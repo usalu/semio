@@ -1,0 +1,14 @@
+{
+  "title": "Fix Vite Config Node Strip Parameter Properties",
+  "emoji": "🛠️",
+  "status": "closed",
+  "description": "mit-bestand demonstrator:dev fails loading ⚙️vite.config.ts because Node strip-only TypeScript rejects constructor parameter properties in 🧩framework/⚡️implementation/🟦️typescript/📦️index.ts (pulled in via os/dev script → @semio-tech/framework-core). Fix at root so vite config import graph is compatible and demonstrator/dev starts.",
+  "summary": "Node 24/Vite 7 native configLoader (strip-only TS) rejected constructor parameter properties when loading mit-bestand demonstrator ⚙️vite.config.ts via os/dev helpers. Forced --configLoader bundle on all bun/bunx vite spawns in repo lib (withViteConfigLoader) and on direct vite build runCmdStatus sites in demonstrator + os/dev. Verified: SKIP_PLUGIN_BUILD=1 demonstrator:dev → Vite ready on :6029 with HTTP 200.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2428"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪4036597a41d04110ba706953606cb0b6"
+  ]
+}

@@ -6,9 +6,9 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./⚡️implementation/🦀️rust/pkg/flow_extension_bim.js",
-    "./pkg/flow_extension_bim.js": "./⚡️implementation/🦀️rust/pkg/flow_extension_bim.js",
-    "./pkg/flow_extension_bim_bg.wasm": "./⚡️implementation/🦀️rust/pkg/flow_extension_bim_bg.wasm"
+    ".": "./⚡️implementation/🦀️rust/pkg/semio_s_plugin_flow_extension_bim.js",
+    "./pkg/semio_s_plugin_flow_extension_bim.js": "./⚡️implementation/🦀️rust/pkg/semio_s_plugin_flow_extension_bim.js",
+    "./pkg/semio_s_plugin_flow_extension_bim_bg.wasm": "./⚡️implementation/🦀️rust/pkg/semio_s_plugin_flow_extension_bim_bg.wasm"
   },
   "scripts": {
     "wasm": "bun ./📜️script.ts wasm"

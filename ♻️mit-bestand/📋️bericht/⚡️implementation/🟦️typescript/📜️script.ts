@@ -6,7 +6,7 @@ import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../�
 import { buildPrintDocument, fetchPrintFonts } from "../../../../🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/📜️script.ts";
 
 const berichtRoot = import.meta.dir;
-const defaultTex = join(berichtRoot, "zwischenbericht/🖋️zwischenbericht.tex");
+const defaultTex = join(berichtRoot, "📋️zwischenbericht/zwischenbericht.tex");
 
 function resolveTexPath(segments: string[]): string {
   const raw = segments[0] ?? defaultTex;
@@ -30,7 +30,7 @@ async function buildDocument(segments: string[]): Promise<void> {
 async function watchDocument(segments: string[]): Promise<void> {
   const texAbs = resolveTexPath(segments);
   const outDir = resolveOutDir(texAbs, segments);
-  const roots = [dirname(texAbs), join(berichtRoot, "../../framework/print/tex")];
+  const roots = [dirname(texAbs), join(berichtRoot, "../../../../🧰️framework/🛍️product/📓️print/⚡️implementation/🖋️latex")];
   const mtimes = new Map<string, number>();
   const rebuild = async () => {
     try {

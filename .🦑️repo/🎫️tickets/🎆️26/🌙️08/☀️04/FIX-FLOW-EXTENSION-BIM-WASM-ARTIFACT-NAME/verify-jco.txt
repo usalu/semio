@@ -1,0 +1,1 @@
+jco transpile of semio_s_plugin_flow_extension_bim.wasm succeeded; see jco-out/

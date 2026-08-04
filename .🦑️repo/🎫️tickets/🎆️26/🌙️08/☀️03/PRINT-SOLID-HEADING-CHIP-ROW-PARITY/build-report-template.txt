@@ -1,0 +1,700 @@
+note: Running TeX ...
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) in alignment at lines 11--11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+note: Running BibTeX on report.aux ...
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:10: Overfull \hbox (98.13203pt too wide) in alignment at lines 10--10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) in alignment at lines 11--11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.aux` (5.0771484375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.synctex.gz` (31.919921875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.blg` (252 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.window-breaks` (342 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.register-toc` (489 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.log` (53.1796875 KiB)
+note: Not writing `report.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.bbl` (1.7294921875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.pdf` (38.6357421875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.run.xml` (2.57421875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.panels` (50 B)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.pdf
+[DEBUG] print panel glass panel-1 page 3
+note: Running TeX ...
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) in alignment at lines 11--11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Overfull \hbox (98.13203pt too wide) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+note: Running BibTeX on report.aux ...
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:10: Overfull \hbox (98.13203pt too wide) in alignment at lines 10--10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) in alignment at lines 11--11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.register-toc` (489 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.blg` (252 B)
+note: Not writing `report.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.log` (53.28515625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.pdf` (58.3134765625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.run.xml` (2.57421875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.synctex.gz` (32.1875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.window-breaks` (342 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.aux` (5.0771484375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.bbl` (1.7294921875 KiB)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.pdf
+note: Running TeX ...
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) in alignment at lines 11--11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+note: Running BibTeX on report-dark.aux ...
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:10: Overfull \hbox (98.13203pt too wide) in alignment at lines 10--10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) in alignment at lines 11--11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.log` (53.2724609375 KiB)
+note: Not writing `report-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.bbl` (1.7294921875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.pdf` (38.611328125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.run.xml` (2.6181640625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.aux` (5.08203125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.window-breaks` (342 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.blg` (262 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.register-toc` (489 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.synctex.gz` (31.9384765625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.panels` (50 B)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.pdf
+[DEBUG] print panel glass panel-1 page 3
+note: Running TeX ...
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) in alignment at lines 11--11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Overfull \hbox (98.13203pt too wide) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+note: Running BibTeX on report-dark.aux ...
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:10: Overfull \hbox (98.13203pt too wide) in alignment at lines 10--10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) in alignment at lines 11--11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.window-breaks` (342 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.bbl` (1.7294921875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.synctex.gz` (32.2060546875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.aux` (5.08203125 KiB)
+note: Not writing `report-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.register-toc` (489 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.run.xml` (2.6181640625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.log` (53.3876953125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.pdf` (57.3681640625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.blg` (262 B)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.pdf

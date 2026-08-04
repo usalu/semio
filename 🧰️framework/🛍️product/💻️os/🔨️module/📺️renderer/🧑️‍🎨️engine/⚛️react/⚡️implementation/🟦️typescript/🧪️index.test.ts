@@ -216,6 +216,12 @@ import {
   runRequestMediaFrames,
   createFrameworkDisplayPanelTabs,
   type DisplayHostApi,
+  createFrameworkPluginsPanelTabs,
+  type PluginsHostApi,
+  type PluginsPanelEntry,
+  type PluginPanelStatus,
+  type PluginManifest,
+  type PluginWasmHandle,
   resolveFrameworkLayoutSeed,
   retitleWindowLayoutNode,
   introductionTargetsWindow,
@@ -723,6 +729,52 @@ describe("shell store reducer", () => {
     expect(snapshot.overlays.searchOpen).toBe(true);
     expect(snapshot.pluginRuntime).toBe(state.pluginRuntime);
   });
+
+  //#region 🔌️PluginRuntime hot-swap actions
+  function fakeLoadedPlugin(pluginId: string, version = "0"): { readonly handle: PluginWasmHandle; readonly manifest: PluginManifest } {
+    const manifest: PluginManifest = { pluginId, label: pluginId, version, apps: [], workflows: [], examples: [] };
+    const handle = {
+      pluginId,
+      manifest,
+      createApp: async () => 0,
+      destroyApp: async () => {},
+      handleAction: async () => ({ output: null, operations: [], inverseGroup: { invocationId: "", operations: [], inverseOperations: [] }, diagnostics: [], requestedEffects: [], events: [] }),
+      refreshUi: async () => ({}),
+      contextMenu: async () => [],
+      dispose: () => {},
+    } as unknown as PluginWasmHandle;
+    return { handle, manifest };
+  }
+
+  it("UPSERT_LOADED_PLUGIN inserts a new pluginId and replaces an existing one in place (order preserved)", () => {
+    const state = baseState();
+    const note1 = fakeLoadedPlugin("note", "1");
+    const withNote = shellReducer(state, { type: "UPSERT_LOADED_PLUGIN", value: note1 });
+    expect(withNote.pluginRuntime.loadedPlugins.map((entry) => entry.handle.pluginId)).toEqual(["note"]);
+    const withS = shellReducer(withNote, { type: "UPSERT_LOADED_PLUGIN", value: fakeLoadedPlugin("s") });
+    expect(withS.pluginRuntime.loadedPlugins.map((entry) => entry.handle.pluginId)).toEqual(["note", "s"]);
+    const note2 = fakeLoadedPlugin("note", "2");
+    const reloaded = shellReducer(withS, { type: "UPSERT_LOADED_PLUGIN", value: note2 });
+    expect(reloaded.pluginRuntime.loadedPlugins.map((entry) => entry.handle.pluginId)).toEqual(["note", "s"]);
+    expect(reloaded.pluginRuntime.loadedPlugins[0]!.manifest.version).toBe("2");
+    expect(reloaded.layout).toBe(withS.layout);
+  });
+
+  it("REMOVE_LOADED_PLUGIN drops only the matching pluginId", () => {
+    const withBoth = [fakeLoadedPlugin("note"), fakeLoadedPlugin("s")].reduce((state, entry) => shellReducer(state, { type: "UPSERT_LOADED_PLUGIN", value: entry }), baseState());
+    const removed = shellReducer(withBoth, { type: "REMOVE_LOADED_PLUGIN", pluginId: "note" });
+    expect(removed.pluginRuntime.loadedPlugins.map((entry) => entry.handle.pluginId)).toEqual(["s"]);
+  });
+
+  it("SET_PLUGIN_STATUS tracks per-pluginId status independent of loadedPlugins membership", () => {
+    const state = baseState();
+    const installing = shellReducer(state, { type: "SET_PLUGIN_STATUS", pluginId: "note", value: "installing" });
+    expect(installing.pluginRuntime.pluginStatusById).toEqual({ note: "installing" });
+    const loaded = shellReducer(installing, { type: "SET_PLUGIN_STATUS", pluginId: "note", value: "loaded" });
+    const failed = shellReducer(loaded, { type: "SET_PLUGIN_STATUS", pluginId: "s", value: "failed" });
+    expect(failed.pluginRuntime.pluginStatusById).toEqual({ note: "loaded", s: "failed" });
+  });
+  //#endregion 🔌️PluginRuntime hot-swap actions
 });
 
 // 🐢️ Puzzle 2D performance round 2: the per-interaction full-shell refresh cascade was dominated by
@@ -4821,6 +4873,85 @@ describe("Display Windows tab — projection drag templates", () => {
     const isometric = byLabel(axonometric.items!, "Isometric")!;
     const isoPayload = JSON.parse(isometric.dragData!["application/x-compose-window-template"]!) as { windowKindId: string; templateId: string };
     expect(decodeWorldProjectionTemplateId(isoPayload.templateId)).toMatchObject({ mode: { kind: "axonometric", variant: "isometric" } });
+  });
+});
+
+describe("createFrameworkPluginsPanelTabs (plugin panel, bottom-right dock)", () => {
+  type LabeledTreeItem = { readonly id: string; readonly label?: string; readonly loading?: boolean };
+  type PluginsTreeSections = { readonly sections: readonly { readonly id: string; readonly label?: string; readonly items?: readonly LabeledTreeItem[] }[] };
+  type LeafWithTrees = { readonly trees: readonly { readonly tree: { readonly resolveTree: () => PluginsTreeSections } }[] };
+
+  function pluginsTreeSections(host: PluginsHostApi | null) {
+    const tabs = createFrameworkPluginsPanelTabs(() => host);
+    const pluginsTab = tabs.find((tab) => tab.id === "framework.settings.plugins") as unknown as LeafWithTrees;
+    return pluginsTab.trees[0]!.tree.resolveTree().sections;
+  }
+
+  it("shows an unavailable placeholder when no host is mounted yet", () => {
+    const sections = pluginsTreeSections(null);
+    expect(sections).toHaveLength(1);
+    expect(sections[0]!.items?.[0]?.id).toBe("unavailable");
+  });
+
+  const entry = (pluginId: string, status: PluginPanelStatus, canUninstall: boolean): PluginsPanelEntry => ({ pluginId, label: pluginId, version: "1", status, sourceId: "dev", canUninstall });
+
+  it("groups plugins into one section per source, sorted by pluginId within a source", () => {
+    const host: PluginsHostApi = { plugins: [entry("s", "loaded", false), entry("note", "loaded", true)], install: () => {}, uninstall: () => {}, reload: () => {} };
+    const sections = pluginsTreeSections(host);
+    expect(sections).toHaveLength(1);
+    expect(sections[0]!.id).toBe("framework.settings.plugins.source.dev");
+    expect(sections[0]!.items?.map((item) => item.id)).toEqual(["framework.settings.plugins.note", "framework.settings.plugins.s"]);
+  });
+
+  it("marks installing/reloading rows as loading, and every status is reflected in the row label", () => {
+    const host: PluginsHostApi = {
+      plugins: [entry("a", "available", true), entry("b", "installing", true), entry("c", "loaded", true), entry("d", "failed", true), entry("e", "reloading", true)],
+      install: () => {},
+      uninstall: () => {},
+      reload: () => {},
+    };
+    const items = pluginsTreeSections(host)[0]!.items!;
+    const byId = (pluginId: string) => items.find((item) => item.id === `framework.settings.plugins.${pluginId}`)!;
+    expect(byId("a").loading).toBe(false);
+    expect(byId("b").loading).toBe(true);
+    expect(byId("c").loading).toBe(false);
+    expect(byId("d").loading).toBe(false);
+    expect(byId("e").loading).toBe(true);
+    expect(byId("a").label).toContain("Available");
+    expect(byId("b").label).toContain("Installing");
+    expect(byId("c").label).toContain("Loaded");
+    expect(byId("d").label).toContain("Failed");
+    expect(byId("e").label).toContain("Reloading");
+  });
+
+  it("routes install/uninstall/reload clicks for one row back through the host without touching others", () => {
+    const calls: string[] = [];
+    const host: PluginsHostApi = {
+      plugins: [entry("note", "loaded", true)],
+      install: (pluginId) => calls.push(`install:${pluginId}`),
+      uninstall: (pluginId) => calls.push(`uninstall:${pluginId}`),
+      reload: (pluginId) => calls.push(`reload:${pluginId}`),
+    };
+    const tabs = createFrameworkPluginsPanelTabs(() => host);
+    const pluginsTab = tabs.find((tab) => tab.id === "framework.settings.plugins") as unknown as LeafWithTrees;
+    const sections = pluginsTab.trees[0]!.tree.resolveTree();
+    const noteItem = (sections.sections[0]!.items as unknown as { readonly control: ReactElement }[])[0]!;
+    const { getByText } = render(createElement("div", null, noteItem.control));
+    fireEvent.click(getByText("Reload"));
+    fireEvent.click(getByText("Uninstall"));
+    expect(calls).toEqual(["reload:note", "uninstall:note"]);
+    cleanup();
+  });
+
+  it("disables uninstall for the host/primary plugin and the active session's plugin (canUninstall: false)", () => {
+    const host: PluginsHostApi = { plugins: [entry("s", "loaded", false)], install: () => {}, uninstall: () => {}, reload: () => {} };
+    const tabs = createFrameworkPluginsPanelTabs(() => host);
+    const pluginsTab = tabs.find((tab) => tab.id === "framework.settings.plugins") as unknown as LeafWithTrees;
+    const sections = pluginsTab.trees[0]!.tree.resolveTree();
+    const sItem = (sections.sections[0]!.items as unknown as { readonly control: ReactElement }[])[0]!;
+    const { getByText } = render(createElement("div", null, sItem.control));
+    expect((getByText("Uninstall").closest("button") as HTMLButtonElement).disabled).toBe(true);
+    cleanup();
   });
 });
 

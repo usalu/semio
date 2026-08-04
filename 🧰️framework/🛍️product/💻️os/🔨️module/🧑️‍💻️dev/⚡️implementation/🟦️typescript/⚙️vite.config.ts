@@ -8,7 +8,7 @@ import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playground
 import { PLAYGROUND_BUILD_TARGETS } from "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
 import { isStudioPluginFilter } from "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/📜️script.ts";
 import { resolveShellBrandById } from "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🏷️brand/📦️index.ts";
-import { semioBackboneVitePlugin, semioBlobVitePlugin } from "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/📜️script.ts";
+import { semioBackboneVitePlugin, semioBlobVitePlugin, semioPluginHotSwapVitePlugin } from "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/📜️script.ts";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 const playDir = configDir;
@@ -98,6 +98,7 @@ export default defineConfig({
     playgroundFlowWasmDevStubPlugin(repoRoot),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
+    semioPluginHotSwapVitePlugin(),
     ...semioAssetsVitePlugin(repoRoot),
     // 🔌️ `resolve.alias`'s `/plugin-modules` entry above only covers *bundler* resolution (static imports
     // Vite can inline) — the shell also fetches wasm plugin modules at runtime via plain absolute-URL

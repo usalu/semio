@@ -1,0 +1,17 @@
+{
+  "title": "Fix Flow Extension Bim Wasm Artifact Name",
+  "emoji": "🧩",
+  "status": "closed",
+  "description": "semio-s-plugin-flow-extension-bim overrode [lib] name to flow_extension_bim, so cargo emitted flow_extension_bim.wasm while the OS plugin builder looks for semio_s_plugin_flow_extension_bim.wasm (package name), breaking jco transpile during framework-os-dev.",
+  "goal": "R26-02",
+  "sessions": [],
+  "summary": "Removed custom [lib] name from semio-s-plugin-flow-extension-bim so cargo emits semio_s_plugin_flow_extension_bim.wasm (matching package name and OS plugin builder). Updated wasm-pack package.json/script.ts basenames and fixed OperatorMeta<'_> elided-lifetime warning. Verified cargo build + jco transpile.",
+  "files": {
+    "updated": [
+      "✏️s/🔌️plugin/🌊️flow/🧩️extension/🏗️bim/⚡️implementation/🦀️rust/Cargo.toml",
+      "✏️s/🔌️plugin/🌊️flow/🧩️extension/🏗️bim/⚡️implementation/🦀️rust/📦️lib.rs",
+      "✏️s/🔌️plugin/🌊️flow/🧩️extension/🏗️bim/package.json",
+      "✏️s/🔌️plugin/🌊️flow/🧩️extension/🏗️bim/📜️script.ts"
+    ]
+  }
+}

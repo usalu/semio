@@ -2787,8 +2787,16 @@ type PluginWorkerMessageType = "init" | "manifest" | "createApp" | "destroy" | "
  * state, so abandoning it mid-call (the wgpu renderer's timeout+restart policy) would corrupt it. */
 const PLUGIN_WORKER_UNRESPONSIVE_MS = 10000;
 
-function pluginWorkerUrl(moduleUrl: string): string {
-  return moduleUrl.replace(/\/[^/]+\.js$/, "/🟨️plugin-worker.js");
+/** @emoji 🔌️ Derives the generic worker bootstrap script's URL from a plugin module URL — same directory,
+ * `🟨️plugin-worker.js` instead of the plugin's own bridge filename. The bootstrap script itself never
+ * needs cache-busting (it's plugin-version-agnostic; the *actual* module URL, `?v=`-busted or not, only
+ * ever travels as the `init` request's `moduleUrl` payload — see `start()` below), so any `?query` or
+ * `#hash` on `moduleUrl` (from `PluginSource.moduleUrl`'s hot-reload cache-busting) is stripped first —
+ * otherwise the trailing `.js` no longer sits at the string's end and the replace silently no-ops,
+ * pointing the worker at the plugin's own module instead of its bootstrap script. */
+export function pluginWorkerUrl(moduleUrl: string): string {
+  const bare = moduleUrl.split(/[?#]/)[0]!;
+  return bare.replace(/\/[^/]+\.js$/, "/🟨️plugin-worker.js");
 }
 
 /**
@@ -2899,14 +2907,23 @@ class PluginWorkerClient {
  * @emoji 🧵️ Worker-backed `PluginWasmHandle` for component-model plugins (the ABI the generated
  * `🟨️plugin-worker.js` supports). Caller falls back to the direct main-thread import on failure (no
  * `🟨️plugin-worker.js` alongside this module, wasm-bindgen-only program, or `Worker` unavailable).
+ *
+ * Keyed by `moduleUrl` (not `pluginId`): a hot reload acquires a *second* worker at a fresh
+ * cache-busted URL for the same `pluginId` while the old one still serves live instances, so a
+ * `pluginId`-keyed map would have the new worker's `set()` silently clobber the old entry and then
+ * the old worker's `dispose()` delete the new one out from under it. `activeWorkerByPluginId` tracks
+ * which of a plugin's (possibly several, during a swap) worker clients is the one inbound backbone
+ * traffic should reach.
  */
 const pluginWorkerClients = new Map<string, PluginWorkerClient>();
+const activeWorkerByPluginId = new Map<string, PluginWorkerClient>();
 
 async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
   const client = new PluginWorkerClient(pluginId, moduleUrl);
-  pluginWorkerClients.set(pluginId, client);
+  pluginWorkerClients.set(moduleUrl, client);
   client.onBackboneOutbound = (uri, message) => relayPluginBackboneOutbound(uri, message);
   await client.start();
+  activeWorkerByPluginId.set(pluginId, client);
   console.log(`[DEBUG] plugin worker + ${pluginId} (${pluginWorkerClients.size} live)`);
   return withSerializedPluginWasmHandle({
     manifest: () => client.manifest(),
@@ -2914,7 +2931,8 @@ async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): P
     destroyApp: (instanceId) => client.destroyApp(instanceId),
     exchange: (instanceId, frames) => client.exchange(instanceId, frames),
     dispose: () => {
-      pluginWorkerClients.delete(pluginId);
+      if (pluginWorkerClients.get(moduleUrl) === client) pluginWorkerClients.delete(moduleUrl);
+      if (activeWorkerByPluginId.get(pluginId) === client) activeWorkerByPluginId.delete(pluginId);
       client.dispose();
       console.log(`[DEBUG] plugin worker - ${pluginId} (${pluginWorkerClients.size} live)`);
     },
@@ -2942,7 +2960,7 @@ function pushMainThreadPluginBackboneInbound(uri: string, messages: readonly Uin
 }
 
 export function postPluginBackboneInbound(pluginId: string, uri: string, messages: readonly Uint8Array[]): void {
-  const client = pluginWorkerClients.get(pluginId);
+  const client = activeWorkerByPluginId.get(pluginId);
   if (client) {
     client.postBackboneInbound(uri, messages);
     return;
@@ -3132,12 +3150,21 @@ export async function acquirePluginModule(pluginId: string, moduleUrl: string): 
   return { handle: lease.value, release: lease.release };
 }
 
+/** @emoji 🔁️ Forces immediate disposal of a stale `moduleUrl` after a hot reload has released its last
+ * lease — a no-op with a `[DEBUG]` warning (see {@link createLeasePool.evictNow}) if a caller still
+ * holds the old lease, so a reload sequence must release before evicting. Skipping this after a
+ * cache-busted reload would leave the old worker lingering for the pool's full 30s window per swap. */
+export function evictPluginModule(moduleUrl: string): void {
+  pluginModulePool.evictNow(moduleUrl);
+}
+
 /** @emoji 🔭️ Debug-only runtime snapshot — live plugin worker ids and the plugin module pool's lease
  * states — for verifying eager-boot-vs-lazy-residency changes from devtools without instrumenting call
  * sites by hand. Intentionally global rather than exported: this is a console/devtools aid, not API. */
 (globalThis as unknown as { __semioPluginRuntimeStats?: () => unknown }).__semioPluginRuntimeStats = () => ({
-  workerIds: Array.from(pluginWorkerClients.keys()),
+  workerModuleUrls: Array.from(pluginWorkerClients.keys()),
   workerCount: pluginWorkerClients.size,
+  activePluginIds: Array.from(activeWorkerByPluginId.keys()),
   modulePool: pluginModulePool.stats(),
 });
 //#endregion 🐚️PluginModuleLease
@@ -3199,6 +3226,72 @@ export function pluginHandleForBridge(handle: PluginWasmHandle) {
   };
 }
 //#endregion PluginRuntime
+
+//#region 🔌️PluginSource
+/** @emoji 🔌️ Dev-server SSE endpoint a `PluginSource` availability stream connects to (see
+ * {@link createDevPluginSource}) — mounted by the dev runner's `semioPluginHotSwapVitePlugin`
+ * alongside the `/plugin-modules` static alias it watches. Shared here (rather than duplicated as a
+ * literal in both the dev vite plugin and the shell) so the two ends can't drift apart. */
+export const PLUGIN_SOURCE_WATCH_PATH = "/plugin-modules/watch";
+
+/** @emoji 🔌️ One entry of an availability stream: either the full set of currently-built plugins sent
+ * once on connect (a reconnecting/late-connecting browser must not miss builds that already finished),
+ * or a single plugin's rebuild landing. `rebuiltAt` is the artifact's build timestamp and doubles as
+ * the cache-busting query value {@link PluginSource.moduleUrl} mints. */
+export type PluginSourceEvent = { readonly kind: "snapshot"; readonly plugins: readonly { readonly pluginId: string; readonly rebuiltAt: number }[] } | { readonly kind: "built"; readonly pluginId: string; readonly rebuiltAt: number };
+
+/**
+ * @emoji 🔌️ Where the shell's incremental plugin runtime (install/uninstall/reload — see the react
+ * renderer's plugin panel) gets its catalog and availability notifications from. `createDevPluginSource`
+ * is the only implementation today; a future `HubPluginSource` (fetching manifests and artifacts from
+ * the plugin hub over HTTP/SSE instead of the local dev server) implements the same three methods and
+ * needs no changes anywhere else — the shell only ever depends on this interface.
+ */
+export interface PluginSource {
+  readonly id: string;
+  /** Every plugin this source can currently install (built or not — the panel shows "available"
+   * entries that haven't finished their first build yet). */
+  list(): Promise<readonly PluginRegistryEntry[]>;
+  /** Mints a concrete, cache-busted module URL for one install/reload of `pluginId`. Omitting
+   * `rebuiltAt` (initial install, before any `built` event) falls back to the registry's own
+   * `moduleUrl`, unbusted — correct for a first load, where there is nothing stale to bust. */
+  moduleUrl(pluginId: string, rebuiltAt?: number): string;
+  /** Subscribes to availability events; returns an unsubscribe function. Fires an immediate `snapshot`
+   * on subscribe against sources that support it (the dev source's SSE endpoint always sends one). */
+  subscribe(listener: (event: PluginSourceEvent) => void): () => void;
+}
+
+/** @emoji 🔌️ `PluginSource` backed by the dev server's static `/plugin-modules` output and its
+ * {@link PLUGIN_SOURCE_WATCH_PATH} SSE stream. `EventSource` is unavailable under vitest/node, so
+ * `subscribe` there is a harmless no-op (matches every other browser-only feature detection in this
+ * module, e.g. {@link loadPluginModuleUncached}'s `Worker` check). */
+export function createDevPluginSource(registry: readonly PluginRegistryEntry[]): PluginSource {
+  const byId = new Map(registry.map((entry) => [entry.pluginId, entry] as const));
+  return {
+    id: "dev",
+    async list() {
+      return registry;
+    },
+    moduleUrl(pluginId, rebuiltAt) {
+      const entry = byId.get(pluginId);
+      if (!entry) throw new Error(`[DEBUG] plugin source "dev" has no registry entry for ${pluginId}`);
+      return rebuiltAt === undefined ? entry.moduleUrl : `${entry.moduleUrl}?v=${rebuiltAt}`;
+    },
+    subscribe(listener) {
+      if (typeof EventSource === "undefined") return () => {};
+      const source = new EventSource(PLUGIN_SOURCE_WATCH_PATH);
+      source.onmessage = (event) => {
+        try {
+          listener(JSON.parse(event.data) as PluginSourceEvent);
+        } catch (error) {
+          console.warn(`[DEBUG] plugin source "dev" malformed event: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      };
+      return () => source.close();
+    },
+  };
+}
+//#endregion 🔌️PluginSource
 
 // #region 🎮️PlaygroundResolution
 /** @emoji 🎮️ Finds the generated playground catalog row for a variant id or one of its aliases. */
@@ -3573,6 +3666,102 @@ if (import.meta.vitest) {
       expect(organized[6]!.separator).toBe(true);
       expect(organized[6]!.label).toBeUndefined();
       expect(organized[7]!.destructive).toBe(true);
+    });
+  });
+
+  describe("pluginWorkerUrl (hot-reload cache-busting regression)", () => {
+    it("swaps the plugin's own bridge filename for the generic worker bootstrap script", () => {
+      expect(pluginWorkerUrl("/plugin-modules/note/note_plugin.js")).toBe("/plugin-modules/note/🟨️plugin-worker.js");
+    });
+
+    it("strips a cache-busting ?v= query before swapping the filename — a bare .js-suffix regex silently no-ops on a query string", () => {
+      expect(pluginWorkerUrl("/plugin-modules/note/note_plugin.js?v=1785506741609")).toBe("/plugin-modules/note/🟨️plugin-worker.js");
+    });
+
+    it("also strips a trailing hash fragment", () => {
+      expect(pluginWorkerUrl("/plugin-modules/note/note_plugin.js#fragment")).toBe("/plugin-modules/note/🟨️plugin-worker.js");
+    });
+  });
+
+  describe("PluginSource", () => {
+    const registry: readonly PluginRegistryEntry[] = [
+      { pluginId: "note", moduleUrl: "/plugin-modules/note/note_plugin.js" },
+      { pluginId: "s", moduleUrl: "/plugin-modules/s/s_plugin.js" },
+    ];
+
+    it("list() returns the registry it was created with", async () => {
+      const source = createDevPluginSource(registry);
+      expect(source.id).toBe("dev");
+      await expect(source.list()).resolves.toEqual(registry);
+    });
+
+    it("moduleUrl() passes through unbusted without rebuiltAt", () => {
+      const source = createDevPluginSource(registry);
+      expect(source.moduleUrl("note")).toBe("/plugin-modules/note/note_plugin.js");
+    });
+
+    it("moduleUrl() cache-busts with a rebuiltAt query param", () => {
+      const source = createDevPluginSource(registry);
+      expect(source.moduleUrl("note", 1785789943669)).toBe("/plugin-modules/note/note_plugin.js?v=1785789943669");
+    });
+
+    it("moduleUrl() throws for an unknown pluginId", () => {
+      const source = createDevPluginSource(registry);
+      expect(() => source.moduleUrl("missing")).toThrow(/missing/);
+    });
+
+    it("subscribe() is a harmless no-op without a global EventSource (node/vitest)", () => {
+      const source = createDevPluginSource(registry);
+      const events: PluginSourceEvent[] = [];
+      const unsubscribe = source.subscribe((event) => events.push(event));
+      expect(() => unsubscribe()).not.toThrow();
+      expect(events).toEqual([]);
+    });
+  });
+
+  describe("LeasePool evictNow (hot-swap reload eviction)", () => {
+    it("disposes a fully-released key immediately", async () => {
+      const disposed: string[] = [];
+      const pool = createLeasePool<string>(
+        (key) => Promise.resolve(`value:${key}`),
+        (value) => disposed.push(value),
+        { lingerMs: 30_000 },
+      );
+      const lease = await pool.acquire("url-v1");
+      lease.release();
+      expect(disposed).toEqual([]);
+      pool.evictNow("url-v1");
+      expect(disposed).toEqual(["value:url-v1"]);
+    });
+
+    it("skips (does not throw) a key with an active lease, matching a reload that hasn't released the old handle yet", async () => {
+      const disposed: string[] = [];
+      const pool = createLeasePool<string>(
+        (key) => Promise.resolve(`value:${key}`),
+        (value) => disposed.push(value),
+      );
+      const lease = await pool.acquire("url-v1");
+      expect(() => pool.evictNow("url-v1")).not.toThrow();
+      expect(disposed).toEqual([]);
+      lease.release();
+      pool.evictNow("url-v1");
+      expect(disposed).toEqual(["value:url-v1"]);
+    });
+
+    it("treats two cache-busted URLs of the same pluginId as independent keys", async () => {
+      const disposed: string[] = [];
+      const pool = createLeasePool<string>(
+        (key) => Promise.resolve(`value:${key}`),
+        (value) => disposed.push(value),
+      );
+      const oldLease = await pool.acquire("note.js?v=1");
+      const newLease = await pool.acquire("note.js?v=2");
+      oldLease.release();
+      pool.evictNow("note.js?v=1");
+      expect(disposed).toEqual(["value:note.js?v=1"]);
+      newLease.release();
+      pool.evictNow("note.js?v=2");
+      expect(disposed).toEqual(["value:note.js?v=1", "value:note.js?v=2"]);
     });
   });
 }

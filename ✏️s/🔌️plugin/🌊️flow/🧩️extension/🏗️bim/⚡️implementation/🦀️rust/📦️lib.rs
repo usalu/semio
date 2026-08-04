@@ -163,7 +163,7 @@ struct OperatorMeta<'a> {
     summary: &'a str,
 }
 
-fn operator_info(meta: OperatorMeta, inputs: Vec<ChannelSpec>, output: ChannelSpec, group: &[&str]) -> OperatorInfo {
+fn operator_info(meta: OperatorMeta<'_>, inputs: Vec<ChannelSpec>, output: ChannelSpec, group: &[&str]) -> OperatorInfo {
     OperatorInfo {
         id: meta.id.into(),
         extension: "bim".into(),

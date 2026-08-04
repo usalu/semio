@@ -1,0 +1,14 @@
+{
+  "title": "Hot-Swappable S Plugins",
+  "emoji": "🔌️",
+  "status": "closed",
+  "description": "Make \"s\" plugins hot-swappable at runtime: dev server streams each plugin into the running shell as soon as it's built (instead of waiting for all ~37 crates), plugins can be installed/uninstalled/reloaded live via a new bottom-right dock panel, and the install source is abstracted (PluginSource) so a remote hub source can be added later. Implementation plan at /Users/ueli/.claude/plans/s-plugins-must-be-spicy-aho.md.",
+  "summary": "Made \"s\" plugins hot-swappable end-to-end: (1) dev server streams each plugin into the running shell as soon as its build lands (host plugin built first, Vite starts before the ~36-crate build loop, SSE endpoint at /plugin-modules/watch backs a new PluginSource abstraction) instead of blocking on the whole catalog; (2) React shell gained incremental install/uninstall/reload actions replacing the old boot-time-only SET_LOADED_PLUGINS, with proper module-lease eviction and worker re-keying by moduleUrl (fixes a pre-existing worker-URL collision bug on reload); (3) a new Plugins panel docked bottom-right (next to Settings/Theme) lets users install/uninstall/reload each plugin, with the host/session-owning plugin's Uninstall disabled; (4) full i18n (en+de) for the panel. Verified with real vitest runs (framework-core, framework-os-dev, framework-renderer-react — all green except pre-existing unrelated failures) and a live `bun dev` session in the browser: confirmed Vite starts before plugin builds finish, plugins stream in via SSE snapshot/built events, and install/reload/uninstall all work correctly with proper worker lifecycle (verified via __semioPluginRuntimeStats()). Found and fixed a real bug during verification: pluginWorkerUrl's regex broke on the new cache-busting ?v= query param. Hub-source support is designed for (PluginSource interface) but not built — out of scope per plan.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2425"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪4e7b9e3fe94f40baab273d70ce7a3d05"
+  ]
+}

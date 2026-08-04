@@ -3848,6 +3848,7 @@ export type UiTranslationSchema = {
       readonly details: UiLabelValue;
       readonly settings: UiLabelValue;
       readonly chat: UiLabelValue;
+      readonly plugins: UiLabelValue;
     };
     readonly display: {
       readonly tab: {
@@ -3923,6 +3924,25 @@ export type UiTranslationSchema = {
       };
       readonly unavailable: UiLabelValue;
       readonly resetDock: UiLabelValue;
+    };
+    /** 🔌️ Plugin panel (bottom-right dock, next to Settings/Theme): install/uninstall/reload for the
+     * dev `PluginSource`'s registry — see `createFrameworkPluginsPanelTabs`. */
+    readonly plugins: {
+      readonly status: {
+        readonly available: UiLabelValue;
+        readonly installing: UiLabelValue;
+        readonly loaded: UiLabelValue;
+        readonly failed: UiLabelValue;
+        readonly reloading: UiLabelValue;
+      };
+      readonly action: {
+        readonly install: UiLabelValue;
+        readonly uninstall: UiLabelValue;
+        readonly reload: UiLabelValue;
+      };
+      readonly waitingForHost: UiLabelValue;
+      readonly unavailable: UiLabelValue;
+      readonly source: UiLabelValue;
     };
     readonly command: {
       readonly introduceApp: UiLabelValue;
@@ -4535,6 +4555,12 @@ export const uiChromeTranslationBundles = {
               beginner: "Chat",
             },
           },
+          plugins: {
+            label: {
+              normal: "Plugins",
+              beginner: "Plugins",
+            },
+          },
         },
         display: {
           tab: {
@@ -4615,6 +4641,23 @@ export const uiChromeTranslationBundles = {
           },
           unavailable: { label: { normal: "Einstellungen nicht verfügbar", beginner: "Einstellungen nicht verfügbar" } },
           resetDock: { label: { normal: "Panels zurücksetzen", beginner: "Panels zurücksetzen" } },
+        },
+        plugins: {
+          status: {
+            available: { label: { normal: "Verfügbar", beginner: "Verfügbar" } },
+            installing: { label: { normal: "Wird installiert…", beginner: "Wird installiert…" } },
+            loaded: { label: { normal: "Geladen", beginner: "Geladen" } },
+            failed: { label: { normal: "Fehlgeschlagen", beginner: "Fehlgeschlagen" } },
+            reloading: { label: { normal: "Wird neu geladen…", beginner: "Wird neu geladen…" } },
+          },
+          action: {
+            install: { label: { normal: "Installieren", beginner: "Installieren" } },
+            uninstall: { label: { normal: "Deinstallieren", beginner: "Deinstallieren" } },
+            reload: { label: { normal: "Neu laden", beginner: "Neu laden" } },
+          },
+          waitingForHost: { label: { normal: "Warte auf Host-Programm…", beginner: "Warte auf Host-Programm…" } },
+          unavailable: { label: { normal: "Plugins nicht verfügbar", beginner: "Plugins nicht verfügbar" } },
+          source: { label: { normal: "Quelle", beginner: "Quelle" } },
         },
         command: {
           introduceApp: { label: { normal: "App vorstellen", beginner: "App vorstellen" } },
@@ -5209,6 +5252,12 @@ export const uiChromeTranslationBundles = {
               beginner: "Chat",
             },
           },
+          plugins: {
+            label: {
+              normal: "Plugins",
+              beginner: "Plugins",
+            },
+          },
         },
         display: {
           tab: {
@@ -5289,6 +5338,23 @@ export const uiChromeTranslationBundles = {
           },
           unavailable: { label: { normal: "Settings unavailable", beginner: "Settings unavailable" } },
           resetDock: { label: { normal: "Reset panels", beginner: "Reset panels" } },
+        },
+        plugins: {
+          status: {
+            available: { label: { normal: "Available", beginner: "Available" } },
+            installing: { label: { normal: "Installing…", beginner: "Installing…" } },
+            loaded: { label: { normal: "Loaded", beginner: "Loaded" } },
+            failed: { label: { normal: "Failed", beginner: "Failed" } },
+            reloading: { label: { normal: "Reloading…", beginner: "Reloading…" } },
+          },
+          action: {
+            install: { label: { normal: "Install", beginner: "Install" } },
+            uninstall: { label: { normal: "Uninstall", beginner: "Uninstall" } },
+            reload: { label: { normal: "Reload", beginner: "Reload" } },
+          },
+          waitingForHost: { label: { normal: "Waiting for host program…", beginner: "Waiting for host program…" } },
+          unavailable: { label: { normal: "Plugins unavailable", beginner: "Plugins unavailable" } },
+          source: { label: { normal: "Source", beginner: "Source" } },
         },
         command: {
           introduceApp: { label: { normal: "Introduce App", beginner: "Introduce App" } },

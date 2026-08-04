@@ -334,7 +334,11 @@ import {
   type DockUiPanelState,
   type DockUiState,
   acquirePluginModule,
+  evictPluginModule,
+  createDevPluginSource,
   type PluginModuleLease,
+  type PluginSource,
+  type PluginSourceEvent,
   registerPluginBackboneRoute,
   buildContributionsJson,
   expandPluginRegistry,
@@ -1363,6 +1367,13 @@ type LoadedProgramState = {
   readonly manifest: PluginManifest;
 };
 
+/** 🔌️ Lifecycle status of one registry entry for the plugin panel (bottom-right dock): "available" —
+ * registered but not (yet) loaded, including a plugin whose first build hasn't landed. Driven by
+ * `installPlugin`/`reloadPlugin`/`uninstallPlugin` and the `PluginSource` subscription, not by
+ * `loadedPlugins` membership alone — a `"reloading"` entry is still present in `loadedPlugins` (the old
+ * handle keeps serving until the swap completes). */
+export type PluginPanelStatus = "available" | "installing" | "loaded" | "failed" | "reloading";
+
 type ActiveSession = {
   readonly pluginId: string;
   readonly instanceId: number;
@@ -1550,6 +1561,7 @@ type UIHistory = { readonly entries: readonly UIHistoryEntry[]; readonly index: 
 //#region slice shapes
 type PluginRuntimeState = {
   readonly loadedPlugins: readonly LoadedProgramState[];
+  readonly pluginStatusById: Readonly<Record<string, PluginPanelStatus>>;
   readonly session: ActiveSession | null;
   readonly error: string | null;
 };
@@ -1711,7 +1723,9 @@ type Updatable<T> = T | ((prev: T) => T);
 const resolveUpdatable = <T,>(next: Updatable<T>, prev: T): T => (typeof next === "function" ? (next as (prev: T) => T)(prev) : next);
 
 export type ShellAction =
-  | { readonly type: "SET_LOADED_PLUGINS"; readonly value: Updatable<readonly LoadedProgramState[]> }
+  | { readonly type: "UPSERT_LOADED_PLUGIN"; readonly value: LoadedProgramState }
+  | { readonly type: "REMOVE_LOADED_PLUGIN"; readonly pluginId: string }
+  | { readonly type: "SET_PLUGIN_STATUS"; readonly pluginId: string; readonly value: PluginPanelStatus }
   | { readonly type: "SET_SESSION"; readonly value: Updatable<ActiveSession | null> }
   | { readonly type: "SET_ERROR"; readonly value: Updatable<string | null> }
   | { readonly type: "SET_WINDOW_UI_BY_WINDOW_ID"; readonly value: Updatable<Readonly<Record<string, UiNode>>> }
@@ -1780,8 +1794,15 @@ export type ShellAction =
 //#region slice reducers
 function pluginRuntimeReducer(state: PluginRuntimeState, action: ShellAction): PluginRuntimeState {
   switch (action.type) {
-    case "SET_LOADED_PLUGINS":
-      return { ...state, loadedPlugins: resolveUpdatable(action.value, state.loadedPlugins) };
+    case "UPSERT_LOADED_PLUGIN": {
+      const index = state.loadedPlugins.findIndex((entry) => entry.handle.pluginId === action.value.handle.pluginId);
+      const loadedPlugins = index === -1 ? [...state.loadedPlugins, action.value] : state.loadedPlugins.map((entry, i) => (i === index ? action.value : entry));
+      return { ...state, loadedPlugins };
+    }
+    case "REMOVE_LOADED_PLUGIN":
+      return { ...state, loadedPlugins: state.loadedPlugins.filter((entry) => entry.handle.pluginId !== action.pluginId) };
+    case "SET_PLUGIN_STATUS":
+      return { ...state, pluginStatusById: { ...state.pluginStatusById, [action.pluginId]: action.value } };
     case "SET_SESSION":
       return { ...state, session: resolveUpdatable(action.value, state.session) };
     case "SET_ERROR":
@@ -2087,7 +2108,7 @@ export function initialShellState(_props: {
   const defaults = _props.defaults ?? {};
   const storage = _props.storage;
   return {
-    pluginRuntime: { loadedPlugins: [], session: null, error: null },
+    pluginRuntime: { loadedPlugins: [], pluginStatusById: {}, session: null, error: null },
     windowUi: { windowUiByWindowId: {}, windowEngagementsByWindowId: {}, windowMeasuresByWindowId: {}, toolMeasuresByToolId: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
     spawnedWindow: { spawnedWindowUi: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {} },
     actionPane: { foldedByWindowId: {}, expandedByWindowId: {}, stagedArgsByKey: {}, activeUtilityByWindowId: {}, activeToolId: null },
@@ -5778,7 +5799,7 @@ function FrameworkOsShellInner({
   const defaults = defaultsProp ?? EMPTY_SHELL_DEFAULTS;
   const ephemeral = isEphemeralShellBrand(brand);
   const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks, defaults, storage: scope.storage }));
-  const { loadedPlugins, session, error } = shellState.pluginRuntime;
+  const { loadedPlugins, pluginStatusById, session, error } = shellState.pluginRuntime;
   const hostPlugin = useMemo(() => (hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined), [loadedPlugins, hostConfig]);
   const hostApp = useMemo(() => hostPlugin?.manifest.apps.find((app) => app.id === hostConfig?.hostAppId), [hostPlugin, hostConfig]);
   const landingApp = useMemo(() => hostPlugin?.manifest.apps.find((app) => app.id === hostConfig?.landingAppId) ?? hostPlugin?.manifest.apps[0], [hostPlugin, hostConfig]);
@@ -5851,6 +5872,17 @@ function FrameworkOsShellInner({
    * teardown time without depending on it (a dependency would tear down and re-run on every reload). */
   const loadedPluginsRef = useRef<readonly LoadedProgramState[]>([]);
   loadedPluginsRef.current = loadedPlugins;
+  /** 🔌️ The exact (possibly cache-busted `?v=`) module URL each currently-loaded plugin was acquired
+   * at — `LoadedProgramState`/`PluginWasmHandle` carry no URL of their own, but `reloadPlugin`/
+   * `uninstallPlugin` need the OLD url to `evictPluginModule` after swapping in a new lease at a
+   * different url (see the lease pool's key convention in `@semio-tech/framework-core`). */
+  const pluginModuleUrlByIdRef = useRef<Map<string, string>>(new Map());
+  /** 🔌️ Per-pluginId mutual exclusion across `installPlugin`/`reloadPlugin`/`uninstallPlugin` — the
+   * boot effect and the `PluginSource` subscription effect can both request the same pluginId around
+   * mount (e.g. the host plugin already appears in the connect-time `snapshot`), and without this guard
+   * both calls would independently acquire a module lease, race their `UPSERT_LOADED_PLUGIN` dispatches,
+   * and leak whichever lease lost the race (nothing left holding a reference to release it). */
+  const pluginOpInFlightRef = useRef<Set<string>>(new Set());
 
   const ensureBackboneWorker = useCallback((): Worker => {
     if (backboneWorkerRef.current) return backboneWorkerRef.current;
@@ -5917,6 +5949,248 @@ function FrameworkOsShellInner({
     if (studioMode) return expanded;
     return pluginFilter ? expanded : plugins;
   }, [pluginFilter, plugins, studioMode]);
+
+  //#region 🔌️PluginRuntime
+  /** 🔌️ The one registry entry the shell must have loaded before it can create a session — the studio
+   * host plugin (`hostConfig.pluginId`) in studio mode, otherwise the resolved single-app variant.
+   * Every other registry entry streams in independently and is never fatal to boot. */
+  const primaryPluginId = useMemo(() => hostConfig?.pluginId ?? (pluginFilter ? resolvePluginRegistryId(pluginFilter) : undefined) ?? registry[0]?.pluginId, [hostConfig, pluginFilter, registry]);
+  /** 🔌️ Dev-only today (`createDevPluginSource`) — a future hub-backed source implements the same
+   * `PluginSource` contract and swaps in here with no other change to the runtime below. */
+  const pluginSource: PluginSource = useMemo(() => createDevPluginSource(registry), [registry]);
+
+  /** 🔌️ Recreates the primary session instance for `handle` — the exact `hostConfig`/non-studio
+   * app-resolution logic the boot effect used to run once inline, now shared with `reloadPlugin` so a
+   * hot-swap of the session-owning plugin re-establishes the session the same way boot does. */
+  const establishPrimarySession = useCallback(
+    async (handle: PluginWasmHandle) => {
+      const manifest = handle.manifest;
+      if (hostConfig) {
+        const sApp = manifest.apps.find((app) => app.id === hostConfig.landingAppId) ?? manifest.apps[0];
+        if (!sApp) throw new Error("host program missing landing app");
+        const programs = buildSpacePrograms(loadedPluginsRef.current);
+        const panelState = buildSpacePanelState(programs, []);
+        const instanceId = await handle.createApp(sApp.id);
+        const viewState: ViewState = { activeModeId: sApp.defaultModeId ?? sApp.modes[0]?.id, panelJson: panelJsonFromState(panelState) };
+        // 🪟️ Seed default-layout panes (Top/Perspective) before any effect can fire actions — otherwise
+        // boot `setActiveExample` races the session-switch refresh and wipes pane bodies.
+        const seeded = applyFrameworkLayoutSeed(sApp.defaultLayout, sApp.windowKinds, EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
+        extraWindowInstancesRef.current = seeded.extraInstances;
+        extraWindowCounterRef.current = seeded.extraInstances.length;
+        dispatch({ type: "SET_SESSION", value: { pluginId: handle.pluginId, instanceId, app: sApp, viewState } });
+        dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+        dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+        dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+        return;
+      }
+      const primaryApp = appId
+        ? (() => {
+            const found = manifest.apps.find((app) => app.id === appId);
+            if (!found) throw new Error(`appId "${appId}" does not resolve to any app in the loaded program manifest`);
+            return found;
+          })()
+        : (() => {
+            const defaultAppId = pluginFilter ? resolvePlaygroundDefaultAppId(pluginFilter) : undefined;
+            return (defaultAppId ? manifest.apps.find((app) => app.id === defaultAppId) : undefined) ?? manifest.apps[0];
+          })();
+      if (!primaryApp) return;
+      const instanceId = await handle.createApp(primaryApp.id);
+      const seeded = applyFrameworkLayoutSeed(primaryApp.defaultLayout, primaryApp.windowKinds, EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
+      extraWindowInstancesRef.current = seeded.extraInstances;
+      extraWindowCounterRef.current = seeded.extraInstances.length;
+      dispatch({
+        type: "SET_SESSION",
+        value: { pluginId: handle.pluginId, instanceId, app: primaryApp, viewState: { activeModeId: primaryApp.defaultModeId ?? primaryApp.modes[0]?.id } },
+      });
+      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+      dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+    },
+    [hostConfig, appId, pluginFilter, uiTerminology, uiLocale],
+  );
+
+  /** 🔌️ Installs a registry entry that isn't loaded yet: acquires its module (worker-backed, refcounted
+   * — see `acquirePluginModule`), upserts it into `loadedPlugins`, and — if this is the primary plugin
+   * and no session exists yet — establishes the session. Shared by the boot effect (primary plugin
+   * only) and the `PluginSource` subscription effect (every other plugin, as its build lands). */
+  const installPlugin = useCallback(
+    async (pluginId: string, rebuiltAt?: number) => {
+      if (pluginOpInFlightRef.current.has(pluginId)) return;
+      if (loadedPluginsRef.current.some((entry) => entry.handle.pluginId === pluginId)) return;
+      const entry = registry.find((candidate) => candidate.pluginId === pluginId);
+      if (!entry) return;
+      pluginOpInFlightRef.current.add(pluginId);
+      dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "installing" });
+      try {
+        const moduleUrl = pluginSource.moduleUrl(pluginId, rebuiltAt);
+        const handle = await loadPluginModuleResilient(pluginId, moduleUrl);
+        if (!handle) {
+          dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "failed" });
+          return;
+        }
+        pluginModuleUrlByIdRef.current.set(pluginId, moduleUrl);
+        dispatch({ type: "UPSERT_LOADED_PLUGIN", value: { handle, manifest: handle.manifest } });
+        dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
+        if (pluginId === primaryPluginId && !sessionRef.current) {
+          try {
+            await establishPrimarySession(handle);
+          } catch (bootError) {
+            console.error("[DEBUG] framework os boot failed", bootError);
+            dispatch({ type: "SET_ERROR", value: bootError instanceof Error ? bootError.message : String(bootError) });
+          }
+        }
+      } finally {
+        pluginOpInFlightRef.current.delete(pluginId);
+      }
+    },
+    [registry, pluginSource, primaryPluginId, establishPrimarySession],
+  );
+
+  /** 🔌️ Hot-swaps an already-loaded plugin to a newly built module — mirrors the os-core kernel's
+   * `PluginHost::hot_swap_plugin` contract (validate → destroy affected instances → swap → recreate the
+   * session if it was this plugin's → release the old module) without inventing a separate one:
+   * acquires the new module BEFORE tearing anything down (the old handle keeps serving concurrent
+   * traffic during the swap), validates the new manifest still declares apps (and, if this plugin owns
+   * the active session, still declares the session's app id), then only commits. A validation failure
+   * disposes the new lease and leaves the old plugin exactly as it was — nothing destroyed, status back
+   * to `"loaded"`. */
+  const reloadPlugin = useCallback(
+    async (pluginId: string, rebuiltAt?: number) => {
+      if (pluginOpInFlightRef.current.has(pluginId)) return;
+      const current = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === pluginId);
+      if (!current) return installPlugin(pluginId, rebuiltAt);
+      const oldModuleUrl = pluginModuleUrlByIdRef.current.get(pluginId);
+      pluginOpInFlightRef.current.add(pluginId);
+      dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "reloading" });
+      let newHandle: PluginWasmHandle | null = null;
+      try {
+        const moduleUrl = pluginSource.moduleUrl(pluginId, rebuiltAt);
+        newHandle = await loadPluginModuleResilient(pluginId, moduleUrl);
+        if (!newHandle) throw new Error(`program ${pluginId} failed to reload`);
+        if (newHandle.manifest.apps.length === 0) throw new Error(`program ${pluginId} reload declares no apps`);
+        const activeSession = sessionRef.current;
+        const ownsSession = activeSession?.pluginId === pluginId;
+        if (ownsSession && activeSession && !newHandle.manifest.apps.some((app) => app.id === activeSession.app.id)) {
+          throw new Error(`program ${pluginId} reload dropped the active session's app "${activeSession.app.id}"`);
+        }
+
+        const oldAppIds = new Set(current.manifest.apps.map((app) => app.id));
+        const newAppIds = new Set(newHandle.manifest.apps.map((app) => app.id));
+        const hotSwapEvent: ProgramHotSwapEvent = {
+          pluginId,
+          version: newHandle.manifest.version,
+          addedApps: [...newAppIds].filter((id) => !oldAppIds.has(id)),
+          removedApps: [...oldAppIds].filter((id) => !newAppIds.has(id)),
+        };
+        console.log(`[DEBUG] hot-swap ${pluginId}`, hotSwapEvent);
+
+        // 🪦️ Destroy this plugin's live instances under the OLD handle before swapping — the primary
+        // session instance (if owned), every studio-spawned instance, and any external-slot contributor
+        // instance. Mirrors the shell-unmount teardown effect, scoped to one pluginId instead of every
+        // loaded plugin.
+        if (ownsSession && activeSession) {
+          await current.handle.destroyApp(activeSession.instanceId).catch(() => {});
+        }
+        for (const spawned of spawnedAppsRef.current.filter((entry) => entry.pluginId === pluginId)) {
+          await current.handle.destroyApp(spawned.instanceId).catch(() => {});
+        }
+        const contributorInstanceId = contributorInstancesRef.current.get(pluginId);
+        if (contributorInstanceId != null) {
+          await current.handle.destroyApp(contributorInstanceId).catch(() => {});
+          contributorInstancesRef.current.delete(pluginId);
+        }
+        if (studioMode && activeSession) {
+          const currentPanel = parsePanelState(activeSession.viewState);
+          const dropped = currentPanel?.spawnedApps.filter((entry) => entry.pluginId === pluginId) ?? [];
+          if (currentPanel && dropped.length > 0) {
+            console.log(
+              `[DEBUG] hot-swap ${pluginId} dropped ${dropped.length} spawned instance(s)`,
+              dropped.map((entry) => entry.id),
+            );
+            const survivingSpawned = currentPanel.spawnedApps.filter((entry) => entry.pluginId !== pluginId);
+            const activeSpawnedId = currentPanel.activeSpawnedId && dropped.some((entry) => entry.id === currentPanel.activeSpawnedId) ? undefined : currentPanel.activeSpawnedId;
+            const nextPanel = { ...currentPanel, spawnedApps: survivingSpawned, activeSpawnedId };
+            dispatch({
+              type: "SET_SESSION",
+              value: (nextSession) => (nextSession ? { ...nextSession, viewState: { ...nextSession.viewState, panelJson: panelJsonFromState(nextPanel) } } : nextSession),
+            });
+          }
+        }
+
+        pluginModuleUrlByIdRef.current.set(pluginId, moduleUrl);
+        dispatch({ type: "UPSERT_LOADED_PLUGIN", value: { handle: newHandle, manifest: newHandle.manifest } });
+        dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
+
+        if (ownsSession) await establishPrimarySession(newHandle);
+
+        current.handle.dispose();
+        if (oldModuleUrl) evictPluginModule(oldModuleUrl);
+      } catch (error) {
+        console.warn(`[DEBUG] hot-swap rolled back for ${pluginId}`, error);
+        newHandle?.dispose();
+        dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
+      } finally {
+        pluginOpInFlightRef.current.delete(pluginId);
+      }
+    },
+    [installPlugin, establishPrimarySession, studioMode, pluginSource],
+  );
+
+  /** 🔌️ Removes an already-loaded plugin: refuses the host/primary plugin and whichever plugin owns the
+   * active session (there is nothing to fall back to), otherwise destroys its live instances the same
+   * way `reloadPlugin` does, drops it from `loadedPlugins`, and evicts its module lease immediately
+   * (rather than the pool's normal 30s linger — freeing it right away is the point of an explicit
+   * uninstall). */
+  const uninstallPlugin = useCallback(
+    async (pluginId: string) => {
+      if (pluginOpInFlightRef.current.has(pluginId)) return;
+      const current = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === pluginId);
+      if (!current) return;
+      if (pluginId === primaryPluginId) {
+        console.warn(`[DEBUG] refusing to uninstall the host/primary plugin: ${pluginId}`);
+        return;
+      }
+      if (sessionRef.current?.pluginId === pluginId) {
+        console.warn(`[DEBUG] refusing to uninstall the active session's plugin: ${pluginId}`);
+        return;
+      }
+      pluginOpInFlightRef.current.add(pluginId);
+      try {
+        for (const spawned of spawnedAppsRef.current.filter((entry) => entry.pluginId === pluginId)) {
+          await current.handle.destroyApp(spawned.instanceId).catch(() => {});
+        }
+        const contributorInstanceId = contributorInstancesRef.current.get(pluginId);
+        if (contributorInstanceId != null) {
+          await current.handle.destroyApp(contributorInstanceId).catch(() => {});
+          contributorInstancesRef.current.delete(pluginId);
+        }
+        if (studioMode && sessionRef.current) {
+          const activeSession = sessionRef.current;
+          const currentPanel = parsePanelState(activeSession.viewState);
+          const dropped = currentPanel?.spawnedApps.filter((entry) => entry.pluginId === pluginId) ?? [];
+          if (currentPanel && dropped.length > 0) {
+            const survivingSpawned = currentPanel.spawnedApps.filter((entry) => entry.pluginId !== pluginId);
+            const activeSpawnedId = currentPanel.activeSpawnedId && dropped.some((entry) => entry.id === currentPanel.activeSpawnedId) ? undefined : currentPanel.activeSpawnedId;
+            const nextPanel = { ...currentPanel, spawnedApps: survivingSpawned, activeSpawnedId };
+            dispatch({
+              type: "SET_SESSION",
+              value: (nextSession) => (nextSession ? { ...nextSession, viewState: { ...nextSession.viewState, panelJson: panelJsonFromState(nextPanel) } } : nextSession),
+            });
+          }
+        }
+        dispatch({ type: "REMOVE_LOADED_PLUGIN", pluginId });
+        dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "available" });
+        current.handle.dispose();
+        const moduleUrl = pluginModuleUrlByIdRef.current.get(pluginId);
+        pluginModuleUrlByIdRef.current.delete(pluginId);
+        if (moduleUrl) evictPluginModule(moduleUrl);
+      } finally {
+        pluginOpInFlightRef.current.delete(pluginId);
+      }
+    },
+    [primaryPluginId, studioMode],
+  );
+  //#endregion 🔌️PluginRuntime
 
   // 🐢️ Memoized on the raw `panelJson` string (not `session` object identity, which churns every
   // action) so a `session` refresh that leaves `panelJson` untouched reuses the same parsed `panel`
@@ -6192,89 +6466,40 @@ function FrameworkOsShellInner({
     }
   }, [activeAppTitle, brand, scope.ownsPage]);
 
+  // 🔌️ Boot gates on the primary/host plugin ONLY — every other registry entry streams in via the
+  // subscription effect below as its build lands, instead of the whole shell waiting on all ~37 crates
+  // (see `buildPluginsStreaming` in the dev runner). A primary that fails to load (timeout/error) is
+  // still fatal, mirroring the old `noPluginsLoaded`/"host program missing landing app" boot failures.
   useEffect(() => {
-    let cancelled = false;
+    if (!primaryPluginId) return;
+    if (loadedPluginsRef.current.some((entry) => entry.handle.pluginId === primaryPluginId)) return;
     void (async () => {
-      try {
-        const settled = await Promise.allSettled(registry.map((entry) => loadPluginModuleResilient(entry.pluginId, entry.moduleUrl)));
-        const loaded = settled.flatMap((result, index) => {
-          if (result.status === "fulfilled" && result.value) return [result.value];
-          if (result.status === "rejected") {
-            console.error(`[DEBUG] program rejected: ${registry[index]?.pluginId}`, result.reason);
-          }
-          return [];
-        });
-        if (loaded.length === 0) throw new Error(shellLabel("ui.common.noPluginsLoaded"));
-        if (cancelled) return;
-        const loadedState = loaded.map((handle) => ({ handle, manifest: handle.manifest }));
-        dispatch({ type: "SET_LOADED_PLUGINS", value: loadedState });
-
-        if (hostConfig) {
-          const sPlugin = loadedState.find((entry) => entry.handle.pluginId === hostConfig.pluginId);
-          const sApp = sPlugin?.manifest.apps.find((app) => app.id === hostConfig.landingAppId) ?? sPlugin?.manifest.apps[0];
-          if (!sPlugin || !sApp) throw new Error("host program missing landing app");
-          const programs = buildSpacePrograms(loadedState);
-          const panelState = buildSpacePanelState(programs, []);
-          const instanceId = await sPlugin.handle.createApp(sApp.id);
-          const viewState: ViewState = {
-            activeModeId: sApp.defaultModeId ?? sApp.modes[0]?.id,
-            panelJson: panelJsonFromState(panelState),
-          };
-          // 🪟️ Seed default-layout panes (Top/Perspective) before any effect can fire actions — otherwise
-          // boot `setActiveExample` races the session-switch refresh and wipes pane bodies.
-          const seeded = applyFrameworkLayoutSeed(sApp.defaultLayout, sApp.windowKinds, EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
-          extraWindowInstancesRef.current = seeded.extraInstances;
-          extraWindowCounterRef.current = seeded.extraInstances.length;
-          dispatch({ type: "SET_SESSION", value: { pluginId: sPlugin.handle.pluginId, instanceId, app: sApp, viewState } });
-          dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
-          dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
-          dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
-          return;
-        }
-
-        const registryPluginId = pluginFilter ? resolvePluginRegistryId(pluginFilter) : undefined;
-        const primary = (registryPluginId ? loaded.find((entry) => entry.pluginId === registryPluginId) : undefined) ?? loaded[0];
-        const primaryApp = appId
-          ? (() => {
-              const found = primary?.manifest.apps.find((app) => app.id === appId);
-              if (!found) throw new Error(`appId "${appId}" does not resolve to any app in the loaded program manifest`);
-              return found;
-            })()
-          : (() => {
-              const defaultAppId = pluginFilter ? resolvePlaygroundDefaultAppId(pluginFilter) : undefined;
-              return (defaultAppId ? primary?.manifest.apps.find((app) => app.id === defaultAppId) : undefined) ?? primary?.manifest.apps[0];
-            })();
-        if (primary && primaryApp) {
-          const instanceId = await primary.createApp(primaryApp.id);
-          const seeded = applyFrameworkLayoutSeed(primaryApp.defaultLayout, primaryApp.windowKinds, EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
-          extraWindowInstancesRef.current = seeded.extraInstances;
-          extraWindowCounterRef.current = seeded.extraInstances.length;
-          dispatch({
-            type: "SET_SESSION",
-            value: {
-              pluginId: primary.pluginId,
-              instanceId,
-              app: primaryApp,
-              viewState: {
-                activeModeId: primaryApp.defaultModeId ?? primaryApp.modes[0]?.id,
-              },
-            },
-          });
-          dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
-          dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
-          dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
-        }
-      } catch (bootError) {
-        if (!cancelled) {
-          console.error("[DEBUG] framework os boot failed", bootError);
-          dispatch({ type: "SET_ERROR", value: bootError instanceof Error ? bootError.message : String(bootError) });
-        }
+      await installPlugin(primaryPluginId);
+      if (!loadedPluginsRef.current.some((entry) => entry.handle.pluginId === primaryPluginId)) {
+        dispatch({ type: "SET_ERROR", value: shellLabel("ui.common.noPluginsLoaded") });
       }
     })();
-    return () => {
-      cancelled = true;
+  }, [primaryPluginId, installPlugin]);
+
+  // 🔌️ Streams every registry entry in independently of boot: one connect-time `snapshot` (whatever's
+  // already built, including a dev server that was already fully built before this shell mounted) plus
+  // a `built` event per crate as `buildPluginsStreaming`/the folded-in watch loop finishes it. An event
+  // for an already-loaded plugin routes to `reloadPlugin` (hot-swap) instead of `installPlugin`.
+  useEffect(() => {
+    const registryIds = new Set(registry.map((entry) => entry.pluginId));
+    const handlePluginAvailable = (pluginId: string, rebuiltAt: number) => {
+      if (!registryIds.has(pluginId)) return;
+      const alreadyLoaded = loadedPluginsRef.current.some((entry) => entry.handle.pluginId === pluginId);
+      void (alreadyLoaded ? reloadPlugin(pluginId, rebuiltAt) : installPlugin(pluginId, rebuiltAt));
     };
-  }, [registry, studioMode, hostConfig, appId]);
+    return pluginSource.subscribe((event: PluginSourceEvent) => {
+      if (event.kind === "snapshot") {
+        for (const plugin of event.plugins) handlePluginAvailable(plugin.pluginId, plugin.rebuiltAt);
+        return;
+      }
+      handlePluginAvailable(event.pluginId, event.rebuiltAt);
+    });
+  }, [registry, pluginSource, installPlugin, reloadPlugin]);
 
   const findPluginForAction = useCallback(
     (action: ActionDescriptor) => {
@@ -8187,6 +8412,29 @@ function FrameworkOsShellInner({
   const frameworkDisplayTabs = useMemo(() => createFrameworkDisplayPanelTabs(() => displayHostRef.current), [displayHost, uiLocale]);
   const frameworkSettingsTabs = useMemo(() => createFrameworkSettingsPanelTabs(() => settingsHostRef.current), [settingsHost]);
 
+  const pluginsHostRef = useRef<PluginsHostApi | null>(null);
+  const pluginsHost: PluginsHostApi = useMemo(
+    () => ({
+      plugins: registry.map((entry): PluginsPanelEntry => {
+        const loadedEntry = loadedPlugins.find((candidate) => candidate.handle.pluginId === entry.pluginId);
+        return {
+          pluginId: entry.pluginId,
+          label: loadedEntry?.manifest.label ?? entry.pluginId,
+          version: loadedEntry?.manifest.version,
+          status: pluginStatusById[entry.pluginId] ?? "available",
+          sourceId: pluginSource.id,
+          canUninstall: entry.pluginId !== primaryPluginId && session?.pluginId !== entry.pluginId,
+        };
+      }),
+      install: (pluginId) => void installPlugin(pluginId),
+      uninstall: (pluginId) => void uninstallPlugin(pluginId),
+      reload: (pluginId) => void reloadPlugin(pluginId),
+    }),
+    [registry, loadedPlugins, pluginStatusById, pluginSource, primaryPluginId, session?.pluginId, installPlugin, uninstallPlugin, reloadPlugin],
+  );
+  pluginsHostRef.current = pluginsHost;
+  const frameworkPluginsTabs = useMemo(() => createFrameworkPluginsPanelTabs(() => pluginsHostRef.current), [pluginsHost]);
+
   // 🐚️ Gated to this shell via `useShellKeydown` below — was an unconditional `window` keydown listener,
   // so every mounted shell fired its bound action (and could `preventDefault()` out from under another
   // shell) for every keystroke on the page regardless of which shell the user was actually using.
@@ -8494,7 +8742,7 @@ function FrameworkOsShellInner({
     }
     if (frameworkSyncTab) bottomLeft.push(frameworkSyncTab);
     const topRight: PanelTabNode[] = [...detailsRightTabs];
-    const bottomRight: PanelTabNode[] = [...settingsRightTabs];
+    const bottomRight: PanelTabNode[] = [...settingsRightTabs, ...frameworkPluginsTabs];
     if (frameworkUtilitiesHistoryTab) bottomRight.push(frameworkUtilitiesHistoryTab);
     // 🛠️ Tool categories stay nested under one expandable Tool branch, exactly like Command categories,
     // placed left of Command (order 0 vs 1) — like commands not being window-level, tools are not
@@ -8507,7 +8755,7 @@ function FrameworkOsShellInner({
       ...(commandCategoryTabs.length > 0 ? [{ kind: "branch" as const, id: FRAMEWORK_CATEGORY_COMMAND_ID, icon: categoryTabIcon(commandCategoryTabs, "wrench"), name: shellLabel("ui.panelToggle.command"), order: 1, children: commandCategoryTabs }] : []),
     ];
     return { anchors: { "top-left": topLeft, "top-middle": [], "top-right": topRight, "right-middle": [], "bottom-right": bottomRight, "bottom-middle": bottomMiddle, "bottom-left": bottomLeft, "left-middle": [] } };
-  }, [commandCategoryTabs, detailsRightTabs, frameworkDisplayTabs, frameworkSyncTab, frameworkUtilitiesHistoryTab, settingsRightTabs, toolTabs, uiLocale, workbenchLeftTabs]);
+  }, [commandCategoryTabs, detailsRightTabs, frameworkDisplayTabs, frameworkPluginsTabs, frameworkSyncTab, frameworkUtilitiesHistoryTab, settingsRightTabs, toolTabs, uiLocale, workbenchLeftTabs]);
 
   useEffect(() => {
     dispatch({ type: "SET_DOCK_OVERRIDE", value: dockLayoutStore.getSnapshot() });
@@ -11869,6 +12117,97 @@ export function useNamedLayoutHost(options: {
   );
 }
 //#endregion SettingsPanel
+
+//#region PluginsPanel
+/** 🔌️ One registry entry as the plugin panel wants to render it — `sourceId` and `canUninstall` come
+ * straight from the shell's `PluginSource`/primary-plugin bookkeeping; `label`/`version` fall back to
+ * the bare pluginId when a plugin hasn't loaded far enough to have a manifest yet (`"available"`). */
+export type PluginsPanelEntry = {
+  readonly pluginId: string;
+  readonly label: string;
+  readonly version?: string;
+  readonly status: PluginPanelStatus;
+  readonly sourceId: string;
+  readonly canUninstall: boolean;
+};
+
+export type PluginsHostApi = {
+  readonly plugins: readonly PluginsPanelEntry[];
+  readonly install: (pluginId: string) => void;
+  readonly uninstall: (pluginId: string) => void;
+  readonly reload: (pluginId: string) => void;
+};
+
+const FRAMEWORK_SETTINGS_PLUGINS_TAB_ID = "framework.settings.plugins";
+
+function pluginStatusLabel(status: PluginPanelStatus): UiLabel {
+  if (status === "available") return shellLabel("ui.plugins.status.available");
+  if (status === "installing") return shellLabel("ui.plugins.status.installing");
+  if (status === "loaded") return shellLabel("ui.plugins.status.loaded");
+  if (status === "failed") return shellLabel("ui.plugins.status.failed");
+  return shellLabel("ui.plugins.status.reloading");
+}
+
+function buildPluginsTree(host: PluginsHostApi): TreePanelConfig {
+  const bySource = new Map<string, PluginsPanelEntry[]>();
+  for (const entry of host.plugins) {
+    const list = bySource.get(entry.sourceId) ?? [];
+    list.push(entry);
+    bySource.set(entry.sourceId, list);
+  }
+  const sections: TreeDataSection[] = [...bySource.entries()].map(([sourceId, entries]) => ({
+    id: `framework.settings.plugins.source.${sourceId}`,
+    label: `${shellLabel("ui.plugins.source")}: ${sourceId}`,
+    defaultOpen: true,
+    items: [...entries]
+      .sort((a, b) => a.pluginId.localeCompare(b.pluginId))
+      .map((entry) => ({
+        id: `framework.settings.plugins.${entry.pluginId}`,
+        label: `${entry.label}${entry.version ? ` · ${entry.version}` : ""} · ${pluginStatusLabel(entry.status)}`,
+        loading: entry.status === "installing" || entry.status === "reloading",
+        control:
+          entry.status === "available" || entry.status === "failed" ? (
+            <Button id={`framework.settings.plugins.${entry.pluginId}.install`} size="sm" text={shellLabel("ui.plugins.action.install")} onClick={() => host.install(entry.pluginId)} />
+          ) : (
+            <div className="flex items-center gap-1">
+              <Button
+                id={`framework.settings.plugins.${entry.pluginId}.reload`}
+                size="sm"
+                text={shellLabel("ui.plugins.action.reload")}
+                disabled={entry.status !== "loaded"}
+                onClick={() => host.reload(entry.pluginId)}
+              />
+              <Button
+                id={`framework.settings.plugins.${entry.pluginId}.uninstall`}
+                size="sm"
+                text={shellLabel("ui.plugins.action.uninstall")}
+                disabled={!entry.canUninstall || entry.status !== "loaded"}
+                onClick={() => host.uninstall(entry.pluginId)}
+              />
+            </div>
+          ),
+      })),
+  }));
+  return sections.length > 0 ? { sections } : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.plugins.unavailable") }] }] };
+}
+
+export function createFrameworkPluginsPanelTabs(getHost: () => PluginsHostApi | null): PanelTabNode[] {
+  return [
+    singleTreeLeaf({
+      id: FRAMEWORK_SETTINGS_PLUGINS_TAB_ID,
+      icon: shellTabIcon("plug"),
+      name: shellLabel("ui.panelToggle.plugins"),
+      order: -96,
+      tree: {
+        resolveTree: () => {
+          const host = getHost();
+          return host ? buildPluginsTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.plugins.unavailable") }] }] };
+        },
+      },
+    }),
+  ];
+}
+//#endregion PluginsPanel
 //#endregion 🔖️os-chrome-panels
 //#endregion 🔖️OsShell
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/mit-bestand-demonstrator` task router: `bun ./📜️script.ts <dev|build> [args…]`. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmdStatus, runViteBunxDev } from "../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCmdStatus, runViteBunxDev, withViteConfigLoader } from "../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
 import { buildEngineWasm, buildPlugins, ensurePluginRegistry } from "../../🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/📜️script.ts";
 import { DEMONSTRATOR_PANES } from "./🟦️brand.ts";
 
@@ -47,7 +47,7 @@ class DevScript extends BundleScript {
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await buildDemonstratorPlugins();
-    if (runCmdStatus("bun", ["run", "vite", "build", "--config", "⚙️vite.config.ts", ...segments], { cwd: this.root, env: process.env }) !== 0) {
+    if (runCmdStatus("bun", withViteConfigLoader(["run", "vite", "build", "--config", "⚙️vite.config.ts", ...segments]), { cwd: this.root, env: process.env }) !== 0) {
       throw new Error("demonstrator landing build failed");
     }
     console.log(`[build] demonstrator built at ${join(demonstratorRoot, "dist")}`);

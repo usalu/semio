@@ -13,9 +13,10 @@ const repoRoot = getWorkspaceRoot();
 const tokensPath = join(repoRoot, "🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🔣️tokens.json");
 const texDir = join(printRoot, "../🖋️latex");
 const templateRoot = join(printRoot, "📄️template");
-const fontRoot = join(printRoot, "🖼️asset/🔤️font");
+const assetRoot = join(printRoot, "asset");
+const fontRoot = join(assetRoot, "font");
 const distDir = join(printRoot, "dist");
-const tokensOut = join(texDir, "🖋️semio-tokens.sty");
+const tokensOut = join(texDir, "semio-tokens.sty");
 
 type Rgba8 = [number, number, number, number];
 
@@ -38,31 +39,31 @@ const LEVELS_DEFAULT: StylingLevels = {
 const PRINT_FONTS: readonly { readonly family: string; readonly dir: string; readonly file: string; readonly url: string }[] = [
   {
     family: "Anta",
-    dir: "🔤️anta",
-    file: "🔤️Anta-Regular.ttf",
-    url: "https://raw.githubusercontent.com/google/fonts/main/ofl/anta/🔤️Anta-Regular.ttf",
+    dir: "anta",
+    file: "Anta-Regular.ttf",
+    url: "https://raw.githubusercontent.com/google/fonts/main/ofl/anta/Anta-Regular.ttf",
   },
   {
     family: "Share Tech Mono",
-    dir: "🔤️share-tech-mono",
-    file: "🔤️ShareTechMono-Regular.ttf",
-    url: "https://raw.githubusercontent.com/google/fonts/main/ofl/sharetechmono/🔤️ShareTechMono-Regular.ttf",
+    dir: "share-tech-mono",
+    file: "ShareTechMono-Regular.ttf",
+    url: "https://raw.githubusercontent.com/google/fonts/main/ofl/sharetechmono/ShareTechMono-Regular.ttf",
   },
   {
     family: "Noto Emoji",
-    dir: "😀️noto-emoji",
-    file: "🔤️NotoEmoji-Regular.ttf",
+    dir: "noto-emoji",
+    file: "NotoEmoji-Regular.ttf",
     url: "https://raw.githubusercontent.com/google/fonts/main/ofl/notoemoji/NotoEmoji%5Bwght%5D.ttf",
   },
 ];
 
 const TEMPLATES: readonly { readonly id: string; readonly tex: string }[] = [
-  { id: "report", tex: "📄️template/📋️report/🖋️report.tex" },
-  { id: "paper", tex: "📄️template/📄️paper/🖋️paper.tex" },
-  { id: "flyer", tex: "📄️template/📰️flyer/🖋️flyer.tex" },
-  { id: "forschungsbericht", tex: "📄️template/🏗️zukunftbau/🖋️forschungsbericht.tex" },
-  { id: "zwischenbericht", tex: "📄️template/🏗️zukunftbau/🖋️zwischenbericht.tex" },
-  { id: "kompaktbericht", tex: "📄️template/🏗️zukunftbau/🖋️kompaktbericht.tex" },
+  { id: "report", tex: "📄️template/📋️report/report.tex" },
+  { id: "paper", tex: "📄️template/📄️paper/paper.tex" },
+  { id: "flyer", tex: "📄️template/📰️flyer/flyer.tex" },
+  { id: "forschungsbericht", tex: "📄️template/🏗️zukunftbau/forschungsbericht.tex" },
+  { id: "zwischenbericht", tex: "📄️template/🏗️zukunftbau/zwischenbericht.tex" },
+  { id: "kompaktbericht", tex: "📄️template/🏗️zukunftbau/kompaktbericht.tex" },
 ];
 
 function deriveDarkTexSource(lightSource: string): string {
@@ -374,7 +375,7 @@ function remToEm(rem: string): string {
   return `${match[1]}em`;
 }
 
-/** @emoji 🎨️ Writes `tex/🖋️semio-tokens.sty` from {@link framework/ui/styling/🔣️tokens.json}. */
+/** @emoji 🎨️ Writes `latex/semio-tokens.sty` from {@link framework/ui/styling/🔣️tokens.json}. */
 export function emitSemioTokensSty(): void {
   const tokens = JSON.parse(readFileSync(tokensPath, "utf8")) as Tokens;
   const lines: string[] = ["% Generated from framework/ui/styling/🔣️tokens.json — run `bun ./📜️script.ts generate`.", "\\NeedsTeXFormat{LaTeX2e}", "\\ProvidesPackage{semio-tokens}[2026/07/06 v0.1.0 semio design tokens]", "\\RequirePackage{xcolor}", ""];
@@ -556,7 +557,8 @@ function compilePrintDocument(tectonic: string, texAbs: string, outDir: string, 
   mkdirSync(outDir, { recursive: true });
   clearStaleTocAuxFiles(workDir, outDir, jobname);
   clearStaleTocAuxFiles(dirname(texAbs), outDir, jobname);
-  const args = ["--keep-logs", "--keep-intermediates", "--synctex", "--reruns", "2", "-Z", `search-path=${texDir}`, "-Z", `search-path=${workDir}`, "-Z", `search-path=${outDir}`, "--outdir", outDir, texFile];
+  const searchPaths = [texDir, workDir, outDir, ...PRINT_FONTS.map((font) => join(fontRoot, font.dir))];
+  const args = ["--keep-logs", "--keep-intermediates", "--synctex", "--reruns", "2", ...searchPaths.flatMap((path) => ["-Z", `search-path=${path}`]), "--outdir", outDir, texFile];
   const env = tectonicEnv(workDir, outDir);
   runCmd(tectonic, args, { cwd: workDir, env });
   const pdf = join(outDir, `${basename(texAbs, ".tex")}.pdf`);
@@ -601,7 +603,7 @@ function resolveTemplates(filter: string[]): (typeof TEMPLATES)[number][] {
 }
 
 function collectWatchRoots(): string[] {
-  return [texDir, templateRoot, fontRoot].filter((path) => existsSync(path));
+  return [texDir, templateRoot, assetRoot].filter((path) => existsSync(path));
 }
 
 async function watchTemplates(filter: string[]): Promise<void> {
@@ -651,7 +653,7 @@ async function watchTemplates(filter: string[]): Promise<void> {
 class GenerateScript extends BundleScript {
   run(): void {
     emitSemioTokensSty();
-    console.log("print: wrote tex/🖋️semio-tokens.sty");
+    console.log("print: wrote latex/semio-tokens.sty");
   }
 }
 
@@ -741,7 +743,7 @@ class TestScript extends BundleScript {
     assert.match(darkSource, /theme=dark/);
     assert.match(darkSource, /asset\/logo\/mark-dark\.png/);
     assert.match(darkSource, /^% Generated by print\/script\.ts deriveDarkTexSource/);
-    const withMagic = "% !TEX program = tectonic\n% !TEX root = 🖋️report.tex\n\\documentclass[theme=light]{semio}\n";
+    const withMagic = "% !TEX program = tectonic\n% !TEX root = report.tex\n\\documentclass[theme=light]{semio}\n";
     const darkWithMagic = deriveDarkTexSource(withMagic);
     assert.match(darkWithMagic, /^% !TEX program = tectonic\n% !TEX root = report\.tex\n% Generated by print\/script\.ts deriveDarkTexSource/);
     assert.match(darkWithMagic, /theme=dark/);
@@ -750,15 +752,15 @@ class TestScript extends BundleScript {
     //#endregion
 
     //#region templatePdfNames / resolveTemplates
-    assert.deepEqual(templatePdfNames("📄️template/📋️report/🖋️report.tex"), { light: "report.pdf", dark: "report-dark.pdf" });
+    assert.deepEqual(templatePdfNames("📄️template/📋️report/report.tex"), { light: "report.pdf", dark: "report-dark.pdf" });
     assert.equal(resolveTemplates([]).length, TEMPLATES.length);
     assert.equal(resolveTemplates(["report", "report-dark"]).length, 1);
     assert.throws(() => resolveTemplates(["not-a-template"]));
     //#endregion
 
     //#region Window layout
-    const windowSource = readFileSync(join(texDir, "🖋️semio-window.sty"), "utf8");
-    const tableSource = readFileSync(join(texDir, "🖋️semio-table.sty"), "utf8");
+    const windowSource = readFileSync(join(texDir, "semio-window.sty"), "utf8");
+    const tableSource = readFileSync(join(texDir, "semio-table.sty"), "utf8");
     assert.match(windowSource, /\\semio_window_vskip_stroke_hairline: \{[\s\S]*?\\vskip\\dimexpr-3\\semio@stroke@hairline\\relax/);
     assert.match(windowSource, /semio~window~table\/\.style=\{\s*semio~window,\s*toprule=0pt,/);
     assert.match(windowSource, /\\semio_window_table_border_finish: \{[\s\S]*?frame\.north~west[\s\S]*?frame\.south~west/);

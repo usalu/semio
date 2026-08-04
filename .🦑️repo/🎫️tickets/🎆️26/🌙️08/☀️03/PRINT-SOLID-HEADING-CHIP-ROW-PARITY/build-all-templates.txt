@@ -1,0 +1,2026 @@
+note: Running TeX ...
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) in alignment at lines 11--11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Overfull \hbox (98.13203pt too wide) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+note: Running BibTeX on report.aux ...
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:10: Overfull \hbox (98.13203pt too wide) in alignment at lines 10--10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) in alignment at lines 11--11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.pdf` (38.6357421875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.run.xml` (2.57421875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.aux` (5.0771484375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.synctex.gz` (31.919921875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.blg` (252 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.bbl` (1.7294921875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-blx.bib` (340 B)
+note: Not writing `report.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.register-toc` (489 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.log` (53.1796875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.window-breaks` (342 B)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.pdf
+[DEBUG] print panel glass panel-1 page 3
+note: Running TeX ...
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) in alignment at lines 11--11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Overfull \hbox (98.13203pt too wide) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+note: Running BibTeX on report.aux ...
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:10: Overfull \hbox (98.13203pt too wide) in alignment at lines 10--10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) in alignment at lines 11--11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.window-breaks` (342 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.bbl` (1.7294921875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.register-toc` (489 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.pdf` (58.3134765625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.run.xml` (2.57421875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.aux` (5.0771484375 KiB)
+note: Not writing `report.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.log` (53.28515625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.blg` (252 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.synctex.gz` (32.1875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.panels` (50 B)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report.pdf
+note: Running TeX ...
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) in alignment at lines 11--11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Overfull \hbox (98.13203pt too wide) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+note: Running BibTeX on report-dark.aux ...
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:10: Overfull \hbox (98.13203pt too wide) in alignment at lines 10--10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) in alignment at lines 11--11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.synctex.gz` (31.9384765625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.log` (53.2724609375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.register-toc` (489 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.blg` (262 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.aux` (5.08203125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.window-breaks` (342 B)
+note: Not writing `report-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.run.xml` (2.6181640625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.bbl` (1.7294921875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.pdf` (38.611328125 KiB)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.pdf
+[DEBUG] print panel glass panel-1 page 3
+note: Running TeX ...
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) in alignment at lines 11--11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Overfull \hbox (98.13203pt too wide) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+note: Running BibTeX on report-dark.aux ...
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:10: Overfull \hbox (98.13203pt too wide) in alignment at lines 10--10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) in alignment at lines 11--11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) in alignment at lines 78--78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: report.content.tex:19: Underfull \hbox (badness 10000) detected at line 19
+warning: report.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: report.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: report.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: report.content.tex:28: Missing character: There is no ���� (U+1F4DC) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "📜" (0x1f4dc) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: report.content.tex:28: Missing character: There is no ��� (U+FE0F) in font [ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;!
+warning: could not represent character "️" (0xfe0f) in font "[ShareTechMono-Regular.ttf]/OT:script=latn;language=dflt;"
+warning: report.content.tex:30: Underfull \hbox (badness 10000) detected at line 30
+warning: report.content.tex:32: Underfull \hbox (badness 10000) detected at line 32
+warning: report.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: report.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:41: Underfull \hbox (badness 10000) detected at line 41
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:44: Underfull \hbox (badness 10000) detected at line 44
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:53: Underfull \hbox (badness 10000) detected at line 53
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.content.tex:70: Underfull \hbox (badness 10000) detected at line 70
+warning: report.content.tex:72: Underfull \hbox (badness 10000) detected at line 72
+warning: report.content.tex:76: Underfull \hbox (badness 10000) detected at line 76
+warning: report.appendix.tex:3: Underfull \hbox (badness 10000) detected at line 3
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.appendix.tex:11: Underfull \hbox (badness 10000) detected at line 11
+warning: report.content.tex:77: Underfull \hbox (badness 10000) detected at line 77
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: report.content.tex:78: Underfull \hbox (badness 10000) detected at line 78
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.log` (53.3876953125 KiB)
+note: Not writing `report-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.window-breaks` (342 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.synctex.gz` (32.2060546875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.register-toc` (489 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.blg` (262 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.aux` (5.08203125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.bbl` (1.7294921875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.run.xml` (2.6181640625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.pdf` (57.3681640625 KiB)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/report-dark.pdf
+note: Running TeX ...
+warning: paper.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: paper.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: paper.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: paper.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: paper.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: paper.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) in alignment at lines 35--35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+note: Running BibTeX on paper.aux ...
+note: Rerunning TeX because I was told to ...
+warning: paper.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: paper.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: paper.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: paper.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: paper.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: paper.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+note: Rerunning TeX because I was told to ...
+warning: paper.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: paper.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: paper.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: paper.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: paper.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: paper.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.log` (49.0625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.register-toc` (344 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.bbl` (2.47265625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.panels` (50 B)
+note: Not writing `paper.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.aux` (2.9453125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.pdf` (19.38671875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.blg` (250 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.synctex.gz` (8.5380859375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.run.xml` (2.5712890625 KiB)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.pdf
+[DEBUG] print panel glass panel-1 page 2
+note: Running TeX ...
+warning: paper.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: paper.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: paper.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: paper.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: paper.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: paper.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+note: Running BibTeX on paper.aux ...
+note: Rerunning TeX because I was told to ...
+warning: paper.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: paper.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: paper.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: paper.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: paper.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: paper.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+note: Rerunning TeX because I was told to ...
+warning: paper.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: paper.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: paper.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: paper.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: paper.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: paper.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.blg` (250 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.bbl` (2.47265625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.run.xml` (2.5712890625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.pdf` (45.9091796875 KiB)
+note: Not writing `paper.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.aux` (2.9453125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.synctex.gz` (8.759765625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.register-toc` (344 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.log` (49.166015625 KiB)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper.pdf
+note: Running TeX ...
+warning: paper.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: paper.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: paper.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: paper.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: paper.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: paper.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) in alignment at lines 35--35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+note: Running BibTeX on paper-dark.aux ...
+note: Rerunning TeX because I was told to ...
+warning: paper.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: paper.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: paper.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: paper.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: paper.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: paper.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+note: Rerunning TeX because I was told to ...
+warning: paper.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: paper.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: paper.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: paper.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: paper.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: paper.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.run.xml` (2.615234375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.register-toc` (344 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.blg` (260 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.aux` (2.9501953125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.pdf` (19.3779296875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.synctex.gz` (8.5546875 KiB)
+note: Not writing `paper-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.bbl` (2.47265625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.log` (49.140625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark-blx.bib` (340 B)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.pdf
+[DEBUG] print panel glass panel-1 page 2
+note: Running TeX ...
+warning: paper.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: paper.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: paper.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: paper.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: paper.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: paper.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+note: Running BibTeX on paper-dark.aux ...
+note: Rerunning TeX because I was told to ...
+warning: paper.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: paper.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: paper.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: paper.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: paper.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: paper.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+note: Rerunning TeX because I was told to ...
+warning: paper.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: paper.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: paper.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: paper.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: paper.content.tex:27: Underfull \hbox (badness 10000) detected at line 27
+warning: paper.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: paper.content.tex:35: Underfull \hbox (badness 10000) detected at line 35
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.pdf` (43.138671875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.synctex.gz` (8.7763671875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.log` (49.25390625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.blg` (260 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.aux` (2.9501953125 KiB)
+note: Not writing `paper-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.register-toc` (344 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.run.xml` (2.615234375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.bbl` (2.47265625 KiB)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/paper-dark.pdf
+note: Running TeX ...
+warning: flyer.content.tex:14: Underfull \hbox (badness 10000) detected at line 14
+warning: flyer.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: flyer.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+note: Running BibTeX on flyer.aux ...
+note: Rerunning TeX because I was told to ...
+warning: flyer.content.tex:14: Underfull \hbox (badness 10000) detected at line 14
+warning: flyer.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: flyer.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+note: Rerunning TeX because I was told to ...
+warning: flyer.content.tex:14: Underfull \hbox (badness 10000) detected at line 14
+warning: flyer.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: flyer.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.synctex.gz` (4.4306640625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.window-breaks` (87 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.run.xml` (2.5322265625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.blg` (217 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.aux` (1.1689453125 KiB)
+note: Not writing `flyer.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.bbl` (512 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.pdf` (13.234375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.log` (48.3359375 KiB)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.pdf
+[DEBUG] print panel glass panel-1 page 2
+note: Running TeX ...
+warning: flyer.content.tex:14: Underfull \hbox (badness 10000) detected at line 14
+warning: flyer.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: flyer.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+note: Running BibTeX on flyer.aux ...
+note: Rerunning TeX because I was told to ...
+warning: flyer.content.tex:14: Underfull \hbox (badness 10000) detected at line 14
+warning: flyer.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: flyer.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+note: Rerunning TeX because I was told to ...
+warning: flyer.content.tex:14: Underfull \hbox (badness 10000) detected at line 14
+warning: flyer.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: flyer.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.bbl` (512 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.pdf` (15.6796875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.window-breaks` (87 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.blg` (217 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.run.xml` (2.5322265625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.aux` (1.1689453125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.log` (48.439453125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.synctex.gz` (4.638671875 KiB)
+note: Not writing `flyer.out`: it would be empty.
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer.pdf
+note: Running TeX ...
+warning: flyer.content.tex:14: Underfull \hbox (badness 10000) detected at line 14
+warning: flyer.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: flyer.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+note: Running BibTeX on flyer-dark.aux ...
+note: Rerunning TeX because I was told to ...
+warning: flyer.content.tex:14: Underfull \hbox (badness 10000) detected at line 14
+warning: flyer.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: flyer.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+note: Rerunning TeX because I was told to ...
+warning: flyer.content.tex:14: Underfull \hbox (badness 10000) detected at line 14
+warning: flyer.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: flyer.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Not writing `flyer-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.log` (48.4189453125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.bbl` (512 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.blg` (227 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.pdf` (13.2216796875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.window-breaks` (87 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.aux` (1.173828125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.run.xml` (2.576171875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.synctex.gz` (4.447265625 KiB)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.pdf
+[DEBUG] print panel glass panel-1 page 2
+note: Running TeX ...
+warning: flyer.content.tex:14: Underfull \hbox (badness 10000) detected at line 14
+warning: flyer.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: flyer.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+note: Running BibTeX on flyer-dark.aux ...
+note: Rerunning TeX because I was told to ...
+warning: flyer.content.tex:14: Underfull \hbox (badness 10000) detected at line 14
+warning: flyer.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: flyer.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+note: Rerunning TeX because I was told to ...
+warning: flyer.content.tex:14: Underfull \hbox (badness 10000) detected at line 14
+warning: flyer.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: flyer.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Not writing `flyer-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.blg` (227 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.run.xml` (2.576171875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.window-breaks` (87 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.bbl` (512 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.aux` (1.173828125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.log` (48.5322265625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.pdf` (15.607421875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.synctex.gz` (4.65625 KiB)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/flyer-dark.pdf
+note: Running TeX ...
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (283.92876pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (385.86618pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: forschungsbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: forschungsbericht.content.tex:27: Underfull \hbox (badness 10000) in paragraph at lines 26--27
+warning: forschungsbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: forschungsbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+warning: forschungsbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: forschungsbericht.content.tex:37: Underfull \hbox (badness 10000) detected at line 37
+warning: forschungsbericht.content.tex:40: Underfull \hbox (badness 10000) detected at line 40
+warning: forschungsbericht.content.tex:43: Underfull \hbox (badness 10000) detected at line 43
+warning: forschungsbericht.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: forschungsbericht.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) in alignment at lines 51--51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) in alignment at lines 51--51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+note: Running BibTeX on forschungsbericht.aux ...
+note: Rerunning TeX because I was told to ...
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (283.92876pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (385.86618pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: forschungsbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: forschungsbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: forschungsbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+warning: forschungsbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: forschungsbericht.content.tex:37: Underfull \hbox (badness 10000) detected at line 37
+warning: forschungsbericht.content.tex:40: Underfull \hbox (badness 10000) detected at line 40
+warning: forschungsbericht.content.tex:43: Underfull \hbox (badness 10000) detected at line 43
+warning: forschungsbericht.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: forschungsbericht.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+note: Rerunning TeX because I was told to ...
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (283.92876pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (385.86618pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: forschungsbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: forschungsbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: forschungsbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+warning: forschungsbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: forschungsbericht.content.tex:37: Underfull \hbox (badness 10000) detected at line 37
+warning: forschungsbericht.content.tex:40: Underfull \hbox (badness 10000) detected at line 40
+warning: forschungsbericht.content.tex:43: Underfull \hbox (badness 10000) detected at line 43
+warning: forschungsbericht.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: forschungsbericht.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.bbl` (2.5078125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.log` (52.7099609375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.synctex.gz` (27.6572265625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.window-breaks` (58 B)
+note: Not writing `forschungsbericht.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.pdf` (44.2470703125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.blg` (274 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.run.xml` (2.6708984375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.register-toc` (743 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.aux` (4.8369140625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-blx.bib` (340 B)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.pdf
+[DEBUG] print panel glass panel-1 page 2
+note: Running TeX ...
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (283.92876pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (385.86618pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: forschungsbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: forschungsbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: forschungsbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+warning: forschungsbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: forschungsbericht.content.tex:37: Underfull \hbox (badness 10000) detected at line 37
+warning: forschungsbericht.content.tex:40: Underfull \hbox (badness 10000) detected at line 40
+warning: forschungsbericht.content.tex:43: Underfull \hbox (badness 10000) detected at line 43
+warning: forschungsbericht.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: forschungsbericht.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+note: Running BibTeX on forschungsbericht.aux ...
+note: Rerunning TeX because I was told to ...
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (283.92876pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (385.86618pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: forschungsbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: forschungsbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: forschungsbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+warning: forschungsbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: forschungsbericht.content.tex:37: Underfull \hbox (badness 10000) detected at line 37
+warning: forschungsbericht.content.tex:40: Underfull \hbox (badness 10000) detected at line 40
+warning: forschungsbericht.content.tex:43: Underfull \hbox (badness 10000) detected at line 43
+warning: forschungsbericht.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: forschungsbericht.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+note: Rerunning TeX because I was told to ...
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (283.92876pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (385.86618pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: forschungsbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: forschungsbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: forschungsbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+warning: forschungsbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: forschungsbericht.content.tex:37: Underfull \hbox (badness 10000) detected at line 37
+warning: forschungsbericht.content.tex:40: Underfull \hbox (badness 10000) detected at line 40
+warning: forschungsbericht.content.tex:43: Underfull \hbox (badness 10000) detected at line 43
+warning: forschungsbericht.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: forschungsbericht.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Not writing `forschungsbericht.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.blg` (274 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.synctex.gz` (27.8671875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.aux` (4.8369140625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.register-toc` (743 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.pdf` (46.3740234375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.log` (52.8369140625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.window-breaks` (58 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.run.xml` (2.6708984375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.bbl` (2.5078125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.panels` (50 B)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht.pdf
+note: Running TeX ...
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (283.92876pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (385.86618pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: forschungsbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: forschungsbericht.content.tex:27: Underfull \hbox (badness 10000) in paragraph at lines 26--27
+warning: forschungsbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: forschungsbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+warning: forschungsbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: forschungsbericht.content.tex:37: Underfull \hbox (badness 10000) detected at line 37
+warning: forschungsbericht.content.tex:40: Underfull \hbox (badness 10000) detected at line 40
+warning: forschungsbericht.content.tex:43: Underfull \hbox (badness 10000) detected at line 43
+warning: forschungsbericht.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: forschungsbericht.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) in alignment at lines 51--51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) in alignment at lines 51--51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+note: Running BibTeX on forschungsbericht-dark.aux ...
+note: Rerunning TeX because I was told to ...
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (283.92876pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (385.86618pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: forschungsbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: forschungsbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: forschungsbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+warning: forschungsbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: forschungsbericht.content.tex:37: Underfull \hbox (badness 10000) detected at line 37
+warning: forschungsbericht.content.tex:40: Underfull \hbox (badness 10000) detected at line 40
+warning: forschungsbericht.content.tex:43: Underfull \hbox (badness 10000) detected at line 43
+warning: forschungsbericht.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: forschungsbericht.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+note: Rerunning TeX because I was told to ...
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (283.92876pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (385.86618pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: forschungsbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: forschungsbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: forschungsbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+warning: forschungsbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: forschungsbericht.content.tex:37: Underfull \hbox (badness 10000) detected at line 37
+warning: forschungsbericht.content.tex:40: Underfull \hbox (badness 10000) detected at line 40
+warning: forschungsbericht.content.tex:43: Underfull \hbox (badness 10000) detected at line 43
+warning: forschungsbericht.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: forschungsbericht.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.pdf` (44.1748046875 KiB)
+note: Not writing `forschungsbericht-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.window-breaks` (58 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.register-toc` (743 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.blg` (284 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.aux` (4.841796875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.run.xml` (2.71484375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.log` (52.8037109375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.synctex.gz` (27.6787109375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.bbl` (2.5078125 KiB)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.pdf
+[DEBUG] print panel glass panel-1 page 2
+note: Running TeX ...
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (283.92876pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (385.86618pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: forschungsbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: forschungsbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: forschungsbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+warning: forschungsbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: forschungsbericht.content.tex:37: Underfull \hbox (badness 10000) detected at line 37
+warning: forschungsbericht.content.tex:40: Underfull \hbox (badness 10000) detected at line 40
+warning: forschungsbericht.content.tex:43: Underfull \hbox (badness 10000) detected at line 43
+warning: forschungsbericht.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: forschungsbericht.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+note: Running BibTeX on forschungsbericht-dark.aux ...
+note: Rerunning TeX because I was told to ...
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (283.92876pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (385.86618pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: forschungsbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: forschungsbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: forschungsbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+warning: forschungsbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: forschungsbericht.content.tex:37: Underfull \hbox (badness 10000) detected at line 37
+warning: forschungsbericht.content.tex:40: Underfull \hbox (badness 10000) detected at line 40
+warning: forschungsbericht.content.tex:43: Underfull \hbox (badness 10000) detected at line 43
+warning: forschungsbericht.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: forschungsbericht.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+note: Rerunning TeX because I was told to ...
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: forschungsbericht.content.tex:10: Overfull \hbox (6.79999pt too wide) in paragraph at lines 10--10
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (283.92876pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) detected at line 16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (385.86618pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:22: Underfull \hbox (badness 10000) detected at line 22
+warning: forschungsbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: forschungsbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: forschungsbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+warning: forschungsbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: forschungsbericht.content.tex:37: Underfull \hbox (badness 10000) detected at line 37
+warning: forschungsbericht.content.tex:40: Underfull \hbox (badness 10000) detected at line 40
+warning: forschungsbericht.content.tex:43: Underfull \hbox (badness 10000) detected at line 43
+warning: forschungsbericht.content.tex:47: Underfull \hbox (badness 10000) detected at line 47
+warning: forschungsbericht.content.tex:50: Underfull \hbox (badness 10000) detected at line 50
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: forschungsbericht.content.tex:51: Underfull \hbox (badness 10000) detected at line 51
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.synctex.gz` (27.88671875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.register-toc` (743 B)
+note: Not writing `forschungsbericht-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.blg` (284 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.bbl` (2.5078125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.log` (52.94140625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.aux` (4.841796875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.run.xml` (2.71484375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.pdf` (46.3056640625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.window-breaks` (58 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark-blx.bib` (340 B)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/forschungsbericht-dark.pdf
+note: Running TeX ...
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: zwischenbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: zwischenbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: zwischenbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: zwischenbericht.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: zwischenbericht.anlage.tex:1: Underfull \hbox (badness 10000) detected at line 1
+warning: zwischenbericht.anlage.tex:5: Underfull \hbox (badness 10000) detected at line 5
+note: Running BibTeX on zwischenbericht.aux ...
+note: Rerunning TeX because I was told to ...
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) in alignment at lines 12--12
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: zwischenbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: zwischenbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: zwischenbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: zwischenbericht.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: zwischenbericht.anlage.tex:1: Underfull \hbox (badness 10000) detected at line 1
+warning: zwischenbericht.anlage.tex:5: Underfull \hbox (badness 10000) detected at line 5
+note: Rerunning TeX because I was told to ...
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: zwischenbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: zwischenbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: zwischenbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: zwischenbericht.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: zwischenbericht.anlage.tex:1: Underfull \hbox (badness 10000) detected at line 1
+warning: zwischenbericht.anlage.tex:5: Underfull \hbox (badness 10000) detected at line 5
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.blg` (237 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.log` (51.73046875 KiB)
+note: Not writing `zwischenbericht.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.window-breaks` (66 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.bbl` (512 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.synctex.gz` (17.08984375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.register-toc` (419 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.run.xml` (2.6201171875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.pdf` (25.626953125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.aux` (2.5 KiB)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.pdf
+[DEBUG] print panel glass panel-1 page 3
+note: Running TeX ...
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: zwischenbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: zwischenbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: zwischenbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: zwischenbericht.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: zwischenbericht.anlage.tex:1: Underfull \hbox (badness 10000) detected at line 1
+warning: zwischenbericht.anlage.tex:5: Underfull \hbox (badness 10000) detected at line 5
+note: Running BibTeX on zwischenbericht.aux ...
+note: Rerunning TeX because I was told to ...
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) in alignment at lines 12--12
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: zwischenbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: zwischenbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: zwischenbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: zwischenbericht.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: zwischenbericht.anlage.tex:1: Underfull \hbox (badness 10000) detected at line 1
+warning: zwischenbericht.anlage.tex:5: Underfull \hbox (badness 10000) detected at line 5
+note: Rerunning TeX because I was told to ...
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: zwischenbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: zwischenbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: zwischenbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: zwischenbericht.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: zwischenbericht.anlage.tex:1: Underfull \hbox (badness 10000) detected at line 1
+warning: zwischenbericht.anlage.tex:5: Underfull \hbox (badness 10000) detected at line 5
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.window-breaks` (66 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.panels` (50 B)
+note: Not writing `zwischenbericht.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.log` (51.853515625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.aux` (2.5 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.register-toc` (419 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.synctex.gz` (17.3046875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.blg` (237 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.bbl` (512 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.run.xml` (2.6201171875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.pdf` (44.3037109375 KiB)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht.pdf
+note: Running TeX ...
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: zwischenbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: zwischenbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: zwischenbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: zwischenbericht.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: zwischenbericht.anlage.tex:1: Underfull \hbox (badness 10000) detected at line 1
+warning: zwischenbericht.anlage.tex:5: Underfull \hbox (badness 10000) detected at line 5
+note: Running BibTeX on zwischenbericht-dark.aux ...
+note: Rerunning TeX because I was told to ...
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) in alignment at lines 12--12
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: zwischenbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: zwischenbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: zwischenbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: zwischenbericht.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: zwischenbericht.anlage.tex:1: Underfull \hbox (badness 10000) detected at line 1
+warning: zwischenbericht.anlage.tex:5: Underfull \hbox (badness 10000) detected at line 5
+note: Rerunning TeX because I was told to ...
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: zwischenbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: zwischenbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: zwischenbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: zwischenbericht.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: zwischenbericht.anlage.tex:1: Underfull \hbox (badness 10000) detected at line 1
+warning: zwischenbericht.anlage.tex:5: Underfull \hbox (badness 10000) detected at line 5
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.synctex.gz` (17.109375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.bbl` (512 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.pdf` (25.5966796875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.run.xml` (2.6640625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.blg` (247 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.log` (51.8232421875 KiB)
+note: Not writing `zwischenbericht-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.window-breaks` (66 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.register-toc` (419 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.aux` (2.5048828125 KiB)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.pdf
+[DEBUG] print panel glass panel-1 page 3
+note: Running TeX ...
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: zwischenbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: zwischenbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: zwischenbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: zwischenbericht.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: zwischenbericht.anlage.tex:1: Underfull \hbox (badness 10000) detected at line 1
+warning: zwischenbericht.anlage.tex:5: Underfull \hbox (badness 10000) detected at line 5
+note: Running BibTeX on zwischenbericht-dark.aux ...
+note: Rerunning TeX because I was told to ...
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) in alignment at lines 12--12
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: zwischenbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: zwischenbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: zwischenbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: zwischenbericht.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: zwischenbericht.anlage.tex:1: Underfull \hbox (badness 10000) detected at line 1
+warning: zwischenbericht.anlage.tex:5: Underfull \hbox (badness 10000) detected at line 5
+note: Rerunning TeX because I was told to ...
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:9: Underfull \hbox (badness 10000) detected at line 9
+warning: zwischenbericht.content.tex:9: Overfull \hbox (6.79999pt too wide) in paragraph at lines 9--9
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: zwischenbericht.content.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:23: Underfull \hbox (badness 10000) detected at line 23
+warning: zwischenbericht.content.tex:25: Underfull \hbox (badness 10000) detected at line 25
+warning: zwischenbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: zwischenbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: zwischenbericht.content.tex:34: Underfull \hbox (badness 10000) detected at line 34
+warning: zwischenbericht.content.tex:38: Underfull \hbox (badness 10000) detected at line 38
+warning: zwischenbericht.anlage.tex:1: Underfull \hbox (badness 10000) detected at line 1
+warning: zwischenbericht.anlage.tex:5: Underfull \hbox (badness 10000) detected at line 5
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.aux` (2.5048828125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.window-breaks` (66 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.bbl` (512 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.run.xml` (2.6640625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.log` (51.95703125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.register-toc` (419 B)
+note: Not writing `zwischenbericht-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.pdf` (43.830078125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.synctex.gz` (17.32421875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.blg` (247 B)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/zwischenbericht-dark.pdf
+note: Running TeX ...
+warning: kompaktbericht.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: kompaktbericht.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: kompaktbericht.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: kompaktbericht.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: kompaktbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) in alignment at lines 31--31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:33: Underfull \hbox (badness 10000) detected at line 33
+note: Running BibTeX on kompaktbericht.aux ...
+note: Rerunning TeX because I was told to ...
+warning: kompaktbericht.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: kompaktbericht.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: kompaktbericht.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: kompaktbericht.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: kompaktbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:33: Underfull \hbox (badness 10000) detected at line 33
+note: Rerunning TeX because I was told to ...
+warning: kompaktbericht.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: kompaktbericht.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: kompaktbericht.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: kompaktbericht.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: kompaktbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:33: Underfull \hbox (badness 10000) detected at line 33
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+warning: Object @section*.2 already defined.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.blg` (268 B)
+note: Not writing `kompaktbericht.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.run.xml` (2.650390625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.log` (49.150390625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.synctex.gz` (8.1435546875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.bbl` (1.857421875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.aux` (2.55078125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.pdf` (19.4189453125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.register-toc` (376 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-blx.bib` (340 B)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.pdf
+[DEBUG] print panel glass panel-1 page 2
+note: Running TeX ...
+warning: kompaktbericht.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: kompaktbericht.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: kompaktbericht.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: kompaktbericht.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: kompaktbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:33: Underfull \hbox (badness 10000) detected at line 33
+note: Running BibTeX on kompaktbericht.aux ...
+note: Rerunning TeX because I was told to ...
+warning: kompaktbericht.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: kompaktbericht.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: kompaktbericht.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: kompaktbericht.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: kompaktbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:33: Underfull \hbox (badness 10000) detected at line 33
+note: Rerunning TeX because I was told to ...
+warning: kompaktbericht.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: kompaktbericht.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: kompaktbericht.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: kompaktbericht.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: kompaktbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:33: Underfull \hbox (badness 10000) detected at line 33
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+warning: Object @section*.2 already defined.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.blg` (268 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.log` (49.271484375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.bbl` (1.857421875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.aux` (2.55078125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.synctex.gz` (8.3505859375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.register-toc` (376 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.pdf` (29.9453125 KiB)
+note: Not writing `kompaktbericht.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.run.xml` (2.650390625 KiB)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht.pdf
+note: Running TeX ...
+warning: kompaktbericht.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: kompaktbericht.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: kompaktbericht.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: kompaktbericht.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: kompaktbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) in alignment at lines 31--31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:33: Underfull \hbox (badness 10000) detected at line 33
+note: Running BibTeX on kompaktbericht-dark.aux ...
+note: Rerunning TeX because I was told to ...
+warning: kompaktbericht.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: kompaktbericht.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: kompaktbericht.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: kompaktbericht.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: kompaktbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:33: Underfull \hbox (badness 10000) detected at line 33
+note: Rerunning TeX because I was told to ...
+warning: kompaktbericht.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: kompaktbericht.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: kompaktbericht.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: kompaktbericht.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: kompaktbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:33: Underfull \hbox (badness 10000) detected at line 33
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+warning: Object @section*.2 already defined.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.panels` (50 B)
+note: Not writing `kompaktbericht-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.blg` (278 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.log` (49.2275390625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.register-toc` (376 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.aux` (2.5556640625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.synctex.gz` (8.16015625 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.bbl` (1.857421875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.run.xml` (2.6943359375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.pdf` (19.4111328125 KiB)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.pdf
+[DEBUG] print panel glass panel-1 page 2
+note: Running TeX ...
+warning: kompaktbericht.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: kompaktbericht.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: kompaktbericht.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: kompaktbericht.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: kompaktbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:33: Underfull \hbox (badness 10000) detected at line 33
+note: Running BibTeX on kompaktbericht-dark.aux ...
+note: Rerunning TeX because I was told to ...
+warning: kompaktbericht.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: kompaktbericht.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: kompaktbericht.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: kompaktbericht.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: kompaktbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:33: Underfull \hbox (badness 10000) detected at line 33
+note: Rerunning TeX because I was told to ...
+warning: kompaktbericht.content.tex:15: Underfull \hbox (badness 10000) detected at line 15
+warning: kompaktbericht.content.tex:18: Underfull \hbox (badness 10000) detected at line 18
+warning: kompaktbericht.content.tex:21: Underfull \hbox (badness 10000) detected at line 21
+warning: kompaktbericht.content.tex:24: Underfull \hbox (badness 10000) detected at line 24
+warning: kompaktbericht.content.tex:28: Underfull \hbox (badness 10000) detected at line 28
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:31: Underfull \hbox (badness 10000) detected at line 31
+warning: kompaktbericht.content.tex:33: Underfull \hbox (badness 10000) detected at line 33
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+warning: Object @section*.2 already defined.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.synctex.gz` (8.3671875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.register-toc` (376 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.bbl` (1.857421875 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.blg` (278 B)
+note: Not writing `kompaktbericht-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.log` (49.359375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.run.xml` (2.6943359375 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.pdf` (28.986328125 KiB)
+note: Writing `/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.aux` (2.5556640625 KiB)
+[DEBUG] print built 🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/dist/kompaktbericht-dark.pdf

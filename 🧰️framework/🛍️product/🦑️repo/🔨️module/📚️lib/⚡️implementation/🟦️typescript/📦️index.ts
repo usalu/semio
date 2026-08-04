@@ -1678,14 +1678,37 @@ export function devToolingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv 
   return env;
 }
 
+//#region ⚙️ViteConfigLoader
+/**
+ * @emoji ⚙️ Force Vite's esbuild config loader (`--configLoader bundle`).
+ * Node 24+ defaults Vite to `native` strip-only TypeScript, which rejects constructor parameter
+ * properties used across monorepo configs pulled into `⚙️vite.config.ts` (e.g. via `@semio-tech/framework-core`).
+ * @see https://vite.dev/config/#config-loader
+ */
+export function withViteConfigLoader(args: readonly string[]): string[] {
+  if (args.includes("--configLoader")) return [...args];
+  const out = [...args];
+  const viteIdx = out.indexOf("vite");
+  if (viteIdx >= 0) {
+    out.splice(viteIdx + 1, 0, "--configLoader", "bundle");
+    return out;
+  }
+  return ["--configLoader", "bundle", ...out];
+}
+
+function bunArgsForVite(args: readonly string[]): string[] {
+  return args.includes("vite") ? withViteConfigLoader(args) : [...args];
+}
+//#endregion ⚙️ViteConfigLoader
+
 /** 🥖️Runs `bun` with inherited stdio in `cwd`. */
 export function runBun(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
-  runCmd(process.execPath, args, { cwd, env });
+  runCmd(process.execPath, bunArgsForVite(args), { cwd, env });
 }
 
 /** 🥖️Runs `bunx` synchronously in `cwd`. */
 export function runBunx(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
-  const result = spawnSync(process.execPath, ["x", ...args], { cwd, env, shell: false, stdio: "inherit" });
+  const result = spawnSync(process.execPath, ["x", ...bunArgsForVite(args)], { cwd, env, shell: false, stdio: "inherit" });
   if (result.error) {
     console.error(result.error);
     process.exit(1);
@@ -1695,7 +1718,7 @@ export function runBunx(args: string[], cwd: string, env: NodeJS.ProcessEnv = pr
 
 /** 🥖️Spawns `bunx` asynchronously; exits with child code. */
 export function spawnBunx(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
-  const child = spawn(process.execPath, ["x", ...args], { cwd, env, shell: false, stdio: "inherit" });
+  const child = spawn(process.execPath, ["x", ...bunArgsForVite(args)], { cwd, env, shell: false, stdio: "inherit" });
   child.on("exit", (code) => process.exit(code ?? 0));
   child.on("error", (error) => {
     console.error(error);
@@ -1705,7 +1728,7 @@ export function spawnBunx(args: string[], cwd: string, env: NodeJS.ProcessEnv = 
 
 /** 🥖️Spawns `bun` asynchronously; exits with child code. */
 export function spawnBun(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
-  const child = spawn(process.execPath, args, { cwd, env, shell: true, stdio: "inherit" });
+  const child = spawn(process.execPath, bunArgsForVite(args), { cwd, env, shell: true, stdio: "inherit" });
   child.on("exit", (code) => process.exit(code ?? 0));
   child.on("error", (error) => {
     console.error(error);

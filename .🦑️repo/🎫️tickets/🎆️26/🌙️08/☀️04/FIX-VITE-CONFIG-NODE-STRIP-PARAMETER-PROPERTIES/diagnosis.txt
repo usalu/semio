@@ -1,0 +1,20 @@
+Root cause
+==========
+Node 24 + Vite 7 default `configLoader: native` uses strip-only TypeScript.
+That rejects constructor parameter properties. mit-bestand demonstrator
+⚙️vite.config.ts imports os/dev script helpers which pull monorepo TS that
+uses parameter properties → config load fails before the server starts.
+
+The tiled-map `canvas::gpu_session` messages in the same log are rustc
+warnings only; wasm-pack finished successfully and did not cause the
+demonstrator failure.
+
+Fix
+===
+Force `--configLoader bundle` (esbuild) for every bun/bunx vite invocation
+via withViteConfigLoader / bunArgsForVite in repo lib spawn helpers, plus
+direct runCmdStatus vite build call sites in demonstrator and os/dev.
+
+Verified
+========
+SKIP_PLUGIN_BUILD=1 bun ./📜️script.ts dev → VITE ready on :6029, HTTP 200.

@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** @emoji 🧭️ `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
-import { createWriteStream, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, watch, writeFileSync } from "node:fs";
+import { createWriteStream, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -27,8 +28,10 @@ import {
   frameworkOsPlaygroundDefaultPort,
   frameworkOsLockedPrefsEnv,
   resolveTestLevel,
+  withViteConfigLoader,
 } from "../../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri, decodeDocumentPackBytes, encodeDocumentPackBytes } from "@semio-tech/framework-os-core";
+import type { PluginSourceEvent } from "@semio-tech/framework-core";
 import { generatePluginRegistry, isStudioPluginFilter, writePlaygroundSession, type PluginRegistryEntry } from "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/📜️script.ts";
 import { PNG } from "pngjs";
 import pixelmatch from "pixelmatch";
@@ -253,6 +256,90 @@ export function semioBackboneVitePlugin() {
   };
 }
 //#endregion BackboneVitePlugin
+
+//#region 🔌️PluginHotSwapVitePlugin
+type PluginHotSwapMarker = { readonly pluginId: string; readonly rebuiltAt: number };
+
+/** @emoji 🔌️ Every plugin dir under `root` (default `plugin-modules/`) that has a completed build right
+ * now (a `.core*.wasm` present — same convention `collectPluginWasmSizeRows` walks), newest core-wasm
+ * mtime as `rebuiltAt`. Backs the SSE endpoint's connect-time `snapshot` event: a browser that connects
+ * (or reconnects) after some builds already finished must still learn about them — `.hot-swap` alone
+ * only ever holds the single most recent build, not the full history. `root` is overridable so this can
+ * be exercised against a throwaway temp dir in-source below rather than the real (build-dependent, so
+ * flaky) `plugin-modules/` tree. */
+function scanBuiltPluginModules(root: string = pluginOutRoot): readonly PluginHotSwapMarker[] {
+  if (!existsSync(root)) return [];
+  const rows: PluginHotSwapMarker[] = [];
+  for (const entry of readdirSync(root, { withFileTypes: true })) {
+    if (!entry.isDirectory() || entry.name.startsWith("_")) continue;
+    const pluginDir = join(root, entry.name);
+    let newestMs = 0;
+    for (const file of readdirSync(pluginDir)) {
+      if (!/\.core\d*\.wasm$/.test(file)) continue;
+      newestMs = Math.max(newestMs, statSync(join(pluginDir, file)).mtimeMs);
+    }
+    if (newestMs > 0) rows.push({ pluginId: entry.name, rebuiltAt: Math.round(newestMs) });
+  }
+  return rows;
+}
+
+/** @emoji 🔌️ Mirrors `@semio-tech/framework-core`'s `PLUGIN_SOURCE_WATCH_PATH` — kept as a literal here
+ * rather than a real (non-`type`) import: `⚙️vite.config.ts` loads this module's exports through Vite's
+ * own config loader, which runs under Node's native strip-only TypeScript support rather than esbuild;
+ * a genuine runtime import of framework-core's single-file `📦️index.ts` forces Node to parse the WHOLE
+ * file, including unrelated parameter-property constructors that strip-only mode rejects
+ * (`SyntaxError [ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX]`) — confirmed by reproducing it locally. `import
+ * type` stays safe (fully erased, no runtime import), so `PluginSourceEvent` below is unaffected. */
+const PLUGIN_SOURCE_WATCH_PATH = "/plugin-modules/watch";
+
+/** @emoji 🔌️ Vite middleware backing the shell's `createDevPluginSource` (`@semio-tech/framework-core`):
+ * SSE at `PLUGIN_SOURCE_WATCH_PATH`, mirroring `semioBackboneVitePlugin`'s `/watch` endpoint. Sends one
+ * `snapshot` on connect ({@link scanBuiltPluginModules}), then a `built` event every time `buildPlugin`
+ * overwrites the shared `.hot-swap` marker — `buildPlugin` writes it last, after every other output
+ * file, so by the time this fires the plugin's module is actually fetchable. Debounced the same 200ms
+ * as `subscribeFolderWatch` above (a burst of writes during one build collapses to a single event). One
+ * `fs.watch` on `plugin-modules/` for the whole dev server's lifetime — unlike the backbone plugin's
+ * per-uri watchers, there is exactly one watch target here, so it is never torn down. */
+export function semioPluginHotSwapVitePlugin() {
+  return {
+    name: "semio-plugin-hot-swap",
+    configureServer(server: { middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void } }) {
+      const subscribers = new Set<BackboneServerResponse>();
+      mkdirSync(pluginOutRoot, { recursive: true });
+      const hotSwapMarker = join(pluginOutRoot, ".hot-swap");
+      let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+      watch(pluginOutRoot, (_eventType, filename) => {
+        if (filename !== ".hot-swap") return;
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          if (!existsSync(hotSwapMarker)) return;
+          let marker: PluginHotSwapMarker;
+          try {
+            marker = JSON.parse(readFileSync(hotSwapMarker, "utf8")) as PluginHotSwapMarker;
+          } catch {
+            return;
+          }
+          const event: PluginSourceEvent = { kind: "built", pluginId: marker.pluginId, rebuiltAt: marker.rebuiltAt };
+          const payload = `data: ${JSON.stringify(event)}\n\n`;
+          for (const sub of subscribers) sub.write(payload);
+        }, FOLDER_WATCH_DEBOUNCE_MS);
+      });
+      server.middlewares.use((req, res, next) => {
+        if (req.url !== PLUGIN_SOURCE_WATCH_PATH || req.method !== "GET") return next();
+        res.statusCode = 200;
+        res.setHeader("content-type", "text/event-stream");
+        res.setHeader("cache-control", "no-cache");
+        res.setHeader("connection", "keep-alive");
+        res.write(": connected\n\n");
+        const snapshot: PluginSourceEvent = { kind: "snapshot", plugins: scanBuiltPluginModules() };
+        res.write(`data: ${JSON.stringify(snapshot)}\n\n`);
+        subscribers.add(res);
+        req.on("close", () => subscribers.delete(res));
+      });
+    },
+  };
+}
+//#endregion 🔌️PluginHotSwapVitePlugin
 
 //#region 🔖️Blake3
 /** 🧬️ Self-contained BLAKE3 (default 32-byte hash mode, no key/context) so the dev-only blob endpoint
@@ -977,11 +1064,12 @@ function resolvePluginBuildTargets(entries: readonly PluginRegistryEntry[], filt
   return entries;
 }
 
-/** @emoji 🎪️ Exported so a multi-variant host (e.g. the mit-bestand demonstrator, which needs every one
- * of its six panes' plugin crates built into the SAME shared `🔌️plugin-modules/` dir rather than one
- * variant's own isolated dev/build) can call this directly per variant instead of shelling out to this
- * script's own CLI once per variant. */
-export async function buildPlugins(filterPlugin?: string): Promise<void> {
+/** @emoji 🎯️ Shared setup for every plugin-build entry point below: registry regeneration, output dirs,
+ * vendor shims, stale-output cleanup, and the resolved+logged target list — everything a build needs
+ * that isn't itself a `cargo build`. Split out of the old monolithic `buildPlugins` so the dev runner's
+ * streaming variant can run this fast (no-cargo) prep synchronously before Vite starts, then stream the
+ * slow per-crate builds in afterward instead of blocking the first byte on all of them. */
+async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonly PluginRegistryEntry[]> {
   ensureWasmTarget();
   await ensurePluginRegistry(filterPlugin);
   const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
@@ -999,8 +1087,36 @@ export async function buildPlugins(filterPlugin?: string): Promise<void> {
   } else {
     console.log(`[DEBUG] program build scope: all (${targets.length} plugin crates)`);
   }
+  return targets;
+}
+
+/** @emoji 🎪️ Exported so a multi-variant host (e.g. the mit-bestand demonstrator, which needs every one
+ * of its six panes' plugin crates built into the SAME shared `🔌️plugin-modules/` dir rather than one
+ * variant's own isolated dev/build) can call this directly per variant instead of shelling out to this
+ * script's own CLI once per variant. */
+export async function buildPlugins(filterPlugin?: string): Promise<void> {
+  const targets = await preparePluginBuildTargets(filterPlugin);
   for (const target of targets) {
     await buildPlugin(target);
+  }
+}
+
+/** @emoji 🌊️ Host-plugin-first, best-effort variant of `buildPlugins` for the dev runner's streaming
+ * boot (`DevScript`, react renderer only): the shell's boot effect gates only on the host/primary
+ * plugin (see os-core's `hostConfig` path), so building it first gets the shell out of its "waiting for
+ * host program" state fastest — every other crate streams in afterward via the `.hot-swap`/SSE channel,
+ * in whatever order the registry lists them. Still serial (concurrent `cargo build`s just contend on
+ * the shared `target/` lock) but a single broken crate no longer aborts the rest of the catalog. */
+export async function buildPluginsStreaming(filterPlugin?: string): Promise<void> {
+  const targets = await preparePluginBuildTargets(filterPlugin);
+  const hostPluginId = resolvePlaygroundFilter(filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s").pluginId;
+  const ordered = [...targets].sort((a, b) => (a.pluginId === hostPluginId ? -1 : b.pluginId === hostPluginId ? 1 : 0));
+  for (const target of ordered) {
+    try {
+      await buildPlugin(target);
+    } catch (error) {
+      console.error(`[DEBUG] program build failed, continuing with remaining targets: ${target.pluginId}`, error);
+    }
   }
 }
 
@@ -1228,6 +1344,48 @@ function pluginWatchRoot(target: PluginRegistryEntry): string {
   return join(repoRoot, topLevel);
 }
 
+/** @emoji 👀️ Rebuilds each of `targets` on source change — one `fs.watch` per crate (see
+ * `pluginWatchRoot`) feeding a single dirty-set queue that drains serially. Two crates edited in quick
+ * succession (or one crate touched again before its own rebuild finishes) used to fire overlapping
+ * `void buildPlugin(...)` calls that raced each other against the same `target/` cargo lock; the dirty
+ * set collapses any number of change events for one crate into a single pending rebuild, and the drain
+ * loop only ever runs one `buildPlugin` at a time. Shared by both the standalone `plugin watch` command
+ * and `DevScript`'s streaming boot, which folds this in right after the initial build pass so plugin
+ * edits keep hot-swapping the running shell for the rest of the dev session. */
+function watchPluginRebuilds(targets: readonly PluginRegistryEntry[]): void {
+  const byPluginId = new Map(targets.map((target) => [target.pluginId, target] as const));
+  const dirty = new Set<string>();
+  let draining = false;
+
+  async function drain(): Promise<void> {
+    if (draining) return;
+    draining = true;
+    try {
+      while (dirty.size > 0) {
+        const [pluginId] = dirty;
+        dirty.delete(pluginId!);
+        const target = byPluginId.get(pluginId!);
+        if (!target) continue;
+        try {
+          await buildPlugin(target);
+        } catch (error) {
+          console.error("[DEBUG] program watch rebuild failed", error);
+        }
+      }
+    } finally {
+      draining = false;
+    }
+  }
+
+  for (const target of targets) {
+    watch(pluginWatchRoot(target), { recursive: true }, () => {
+      dirty.add(target.pluginId);
+      void drain();
+    });
+  }
+  console.log("[DEBUG] watching plugin crates for hot-swap rebuilds");
+}
+
 class PluginWatchScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND;
@@ -1235,14 +1393,7 @@ class PluginWatchScript extends BundleScript {
     const filterPluginId = resolveCatalogFilterPluginId(filterPlugin || undefined);
     const catalogEntries = generatePluginRegistry(repoRoot, filterPluginId ? { filterPlaygroundPlugin: filterPluginId } : {});
     const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin || undefined);
-    for (const target of targets) {
-      watch(pluginWatchRoot(target), { recursive: true }, () => {
-        void buildPlugin(target).catch((error) => {
-          console.error("[DEBUG] program watch rebuild failed", error);
-        });
-      });
-    }
-    console.log("[DEBUG] watching plugin crates for hot-swap rebuilds");
+    watchPluginRebuilds(targets);
   }
 }
 
@@ -1308,13 +1459,21 @@ class DevScript extends BundleScript {
     const variantSegment = segments[0] && !segments[0].startsWith("-") ? segments[0] : undefined;
     const viteSegments = variantSegment ? segments.slice(1) : segments;
     const filterPlugin = variantSegment ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
-    if (process.env.SKIP_PLUGIN_BUILD !== "1") {
-      await buildPlugins(filterPlugin);
-    } else {
-      await ensurePluginRegistry(filterPlugin);
-    }
     const renderer = process.env.SEMIO_RENDERER ?? "react";
     const plugin = filterPlugin;
+    // 🌊️ React serves over Vite, which only needs the fast (no-`cargo`) registry + playground session
+    // regenerated before it starts (`⚙️vite.config.ts` imports the generated catalog at config-eval
+    // time) — the ~37-crate plugin build itself streams in AFTER Vite is already listening
+    // (`buildPluginsStreaming`, called post-`runViteBunxDev` below), instead of blocking the dev
+    // server's first byte on every crate finishing. wgpu (native trunk — no browser runtime to stream
+    // installs into) and `SKIP_PLUGIN_BUILD=1` (explicitly asks to skip building) keep the original
+    // build-then-serve order.
+    const streamPluginBuilds = renderer === "react" && process.env.SKIP_PLUGIN_BUILD !== "1";
+    if (streamPluginBuilds || process.env.SKIP_PLUGIN_BUILD === "1") {
+      await ensurePluginRegistry(filterPlugin);
+    } else {
+      await buildPlugins(filterPlugin);
+    }
     await buildEngineWasm(plugin, renderer);
     const defaultPort = String(frameworkOsPlaygroundDefaultPort(playgroundCatalog, plugin, renderer));
     if (renderer === "wgpu") {
@@ -1374,6 +1533,17 @@ class DevScript extends BundleScript {
         ...frameworkOsLockedPrefsEnv(),
       },
     });
+    if (streamPluginBuilds) {
+      // 🌊️ Vite is already listening at this point (`runViteBunxDev` spawns it as a detached child and
+      // returns immediately) — the shell's `createDevPluginSource` SSE subscription picks up each crate
+      // as `buildPluginsStreaming` finishes it, installing the host plugin first and everything else as
+      // it lands, instead of the browser waiting on this whole loop before it can even connect.
+      await buildPluginsStreaming(filterPlugin);
+      const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
+      const catalogEntries = generatePluginRegistry(repoRoot, filterPluginId ? { filterPlaygroundPlugin: filterPluginId } : {});
+      const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin);
+      watchPluginRebuilds(targets);
+    }
   }
 }
 
@@ -1391,7 +1561,7 @@ class BuildScript extends BundleScript {
     }
     await buildEngineWasm(plugin, renderer);
     const resolvedFilter = resolvePlaygroundFilter(plugin);
-    runCmdStatus("bun", ["run", "vite", "build", "--config", "⚙️vite.config.ts", ...viteSegments], {
+    runCmdStatus("bun", withViteConfigLoader(["run", "vite", "build", "--config", "⚙️vite.config.ts", ...viteSegments]), {
       cwd: this.root,
       env: {
         ...process.env,
@@ -2510,4 +2680,64 @@ const router = new ScriptRouter(import.meta.dir)
 
 if (import.meta.main) {
   await runBundleScriptMain(router, import.meta.url, { defaultCommand: "dev" });
+}
+
+if (import.meta.vitest) {
+  const { describe, expect, it, beforeEach, afterEach } = import.meta.vitest;
+
+  describe("scanBuiltPluginModules (plugin hot-swap SSE snapshot)", () => {
+    let root: string;
+
+    beforeEach(() => {
+      root = mkdtempSync(join(tmpdir(), "semio-plugin-hot-swap-"));
+    });
+
+    afterEach(() => {
+      rmSync(root, { recursive: true, force: true });
+    });
+
+    it("returns nothing for a missing root", () => {
+      expect(scanBuiltPluginModules(join(root, "does-not-exist"))).toEqual([]);
+    });
+
+    it("skips a plugin dir with no core wasm output yet", () => {
+      mkdirSync(join(root, "note"), { recursive: true });
+      writeFileSync(join(root, "note", "🟨️host-shim.js"), "");
+      expect(scanBuiltPluginModules(root)).toEqual([]);
+    });
+
+    it("skips the shared _vendor dir", () => {
+      mkdirSync(join(root, "_vendor"), { recursive: true });
+      writeFileSync(join(root, "_vendor", "shim.core.wasm"), "");
+      expect(scanBuiltPluginModules(root)).toEqual([]);
+    });
+
+    it("reports a built plugin's newest core wasm mtime", () => {
+      mkdirSync(join(root, "note"), { recursive: true });
+      writeFileSync(join(root, "note", "note_plugin_component.core.wasm"), "");
+      const rows = scanBuiltPluginModules(root);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.pluginId).toBe("note");
+      expect(rows[0]!.rebuiltAt).toBeGreaterThan(0);
+    });
+
+    it("reports one row per plugin dir, largest mtime among multiple core wasm chunks", () => {
+      mkdirSync(join(root, "note"), { recursive: true });
+      writeFileSync(join(root, "note", "note_plugin_component.core.wasm"), "");
+      writeFileSync(join(root, "note", "note_plugin_component.core2.wasm"), "");
+      mkdirSync(join(root, "s"), { recursive: true });
+      writeFileSync(join(root, "s", "s_plugin_component.core.wasm"), "");
+      const rows = scanBuiltPluginModules(root);
+      expect(rows.map((row) => row.pluginId).sort()).toEqual(["note", "s"]);
+    });
+  });
+
+  describe("PluginHotSwapMarker JSON round-trip (SSE `built` event payload)", () => {
+    it("parses the exact shape buildPlugin writes to .hot-swap", () => {
+      const marker = JSON.parse(`${JSON.stringify({ pluginId: "note", rebuiltAt: 1785789943669 })}\n`) as PluginHotSwapMarker;
+      expect(marker).toEqual({ pluginId: "note", rebuiltAt: 1785789943669 });
+      const event: PluginSourceEvent = { kind: "built", pluginId: marker.pluginId, rebuiltAt: marker.rebuiltAt };
+      expect(event).toEqual({ kind: "built", pluginId: "note", rebuiltAt: 1785789943669 });
+    });
+  });
 }

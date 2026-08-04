@@ -17,7 +17,6 @@ contributes = ["flow.extension"]
 wasm-opt = false
 
 [lib]
-name = "flow_extension_bim"
 crate-type = ["cdylib", "rlib"]
 path = "../../../../../../../✏️s/🔌️plugin/🌊️flow/🧩️extension/🏗️bim/⚡️implementation/🦀️rust/📦️lib.rs"
 

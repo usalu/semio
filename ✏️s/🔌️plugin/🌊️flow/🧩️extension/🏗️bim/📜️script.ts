@@ -9,15 +9,15 @@ class WasmScript extends BundleScript {
       rsDir: join(this.root, "⚡️implementation", "🦀️rust"),
       skipEnvVar: "FLOW_MODULE_BIM_SKIP_WASM_BUILD",
       logPrefix: "flow/module/bim",
-      wasmBaseName: "flow_extension_bim",
+      wasmBaseName: "semio_s_plugin_flow_extension_bim",
       cargoFeatures: ["standalone-wasm"],
       noDefaultFeatures: true,
       pkg: {
         name: "@semio-tech/flow-module-bim",
-        files: ["flow_extension_bim_bg.wasm", "flow_extension_bim.js", "flow_extension_bim.d.ts", "flow_extension_bim_bg.wasm.d.ts"],
-        main: "flow_extension_bim.js",
-        module: "flow_extension_bim.js",
-        types: "flow_extension_bim.d.ts",
+        files: ["semio_s_plugin_flow_extension_bim_bg.wasm", "semio_s_plugin_flow_extension_bim.js", "semio_s_plugin_flow_extension_bim.d.ts", "semio_s_plugin_flow_extension_bim_bg.wasm.d.ts"],
+        main: "semio_s_plugin_flow_extension_bim.js",
+        module: "semio_s_plugin_flow_extension_bim.js",
+        types: "semio_s_plugin_flow_extension_bim.d.ts",
       },
     });
   }

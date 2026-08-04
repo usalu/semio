@@ -1,0 +1,19 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-fonts}[2026/08/04 v0.2.0 semio font stacks]
+
+\RequirePackage{fontspec}
+\RequirePackage{semio-tokens}
+
+% 🔤️ Font files are found by bare name through the engine search path that
+% print's build seeds with every `asset/font/<family>` directory; a document may
+% live anywhere in the workspace, so no relative `Path=` holds for all of them.
+\newfontfamily\SemioSans{Anta-Regular.ttf}
+\let\SemioSerif\SemioSans
+\newfontfamily\SemioMono{ShareTechMono-Regular.ttf}
+\newfontfamily\SemioEmoji{NotoEmoji-Regular.ttf}
+
+\newcommand{\semio@set@main@fonts}{%
+  \setmainfont{Anta-Regular.ttf}%
+  \setsansfont{Anta-Regular.ttf}%
+  \setmonofont{ShareTechMono-Regular.ttf}%
+}
