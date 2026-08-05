@@ -19,7 +19,11 @@ use crate::apps::forms::panels::{catalogue as catalogue_panel, document as docum
 use crate::apps::forms::terminology::{forms_play_labels, FormsLabels};
 use crate::artifacts::forms::engine::{default_example_json, forms_io, onboarding_example_json};
 use crate::artifacts::forms::op::FormOperation;
-use crate::artifacts::forms::{dsl, FormQuestion, FormSpec, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
+// 🧷️ Aliased: `app_commands!` below derives `dsl::DslOps` off the EXTERN `dsl` crate — importing the
+// artifact's own `dsl` submodule under the bare name would shadow it (see the identical note in the
+// artifact's `⚙️engine/🦀️component.rs`).
+use crate::artifacts::forms::dsl as forms_dsl;
+use crate::artifacts::forms::{FormQuestion, FormSpec, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, Contribution, DocumentApp, DocumentView, ConfigView, Emit, Fault, IconName, Label, LocalizedLabel, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, OsMediaCapability, UiNode,
@@ -162,7 +166,7 @@ pub fn catalogue_kinds(contributions: &[ProgramContributionEntry], labels: &Form
         .collect();
     for entry in contributions {
         if let Contribution::PlaybookBlockKind { block_kind, label, icon_id, .. } = &entry.contribution {
-            kinds.push((block_kind.clone(), label.clone(), icon_id.clone()));
+            kinds.push((block_kind.clone(), label.clone(), *icon_id));
         }
     }
     kinds
@@ -385,7 +389,7 @@ pub fn create_forms_app() -> App {
     )
     .example("default", LocalizedLabel::native("Contact", "Kontakt"), default_example_json(), "file")
     .example("onboarding", LocalizedLabel::native("Onboarding", "Einführung"), onboarding_example_json(), "user")
-    .example("building-component", LocalizedLabel::native("Building Component", "Baukomponente"), dsl::BUILDING_COMPONENT_EXAMPLE_TEXT, "building")
+    .example("building-component", LocalizedLabel::native("Building Component", "Baukomponente"), forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT, "building")
     .workflow("forms", "Forms", "data")
 }
 //#endregion 🔖️Manifest
@@ -440,7 +444,7 @@ pub(crate) mod testkit {
     /// 🧩️ A standalone `buildingComponent` question, for tests that exercise `render_extension_question`
     /// directly without going through a full document.
     pub fn building_component_question() -> FormQuestion {
-        let mut question = crate::apps::forms::commands::question::question_shell("geometry".into(), "Geometry".into(), "buildingComponent".into());
+        let mut question = question::question_shell("geometry".into(), "Geometry".into(), "buildingComponent".into());
         question.fixture_slug = Some("hexagonal-mushroom-column".into());
         question.params = Some(crate::artifacts::forms::engine::value_to_dsl(&json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })));
         question
@@ -466,7 +470,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 27, "every FormsCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 28, "every FormsCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -478,8 +482,11 @@ mod tests {
     }
 
     /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — the
-    /// kebab-cased command id, except for the two documented host-pushed divergences
-    /// (`setLocale`→`locale`, `setContributions`→`contributions`).
+    /// kebab-cased command id for most rows, except the documented divergences copied VERBATIM from the
+    /// pre-migration `forms_protocol::FormsCommand`'s own `#[dsl(key = ..)]` attributes (host-pushed
+    /// `setLocale`/`setContributions`, and the shortened `selection`/`try-value`/`try-values`/
+    /// `spec-json`/`active-example` keys — preserving these exactly is what makes the wire format
+    /// byte-identical across the migration; see TEMPLATE.md §5.1).
     #[test]
     fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
@@ -487,6 +494,11 @@ mod tests {
             let expected = match id {
                 "setLocale" => "locale".to_string(),
                 "setContributions" => "contributions".to_string(),
+                "setSelection" => "selection".to_string(),
+                "setTryValue" => "try-value".to_string(),
+                "setTryValues" => "try-values".to_string(),
+                "setSpecJson" => "spec-json".to_string(),
+                "setActiveExample" => "active-example".to_string(),
                 _ => id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect(),
             };
             let printed = protocol::OpText::print_op(&command);

@@ -38,7 +38,7 @@ pub fn relationship_kind_display_name(kind: &str, labels: &WiresLabels) -> Strin
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{Locale, Terminology};
+    use semio_framework_plugin::{AppLabels, Locale, Terminology};
 
     #[test]
     fn relationship_kind_display_name_resolves_labels() {

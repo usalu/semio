@@ -134,7 +134,7 @@ mod tests {
     fn patch_step_updates_title_and_description() {
         let mut app = forms_app();
         let step_id = app.projection().expect("projection").steps[0].id.clone();
-        dispatch(&mut app, FormsCommand::PatchStep(PatchStep { step_id: step_id.clone(), field: "title".into(), value: "Renamed".into() }));
+        dispatch(&mut app, FormsCommand::PatchStep(PatchStep { step_id, field: "title".into(), value: "Renamed".into() }));
         assert_eq!(app.projection().expect("projection").steps[0].title, "Renamed");
     }
 

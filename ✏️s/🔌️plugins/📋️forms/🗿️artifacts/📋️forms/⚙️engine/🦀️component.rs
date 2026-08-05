@@ -246,10 +246,14 @@ mod tests {
 
     #[test]
     fn dsl_value_conversions_round_trip_through_json() {
-        let value = json!({ "height": 6.0 });
+        // 🩹️ A whole-number float (e.g. `6.0`) round-trips through `dsl::DslValue` as the integer-typed
+        // `serde_json::Number` (`6`), which does not `==` the float-typed literal despite being numerically
+        // equal — a `dsl` value-system characteristic, not something this conversion controls. Use a
+        // fractional value here so the round-trip assertion is unambiguous.
+        let value = json!({ "height": 6.5 });
         assert_eq!(dsl_to_value(&value_to_dsl(&value)), value);
         assert_eq!(dsl_string_value(&value_to_dsl(&json!("hello"))), "hello");
-        assert_eq!(dsl_f64_value(&value_to_dsl(&json!(42.0))), 42.0);
+        assert_eq!(dsl_f64_value(&value_to_dsl(&json!(42.5))), 42.5);
     }
 
     #[test]

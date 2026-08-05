@@ -20,7 +20,7 @@ fn force_layout_operations(document: &MindmapWiresDocument) -> Vec<MindmapWiresO
         .filter_map(|node| {
             let id = node.get("id").and_then(|value| value.as_str())?;
             let (nx, ny) = node_position(node);
-            let (ox, oy) = crate::artifacts::wires::engine::find_board_node(document, id).map(node_position).unwrap_or((nx, ny));
+            let (ox, oy) = crate::artifacts::wires::engine::find_board_node(document, id).map_or((nx, ny), node_position);
             if nx == ox && ny == oy {
                 return None;
             }

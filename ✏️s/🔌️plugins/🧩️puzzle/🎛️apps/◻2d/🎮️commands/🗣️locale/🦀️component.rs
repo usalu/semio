@@ -1,0 +1,18 @@
+//! 🗣️ Puzzle 2d play app commands — locale and terminology. B1: both used to be host-pushed
+//! `ViewState` fields with no app-level action of their own; now that `ViewState` is gone from the
+//! app-facing surface they are real config edits.
+
+use crate::apps::puzzle2d::Puzzle2dActionCtx;
+use serde_json::Value;
+
+pub fn set_locale(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
+    if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
+        ctx.scene.runtime.locale = value.into();
+    }
+}
+
+pub fn set_terminology(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
+    if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
+        ctx.scene.runtime.terminology = value.into();
+    }
+}

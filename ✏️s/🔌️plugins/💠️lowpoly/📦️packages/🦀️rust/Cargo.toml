@@ -1,0 +1,119 @@
+cargo-features = ["trim-paths"]
+
+[package]
+name = "semio-s-plugin-lowpoly"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Lowpoly plugin - one crate for the lowpoly artifact (diff/op/dsl/pack/spr/engine) and the lowpoly play app (commands/modes/windows/options/panels)"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:lowpoly"
+
+[package.metadata.semio]
+role = "plugin"
+
+[[package.metadata.semio.playground]]
+variant = "lowpoly"
+ports = { react = 6078, wgpu = 6178 }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../📦️lib.rs"
+
+[dependencies]
+dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+kernel_3d_mesh = { path = "../../../../🔨️modules/🧊️3d/🥽️mesh/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-mesh" }
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+base64 = "0.22.1"
+png = "0.17.16"
+
+[dev-dependencies]
+# 🧪️ Test-only: `⚙️engine/🦀️media.rs`'s `export_concrete_forest_mesh_tests` builds a real CAD solid from a
+# fixture model to derive a lowpoly mesh export — see that module's doc comment. Carried forward from the
+# old `⚙️engine` crate's `[dev-dependencies]` verbatim (already repointed by a prior batch-1 agent from the
+# deleted `semio-s-app-cad-engine` to this crate).
+cad_plugin = { path = "../../../../../✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust", package = "semio-s-plugin-cad" }
+kernel_3d_brepkit = { path = "../../../../🔨️modules/🧊️3d/📐️brep/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-brep" }
+kernel_3d_engine = { path = "../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-brep-engine" }
+
+# ══════════════════════════════════════════════════════════════════════════════════════════════
+# 🚧️ TEMPORARY VERIFICATION-ONLY OVERLAY — DELETE THIS ENTIRE BLOCK AT REGISTRAR HANDOFF.
+# The new crate is not yet a workspace member (root Cargo.toml still lists the OLD 7 crates), and
+# Cargo refuses to build a manifest that sits inside a workspace tree without being a member. This
+# overlay makes the crate its own temporary workspace root so `cargo check/clippy/test --manifest-path
+# …` can run in isolation before the registrar prunes the old members and adds this crate's line.
+# Copied verbatim from root Cargo.toml's `[workspace.package]`/lints/profiles so artifact fingerprints
+# match and the shared `target/` stays warm. See TEMPLATE.md §3 "The chicken-and-egg, and how to
+# verify anyway".
+# ══════════════════════════════════════════════════════════════════════════════════════════════
+[workspace]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[workspace.dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+thiserror = "2.0.18"
+
+[workspace.lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"
+
+[profile.dev]
+debug = false
+incremental = true
+
+[profile.dev.build-override]
+opt-level = 3
+
+[profile.dev.package.semio-framework-os-kernel-store]
+codegen-units = 1
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"
+incremental = false
+trim-paths = "object"
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+incremental = false
+trim-paths = "object"
+
+[profile.wasm-release.package.semio-framework-os-kernel-store]
+codegen-units = 1
+# ══════════════════════════════════════════════════════════════════════════════════════════════
+# 🚧️ END TEMPORARY VERIFICATION-ONLY OVERLAY
+# ══════════════════════════════════════════════════════════════════════════════════════════════

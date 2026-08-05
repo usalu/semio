@@ -16,7 +16,7 @@ use crate::artifacts::gismap::engine::{gis2d_features_in_port, gis2d_io, gis2d_m
 use crate::artifacts::gismap::op::GisMapOperation;
 use crate::artifacts::gismap::{artifact_kind, GisMapDocument, GIS_MAP_SCHEMA};
 use semio_framework_plugin::{
-    create_default_layout, tree_item_with_action, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass,
+    tree_item_with_action, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass,
     MediaError, MediaForm, MediaPayload, MediaType, Menu, UiNode, UiTreeItemNode, WindowMeasure,
 };
 use serde_json::{json, Value};
@@ -200,7 +200,7 @@ impl DocumentApp for Gis2dPlayApp {
                     return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let projection = <GisMapDocument as store::DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let projection = <GisMapDocument as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 match self.whole_document_operation(projection) {
                     Some(operation) => Ok(Emit::operations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
@@ -225,7 +225,7 @@ impl DocumentApp for Gis2dPlayApp {
         match action {
             "setActiveExample" => Ok(Gis2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_arg(&["exampleId", "example_id", "value"]).unwrap_or_default() })),
             "patchPositions" => Ok(Gis2dCommand::PatchPositions(patch_positions::PatchPositions {
-                positions_json: str_arg(&["positionsJson", "positions_json"]).or_else(|| args.get("positions").map(std::string::ToString::to_string)).unwrap_or_else(|| "[]".into()),
+                positions_json: str_arg(&["positionsJson", "positions_json"]).or_else(|| args.get("positions").map(ToString::to_string)).unwrap_or_else(|| "[]".into()),
             })),
             "patchRoutes" => Ok(Gis2dCommand::PatchRoutes(patch_routes::PatchRoutes {
                 route_ids: {
@@ -262,7 +262,7 @@ impl DocumentApp for Gis2dPlayApp {
             })),
             "setHover" => {
                 let hover_json = str_arg(&["hoverJson", "hover_json"])
-                    .or_else(|| args.get("hover").map(std::string::ToString::to_string))
+                    .or_else(|| args.get("hover").map(ToString::to_string))
                     .or_else(|| {
                         let object = args.as_object()?;
                         if object.is_empty() || object.keys().all(|key| key == "surfaceId") {

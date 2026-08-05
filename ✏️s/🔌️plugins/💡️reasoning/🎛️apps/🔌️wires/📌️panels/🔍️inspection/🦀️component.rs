@@ -27,8 +27,8 @@ pub fn render(document: &MindmapWiresDocument, selected: &[String]) -> UiNode {
         let extension = DefaultWiresExtension::from_fixture_json(&fixture_json_string(&document.wires_fixture)).ok();
         return ui_stack_vertical(vec![
             ui_text(Label::data(format!("Schema: {MINDMAP_WIRES_SCHEMA}"))),
-            ui_text(Label::data(format!("Identities: {}", extension.as_ref().map(|ext| ext.mindmap.topics.len()).unwrap_or(0)))),
-            ui_text(Label::data(format!("Relationships: {}", extension.as_ref().map(|ext| ext.relationships.len()).unwrap_or(0)))),
+            ui_text(Label::data(format!("Identities: {}", extension.as_ref().map_or(0, |ext| ext.mindmap.topics.len())))),
+            ui_text(Label::data(format!("Relationships: {}", extension.as_ref().map_or(0, |ext| ext.relationships.len())))),
             ui_text(Label::data(format!("Board nodes: {}", fixture_nodes(&document.board_fixture).len()))),
         ]);
     }
@@ -38,8 +38,8 @@ pub fn render(document: &MindmapWiresDocument, selected: &[String]) -> UiNode {
         ui_inspector_readonly_field("wires-play-inspector.id", Label::data("Id"), node.get("id").and_then(|value| value.as_str()).unwrap_or("").to_string()),
         ui_inspector_readonly_field("wires-play-inspector.identity-label", Label::data("Identity"), identity.and_then(|row| row.get("label")).and_then(|value| value.as_str()).unwrap_or("—").to_string()),
         ui_inspector_readonly_field("wires-play-inspector.node-kind", Label::data("Identity Kind"), node.get("nodeKind").and_then(|value| value.as_str()).unwrap_or("—").to_string()),
-        ui_inspector_readonly_field("wires-play-inspector.x", Label::data("X"), node.get("x").and_then(|value| value.as_f64()).map(|value| value.to_string()).unwrap_or_else(|| "—".into())),
-        ui_inspector_readonly_field("wires-play-inspector.y", Label::data("Y"), node.get("y").and_then(|value| value.as_f64()).map(|value| value.to_string()).unwrap_or_else(|| "—".into())),
+        ui_inspector_readonly_field("wires-play-inspector.x", Label::data("X"), node.get("x").and_then(|value| value.as_f64()).map_or_else(|| "—".into(), |value| value.to_string())),
+        ui_inspector_readonly_field("wires-play-inspector.y", Label::data("Y"), node.get("y").and_then(|value| value.as_f64()).map_or_else(|| "—".into(), |value| value.to_string())),
     ])
 }
 //#endregion 🔖️Render

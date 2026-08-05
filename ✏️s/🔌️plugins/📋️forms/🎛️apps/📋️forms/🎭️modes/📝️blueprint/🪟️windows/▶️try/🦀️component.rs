@@ -316,7 +316,7 @@ mod tests {
     #[test]
     fn image_question_with_url_src_emits_image_node() {
         let question = FormQuestion { src: Some("https://example.com/picture.png".into()), ..crate::apps::forms::commands::question::question_shell("q-image".into(), "Picture".into(), "image".into()) };
-        let node = render_try_question(&question, &Map::new(), &[], None, &FormsLabels::NATIVE_EN);
+        let node = render_try_question(&question, &Map::new(), &[], None, crate::apps::forms::terminology::forms_play_labels(&FormsConfig::default()));
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains(r#""type":"image""#));
         assert!(json.contains("https://example.com/picture.png"));
@@ -324,7 +324,7 @@ mod tests {
 
     #[test]
     fn extension_question_emits_external_slot_when_contribution_registered() {
-        let node = render_try_question(&building_component_question(), &Map::new(), &building_component_contributions(), None, &FormsLabels::NATIVE_EN);
+        let node = render_try_question(&building_component_question(), &Map::new(), &building_component_contributions(), None, crate::apps::forms::terminology::forms_play_labels(&FormsConfig::default()));
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("externalSlot"));
         assert!(json.contains("forms-module-procedural"));
@@ -332,7 +332,7 @@ mod tests {
 
     #[test]
     fn extension_question_falls_back_without_contribution() {
-        let node = render_try_question(&building_component_question(), &Map::new(), &[], None, &FormsLabels::NATIVE_EN);
+        let node = render_try_question(&building_component_question(), &Map::new(), &[], None, crate::apps::forms::terminology::forms_play_labels(&FormsConfig::default()));
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Extension unavailable"));
     }

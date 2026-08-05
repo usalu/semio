@@ -1,0 +1,20 @@
+//! 🛍️ Puzzle 2d play app commands — the example picker: replaces the whole fixture with one of the
+//! two handcrafted `.puzzle2d` example documents (or an empty board) and resets the view runtime.
+
+use crate::apps::puzzle2d::config::Puzzle2dPlayRuntime;
+use crate::apps::puzzle2d::{default_empty_fixture, Puzzle2dActionCtx, CONCRETE_FOREST_EXAMPLE_JSON, NAKAGIN_EXAMPLE_JSON, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID};
+use serde_json::Value;
+
+pub fn set_active_example(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
+    let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
+    ctx.scene.fixture = if example_id.is_empty() {
+        default_empty_fixture()
+    } else if example_id == PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID || example_id == "concrete" {
+        serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| default_empty_fixture())
+    } else if example_id == PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID || example_id == "nakagin" {
+        serde_json::from_str(NAKAGIN_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| default_empty_fixture())
+    } else {
+        default_empty_fixture()
+    };
+    ctx.scene.runtime = Puzzle2dPlayRuntime::default();
+}

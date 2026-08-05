@@ -280,7 +280,7 @@ fn mindmap_wires_document_to_dsl(document: &MindmapWiresDocument) -> MindmapWire
 }
 
 /// 🔀️ DSL mirror (typed) → real document (opaque `DslValue`), for `parse_dsl`/`decode_pack_with`.
-fn mindmap_wires_document_from_dsl(parsed: MindmapWiresDocumentDsl) -> Result<MindmapWiresDocument, store::TextError> {
+fn mindmap_wires_document_from_dsl(parsed: &MindmapWiresDocumentDsl) -> Result<MindmapWiresDocument, store::TextError> {
     Ok(MindmapWiresDocument {
         wires_fixture: dsl::to_dsl_value(&parsed.wires_fixture).map_err(|error| store::TextError::new(format!("invalid wires fixture: {error}"), store::TextSpan::at(1, 1)))?,
         board_fixture: dsl::to_dsl_value(&parsed.board_fixture).map_err(|error| store::TextError::new(format!("invalid board fixture: {error}"), store::TextSpan::at(1, 1)))?,
@@ -295,7 +295,7 @@ impl store::DocumentDsl for MindmapWiresDocument {
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let parsed = <MindmapWiresDocumentDsl as store::DocumentDsl>::parse_dsl(text)?;
-        mindmap_wires_document_from_dsl(parsed)
+        mindmap_wires_document_from_dsl(&parsed)
     }
 
     fn print_dsl(&self) -> String {
@@ -313,7 +313,7 @@ impl store::DocumentPack for MindmapWiresDocument {
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let parsed = <MindmapWiresDocumentDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
-        mindmap_wires_document_from_dsl(parsed).map_err(store::text_error_to_pack_error)
+        mindmap_wires_document_from_dsl(&parsed).map_err(store::text_error_to_pack_error)
     }
 }
 //#endregion 🔖️Dsl

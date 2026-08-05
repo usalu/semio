@@ -2,7 +2,7 @@
 
 use crate::apps::forms::config::{FormsConfig, FormsConfigOperation};
 use crate::apps::forms::{parse_value_json, reset_try_config_operations};
-use crate::artifacts::forms::engine::{create_form_id, dsl_to_value, forms_play_step_tree_id, locate_question, update_block_operation, value_to_dsl};
+use crate::artifacts::forms::engine::{create_form_id, locate_question, update_block_operation, value_to_dsl};
 use crate::artifacts::forms::{op::FormOperation, FormQuestion, FormSpec, FormVectorField};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -278,7 +278,7 @@ pub mod move_question {
             return Ok(Emit::default());
         };
         let target_id = payload.target_id.as_deref().unwrap_or(&payload.question_id);
-        let resolved_index = payload.index.map(|value| value as usize).unwrap_or_else(|| resolve_question_insert_index(spec, &payload.to_step_id, target_id, &payload.position).unwrap_or(0));
+        let resolved_index = payload.index.map_or_else(|| resolve_question_insert_index(spec, &payload.to_step_id, target_id, &payload.position).unwrap_or(0), |value| value as usize);
         Ok(Emit {
             document_operations: vec![FormOperation::MoveBlock { block_id: payload.question_id.clone(), from_step_id: source.step_id, to_step_id: payload.to_step_id.clone(), index: resolved_index }],
             config_operations: reset_try_config_operations(),

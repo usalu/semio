@@ -26,14 +26,12 @@ pub fn apply_step(wires: &mut DslValue, board: &mut DslValue, step: &MindmapWire
             array_mut(board, "nodes").retain(|node| entity_id(node, "id") != Some(node_id.as_str()));
         }
         MindmapWiresStep::PatchNode { node_id, patch } => {
-            if let Some(node) = array_mut(board, "nodes").iter_mut().find(|node| entity_id(node, "id") == Some(node_id.as_str())) {
-                if let DslValue::Object(entries) = node {
-                    for (key, value) in patch {
-                        if let Some((_, slot)) = entries.iter_mut().find(|(entry_key, _)| entry_key == key) {
-                            *slot = value.clone();
-                        } else {
-                            entries.push((key.clone(), value.clone()));
-                        }
+            if let Some(DslValue::Object(entries)) = array_mut(board, "nodes").iter_mut().find(|node| entity_id(node, "id") == Some(node_id.as_str())) {
+                for (key, value) in patch {
+                    if let Some((_, slot)) = entries.iter_mut().find(|(entry_key, _)| entry_key == key) {
+                        *slot = value.clone();
+                    } else {
+                        entries.push((key.clone(), value.clone()));
                     }
                 }
             }
@@ -62,7 +60,7 @@ pub struct MindmapWiresDiff {
 
 impl OperationDiff<MindmapWiresDocument> for MindmapWiresDiff {
     fn apply(&self, projection: &MindmapWiresDocument) -> MindmapWiresDocument {
-        let base = self.replace.as_ref().map(|document| (**document).clone()).unwrap_or_else(|| projection.clone());
+        let base = self.replace.as_ref().map_or_else(|| projection.clone(), |document| (**document).clone());
         let mut wires = base.wires_fixture;
         let mut board = base.board_fixture;
         for step in &self.steps {

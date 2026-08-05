@@ -50,7 +50,7 @@ fn relationship_edge_layers(wires: &DslValue, board: &DslValue) -> Vec<Value> {
             layers.push(json!({
                 "id": edge_id,
                 "kind": "edge",
-                "edgeKind": relationship.get("kind").map(dsl_to_json).unwrap_or_else(|| json!("relationship")),
+                "edgeKind": relationship.get("kind").map_or_else(|| json!("relationship"), dsl_to_json),
                 "source": relationship.get("sourceIdentityId").map(|value| value.as_f64().map(|n| n.to_string()).unwrap_or_default()).unwrap_or_default(),
                 "target": relationship.get("targetIdentityId").map(|value| value.as_f64().map(|n| n.to_string()).unwrap_or_default()).unwrap_or_default(),
             }));

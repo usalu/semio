@@ -1,0 +1,25 @@
+Pre-migration per-crate test baseline (§0.3), captured before any old crate was touched (except the
+temporary [DEBUG] wire-dump test added to semio-s-app-layout-protocol for §0.4, which does not affect
+these pass counts):
+
+semio-s-app-layout            : 1 passed
+semio-s-app-layout-dsl        : 4 passed
+semio-s-app-layout-pack       : 3 passed
+semio-s-app-layout-protocol   : 4 passed
+semio-s-app-layout-op         : 12 passed
+semio-s-app-layout-engine     : 26 passed
+semio-s-app-layout-ui         : DID NOT COMPILE — confirmed instance of the systemic pre-existing
+                                 broken-parens bug (TEMPLATE.md §12.3): `Ok(` wrapping `handle`'s match
+                                 arms without a closing paren, e.g. `Ok(Emit::config(config_operations)`
+                                 followed directly by `}` with no `)` and no `;`. `cargo test -p
+                                 semio-s-app-layout-ui --lib` fails with ~20 "mismatched closing
+                                 delimiter" errors at HEAD, before this migration touched anything.
+                                 Baseline test count for this crate is therefore 0 (never ran), and its
+                                 ~30 unit tests only exist as source text ported forward into the new
+                                 taxonomy files, fixed as a natural side effect of the `app_commands!`
+                                 decomposition (each match arm becomes its own `handle()` function body,
+                                 which forces the parens to balance to even compile).
+
+Correctness floor (sum of crates that actually compiled and ran): 1 + 4 + 3 + 4 + 12 + 26 = 50 passing
+tests. The merged crate's `cargo test` must meet or exceed this AND additionally pass every test ported
+from the never-compiling ui crate.

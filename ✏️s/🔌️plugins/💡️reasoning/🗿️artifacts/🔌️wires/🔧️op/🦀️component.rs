@@ -21,6 +21,11 @@ pub enum MindmapWiresOperation {
 }
 
 //#region 🔖️DslMirror
+/// 🧯️ `large_enum_variant`: `ReplaceDocument`'s two nested fixture structs make it far larger than the
+/// other variants, but boxing them would require the `#[derive(dsl::DslOps)]` field-shape machinery to
+/// see through `Box<T>`, which is unverified — same accepted tradeoff as
+/// `procedural_3d`'s `🦀️config.rs` config-operation enum.
+#[allow(clippy::large_enum_variant)]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 enum MindmapWiresOperationDsl {

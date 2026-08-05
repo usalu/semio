@@ -146,7 +146,7 @@ pub fn create_wires_app() -> App {
             // 🎯️ Typed channel surface (B1 pure-trait conversion) — `config_spec()`'s single source of
             // truth (the trait default `ConfigSpec::empty()`: none of `WiresConfig`'s fields are
             // user-visible settings, they're ephemeral view state) reused here rather than duplicated.
-            .config(ReasoningWiresPlayApp::default().config_spec()),
+            .config(ReasoningWiresPlayApp.config_spec()),
     )
     .example(WIRES_PLAY_EXAMPLE_METABOLISM_ID, LocalizedLabel::native("Metabolism", "Stoffwechsel"), serde_json::to_string(&crate::artifacts::wires::engine::metabolism_wires_example_document()).unwrap(), "network")
     .workflow("reasoning-wires", "Mindmap Wires", "graph")
@@ -159,7 +159,7 @@ pub fn create_wires_app() -> App {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::testkit::{meta, new_app as new_test_app, new_app_with_registry};
+    use semio_framework_plugin::testkit::{meta, new_app as new_test_app};
     use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewState};
 
     pub type WiresApp = VcsDocumentApp<ReasoningWiresPlayApp>;
@@ -167,11 +167,6 @@ pub(crate) mod testkit {
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn new_app() -> WiresApp {
         new_test_app::<ReasoningWiresPlayApp>()
-    }
-
-    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn new_app_registered() -> WiresApp {
-        new_app_with_registry::<ReasoningWiresPlayApp>(create_wires_app)
     }
 
     /// 🧪️ An app pre-loaded with the metabolism example document, for tests exercising a populated board.
@@ -222,17 +217,60 @@ mod tests {
         }
     }
 
-    /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — the
-    /// kebab-cased command id, except for the one documented divergence (`setLocale` → `locale`).
-    /// This is what a missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the record
-    /// prints with no keyword at all and no longer parses).
+    /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — pinned
+    /// per-row from the `app_commands!` table's `"id" as "wire-key"` declarations rather than derived
+    /// (several rows genuinely diverge from a naive kebab-case of the id: `setLocale` → `locale`,
+    /// `setActiveExample` → `active-example`, and all three `canvasPointer*` rows drop the `canvas-`
+    /// prefix). This is what a missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the
+    /// record prints with no keyword at all and no longer parses).
     #[test]
     fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+        let expected_keys = [
+            ("setActiveExample", "active-example"),
+            ("addNode", "add-node"),
+            ("addRelationship", "add-relationship"),
+            ("deleteSelection", "delete-selection"),
+            ("forceLayout", "force-layout"),
+            ("reorganize", "reorganize"),
+            ("canvasPointerMove", "pointer-move"),
+            ("setSelection", "set-selection"),
+            ("documentSelect", "document-select"),
+            ("canvasPointerDown", "pointer-down"),
+            ("canvasPointerUp", "pointer-up"),
+            ("setLocale", "locale"),
+        ];
         for command in every_command() {
             let id = command.command_id();
-            let expected = if id == "setLocale" { "locale".to_string() } else { id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect() };
+            let expected = expected_keys.iter().find(|(row_id, _)| *row_id == id).map(|(_, key)| *key).unwrap_or_else(|| panic!("no expected wire key recorded for command {id}"));
             let printed = protocol::OpText::print_op(&command);
             assert_eq!(printed.split(' ').next().unwrap_or_default(), expected, "wire keyword drifted for command {id}: {printed:?}");
+        }
+    }
+
+    /// 📜️ [DEBUG] TEMPLATE.md §0.4 post-migration wire dump — same 13 samples, same order, as the
+    /// pre-migration `🧪️wire-baseline-before.txt` capture. Delete once the diff against that file is
+    /// confirmed clean.
+    #[test]
+    fn debug_wire_after_dump() {
+        let samples: Vec<WiresCommand> = vec![
+            WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "metabolism".into() }),
+            WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }),
+            WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: "owns".into() }),
+            WiresCommand::DeleteSelection(delete_selection::DeleteSelection {}),
+            WiresCommand::ForceLayout(force_layout::ForceLayout {}),
+            WiresCommand::Reorganize(reorganize::Reorganize {}),
+            WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1.5, y: -2.5 }),
+            WiresCommand::SetSelection(set_selection::SetSelection { ids: vec!["node-1".into(), "edge-1".into()] }),
+            WiresCommand::DocumentSelect(document_select::DocumentSelect { ids: vec!["node-2".into()] }),
+            WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }),
+            WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { id: None, x: 0.0, y: 0.0 }),
+            WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}),
+            WiresCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
+        ];
+        for sample in &samples {
+            let bytes = protocol::OpBinary::encode_op(sample).expect("encode");
+            let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
+            println!("[DEBUG] {} | {} | {}", protocol::OpText::print_op(sample), bytes.len(), hex);
         }
     }
 

@@ -96,7 +96,7 @@ fn question_kind_editor_fields(question: &FormQuestion, question_ids: &[String],
             fields.push(inspector_number_field(question_ids, &fid("min"), labels.min, &[question.min.unwrap_or(0.0)], "min"));
             fields.push(inspector_number_field(question_ids, &fid("max"), labels.max, &[question.max.unwrap_or(100.0)], "max"));
             fields.push(inspector_number_field(question_ids, &fid("step"), labels.step_field, &[question.step.unwrap_or(1.0)], "step"));
-            fields.push(inspector_number_field(question_ids, &fid("default"), labels.default, &[question.default.as_ref().map(dsl_f64_value).unwrap_or(0.0)], "default"));
+            fields.push(inspector_number_field(question_ids, &fid("default"), labels.default, &[question.default.as_ref().map_or(0.0, dsl_f64_value)], "default"));
             if question.kind == "slider" {
                 fields.push(inspector_text_field(question_ids, &fid("unit"), labels.unit, &[question.unit.clone().unwrap_or_default()], "unit"));
             }
@@ -343,7 +343,7 @@ mod tests {
     #[test]
     fn kind_editor_fields_are_editable_when_unset() {
         let question = crate::apps::forms::commands::question::question_shell("q-num".into(), "Amount".into(), "number".into());
-        let fields = question_kind_editor_fields(&question, &["q-num".into()], &[], "forms-blueprint.q-num", &FormsLabels::NATIVE_EN);
+        let fields = question_kind_editor_fields(&question, &["q-num".into()], &[], "forms-blueprint.q-num", crate::apps::forms::terminology::forms_play_labels(&FormsConfig::default()));
         let json = serde_json::to_string(&fields).unwrap();
         assert!(json.contains("forms-blueprint.q-num.min"));
         assert!(json.contains("forms-blueprint.q-num.max"));
@@ -353,7 +353,7 @@ mod tests {
 
     #[test]
     fn extension_question_kind_editor_shows_the_fixture_slug_readonly_field() {
-        let node = question_kind_editor_fields(&building_component_question(), &["geometry".into()], &building_component_contributions(), "forms-play-inspector", &FormsLabels::NATIVE_EN);
+        let node = question_kind_editor_fields(&building_component_question(), &["geometry".into()], &building_component_contributions(), "forms-play-inspector", crate::apps::forms::terminology::forms_play_labels(&FormsConfig::default()));
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("fixtureSlug"));
     }

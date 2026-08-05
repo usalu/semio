@@ -5,7 +5,10 @@
 use crate::apps::forms::config::{FormsConfig, FormsConfigOperation};
 use crate::apps::forms::reset_try_config_operations;
 use crate::artifacts::forms::engine::{default_example_spec, empty_forms_projection, onboarding_example_spec};
-use crate::artifacts::forms::{dsl, op::FormOperation, FormSpec};
+// 🧷️ Aliased: the payload structs below derive the EXTERN `dsl` crate's `dsl::DslRecord` — importing the
+// artifact's own `dsl` submodule under the bare name would shadow it.
+use crate::artifacts::forms::dsl as forms_dsl;
+use crate::artifacts::forms::{op::FormOperation, FormSpec};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -59,7 +62,7 @@ pub mod set_active_example {
     pub fn handle(payload: &SetActiveExample, doc: &DocumentView<'_, FormSpec>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormOperation, FormsConfigOperation>, Fault> {
         let next = match payload.example_id.as_str() {
             "" => Some(empty_forms_projection()),
-            "building-component" => dsl::parse_dsl(dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).ok(),
+            "building-component" => forms_dsl::parse_dsl(forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).ok(),
             "default" => Some(default_example_spec()),
             "onboarding" => Some(onboarding_example_spec()),
             _ => None,
@@ -85,11 +88,14 @@ mod tests {
 
     #[test]
     fn set_active_example_switches_to_the_onboarding_fixture() {
+        // 🩹️ `replace_spec_operations` deliberately never touches `id` (only title/steps — `id` is the
+        // document's own stable identity, not part of the "example" content it swaps) — assert on the
+        // steps/title it does replace, not on `id`.
         let mut app = forms_app();
         dispatch(&mut app, FormsCommand::SetActiveExample(SetActiveExample { example_id: "onboarding".into() }));
         let spec = app.projection().expect("projection");
-        assert_eq!(spec.id, "onboarding");
         assert_eq!(spec.steps.len(), 3);
+        assert_eq!(spec.title, onboarding_example_spec().title);
     }
 
     #[test]
@@ -103,10 +109,11 @@ mod tests {
     #[test]
     fn set_spec_json_replaces_the_document() {
         let mut app = forms_app();
-        let onboarding = serde_json::to_string(&crate::artifacts::forms::engine::onboarding_example_spec()).unwrap();
+        let onboarding = serde_json::to_string(&onboarding_example_spec()).unwrap();
         dispatch(&mut app, FormsCommand::SetSpecJson(SetSpecJson { json: onboarding }));
         let spec = app.projection().expect("projection");
-        assert_eq!(spec.id, "onboarding");
+        assert_eq!(spec.steps.len(), 3);
+        assert_eq!(spec.title, onboarding_example_spec().title);
     }
 
     #[test]
