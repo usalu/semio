@@ -1,0 +1,184 @@
+{
+  "pdf": "e:/semio/mit-bestand/bericht/zwischenbericht/dist/zwischenbericht.pdf",
+  "ticket": ".repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY",
+  "auditedAt": "2026-08-05T00:55:00.000Z",
+  "scope": "windowed short tables",
+  "method": "Visual crops @144dpi + @288dpi (Read PNGs) + RGB border scans; mid-rule notch = cream on outer border with rule neighbors",
+  "dpi": [144, 288],
+  "checks": [
+    "chipSeam: single hairline, no double, no cream gap under chips",
+    "chipAlign: dL/dR ≈ 0 vs body outer borders",
+    "edges: continuous L/R, no cream notches at row joins, no x-jitter",
+    "insets: header vs body top air + left pad consistent",
+    "interiorVerts: consistent (present or absent)"
+  ],
+  "summary": {
+    "pages": 6,
+    "pass": 6,
+    "fail": 0
+  },
+  "excludedLongOrOther": [
+    { "page": 76, "reason": "long table (Hürden)" },
+    { "page": 78, "reason": "long table (Marktplätze)" },
+    { "page": 79, "reason": "long BB.M continuation" },
+    { "page": 121, "reason": "long glossary (out of windowed-short scope)" }
+  ],
+  "pages": [
+    {
+      "id": "meilensteine",
+      "page": 18,
+      "title": "Meilensteine (Förderrechtliche Meilensteine / Tabelle: 2.1.a)",
+      "verdict": "PASS",
+      "checks": {
+        "chipSeam": "PASS",
+        "chipAlign": "PASS",
+        "edges": "PASS",
+        "insets": "PASS",
+        "interiorVerts": "PASS"
+      },
+      "metrics": {
+        "144": { "hairPt": 0.5, "creamGapPt": 0, "dL": 0, "dR": 0, "creamJoins": 0, "jitterPx": 0, "borderCreamInBody": 0 },
+        "288": { "hairPt": 0.75, "creamGapPt": 0, "dL": 0, "dR": 0, "creamJoins": 0, "jitterPx": 1, "borderCreamInBody": 0 }
+      },
+      "notes": "Flush chips; continuous L border R≈128; no interior verticals (whitespace columns). Header left pad ~6.5–7pt.",
+      "crops": [
+        "audit-win-meilensteine-d144-seam.png",
+        "audit-win-meilensteine-d144-edgeL.png",
+        "audit-win-meilensteine-d144-head.png",
+        "audit-win-meilensteine-d288-seam.png",
+        "audit-win-meilensteine-d288-edgeL.png",
+        "audit-win-meilensteine-d288-head.png"
+      ]
+    },
+    {
+      "id": "risiken",
+      "page": 19,
+      "title": "Risiken (Risiken und Maßnahmen / Tabelle: 2.1.b)",
+      "verdict": "PASS",
+      "checks": {
+        "chipSeam": "PASS",
+        "chipAlign": "PASS",
+        "edges": "PASS",
+        "insets": "PASS",
+        "interiorVerts": "PASS"
+      },
+      "metrics": {
+        "144": { "hairPt": 0.5, "creamGapPt": 0, "dL": 0, "dR": 0, "creamJoins": 0, "jitterPx": 2, "borderCreamInBody": 0 },
+        "288": { "hairPt": 0.75, "creamGapPt": 0, "dL": 0, "dR": 0, "creamJoins": 0, "jitterPx": 2, "borderCreamInBody": 0 }
+      },
+      "notes": "Single chip baseline; L/R flush; edgeL scan solid rule through body; header↔body left pad visually matched. No interior verticals.",
+      "crops": [
+        "audit-win-risiken-d144-seam.png",
+        "audit-win-risiken-d144-edgeL.png",
+        "audit-win-risiken-d144-head.png",
+        "audit-win-risiken-d288-seam.png",
+        "audit-win-risiken-d288-edgeL.png",
+        "audit-win-risiken-d288-head.png"
+      ]
+    },
+    {
+      "id": "erfolgsindikatoren",
+      "page": 23,
+      "title": "Erfolgsindikatoren (Tabelle: 4.1.a)",
+      "verdict": "PASS",
+      "checks": {
+        "chipSeam": "PASS",
+        "chipAlign": "PASS",
+        "edges": "PASS",
+        "insets": "PASS",
+        "interiorVerts": "PASS"
+      },
+      "metrics": {
+        "144": { "hairPt": 0.5, "creamGapPt": 0, "dL": 0, "dR": 0, "creamJoins": 0, "jitterPx": 2, "borderCreamInBody": 0 },
+        "288": { "hairPt": 0.5, "creamGapPt": 0, "dL": 0, "dR": 0, "creamJoins": 0, "jitterPx": 2, "borderCreamInBody": 0 }
+      },
+      "notes": "Extra short window found via Tabelle: scan. Geometry matches Meilensteine/Risiken peers.",
+      "crops": [
+        "audit-win-erfolgsindikatoren-d144-seam.png",
+        "audit-win-erfolgsindikatoren-d144-edgeL.png",
+        "audit-win-erfolgsindikatoren-d144-head.png",
+        "audit-win-erfolgsindikatoren-d288-seam.png",
+        "audit-win-erfolgsindikatoren-d288-edgeL.png",
+        "audit-win-erfolgsindikatoren-d288-head.png"
+      ]
+    },
+    {
+      "id": "ueberblick",
+      "page": 77,
+      "title": "Überblick (Tabelle: BB.a)",
+      "verdict": "PASS",
+      "checks": {
+        "chipSeam": "PASS",
+        "chipAlign": "PASS",
+        "edges": "PASS",
+        "insets": "PASS",
+        "interiorVerts": "PASS"
+      },
+      "metrics": {
+        "144": { "hairPt": 0.5, "creamGapPt": 0, "dL": 0, "dR": 0, "creamJoins": 0, "jitterPx": 2, "borderCreamInBody": 0 },
+        "288": { "hairPt": 0.75, "creamGapPt": 0, "dL": 0, "dR": 0, "creamJoins": 0, "jitterPx": 2, "borderCreamInBody": 0 }
+      },
+      "notes": "Very short 2-row window. Cream after table end (before Marktplätze long table) is page gap, not join notches. Within body: continuous edges, 0 notches.",
+      "crops": [
+        "audit-win-ueberblick-d144-seam.png",
+        "audit-win-ueberblick-d144-edgeL.png",
+        "audit-win-ueberblick-d144-head.png",
+        "audit-win-ueberblick-d288-seam.png",
+        "audit-win-ueberblick-d288-edgeL.png",
+        "audit-win-ueberblick-d288-head.png"
+      ]
+    },
+    {
+      "id": "interviewinfo",
+      "page": 101,
+      "title": "Interviewinformationen (Tabelle: I.T.a)",
+      "verdict": "PASS",
+      "checks": {
+        "chipSeam": "PASS",
+        "chipAlign": "PASS",
+        "edges": "PASS",
+        "insets": "PASS",
+        "interiorVerts": "PASS"
+      },
+      "metrics": {
+        "144": { "hairPt": 0.5, "creamGapPt": 0, "dL": 0, "dR": 0, "creamJoins": 0, "jitterPx": 2 },
+        "288": { "hairPt": 0.5, "creamGapPt": 0, "dL": 1, "dR": 0, "creamJoins": 0, "jitterPx": 2 }
+      },
+      "notes": "Extra short window. dL=1px@288 (≤0.25pt) treated as flush. Body rows share left pad; chip title may sit slightly tighter (design).",
+      "crops": [
+        "audit-win-interviewinfo-d144-seam.png",
+        "audit-win-interviewinfo-d144-edgeL.png",
+        "audit-win-interviewinfo-d144-head.png",
+        "audit-win-interviewinfo-d288-seam.png",
+        "audit-win-interviewinfo-d288-edgeL.png",
+        "audit-win-interviewinfo-d288-head.png"
+      ]
+    },
+    {
+      "id": "uebersicht",
+      "page": 111,
+      "title": "Übersicht (Tabelle: US.a)",
+      "verdict": "PASS",
+      "checks": {
+        "chipSeam": "PASS",
+        "chipAlign": "PASS",
+        "edges": "PASS",
+        "insets": "PASS",
+        "interiorVerts": "PASS"
+      },
+      "metrics": {
+        "144": { "hairPt": 0.5, "creamGapPt": 0, "dL": 0, "dR": 0, "creamJoins": 0, "jitterPx": 2 },
+        "288": { "hairPt": 0.5, "creamGapPt": 0, "dL": 0, "dR": 0, "creamJoins": 0, "jitterPx": 2 }
+      },
+      "notes": "Extra short window. Flush chips; continuous L edge through header+body; header↔body insets aligned. No interior verticals.",
+      "crops": [
+        "audit-win-uebersicht-d144-seam.png",
+        "audit-win-uebersicht-d144-edgeL.png",
+        "audit-win-uebersicht-d144-head.png",
+        "audit-win-uebersicht-d288-seam.png",
+        "audit-win-uebersicht-d288-edgeL.png",
+        "audit-win-uebersicht-d288-head.png"
+      ]
+    }
+  ]
+}

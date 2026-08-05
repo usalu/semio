@@ -258,6 +258,13 @@
     \color{semio-chrome-text-normal}%
   \fi
 }
+% Chrome-row right edge: width phantom only (no ink). A full-height border@R
+% here becomes a vertical stem in the air on title-only chrome (TOC / glossary
+% ? no number chip). When a number chip exists it already paints its own right
+% wall via the muted open cap; body rows supply border@R below the baseline.
+\newcommand{\semio@table@border@R@chrome}{%
+  \vrule width\arrayrulewidth height\z@ depth\z@
+}
 
 \newcommand{\semio@table@colspec@register@long}{@{\semio@table@border@L}@{\semio@table@padendL}>{\semio@table@long@cellfill}m{\dimexpr0.12\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr0.78\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfillR}m{\dimexpr0.10\semio@table@long@inner@w\relax}<{\semio@register@lastclose}@{\semio@table@padendR}@{\semio@table@border@R}}
 
@@ -369,26 +376,25 @@
 % extend through \noalign ? the join band must therefore carry border ink at
 % the L/R x-positions or cream shows through as a notch at every row.
 %
-% owns@sides: mid-rule paints ONLY the inner span (between the L/R border
-% slots) so the outer edge is never crossed by horizontal ink. Smashed L/R
-% pillars fill the join band and overlap 3pt into the adjacent rows, welding
-% the per-row side strokes into one continuous outer edge. Smash keeps band
-% advance = one hairline.
+% owns@sides: one hbox paints the mid-rule. Smashed L/R pillars sit in the
+% border slots and overlap 3pt into the adjacent rows so per-row side strokes
+% read as one continuous outer edge; the inner horizontal spans only between
+% those slots so it never crosses the outer edge. Smash keeps band advance =
+% one hairline (no vskip back/forward ? that dance could ghost a second
+% hairline under some PDF viewers).
 %
-% Windowed short tables: the tcolorbox leftrule/rightrule (plus TikZ side
-% overstroke) is the sole continuous outer edge. Mid-rules stay exactly
-% \linewidth so they meet the INNER face of that frame.
+% Windowed short tables: the tcolorbox leftrule/rightrule is the sole
+% continuous outer edge. Mid-rules stay exactly \linewidth so they meet the
+% INNER face of that frame.
 \newcommand{\semio@table@rule}{%
   \noalign{%
     \begingroup
       \color{semio-chrome-border-normal}%
       \ifsemio@table@owns@sides
-        \hbox to \linewidth{%
-          \kern\arrayrulewidth
-          \vrule height\arrayrulewidth depth\z@
-                 width\dimexpr\linewidth-2\arrayrulewidth\relax
-          \kern\arrayrulewidth
-        }%
+        % Single \hrule (full width) + smashed L/R pillars. Pillars overlap 3pt
+        % into adjacent rows so per-row side strokes read continuous; smash
+        % keeps band advance = one hairline.
+        \hrule height\arrayrulewidth width\linewidth
         \vskip-\arrayrulewidth
         \hbox to \linewidth{%
           \smash{%
@@ -472,7 +478,9 @@
   % draw `\hbox to \linewidth+\hairline` with `\moveleft\hairline` so the
   % baseline T-joins the frame; with borders outside an unshrunk \linewidth
   % the baseline overshoots and corner joins notch.
-  \multicolumn{#1}{@{\semio@table@border@L}@{}l@{\semio@table@border@R}}{%
+  %
+  % border@R@chrome is a width phantom (no ink) ? see its definition.
+  \multicolumn{#1}{@{\semio@table@border@L}@{}l@{\semio@table@border@R@chrome}}{%
     \begingroup
       \setlength{\linewidth}{\dimexpr\linewidth-2\arrayrulewidth\relax}%
       \setlength{\hsize}{\linewidth}%
@@ -561,8 +569,12 @@
 }
 
 \let\semio@table@long@hhline@current\semio@table@rule
+% \\* keeps the trailing mid-rule with its row. A plain \\ can page-break
+% between the row and the \noalign rule; the orphaned rule then lands on the
+% next page immediately under \endhead's own mid-rule and reads as a double
+% hairline (measured 1.5pt on TOC continuations).
 \newcommand{\semio@table@row@long}[1]{%
-  #1\\
+  #1\\*%
   \semio@table@rule
 }
 
@@ -1137,7 +1149,7 @@
       }%
     }%
   }%
-  \\\semio@table@rule
+  \\*\semio@table@rule
 }
 
 \newcommand{\semio@project@headrow}{%

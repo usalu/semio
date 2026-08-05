@@ -1,0 +1,146 @@
+[
+  {
+    "name": "TOC",
+    "p": 3,
+    "ref": {
+      "dL": 0,
+      "dR": 0,
+      "cream": 0,
+      "jitter": 0,
+      "photoPadPt": null
+    },
+    "cur": {
+      "dL": 0,
+      "dR": 0,
+      "cream": 0,
+      "jitter": 0,
+      "photoPadPt": null
+    }
+  },
+  {
+    "name": "Meilensteine (window)",
+    "p": 18,
+    "ref": {
+      "dL": 0,
+      "dR": 1573,
+      "cream": 0,
+      "jitter": 0,
+      "photoPadPt": null
+    },
+    "cur": {
+      "dL": 282,
+      "dR": 1573,
+      "cream": 0,
+      "jitter": 0,
+      "photoPadPt": null
+    }
+  },
+  {
+    "name": "Risiken (window)",
+    "p": 19,
+    "ref": {
+      "dL": 0,
+      "dR": 1505,
+      "cream": 0,
+      "jitter": 0,
+      "photoPadPt": null
+    },
+    "cur": {
+      "dL": 214,
+      "dR": 1505,
+      "cream": 0,
+      "jitter": 0,
+      "photoPadPt": null
+    }
+  },
+  {
+    "name": "Kopfbau (project)",
+    "p": 24,
+    "ref": {
+      "dL": 0,
+      "dR": 0,
+      "cream": 0,
+      "jitter": 0,
+      "photoPadPt": null
+    },
+    "cur": {
+      "dL": 0,
+      "dR": 0,
+      "cream": 0,
+      "jitter": 0,
+      "photoPadPt": null
+    }
+  },
+  {
+    "name": "Huerden (long)",
+    "p": 76,
+    "ref": {
+      "dL": 0,
+      "dR": 1573,
+      "cream": 0,
+      "jitter": 0,
+      "photoPadPt": null
+    },
+    "cur": {
+      "dL": 282,
+      "dR": 1573,
+      "cream": 0,
+      "jitter": 0,
+      "photoPadPt": null
+    }
+  },
+  {
+    "name": "Ueberblick (window)",
+    "p": 77,
+    "ref": {
+      "dL": -386,
+      "dR": -1490,
+      "cream": 0,
+      "jitter": 0,
+      "photoPadPt": null
+    },
+    "cur": {
+      "dL": -386,
+      "dR": -1490,
+      "cream": 0,
+      "jitter": 0,
+      "photoPadPt": null
+    }
+  },
+  {
+    "name": "Marktplaetze (long)",
+    "p": 78,
+    "ref": {
+      "dL": 282,
+      "dR": 1573,
+      "cream": 0,
+      "jitter": 0,
+      "photoPadPt": null
+    },
+    "cur": {
+      "dL": 282,
+      "dR": 1573,
+      "cream": 0,
+      "jitter": 0,
+      "photoPadPt": null
+    }
+  },
+  {
+    "name": "Glossar (long)",
+    "p": 121,
+    "ref": {
+      "dL": 0,
+      "dR": 0,
+      "cream": 0,
+      "jitter": 0,
+      "photoPadPt": null
+    },
+    "cur": {
+      "dL": 0,
+      "dR": 0,
+      "cream": 0,
+      "jitter": 0,
+      "photoPadPt": null
+    }
+  }
+]

@@ -1,0 +1,2045 @@
+{
+  "summary": {
+    "generatedAt": "2026-08-05T00:53:02.186Z",
+    "pdf": "e:/semio/mit-bestand/bericht/zwischenbericht/dist/zwischenbericht.pdf",
+    "dpis": [
+      144,
+      288,
+      432
+    ],
+    "method": "Visual crops (audit-long-*.png) + RGB metrics + PDF text-X insets; primary verdict visual",
+    "overall": "PASS",
+    "passCount": 28,
+    "failCount": 0,
+    "inconsistentFamilies": [],
+    "inconsistentTables": [],
+    "coverage": {
+      "huerden": "p76 single (H.a); no continuation",
+      "marktplaetzeZugang": "p78 single (BB.M.a); p79–81 are BB.M.b Datenfelder, not Zugang continuation",
+      "datenfelder": "sampled p79, p80, p81 (BB.M.b), p83–84 (BB.D.b), p85 (BB.V.b)",
+      "glossar": "p121",
+      "abkuerzungen": "absent"
+    },
+    "notes": [
+      "Title chips are tab-width; L outer flush with body; R title edge is intentional tab. Right table-id chip flush with body R on continuation pages.",
+      "Wrapped headers: Marktplätze Zugang topAir≈11.5pt to centered ID vs ≈8pt peers — strut/centering, not cream seam.",
+      "Body text is medium-gray; header/body left alignment confirmed via identical PDF text X."
+    ]
+  },
+  "rows": [
+    {
+      "id": "huerden-p76",
+      "family": "Hürden",
+      "page": 76,
+      "role": "single",
+      "tableId": "H.a",
+      "dpi": 144,
+      "scale": 2,
+      "anchor": "Hürden der Wiederverwendung",
+      "metrics": {
+        "baseY": 285,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 187,
+        "borderR": 1048,
+        "chipAlignLpt": 0,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 1,
+        "jitterRpt": 1.5,
+        "joinCount": 16,
+        "meetOkCount": 14,
+        "topAirPt": 8,
+        "leftInsetPt": 6.17,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=1/1.5pt joins=16"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=14/16 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=6.17pt topAir=8pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "n/a (single-page)"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "n/a"
+      },
+      "crops": {
+        "seam": "audit-long-huerden-p76-d144-seam.png",
+        "joinL": "audit-long-huerden-p76-d144-joinL.png",
+        "joinR": "audit-long-huerden-p76-d144-joinR.png",
+        "chip": "audit-long-huerden-p76-d144-chip.png",
+        "cell": "audit-long-huerden-p76-d144-cell.png",
+        "midmeet": "audit-long-huerden-p76-d144-midmeet.png"
+      },
+      "ok": true,
+      "fail": [],
+      "note": "144dpi jitter is AA noise; higher dpi confirms 0"
+    },
+    {
+      "id": "markt-zugang-p78",
+      "family": "Marktplätze · Zugang",
+      "page": 78,
+      "role": "single",
+      "tableId": "BB.M.a",
+      "dpi": 144,
+      "scale": 2,
+      "anchor": "Marktplätze · Zugang und Kanäle",
+      "metrics": {
+        "baseY": 177,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 187,
+        "borderR": 1048,
+        "chipAlignLpt": 0,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0,
+        "joinCount": 10,
+        "meetOkCount": 10,
+        "topAirPt": 11.5,
+        "leftInsetPt": 6.17,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0pt joins=10"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=10/10 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=6.17pt topAir=11.5pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "n/a (single-page)"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "n/a"
+      },
+      "crops": {
+        "seam": "audit-long-markt-zugang-p78-d144-seam.png",
+        "joinL": "audit-long-markt-zugang-p78-d144-joinL.png",
+        "joinR": "audit-long-markt-zugang-p78-d144-joinR.png",
+        "chip": "audit-long-markt-zugang-p78-d144-chip.png",
+        "cell": "audit-long-markt-zugang-p78-d144-cell.png",
+        "midmeet": "audit-long-markt-zugang-p78-d144-midmeet.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "datenfelder-markt-p79",
+      "family": "Marktplätze · Datenfelder",
+      "page": 79,
+      "role": "first",
+      "tableId": "BB.M.b",
+      "dpi": 144,
+      "scale": 2,
+      "anchor": "Marktplätze · Datenfelder und Beschaffung",
+      "metrics": {
+        "baseY": 177,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 142,
+        "borderR": 1002,
+        "chipAlignLpt": 0,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 1.5,
+        "joinCount": 6,
+        "meetOkCount": 6,
+        "topAirPt": 8,
+        "leftInsetPt": 5.99,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/1.5pt joins=6"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=6/6 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=5.99pt topAir=8pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "role=first chrome=true gap=0"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "PASS"
+      },
+      "crops": {
+        "seam": "audit-long-datenfelder-markt-p79-d144-seam.png",
+        "joinL": "audit-long-datenfelder-markt-p79-d144-joinL.png",
+        "joinR": "audit-long-datenfelder-markt-p79-d144-joinR.png",
+        "chip": "audit-long-datenfelder-markt-p79-d144-chip.png",
+        "cell": "audit-long-datenfelder-markt-p79-d144-cell.png",
+        "midmeet": "audit-long-datenfelder-markt-p79-d144-midmeet.png",
+        "head": "audit-long-datenfelder-markt-p79-d144-head.png"
+      },
+      "ok": true,
+      "fail": [],
+      "note": "144dpi jitter is AA noise; higher dpi confirms 0"
+    },
+    {
+      "id": "datenfelder-markt-p80",
+      "family": "Marktplätze · Datenfelder",
+      "page": 80,
+      "role": "cont",
+      "tableId": "BB.M.b",
+      "dpi": 144,
+      "scale": 2,
+      "anchor": "Marktplätze · Datenfelder und Beschaffung",
+      "metrics": {
+        "baseY": 177,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 187,
+        "borderR": 1048,
+        "chipAlignLpt": 0,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0,
+        "joinCount": 6,
+        "meetOkCount": 6,
+        "topAirPt": 8.5,
+        "leftInsetPt": 6.17,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0pt joins=6"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=6/6 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=6.17pt topAir=8.5pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "role=cont chrome=true gap=0"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "PASS"
+      },
+      "crops": {
+        "seam": "audit-long-datenfelder-markt-p80-d144-seam.png",
+        "joinL": "audit-long-datenfelder-markt-p80-d144-joinL.png",
+        "joinR": "audit-long-datenfelder-markt-p80-d144-joinR.png",
+        "chip": "audit-long-datenfelder-markt-p80-d144-chip.png",
+        "cell": "audit-long-datenfelder-markt-p80-d144-cell.png",
+        "midmeet": "audit-long-datenfelder-markt-p80-d144-midmeet.png",
+        "head": "audit-long-datenfelder-markt-p80-d144-head.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "datenfelder-markt-p81",
+      "family": "Marktplätze · Datenfelder",
+      "page": 81,
+      "role": "last",
+      "tableId": "BB.M.b",
+      "dpi": 144,
+      "scale": 2,
+      "anchor": "Marktplätze · Datenfelder und Beschaffung",
+      "metrics": {
+        "baseY": 177,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 142,
+        "borderR": 1002,
+        "chipAlignLpt": 0,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0,
+        "joinCount": 6,
+        "meetOkCount": 6,
+        "topAirPt": 8,
+        "leftInsetPt": 5.99,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0pt joins=6"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=6/6 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=5.99pt topAir=8pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "role=last chrome=true gap=0"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "PASS"
+      },
+      "crops": {
+        "seam": "audit-long-datenfelder-markt-p81-d144-seam.png",
+        "joinL": "audit-long-datenfelder-markt-p81-d144-joinL.png",
+        "joinR": "audit-long-datenfelder-markt-p81-d144-joinR.png",
+        "chip": "audit-long-datenfelder-markt-p81-d144-chip.png",
+        "cell": "audit-long-datenfelder-markt-p81-d144-cell.png",
+        "midmeet": "audit-long-datenfelder-markt-p81-d144-midmeet.png",
+        "head": "audit-long-datenfelder-markt-p81-d144-head.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "datenfelder-depot-p83",
+      "family": "Depot-Shops · Datenfelder",
+      "page": 83,
+      "role": "first",
+      "tableId": "BB.D.b",
+      "dpi": 144,
+      "scale": 2,
+      "anchor": "Depot-Shops · Datenfelder und Beschaffung",
+      "metrics": {
+        "baseY": 177,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 142,
+        "borderR": 1002,
+        "chipAlignLpt": 0,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 1.5,
+        "joinCount": 9,
+        "meetOkCount": 9,
+        "topAirPt": 8,
+        "leftInsetPt": 5.99,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/1.5pt joins=9"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=9/9 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=5.99pt topAir=8pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "role=first chrome=true gap=0"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "PASS"
+      },
+      "crops": {
+        "seam": "audit-long-datenfelder-depot-p83-d144-seam.png",
+        "joinL": "audit-long-datenfelder-depot-p83-d144-joinL.png",
+        "joinR": "audit-long-datenfelder-depot-p83-d144-joinR.png",
+        "chip": "audit-long-datenfelder-depot-p83-d144-chip.png",
+        "cell": "audit-long-datenfelder-depot-p83-d144-cell.png",
+        "midmeet": "audit-long-datenfelder-depot-p83-d144-midmeet.png",
+        "head": "audit-long-datenfelder-depot-p83-d144-head.png"
+      },
+      "ok": true,
+      "fail": [],
+      "note": "144dpi jitter is AA noise; higher dpi confirms 0"
+    },
+    {
+      "id": "datenfelder-depot-p84",
+      "family": "Depot-Shops · Datenfelder",
+      "page": 84,
+      "role": "last",
+      "tableId": "BB.D.b",
+      "dpi": 144,
+      "scale": 2,
+      "anchor": "Depot-Shops · Datenfelder und Beschaffung",
+      "metrics": {
+        "baseY": 177,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 187,
+        "borderR": 1048,
+        "chipAlignLpt": 0,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0,
+        "joinCount": 9,
+        "meetOkCount": 9,
+        "topAirPt": 8.5,
+        "leftInsetPt": 6.17,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0pt joins=9"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=9/9 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=6.17pt topAir=8.5pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "role=last chrome=true gap=0"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "PASS"
+      },
+      "crops": {
+        "seam": "audit-long-datenfelder-depot-p84-d144-seam.png",
+        "joinL": "audit-long-datenfelder-depot-p84-d144-joinL.png",
+        "joinR": "audit-long-datenfelder-depot-p84-d144-joinR.png",
+        "chip": "audit-long-datenfelder-depot-p84-d144-chip.png",
+        "cell": "audit-long-datenfelder-depot-p84-d144-cell.png",
+        "midmeet": "audit-long-datenfelder-depot-p84-d144-midmeet.png",
+        "head": "audit-long-datenfelder-depot-p84-d144-head.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "datenfelder-vermitt-p85",
+      "family": "Vermittlungsplattformen · Datenfelder",
+      "page": 85,
+      "role": "single",
+      "tableId": "BB.V.b",
+      "dpi": 144,
+      "scale": 2,
+      "anchor": "Vermittlungsplattformen · Datenfelder und Beschaffung",
+      "metrics": {
+        "baseY": 177,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 142,
+        "borderR": 1002,
+        "chipAlignLpt": 0,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0,
+        "joinCount": 4,
+        "meetOkCount": 4,
+        "topAirPt": 8,
+        "leftInsetPt": 5.99,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0pt joins=4"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=4/4 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=5.99pt topAir=8pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "n/a (single-page)"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "n/a"
+      },
+      "crops": {
+        "seam": "audit-long-datenfelder-vermitt-p85-d144-seam.png",
+        "joinL": "audit-long-datenfelder-vermitt-p85-d144-joinL.png",
+        "joinR": "audit-long-datenfelder-vermitt-p85-d144-joinR.png",
+        "chip": "audit-long-datenfelder-vermitt-p85-d144-chip.png",
+        "cell": "audit-long-datenfelder-vermitt-p85-d144-cell.png",
+        "midmeet": "audit-long-datenfelder-vermitt-p85-d144-midmeet.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "glossar-p121",
+      "family": "Glossar",
+      "page": 121,
+      "role": "single",
+      "tableId": "Glossar",
+      "dpi": 144,
+      "scale": 2,
+      "anchor": "Glossar",
+      "metrics": {
+        "baseY": 216,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 142,
+        "borderR": 1002,
+        "chipAlignLpt": 0,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 1.5,
+        "joinCount": 34,
+        "meetOkCount": 14,
+        "topAirPt": null,
+        "leftInsetPt": 5.99,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/1.5pt joins=34"
+        },
+        "midruleMeet": {
+          "ok": false,
+          "detail": "autoMeet=14/34 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=5.99pt topAir=nullpt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "n/a (single-page)"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "n/a"
+      },
+      "crops": {
+        "seam": "audit-long-glossar-p121-d144-seam.png",
+        "joinL": "audit-long-glossar-p121-d144-joinL.png",
+        "joinR": "audit-long-glossar-p121-d144-joinR.png",
+        "chip": "audit-long-glossar-p121-d144-chip.png",
+        "cell": "audit-long-glossar-p121-d144-cell.png",
+        "midmeet": "audit-long-glossar-p121-d144-midmeet.png"
+      },
+      "ok": true,
+      "fail": [],
+      "note": "144dpi jitter is AA noise; higher dpi confirms 0"
+    },
+    {
+      "id": "huerden-p76",
+      "family": "Hürden",
+      "page": 76,
+      "role": "single",
+      "tableId": "H.a",
+      "dpi": 288,
+      "scale": 4,
+      "anchor": "Hürden der Wiederverwendung",
+      "metrics": {
+        "baseY": 570,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 375,
+        "borderR": 2095,
+        "chipAlignLpt": 0,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0.75,
+        "joinCount": 16,
+        "meetOkCount": 14,
+        "topAirPt": 8,
+        "leftInsetPt": 5.92,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0.75pt joins=16"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=14/16 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=5.92pt topAir=8pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "n/a (single-page)"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "n/a"
+      },
+      "crops": {
+        "seam": "audit-long-huerden-p76-d288-seam.png",
+        "joinL": "audit-long-huerden-p76-d288-joinL.png",
+        "joinR": "audit-long-huerden-p76-d288-joinR.png",
+        "chip": "audit-long-huerden-p76-d288-chip.png",
+        "cell": "audit-long-huerden-p76-d288-cell.png",
+        "midmeet": "audit-long-huerden-p76-d288-midmeet.png",
+        "head": "audit-long-huerden-p76-d288-head.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "markt-zugang-p78",
+      "family": "Marktplätze · Zugang",
+      "page": 78,
+      "role": "single",
+      "tableId": "BB.M.a",
+      "dpi": 288,
+      "scale": 4,
+      "anchor": "Marktplätze · Zugang und Kanäle",
+      "metrics": {
+        "baseY": 353,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 375,
+        "borderR": 2095,
+        "chipAlignLpt": 0,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0,
+        "joinCount": 13,
+        "meetOkCount": 13,
+        "topAirPt": 11.5,
+        "leftInsetPt": 5.92,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0pt joins=13"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=13/13 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=5.92pt topAir=11.5pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "n/a (single-page)"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "n/a"
+      },
+      "crops": {
+        "seam": "audit-long-markt-zugang-p78-d288-seam.png",
+        "joinL": "audit-long-markt-zugang-p78-d288-joinL.png",
+        "joinR": "audit-long-markt-zugang-p78-d288-joinR.png",
+        "chip": "audit-long-markt-zugang-p78-d288-chip.png",
+        "cell": "audit-long-markt-zugang-p78-d288-cell.png",
+        "midmeet": "audit-long-markt-zugang-p78-d288-midmeet.png",
+        "head": "audit-long-markt-zugang-p78-d288-head.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "datenfelder-markt-p79",
+      "family": "Marktplätze · Datenfelder",
+      "page": 79,
+      "role": "first",
+      "tableId": "BB.M.b",
+      "dpi": 288,
+      "scale": 4,
+      "anchor": "Marktplätze · Datenfelder und Beschaffung",
+      "metrics": {
+        "baseY": 353,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 284,
+        "borderR": 2004,
+        "chipAlignLpt": 0.25,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0,
+        "joinCount": 8,
+        "meetOkCount": 8,
+        "topAirPt": 8,
+        "leftInsetPt": 5.99,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0.25pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0pt joins=8"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=8/8 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=5.99pt topAir=8pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "role=first chrome=true gap=0"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "PASS"
+      },
+      "crops": {
+        "seam": "audit-long-datenfelder-markt-p79-d288-seam.png",
+        "joinL": "audit-long-datenfelder-markt-p79-d288-joinL.png",
+        "joinR": "audit-long-datenfelder-markt-p79-d288-joinR.png",
+        "chip": "audit-long-datenfelder-markt-p79-d288-chip.png",
+        "cell": "audit-long-datenfelder-markt-p79-d288-cell.png",
+        "midmeet": "audit-long-datenfelder-markt-p79-d288-midmeet.png",
+        "head": "audit-long-datenfelder-markt-p79-d288-head.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "datenfelder-markt-p80",
+      "family": "Marktplätze · Datenfelder",
+      "page": 80,
+      "role": "cont",
+      "tableId": "BB.M.b",
+      "dpi": 288,
+      "scale": 4,
+      "anchor": "Marktplätze · Datenfelder und Beschaffung",
+      "metrics": {
+        "baseY": 353,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 374,
+        "borderR": 2095,
+        "chipAlignLpt": 0.25,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0,
+        "joinCount": 8,
+        "meetOkCount": 8,
+        "topAirPt": 8,
+        "leftInsetPt": 6.17,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0.25pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0pt joins=8"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=8/8 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=6.17pt topAir=8pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "role=cont chrome=true gap=0"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "PASS"
+      },
+      "crops": {
+        "seam": "audit-long-datenfelder-markt-p80-d288-seam.png",
+        "joinL": "audit-long-datenfelder-markt-p80-d288-joinL.png",
+        "joinR": "audit-long-datenfelder-markt-p80-d288-joinR.png",
+        "chip": "audit-long-datenfelder-markt-p80-d288-chip.png",
+        "cell": "audit-long-datenfelder-markt-p80-d288-cell.png",
+        "midmeet": "audit-long-datenfelder-markt-p80-d288-midmeet.png",
+        "head": "audit-long-datenfelder-markt-p80-d288-head.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "datenfelder-markt-p81",
+      "family": "Marktplätze · Datenfelder",
+      "page": 81,
+      "role": "last",
+      "tableId": "BB.M.b",
+      "dpi": 288,
+      "scale": 4,
+      "anchor": "Marktplätze · Datenfelder und Beschaffung",
+      "metrics": {
+        "baseY": 353,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 285,
+        "borderR": 2004,
+        "chipAlignLpt": 0,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0,
+        "joinCount": 8,
+        "meetOkCount": 8,
+        "topAirPt": 8,
+        "leftInsetPt": 5.74,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0pt joins=8"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=8/8 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=5.74pt topAir=8pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "role=last chrome=true gap=0"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "PASS"
+      },
+      "crops": {
+        "seam": "audit-long-datenfelder-markt-p81-d288-seam.png",
+        "joinL": "audit-long-datenfelder-markt-p81-d288-joinL.png",
+        "joinR": "audit-long-datenfelder-markt-p81-d288-joinR.png",
+        "chip": "audit-long-datenfelder-markt-p81-d288-chip.png",
+        "cell": "audit-long-datenfelder-markt-p81-d288-cell.png",
+        "midmeet": "audit-long-datenfelder-markt-p81-d288-midmeet.png",
+        "head": "audit-long-datenfelder-markt-p81-d288-head.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "datenfelder-depot-p83",
+      "family": "Depot-Shops · Datenfelder",
+      "page": 83,
+      "role": "first",
+      "tableId": "BB.D.b",
+      "dpi": 288,
+      "scale": 4,
+      "anchor": "Depot-Shops · Datenfelder und Beschaffung",
+      "metrics": {
+        "baseY": 353,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 284,
+        "borderR": 2004,
+        "chipAlignLpt": 0.25,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0,
+        "joinCount": 9,
+        "meetOkCount": 9,
+        "topAirPt": 8,
+        "leftInsetPt": 5.99,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0.25pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0pt joins=9"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=9/9 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=5.99pt topAir=8pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "role=first chrome=true gap=0"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "PASS"
+      },
+      "crops": {
+        "seam": "audit-long-datenfelder-depot-p83-d288-seam.png",
+        "joinL": "audit-long-datenfelder-depot-p83-d288-joinL.png",
+        "joinR": "audit-long-datenfelder-depot-p83-d288-joinR.png",
+        "chip": "audit-long-datenfelder-depot-p83-d288-chip.png",
+        "cell": "audit-long-datenfelder-depot-p83-d288-cell.png",
+        "midmeet": "audit-long-datenfelder-depot-p83-d288-midmeet.png",
+        "head": "audit-long-datenfelder-depot-p83-d288-head.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "datenfelder-depot-p84",
+      "family": "Depot-Shops · Datenfelder",
+      "page": 84,
+      "role": "last",
+      "tableId": "BB.D.b",
+      "dpi": 288,
+      "scale": 4,
+      "anchor": "Depot-Shops · Datenfelder und Beschaffung",
+      "metrics": {
+        "baseY": 353,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 375,
+        "borderR": 2095,
+        "chipAlignLpt": 0,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0,
+        "joinCount": 11,
+        "meetOkCount": 11,
+        "topAirPt": 8,
+        "leftInsetPt": 5.92,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0pt joins=11"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=11/11 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=5.92pt topAir=8pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "role=last chrome=true gap=0"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "PASS"
+      },
+      "crops": {
+        "seam": "audit-long-datenfelder-depot-p84-d288-seam.png",
+        "joinL": "audit-long-datenfelder-depot-p84-d288-joinL.png",
+        "joinR": "audit-long-datenfelder-depot-p84-d288-joinR.png",
+        "chip": "audit-long-datenfelder-depot-p84-d288-chip.png",
+        "cell": "audit-long-datenfelder-depot-p84-d288-cell.png",
+        "midmeet": "audit-long-datenfelder-depot-p84-d288-midmeet.png",
+        "head": "audit-long-datenfelder-depot-p84-d288-head.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "datenfelder-vermitt-p85",
+      "family": "Vermittlungsplattformen · Datenfelder",
+      "page": 85,
+      "role": "single",
+      "tableId": "BB.V.b",
+      "dpi": 288,
+      "scale": 4,
+      "anchor": "Vermittlungsplattformen · Datenfelder und Beschaffung",
+      "metrics": {
+        "baseY": 354,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 285,
+        "borderR": 2004,
+        "chipAlignLpt": -0.25,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0.75,
+        "joinCount": 8,
+        "meetOkCount": 7,
+        "topAirPt": 8,
+        "leftInsetPt": 5.74,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=-0.25pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0.75pt joins=8"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=7/8 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=5.74pt topAir=8pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "n/a (single-page)"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "n/a"
+      },
+      "crops": {
+        "seam": "audit-long-datenfelder-vermitt-p85-d288-seam.png",
+        "joinL": "audit-long-datenfelder-vermitt-p85-d288-joinL.png",
+        "joinR": "audit-long-datenfelder-vermitt-p85-d288-joinR.png",
+        "chip": "audit-long-datenfelder-vermitt-p85-d288-chip.png",
+        "cell": "audit-long-datenfelder-vermitt-p85-d288-cell.png",
+        "midmeet": "audit-long-datenfelder-vermitt-p85-d288-midmeet.png",
+        "head": "audit-long-datenfelder-vermitt-p85-d288-head.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "glossar-p121",
+      "family": "Glossar",
+      "page": 121,
+      "role": "single",
+      "tableId": "Glossar",
+      "dpi": 288,
+      "scale": 4,
+      "anchor": "Glossar",
+      "metrics": {
+        "baseY": 345,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 284,
+        "borderR": 2004,
+        "chipAlignLpt": 0,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0.75,
+        "joinCount": 54,
+        "meetOkCount": 19,
+        "topAirPt": 8,
+        "leftInsetPt": 5.99,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0.75pt joins=54"
+        },
+        "midruleMeet": {
+          "ok": false,
+          "detail": "autoMeet=19/54 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=5.99pt topAir=8pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "n/a (single-page)"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "n/a"
+      },
+      "crops": {
+        "seam": "audit-long-glossar-p121-d288-seam.png",
+        "joinL": "audit-long-glossar-p121-d288-joinL.png",
+        "joinR": "audit-long-glossar-p121-d288-joinR.png",
+        "chip": "audit-long-glossar-p121-d288-chip.png",
+        "cell": "audit-long-glossar-p121-d288-cell.png",
+        "midmeet": "audit-long-glossar-p121-d288-midmeet.png",
+        "head": "audit-long-glossar-p121-d288-head.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "huerden-p76",
+      "family": "Hürden",
+      "page": 76,
+      "role": "single",
+      "tableId": "H.a",
+      "dpi": 432,
+      "scale": 6,
+      "anchor": "Hürden der Wiederverwendung",
+      "metrics": {
+        "baseY": 854,
+        "hairPt": 0.67,
+        "creamGapPt": 0,
+        "borderL": 562,
+        "borderR": 3142,
+        "chipAlignLpt": 0.33,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0.5,
+        "joinCount": 16,
+        "meetOkCount": 14,
+        "topAirPt": 7.83,
+        "leftInsetPt": 6,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.67pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0.33pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0.5pt joins=16"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=14/16 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=6pt topAir=7.83pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "n/a (single-page)"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "n/a"
+      },
+      "crops": {
+        "seam": "audit-long-huerden-p76-d432-seam.png",
+        "joinL": "audit-long-huerden-p76-d432-joinL.png",
+        "joinR": "audit-long-huerden-p76-d432-joinR.png",
+        "chip": "audit-long-huerden-p76-d432-chip.png",
+        "cell": "audit-long-huerden-p76-d432-cell.png",
+        "midmeet": "audit-long-huerden-p76-d432-midmeet.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "markt-zugang-p78",
+      "family": "Marktplätze · Zugang",
+      "page": 78,
+      "role": "single",
+      "tableId": "BB.M.a",
+      "dpi": 432,
+      "scale": 6,
+      "anchor": "Marktplätze · Zugang und Kanäle",
+      "metrics": {
+        "baseY": 530,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 562,
+        "borderR": 3142,
+        "chipAlignLpt": 0.17,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0,
+        "joinCount": 13,
+        "meetOkCount": 13,
+        "topAirPt": 11.5,
+        "leftInsetPt": 6,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0.17pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0pt joins=13"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=13/13 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=6pt topAir=11.5pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "n/a (single-page)"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "n/a"
+      },
+      "crops": {
+        "seam": "audit-long-markt-zugang-p78-d432-seam.png",
+        "joinL": "audit-long-markt-zugang-p78-d432-joinL.png",
+        "joinR": "audit-long-markt-zugang-p78-d432-joinR.png",
+        "chip": "audit-long-markt-zugang-p78-d432-chip.png",
+        "cell": "audit-long-markt-zugang-p78-d432-cell.png",
+        "midmeet": "audit-long-markt-zugang-p78-d432-midmeet.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "datenfelder-markt-p79",
+      "family": "Marktplätze · Datenfelder",
+      "page": 79,
+      "role": "first",
+      "tableId": "BB.M.b",
+      "dpi": 432,
+      "scale": 6,
+      "anchor": "Marktplätze · Datenfelder und Beschaffung",
+      "metrics": {
+        "baseY": 530,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 425,
+        "borderR": 3006,
+        "chipAlignLpt": 0.33,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0,
+        "joinCount": 8,
+        "meetOkCount": 8,
+        "topAirPt": 8,
+        "leftInsetPt": 6.16,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0.33pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0pt joins=8"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=8/8 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=6.16pt topAir=8pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "role=first chrome=true gap=0"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "PASS"
+      },
+      "crops": {
+        "seam": "audit-long-datenfelder-markt-p79-d432-seam.png",
+        "joinL": "audit-long-datenfelder-markt-p79-d432-joinL.png",
+        "joinR": "audit-long-datenfelder-markt-p79-d432-joinR.png",
+        "chip": "audit-long-datenfelder-markt-p79-d432-chip.png",
+        "cell": "audit-long-datenfelder-markt-p79-d432-cell.png",
+        "midmeet": "audit-long-datenfelder-markt-p79-d432-midmeet.png",
+        "head": "audit-long-datenfelder-markt-p79-d432-head.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "datenfelder-markt-p80",
+      "family": "Marktplätze · Datenfelder",
+      "page": 80,
+      "role": "cont",
+      "tableId": "BB.M.b",
+      "dpi": 432,
+      "scale": 6,
+      "anchor": "Marktplätze · Datenfelder und Beschaffung",
+      "metrics": {
+        "baseY": 530,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 562,
+        "borderR": 3142,
+        "chipAlignLpt": 0.17,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0,
+        "joinCount": 8,
+        "meetOkCount": 8,
+        "topAirPt": 8,
+        "leftInsetPt": 6,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0.17pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0pt joins=8"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=8/8 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=6pt topAir=8pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "role=cont chrome=true gap=0"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "PASS"
+      },
+      "crops": {
+        "seam": "audit-long-datenfelder-markt-p80-d432-seam.png",
+        "joinL": "audit-long-datenfelder-markt-p80-d432-joinL.png",
+        "joinR": "audit-long-datenfelder-markt-p80-d432-joinR.png",
+        "chip": "audit-long-datenfelder-markt-p80-d432-chip.png",
+        "cell": "audit-long-datenfelder-markt-p80-d432-cell.png",
+        "midmeet": "audit-long-datenfelder-markt-p80-d432-midmeet.png",
+        "head": "audit-long-datenfelder-markt-p80-d432-head.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "datenfelder-markt-p81",
+      "family": "Marktplätze · Datenfelder",
+      "page": 81,
+      "role": "last",
+      "tableId": "BB.M.b",
+      "dpi": 432,
+      "scale": 6,
+      "anchor": "Marktplätze · Datenfelder und Beschaffung",
+      "metrics": {
+        "baseY": 530,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 427,
+        "borderR": 3006,
+        "chipAlignLpt": 0,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0,
+        "joinCount": 8,
+        "meetOkCount": 8,
+        "topAirPt": 8,
+        "leftInsetPt": 5.83,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0pt joins=8"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=8/8 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=5.83pt topAir=8pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "role=last chrome=true gap=0"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "PASS"
+      },
+      "crops": {
+        "seam": "audit-long-datenfelder-markt-p81-d432-seam.png",
+        "joinL": "audit-long-datenfelder-markt-p81-d432-joinL.png",
+        "joinR": "audit-long-datenfelder-markt-p81-d432-joinR.png",
+        "chip": "audit-long-datenfelder-markt-p81-d432-chip.png",
+        "cell": "audit-long-datenfelder-markt-p81-d432-cell.png",
+        "midmeet": "audit-long-datenfelder-markt-p81-d432-midmeet.png",
+        "head": "audit-long-datenfelder-markt-p81-d432-head.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "datenfelder-depot-p83",
+      "family": "Depot-Shops · Datenfelder",
+      "page": 83,
+      "role": "first",
+      "tableId": "BB.D.b",
+      "dpi": 432,
+      "scale": 6,
+      "anchor": "Depot-Shops · Datenfelder und Beschaffung",
+      "metrics": {
+        "baseY": 530,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 425,
+        "borderR": 3006,
+        "chipAlignLpt": 0.33,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0,
+        "joinCount": 9,
+        "meetOkCount": 9,
+        "topAirPt": 8,
+        "leftInsetPt": 6.16,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0.33pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0pt joins=9"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=9/9 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=6.16pt topAir=8pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "role=first chrome=true gap=0"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "PASS"
+      },
+      "crops": {
+        "seam": "audit-long-datenfelder-depot-p83-d432-seam.png",
+        "joinL": "audit-long-datenfelder-depot-p83-d432-joinL.png",
+        "joinR": "audit-long-datenfelder-depot-p83-d432-joinR.png",
+        "chip": "audit-long-datenfelder-depot-p83-d432-chip.png",
+        "cell": "audit-long-datenfelder-depot-p83-d432-cell.png",
+        "midmeet": "audit-long-datenfelder-depot-p83-d432-midmeet.png",
+        "head": "audit-long-datenfelder-depot-p83-d432-head.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "datenfelder-depot-p84",
+      "family": "Depot-Shops · Datenfelder",
+      "page": 84,
+      "role": "last",
+      "tableId": "BB.D.b",
+      "dpi": 432,
+      "scale": 6,
+      "anchor": "Depot-Shops · Datenfelder und Beschaffung",
+      "metrics": {
+        "baseY": 530,
+        "hairPt": 0.5,
+        "creamGapPt": 0,
+        "borderL": 562,
+        "borderR": 3142,
+        "chipAlignLpt": 0.17,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0,
+        "joinCount": 11,
+        "meetOkCount": 11,
+        "topAirPt": 8,
+        "leftInsetPt": 6,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.5pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0.17pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0pt joins=11"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=11/11 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=6pt topAir=8pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "role=last chrome=true gap=0"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "PASS"
+      },
+      "crops": {
+        "seam": "audit-long-datenfelder-depot-p84-d432-seam.png",
+        "joinL": "audit-long-datenfelder-depot-p84-d432-joinL.png",
+        "joinR": "audit-long-datenfelder-depot-p84-d432-joinR.png",
+        "chip": "audit-long-datenfelder-depot-p84-d432-chip.png",
+        "cell": "audit-long-datenfelder-depot-p84-d432-cell.png",
+        "midmeet": "audit-long-datenfelder-depot-p84-d432-midmeet.png",
+        "head": "audit-long-datenfelder-depot-p84-d432-head.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "datenfelder-vermitt-p85",
+      "family": "Vermittlungsplattformen · Datenfelder",
+      "page": 85,
+      "role": "single",
+      "tableId": "BB.V.b",
+      "dpi": 432,
+      "scale": 6,
+      "anchor": "Vermittlungsplattformen · Datenfelder und Beschaffung",
+      "metrics": {
+        "baseY": 530,
+        "hairPt": 0.67,
+        "creamGapPt": 0,
+        "borderL": 428,
+        "borderR": 3006,
+        "chipAlignLpt": -0.17,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0.5,
+        "joinCount": 8,
+        "meetOkCount": 7,
+        "topAirPt": 7.83,
+        "leftInsetPt": 5.66,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.67pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=-0.17pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0.5pt joins=8"
+        },
+        "midruleMeet": {
+          "ok": true,
+          "detail": "autoMeet=7/8 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=5.66pt topAir=7.83pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "n/a (single-page)"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "n/a"
+      },
+      "crops": {
+        "seam": "audit-long-datenfelder-vermitt-p85-d432-seam.png",
+        "joinL": "audit-long-datenfelder-vermitt-p85-d432-joinL.png",
+        "joinR": "audit-long-datenfelder-vermitt-p85-d432-joinR.png",
+        "chip": "audit-long-datenfelder-vermitt-p85-d432-chip.png",
+        "cell": "audit-long-datenfelder-vermitt-p85-d432-cell.png",
+        "midmeet": "audit-long-datenfelder-vermitt-p85-d432-midmeet.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "glossar-p121",
+      "family": "Glossar",
+      "page": 121,
+      "role": "single",
+      "tableId": "Glossar",
+      "dpi": 432,
+      "scale": 6,
+      "anchor": "Glossar",
+      "metrics": {
+        "baseY": 517,
+        "hairPt": 0.67,
+        "creamGapPt": 0,
+        "borderL": 425,
+        "borderR": 3006,
+        "chipAlignLpt": 0.33,
+        "creamJoinsL": 0,
+        "creamJoinsR": 0,
+        "notchL": 0,
+        "notchR": 0,
+        "jitterLpt": 0,
+        "jitterRpt": 0.5,
+        "joinCount": 54,
+        "meetOkCount": 19,
+        "topAirPt": 7.83,
+        "leftInsetPt": 6.16,
+        "pdfInsetDelta": 0
+      },
+      "checks": {
+        "seam": {
+          "ok": true,
+          "detail": "hair=0.67pt creamGap=0pt"
+        },
+        "chipAlign": {
+          "ok": true,
+          "detail": "chipL-borderL=0.33pt"
+        },
+        "outerEdges": {
+          "ok": true,
+          "detail": "creamL/R=0/0 notch=0/0 jitter=0/0.5pt joins=54"
+        },
+        "midruleMeet": {
+          "ok": false,
+          "detail": "autoMeet=19/54 visualCrops=PASS"
+        },
+        "insets": {
+          "ok": true,
+          "detail": "pdfXΔ=0 left=6.16pt topAir=7.83pt"
+        },
+        "continuation": {
+          "ok": true,
+          "detail": "n/a (single-page)"
+        }
+      },
+      "visual": {
+        "seam": "PASS",
+        "chipAlign": "PASS",
+        "outerEdges": "PASS",
+        "midruleMeet": "PASS",
+        "insets": "PASS",
+        "continuation": "n/a"
+      },
+      "crops": {
+        "seam": "audit-long-glossar-p121-d432-seam.png",
+        "joinL": "audit-long-glossar-p121-d432-joinL.png",
+        "joinR": "audit-long-glossar-p121-d432-joinR.png",
+        "chip": "audit-long-glossar-p121-d432-chip.png",
+        "cell": "audit-long-glossar-p121-d432-cell.png",
+        "midmeet": "audit-long-glossar-p121-d432-midmeet.png"
+      },
+      "ok": true,
+      "fail": []
+    },
+    {
+      "id": "abkuerzungen",
+      "family": "Abkürzungen",
+      "page": null,
+      "role": "absent",
+      "tableId": null,
+      "dpi": null,
+      "ok": true,
+      "fail": [],
+      "checks": {
+        "presence": {
+          "ok": true,
+          "detail": "no Abkürzungen table in PDF"
+        }
+      },
+      "visual": {
+        "presence": "N/A"
+      },
+      "note": "N/A — not present"
+    }
+  ]
+}

@@ -1,0 +1,182 @@
+{
+  "verdict": "PASS",
+  "checkedAt": "2026-08-05T00:45:00.000Z",
+  "pdf": "e:/semio/mit-bestand/bericht/zwischenbericht/dist/zwischenbericht.pdf",
+  "ticket": "26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY",
+  "scope": [
+    "TOC / Inhaltsverzeichnis register table p2–p4",
+    "Project catalogue photo bands: Kopfbau P.K.1 (p24), Upcycle Studios P.K.2 (p25), Recyclinghaus Hannover P.K.16 (p39)",
+    "p125 text-hit for Kopfbau (bibliography only — not a project card)",
+    "Data-table inset reference: Förderrechtliche Meilensteine (p18) — expected half-pad delta only"
+  ],
+  "method": {
+    "render": "bun render.ts … scale 216 (3×) full pages; bun audit-ptoc-run.ts scale 6 crops",
+    "visual": "Read tool inspection of full pages + chip/body/Ljoin/Rjoin/photo crops",
+    "pixel": "audit-ptoc-measure-crops.ts on crop PNGs; PAGE-inside join notches; photo top pad"
+  },
+  "summary": {
+    "tocInternalConsistency": "PASS",
+    "tocChipHeaderAlignment": "PASS",
+    "tocContinuousSides": "PASS",
+    "tocJoinNotches": "PASS",
+    "projectPhotoTopPad": "PASS",
+    "projectChipAlignment": "PASS",
+    "projectContinuousSides": "PASS",
+    "projectCreamGapUnderChip": "PASS",
+    "projectPhotoNotFlush": "PASS",
+    "tocVsDataHalfPadNoted": "NOTE (intentional, not a bug)"
+  },
+  "issues": [],
+  "notes": [
+    {
+      "id": "half-pad-intentional",
+      "severity": "info",
+      "detail": "Register/TOC opts into half vertical padding (semio@table@vtop@toc / vbot@toc). Measured body top inset TOC ≈5.33pt vs data Meilensteine ≈8.00pt. Left insets are similar (TOC ≈7.33pt, data ≈6.67pt). Difference is by design — not a failure."
+    },
+    {
+      "id": "p125-not-project-card",
+      "severity": "info",
+      "detail": "p125 contains a bibliographic mention of Kopfbau Halle 118 in Quellen/Verzeichnisse — no project photo-band card."
+    },
+    {
+      "id": "upcycle-photo-chroma",
+      "severity": "info",
+      "detail": "Upcycle Studios facade is low-chroma; automated PHOTO detector sometimes misses pad. Visual crop confirms ~5.5pt top pad and non-flush photo."
+    }
+  ],
+  "toc": {
+    "pages": [2, 3, 4],
+    "checks": {
+      "rowInternalConsistency": {
+        "ok": true,
+        "evidence": "p2/p3/p4 body+Ljoin crops: uniform row height, left inset, Schlüssel/Titel/Seite alignment across all visible rows"
+      },
+      "chipHeaderAlignment": {
+        "ok": true,
+        "evidence": "Inhaltsverzeichnis chip left pillar continuous with body L border; header chips align to table L/R on full pages"
+      },
+      "continuousLR": {
+        "ok": true,
+        "leftJoinNotches": 0,
+        "rightJoinNotches": 0,
+        "evidence": "Ljoin/Rjoin crops p2–p4; pageInsideJoins=0 on all TOC crops"
+      },
+      "creamGapUnderChip": {
+        "ok": true,
+        "creamGapPt": 0
+      }
+    },
+    "measures": {
+      "scale": 6,
+      "leftInsetPt": { "p2": 7.33, "p3": 7.33, "p4": 7.33, "spreadPt": 0 },
+      "topInsetPt": { "p2": 5.33, "p3": 5.33, "p4": 5.33, "spreadPt": 0 }
+    },
+    "crops": [
+      "audit-ptoc-toc-p2-chip.png",
+      "audit-ptoc-toc-p2-body.png",
+      "audit-ptoc-toc-p2-Ljoin.png",
+      "audit-ptoc-toc-p2-Rjoin.png",
+      "audit-ptoc-toc-p2-head.png",
+      "audit-ptoc-toc-p3-chip.png",
+      "audit-ptoc-toc-p3-body.png",
+      "audit-ptoc-toc-p3-Ljoin.png",
+      "audit-ptoc-toc-p3-Rjoin.png",
+      "audit-ptoc-toc-p3-head.png",
+      "audit-ptoc-toc-p4-chip.png",
+      "audit-ptoc-toc-p4-body.png",
+      "audit-ptoc-toc-p4-Ljoin.png",
+      "audit-ptoc-toc-p4-Rjoin.png",
+      "audit-ptoc-toc-p4-head.png",
+      "audit-ptoc-page-002.png",
+      "audit-ptoc-page-003.png",
+      "audit-ptoc-page-004.png"
+    ]
+  },
+  "project": {
+    "cards": [
+      {
+        "id": "kopfbau",
+        "page": 24,
+        "label": "Kopfbau Halle 118 / P.K.1",
+        "ok": true,
+        "photoPadPt": 5.5,
+        "leftInsetPt": 6.33,
+        "topInsetPt": 5.67,
+        "creamGapPt": 0,
+        "joinNotchesL": 0,
+        "joinNotchesR": 0,
+        "photoFlush": false,
+        "checks": {
+          "photoTopPadApproxCellPad": true,
+          "chipAlignedToBodyBorders": true,
+          "continuousSides": true,
+          "noCreamGapUnderChip": true,
+          "photoNotFlushToTopRule": true
+        }
+      },
+      {
+        "id": "upcycle",
+        "page": 25,
+        "label": "Upcycle Studios / P.K.2",
+        "ok": true,
+        "photoPadPt": "~5.5 (visual; low-chroma photo)",
+        "creamGapPt": 0,
+        "joinNotchesL": 0,
+        "joinNotchesR": 0,
+        "photoFlush": false,
+        "checks": {
+          "photoTopPadApproxCellPad": true,
+          "chipAlignedToBodyBorders": true,
+          "continuousSides": true,
+          "noCreamGapUnderChip": true,
+          "photoNotFlushToTopRule": true
+        }
+      },
+      {
+        "id": "recyclinghaus",
+        "page": 39,
+        "label": "Recyclinghaus Hannover / P.K.16",
+        "ok": true,
+        "photoPadPt": 5.83,
+        "leftInsetPt": 6.17,
+        "creamGapPt": 0,
+        "joinNotchesL": 0,
+        "joinNotchesR": 0,
+        "photoFlush": false,
+        "checks": {
+          "photoTopPadApproxCellPad": true,
+          "chipAlignedToBodyBorders": true,
+          "continuousSides": true,
+          "noCreamGapUnderChip": true,
+          "photoNotFlushToTopRule": true
+        }
+      }
+    ],
+    "otherProjectBands": "Catalogue continues p24–p73 with the same project overview band chrome; sampled P.K.1 / P.K.2 / P.K.16 as representative photo+meta+data cards.",
+    "crops": [
+      "audit-ptoc-project-kopfbau-chip.png",
+      "audit-ptoc-project-kopfbau-photo.png",
+      "audit-ptoc-project-kopfbau-body.png",
+      "audit-ptoc-project-kopfbau-Ljoin.png",
+      "audit-ptoc-project-kopfbau-Rjoin.png",
+      "audit-ptoc-project-upcycle-chip.png",
+      "audit-ptoc-project-upcycle-photo.png",
+      "audit-ptoc-project-upcycle-Ljoin.png",
+      "audit-ptoc-project-recycling-chip.png",
+      "audit-ptoc-project-recycling-photo.png",
+      "audit-ptoc-project-recycling-Ljoin.png",
+      "audit-ptoc-page-024.png",
+      "audit-ptoc-page-125.png"
+    ]
+  },
+  "halfPadComparison": {
+    "intentional": true,
+    "sty": "print/tex/semio-table.sty — semio@table@vtop@toc / vbot@toc (half of full data-table vertical air)",
+    "tocTopInsetPt": 5.33,
+    "dataTopInsetPt": 8.0,
+    "tocLeftInsetPt": 7.33,
+    "dataLeftInsetPt": 6.67,
+    "projectPhotoPadPt": 5.5,
+    "note": "TOC denser vertical pad vs data tables is expected. Project photo top pad tracks body cell pad (~5.5pt)."
+  }
+}

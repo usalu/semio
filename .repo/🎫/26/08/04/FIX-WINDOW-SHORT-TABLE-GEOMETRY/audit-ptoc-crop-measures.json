@@ -1,0 +1,442 @@
+[
+  {
+    "file": "audit-ptoc-data-meilensteine-body.png",
+    "borderX": 6,
+    "ruleY0": 0,
+    "ruleY1": 2,
+    "leftInsetPt": 6.67,
+    "topInsetPt": 8,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-data-meilensteine-chip.png",
+    "borderX": 9,
+    "ruleY0": 97,
+    "ruleY1": 100,
+    "leftInsetPt": 6.83,
+    "topInsetPt": 4,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-data-meilensteine-head.png",
+    "borderX": 21,
+    "ruleY0": 138,
+    "ruleY1": 141,
+    "leftInsetPt": 2.83,
+    "topInsetPt": 2.5,
+    "photoPadPt": 2.33,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-data-meilensteine-Ljoin.png",
+    "borderX": 10,
+    "ruleY0": 1,
+    "ruleY1": 4,
+    "leftInsetPt": 6.67,
+    "topInsetPt": 8,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-data-meilensteine-Rjoin.png",
+    "borderX": 35,
+    "ruleY0": 1,
+    "ruleY1": 4,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-kopfbau-body.png",
+    "borderX": 6,
+    "ruleY0": 0,
+    "ruleY1": 2,
+    "leftInsetPt": 6.33,
+    "topInsetPt": 5.67,
+    "photoPadPt": 5.5,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-kopfbau-chip.png",
+    "borderX": 9,
+    "ruleY0": 98,
+    "ruleY1": 101,
+    "leftInsetPt": 6.83,
+    "topInsetPt": 3.67,
+    "photoPadPt": 22.83,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-kopfbau-head.png",
+    "borderX": 21,
+    "ruleY0": 138,
+    "ruleY1": 141,
+    "leftInsetPt": 2.83,
+    "topInsetPt": 2.5,
+    "photoPadPt": 2.33,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-kopfbau-Ljoin.png",
+    "borderX": 10,
+    "ruleY0": 1,
+    "ruleY1": 4,
+    "leftInsetPt": 6.33,
+    "topInsetPt": 5.67,
+    "photoPadPt": 5.5,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-kopfbau-photo.png",
+    "borderX": 6,
+    "ruleY0": 1,
+    "ruleY1": 4,
+    "leftInsetPt": 6.33,
+    "topInsetPt": 5.67,
+    "photoPadPt": 5.5,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-kopfbau-Rjoin.png",
+    "borderX": 0,
+    "ruleY0": 1,
+    "ruleY1": 4,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-pk2-body.png",
+    "borderX": 6,
+    "ruleY0": 22,
+    "ruleY1": 26,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-pk2-chip.png",
+    "borderX": 8,
+    "ruleY0": 119,
+    "ruleY1": 122,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-pk2-head.png",
+    "borderX": 20,
+    "ruleY0": 138,
+    "ruleY1": 141,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-pk2-Ljoin.png",
+    "borderX": 10,
+    "ruleY0": 24,
+    "ruleY1": 28,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-pk2-photo.png",
+    "borderX": 6,
+    "ruleY0": 24,
+    "ruleY1": 28,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-pk2-Rjoin.png",
+    "borderX": 17,
+    "ruleY0": 0,
+    "ruleY1": 4,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-recycling-body.png",
+    "borderX": 6,
+    "ruleY0": 30,
+    "ruleY1": 33,
+    "leftInsetPt": 6.17,
+    "topInsetPt": 8.33,
+    "photoPadPt": 5.83,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-recycling-chip.png",
+    "borderX": 8,
+    "ruleY0": 97,
+    "ruleY1": 100,
+    "leftInsetPt": 7,
+    "topInsetPt": 4,
+    "photoPadPt": 23.33,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-recycling-head.png",
+    "borderX": 20,
+    "ruleY0": 138,
+    "ruleY1": 141,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-recycling-Ljoin.png",
+    "borderX": 10,
+    "ruleY0": 32,
+    "ruleY1": 35,
+    "leftInsetPt": 6.17,
+    "topInsetPt": 8.33,
+    "photoPadPt": 5.83,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-recycling-photo.png",
+    "borderX": 6,
+    "ruleY0": 32,
+    "ruleY1": 35,
+    "leftInsetPt": 6.17,
+    "topInsetPt": 8.33,
+    "photoPadPt": 5.83,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-recycling-Rjoin.png",
+    "borderX": 0,
+    "ruleY0": 32,
+    "ruleY1": 35,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-upcycle-body.png",
+    "borderX": 6,
+    "ruleY0": 0,
+    "ruleY1": 2,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-upcycle-chip.png",
+    "borderX": 8,
+    "ruleY0": 97,
+    "ruleY1": 100,
+    "leftInsetPt": 7,
+    "topInsetPt": 4,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-upcycle-head.png",
+    "borderX": 20,
+    "ruleY0": 138,
+    "ruleY1": 141,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-upcycle-Ljoin.png",
+    "borderX": 10,
+    "ruleY0": 1,
+    "ruleY1": 4,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-upcycle-photo.png",
+    "borderX": 6,
+    "ruleY0": 1,
+    "ruleY1": 4,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-project-upcycle-Rjoin.png",
+    "borderX": 0,
+    "ruleY0": 1,
+    "ruleY1": 4,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-toc-p2-body.png",
+    "borderX": 6,
+    "ruleY0": 0,
+    "ruleY1": 2,
+    "leftInsetPt": 7.33,
+    "topInsetPt": 5.33,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-toc-p2-chip.png",
+    "borderX": 8,
+    "ruleY0": 97,
+    "ruleY1": 100,
+    "leftInsetPt": 7,
+    "topInsetPt": 4,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-toc-p2-head.png",
+    "borderX": 20,
+    "ruleY0": 3,
+    "ruleY1": 3,
+    "leftInsetPt": 3,
+    "topInsetPt": 0.17,
+    "photoPadPt": 0.33,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-toc-p2-Ljoin.png",
+    "borderX": 10,
+    "ruleY0": 1,
+    "ruleY1": 4,
+    "leftInsetPt": 7.33,
+    "topInsetPt": 5.33,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-toc-p2-Rjoin.png",
+    "borderX": 0,
+    "ruleY0": 1,
+    "ruleY1": 4,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-toc-p3-body.png",
+    "borderX": 6,
+    "ruleY0": 0,
+    "ruleY1": 2,
+    "leftInsetPt": 7.33,
+    "topInsetPt": 5.33,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-toc-p3-chip.png",
+    "borderX": 8,
+    "ruleY0": 97,
+    "ruleY1": 100,
+    "leftInsetPt": 7,
+    "topInsetPt": 4,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-toc-p3-head.png",
+    "borderX": 20,
+    "ruleY0": 3,
+    "ruleY1": 3,
+    "leftInsetPt": 3,
+    "topInsetPt": 0.17,
+    "photoPadPt": 0.33,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-toc-p3-Ljoin.png",
+    "borderX": 10,
+    "ruleY0": 1,
+    "ruleY1": 4,
+    "leftInsetPt": 7.33,
+    "topInsetPt": 5.33,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-toc-p3-Rjoin.png",
+    "borderX": 0,
+    "ruleY0": 1,
+    "ruleY1": 4,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-toc-p4-body.png",
+    "borderX": 6,
+    "ruleY0": 0,
+    "ruleY1": 2,
+    "leftInsetPt": 7.33,
+    "topInsetPt": 5.33,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-toc-p4-chip.png",
+    "borderX": 8,
+    "ruleY0": 97,
+    "ruleY1": 100,
+    "leftInsetPt": 7,
+    "topInsetPt": 4,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-toc-p4-head.png",
+    "borderX": 20,
+    "ruleY0": 3,
+    "ruleY1": 3,
+    "leftInsetPt": 3,
+    "topInsetPt": 0.17,
+    "photoPadPt": 0.33,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-toc-p4-Ljoin.png",
+    "borderX": 10,
+    "ruleY0": 1,
+    "ruleY1": 4,
+    "leftInsetPt": 7.33,
+    "topInsetPt": 5.33,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  },
+  {
+    "file": "audit-ptoc-toc-p4-Rjoin.png",
+    "borderX": 0,
+    "ruleY0": 1,
+    "ruleY1": 4,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "pageInsideJoins": 0
+  }
+]

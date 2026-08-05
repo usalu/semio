@@ -1,0 +1,356 @@
+{
+  "meilensteine": {
+    "id": "meilensteine",
+    "page": 18,
+    "title": "Meilensteine",
+    "dpi": {
+      "144": {
+        "dpi": 144,
+        "hairPt": 0.5,
+        "hairCount": 1,
+        "creamGapPt": 0,
+        "dL": 0,
+        "dR": 0,
+        "creamJoins": 0,
+        "jitterPx": 0,
+        "creamOnBorder": 0,
+        "ruleOnBorder": 318,
+        "bands": 6,
+        "headerInset": {
+          "topAirPt": 8,
+          "leftPadPt": 7
+        },
+        "bodyInset": {
+          "topAirPt": null,
+          "leftPadPt": null
+        },
+        "interiorVerts": 0,
+        "bodyL": 187,
+        "bodyR": 1048,
+        "chipL": 187,
+        "chipR": 1048
+      },
+      "288": {
+        "dpi": 288,
+        "hairPt": 0.75,
+        "hairCount": 1,
+        "creamGapPt": 0,
+        "dL": 0,
+        "dR": 0,
+        "creamJoins": 0,
+        "jitterPx": 1,
+        "creamOnBorder": 0,
+        "ruleOnBorder": 638,
+        "bands": 6,
+        "headerInset": {
+          "topAirPt": 7.75,
+          "leftPadPt": 78.75
+        },
+        "bodyInset": {
+          "topAirPt": null,
+          "leftPadPt": null
+        },
+        "interiorVerts": 0,
+        "bodyL": 374,
+        "bodyR": 2096,
+        "chipL": 374,
+        "chipR": 2096
+      }
+    }
+  },
+  "risiken": {
+    "id": "risiken",
+    "page": 19,
+    "title": "Risiken",
+    "dpi": {
+      "144": {
+        "dpi": 144,
+        "hairPt": 0.5,
+        "hairCount": 1,
+        "creamGapPt": 0,
+        "dL": 0,
+        "dR": 0,
+        "creamJoins": 0,
+        "jitterPx": 2,
+        "creamOnBorder": 0,
+        "ruleOnBorder": 318,
+        "bands": 5,
+        "headerInset": {
+          "topAirPt": 8,
+          "leftPadPt": 6.5
+        },
+        "bodyInset": {
+          "topAirPt": null,
+          "leftPadPt": null
+        },
+        "interiorVerts": 0,
+        "bodyL": 142,
+        "bodyR": 1002,
+        "chipL": 142,
+        "chipR": 1002
+      },
+      "288": {
+        "dpi": 288,
+        "hairPt": 0.75,
+        "hairCount": 1,
+        "creamGapPt": 0,
+        "dL": 0,
+        "dR": 0,
+        "creamJoins": 0,
+        "jitterPx": 2,
+        "creamOnBorder": 0,
+        "ruleOnBorder": 638,
+        "bands": 5,
+        "headerInset": {
+          "topAirPt": 7.75,
+          "leftPadPt": 11.5
+        },
+        "bodyInset": {
+          "topAirPt": null,
+          "leftPadPt": null
+        },
+        "interiorVerts": 0,
+        "bodyL": 284,
+        "bodyR": 2006,
+        "chipL": 284,
+        "chipR": 2006
+      }
+    }
+  },
+  "erfolgsindikatoren": {
+    "id": "erfolgsindikatoren",
+    "page": 23,
+    "title": "Erfolgsindikatoren",
+    "dpi": {
+      "144": {
+        "dpi": 144,
+        "hairPt": 0.5,
+        "hairCount": 1,
+        "creamGapPt": 0,
+        "dL": 0,
+        "dR": 0,
+        "creamJoins": 0,
+        "jitterPx": 2,
+        "creamOnBorder": 0,
+        "ruleOnBorder": 318,
+        "bands": 8,
+        "headerInset": {
+          "topAirPt": 8,
+          "leftPadPt": 6.5
+        },
+        "bodyInset": {
+          "topAirPt": null,
+          "leftPadPt": null
+        },
+        "interiorVerts": 0,
+        "bodyL": 142,
+        "bodyR": 1002,
+        "chipL": 142,
+        "chipR": 1002
+      },
+      "288": {
+        "dpi": 288,
+        "hairPt": 0.5,
+        "hairCount": 1,
+        "creamGapPt": 0,
+        "dL": 0,
+        "dR": 0,
+        "creamJoins": 0,
+        "jitterPx": 2,
+        "creamOnBorder": 0,
+        "ruleOnBorder": 638,
+        "bands": 11,
+        "headerInset": {
+          "topAirPt": 8,
+          "leftPadPt": 6.5
+        },
+        "bodyInset": {
+          "topAirPt": null,
+          "leftPadPt": null
+        },
+        "interiorVerts": 0,
+        "bodyL": 284,
+        "bodyR": 2006,
+        "chipL": 284,
+        "chipR": 2006
+      }
+    }
+  },
+  "ueberblick": {
+    "id": "ueberblick",
+    "page": 77,
+    "title": "Überblick",
+    "dpi": {
+      "144": {
+        "dpi": 144,
+        "hairPt": 0.5,
+        "hairCount": 1,
+        "creamGapPt": 0,
+        "dL": 0,
+        "dR": 0,
+        "creamJoins": 0,
+        "jitterPx": 2,
+        "creamOnBorder": 87,
+        "ruleOnBorder": 194,
+        "bands": 6,
+        "headerInset": {
+          "topAirPt": 8.5,
+          "leftPadPt": 6.5
+        },
+        "bodyInset": {
+          "topAirPt": null,
+          "leftPadPt": null
+        },
+        "interiorVerts": 0,
+        "bodyL": 142,
+        "bodyR": 1002,
+        "chipL": 142,
+        "chipR": 1002
+      },
+      "288": {
+        "dpi": 288,
+        "hairPt": 0.75,
+        "hairCount": 1,
+        "creamGapPt": 0,
+        "dL": 0,
+        "dR": 0,
+        "creamJoins": 0,
+        "jitterPx": 2,
+        "creamOnBorder": 175,
+        "ruleOnBorder": 390,
+        "bands": 6,
+        "headerInset": {
+          "topAirPt": 8,
+          "leftPadPt": 6.5
+        },
+        "bodyInset": {
+          "topAirPt": null,
+          "leftPadPt": null
+        },
+        "interiorVerts": 0,
+        "bodyL": 284,
+        "bodyR": 2006,
+        "chipL": 284,
+        "chipR": 2006
+      }
+    }
+  },
+  "interviewinfo": {
+    "id": "interviewinfo",
+    "page": 101,
+    "title": "Interviewinformationen",
+    "dpi": {
+      "144": {
+        "dpi": 144,
+        "hairPt": 0.5,
+        "hairCount": 1,
+        "creamGapPt": 0,
+        "dL": 0,
+        "dR": 0,
+        "creamJoins": 0,
+        "jitterPx": 2,
+        "creamOnBorder": 54,
+        "ruleOnBorder": 262,
+        "bands": 11,
+        "headerInset": {
+          "topAirPt": null,
+          "leftPadPt": null
+        },
+        "bodyInset": {
+          "topAirPt": null,
+          "leftPadPt": null
+        },
+        "interiorVerts": 0,
+        "bodyL": 142,
+        "bodyR": 1002,
+        "chipL": 142,
+        "chipR": 1002
+      },
+      "288": {
+        "dpi": 288,
+        "hairPt": 0.5,
+        "hairCount": 1,
+        "creamGapPt": 0,
+        "dL": 1,
+        "dR": 0,
+        "creamJoins": 0,
+        "jitterPx": 2,
+        "creamOnBorder": 107,
+        "ruleOnBorder": 529,
+        "bands": 16,
+        "headerInset": {
+          "topAirPt": null,
+          "leftPadPt": null
+        },
+        "bodyInset": {
+          "topAirPt": null,
+          "leftPadPt": null
+        },
+        "interiorVerts": 0,
+        "bodyL": 285,
+        "bodyR": 2006,
+        "chipL": 284,
+        "chipR": 2006
+      }
+    }
+  },
+  "uebersicht": {
+    "id": "uebersicht",
+    "page": 111,
+    "title": "Übersicht",
+    "dpi": {
+      "144": {
+        "dpi": 144,
+        "hairPt": 0.5,
+        "hairCount": 1,
+        "creamGapPt": 0,
+        "dL": 0,
+        "dR": 0,
+        "creamJoins": 0,
+        "jitterPx": 2,
+        "creamOnBorder": 37,
+        "ruleOnBorder": 258,
+        "bands": 8,
+        "headerInset": {
+          "topAirPt": 8.5,
+          "leftPadPt": 8
+        },
+        "bodyInset": {
+          "topAirPt": null,
+          "leftPadPt": null
+        },
+        "interiorVerts": 0,
+        "bodyL": 142,
+        "bodyR": 1002,
+        "chipL": 142,
+        "chipR": 1002
+      },
+      "288": {
+        "dpi": 288,
+        "hairPt": 0.5,
+        "hairCount": 1,
+        "creamGapPt": 0,
+        "dL": 0,
+        "dR": 0,
+        "creamJoins": 0,
+        "jitterPx": 2,
+        "creamOnBorder": 74,
+        "ruleOnBorder": 517,
+        "bands": 10,
+        "headerInset": {
+          "topAirPt": 8,
+          "leftPadPt": 8
+        },
+        "bodyInset": {
+          "topAirPt": null,
+          "leftPadPt": null
+        },
+        "interiorVerts": 0,
+        "bodyL": 284,
+        "bodyR": 2006,
+        "chipL": 284,
+        "chipR": 2006
+      }
+    }
+  }
+}
