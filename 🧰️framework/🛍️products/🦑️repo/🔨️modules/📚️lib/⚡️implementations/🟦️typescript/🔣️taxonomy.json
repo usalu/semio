@@ -1,0 +1,21 @@
+{
+  "_comment": "artifactComponentDirs vs artifactChildDirsExtra resolves a real disagreement between the two hand-maintained taxonomy vocab copies this file replaces: framework/os/plugin/registry script.ts's TAXONOMY_ARTIFACT_COMPONENTS (5 dirs, the 'completeness' set every artifact must carry) vs root script.ts's POLICY_ARTIFACT_COMPONENT_DIRS (the same 5 plus ⚙️engine, which is allowed but not required). artifactComponentDirs = the required 5; artifactChildDirsExtra = additional dirs allowed as artifact children but not required. Do not merge these into one list. See master ticket 26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE and mechanism ticket 26/08/05/TAXONOMY-VOCABULARY-AND-PACKAGE-DISCOVERY-CONTRACT.",
+  "roles": ["plugin", "framework", "product", "hub", "s-module", "extension", "testkit", "tool"],
+  "langs": ["🦀️rust", "🟦️typescript", "🐹️go", "🐍️python"],
+  "artifactComponentDirs": ["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr"],
+  "artifactChildDirsExtra": ["⚙️engine"],
+  "windowChildDirs": ["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options"],
+  "taxonomyLeafParentDirs": ["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr", "🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options", "🎮️commands", "🛠️tools", "📌️panels"],
+  "taxonomyLeafFilename": "🦀️component.rs",
+  "libWiringLineBudget": 150,
+  "forbiddenPathSegments": ["⚡️implementations", "⚡️implementation"],
+  "packagesDirName": "📦️packages",
+  "areas": {
+    "✏️s/🔌️plugins": "mixed",
+    "✏️s/🔨️modules": "legacy",
+    "🧰️framework": "legacy",
+    "🌎️hub": "legacy",
+    "♻️mit-bestand": "legacy",
+    "compose": "exempt"
+  }
+}

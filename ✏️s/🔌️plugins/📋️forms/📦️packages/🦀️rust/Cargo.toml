@@ -1,0 +1,76 @@
+[package]
+name = "semio-s-plugin-forms"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Forms plugin - one crate for the forms artifact (diff/op/dsl/pack/spr/engine) and the forms play app (commands/modes/windows/panels)"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:forms"
+
+[package.metadata.semio]
+role = "plugin"
+consumes = ["forms.questionKind"]
+
+[[package.metadata.semio.playground]]
+variant = "forms"
+ports = { react = 6058, wgpu = 6158 }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../📦️lib.rs"
+
+[dependencies]
+playbook = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-playbook" }
+dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-core = { path = "../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
+serde.workspace = true
+serde_json.workspace = true
+
+# ⚠️ TEMPORARY VERIFICATION OVERLAY — DELETE THIS ENTIRE BLOCK AT REGISTRAR HANDOFF (see TEMPLATE.md §3).
+# Makes this crate its own workspace root so `cargo check/test/clippy --manifest-path …` can run before
+# the registrar adds this crate as a root-workspace member (the old bundle crate still holds the package
+# name as a member today). Copied verbatim from root Cargo.toml so artifact fingerprints match.
+[workspace]
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[workspace.dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+
+[workspace.lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"
+
+[profile.dev]
+debug = false
+incremental = true
+
+[profile.dev.build-override]
+opt-level = 3
+
+[profile.dev.package.semio-framework-os-kernel-store]
+codegen-units = 1
+# ⚠️ END TEMPORARY VERIFICATION OVERLAY

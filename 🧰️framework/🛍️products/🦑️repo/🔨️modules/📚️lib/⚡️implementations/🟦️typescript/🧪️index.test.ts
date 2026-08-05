@@ -17,6 +17,7 @@ import {
   playgroundPlayViteDefine,
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
 import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts";
+import { areaOf, discoverPackages, getWorkspaceRoot, loadTaxonomy, readSemioMarker } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
 describe("Neo4j graph database registry", () => {
   test("joins name segments with hyphen", () => {
     expect(joinNeo4jGraphDatabaseName(["compose", "kit"])).toBe("compose-kit");
@@ -1104,5 +1105,65 @@ describe("resolveCargoPackageName", () => {
     const root = process.cwd();
     const dbActorDir = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/⚡️implementations/🦀️rust");
     expect(resolveCargoPackageNames([], dbActorDir)).toEqual(["semio-framework-os-kernel-db-actor"]);
+  });
+});
+
+describe("loadTaxonomy", () => {
+  test("parses 🔣️taxonomy.json into the expected shape", () => {
+    const taxonomy = loadTaxonomy();
+    expect(taxonomy.artifactComponentDirs).toEqual(["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr"]);
+    expect(taxonomy.artifactChildDirsExtra).toEqual(["⚙️engine"]);
+    expect(taxonomy.windowChildDirs).toEqual(["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options"]);
+    expect(taxonomy.taxonomyLeafFilename).toBe("🦀️component.rs");
+    expect(taxonomy.libWiringLineBudget).toBe(150);
+    expect(taxonomy.packagesDirName).toBe("📦️packages");
+    expect(Object.keys(taxonomy.areas).length).toBeGreaterThan(0);
+  });
+});
+
+describe("areaOf", () => {
+  test("longest-prefix matches a plugin path to its declared area", () => {
+    expect(areaOf("✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust")).toBe("mixed");
+  });
+
+  test("longest-prefix matches framework paths to legacy", () => {
+    expect(areaOf("🧰️framework/🛍️products/💻️os")).toBe("legacy");
+  });
+
+  test("returns undefined outside every declared area", () => {
+    expect(areaOf("some/unknown/path")).toBeUndefined();
+  });
+});
+
+describe("readSemioMarker", () => {
+  test("reads role = \"plugin\" from the writer plugin's migrated Cargo.toml", () => {
+    const root = getWorkspaceRoot();
+    const manifestPath = join(root, "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/Cargo.toml");
+    expect(readSemioMarker(manifestPath, "🦀️rust")).toEqual({ role: "plugin" });
+  });
+
+  test("returns undefined for a non-existent manifest", () => {
+    const root = getWorkspaceRoot();
+    expect(readSemioMarker(join(root, "does/not/exist/Cargo.toml"), "🦀️rust")).toBeUndefined();
+  });
+
+  test("go and python ecosystems are not yet implemented", () => {
+    const root = getWorkspaceRoot();
+    const manifestPath = join(root, "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/Cargo.toml");
+    expect(readSemioMarker(manifestPath, "🐹️go")).toBeUndefined();
+    expect(readSemioMarker(manifestPath, "🐍️python")).toBeUndefined();
+  });
+});
+
+describe("discoverPackages", () => {
+  test("finds already-migrated plugins with role \"plugin\" under the real repo root", () => {
+    const root = getWorkspaceRoot();
+    const catalog = discoverPackages(root);
+    expect(catalog.length).toBeGreaterThan(0);
+    expect(catalog.every((p) => p.role === "plugin")).toBe(true);
+    expect(catalog.some((p) => p.ownerRel === "✏️s/🔌️plugins/✒️writer")).toBe(true);
+    const writerEntry = catalog.find((p) => p.ownerRel === "✏️s/🔌️plugins/✒️writer");
+    expect(writerEntry?.area).toBe("mixed");
+    expect(writerEntry?.lang).toBe("🦀️rust");
   });
 });

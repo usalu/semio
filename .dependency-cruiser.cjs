@@ -1,7 +1,15 @@
 /** @type {import('dependency-cruiser').IConfiguration} */
+const fs = require("fs");
+const path = require("path");
+
 const TECHNOLOGIES = ["compose", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand"];
 
-const PLUGINS = ["🎞️animate", "🏛️architect", "🧱️block", "📐️cad", "🕸️dag", "🖍️draw", "🔋️energy", "🏗️fem", "🌊️flow", "📋️forms", "🌍️gis", "📜️imperative", "📏️layout", "💠️lowpoly", "➗️mathematical", "📕️norm", "🗒️note", "📖️playbook", "🌀️procedural", "🏭️process", "🧩️puzzle", "🖨️raster", "💡️reasoning", "📸️remodel", "🎬️sequence", "🎥️shooting", "🪵️sourcing", "🪐️space", "🔱️trinity", "🌿️vcs", "✒️writer"];
+/** 🔌️ Derived from the live `✏️s/🔌️plugins` directory listing rather than hardcoded, so the
+ * cross-plugin isolation matrix below self-corrects as plugins are added, renamed, or removed. */
+const PLUGINS = fs
+  .readdirSync(path.join(__dirname, "✏️s/🔌️plugins"), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name);
 
 function crossTechnologyRules() {
   const rules = [];
@@ -106,7 +114,7 @@ module.exports = {
       severity: "error",
       comment: "only the plugin registry itself may import its generated plugin catalog directly — other consumers must go through generated/🟦️plugins.ts",
       from: { pathNot: "^🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/" },
-      to: { path: "^🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/plugins\\.json$" },
+      to: { path: "^🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🔣️plugins\\.json$" },
     },
     ...crossTechnologyRules(),
     ...crossPluginRules(),

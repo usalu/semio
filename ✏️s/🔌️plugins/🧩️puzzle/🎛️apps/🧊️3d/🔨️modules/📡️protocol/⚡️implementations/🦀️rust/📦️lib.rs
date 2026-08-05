@@ -138,3 +138,58 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🧪️WireBaselineDump
+#[cfg(test)]
+mod wire_baseline_dump {
+    use super::*;
+    use protocol::OpText;
+    use serde_json::json;
+
+    fn ops() -> Vec<Puzzle3dOperation> {
+        let object: puzzle_3d::Puzzle3dObject = serde_json::from_value(json!({"id":"o1","label":"L","objectKind":"Capsule","origin":[1.0,2.0,3.0],"orientation":[0.0,0.0,0.0,1.0],"scale":[2.0,3.0,4.0],"meshUrl":"/m.glb","vortices":[{"id":"v0","vortexKind":"k","position":[0.0,0.0,0.0],"direction":[0.0,0.0,1.0],"radius":3.0,"hidden":false,"locked":false}],"hidden":false,"locked":true})).unwrap();
+        let attraction: puzzle_3d::Puzzle3dAttraction = serde_json::from_value(json!({"id":"a1","attracting":"o1:v0","attracted":"o2:v0","gap":1.0,"shift":2.0,"rise":3.0,"rotation":4.0,"turn":5.0,"tilt":6.0})).unwrap();
+        let target_volume: puzzle_3d::Puzzle3dTargetVolume = serde_json::from_value(json!({"id":"t1","origin":[0.0,1.0,2.0],"orientation":[0.0,0.0,0.0,1.0],"scale":5.0,"hidden":false,"locked":false})).unwrap();
+        let reference: puzzle_3d::Puzzle3dReference = serde_json::from_value(json!({"id":"r1","source":{"url":"/u.png","mediaKind":"image"},"origin":[0.0,0.0,0.0],"widthWorld":4.0,"locked":false,"hidden":false})).unwrap();
+        let meta: puzzle_3d::Puzzle3dMeta = serde_json::from_value(json!({"kindCompatibility":[{"source":"a","target":"b","bidirectional":true,"important":false,"specificity":"vortex"}]})).unwrap();
+        let document = puzzle_3d::Puzzle3dProjection::default();
+        vec![
+            Puzzle3dOperation::SetObject { index: 0, object },
+            Puzzle3dOperation::RemoveObject { id: "o1".into() },
+            Puzzle3dOperation::SetAttraction { index: 1, attraction },
+            Puzzle3dOperation::RemoveAttraction { id: "a1".into() },
+            Puzzle3dOperation::SetTargetVolume { index: 2, target_volume },
+            Puzzle3dOperation::RemoveTargetVolume { id: "t1".into() },
+            Puzzle3dOperation::SetReference { index: 3, reference },
+            Puzzle3dOperation::RemoveReference { id: "r1".into() },
+            Puzzle3dOperation::SetMeta { meta },
+            Puzzle3dOperation::SetDocument { document },
+        ]
+    }
+
+    #[test]
+    fn debug_wire_dump() {
+        for operation in ops() {
+            let text = operation.print_op();
+            let bytes = encode_op(&operation).expect("encode");
+            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+            println!("[WIRE] {text} | {} | {hex}", bytes.len());
+            assert_eq!(decode_op(&bytes).expect("decode"), operation);
+        }
+        let mut object_weights = std::collections::BTreeMap::new();
+        object_weights.insert("Host".to_string(), 0.5);
+        for command in [
+            Puzzle3dEngineCommand::ApplyFillCount { count: 7 },
+            Puzzle3dEngineCommand::ComposeFillDisplay { count: 9 },
+            Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights: std::collections::BTreeMap::new() },
+            Puzzle3dEngineCommand::BrushPreview { vortex_full_id: "host:v0".to_string(), candidate_index: 2 },
+        ] {
+            let text = command.print_op();
+            let bytes = encode_engine_command(&command).expect("encode");
+            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+            println!("[WIRE-ENGINE] {text} | {} | {hex}", bytes.len());
+            assert_eq!(decode_engine_command(&bytes).expect("decode"), command);
+        }
+    }
+}
+//#endregion 🧪️WireBaselineDump

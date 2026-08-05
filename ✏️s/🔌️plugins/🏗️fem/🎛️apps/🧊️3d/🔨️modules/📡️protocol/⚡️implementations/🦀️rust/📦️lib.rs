@@ -139,5 +139,35 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&Fem3dCommand::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0 });
     }
     // #endregion 🔖️Fem3dCommand
+
+    // #region 🔖️WireBaseline
+    // 🚧️ [DEBUG] temporary wire-format baseline dump for the taxonomy migration — delete after diffing.
+    #[test]
+    fn wire_baseline_dump() {
+        fn dump(label: &str, bytes: &[u8]) {
+            println!("{label} | {} | {}", bytes.len(), bytes.iter().map(|b| format!("{b:02x}")).collect::<String>());
+        }
+        dump("Command::AddNode", &Fem3dCommand::AddNode { x: 1.0, y: 2.0, z: 3.0 }.encode_op().unwrap());
+        dump("Command::AddBar", &Fem3dCommand::AddBar { start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "rod".into() }.encode_op().unwrap());
+        dump("Command::AddFrame", &Fem3dCommand::AddFrame { start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.5 }.encode_op().unwrap());
+        dump("Command::AddMaterial", &Fem3dCommand::AddMaterial { name: "Steel".into(), e: 2.1e11, g: 8.077e10 }.encode_op().unwrap());
+        dump("Command::AddSection", &Fem3dCommand::AddSection { name: "HEA200".into(), area: 0.00538, iy: 0.0000369, iz: 0.0000133, j: 0.0000006 }.encode_op().unwrap());
+        dump("Command::AddSupport", &Fem3dCommand::AddSupport { node_id: "n1".into(), fixed: FemDof::ALL.to_vec() }.encode_op().unwrap());
+        dump("Command::AddNodalLoad", &Fem3dCommand::AddNodalLoad { node_id: "n1".into(), dof: FemDof::Tz, value: -5000.0, case_id: Some("live".into()) }.encode_op().unwrap());
+        dump("Command::AddNodalLoad(None)", &Fem3dCommand::AddNodalLoad { node_id: "n1".into(), dof: FemDof::Tz, value: -5000.0, case_id: None }.encode_op().unwrap());
+        dump("Command::AddMemberUdl", &Fem3dCommand::AddMemberUdl { element_id: "e1".into(), wx: 0.0, wy: 0.0, wz: -500.0, case_id: None }.encode_op().unwrap());
+        dump("Command::AddAreaLoad", &Fem3dCommand::AddAreaLoad { solid_id: "sol1".into(), pressure: 5000.0, case_id: Some("dead".into()) }.encode_op().unwrap());
+        dump("Command::AddSolid", &Fem3dCommand::AddSolid { x: 0.0, y: 0.0, width: 4.0, depth: 2.0, height: 0.5, material_id: "concrete".into(), base_z: Some(0.0), layers: Some(2), mesh_size: None }.encode_op().unwrap());
+        dump("Command::AddLoadCase", &Fem3dCommand::AddLoadCase { name: "Live".into(), self_weight: false }.encode_op().unwrap());
+        dump("Command::AddCombination", &Fem3dCommand::AddCombination { name: "ULS".into(), terms: "[[\"dead\",1.35],[\"live\",1.5]]".into() }.encode_op().unwrap());
+        dump("Command::SetSelfWeight", &Fem3dCommand::SetSelfWeight { case_id: "dead".into(), enabled: true }.encode_op().unwrap());
+        dump("Command::SetAnalysisSettings", &Fem3dCommand::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0) }.encode_op().unwrap());
+        dump("Command::RemoveSelection", &Fem3dCommand::RemoveSelection { ids: vec!["n1".into(), "e1".into()] }.encode_op().unwrap());
+        dump("Command::SetActiveExample", &Fem3dCommand::SetActiveExample { example_id: "default".into() }.encode_op().unwrap());
+        dump("Command::SetCamera", &Fem3dCommand::SetCamera { json: "{\"x\":1}".into() }.encode_op().unwrap());
+        dump("Command::SetResultDisplay", &Fem3dCommand::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0 }.encode_op().unwrap());
+        dump("Operation::SetAnalysisSettings", &encode_op(&Fem3dOperation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } }).unwrap());
+    }
+    // #endregion 🔖️WireBaseline
 }
 // #endregion 🧪️Tests

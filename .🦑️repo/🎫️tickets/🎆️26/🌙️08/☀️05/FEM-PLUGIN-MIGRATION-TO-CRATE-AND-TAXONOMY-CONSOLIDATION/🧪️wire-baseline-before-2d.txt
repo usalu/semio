@@ -1,0 +1,111 @@
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust)
+   Compiling semio-s-app-fem-2d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/⚡️implementations/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust)
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3266:68
+     |
+3266 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3266 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3266 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+   Compiling semio-s-app-fem-2d-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust)
+   Compiling semio-s-app-fem-2d-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/🔧️op/⚡️implementations/🦀️rust)
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+   Compiling semio-s-app-fem-2d-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust)
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/../../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs:160:99
+    |
+160 | ...   dump("Command::AddSupport", &Fem2dCommand::AddSupport { node_id: "n1".into(), fixed: vec![fem2d::FemDof::Tx, fem2d::FemDof::T...
+    |                                                                                                 ^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+160 -         dump("Command::AddSupport", &Fem2dCommand::AddSupport { node_id: "n1".into(), fixed: vec![fem2d::FemDof::Tx, fem2d::FemDof::Ty] }.encode_op().unwrap());
+160 +         dump("Command::AddSupport", &Fem2dCommand::AddSupport { node_id: "n1".into(), fixed: vec![FemDof::Tx, fem2d::FemDof::Ty] }.encode_op().unwrap());
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/../../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs:160:118
+    |
+160 | ...{ node_id: "n1".into(), fixed: vec![fem2d::FemDof::Tx, fem2d::FemDof::Ty] }.encode_op().unwrap());
+    |                                                           ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+160 -         dump("Command::AddSupport", &Fem2dCommand::AddSupport { node_id: "n1".into(), fixed: vec![fem2d::FemDof::Tx, fem2d::FemDof::Ty] }.encode_op().unwrap());
+160 +         dump("Command::AddSupport", &Fem2dCommand::AddSupport { node_id: "n1".into(), fixed: vec![fem2d::FemDof::Tx, FemDof::Ty] }.encode_op().unwrap());
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/../../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs:161:96
+    |
+161 | ...   dump("Command::AddNodalLoad", &Fem2dCommand::AddNodalLoad { node_id: "n1".into(), dof: fem2d::FemDof::Ty, value: -5000.0, cas...
+    |                                                                                              ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+161 -         dump("Command::AddNodalLoad", &Fem2dCommand::AddNodalLoad { node_id: "n1".into(), dof: fem2d::FemDof::Ty, value: -5000.0, case_id: Some("live".into()) }.encode_op().unwrap());
+161 +         dump("Command::AddNodalLoad", &Fem2dCommand::AddNodalLoad { node_id: "n1".into(), dof: FemDof::Ty, value: -5000.0, case_id: Some("live".into()) }.encode_op().unwrap());
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/../../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs:162:102
+    |
+162 | ...   dump("Command::AddNodalLoad(None)", &Fem2dCommand::AddNodalLoad { node_id: "n1".into(), dof: fem2d::FemDof::Ty, value: -5000....
+    |                                                                                                    ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+162 -         dump("Command::AddNodalLoad(None)", &Fem2dCommand::AddNodalLoad { node_id: "n1".into(), dof: fem2d::FemDof::Ty, value: -5000.0, case_id: None }.encode_op().unwrap());
+162 +         dump("Command::AddNodalLoad(None)", &Fem2dCommand::AddNodalLoad { node_id: "n1".into(), dof: FemDof::Ty, value: -5000.0, case_id: None }.encode_op().unwrap());
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/../../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs:178:108
+    |
+178 | ...p(&Fem2dOperation::SetAnalysisSettings { settings: fem2d::FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_s...
+    |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+178 -         dump("Operation::SetAnalysisSettings", &encode_op(&Fem2dOperation::SetAnalysisSettings { settings: fem2d::FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } }).unwrap());
+178 +         dump("Operation::SetAnalysisSettings", &encode_op(&Fem2dOperation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } }).unwrap());
+    |
+
+warning: `semio-s-app-fem-2d-protocol` (lib test) generated 5 warnings (run `cargo fix --lib -p semio-s-app-fem-2d-protocol --tests` to apply 5 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 5.23s
+     Running unittests ../../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_fem_2d_protocol-9bd8a275ef33e70b)
+
+running 1 test
+Command::AddNode | 24 | 010000020005000000000000f03f01050000000000000040
+Command::AddBar | 28 | 010104026d31026e31026e3202733104000601010602020600030603
+Command::AddBeam | 28 | 010204026d31026e31026e3202733104000601010602020600030603
+Command::AddMaterial | 23 | 01030105737465656c020006000105000000da7c724842
+Command::AddSection | 34 | 01040106697065333030030006000105a4005130630a763f020509c577de9de7153f
+Command::AddSupport | 15 | 010501026e31020006000116020002
+Command::AddNodalLoad | 31 | 010602046c697665026e3104000601010a010205000000000088b3c0030600
+Command::AddNodalLoad(None) | 23 | 010601026e3103000600010a010205000000000088b3c0
+Command::AddMemberUdl | 30 | 010701026531030006000105000000000000000002050000000000407fc0
+Command::AddAreaLoad | 28 | 0108020464656164027231030006010105000000000088b340020600
+Command::AddRegion | 63 | 01090105737465656c060005000000000000000001050000000000000000020500000000000010400305000000000000004004060005057b14ae47e17a943f
+Command::AddLoadCase | 14 | 010a01044c697665020006000101
+Command::AddCombination | 54 | 010b0303554c530464656164046c69766502000600010c020d0200060101059a9999999999f53f0d020006020105000000000000f83f
+Command::SetSelfWeight | 14 | 010c010464656164020006000102
+Command::SetAnalysisSettings | 17 | 010d000200040502050000000000003e40
+Command::RemoveSelection | 17 | 010e02026531026e3101000c0206010600
+Command::SetActiveExample | 15 | 010f010764656661756c7401000600
+Command::SetCamera | 34 | 011000030005000000000000f03f010500000000000000400205000000000000f83f
+Command::SetResultDisplay | 24 | 0111020464656164056d6f64616c03000600010601020400
+Command::SetLocale | 13 | 0112010564652d444501000600
+Operation::SetAnalysisSettings | 24 | 01100001000e0d0300040501040202050000000000002440
+test tests::wire_baseline_dump ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+

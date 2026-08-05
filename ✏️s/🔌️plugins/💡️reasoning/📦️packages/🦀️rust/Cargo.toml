@@ -36,3 +36,46 @@ semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️produc
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+
+# ============================================================================
+# TEMPORARY VERIFICATION-ONLY OVERLAY — DELETE AT REGISTRAR HANDOFF.
+# The new crate is not yet a workspace member (the old bundle crate with the same
+# package name still is), so it cannot be built via the root workspace. This makes
+# it its own nested workspace root for the duration of isolated verification only.
+# See TEMPLATE.md §3 "The chicken-and-egg, and how to verify anyway".
+# ============================================================================
+[workspace]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[workspace.dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+thiserror = "2.0.18"
+
+[workspace.lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"
+
+[profile.dev]
+debug = false
+incremental = true
+
+[profile.dev.build-override]
+opt-level = 3

@@ -155,5 +155,49 @@ mod tests {
         assert_eq!(LayoutCommand::decode_op(&bytes).expect("decode command"), command);
     }
     //#endregion 🧪️LayoutCommand
+
+    //#region [DEBUG] WireBaseline
+    #[test]
+    fn dump_wire_baseline_before_migration() {
+        fn hex(bytes: &[u8]) -> String {
+            bytes.iter().map(|b| format!("{b:02x}")).collect::<String>()
+        }
+        let commands: Vec<LayoutCommand> = vec![
+            LayoutCommand::SetSelection { ids: vec!["frame-1".into()] },
+            LayoutCommand::SetActivePage { page_id: "page-2".into() },
+            LayoutCommand::SetHover { id: Some("frame-1".into()) },
+            LayoutCommand::SetHover { id: None },
+            LayoutCommand::FocusPreflightIssue { object_id: Some("frame-1".into()), page_id: Some("page-1".into()) },
+            LayoutCommand::EngagementInput { value: "export png".into() },
+            LayoutCommand::CanvasPointerDown { surface_id: Some("layout.play.blueprint".into()), button: 0, extend: false, x: 1.0, y: 2.0, width: 800.0, height: 600.0 },
+            LayoutCommand::CanvasPointerMove { surface_id: None, x: 1.0, y: 2.0, width: 800.0, height: 600.0 },
+            LayoutCommand::CanvasPointerUp,
+            LayoutCommand::CanvasDragOver { surface_id: Some("layout.play.blueprint".into()), kind: "rect".into(), x: 1.0, y: 2.0, width: 800.0, height: 600.0 },
+            LayoutCommand::CanvasDragLeave,
+            LayoutCommand::SetCamera { surface_id: None, camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 1.5 } },
+            LayoutCommand::SetCamera { surface_id: Some("layout.play.blueprint".into()), camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 1.5 } },
+            LayoutCommand::SetLocale { value: "de-DE".into() },
+            LayoutCommand::AddFrame { kind: "rect".into(), x: Some(1.0), y: None },
+            LayoutCommand::AddFrame { kind: "text".into(), x: None, y: None },
+            LayoutCommand::AddPage,
+            LayoutCommand::PatchPage { page_id: Some("page-1".into()), field: "width".into(), value: "300".into() },
+            LayoutCommand::PatchPage { page_id: None, field: "name".into(), value: "x".into() },
+            LayoutCommand::PatchFrame { frame_id: "frame-1".into(), page_id: Some("page-1".into()), field: "fill".into(), value: "0.5, 0.4, 0.3, 1".into() },
+            LayoutCommand::PatchFrame { frame_id: "frame-1".into(), page_id: None, field: "x".into(), value: "1".into() },
+            LayoutCommand::CanvasDrop { surface_id: Some("layout.play.blueprint".into()), kind: "rect".into(), x: 1.0, y: 2.0, width: 800.0, height: 600.0 },
+            LayoutCommand::ExportPng { page_id: Some("page-1".into()) },
+            LayoutCommand::ExportPng { page_id: None },
+            LayoutCommand::ExportSvg { page_id: None },
+            LayoutCommand::ExportPdf { page_id: None },
+            LayoutCommand::ExportPackage,
+            LayoutCommand::EngagementSubmit { value: "export png".into() },
+        ];
+        for command in &commands {
+            let text = protocol::OpText::print_op(command);
+            let bytes = command.encode_op().expect("encode");
+            println!("[DEBUG] {} | {} | {}", text, bytes.len(), hex(&bytes));
+        }
+    }
+    //#endregion [DEBUG] WireBaseline
 }
 //#endregion 🧪️Tests

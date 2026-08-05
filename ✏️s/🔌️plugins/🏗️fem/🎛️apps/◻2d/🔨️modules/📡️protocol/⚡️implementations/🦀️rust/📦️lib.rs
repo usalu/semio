@@ -144,5 +144,39 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&Fem2dCommand::SetLocale { value: "de-DE".into() });
     }
     // #endregion 🔖️Fem2dCommand
+
+    // #region 🔖️WireBaseline
+    // 🚧️ [DEBUG] temporary wire-format baseline dump for the taxonomy migration — delete after diffing.
+    #[test]
+    fn wire_baseline_dump() {
+        fn dump(label: &str, bytes: &[u8]) {
+            println!("{label} | {} | {}", bytes.len(), bytes.iter().map(|b| format!("{b:02x}")).collect::<String>());
+        }
+        dump("Command::AddNode", &Fem2dCommand::AddNode { x: 1.0, y: 2.0 }.encode_op().unwrap());
+        dump("Command::AddBar", &Fem2dCommand::AddBar { start: "n1".into(), end: "n2".into(), material_id: "m1".into(), section_id: "s1".into() }.encode_op().unwrap());
+        dump("Command::AddBeam", &Fem2dCommand::AddBeam { start: "n1".into(), end: "n2".into(), material_id: "m1".into(), section_id: "s1".into() }.encode_op().unwrap());
+        dump("Command::AddMaterial", &Fem2dCommand::AddMaterial { name: "steel".into(), e: 210e9 }.encode_op().unwrap());
+        dump("Command::AddSection", &Fem2dCommand::AddSection { name: "ipe300".into(), area: 0.005381, iy: 8.356e-5 }.encode_op().unwrap());
+        dump("Command::AddSupport", &Fem2dCommand::AddSupport { node_id: "n1".into(), fixed: vec![fem2d::FemDof::Tx, fem2d::FemDof::Ty] }.encode_op().unwrap());
+        dump("Command::AddNodalLoad", &Fem2dCommand::AddNodalLoad { node_id: "n1".into(), dof: fem2d::FemDof::Ty, value: -5000.0, case_id: Some("live".into()) }.encode_op().unwrap());
+        dump("Command::AddNodalLoad(None)", &Fem2dCommand::AddNodalLoad { node_id: "n1".into(), dof: fem2d::FemDof::Ty, value: -5000.0, case_id: None }.encode_op().unwrap());
+        dump("Command::AddMemberUdl", &Fem2dCommand::AddMemberUdl { element_id: "e1".into(), wx: 0.0, wy: -500.0, case_id: None }.encode_op().unwrap());
+        dump("Command::AddAreaLoad", &Fem2dCommand::AddAreaLoad { region_id: "r1".into(), pressure: 5000.0, case_id: Some("dead".into()) }.encode_op().unwrap());
+        dump("Command::AddRegion", &Fem2dCommand::AddRegion { x: 0.0, y: 0.0, width: 4.0, height: 2.0, material_id: "steel".into(), thickness: Some(0.02), mesh_size: None }.encode_op().unwrap());
+        dump("Command::AddLoadCase", &Fem2dCommand::AddLoadCase { name: "Live".into(), self_weight: false }.encode_op().unwrap());
+        dump(
+            "Command::AddCombination",
+            &Fem2dCommand::AddCombination { name: "ULS".into(), terms: vec![fem2d::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, fem2d::FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] }.encode_op().unwrap(),
+        );
+        dump("Command::SetSelfWeight", &Fem2dCommand::SetSelfWeight { case_id: "dead".into(), enabled: true }.encode_op().unwrap());
+        dump("Command::SetAnalysisSettings", &Fem2dCommand::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0) }.encode_op().unwrap());
+        dump("Command::RemoveSelection", &Fem2dCommand::RemoveSelection { ids: vec!["n1".into(), "e1".into()] }.encode_op().unwrap());
+        dump("Command::SetActiveExample", &Fem2dCommand::SetActiveExample { example_id: "default".into() }.encode_op().unwrap());
+        dump("Command::SetCamera", &Fem2dCommand::SetCamera { x: 1.0, y: 2.0, zoom: 1.5 }.encode_op().unwrap());
+        dump("Command::SetResultDisplay", &Fem2dCommand::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0 }.encode_op().unwrap());
+        dump("Command::SetLocale", &Fem2dCommand::SetLocale { value: "de-DE".into() }.encode_op().unwrap());
+        dump("Operation::SetAnalysisSettings", &encode_op(&Fem2dOperation::SetAnalysisSettings { settings: fem2d::FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } }).unwrap());
+    }
+    // #endregion 🔖️WireBaseline
 }
 // #endregion 🧪️Tests

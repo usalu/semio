@@ -40,3 +40,38 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🧪️WireBaselineDump
+#[cfg(test)]
+mod wire_baseline_dump {
+    use super::*;
+    use protocol::OpText;
+    use serde_json::json;
+
+    fn ops() -> Vec<Puzzle2dOperation> {
+        let node: puzzle_2d::Puzzle2dNode = serde_json::from_value(json!({"id":"n1","nodeKind":"Base","shape":"circle","x":1.5,"y":-2.25,"radius":3.0,"text":"hi","iconKind":"base","root":true,"scale":2.0,"visible":true,"locked":false,"handles":[]})).unwrap();
+        let edge: puzzle_2d::Puzzle2dEdge = serde_json::from_value(json!({"id":"e1","source":"n1:h0","target":"n2:h0","edgeKind":"wire.link","sourceTip":"none","targetTip":"arrow","visible":true,"locked":false})).unwrap();
+        let meta: puzzle_2d::Puzzle2dMeta = serde_json::from_value(json!({"manifestId":"nakagin","kindCompatibility":[{"source":"a","target":"b","bidirectional":true,"specificity":"handle"}]})).unwrap();
+        let document = puzzle_2d::Puzzle2dProjection::default();
+        vec![
+            Puzzle2dOperation::SetNode { index: 0, node },
+            Puzzle2dOperation::RemoveNode { id: "n1".into() },
+            Puzzle2dOperation::SetEdge { index: 1, edge },
+            Puzzle2dOperation::RemoveEdge { id: "e1".into() },
+            Puzzle2dOperation::SetMeta { meta },
+            Puzzle2dOperation::SetDocument { document },
+        ]
+    }
+
+    #[test]
+    fn debug_wire_dump() {
+        for operation in ops() {
+            let text = operation.print_op();
+            let bytes = encode_op(&operation).expect("encode");
+            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+            println!("[WIRE] {text} | {} | {hex}", bytes.len());
+            assert_eq!(decode_op(&bytes).expect("decode"), operation);
+        }
+    }
+}
+//#endregion 🧪️WireBaselineDump

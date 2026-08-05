@@ -1,0 +1,14 @@
+{
+  "title": "Dependency Cruiser Config Staleness Fixes",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Two live bugs in .dependency-cruiser.cjs at repo root:\n1. `no-generated-edits-upstream` rule targets `🤖️generated/plugins.json` but the registry actually generates `🤖️generated/🔣️plugins.json` (confirmed on disk) — the rule currently matches nothing. Fix the path.\n2. The hardcoded `PLUGINS` array is missing `🎪️demonstrator` (confirmed via `ls ✏️s/🔌️plugins`, 32 dirs vs 31 in the array). Replace the hardcoded literal with a `fs.readdirSync(\"✏️s/🔌️plugins\", { withFileTypes: true })` derivation so it self-corrects as plugin migrations land (~14+ incoming over the next days).\nVerify before/after with the exact verify-gate dependency-cruiser invocation from root script.ts (`bunx dependency-cruiser@16 compose 🧰️framework ✏️s 🌎️hub ♻️mit-bestand --config .dependency-cruiser.cjs --output-type err`) to confirm no unrelated violation-set changes.",
+  "summary": "Fixed two stale/diverged spots in .dependency-cruiser.cjs. (1) no-generated-edits-upstream targeted the wrong generated filename (🤖️generated/plugins.json) which never matched anything on disk; corrected to the real generated filename 🤖️generated/🔣️plugins.json (verified against the registry's actual output at 🧰️framework/.../📇️registry/🤖️generated/). (2) The hardcoded PLUGINS array (used by crossPluginRules and framework-no-plugin-packages) had drifted from `ls ✏️s/🔌️plugins` — missing 🎪️demonstrator (31 vs 32 dirs). Replaced the literal with fs.readdirSync(path.join(__dirname, \"✏️s/🔌️plugins\"), { withFileTypes: true }).filter(isDirectory).map(name) so the list self-corrects as the ~14+ pending plugin migrations land, added require(\"fs\")/require(\"path\") (file had no prior requires). Verified: derived list sanity-printed via node, 32 entries, matches `ls` exactly. Ran the exact verify-gate invocation (bunx dependency-cruiser@16 compose 🧰️framework ✏️s 🌎️hub ♻️mit-bestand --config .dependency-cruiser.cjs --output-type err) before and after both fixes: identical result both times — 0 violations, 206 modules, 309 dependencies cruised, exit 0. no-generated-edits-upstream did not newly fire, meaning no current upstream code imports the generated json directly today.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2466"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪6e227429f64e481a9a8b9a8da6a397f0"
+  ]
+}

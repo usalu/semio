@@ -11379,6 +11379,7 @@ dependencies = [
  "semio-s-app-puzzle-2d",
  "semio-s-app-puzzle-2d-engine",
  "semio-s-app-puzzle-2d-op",
+ "serde_json",
 ]
 
 [[package]]
@@ -11562,6 +11563,7 @@ dependencies = [
  "semio-s-app-puzzle-5d",
  "semio-s-app-puzzle-5d-engine",
  "semio-s-app-puzzle-5d-op",
+ "serde_json",
 ]
 
 [[package]]

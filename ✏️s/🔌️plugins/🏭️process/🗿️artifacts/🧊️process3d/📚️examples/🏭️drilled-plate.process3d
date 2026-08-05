@@ -1,0 +1,49 @@
+resolved-up-to=2
+workshop {
+  machines=[ id=saw label="Generic Saw" icon-id=scissors capabilities=[ id=cut label=Cut icon-id=scissors parameters=[ id=kerf label=Kerf value=0.05m id=length label=Length value=0.5m id=depth label=Depth value=0.5m ]
+  rules {
+  }
+  blade-cut kerf=kerf length=length depth=depth ] id=drill label="Generic Drill" icon-id=circle-dot capabilities=[ id=drill label=Drill icon-id=circle-dot parameters=[ id=radius label=Radius value=0.05m id=depth label=Depth value=0.3m ]
+  rules {
+  }
+  bore-drill radius=radius depth=depth ] id=attacher label="Generic Attacher" icon-id=plus capabilities=[ id=attach label=Attach icon-id=plus parameters=[ id=radius label=Radius value=0.03m id=length label=Length value=0.2m ]
+  rules {
+  }
+  cylinder-attach radius=radius length=length ] id=pillarDrill label="Pillar Drill" icon-id=circle-dot catalog-id=metal capabilities=[ id=bore label=Bore icon-id=circle-dot parameters=[ id=bitRadius label="Bit Radius" value=0.008m id=strokeDepth label="Stroke Depth" value=0.08m ]
+  rules {
+    max quantity=height parameter=strokeDepth margin=0m
+  }
+  bore-drill radius=bitRadius depth=strokeDepth ] ]
+}
+stock {
+  id=plate label="Steel Plate"
+  pose {
+    position=@0,0,0.01 axis=^0,0,1 angle=0rad
+  }
+  box width=1m depth=0.6m height=0.02m
+}
+steps=[ id=hole-1 label="Hole 1" enabled=true
+origin {
+  machine-id=pillarDrill capability-id=bore
+}
+drill radius=0.03m depth=0.05m
+pose {
+  position=@-0.35,0,0.01 axis=^0,0,1 angle=0rad
+}
+id=hole-2 label="Hole 2" enabled=true
+origin {
+  machine-id=pillarDrill capability-id=bore
+}
+drill radius=0.03m depth=0.05m
+pose {
+  position=@0,0,0.01 axis=^0,0,1 angle=0rad
+}
+id=hole-3 label="Hole 3" enabled=true
+origin {
+  machine-id=pillarDrill capability-id=bore
+}
+drill radius=0.03m depth=0.05m
+pose {
+  position=@0.35,0,0.01 axis=^0,0,1 angle=0rad
+}
+]

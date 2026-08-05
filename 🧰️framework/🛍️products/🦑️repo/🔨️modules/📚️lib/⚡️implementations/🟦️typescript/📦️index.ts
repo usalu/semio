@@ -5127,3 +5127,9 @@ export async function exportAnimatedSvgToMp4(inputSvgPath: string, outputMp4Path
   await browser.close();
 }
 //#endregion 📻️SVG Export
+
+//#region 🔣️TaxonomyDiscovery
+/** 🔣️ Shared taxonomy vocabulary + repo-wide package discovery contract — see
+ * `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`. */
+export * from "./🟦️discovery.ts";
+//#endregion 🔣️TaxonomyDiscovery

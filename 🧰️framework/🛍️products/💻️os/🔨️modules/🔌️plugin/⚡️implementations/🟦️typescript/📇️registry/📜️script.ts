@@ -41,6 +41,14 @@ function hasSemioRole(text: string, role: "plugin" | "framework"): boolean {
   if (!block) return false;
   return new RegExp(`^role\\s*=\\s*"${role}"\\s*$`, "m").test(block.join("\n"));
 }
+
+/** @emoji 🧭️ True when a manifest path matches the new one-crate-per-plugin taxonomy contract shape
+ * (`✏️s/🔌️plugins/<p>/📦️packages/🦀️rust/Cargo.toml`) — the single source of truth for that shape,
+ * shared by crate discovery (`findPluginCargoFiles`) and in-flight playground dedupe
+ * (`dedupeInFlightPlaygroundEntries`) so the two never drift apart. */
+function isNewContractPluginManifestPath(path: string): boolean {
+  return /\/✏️s\/🔌️plugins\/[^/]+\/📦️packages\/🦀️rust\/Cargo\.toml$/.test(path);
+}
 //#endregion 🏛️DiscoveryContract
 
 function findPluginCargoFiles(root: string): string[] {
@@ -75,7 +83,7 @@ function findPluginCargoFiles(root: string): string[] {
           // by path shape. Framework crates are discovered the same way but never carry
           // `[package.metadata.component]`, so `tryParsePluginCargo` drops them below — matching how
           // ordinary (non-plugin) module crates already get silently filtered out of the registry today.
-          const isNewPluginCrate = /\/✏️s\/🔌️plugins\/[^/]+\/📦️packages\/🦀️rust\/Cargo\.toml$/.test(path);
+          const isNewPluginCrate = isNewContractPluginManifestPath(path);
           const isNewFrameworkCrate = !isNewPluginCrate && /\/🧰️framework\/.*\/📦️packages\/🦀️rust\/Cargo\.toml$/.test(path);
           if (isNewPluginCrate || isNewFrameworkCrate) {
             const text = readFileSync(path, "utf8");
@@ -257,18 +265,47 @@ function parsePlaygroundsForCrate(manifestPath: string, pluginId: string, crateP
   return entries;
 }
 
+//#region 🧹️PlaygroundDedupe
+/** @emoji 🧹️ In-flight migration dedupe (see `LEGACY_LAYOUT_TOLERANT`): when a plugin's legacy bundle
+ * crate and its new-contract taxonomy crate are BOTH on disk at once, they typically carry identical
+ * `[[package.metadata.semio.playground]]` rows — same variant id, same aliases, same ports — which
+ * would otherwise trip `validatePlaygroundRegistry`'s duplicate checks for the entire workspace on
+ * every in-flight migration. Groups raw entries by variant id; a group where every entry shares one
+ * `pluginId` AND at least one (but not all) entries come from a new-contract crate is the expected
+ * transient migration shape, so only the new-contract entry/entries survive. A variant collision
+ * across DIFFERENT plugin ids is left untouched — that is a genuine naming collision for
+ * `validatePlaygroundRegistry` to catch. */
+function dedupeInFlightPlaygroundEntries(playgrounds: readonly PlaygroundEntry[]): PlaygroundEntry[] {
+  const byVariant = new Map<string, PlaygroundEntry[]>();
+  for (const entry of playgrounds) byVariant.set(entry.variant, [...(byVariant.get(entry.variant) ?? []), entry]);
+  const dropped = new Set<PlaygroundEntry>();
+  for (const group of byVariant.values()) {
+    if (group.length <= 1) continue;
+    if (new Set(group.map((entry) => entry.pluginId)).size > 1) continue;
+    // 🏛️ `cratePath` is repo-root-relative (no leading slash) while `isNewContractPluginManifestPath`
+    // matches an absolute-shaped suffix (`/✏️s/🔌️plugins/…`) — prefix with "/" so the shared regex
+    // still matches instead of duplicating it in a relative-path form.
+    const newContract = group.filter((entry) => isNewContractPluginManifestPath(`/${entry.cratePath}/Cargo.toml`));
+    if (newContract.length === 0 || newContract.length === group.length) continue;
+    for (const entry of group) if (!newContract.includes(entry)) dropped.add(entry);
+  }
+  return dropped.size === 0 ? [...playgrounds] : playgrounds.filter((entry) => !dropped.has(entry));
+}
+//#endregion 🧹️PlaygroundDedupe
+
 /** @emoji 🕹️ Scans every plugin/module crate for `[[package.metadata.semio.playground]]` rows and flattens them into one repo-wide catalog. */
 export function generatePlaygroundRegistry(repoRoot = getWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): PlaygroundEntry[] {
   const entries = generatePluginRegistry(repoRoot, options);
-  const playgrounds: PlaygroundEntry[] = [];
+  const rawPlaygrounds: PlaygroundEntry[] = [];
   for (const entry of entries) {
     const manifestPath = join(repoRoot, entry.cratePath, "Cargo.toml");
     const crateAssets = parseAssetsForCrate(manifestPath);
     for (const playground of parsePlaygroundsForCrate(manifestPath, entry.pluginId, entry.cratePath)) {
       const assets = crateAssets.filter((asset) => asset.app === undefined || asset.app === playground.app);
-      playgrounds.push({ ...playground, examples: discoverExamplesForPlayground(repoRoot, entry.cratePath, entry.pluginId, playground.variant), assets });
+      rawPlaygrounds.push({ ...playground, examples: discoverExamplesForPlayground(repoRoot, entry.cratePath, entry.pluginId, playground.variant), assets });
     }
   }
+  const playgrounds = dedupeInFlightPlaygroundEntries(rawPlaygrounds);
   for (let i = 0; i < playgrounds.length; i++) {
     const row = playgrounds[i];
     if (!row.brand || row.examples.length > 0) continue;

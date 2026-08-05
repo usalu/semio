@@ -17,4 +17,5 @@ protocol = { path = "../../../../../../../../../🧰️framework/🛍️products
 store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
 
 [dev-dependencies]
+serde_json = "1.0.140"
 puzzle_5d_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-puzzle-5d-engine" }

@@ -1,0 +1,119 @@
+=== semio-s-app-fem-2d ===
+     Running unittests ../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_fem_2d-eb7bcc33cb4aa442)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+=== semio-s-app-fem-2d-op ===
+test tests::support_op_round_trips ... ok
+test tests::fem2d_config_operation_text_round_trips_every_variant ... ok
+test tests::fem2d_op_text_round_trips_every_variant ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+=== semio-s-app-fem-2d-engine ===
+test tests::region_self_weight_via_solve_all_matches_total_mass_times_gravity ... ok
+test tests::fem2d_modal_returns_requested_mode_count ... ok
+test tests::example_fixture_parses_and_solves ... ok
+
+test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+=== semio-s-app-fem-2d-dsl ===
+running 2 tests
+test tests::fem2d_dsl_round_trips_fixture_documents ... ok
+test tests::fem2d_dsl_round_trips_bundled_default_example ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+=== semio-s-app-fem-2d-pack ===
+running 2 tests
+test tests::fem2d_pack_agrees_with_dsl_for_bundled_default_example ... ok
+test tests::fem2d_pack_agrees_with_dsl_for_fixture_documents ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+=== semio-s-app-fem-2d-protocol ===
+test tests::op_binary_round_trips_and_agrees_with_text ... ok
+test tests::fem2d_command_text_round_trips_every_variant ... ok
+test tests::fem2d_document_text_round_trips_through_the_store ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+=== semio-s-app-fem-2d-ui ===
+757 |                     Ok(Emit::operations(operations)
+    |                       ^ unclosed delimiter
+758 |                 }
+    |                 ^ mismatched closing delimiter
+
+error: could not compile `semio-s-app-fem-2d-ui` (lib test) due to 16 previous errors
+=== semio-s-app-fem-3d ===
+     Running unittests ../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_fem_3d-295d17ed1da36c86)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+=== semio-s-app-fem-3d-op ===
+test tests::support_set_and_remove_round_trip ... ok
+test tests::fem3d_config_operation_text_round_trips_every_variant ... ok
+test tests::fem3d_op_text_round_trips_every_variant ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+=== semio-s-app-fem-3d-engine ===
+test tests::solid_self_weight_matches_total_mass_times_gravity ... ok
+test tests::solid_area_load_matches_pressure_times_footprint_area ... ok
+test tests::example_fixture_parses ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+=== semio-s-app-fem-3d-dsl ===
+running 2 tests
+test tests::fem3d_dsl_round_trips_fixture_documents ... ok
+test tests::fem3d_dsl_round_trips_bundled_default_example ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+=== semio-s-app-fem-3d-pack ===
+running 2 tests
+test tests::fem3d_pack_agrees_with_dsl_for_bundled_default_example ... ok
+test tests::fem3d_pack_agrees_with_dsl_for_fixture_documents ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+=== semio-s-app-fem-3d-protocol ===
+test tests::op_binary_round_trips_and_agrees_with_text ... ok
+test tests::fem3d_command_text_round_trips_every_variant ... ok
+test tests::fem3d_document_text_round_trips_through_the_store ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+=== semio-s-app-fem-3d-ui ===
+686 |                     Ok(Emit::operations(operations)
+    |                       ^ unclosed delimiter
+687 |                 }
+    |                 ^ mismatched closing delimiter
+
+error: could not compile `semio-s-app-fem-3d-ui` (lib test) due to 16 previous errors
+=== semio-s-plugin-fem-core ===
+test tests::model_debug_fmt_prints_element_ids_not_trait_objects ... ok
+test tests::solves_single_spring_against_hand_calc ... ok
+test tests::unconstrained_model_is_singular ... ok
+
+test result: ok. 124 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+=== semio-s-plugin-fem-shared ===
+test tests::next_id_retries_past_collisions ... ok
+test tests::parse_result_display_missing_args_defaults_to_static_with_no_source ... ok
+test tests::von_mises_color_maps_extremes_midpoint_and_clamps ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+=== semio-s-plugin-fem ===
+686 |                     Ok(Emit::operations(operations)
+    |                       ^ unclosed delimiter
+687 |                 }
+    |                 ^ mismatched closing delimiter
+
+error: could not compile `semio-s-app-fem-3d-ui` (lib) due to 16 previous errors

@@ -1,3 +1,7 @@
+# ⚠️ TEMPORARY (verification overlay, see the [workspace] block at the bottom of this file) — the
+# `trim-paths` profile keys copied from root Cargo.toml need this opt-in. Removed with the overlay.
+cargo-features = ["trim-paths"]
+
 [package]
 name = "semio-s-plugin-gis"
 version.workspace = true

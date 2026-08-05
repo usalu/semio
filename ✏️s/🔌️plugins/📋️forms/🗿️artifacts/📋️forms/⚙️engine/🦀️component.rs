@@ -7,7 +7,12 @@
 //! `FormsConfig` (view state, not document state) does NOT live here — see `🎛️apps/📋️forms/🦀️config.rs`.
 
 use crate::artifacts::forms::op::FormOperation;
-use crate::artifacts::forms::{dsl, FormQuestion, FormSpec, FormStep, FORMS_DOCUMENT_SCHEMA};
+// 🧷️ Aliased (not the bare `dsl` name): this file also needs the EXTERN `dsl` crate (kernel DSL
+// value/derive surface) for `value_to_dsl`/`dsl_to_value` below — importing the artifact's own `dsl`
+// submodule under the bare name would shadow that crate and break every `dsl::DslValue`/`dsl::to_dsl_value`
+// reference in this file (confirmed by `cargo check`: E0425/E0433 "not found in `dsl`").
+use crate::artifacts::forms::dsl as forms_dsl;
+use crate::artifacts::forms::{FormQuestion, FormSpec, FormStep, FORMS_DOCUMENT_SCHEMA};
 use serde_json::Value;
 use std::sync::atomic::{AtomicU32, Ordering};
 
@@ -63,13 +68,13 @@ pub fn empty_forms_projection() -> FormSpec {
 /// 🌱️ The forms app's default document — the building-component fixture, seeded from its derive-
 /// generated `.forms` DSL text.
 pub fn building_component_spec() -> FormSpec {
-    dsl::parse_dsl(dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_projection())
+    forms_dsl::parse_dsl(forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_projection())
 }
 
-/// 📄️ The `default` (Contact) example, parsed once from `dsl::DEFAULT_EXAMPLE_TEXT` — the source of truth
+/// 📄️ The `default` (Contact) example, parsed once from `forms_dsl::DEFAULT_EXAMPLE_TEXT` — the source of truth
 /// for every "default" example call site (`setActiveExample`, `App::example`).
 pub fn default_example_spec() -> FormSpec {
-    dsl::parse_dsl(dsl::DEFAULT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_projection())
+    forms_dsl::parse_dsl(forms_dsl::DEFAULT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_projection())
 }
 
 /// 📄️ JSON re-serialization of [`default_example_spec`], for the framework-generic call sites that
@@ -78,9 +83,9 @@ pub fn default_example_json() -> String {
     serde_json::to_string(&default_example_spec()).expect("serialize default example document")
 }
 
-/// 📄️ The `onboarding` example, parsed once from `dsl::ONBOARDING_EXAMPLE_TEXT`.
+/// 📄️ The `onboarding` example, parsed once from `forms_dsl::ONBOARDING_EXAMPLE_TEXT`.
 pub fn onboarding_example_spec() -> FormSpec {
-    dsl::parse_dsl(dsl::ONBOARDING_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_projection())
+    forms_dsl::parse_dsl(forms_dsl::ONBOARDING_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_projection())
 }
 
 /// 📄️ JSON re-serialization of [`onboarding_example_spec`], for the framework-generic call sites that

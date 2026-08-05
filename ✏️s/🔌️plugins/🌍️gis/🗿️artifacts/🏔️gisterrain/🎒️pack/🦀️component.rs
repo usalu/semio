@@ -1,0 +1,39 @@
+//! 📦️ GIS terrain artifact — binary document surface + laws (constitutional: pack).
+
+use crate::artifacts::gisterrain::Gis3dTerrainDocument;
+use store::PackError;
+
+/// 📦️ Encodes a `Gis3dTerrainDocument` to its binary pack form.
+pub fn encode(document: &Gis3dTerrainDocument) -> Vec<u8> {
+    store::DocumentPack::encode_pack(document)
+}
+
+/// 📖️ Decodes a `Gis3dTerrainDocument` from its binary pack form.
+pub fn decode(bytes: &[u8]) -> Result<Gis3dTerrainDocument, PackError> {
+    <Gis3dTerrainDocument as store::DocumentPack>::decode_pack(bytes)
+}
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::artifacts::gisterrain::dsl;
+
+    #[test]
+    fn gis3d_terrain_document_pack_agrees_with_dsl_for_bundled_reuse_example() {
+        let document = dsl::parse_dsl(dsl::REUSE_TERRAIN_EXAMPLE_TEXT).expect("parse reuse-terrain example");
+        store::test_support::assert_dsl_pack_equivalence(&document);
+        assert_eq!(decode(&encode(&document)).expect("decode"), document);
+    }
+
+    #[test]
+    fn gis3d_terrain_document_pack_agrees_with_dsl_for_arbitrary_exaggeration() {
+        store::test_support::assert_dsl_pack_equivalence(&Gis3dTerrainDocument { exaggeration: 2.75, imported_features_json: String::new() });
+    }
+
+    #[test]
+    fn gis3d_terrain_document_pack_agrees_with_dsl_for_imported_features_json() {
+        store::test_support::assert_dsl_pack_equivalence(&Gis3dTerrainDocument { exaggeration: 1.0, imported_features_json: r#"{"positions":[{"id":"p1","lon":1.0,"lat":2.0}],"routes":[],"regions":[]}"#.into() });
+    }
+}
+//#endregion 🧪️Tests

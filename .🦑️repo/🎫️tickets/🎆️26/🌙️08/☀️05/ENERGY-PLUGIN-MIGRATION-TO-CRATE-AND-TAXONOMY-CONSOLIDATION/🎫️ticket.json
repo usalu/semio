@@ -1,0 +1,13 @@
+{
+  "title": "Energy Plugin Migration To Crate And Taxonomy Consolidation",
+  "emoji": "🔋️",
+  "status": "open",
+  "description": "Migrate the 🔋️energy plugin from its old layout (single crate at ✏️s/🔌️plugins/🔋️energy/🔨️modules/⚙️engine/⚡️implementations/🦀️rust/, package semio-s-plugin-energy-engine, 11,663-line lib.rs) to the new single-crate taxonomy layout at ✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/, per the repo-wide crate-consolidation-and-plugin-taxonomy-restructure initiative. This is a regional decomposition (not a union merge, since energy is already a single crate) following the TEMPLATE recipe and writer plugin example. Ends with a registrar-handoff block; does not touch root Cargo.toml or other plugins.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2467"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪68a180863d1340579bf88c4ee3d5a0d5"
+  ]
+}
