@@ -189,6 +189,7 @@ pub fn create_note_app() -> App {
     let document = empty_note_document();
     let mut app = App::from_builder(
         App::builder(NOTE_PLAY_APP_ID, LocalizedLabel::native("Note", "Notiz"))
+            .document(["semio", "note"])
             .artifact_kind(crate::artifacts::note::artifact_kind())
             .icon_id("note")
             .mode_def(edit::definition())
@@ -345,10 +346,6 @@ pub(crate) mod testkit {
     pub fn render(app: &mut NoteApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("render json")
     }
-
-    pub fn main_window_measures(app: &mut NoteApp) -> Vec<WindowMeasure> {
-        app.window_measures().get(NOTE_PLAY_WINDOW_COMPOSITE).cloned().expect("composite window measures")
-    }
 }
 //#endregion 🧪️Testkit
 
@@ -356,8 +353,8 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::note::testkit::{dispatch, note_app, note_app_with_registry, NoteApp};
-    use semio_framework_plugin::{testkit, ActionKind as Kind, HostEffect, PluginApp, ViewState};
+    use crate::apps::note::testkit::note_app;
+    use semio_framework_plugin::{testkit, ActionKind as Kind};
 
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
@@ -426,75 +423,6 @@ mod tests {
             NoteCommand::SaveDownload(save_download::SaveDownload {}),
             NoteCommand::LoadRequest(load_request::LoadRequest {}),
         ]
-    }
-
-    /// 🧪️ [DEBUG] Temporary wire-proof dump — reconstructs the exact same 41 representative command
-    /// values the pre-migration `🧪️wire-baseline-before.txt` dump used (same ordinal, same payload),
-    /// prints `print_op(&c) | bytes.len() | hex(bytes)` for each, so the output can be diffed
-    /// byte-for-byte against that file. Delete this test once the diff is confirmed clean.
-    #[test]
-    fn dump_wire_baseline_after() {
-        use protocol::{OpBinary, OpText};
-        fn hex(bytes: &[u8]) -> String {
-            bytes.iter().map(|b| format!("{b:02x}")).collect()
-        }
-        fn line(ordinal: usize, command: &NoteCommand) -> String {
-            let bytes = command.encode_op().expect("encode");
-            format!("{ordinal:02x} | {} | {} | {}", command.print_op(), bytes.len(), hex(&bytes))
-        }
-        let mut ordinal = 0usize;
-        let mut out = String::new();
-        for command in [
-            NoteCommand::SetGridVisible(set_grid_visible::SetGridVisible { value: Some(true) }),
-            NoteCommand::SetGridSpacing(set_grid_spacing::SetGridSpacing { value: 16.0 }),
-            NoteCommand::SetGridSubdivisions(set_grid_subdivisions::SetGridSubdivisions { value: 8.0 }),
-            NoteCommand::SetGridOpacity(set_grid_opacity::SetGridOpacity { value: 0.6 }),
-            NoteCommand::SetSnapEnabled(set_snap_enabled::SetSnapEnabled { value: Some(false) }),
-            NoteCommand::SetSnapGridSpacing(set_snap_grid_spacing::SetSnapGridSpacing { value: 4.0 }),
-            NoteCommand::SetPencilWidth(set_pencil_width::SetPencilWidth { value: 5.0 }),
-            NoteCommand::SetEraserRadius(set_eraser_radius::SetEraserRadius { value: 20.0 }),
-            NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 10.0, y: 20.0 }),
-            NoteCommand::MoveBlock(move_block::MoveBlock { block_id: "b1".into(), target_row_id: "note-play-block:g1".into(), drop_position: "after".into() }),
-            NoteCommand::DeleteBlock(delete_block::DeleteBlock { block_id: "b1".into() }),
-            NoteCommand::DeleteSelection(delete_selection::DeleteSelection {}),
-            NoteCommand::DuplicateBlock(duplicate_block::DuplicateBlock { block_id: "b1".into() }),
-            NoteCommand::DuplicateSelection(duplicate_selection::DuplicateSelection {}),
-            NoteCommand::PatchBlocks(patch_blocks::PatchBlocks { block_ids: vec!["b1".into(), "b2".into()], field: "visible".into(), value: "true".into() }),
-            NoteCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "semio".into() }),
-            NoteCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "{}".into() }),
-            NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[]".into(), phase: "begin".into(), select_ids: Some(vec!["b1".into()]) }),
-            NoteCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("Renamed".into()) }),
-            NoteCommand::NudgeSelection(nudge_selection::NudgeSelection { dx: 1.0, dy: -1.0 }),
-            NoteCommand::NudgeSelectionUp(nudge_selection_up::NudgeSelectionUp {}),
-            NoteCommand::NudgeSelectionDown(nudge_selection_down::NudgeSelectionDown {}),
-            NoteCommand::NudgeSelectionLeft(nudge_selection_left::NudgeSelectionLeft {}),
-            NoteCommand::NudgeSelectionRight(nudge_selection_right::NudgeSelectionRight {}),
-            NoteCommand::NudgeSelectionUpFast(nudge_selection_up_fast::NudgeSelectionUpFast {}),
-            NoteCommand::NudgeSelectionDownFast(nudge_selection_down_fast::NudgeSelectionDownFast {}),
-            NoteCommand::NudgeSelectionLeftFast(nudge_selection_left_fast::NudgeSelectionLeftFast {}),
-            NoteCommand::NudgeSelectionRightFast(nudge_selection_right_fast::NudgeSelectionRightFast {}),
-            NoteCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::note::NoteCamera { x: 4.0, y: 5.0, zoom: 2.0 } }),
-            NoteCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 3.0 }),
-            NoteCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "pencil".into() }),
-            NoteCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
-            NoteCommand::SelectAll(select_all::SelectAll {}),
-            NoteCommand::ClearSelection(clear_selection::ClearSelection {}),
-            NoteCommand::SetSelection(set_selection::SetSelection { ids: vec!["b1".into(), "b2".into()] }),
-            NoteCommand::SetHover(set_hover::SetHover { block_id: Some("b1".into()) }),
-            NoteCommand::SetHover(set_hover::SetHover { block_id: None }),
-            NoteCommand::EngagementInput(engagement_input::EngagementInput { value: "Renaming".into() }),
-            NoteCommand::NavigatorEngagementInput(navigator_engagement_input::NavigatorEngagementInput {}),
-            NoteCommand::SaveDownload(save_download::SaveDownload {}),
-            NoteCommand::LoadRequest(load_request::LoadRequest {}),
-        ] {
-            out.push_str(&line(ordinal, &command));
-            out.push('\n');
-            // SetHover's two rows (Some/None) share ordinal 0x23 — only advance once both are printed.
-            if !matches!(command, NoteCommand::SetHover(set_hover::SetHover { block_id: Some(_) })) {
-                ordinal += 1;
-            }
-        }
-        panic!("\n{out}");
     }
 
     /// 🎞️ Pins the exact hex for rows whose `Option` fields make `None`/`Some` distinct wire cases —

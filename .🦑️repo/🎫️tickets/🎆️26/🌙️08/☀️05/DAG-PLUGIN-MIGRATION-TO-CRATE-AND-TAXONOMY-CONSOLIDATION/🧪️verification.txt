@@ -1,0 +1,65 @@
+DAG plugin migration — verification log
+========================================
+
+1. Baseline (old 8-crate layout, before migration)
+   - manifest/artifact crate: 0 tests
+   - app facade crate: 0 tests
+   - engine crate: 2 tests
+   - dsl crate: 1 test
+   - op crate: 2 tests
+   - pack crate: 2 tests
+   - protocol crate: 3 tests
+   - ui crate: 17 tests, BUT the crate as committed at HEAD does not compile — the
+     `DocumentApp::handle` match arms in the old 🖱️ui crate's 📦️lib.rs have unbalanced `Ok(` wraps
+     (e.g. `Ok(Emit::default();`, `Ok(Emit::operations(vec![...])` missing closing parens) and no
+     `Fault` import, matching the systemic pre-existing corruption pattern documented in the migration
+     TEMPLATE.md §12.3 (also hit by cad/vcs/shooting/sourcing's old ui crates). This is NOT something
+     introduced by this migration — it was forward-fixed as a natural side effect of porting `handle()`
+     into `app_commands!` handlers, exactly as TEMPLATE.md §12.3 anticipates.
+   - Compilable baseline total: 10 tests (engine+dsl+op+pack+protocol). ui's 17 nominal tests could not
+     run pre-migration due to the compile break.
+
+2. New crate (semio-s-plugin-dag) verification, all via isolated `--manifest-path` against a temporary
+   `[workspace]` overlay (deleted before handoff):
+   - `cargo check` — clean, no warnings for this crate (only pre-existing warnings in dependency crates
+     I don't own: semio-framework-plugin, the infinite-board-port-directed-dag kernel crate).
+   - `cargo check --target wasm32-wasip2` — clean.
+   - `cargo clippy --all-targets -- -D warnings` — clean after fixing 7 mechanical findings created by
+     the taxonomy split itself (map_unwrap_or -> map_or_else/is_some_and x2, redundant_clone x4 dropped,
+     one redundant self-referential test removed as a tautology).
+   - `cargo test` — 61/61 passing (61 >> compilable baseline of 10, and covers everything the broken
+     ui crate's 17 nominal tests covered plus more granular per-node tests).
+
+3. Wire-format proof (the real correctness proof)
+   - Captured a genuine pre-migration baseline by temporarily overlaying a `[workspace]` block + a
+     `[DEBUG]` dump test onto the OLD `semio-s-app-dag-protocol` crate (which, unlike the ui crate, has
+     no corruption and compiles standalone) and running it with `--nocapture`.
+   - Saved to 🧪️wire-baseline-before.txt (17 rows, one per DagCommand variant, in declaration order).
+   - Ran the equivalent dump against the NEW crate's `every_command()` list (same values, same order),
+     saved to 🧪️wire-after.txt.
+   - `diff` of the two files: BYTE-IDENTICAL, line-for-line. The command decomposition via
+     `app_commands!` did not alter the wire format in any way.
+   - A permanent `optional_field_rows_keep_their_pre_migration_bytes` test pins the AddNode row's exact
+     hex bytes (the only DagCommand row with `Option` fields) as a regression guard.
+
+4. Taxonomy audit (adapted from cad's ticket, 🔍️taxonomy-audit.ts)
+   - Before deleting old crates: clean except the expected pre-deletion `📡️protocol` path segment
+     finding (from the still-present old crate).
+   - After deleting the 8 old crates: `taxonomy tree clean: 🕸️dag` — no findings at all.
+
+5. Old crates deleted (§8, only after the above was fully green):
+   - ✏️s/🔌️plugins/🕸️dag/🛂️manifest/ (whole dir)
+   - ✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/⚡️implementations/ (whole dir)
+   - ✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🔨️modules/ (whole dir, all 6 module crates)
+   - No stray non-Rust data files found needing relocation (unlike flow's orphan manifest.json case).
+
+6. External dependents found (§0.5 grep across all Cargo.toml, including [dev-dependencies])
+   - No dependents outside ✏️s/🔌️plugins/🕸️dag/** for any of the 8 old crate names, EXCEPT:
+   - `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/⚡️implementations/🦀️rust/Cargo.toml`
+     dev-depends on the old app facade crate (`dag_app = { path = "...", package = "semio-s-app-dag" }`)
+     to import `DagDocument` for its `store::DocumentDsl` fixture-sweep law check (📦️lib.rs line 36/136).
+     `DagDocument` is NOT owned by the dag plugin — it's a re-export of the kernel type from
+     `infinite_board_port_directed_dag`. Per TEMPLATE.md §8.2's precedent (flow's own fixture-sweep
+     repoint), the correct fix is to repoint the alias directly at the kernel crate, not at the new
+     plugin crate — flagged in the registrar handoff below, NOT applied by me (outside my scope).
+   - No dependents found in 🎪️demonstrator.

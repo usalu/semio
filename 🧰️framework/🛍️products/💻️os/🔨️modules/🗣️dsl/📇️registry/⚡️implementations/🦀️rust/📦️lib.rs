@@ -44,8 +44,8 @@ pub fn full_resolver() -> FullResolver {
     let mut schemas: HashMap<&'static str, fn() -> dsl_schema::RecordSpec> = HashMap::new();
     schemas.insert(writer::artifacts::writer::WRITER_DOCUMENT_SCHEMA, writer::artifacts::writer::WriterProjection::__dsl_spec);
     schemas.insert("writer.document#diff", writer::artifacts::writer::diff::WriterDiff::__dsl_diff_spec);
-    schemas.insert(note::NOTE_DOCUMENT_SCHEMA, note::NoteDocument::__dsl_spec);
-    schemas.insert("note.document#diff", note_op::NoteDiff::__dsl_diff_spec);
+    schemas.insert(note::artifacts::note::NOTE_DOCUMENT_SCHEMA, note::artifacts::note::NoteDocument::__dsl_spec);
+    schemas.insert("note.document#diff", note::artifacts::note::diff::NoteDiff::__dsl_diff_spec);
     FullResolver { schemas }
 }
 //#endregion 🔖️Registry

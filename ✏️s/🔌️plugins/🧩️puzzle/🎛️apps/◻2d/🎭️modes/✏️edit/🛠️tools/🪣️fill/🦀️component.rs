@@ -67,8 +67,7 @@ mod tests {
     fn fill_count_slider_is_a_tool_measure() {
         let labels = puzzle2d_labels(&Puzzle2dConfig::default());
         let host = puzzle_board_host();
-        let mut fill_runtime = Puzzle2dPlayRuntime::default();
-        fill_runtime.fill_count = 3;
+        let fill_runtime = Puzzle2dPlayRuntime { fill_count: 3, ..Puzzle2dPlayRuntime::default() };
         let fill_scene = scene(default_empty_fixture(), fill_runtime, overview::utilities::select::UTILITY_ID);
         let fill_measure = measures(&fill_scene, labels);
         assert!(matches!(&fill_measure, WindowMeasure::Group { id, active_utility_id: None, .. } if id == "puzzle2d-tool-options-fill"));

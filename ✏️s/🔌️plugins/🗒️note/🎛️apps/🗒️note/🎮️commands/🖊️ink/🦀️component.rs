@@ -138,7 +138,7 @@ mod tests {
         let new_id = block_id(&block).to_string();
 
         let begin_events = json!([
-            { "operation": "addBlock", "block": block.clone(), "parentId": null, "index": null }
+            { "operation": "addBlock", "block": block, "parentId": null, "index": null }
         ])
         .to_string();
         dispatch(&mut app, NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: begin_events, phase: "begin".into(), select_ids: Some(vec![new_id.clone()]) }));
@@ -146,7 +146,7 @@ mod tests {
 
         for x in [20.0, 30.0, 40.0] {
             let mut moved = block.clone();
-            if let crate::artifacts::note::NoteBlockNode::Text { x: block_x, .. } = &mut moved {
+            if let NoteBlockNode::Text { x: block_x, .. } = &mut moved {
                 *block_x = x;
             }
             let live_events = json!([

@@ -1,0 +1,12 @@
+Baseline test counts (old 7-crate layout), captured before migration:
+- manifest/artifact (semio-s-plugin-playbook, bundle): 0 tests
+- app facade (semio-s-app-playbook): 0 tests
+- engine (semio-s-app-playbook-engine): 3 tests, all passing
+- op (semio-s-app-playbook-op): 2 tests, all passing
+- dsl (semio-s-app-playbook-dsl): 3 tests, all passing
+- pack (semio-s-app-playbook-pack): 4 tests, all passing
+- protocol (semio-s-app-playbook-protocol): 2 tests, all passing (+1 temp [DEBUG] wire-dump test added by this migration, not counted)
+- ui (semio-s-app-playbook-ui): DOES NOT COMPILE. Known TEMPLATE.md §12.3 corruption pattern: `Ok(Emit::operations(vec![...])` / `return Ok(Emit::default();` missing closing parens in AddStep/RemoveStep/MoveStep arms, and AddBlock/RemoveBlock arms return a bare `Emit { .. }` instead of `Ok(Emit { .. })`, plus no `Fault` import. Source-level test count once fixed (counted from source, not run): 13 tests.
+
+Compiling baseline total: 3+2+3+4+2 = 14 tests passing.
+Correctness floor for the new crate (compiling + source-defined-but-broken): 14 + 13 = 27 tests, all must pass green in the new crate.

@@ -1,5 +1,3 @@
-cargo-features = ["trim-paths"]
-
 [package]
 name = "semio-s-plugin-process"
 version.workspace = true
@@ -50,66 +48,3 @@ vcs = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨�
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.106"
-
-# ---------------------------------------------------------------------------------------------
-# 🚧️ TEMPORARY VERIFICATION OVERLAY — delete this `[workspace]` table (and only this table) at
-# registrar handoff. The new crate is not yet a workspace member (the OLD bundle crate with the
-# same package name still is), so Cargo refuses to build it in-place unless it declares itself
-# its own workspace root. Verify via `--manifest-path` while this is in place; see TEMPLATE.md §3.
-# ---------------------------------------------------------------------------------------------
-[workspace]
-
-[workspace.package]
-version = "0.1.0"
-edition = "2021"
-rust-version = "1.88"
-
-[workspace.dependencies]
-serde_json = "1.0.149"
-
-[workspace.lints.rust]
-future_incompatible = { level = "warn", priority = -1 }
-rust_2018_idioms = { level = "warn", priority = -1 }
-unsafe_op_in_unsafe_fn = "warn"
-unused_lifetimes = "warn"
-unused_qualifications = "warn"
-
-[workspace.lints.clippy]
-all = { level = "warn", priority = -1 }
-cloned_instead_of_copied = "warn"
-inefficient_to_string = "warn"
-map_unwrap_or = "warn"
-needless_pass_by_value = "warn"
-semicolon_if_nothing_returned = "warn"
-unnecessary_wraps = "warn"
-redundant_clone = "warn"
-
-[profile.dev]
-debug = false
-incremental = true
-
-[profile.dev.build-override]
-opt-level = 3
-
-[profile.dev.package.semio-framework-os-kernel-store]
-codegen-units = 1
-
-[profile.release]
-opt-level = 3
-lto = "thin"
-codegen-units = 1
-strip = "debuginfo"
-incremental = false
-trim-paths = "object"
-
-[profile.wasm-release]
-inherits = "release"
-opt-level = "s"
-lto = "thin"
-codegen-units = 1
-strip = "symbols"
-incremental = false
-trim-paths = "object"
-
-[profile.wasm-release.package.semio-framework-os-kernel-store]
-codegen-units = 1

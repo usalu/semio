@@ -239,6 +239,7 @@ pub fn create_layout_app() -> App {
                 export_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
                 import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
             })
+            .document(["semio", "layout"])
             .icon_id("layout")
             .mode_def(edit::definition())
             .default_mode_id(edit::LAYOUT_PLAY_MODE_EDIT)
@@ -370,18 +371,44 @@ mod tests {
         }
     }
 
-    /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — the
-    /// kebab-cased command id, except for the one documented divergence (`setLocale` → `locale`, an
-    /// undeclared host-pushed command).
+    /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — the exact
+    /// `as` literal declared in the `app_commands!` invocation above. Unlike flow (where the wire
+    /// keyword happens to be the kebab-cased command id everywhere except `setLocale`), layout's
+    /// pre-existing `📡️protocol` crate deliberately shortened every `set*` view command's wire keyword
+    /// (`setSelection` → `selection`, `setActivePage` → `active-page`, `setHover` → `hover`,
+    /// `setCamera` → `camera`, `setLocale` → `locale`) — carried forward verbatim, not a drift.
     #[test]
     fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+        let expected_keyword = |id: &str| -> &'static str {
+            match id {
+                "setSelection" => "selection",
+                "setActivePage" => "active-page",
+                "setHover" => "hover",
+                "setCamera" => "camera",
+                "setLocale" => "locale",
+                "focusPreflightIssue" => "focus-preflight-issue",
+                "engagementInput" => "engagement-input",
+                "canvasPointerDown" => "canvas-pointer-down",
+                "canvasPointerMove" => "canvas-pointer-move",
+                "canvasPointerUp" => "canvas-pointer-up",
+                "canvasDragOver" => "canvas-drag-over",
+                "canvasDragLeave" => "canvas-drag-leave",
+                "addFrame" => "add-frame",
+                "addPage" => "add-page",
+                "patchPage" => "patch-page",
+                "patchFrame" => "patch-frame",
+                "canvasDrop" => "canvas-drop",
+                "exportPng" => "export-png",
+                "exportSvg" => "export-svg",
+                "exportPdf" => "export-pdf",
+                "exportPackage" => "export-package",
+                "engagementSubmit" => "engagement-submit",
+                other => panic!("every_command() row {other} missing from this test's expected-keyword table"),
+            }
+        };
         for command in every_command() {
             let id = command.command_id();
-            let expected = if id == "setLocale" {
-                "locale".to_string()
-            } else {
-                id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect()
-            };
+            let expected = expected_keyword(id);
             let printed = protocol::OpText::print_op(&command);
             assert_eq!(printed.split(' ').next().unwrap_or_default(), expected, "wire keyword drifted for command {id}: {printed:?}");
         }

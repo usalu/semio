@@ -1,0 +1,17 @@
+[DEBUG][WIRE] add-node kind=slider x=10 | 24 | 01000106736c696465720200060001050000000000002440
+[DEBUG][WIRE] remove-node node-id=n1 | 10 | 010101026e3101000600
+[DEBUG][WIRE] delete-selection | 4 | 01020000
+[DEBUG][WIRE] node-graph-edit set-fixture fixture-json="{}" delete-selection connect source-node-id=n1 source-port-id=out target-node-id=n2 target-port-id=in | 81 | 01030807636f6e6e6563741064656c6574652d73656c656374696f6e02696e026e31026e32036f75740b7365742d66697874757265027b7d01000f03060100060701000004000603010605020604030602
+[DEBUG][WIRE] connect-media-ports source-node-id=n1 source-port-id=out target-node-id=n2 target-port-id=in | 29 | 01040402696e026e31026e32036f757404000601010603020602030600
+[DEBUG][WIRE] disconnect edge-id=e1 | 10 | 01050102653101000600
+[DEBUG][WIRE] move-media-node node-id=n1 x=1 y=2 | 30 | 010601026e31030006000105000000000000f03f02050000000000000040
+[DEBUG][WIRE] rename-dag-node old-id=n1 value=renamed | 21 | 010702026e310772656e616d656402000600010601
+[DEBUG][WIRE] reorganize | 4 | 01080000
+[DEBUG][WIRE] patch-dag-nodes field=value value="5" node-ids=[ n1 n2 ] | 31 | 0109040135026e31026e320576616c756503000c0206010602010603020600
+[DEBUG][WIRE] set-selection ids=[ n1 ] | 12 | 010a01026e3101000c010600
+[DEBUG][WIRE] select-node node-id=n1 | 10 | 010b01026e3101000600
+[DEBUG][WIRE] node-graph-select node-ids=[ n1 n2 ] | 17 | 010c02026e31026e3201000c0206000601
+[DEBUG][WIRE] node-graph-hover | 4 | 010d0000
+[DEBUG][WIRE] node-graph-viewport x=1 y=2 zoom=1.5 | 34 | 010e00030005000000000000f03f010500000000000000400205000000000000f83f
+[DEBUG][WIRE] graph-pointer-down | 4 | 010f0000
+[DEBUG][WIRE] locale value=de-DE | 13 | 0110010564652d444501000600

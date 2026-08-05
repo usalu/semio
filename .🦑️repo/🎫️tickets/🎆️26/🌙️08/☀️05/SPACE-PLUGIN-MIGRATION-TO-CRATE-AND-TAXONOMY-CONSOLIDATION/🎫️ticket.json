@@ -1,0 +1,13 @@
+{
+  "title": "Space Plugin Migration To Crate And Taxonomy Consolidation",
+  "emoji": "🪐️",
+  "status": "open",
+  "description": "Migrate the 🪐️space plugin (multi-app: 🏠️home launcher + 🪐️space studio, plus a 🤝️shared module) from its old 16-crate constitutional layout to one taxonomy crate at ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust, following TEMPLATE.md and the gis worked precedent (2 apps in 1 crate). Determine real document-schema boundary (home vs space apps) from actual engine/dsl code, not directory names — initial read shows space's document type may be OS-kernel-owned (WorkflowDocument/OS_SPACE_SCHEMA), which changes the artifact-count analysis. Full recipe per TEMPLATE §0-§9, registrar handoff only (never touch root Cargo.toml).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2472"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪2c1e62cbab734f0db1c8d31d01052107"
+  ]
+}

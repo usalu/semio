@@ -484,6 +484,13 @@ extend in the same style and record it here.
    assuming you introduced a bug. Fixing it as part of the port (which is what step 4 of §0's baseline
    naturally forces you to do, since you can't get a passing baseline otherwise) is correct; just call it
    out plainly in your final report so the pattern's spread across plugins is visible to the orchestrator.
+4a. **Shared options can live one level higher than the mode, when no single mode owns both sharing
+   windows.** cad's pattern (§12.2) put shared options at `🎭️modes/<mode>/🎚️options/` because one mode
+   owned all the windows sharing them. 💠️lowpoly hit the next case up: its Model window is reused
+   byte-identically by two different modes (`edit` and `paint`), so no single mode can own the shared
+   `🎚️options`/engagement — they moved to app-level `🎚️options/` instead. General rule: put shared
+   options at the shallowest taxonomy node that is a common ancestor of every window sharing them
+   (window own level → mode → app), never duplicate them per window.
 4. **Cross-plugin test-only dependents aren't just demonstrator.** cad's agent found that 💠️lowpoly's
    engine crate `dev-depends` on `semio-s-app-cad-engine` for one test module — nothing in the plan or
    TEMPLATE flagged this. Do the §0 step 5 dependent-search thoroughly (including `[dev-dependencies]`,
@@ -516,3 +523,18 @@ alone**. Two mandates every plugin agent from here on must follow so that merge 
    while other plugins' cargo processes are live can produce spurious incremental-compilation races on the
    shared `target/` dir. If a test run fails with a linker or rmeta error that doesn't reproduce on retry,
    re-run once before treating it as a real regression — it is very likely lock contention, not your code.
+4. **`workspace = true` + a renamed `package = "…"` does NOT work** (confirmed empirically by ➗️mathematical,
+   matches the framework prerequisite's own doc comment): Cargo resolves workspace-dependency inheritance by
+   the LOCAL key, and a `package =` override does not redirect that lookup — `dsl = { workspace = true,
+   package = "semio-framework-os-kernel-dsl" }` errors with "dependency.dsl was not found in
+   workspace.dependencies". Only use `{ workspace = true }` when your local dependency key is spelled
+   IDENTICALLY to the root `[workspace.dependencies]` key (e.g. `serde`, `serde_json`,
+   `semio-framework-core`, `semio-framework-plugin`). Every renamed/aliased internal dep
+   (`dsl`/`store`/`protocol`/`mathematical_graph`/…) stays a plain `path =` + `package =` pair — this is not
+   a workaround to fix later, it is the correct permanent form.
+5. **`app_commands!` forces `Serialize`/`Deserialize` on the generated Command enum** (from ➗️mathematical) —
+   if any payload type nested inside your command enum wraps a framework `dsl::Wire`-family type that does
+   NOT implement `Serialize`/`Deserialize` (some don't, by design), the macro-generated `#[derive]` will fail
+   to compile. Fix by hand-rolling `Serialize`/`Deserialize` for that inner type entirely within your own
+   plugin files (do not modify the framework `dsl::Wire` type or the `app_commands!` macro itself for this —
+   it's a one-off payload-shape mismatch, not a framework bug).

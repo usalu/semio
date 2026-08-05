@@ -44,10 +44,5 @@ mod tests {
         assert_eq!(artifact_kind().id, "graph.dag");
         assert_eq!(artifact_kind().component_kind, "dag");
     }
-
-    #[test]
-    fn dag_document_schema_matches_the_kernel_constant() {
-        assert_eq!(DAG_DOCUMENT_SCHEMA, infinite_board_port_directed_dag::DAG_DOCUMENT_SCHEMA);
-    }
 }
 //#endregion 🧪️Tests

@@ -140,11 +140,11 @@ pub fn runtime_camera(runtime: &Puzzle2dPlayRuntime) -> (f64, f64, f64) {
 }
 
 pub fn fixture_nodes(fixture: &Value) -> &[Value] {
-    fixture.get("nodes").and_then(|value| value.as_array()).map(|values| values.as_slice()).unwrap_or(&[])
+    fixture.get("nodes").and_then(|value| value.as_array()).map_or(&[][..], |values| values.as_slice())
 }
 
 pub fn fixture_edges(fixture: &Value) -> &[Value] {
-    fixture.get("edges").and_then(|value| value.as_array()).map(|values| values.as_slice()).unwrap_or(&[])
+    fixture.get("edges").and_then(|value| value.as_array()).map_or(&[][..], |values| values.as_slice())
 }
 
 pub fn kind_catalog_entries<'a>(fixture: &'a Value, key: &str) -> Option<&'a [Value]> {
@@ -1190,6 +1190,7 @@ fn puzzle2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), St
 /// The DWG's extents no longer frame a camera here: the camera is session-only `Puzzle2dConfig`
 /// state, and this import path produces a bare document with no live app instance to receive it.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+#[allow(clippy::unnecessary_wraps, reason = "the fallible signature is fixed by `semio_framework_os::register_dwg_import_handler`; puzzle-2d simply has no failure mode.")]
 fn puzzle2d_document_json_from_dwg(_drawing: &semio_framework_core::DwgDrawing) -> Result<Value, String> {
     Ok(default_empty_fixture())
 }
@@ -1557,9 +1558,7 @@ mod tests {
     /// `"camera"` key at all, regardless of the drawing's extents.
     #[test]
     fn dwg_import_returns_empty_board_with_no_camera_field() {
-        let mut drawing = semio_framework_core::DwgDrawing::default();
-        drawing.extmin = [0.0, 0.0, 0.0];
-        drawing.extmax = [100.0, 200.0, 0.0];
+        let drawing = semio_framework_core::DwgDrawing { extmin: [0.0, 0.0, 0.0], extmax: [100.0, 200.0, 0.0], ..semio_framework_core::DwgDrawing::default() };
         let fixture = puzzle2d_document_json_from_dwg(&drawing).unwrap();
         assert_eq!(fixture.get("schema").and_then(|value| value.as_str()), Some(PUZZLE2D_FIXTURE_SCHEMA));
         assert!(fixture_nodes(&fixture).is_empty());

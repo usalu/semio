@@ -223,13 +223,13 @@ mod tests {
         };
         let edges_before = app.projection().expect("projection").edges.len();
         app.dispatch_typed(
-            DagCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations: vec![DagNodeGraphEditOp::Connect { source_node_id: source_id.clone(), source_port_id: "out".into(), target_node_id: target_id.clone(), target_port_id: "in".into() }] }),
+            DagCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations: vec![DagNodeGraphEditOp::Connect { source_node_id: source_id.clone(), source_port_id: "out".into(), target_node_id: target_id, target_port_id: "in".into() }] }),
             &semio_framework_plugin::testkit::meta("local"),
         )
         .expect("batched connect");
         assert!(app.projection().expect("projection").edges.len() >= edges_before, "connect either adds an edge or is a safe no-op (e.g. a cycle)");
 
-        app.dispatch_typed(DagCommand::SetSelection(set_selection::SetSelection { ids: vec![source_id.clone()] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
+        app.dispatch_typed(DagCommand::SetSelection(set_selection::SetSelection { ids: vec![source_id] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
         let nodes_before = app.projection().expect("projection").nodes.len();
         app.dispatch_typed(DagCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations: vec![DagNodeGraphEditOp::DeleteSelection] }), &semio_framework_plugin::testkit::meta("local")).expect("batched delete");
         assert_eq!(app.projection().expect("projection").nodes.len(), nodes_before - 1);
@@ -255,7 +255,7 @@ mod tests {
         let edge_id = app.projection().expect("projection").edges.first().map(|edge| edge.id.clone());
         if let Some(edge_id) = edge_id {
             let edges_before = app.projection().expect("projection").edges.len();
-            app.dispatch_typed(DagCommand::Disconnect(disconnect::Disconnect { edge_id: edge_id.clone() }), &semio_framework_plugin::testkit::meta("local")).expect("disconnect");
+            app.dispatch_typed(DagCommand::Disconnect(disconnect::Disconnect { edge_id }), &semio_framework_plugin::testkit::meta("local")).expect("disconnect");
             assert_eq!(app.projection().expect("projection").edges.len(), edges_before - 1);
         }
         let result = app.dispatch_typed(DagCommand::Disconnect(disconnect::Disconnect { edge_id: "nonexistent".into() }), &semio_framework_plugin::testkit::meta("local")).expect("disconnect unknown");

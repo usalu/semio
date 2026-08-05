@@ -29,7 +29,6 @@ pub fn render(labels: &NotePlayLabels) -> UiNode {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::apps::note::testkit::{note_app, render as render_body};
     use crate::apps::note::NOTE_PLAY_BODY_CATALOGUE as BODY_CATALOGUE;
 

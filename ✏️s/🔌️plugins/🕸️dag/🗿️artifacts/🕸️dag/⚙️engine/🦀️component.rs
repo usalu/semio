@@ -8,7 +8,7 @@
 
 use crate::artifacts::dag::op::DagOperation;
 use crate::artifacts::dag::DAG_DOCUMENT_SCHEMA;
-use infinite_board_port_directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle, DagCamera, DagDocument, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, IoPortSpec};
+use infinite_board_port_directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle, DagDocument, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, IoPortSpec};
 use protocol::CollectionOperation;
 use std::collections::BTreeSet;
 use ui_wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
@@ -34,7 +34,7 @@ pub enum DagPlayError {
 
 //#region 🔖️DocumentHelpers
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
-    endpoint.split_once('@').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), "out".into()))
+    endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
 pub fn document_to_workflow(document: &DagDocument) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {

@@ -140,7 +140,7 @@ fn apply_puzzle2d_operation_to_value(document: &mut Value, operation: &Puzzle2dO
 }
 
 fn puzzle2d_value_collection<'a>(document: &'a Value, collection: &str) -> &'a [Value] {
-    document.get(collection).and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[])
+    document.get(collection).and_then(|value| value.as_array()).map_or(&[][..], Vec::as_slice)
 }
 
 fn puzzle2d_value_item_index<T: serde::de::DeserializeOwned>(document: &Value, collection: &str, id: &str) -> Option<(usize, T)> {
@@ -261,8 +261,8 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
         return fallback(after);
     }
     let mut operations = Vec::new();
-    let before_nodes = before_object.get("nodes").and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[]);
-    let after_nodes = after_object.get("nodes").and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[]);
+    let before_nodes = before_object.get("nodes").and_then(|value| value.as_array()).map_or(&[][..], Vec::as_slice);
+    let after_nodes = after_object.get("nodes").and_then(|value| value.as_array()).map_or(&[][..], Vec::as_slice);
     if before_nodes != after_nodes {
         let mut set = Vec::new();
         let mut removed = Vec::new();
@@ -272,8 +272,8 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
         operations.extend(removed.into_iter().map(|id| Puzzle2dOperation::RemoveNode { id }));
         operations.extend(set.into_iter().map(|(index, node)| Puzzle2dOperation::SetNode { index, node }));
     }
-    let before_edges = before_object.get("edges").and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[]);
-    let after_edges = after_object.get("edges").and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[]);
+    let before_edges = before_object.get("edges").and_then(|value| value.as_array()).map_or(&[][..], Vec::as_slice);
+    let after_edges = after_object.get("edges").and_then(|value| value.as_array()).map_or(&[][..], Vec::as_slice);
     if before_edges != after_edges {
         let mut set = Vec::new();
         let mut removed = Vec::new();

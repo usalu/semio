@@ -1,5 +1,3 @@
-cargo-features = ["trim-paths"]
-
 [package]
 name = "semio-s-plugin-dag"
 version.workspace = true
@@ -34,70 +32,3 @@ semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
-
-# ⚠️ TEMPORARY VERIFICATION OVERLAY — delete before handoff (see migration TEMPLATE.md §3). Makes this
-# crate its own workspace root so `cargo check`/`clippy`/`test` can run in isolation before the registrar
-# adds it as a root-workspace member (the old bundle crate holds this package name today, so this crate
-# cannot be a root-workspace member yet). Copied verbatim from root Cargo.toml so artifact fingerprints
-# match and the shared `target/` stays warm.
-[workspace]
-members = ["."]
-
-[workspace.package]
-version = "0.1.0"
-edition = "2021"
-rust-version = "1.88"
-
-[workspace.dependencies]
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.149"
-thiserror = "2.0.18"
-semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust" }
-
-[workspace.lints.rust]
-future_incompatible = { level = "warn", priority = -1 }
-rust_2018_idioms = { level = "warn", priority = -1 }
-unsafe_op_in_unsafe_fn = "warn"
-unused_lifetimes = "warn"
-unused_qualifications = "warn"
-
-[workspace.lints.clippy]
-all = { level = "warn", priority = -1 }
-cloned_instead_of_copied = "warn"
-inefficient_to_string = "warn"
-map_unwrap_or = "warn"
-needless_pass_by_value = "warn"
-semicolon_if_nothing_returned = "warn"
-unnecessary_wraps = "warn"
-redundant_clone = "warn"
-
-[profile.dev]
-debug = false
-incremental = true
-
-[profile.dev.build-override]
-opt-level = 3
-
-[profile.dev.package.semio-framework-os-kernel-store]
-codegen-units = 1
-
-[profile.release]
-opt-level = 3
-lto = "thin"
-codegen-units = 1
-strip = "debuginfo"
-incremental = false
-trim-paths = "object"
-
-[profile.wasm-release]
-inherits = "release"
-opt-level = "s"
-lto = "thin"
-codegen-units = 1
-strip = "symbols"
-incremental = false
-trim-paths = "object"
-
-[profile.wasm-release.package.semio-framework-os-kernel-store]
-codegen-units = 1
-# ⚠️ END TEMPORARY VERIFICATION OVERLAY

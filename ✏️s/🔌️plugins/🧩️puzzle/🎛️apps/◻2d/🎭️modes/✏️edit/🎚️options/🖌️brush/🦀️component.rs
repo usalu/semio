@@ -160,8 +160,7 @@ mod tests {
         // has candidates to place (empty ⇒ absent, matching the old gated-control behaviour).
         let empty_brush = scene(default_empty_fixture(), Puzzle2dPlayRuntime::default(), overview::utilities::brush::UTILITY_ID);
         assert_eq!(group_tag(&overview::window_measures(&empty_brush, labels), "puzzle2d-utility-options-brush"), Some(Some(overview::utilities::brush::UTILITY_ID.into())));
-        let mut brush_runtime = Puzzle2dPlayRuntime::default();
-        brush_runtime.brush_candidates = vec![json!({ "nodeKind": "node" })];
+        let brush_runtime = Puzzle2dPlayRuntime { brush_candidates: vec![json!({ "nodeKind": "node" })], ..Puzzle2dPlayRuntime::default() };
         let brush_scene = scene(default_empty_fixture(), brush_runtime, overview::utilities::brush::UTILITY_ID);
         let brush_measures = overview::window_measures(&brush_scene, labels);
         assert_eq!(group_tag(&brush_measures, "puzzle2d-utility-options-brush"), Some(Some(overview::utilities::brush::UTILITY_ID.into())));

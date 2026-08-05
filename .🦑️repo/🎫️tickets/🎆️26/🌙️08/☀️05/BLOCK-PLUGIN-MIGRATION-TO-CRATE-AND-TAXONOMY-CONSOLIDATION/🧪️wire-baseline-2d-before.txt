@@ -1,0 +1,34 @@
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3273:68
+     |
+3273 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3273 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3273 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+   Compiling semio-s-app-block-2d-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 2.55s
+     Running unittests ../../../../../../../../../✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_block_2d_protocol-91db23481e1998cd)
+
+running 1 test
+[DEBUG] PatchNodeKind { field: "name", value: "x" } | printed="patchNodeKind field=name value=x" | len=17 | hex=010002046e616d65017802000600010601
+[DEBUG] AddHandleKind | printed="addHandleKind" | len=4 | hex=01010000
+[DEBUG] RemoveHandleKind { id: "h0" } | printed="removeHandleKind id=h0" | len=10 | hex=01020102683001000600
+[DEBUG] AddHandle | printed="addHandle" | len=4 | hex=01030000
+[DEBUG] RemoveHandle { id: "h0" } | printed="removeHandle id=h0" | len=10 | hex=01040102683001000600
+[DEBUG] AddCompatibilityRule { source: "a", target: "b" } | printed="addCompatibilityRule source=a target=b" | len=14 | hex=0105020161016202000600010601
+[DEBUG] RemoveCompatibilityRule { id: "c0" } | printed="removeCompatibilityRule id=c0" | len=10 | hex=01060102633001000600
+[DEBUG] SetActiveExample { id: "left" } | printed="setActiveExample id=left" | len=12 | hex=010701046c65667401000600
+[DEBUG] Edit { text: "{}" } | printed="edit text=\"{}\"" | len=10 | hex=010801027b7d01000600
+[DEBUG] SetSelection { ids: ["h0"] } | printed="setSelection ids=[ h0 ]" | len=12 | hex=01090102683001000c010600
+[DEBUG] SetSelection { ids: [] } | printed="setSelection ids=[ ]" | len=7 | hex=01090001000c00
+test tests::dump_wire_baseline_block2d ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+

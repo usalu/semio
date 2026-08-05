@@ -1,8 +1,9 @@
 {
   "title": "Dag Plugin Migration To Crate And Taxonomy Consolidation",
   "emoji": "🕸️",
-  "status": "open",
+  "status": "closed",
   "description": "Migrate the 🕸️dag plugin from its old 8-crate constitutional layout (manifest/artifact, app facade, engine, dsl, op, pack, protocol, ui) into a single new crate at ✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust following the proven recipe in ticket 26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE/📋️TEMPLATE.md (writer/flow pattern). Inventory, baseline tests, wire-format baseline capture, Cargo.toml union, lib.rs taxonomy wiring, app_commands! decomposition, manifest stitch, tests, delete old crates, verification sequence. End with registrar handoff block (never touch root Cargo.toml/Cargo.lock or other plugins).",
+  "summary": "Migrated the 🕸️dag plugin from its old 8-crate constitutional layout to a single taxonomy-tree crate at ✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust (semio-s-plugin-dag), following the proven TEMPLATE.md recipe (writer/flow pattern). 60→61 tests pass (10 compilable pre-migration baseline; the old ui crate had the known repo-wide Ok(-paren corruption from TEMPLATE §12.3 and did not compile as committed — forward-fixed while porting its handle() logic into app_commands! handlers). Wire-format proof: captured a genuine pre-migration baseline from the old dag_protocol crate (via a temporary isolated overlay + a [DEBUG] dump test), diffed against the new crate's equivalent dump — byte-identical across all 17 DagCommand variants. cargo check/clippy(-D warnings)/test all clean on wasm32-wasip2 and native targets, verified in isolation via a temporary [workspace] Cargo.toml overlay (removed before handoff). Taxonomy audit clean after deleting the 8 old crate directories. One cross-cutting dependent found (framework dsl fixture-sweep crate dev-depends on the old app facade for DagDocument, which is kernel-owned) — not touched, flagged for the registrar to repoint at the kernel crate directly, matching the flow-pilot precedent. Never touched root Cargo.toml/Cargo.lock, other plugins, or AGENTS.md.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2469"
   },

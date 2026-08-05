@@ -1,6 +1,5 @@
 //! 🕸️ DAG play app — the main window: the live node-graph canvas (dag's primary editing surface).
 
-use crate::apps::dag::config::DagConfig;
 use crate::apps::dag::terminology::DagPlayLabels;
 use crate::artifacts::dag::engine::document_to_workflow;
 use crate::artifacts::dag::DagDocument;

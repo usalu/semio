@@ -1,0 +1,10 @@
+[DEBUG] AddPrimitive(AddPrimitive { kind: None }) | text="add-primitive" | hex=01000000
+[DEBUG] AddPrimitive(AddPrimitive { kind: Some("box") }) | text="add-primitive kind=box" | hex=01000103626f7801000600
+[DEBUG] Subdivide(Subdivide) | text="subdivide" | hex=01060000
+[DEBUG] FlipFaces(FlipFaces { face_ids: [1, 2, 3] }) | text="flip-faces face-ids=[ 1 2 3 ]" | hex=010a0001001603020406
+[DEBUG] SetCamera(SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 }) | text="set-camera position=@1,2,3 target=@0,0,0 fov=45" | hex=012b0003001503000000000000f03f0000000000000040000000000000084001150300000000000000000000000000000000000000000000000002050000000000804640
+[DEBUG] MarkUvSeam(MarkUvSeam { seam: Some(true), edge_ids: Some([7, 8]) }) | text="mark-uv-seam seam=true edge-ids=[ 7 8 ]" | hex=0110000200020116020e10
+[DEBUG] MarkUvSeam(MarkUvSeam { seam: None, edge_ids: None }) | text="mark-uv-seam" | hex=01100000
+[DEBUG] ToggleSun(ToggleSun) | text="toggle-sun" | hex=01250000
+[DEBUG] SetActiveUtility(SetActiveUtility { utility_id: "rotate" }) | text="set-active-utility utility-id=rotate" | hex=01370106726f7461746501000600
+[DEBUG] PaintStroke(PaintStroke { object_id: Some("obj-1"), u: Some(0.5), v: Some(0.5), x: None, y: None }) | text="paint-stroke object-id=obj-1 u=0.5 v=0.5" | hex=013201056f626a2d31030006000105000000000000e03f0205000000000000e03f

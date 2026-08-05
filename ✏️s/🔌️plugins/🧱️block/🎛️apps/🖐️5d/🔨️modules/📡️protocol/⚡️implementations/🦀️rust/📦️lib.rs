@@ -45,6 +45,28 @@ pub enum Block5dCommand {
 mod tests {
     use super::*;
 
+    // 🧪️ [DEBUG] TEMP wire baseline dump — TEMPLATE.md §0.4. Remove after capturing.
+    #[test]
+    fn dump_wire_baseline_block5d() {
+        let commands = vec![
+            Block5dCommand::PatchPartKind { field: "name".into(), value: "x".into() },
+            Block5dCommand::AddGripKind,
+            Block5dCommand::RemoveGripKind { id: "g0".into() },
+            Block5dCommand::AddGrip,
+            Block5dCommand::RemoveGrip { id: "g0".into() },
+            Block5dCommand::SetActiveExample { id: "forest".into() },
+            Block5dCommand::Edit { text: "{}".into() },
+            Block5dCommand::SetSelection { ids: vec!["g0".into()] },
+            Block5dCommand::SetSelection { ids: vec![] },
+        ];
+        for c in &commands {
+            let printed = protocol::OpText::print_op(c);
+            let bytes = c.encode_op().expect("encode");
+            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+            println!("[DEBUG] {:?} | printed={:?} | len={} | hex={}", c, printed, bytes.len(), hex);
+        }
+    }
+
     #[test]
     fn block5d_document_vcs_replays_granular_operations() {
         use block_5d::BLOCK_5D_SCHEMA;

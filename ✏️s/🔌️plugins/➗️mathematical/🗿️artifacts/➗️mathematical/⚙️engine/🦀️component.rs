@@ -122,7 +122,7 @@ pub fn algorithm_overlay(graph: &MathGraph) -> std::collections::HashMap<String,
             if let Some(seed) = graph.algorithm_seed.as_deref().and_then(|s| index.index_of(s)) {
                 for (i, dist) in bfs_distances(&adj, seed).into_iter().enumerate() {
                     if let Some(id) = index.id_of(i) {
-                        overlay.insert(id.to_string(), dist.map(|d| format!(" d{d}")).unwrap_or_else(|| " ∞".into()));
+                        overlay.insert(id.to_string(), dist.map_or_else(|| " ∞".into(), |d| format!(" d{d}")));
                     }
                 }
             }
@@ -205,8 +205,7 @@ mod tests {
 
     #[test]
     fn components_algorithm_overlay_groups_disconnected_node() {
-        let mut graph = MathGraph::default();
-        graph.algorithm = "components".into();
+        let mut graph = MathGraph { algorithm: "components".into(), ..MathGraph::default() };
         graph.nodes.push(MathNode { id: "z".into(), label: "Z".into(), x: 0.0, y: 0.0 });
         let overlay = algorithm_overlay(&graph);
         assert_ne!(overlay.get("a"), overlay.get("z"));
@@ -214,9 +213,7 @@ mod tests {
 
     #[test]
     fn bfs_algorithm_overlay_reports_hop_distance() {
-        let mut graph = MathGraph::default();
-        graph.algorithm = "bfs".into();
-        graph.algorithm_seed = Some("a".into());
+        let graph = MathGraph { algorithm: "bfs".into(), algorithm_seed: Some("a".into()), ..MathGraph::default() };
         let overlay = algorithm_overlay(&graph);
         assert_eq!(overlay.get("a").unwrap(), " d0");
         assert_eq!(overlay.get("b").unwrap(), " d1");

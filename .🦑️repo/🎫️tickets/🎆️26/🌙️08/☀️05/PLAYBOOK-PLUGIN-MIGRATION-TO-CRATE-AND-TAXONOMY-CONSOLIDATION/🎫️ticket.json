@@ -1,0 +1,13 @@
+{
+  "title": "Playbook Plugin Migration To Crate And Taxonomy Consolidation",
+  "emoji": "📖️",
+  "status": "open",
+  "description": "Migrate the 📖️playbook plugin's 7 constitutional crates (manifest/artifact, app facade, engine, dsl, op, pack, protocol, ui) into ONE crate at ✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust following the crate-consolidation-and-taxonomy-restructure recipe (TEMPLATE.md). Playbook's domain model (PlaybookSpec/PlaybookOperation/PlaybookDiff/etc, plus DocumentDsl/DocumentPack/OpBinary impls) is owned by the FRAMEWORK kernel crate semio-framework-os-kernel-playbook (untouched, out of scope) — this plugin only owns thin re-export wrappers + its own PlaybookConfig/PlaybookConfigOperation/PlaybookCommand/PlaybookPlayApp, closely mirroring the already-migrated 📋️forms plugin which shares the same kernel crate. The old ui crate has the known TEMPLATE §12.3 Ok(/Fault paren-corruption bug (does not compile) — fix as part of the port. Leave 🧩️extensions/🌀️procedural untouched (confirmed: depends directly on the framework kernel crate, not on old core crate names). Fix the one known cross-cutting dependent: dsl/🧪️fixture-sweep's Cargo.toml `playbook` dev-dependency alias currently points at the doomed old app-facade crate (semio-s-app-playbook) — repoint it to the framework kernel crate directly (same pattern used for forms' FormSpec). Never touch root Cargo.toml/Cargo.lock — end with a registrar handoff block instead.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2474"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪3844f0b778df4d0f8f7a3f37edd136c5"
+  ]
+}

@@ -314,7 +314,7 @@ pub fn patch_block_field(document: &NoteDocument, block_id: &str, field: &str, v
                 let mut cloned = block.clone();
                 match &mut cloned {
                     NoteBlockNode::Text { name, .. } | NoteBlockNode::Image { name, .. } | NoteBlockNode::Table { name, .. } | NoteBlockNode::Math { name, .. } | NoteBlockNode::Ink { name, .. } | NoteBlockNode::Group { name, .. } => {
-                        *name = value.as_str().unwrap_or("").into()
+                        *name = value.as_str().unwrap_or("").into();
                     }
                 }
                 cloned
@@ -341,7 +341,7 @@ pub fn patch_block_field(document: &NoteDocument, block_id: &str, field: &str, v
                 let mut cloned = block.clone();
                 match &mut cloned {
                     NoteBlockNode::Text { locked, .. } | NoteBlockNode::Image { locked, .. } | NoteBlockNode::Table { locked, .. } | NoteBlockNode::Math { locked, .. } | NoteBlockNode::Ink { locked, .. } | NoteBlockNode::Group { locked, .. } => {
-                        *locked = pressed
+                        *locked = pressed;
                     }
                 }
                 cloned

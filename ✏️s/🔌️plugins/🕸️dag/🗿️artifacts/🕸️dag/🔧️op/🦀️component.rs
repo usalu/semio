@@ -24,7 +24,7 @@ mod tests {
         let document = infinite_board_port_directed_dag::default_dag_document();
         let operation = DagOperation::SetNodes { nodes: Vec::new() };
         let inverse = operation.backwards(&document);
-        assert_eq!(inverse, vec![DagOperation::SetNodes { nodes: document.nodes.clone() }]);
+        assert_eq!(inverse, vec![DagOperation::SetNodes { nodes: document.nodes }]);
     }
 }
 //#endregion 🧪️Tests

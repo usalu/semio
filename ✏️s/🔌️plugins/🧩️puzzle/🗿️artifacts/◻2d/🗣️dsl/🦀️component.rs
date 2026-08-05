@@ -41,8 +41,7 @@ mod tests {
         let empty = Puzzle2dProjection::default();
         store::test_support::assert_dsl_round_trip(&empty);
         store::test_support::assert_dsl_pack_equivalence(&empty);
-        let mut with_content = Puzzle2dProjection::default();
-        with_content.camera = Puzzle2dCamera { x: 12.0, y: -4.0, zoom: 2.5 };
+        let mut with_content = Puzzle2dProjection { camera: Puzzle2dCamera { x: 12.0, y: -4.0, zoom: 2.5 }, ..Puzzle2dProjection::default() };
         with_content.nodes.push(Puzzle2dNode {
             id: "n1".into(),
             node_kind: Some("seed".into()),

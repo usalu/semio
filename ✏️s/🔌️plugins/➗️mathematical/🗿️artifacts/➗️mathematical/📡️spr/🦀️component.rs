@@ -41,8 +41,7 @@ mod tests {
         let initial = MathProjection::default();
         let envelope = store::create_document_envelope(crate::artifacts::mathematical::MATH_DOCUMENT_SCHEMA, "math-demo", initial, None);
         let mut store = store::DocumentStore::new(envelope);
-        let mut graph = crate::artifacts::mathematical::MathGraph::default();
-        graph.algorithm = "components".into();
+        let graph = crate::artifacts::mathematical::MathGraph { algorithm: "components".into(), ..crate::artifacts::mathematical::MathGraph::default() };
         store.dispatch(store::DocumentCommand::Apply { operations: vec![MathOperation::SetGraph { graph }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);

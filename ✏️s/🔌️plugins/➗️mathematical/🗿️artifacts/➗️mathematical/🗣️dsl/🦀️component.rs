@@ -10,6 +10,7 @@
 //! purely against inline-constructed fixtures (mirrors the original flattened `🔖️DslTests`).
 
 use crate::artifacts::mathematical::{MathEdge, MathGeometry, MathGraph, MathNode, MathProjection};
+use serde::{Deserialize, Serialize};
 use store::DocumentDsl;
 
 //#region 🔖️Dsl
@@ -18,6 +19,14 @@ use store::DocumentDsl;
 /// edges/connections. Converts at the `store::DocumentDsl`/`protocol::OpText` boundary only
 /// (`math_edge_to_dsl`/`math_edge_from_dsl`); `MathEdge` itself (JSON shape, `algorithm_overlay`,
 /// `workflow_json`, the `nodeGraphEdit` action) is completely untouched.
+///
+/// No `Serialize`/`Deserialize` derive: `dsl::Wire` (the framework DSL kernel's wire-literal field type)
+/// does not implement either, and it is out of this plugin's scope to add them there. `MathGraphDsl`
+/// below — the only place this type is ever nested inside something serde-derived (`app_commands!`
+/// unconditionally derives `Serialize`/`Deserialize` on the generated `MathCommand` enum, even though
+/// its actual wire codec is `dsl::DslOps`, never `serde_json`; see `crate::apps::mathematical`'s
+/// `🔖️Commands` doc comment) — hand-implements those traits by round-tripping through the fully
+/// serde-able `MathGraph`/`MathEdge` JSON shape instead of deriving them field-by-field.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 pub struct MathEdgeDsl {
     id: String,
@@ -55,6 +64,23 @@ pub fn math_graph_to_dsl(graph: &MathGraph) -> MathGraphDsl {
 
 pub fn math_graph_from_dsl(graph: MathGraphDsl) -> Result<MathGraph, String> {
     Ok(MathGraph { directed: graph.directed, nodes: graph.nodes, edges: graph.edges.into_iter().map(math_edge_from_dsl).collect::<Result<Vec<_>, _>>()?, algorithm: graph.algorithm, algorithm_seed: graph.algorithm_seed })
+}
+
+/// 🔌️ Hand-rolled `Serialize`/`Deserialize` for `MathGraphDsl` — see the type's own doc comment for why
+/// this can't be `#[derive(...)]`d. Round-trips through the fully serde-able `MathGraph` JSON shape via
+/// the same `math_graph_to_dsl`/`math_graph_from_dsl` conversions the DSL/pack codecs already use, so the
+/// JSON shape a caller would observe (were this ever actually put on a real wire) is `MathGraph`'s own
+/// camelCase shape, not a `MathGraphDsl`-internal one.
+impl Serialize for MathGraphDsl {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        math_graph_from_dsl(self.clone()).map_err(serde::ser::Error::custom)?.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for MathGraphDsl {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        Ok(math_graph_to_dsl(&MathGraph::deserialize(deserializer)?))
+    }
 }
 
 /// 📄️ DSL-only mirror of `MathProjection` — the actual `#[derive(dsl::DslDocument)]` root.
@@ -100,9 +126,7 @@ mod tests {
 
     #[test]
     fn math_projection_dsl_round_trips_with_seed_and_empty_collections() {
-        let mut graph = MathGraph::default();
-        graph.algorithm = "bfs".into();
-        graph.algorithm_seed = Some("a".into());
+        let mut graph = MathGraph { algorithm: "bfs".into(), algorithm_seed: Some("a".into()), ..MathGraph::default() };
         graph.nodes.clear();
         graph.edges.clear();
         let projection = MathProjection { graph, geometry: MathGeometry { points: Vec::new() } };

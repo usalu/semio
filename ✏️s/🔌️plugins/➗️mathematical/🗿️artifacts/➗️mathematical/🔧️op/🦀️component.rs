@@ -8,7 +8,7 @@
 use crate::artifacts::mathematical::diff::MathDiff;
 use crate::artifacts::mathematical::dsl::{math_graph_from_dsl, math_graph_to_dsl, MathGraphDsl};
 use crate::artifacts::mathematical::{MathGeometry, MathGraph, MathProjection};
-use protocol::{Operation, OperationDiff};
+use protocol::Operation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Operation
@@ -99,6 +99,7 @@ impl protocol::OpBinary for MathOperation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::OperationDiff;
 
     #[test]
     fn math_set_graph_op_round_trips() {

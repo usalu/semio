@@ -49,6 +49,30 @@ pub enum Block2dCommand {
 mod tests {
     use super::*;
 
+    // 🧪️ [DEBUG] TEMP wire baseline dump — TEMPLATE.md §0.4. Remove after capturing.
+    #[test]
+    fn dump_wire_baseline_block2d() {
+        let commands = vec![
+            Block2dCommand::PatchNodeKind { field: "name".into(), value: "x".into() },
+            Block2dCommand::AddHandleKind,
+            Block2dCommand::RemoveHandleKind { id: "h0".into() },
+            Block2dCommand::AddHandle,
+            Block2dCommand::RemoveHandle { id: "h0".into() },
+            Block2dCommand::AddCompatibilityRule { source: "a".into(), target: "b".into() },
+            Block2dCommand::RemoveCompatibilityRule { id: "c0".into() },
+            Block2dCommand::SetActiveExample { id: "left".into() },
+            Block2dCommand::Edit { text: "{}".into() },
+            Block2dCommand::SetSelection { ids: vec!["h0".into()] },
+            Block2dCommand::SetSelection { ids: vec![] },
+        ];
+        for c in &commands {
+            let printed = protocol::OpText::print_op(c);
+            let bytes = c.encode_op().expect("encode");
+            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+            println!("[DEBUG] {:?} | printed={:?} | len={} | hex={}", c, printed, bytes.len(), hex);
+        }
+    }
+
     #[test]
     fn block2d_document_vcs_replays_granular_operations() {
         use block_2d::BLOCK_2D_SCHEMA;

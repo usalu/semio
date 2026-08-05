@@ -91,9 +91,7 @@ mod tests {
 
     #[test]
     fn math_config_dsl_round_trips() {
-        let mut config = MathConfig::default();
-        config.camera = MathCamera { x: 5.0, y: 6.0, zoom: 2.0 };
-        config.locale = "de-DE".into();
+        let config = MathConfig { camera: MathCamera { x: 5.0, y: 6.0, zoom: 2.0 }, locale: "de-DE".into() };
         store::test_support::assert_dsl_round_trip(&config);
         store::test_support::assert_dsl_pack_equivalence(&config);
     }

@@ -3,6 +3,7 @@
 //! that every locale combination is compile-checked in one place.
 
 use crate::apps::dag::config::DagConfig;
+use semio_framework_plugin::AppLabels;
 
 //#region 🔖️Labels
 semio_framework_plugin::app_labels! {

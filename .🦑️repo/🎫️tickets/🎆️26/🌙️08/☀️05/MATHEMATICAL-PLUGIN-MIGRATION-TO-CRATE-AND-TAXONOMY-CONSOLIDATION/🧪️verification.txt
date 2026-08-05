@@ -1,0 +1,62 @@
+Mathematical plugin migration — verification summary
+======================================================
+
+Baseline (old 8-crate layout, captured via temporary standalone-workspace overlays since the shared
+root workspace was mid-write by a concurrent session — see 🧪️wire-baseline-before.txt):
+  manifest (bundle)  : broken — depends on the broken old 🖱️ui crate (pre-existing corruption, see below)
+  facade (app)       : 0 tests (no test module)
+  engine             : 8 passed
+  dsl                : 2 passed
+  op                 : 5 passed
+  pack               : 3 passed
+  protocol           : 3 passed
+  ui                 : DID NOT COMPILE — pre-existing corruption matching TEMPLATE.md §12.3's known
+                        pattern exactly: unbalanced `Ok(` wraps around `Emit::operations`/`Emit::config`/
+                        `Emit::commit`/`Emit::default` in `handle`'s match arms, plus a missing `Fault`
+                        import. 15 test functions present in source but never executed. Forward-fixed as
+                        part of porting `handle()` into `app_commands!` handlers (not a revert).
+  Compilable baseline total: 21 passed. Plus 15 source-only (non-compiling) UI-crate tests ported forward.
+
+New crate (semio-s-plugin-mathematical, taxonomy layout):
+  cargo test    : 55 passed, 0 failed (exceeds 21 compilable baseline + 15 forward-ported UI tests = 36;
+                  remaining 19 are new cross-cutting/wire-guard tests plus 2 semio_plugin! sanity tests)
+  cargo check   : clean for this crate (only pre-existing semio-framework-plugin warning, out of scope)
+  cargo check --target wasm32-wasip2 : clean
+  cargo clippy --all-targets -- -D warnings : clean for this crate after fixing 8 findings that rode
+                  along with the moved code (field_reassign_with_default x6, map_unwrap_or x2,
+                  redundant_clone x1 — see TEMPLATE.md §9's "Clippy findings the split itself creates")
+  taxonomy audit (🔍️taxonomy-audit.ts) : clean, zero findings, after old crate deletion
+
+Wire-format proof (the real correctness proof, TEMPLATE.md §0.4/§9.4b):
+  9 representative values (one per MathCommand variant, two for SetAlgorithm to cover its Option<String>
+  seed field) dumped from the OLD mathematical_protocol crate (before) and the NEW crate (after) via a
+  temporary [DEBUG] test in each, diffed line-for-line. Result: BYTE-IDENTICAL for text and hex in every
+  case — see 🧪️wire-baseline-before.txt, 🧪️wire-baseline-after.txt, 🧪️wire-diff-result.txt.
+
+Real framework gap found and worked around (documented in the new Cargo.toml's own comment, not fixed
+upstream — out of this ticket's plugin-only scope):
+  `dep = { workspace = true, package = "..." }` (TEMPLATE.md §13's suggested rename-while-inheriting
+  pattern) does NOT work — Cargo resolves workspace inheritance by the LOCAL dependency key, and `package`
+  does not redirect that lookup (verified empirically: "dependency.dsl was not found in
+  workspace.dependencies"). The renamed internal aliases (dsl/store/protocol/mathematical_graph/
+  mathematical_geometry/ui_wgpu) therefore stay plain `path`+`package` deps; only the 4 dependencies whose
+  local name already equals the workspace key (semio-framework-core, semio-framework-plugin, serde,
+  serde_json) use `workspace = true`.
+
+Second real gap found and worked around entirely within this plugin's own files (no framework edit):
+  `app_commands!` unconditionally derives `serde::Serialize`/`Deserialize` on the generated Command enum,
+  so every payload struct — including nested types — must implement both. `dsl::Wire` (framework DSL
+  kernel field type used by this plugin's `MathEdgeDsl`/`MathGraphDsl` DSL-mirror types) implements
+  neither. Fixed by hand-writing `Serialize`/`Deserialize` for `MathGraphDsl` that round-trips through the
+  fully serde-able `MathGraph` JSON shape via the existing `math_graph_to_dsl`/`math_graph_from_dsl`
+  conversions, instead of deriving field-by-field — `MathEdgeDsl` itself needs no serde impl at all once
+  `MathGraphDsl`'s is hand-rolled. Documented inline in 🗣️dsl/🦀️component.rs.
+
+Shared-workspace churn encountered (per feedback-concurrent-cargo-workspace-churn / TEMPLATE.md's own
+batch-2 concurrent-session note): the root workspace was red for most of this session's duration because
+a concurrent session's 📋️forms migration had deleted forms' old crate dirs before its own registrar pass
+added the new member line. Worked around via TEMPLATE.md §3's standalone-`[workspace]`-overlay trick,
+applied to each old crate individually (not combined — combining siblings into one ad hoc workspace hits
+Cargo's "member of the wrong workspace" check, since each sibling's own directory-walk-up still finds the
+real root workspace as its home). One transient rmeta/fingerprint write error was hit and cleared on retry
+(TEMPLATE.md §13.3's shared-cache test-serialization lesson).

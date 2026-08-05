@@ -345,6 +345,20 @@ mod tests {
             assert_eq!(printed.split(' ').next().unwrap_or_default(), expected_keyword, "wire keyword drifted for {command:?}: {printed:?}");
         }
     }
+
+    /// ⚖️ The row whose `Option` fields make `None`/`Some` distinct wire cases (`AddNode` is the only
+    /// `DagCommand` row with `Option` fields), pinned to the exact bytes captured from the pre-merge
+    /// `dag_protocol` crate (this ticket's `🧪️wire-baseline-before.txt`, row 1). A regression here is a
+    /// real format break, not a test-fixture mismatch.
+    #[test]
+    fn optional_field_rows_keep_their_pre_migration_bytes() {
+        let cases: [(DagCommand, &str, &str); 1] = [(DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: Some(10.0), y: None }), "add-node kind=slider x=10", "01000106736c696465720200060001050000000000002440")];
+        for (command, text, hex) in cases {
+            assert_eq!(protocol::OpText::print_op(&command), text);
+            assert_eq!(protocol::OpBinary::encode_op(&command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>(), hex);
+            store::test_support::assert_op_text_binary_equivalence(&command);
+        }
+    }
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
@@ -409,7 +423,7 @@ mod tests {
         assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
         let last = menu.last().expect("grouped disclosure menu should not be empty");
         let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("nodeGraphEdit");
-        let last_is_group_ending_in_destructive = last.children.as_ref().and_then(|children| children.last()).map(|child| child.destructive == Some(true)).unwrap_or(false);
+        let last_is_group_ending_in_destructive = last.children.as_ref().and_then(|children| children.last()).is_some_and(|child| child.destructive == Some(true));
         assert!(last_is_destructive_leaf || last_is_group_ending_in_destructive, "known destructive deleteSelection (via nodeGraphEdit) must be last: {menu:?}");
     }
     //#endregion 🔖️ContextMenu

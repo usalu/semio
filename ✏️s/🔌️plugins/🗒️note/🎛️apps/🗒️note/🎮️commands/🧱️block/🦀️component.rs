@@ -1,9 +1,7 @@
 //! 🧱️ Note play app commands — block create/move/delete/duplicate/patch. Document-mutating.
 
 use crate::apps::note::config::{NoteConfig, NoteConfigOperation};
-use crate::artifacts::note::engine::{
-    block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block, insert_after, insert_block, offset_block_tree, patch_block_field, remove_block_from_tree, update_block_in_tree,
-};
+use crate::artifacts::note::engine::{block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block, insert_after, insert_block, offset_block_tree, patch_block_field, remove_block_from_tree};
 use crate::artifacts::note::op::NoteOperation;
 use crate::artifacts::note::{NoteBlockNode, NoteDocument};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
@@ -13,7 +11,7 @@ use serde_json::Value;
 //#region 🔖️Helpers
 /// 🧬️ Clones each of `ids` (present in `document`), offsets the clone by `(24, 24)`, and selects the
 /// clones — the shared body of `DuplicateBlock`/`DuplicateSelection`.
-fn duplicate_blocks(document: &NoteDocument, ids: &[String]) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
+fn duplicate_blocks(document: &NoteDocument, ids: &[String]) -> Emit<NoteOperation, NoteConfigOperation> {
     let mut blocks = document.blocks.clone();
     let mut new_ids = Vec::new();
     for source_id in ids {
@@ -27,9 +25,9 @@ fn duplicate_blocks(document: &NoteDocument, ids: &[String]) -> Result<Emit<Note
         }
     }
     if new_ids.is_empty() {
-        return Ok(Emit::default());
+        return Emit::default();
     }
-    Ok(Emit { document_operations: vec![NoteOperation::SetBlocks { blocks }], config_operations: vec![NoteConfigOperation::SetSelection { block_ids: new_ids }], ..Default::default() })
+    Emit { document_operations: vec![NoteOperation::SetBlocks { blocks }], config_operations: vec![NoteConfigOperation::SetSelection { block_ids: new_ids }], ..Default::default() }
 }
 
 /// 🩹️ `PatchBlocks`'s typed field/value pair, reconstructed into the `serde_json::Value` shape
@@ -39,7 +37,7 @@ fn duplicate_blocks(document: &NoteDocument, ids: &[String]) -> Result<Emit<Note
 fn note_patch_json_value(field: &str, value: &str) -> Value {
     match field {
         "visible" | "locked" => Value::Bool(value.parse::<bool>().unwrap_or(false)),
-        "x" | "y" | "width" | "height" | "textSize" | "inkWidth" => value.parse::<f64>().ok().and_then(serde_json::Number::from_f64).map(Value::Number).unwrap_or(Value::Null),
+        "x" | "y" | "width" | "height" | "textSize" | "inkWidth" => value.parse::<f64>().ok().and_then(serde_json::Number::from_f64).map_or(Value::Null, Value::Number),
         _ => Value::String(value.to_string()),
     }
 }
@@ -158,7 +156,7 @@ pub mod duplicate_block {
     }
 
     pub fn handle(payload: &DuplicateBlock, doc: &DocumentView<'_, NoteDocument>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
-        super::duplicate_blocks(doc.projection, std::slice::from_ref(&payload.block_id))
+        Ok(duplicate_blocks(doc.projection, std::slice::from_ref(&payload.block_id)))
     }
 }
 //#endregion 🔖️DuplicateBlock
@@ -172,7 +170,7 @@ pub mod duplicate_selection {
     pub struct DuplicateSelection {}
 
     pub fn handle(_payload: &DuplicateSelection, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
-        super::duplicate_blocks(doc.projection, &cfg.projection.selected_block_ids)
+        Ok(duplicate_blocks(doc.projection, &cfg.projection.selected_block_ids))
     }
 }
 //#endregion 🔖️DuplicateSelection

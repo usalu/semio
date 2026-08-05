@@ -159,7 +159,7 @@ mod tests {
     fn node_graph_viewport_writes_config_not_document_operations() {
         let mut app: MathApp = math_app();
         let camera = MathCamera { x: 5.0, y: 6.0, zoom: 2.0 };
-        let result = app.dispatch_typed(MathCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: camera.clone() }), &semio_framework_plugin::testkit::meta("local")).expect("viewport");
+        let result = app.dispatch_typed(MathCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera }), &semio_framework_plugin::testkit::meta("local")).expect("viewport");
         assert!(result.operations.is_empty(), "nodeGraphViewport must not emit a VCS operation");
     }
 

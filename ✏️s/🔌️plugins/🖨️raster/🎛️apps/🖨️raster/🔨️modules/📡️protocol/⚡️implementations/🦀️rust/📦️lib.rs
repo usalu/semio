@@ -203,5 +203,45 @@ mod tests {
     fn raster_command_op_binary_round_trips() {
         store::test_support::assert_op_text_binary_equivalence(&RasterCommand::AddLayer { kind: "pixel".into() });
     }
+
+    //#region 🔖️WireBaseline
+    /// 🧪️[DEBUG] temporary wire-format baseline dump for the crate-consolidation migration — one line
+    /// per `RasterCommand` variant, `print_op | bytes.len() | hex(bytes)`. Delete once the post-migration
+    /// diff is clean (see ticket 26/08/05/RASTER-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION).
+    #[test]
+    fn debug_wire_baseline_dump() {
+        fn hex(bytes: &[u8]) -> String {
+            bytes.iter().map(|b| format!("{b:02x}")).collect()
+        }
+        fn dump(c: &RasterCommand) {
+            use protocol::OpText;
+            let bytes = c.encode_op().expect("encode");
+            println!("[DEBUG][WIRE] {} | {} | {}", c.print_op(), bytes.len(), hex(&bytes));
+        }
+        dump(&RasterCommand::SetDocument { document: raster_engine::empty_raster_document() });
+        dump(&RasterCommand::SetActiveExample { example_id: "semio".into() });
+        dump(&RasterCommand::AddLayer { kind: "pixel".into() });
+        dump(&RasterCommand::DropLayerKind { kind: "group".into() });
+        dump(&RasterCommand::SetLayerVisible { layer_id: "l1".into(), visible: Some(true) });
+        dump(&RasterCommand::SetLayerVisible { layer_id: "l1".into(), visible: None });
+        dump(&RasterCommand::ToggleLayerVisible { layer_id: "l1".into() });
+        dump(&RasterCommand::DeleteLayer { layer_id: "l1".into() });
+        dump(&RasterCommand::DuplicateLayer { layer_id: "l1".into() });
+        dump(&RasterCommand::PatchLayer { layer_id: "l1".into(), field: "opacity".into(), value: "0.4".into() });
+        dump(&RasterCommand::PatchLayers { layer_ids: vec!["a".into(), "b".into()], field: "name".into(), value: "Renamed".into() });
+        dump(&RasterCommand::MoveLayer { layer_id: "l1".into(), target_row_id: "raster-play-layers".into(), drop_position: "after".into() });
+        dump(&RasterCommand::SetSelection { ids: vec!["a".into()] });
+        dump(&RasterCommand::SetHover { id: Some("a".into()) });
+        dump(&RasterCommand::SetHover { id: None });
+        dump(&RasterCommand::SelectAll);
+        dump(&RasterCommand::SetBrushSize { value: 40.0 });
+        dump(&RasterCommand::SetBrushOpacity { value: 0.5 });
+        dump(&RasterCommand::SetCompositeViewport { width: 640.0, height: 480.0 });
+        dump(&RasterCommand::SetCamera { camera: RasterCamera { x: 1.0, y: 2.0, zoom: 1.5 } });
+        dump(&RasterCommand::SetCameraZoom { zoom: 2.0 });
+        dump(&RasterCommand::SetActiveUtility { utility_id: "paintBrush".into() });
+        dump(&RasterCommand::SetLocale { value: "de-DE".into() });
+    }
+    //#endregion 🔖️WireBaseline
 }
 //#endregion 🧪️Tests

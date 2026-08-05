@@ -62,6 +62,39 @@ mod tests {
     }
 
     //#region 🔖️CommandTests
+    /// [DEBUG] wire baseline dump — TEMPLATE.md §0.4. Temporary, deleted before handoff.
+    #[test]
+    fn zz_debug_wire_baseline_dump() {
+        fn dump(label: &str, command: &PlaybookCommand) {
+            let text = protocol::OpText::print_op(command);
+            let bytes = command.encode_op().expect("encode");
+            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+            println!("[DEBUG] {label} | text={text} | len={} | hex={hex}", bytes.len());
+        }
+        dump("AddStep", &PlaybookCommand::AddStep);
+        dump("RemoveStep", &PlaybookCommand::RemoveStep { step_id: "s".into() });
+        dump("MoveStep", &PlaybookCommand::MoveStep { step_id: "s".into(), index: 2 });
+        dump("AddBlock-None", &PlaybookCommand::AddBlock { kind: "text".into(), step_id: None });
+        dump("AddBlock-Some", &PlaybookCommand::AddBlock { kind: "note".into(), step_id: Some("s".into()) });
+        dump("RemoveBlock", &PlaybookCommand::RemoveBlock { step_id: "s".into(), block_id: "b".into() });
+        dump("MoveBlock", &PlaybookCommand::MoveBlock { block_id: "b".into(), from_step_id: "s1".into(), to_step_id: "s2".into(), index: 0 });
+        dump("UpdatePlaybook", &PlaybookCommand::UpdatePlaybook { value: "Recipe".into() });
+        dump("SetSelection", &PlaybookCommand::SetSelection { ids: vec!["a".into(), "b".into()] });
+        dump("SetLocale", &PlaybookCommand::SetLocale { value: "de-DE".into() });
+        // 🧮️ PlaybookOperation (kernel-owned enum) — one value per constructor this app actually uses.
+        let ops: Vec<(&str, playbook_op::PlaybookOperation)> = vec![
+            ("remove_step_operation", playbook_op::remove_step_operation("s")),
+            ("move_step_operation", playbook_op::move_step_operation("s", 1)),
+            ("update_playbook_title_operation", playbook_op::update_playbook_title_operation(Some("Recipe".into()))),
+        ];
+        for (label, op) in &ops {
+            let text = protocol::OpText::print_op(op);
+            let bytes = encode_op(op).expect("encode op");
+            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+            println!("[DEBUG] op:{label} | text={text} | len={} | hex={hex}", bytes.len());
+        }
+    }
+
     fn assert_command_binary_round_trips(command: &PlaybookCommand) {
         let bytes = command.encode_op().expect("encode command");
         assert_eq!(&PlaybookCommand::decode_op(&bytes).expect("decode command"), command);

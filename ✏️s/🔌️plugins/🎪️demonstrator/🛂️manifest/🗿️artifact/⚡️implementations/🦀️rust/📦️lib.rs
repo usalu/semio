@@ -59,8 +59,8 @@ fn register_procedural_exports() {
 
 //#region 🔖️ProcessExports
 fn process3d_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
-    let document: process_3d::Process3dDocument = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
-    process_3d_engine::processed_mesh(&document).ok_or_else(|| "process3d: kernel replay failed".to_string())
+    let document: process_3d::artifacts::process3d::Process3dDocument = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
+    process_3d::artifacts::process3d::engine::processed_mesh(&document).ok_or_else(|| "process3d: kernel replay failed".to_string())
 }
 
 fn process3d_document_from_mesh(_mesh: &MeshData) -> Result<Value, String> {
@@ -73,7 +73,7 @@ fn register_process3d_exports() {
     semio_framework_os::register_mesh_exporter("3d.process", "process", process3d_mesh_from_document, Box::new(semio_framework_plugin::StlExporter));
     semio_framework_os::register_mesh_dwg_export_handler("3d.process", "process", process3d_mesh_from_document);
     semio_framework_os::register_mesh_dwg_import_handler("3d.process", process3d_document_from_mesh);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<process_3d_ui::Process3dPlayApp>(process_3d::PROCESS_3D_SCHEMA);
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<process_3d::apps::process3d::Process3dPlayApp>(process_3d::artifacts::process3d::PROCESS_3D_SCHEMA);
 }
 //#endregion 🔖️ProcessExports
 
@@ -81,9 +81,9 @@ fn register_process3d_exports() {
 /// 🪶️ Only the 2d half of gis's setup — the demonstrator's `verfolgen` pane boots `gis2d-play`
 /// exclusively; `gis3d_ui` isn't a dependency of this bundle at all.
 fn register_gis_exports() {
-    semio_framework_os::register_2d_export_handlers("2d.map", "gis2d", gis2d_engine::gis2d_document_json_to_svg);
-    semio_framework_os::register_dwg_import_handler("2d.map", gis2d_engine::gis2d_document_json_from_dwg);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<gis2d_ui::Gis2dPlayApp>(gis2d::GIS_MAP_SCHEMA);
+    semio_framework_os::register_2d_export_handlers("2d.map", "gis2d", gis::artifacts::gismap::engine::gis2d_document_json_to_svg);
+    semio_framework_os::register_dwg_import_handler("2d.map", gis::artifacts::gismap::engine::gis2d_document_json_from_dwg);
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<gis::apps::gis2d::Gis2dPlayApp>(gis::artifacts::gismap::GIS_MAP_SCHEMA);
 }
 //#endregion 🔖️GisExports
 
@@ -110,8 +110,8 @@ fn bundle() -> semio_framework_plugin::PluginBundle {
         .register_document_app(cad::apps::cad::create_cad_app(), || <cad::apps::cad::CadPlayApp as ::std::default::Default>::default())
         .register_document_app(puzzle_3d_ui::create_puzzle3d_app(), || <puzzle_3d_ui::Puzzle3dPlayApp as ::std::default::Default>::default())
         .register_document_app(sourcing::apps::curate::create_sourcing_curate_app(), || sourcing::apps::curate::SourcingCurateApp)
-        .register_document_app(process_3d_ui::create_process3d_app(), || process_3d_ui::Process3dPlayApp)
-        .register_document_app(gis2d_ui::create_gis2d_app(), || gis2d_ui::Gis2dPlayApp)
+        .register_document_app(process_3d::apps::process3d::create_process3d_app(), || process_3d::apps::process3d::Process3dPlayApp)
+        .register_document_app(gis::apps::gis2d::create_gis2d_app(), || gis::apps::gis2d::Gis2dPlayApp)
 }
 semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖️Manifest

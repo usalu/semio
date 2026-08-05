@@ -386,6 +386,7 @@ pub fn create_lowpoly_app() -> App {
     let default_example = serde_json::to_string(&crate::artifacts::lowpoly::engine::default_projection()).expect("lowpoly default example");
     App::from_builder(
         App::builder(LOWPOLY_PLAY_APP_ID, LocalizedLabel::native("Lowpoly", "Lowpoly"))
+            .document(["semio", "lowpoly"])
             .artifact_kind(artifact_kind())
             .artifact_kind(mesh_artifact_kind())
             .icon_id("shapes")

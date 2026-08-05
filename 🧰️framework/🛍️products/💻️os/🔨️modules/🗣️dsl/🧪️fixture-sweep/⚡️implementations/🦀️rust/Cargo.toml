@@ -19,7 +19,12 @@ store = { path = "../../../../../../../../🧰️framework/🛍️products/💻�
 # (ticket 26/08/05/WRITER-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION) — `WriterProjection`
 # now lives at `writer::artifacts::writer::WriterProjection` (see this crate's `📦️lib.rs`).
 writer = { path = "../../../../../../../../✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust", package = "semio-s-plugin-writer" }
-mathematical = { path = "../../../../../../../../✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/⚡️implementations/🦀️rust", package = "semio-s-app-mathematical" }
+# 🧮️ `MathProjection` and its `store::DocumentDsl` impl are genuinely plugin-owned (no shared kernel
+# crate the way flow has), so they now live at `mathematical::artifacts::mathematical::MathProjection`
+# (see this crate's `📦️lib.rs`) — the deleted `semio-s-app-mathematical` facade crate was merged into
+# `semio-s-plugin-mathematical` by the crate-consolidation taxonomy migration (ticket
+# 26/08/05/MATHEMATICAL-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION).
+mathematical = { path = "../../../../../../../../✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust", package = "semio-s-plugin-mathematical" }
 # 🌀️ `Procedural2dDocument`/`Procedural3dDocument` are genuinely plugin-owned (no shared kernel crate
 # the way flow has), so they now live at `procedural::artifacts::procedural2d::Procedural2dDocument`/
 # `procedural::artifacts::procedural3d::Procedural3dDocument` (see this crate's `📦️lib.rs`) — the
@@ -62,8 +67,11 @@ shooting = { path = "../../../../../../../../✏️s/🔌️plugins/🎥️shoot
 sequence = { path = "../../../../../../../../✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust", package = "semio-s-plugin-sequence" }
 fem2d = { path = "../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/⚡️implementations/🦀️rust", package = "semio-s-app-fem-2d" }
 fem3d = { path = "../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-fem-3d" }
-process_3d = { path = "../../../../../../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-process-3d" }
-lowpoly = { path = "../../../../../../../../✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/⚡️implementations/🦀️rust", package = "semio-s-app-lowpoly" }
+process_3d = { path = "../../../../../../../../✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust", package = "semio-s-plugin-process" }
+# 🔷️ `LowpolyProjection` merged into `semio-s-plugin-lowpoly` by the crate-consolidation taxonomy
+# migration (ticket 26/08/05/LOWPOLY-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION) — real owner
+# is now `crate::artifacts::lowpoly::LowpolyProjection` (see this crate's `📦️lib.rs`).
+lowpoly = { path = "../../../../../../../../✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust", package = "semio-s-plugin-lowpoly" }
 # 🧠️ `MindmapWiresDocument` merged into `semio-s-plugin-reasoning-mindmap` by the crate-consolidation
 # taxonomy migration (ticket 26/08/05/REASONING-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION) —
 # real owner is now `crate::artifacts::wires::MindmapWiresDocument` (see this crate's `📦️lib.rs`).
@@ -71,7 +79,12 @@ reasoning_mindmap_plugin = { path = "../../../../../../../../✏️s/🔌️plug
 # 🌱️ `forms` dropped (26/08/05/FORMS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION) — `FormSpec`
 # repointed to `playbook::PlaybookSpec` directly in 📦️lib.rs, its real owner; `playbook` below already
 # covers it.
-layout = { path = "../../../../../../../../✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/⚡️implementations/🦀️rust", package = "semio-s-app-layout" }
+# 📏️ `LayoutDocument` and its `store::DocumentDsl` impl are genuinely plugin-owned (no shared kernel
+# crate the way flow has), so they now live at `layout::artifacts::layout::LayoutDocument` (see this
+# crate's `📦️lib.rs`) — the deleted `semio-s-app-layout` facade crate was merged into
+# `semio-s-plugin-layout` by the crate-consolidation taxonomy migration (ticket
+# 26/08/05/LAYOUT-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION).
+layout = { path = "../../../../../../../../✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust", package = "semio-s-plugin-layout" }
 # 📐️ `CadScene` is genuinely plugin-owned (no shared kernel crate the way flow has), so it now lives at
 # `cad_document::artifacts::cad::CadScene` (see this crate's `📦️lib.rs`) — the deleted `semio-s-app-cad`
 # facade crate was merged into `semio-s-plugin-cad` by the crate-consolidation taxonomy migration
@@ -97,10 +110,10 @@ imperative = { path = "../../../../../../../../✏️s/🔌️plugins/📜️imp
 remodel = { path = "../../../../../../../../✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/⚡️implementations/🦀️rust", package = "semio-s-app-remodel" }
 rewrite = { path = "../../../../../../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/✏️rewrite/⚡️implementations/🦀️rust", package = "semio-s-app-trinity-rewrite" }
 trinity_ram = { path = "../../../../../../../../✏️s/🔌️plugins/🔱️trinity/🔨️modules/🐏️ram/⚡️implementations/🦀️rust", package = "semio-s-plugin-trinity-ram" }
-dag_app = { path = "../../../../../../../../✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/⚡️implementations/🦀️rust", package = "semio-s-app-dag" }
+dag_app = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-dag" }
 draw = { path = "../../../../../../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/⚡️implementations/🦀️rust", package = "semio-s-app-draw" }
 raster = { path = "../../../../../../../../✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/⚡️implementations/🦀️rust", package = "semio-s-app-raster" }
-note_app = { path = "../../../../../../../../✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/⚡️implementations/🦀️rust", package = "semio-s-app-note" }
+note_app = { path = "../../../../../../../../✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust", package = "semio-s-plugin-note" }
 puzzle_2d = { path = "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/⚡️implementations/🦀️rust", package = "semio-s-app-puzzle-2d" }
 puzzle_5d = { path = "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/⚡️implementations/🦀️rust", package = "semio-s-app-puzzle-5d" }
 puzzle_3d = { path = "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-puzzle-3d" }

@@ -54,7 +54,41 @@ pub mod artifacts {
         }
     }
 
-    // 🚧️ The 🧊️3d and 🖐️5d artifact regions land here, in the same shape as `puzzle2d` above.
+    #[path = "."]
+    pub mod puzzle3d {
+        #[path = "🗿️artifacts/🧊️3d/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs"]
+        pub mod diff;
+        #[path = "🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs"]
+        pub mod op;
+        #[path = "🗿️artifacts/🧊️3d/🗣️dsl/🦀️component.rs"]
+        pub mod dsl;
+        #[path = "🗿️artifacts/🧊️3d/🎒️pack/🦀️component.rs"]
+        pub mod pack;
+        #[path = "🗿️artifacts/🧊️3d/📡️spr/🦀️component.rs"]
+        pub mod spr;
+
+        #[path = "."]
+        pub mod engine {
+            #[path = "🗿️artifacts/🧊️3d/⚙️engine/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "🗿️artifacts/🧊️3d/⚙️engine/🦀️geometry.rs"]
+            pub mod geometry;
+            #[path = "🗿️artifacts/🧊️3d/⚙️engine/🦀️brush.rs"]
+            pub mod brush;
+            #[path = "🗿️artifacts/🧊️3d/⚙️engine/🦀️fill.rs"]
+            pub mod fill;
+            #[path = "🗿️artifacts/🧊️3d/⚙️engine/🦀️session.rs"]
+            pub mod session;
+        }
+    }
+
+    // 🚧️ The 🖐️5d artifact region lands here, in the same shape as `puzzle2d`/`puzzle3d` above.
 }
 //#endregion 🗿️Artifacts
 

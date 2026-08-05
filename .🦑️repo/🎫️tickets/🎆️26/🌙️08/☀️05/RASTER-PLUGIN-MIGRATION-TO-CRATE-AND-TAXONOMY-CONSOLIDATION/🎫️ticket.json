@@ -1,0 +1,13 @@
+{
+  "title": "Raster Plugin Migration To Crate And Taxonomy Consolidation",
+  "emoji": "🖨️",
+  "status": "open",
+  "description": "Migrate the 🖨️raster plugin from its old 8-crate constitutional layout to the new single-crate taxonomy layout, following the proven recipe in CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE/TEMPLATE.md. Old crates: manifest/artifact, apps/raster (root), apps/raster/modules/{engine,dsl,op,pack,protocol,ui}. New crate: ✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust (semio-s-plugin-raster). Capture test baseline + wire-format baseline before touching anything, move code per the taxonomy mapping table, decompose commands with app_commands!, verify (check/clippy/test/wasm), delete old crates only once green, and end with a registrar handoff block (do not touch root Cargo.toml myself).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2471"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪4ee6d6599dc74c2a944a85c895336c6e"
+  ]
+}

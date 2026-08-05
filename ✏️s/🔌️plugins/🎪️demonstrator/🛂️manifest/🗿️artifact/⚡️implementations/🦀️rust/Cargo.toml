@@ -122,10 +122,6 @@ puzzle_3d_ui = { path = "../../../../../../../✏️s/🔌️plugins/🧩️puzz
 
 sourcing = { path = "../../../../../../../✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust", package = "semio-s-plugin-sourcing" }
 
-process_3d = { path = "../../../../../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-process-3d" }
-process_3d_engine = { path = "../../../../../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-process-3d-engine" }
-process_3d_ui = { path = "../../../../../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust", package = "semio-s-app-process-3d-ui" }
+process_3d = { path = "../../../../../../../✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust", package = "semio-s-plugin-process" }
 
-gis2d = { path = "../../../../../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/⚡️implementations/🦀️rust", package = "semio-s-app-gis-2d" }
-gis2d_engine = { path = "../../../../../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-gis-2d-engine" }
-gis2d_ui = { path = "../../../../../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust", package = "semio-s-app-gis-2d-ui" }
+gis = { path = "../../../../../../../✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust", package = "semio-s-plugin-gis" }

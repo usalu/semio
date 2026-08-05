@@ -1,0 +1,41 @@
+00 | set-grid-visible value=true | 6 | 010000010002
+01 | set-grid-spacing value=16 | 14 | 0101000100050000000000003040
+02 | set-grid-subdivisions value=8 | 14 | 0102000100050000000000002040
+03 | set-grid-opacity value=0.6 | 14 | 010300010005333333333333e33f
+04 | set-snap-enabled value=false | 6 | 010400010001
+05 | set-snap-grid-spacing value=4 | 14 | 0105000100050000000000001040
+06 | set-pencil-width value=5 | 14 | 0106000100050000000000001440
+07 | set-eraser-radius value=20 | 14 | 0107000100050000000000003440
+08 | add-block kind=text x=10 y=20 | 32 | 0108010474657874030006000105000000000000244002050000000000003440
+09 | move-block block-id=b1 target-row-id="note-play-block:g1" drop-position=after | 41 | 010903056166746572026231126e6f74652d706c61792d626c6f636b3a673103000601010602020600
+0a | delete-block block-id=b1 | 10 | 010a0102623101000600
+0b | delete-selection | 4 | 010b0000
+0c | duplicate-block block-id=b1 | 10 | 010c0102623101000600
+0d | duplicate-selection | 4 | 010d0000
+0e | patch-blocks field=visible value="true" block-ids=[ b1 b2 ] | 36 | 010e0402623102623204747275650776697369626c6503000c0206000601010603020602
+0f | set-active-example example-id=semio | 13 | 010f010573656d696f01000600
+10 | set-fixture-json json="{}" | 10 | 011001027b7d01000600
+11 | ink-apply-events events-json="[]" phase=begin select-ids=[ b1 ] | 27 | 011103025b5d02623105626567696e03000600010602020c010601
+12 | engagement-submit value=Renamed | 15 | 0112010752656e616d656401000600
+13 | nudge-selection dx=1 dy=-1 | 24 | 011300020005000000000000f03f0105000000000000f0bf
+14 | nudge-selection-up | 4 | 01140000
+15 | nudge-selection-down | 4 | 01150000
+16 | nudge-selection-left | 4 | 01160000
+17 | nudge-selection-right | 4 | 01170000
+18 | nudge-selection-up-fast | 4 | 01180000
+19 | nudge-selection-down-fast | 4 | 01190000
+1a | nudge-selection-left-fast | 4 | 011a0000
+1b | nudge-selection-right-fast | 4 | 011b0000
+1c | camera camera { x=4 y=5 zoom=2 } | 38 | 011c0001000e0d03000500000000000010400105000000000000144002050000000000000040
+1d | camera-zoom value=3 | 14 | 011d000100050000000000000840
+1e | active-utility utility-id=pencil | 14 | 011e010670656e63696c01000600
+1f | locale value=de-DE | 13 | 011f010564652d444501000600
+20 | select-all | 4 | 01200000
+21 | clear-selection | 4 | 01210000
+22 | set-selection ids=[ b1 b2 ] | 17 | 01220202623102623201000c0206000601
+23 | set-hover block-id=b1 | 10 | 01230102623101000600
+23 | set-hover | 4 | 01230000
+24 | engagement-input value=Renaming | 16 | 0124010852656e616d696e6701000600
+25 | navigator-engagement-input | 4 | 01250000
+26 | save-download | 4 | 01260000
+27 | load-request | 4 | 01270000

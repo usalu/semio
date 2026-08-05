@@ -81,6 +81,49 @@ pub enum Block3dCommand {
 mod tests {
     use super::*;
 
+    // 🧪️ [DEBUG] TEMP wire baseline dump — TEMPLATE.md §0.4. Remove after capturing.
+    #[test]
+    fn dump_wire_baseline_block3d() {
+        let commands = vec![
+            Block3dCommand::PatchObjectKind { field: "name".into(), value: "x".into() },
+            Block3dCommand::AddRepresentation,
+            Block3dCommand::RemoveRepresentation { id: "r0".into() },
+            Block3dCommand::AddVortexKind,
+            Block3dCommand::RemoveVortexKind { id: "v0".into() },
+            Block3dCommand::AddVortex,
+            Block3dCommand::RemoveVortex { id: "v0".into() },
+            Block3dCommand::SetActiveExample { id: "capsule".into() },
+            Block3dCommand::Edit { text: "{}".into() },
+            Block3dCommand::SetSelection { ids: vec!["r0".into()] },
+            Block3dCommand::SetSelection { ids: vec![] },
+            Block3dCommand::SetActiveRepresentation { representation_id: Some("r0".into()) },
+            Block3dCommand::SetActiveRepresentation { representation_id: None },
+            Block3dCommand::SetWindowRepresentations { window_id: "w0".into(), representation_ids: vec!["r0".into()] },
+            Block3dCommand::ToggleWindowRepresentation { window_id: "w0".into(), representation_id: "r0".into(), visible: true },
+            Block3dCommand::SetWindowArrangement { window_id: "w0".into(), arrangement: "x".into() },
+            Block3dCommand::SetWindowSpacing { window_id: "w0".into(), spacing: 8.0 },
+            Block3dCommand::SetActiveUtility { window_id: "w0".into(), utility_id: "select".into() },
+            Block3dCommand::SetBrushVortexKind { vortex_kind_id: Some("v0".into()) },
+            Block3dCommand::SetBrushVortexKind { vortex_kind_id: None },
+            Block3dCommand::SetBrushRadius { radius: 0.3 },
+            Block3dCommand::SetBrushFlip { flip: true },
+            Block3dCommand::HoverSurface { window_id: "w0".into(), object_id: "r0".into(), position: [0.0, 0.0, 0.0], normal: [0.0, 1.0, 0.0] },
+            Block3dCommand::LeaveSurface,
+            Block3dCommand::PlaceVortex { window_id: "w0".into(), object_id: "r0".into(), position: [0.0, 0.0, 0.0], normal: [0.0, 1.0, 0.0] },
+            Block3dCommand::SetCamera { camera: block_shared::BlockCamera3d::default() },
+            Block3dCommand::SelectVortex { full_id: "r0:v0".into(), merge: true },
+            Block3dCommand::HoverVortex { full_id: Some("r0:v0".into()) },
+            Block3dCommand::HoverVortex { full_id: None },
+            Block3dCommand::PatchRepresentation { id: "r0".into(), field: "name".into(), value: "x".into() },
+        ];
+        for c in &commands {
+            let printed = protocol::OpText::print_op(c);
+            let bytes = c.encode_op().expect("encode");
+            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+            println!("[DEBUG] {:?} | printed={:?} | len={} | hex={}", c, printed, bytes.len(), hex);
+        }
+    }
+
     #[test]
     fn block3d_document_vcs_replays_granular_operations() {
         use block_3d::BLOCK_3D_SCHEMA;

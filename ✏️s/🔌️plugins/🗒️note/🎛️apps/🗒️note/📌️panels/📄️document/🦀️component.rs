@@ -56,7 +56,6 @@ pub fn render(document: &NoteDocument, selected_ids: &[String], labels: &NotePla
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::apps::note::testkit::{dispatch, note_app, render as render_body};
     use crate::apps::note::commands::fixture::set_active_example::SetActiveExample;
     use crate::apps::note::{NoteCommand, NOTE_PLAY_BODY_DOCUMENT as BODY_DOCUMENT};

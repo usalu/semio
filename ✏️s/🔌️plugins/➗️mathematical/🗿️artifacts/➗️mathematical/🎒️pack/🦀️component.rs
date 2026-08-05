@@ -6,15 +6,15 @@
 
 use crate::artifacts::mathematical::dsl::{math_projection_from_dsl, math_projection_to_dsl, MathProjectionDsl};
 use crate::artifacts::mathematical::MathProjection;
-use store::{DocumentPack, PackError};
+use store::{DocumentPack, PackDecodeOptions, PackEncodeOptions, PackError};
 
 //#region 🔖️Pack
 impl DocumentPack for MathProjection {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         math_projection_to_dsl(self).encode_pack_with(options)
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
         let dsl_projection = MathProjectionDsl::decode_pack_with(bytes, options)?;
         math_projection_from_dsl(dsl_projection).map_err(|message| store::text_error_to_pack_error(store::TextError::new(message, store::TextSpan::at(1, 1))))
     }
@@ -46,9 +46,7 @@ mod tests {
 
     #[test]
     fn math_projection_dsl_pack_equivalence_with_seed_and_empty_collections() {
-        let mut graph = MathGraph::default();
-        graph.algorithm = "bfs".into();
-        graph.algorithm_seed = Some("a".into());
+        let mut graph = MathGraph { algorithm: "bfs".into(), algorithm_seed: Some("a".into()), ..MathGraph::default() };
         graph.nodes.clear();
         graph.edges.clear();
         let projection = MathProjection { graph, geometry: MathGeometry { points: Vec::new() } };
@@ -67,8 +65,7 @@ mod tests {
         use store::{create_document_envelope, DocumentCommand, DocumentStore};
 
         let mut store: DocumentStore<MathProjection, MathOperation> = DocumentStore::new(create_document_envelope("semio.mathematical/v1", "math-demo", MathProjection::default(), None));
-        let mut graph = MathGraph::default();
-        graph.algorithm = "components".into();
+        let graph = MathGraph { algorithm: "components".into(), ..MathGraph::default() };
         store.dispatch(DocumentCommand::Apply { operations: vec![MathOperation::SetGraph { graph }], description: None }).expect("apply");
         let edit: &Edit<MathOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::test_support::assert_command_envelope_round_trip::<MathProjection, MathOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));

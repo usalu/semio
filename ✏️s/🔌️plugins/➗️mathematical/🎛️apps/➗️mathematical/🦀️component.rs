@@ -103,7 +103,7 @@ impl DocumentApp for MathematicalPlayApp {
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.mathematical".into(), json } })
             }
             "document:out" => {
-                let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+                let media_type = self.io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.projection.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -252,12 +252,13 @@ mod tests {
     }
 
     /// ⚖️ The row whose `Option` field makes `None`/`Some` distinct wire cases, pinned to the exact bytes
-    /// captured from the pre-merge `mathematical_protocol`/`mathematical_op` crates.
+    /// captured from the pre-merge `mathematical_protocol` crate (see the ticket's
+    /// `🧪️wire-baseline-before.txt`).
     #[test]
     fn optional_field_rows_keep_their_pre_migration_bytes() {
         let cases: [(MathCommand, &str, &str); 2] = [
-            (MathCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "topo".into(), seed: None }), "set-algorithm algorithm=topo", "0101040746746f706f0000"),
-            (MathCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }), "set-algorithm algorithm=bfs seed=a", "010104036266730001016100"),
+            (MathCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "topo".into(), seed: None }), "set-algorithm algorithm=topo", "01010104746f706f01000600"),
+            (MathCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }), "set-algorithm algorithm=bfs seed=a", "01010201610362667302000601010600"),
         ];
         for (command, text, hex) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text);

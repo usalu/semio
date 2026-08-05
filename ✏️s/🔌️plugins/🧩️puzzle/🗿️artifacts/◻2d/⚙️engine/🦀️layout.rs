@@ -24,6 +24,7 @@ pub fn redraw_layout_fixture_json(fixture_json: &str, options_json: &str) -> Res
 
 //#region 🧪️Tests
 #[cfg(test)]
+#[allow(clippy::approx_constant, reason = "3.14159 is verbatim fixture data (a handle angle in a scene JSON literal), carried over unchanged from the pre-consolidation engine crate; swapping in std::f64::consts::PI would alter the recorded test input.")]
 mod tests {
     use crate::artifacts::puzzle2d::engine::graph;
     use crate::artifacts::puzzle2d::engine::{apply_force_graph_layout_to_fixture_v1_json, apply_normal_undirected_redraw_layout_to_fixture_v1_json};
