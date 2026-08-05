@@ -646,7 +646,10 @@
   \ifnum\lastnodetype=-1 \else\addvspace{\semio@block@sep@skip}\fi
 }
 \newcommand{\semio@block@after}{\ifhmode\par\fi\nobreak}
-\newcommand{\semio@noindent@noparskip}{\begingroup\parskip\z@\noindent\endgroup}
+% \noindent must precede the following material in the same paragraph. A
+% grouped \noindent ends before the chip/header row and leaves \parindent in
+% effect (measured: title-chip L inset from the table outer L).
+\newcommand{\semio@noindent@noparskip}{\parskip\z@\noindent}
 \newcommand{\SemioSpacingUnit}{\semio@spacing@single}
 \newcommand{\SemioSpacingDouble}{\semio@spacing@double}
 \makeatother

@@ -22,8 +22,6 @@
   }
 }
 
-\AddToHook { cmd / tableofcontents / after } { \semio_cover_geometry_restore: }
-
 \bool_new:N \l_semio_cover@meta@row_bool
 \bool_new:N \l_semio_cover@institution@row_bool
 \bool_new:N \l_semio_is_zwischenbericht_bool
@@ -93,6 +91,7 @@
 }
 
 \cs_new_protected:Npn \semio_mainmatter_begin: {
+  \semio_cover_geometry_restore:
   \semio_clear_to_recto:
   \setcounter{page}{1}
   \renewcommand{\thepage}{\arabic{page}}
@@ -308,7 +307,9 @@
         }
       \end{WindowColumn}
     \end{WindowArrangement}
-    \prevdepth\z@\nointerlineskip
+  % Cover must occupy page 1 alone; Inhaltsverzeichnis starts on the next page
+  % with restored body geometry (not the cover's tight 1.5cm margins).
+  \semio_cover_geometry_restore:
 }
 
 \NewDocumentCommand{\maketableofcontents}{o}{%

@@ -1,0 +1,82 @@
+[
+  {
+    "p": 2,
+    "glossTitle": false,
+    "abkTitle": false,
+    "abkHeader": false,
+    "test": true,
+    "AP": true,
+    "API": false,
+    "snippet": "Entwerfen mit Bestand Vorspann Zwischenbericht Inhaltsverzeichnis Schlüssel Titel Seite 1.1.3 Synchronisierung 1 1.1.4 Assistenz 1 1.1.5 Praxistauglichkeit 1 1.1.6 Zielsetzung 1 1.2 Arbeitspakete 2 1.2.1 AP-Erfahrung 2 1.2.1.1 Recherche 2 1.2.1.1.1 Bauteilbörsen und Angebotskanäl"
+  },
+  {
+    "p": 3,
+    "glossTitle": false,
+    "abkTitle": false,
+    "abkHeader": false,
+    "test": true,
+    "AP": true,
+    "API": false,
+    "snippet": "Entwerfen mit Bestand Vorspann Zwischenbericht Inhaltsverzeichnis Schlüssel Titel Seite 2.2.3 AP-Tool 13 2.2.3.1 Human-Interface-Design 13 2.2.3.2 Lebenszyklusanalyse 13 2.2.3.3 Tragwerksanalyse 13 2.2.3.4 KI-Assistenz 13 2.2.3.5 Konfigurator 13 2.2.4 AP-Validierung 14 2.2.4.1 Te"
+  },
+  {
+    "p": 15,
+    "glossTitle": false,
+    "abkTitle": false,
+    "abkHeader": false,
+    "test": true,
+    "AP": true,
+    "API": false,
+    "snippet": "1.2.3 AP-Tool Entwerfen mit Bestand Zwischenbericht präsentationen durchgängig verarbeitet werden können. Dazu wurden Datenmodell, Schnittstellen und Systemarchitektur angepasst. Die In- formationen einer Baukomponente werden in einem gemeinsamen Bauteilobjekt zu- sammengeführt. "
+  },
+  {
+    "p": 16,
+    "glossTitle": false,
+    "abkTitle": false,
+    "abkHeader": false,
+    "test": true,
+    "AP": true,
+    "API": false,
+    "snippet": "Entwerfen mit Bestand 1.2.4 AP-Validierung Zwischenbericht Querschnitte, Knoten, Anschlussbereiche und Verbindungen zu anderen Komponen- ten. Werden mehrere Baukomponenten in der Entwurfsumgebung kombiniert, sollen ihre Repräsentationen zu einem vereinfachten Tragsystem verknüpft"
+  },
+  {
+    "p": 21,
+    "glossTitle": false,
+    "abkTitle": false,
+    "abkHeader": false,
+    "test": true,
+    "AP": true,
+    "API": false,
+    "snippet": "2.2.4 AP-Validierung Entwerfen mit Bestand Zwischenbericht AP-Validierung 2.2.4 Verantwortung: NGS und KET bearbeiten die erste Test-Case-Phase gemeinsam. KET übernimmt schwerpunktmäßig die nutzungsnahe Weiterentwicklung und Workshop- vorbereitung; Durchführung und Auswertung erf"
+  },
+  {
+    "p": 121,
+    "glossTitle": true,
+    "abkTitle": false,
+    "abkHeader": false,
+    "test": false,
+    "AP": false,
+    "API": false,
+    "snippet": "Verzeichnisse Entwerfen mit Bestand Zwischenbericht Verzeichnisse V Verzeichnis der Anhänge Schlüssel Titel Seite P Projekte 17 H Hürden der Wiederverwendung 69 BB Bauteilbörsen 70 TZ Typologische Zuordnung und Wiederverwendungsrollen 84 SB Sekundärbefunde BaselCircular/Cirkla 89"
+  },
+  {
+    "p": 122,
+    "glossTitle": true,
+    "abkTitle": false,
+    "abkHeader": false,
+    "test": true,
+    "AP": false,
+    "API": false,
+    "snippet": "Entwerfen mit Bestand Verzeichnisse Zwischenbericht Glossar Begriff Verwendung im Bericht Seiten Einspeiseplattform Digitaler Eingangsbereich der Plattform aus Bauteilportal und Wizard, in dem Bestandsdaten erfasst, übernommen und aufbereitet werden. 6 Entwurfswerkzeug Digitaler "
+  },
+  {
+    "p": 123,
+    "glossTitle": false,
+    "abkTitle": true,
+    "abkHeader": true,
+    "test": false,
+    "AP": true,
+    "API": true,
+    "snippet": "Verzeichnisse Entwerfen mit Bestand Zwischenbericht Abkürzungsverzeichnis Abkürzung Bedeutung Seiten AP Arbeitspaket -- Klar abgegrenzter Teilbereich des Projekts mit eigenen Zielen und Aufgaben. 2, 6, 7, 9, 12 API Application Programming Interface -- Festgelegte Programmierschni"
+  }
+]

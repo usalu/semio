@@ -633,6 +633,8 @@
 \tl_new:N \l_semio_termlist_title_tl
 \tl_new:N \l_semio_termlist_definition_tl
 \tl_new:N \l_semio_termlist_term_tl
+\bool_new:N \g_semio_termlist_shipped_bool
+\bool_gset_false:N \g_semio_termlist_shipped_bool
 
 \cs_new_protected:Npn \semio_termlist_term_ensure:nn #1#2 {
   \exp_args:Nc \prop_if_in:NnF { g_semio_#1_pages_prop } {#2} {
@@ -743,6 +745,12 @@
   \int_compare:nNnT { \exp_args:Nc \seq_count:N { g_semio_#1_terms_seq } } > { 0 } {
     \semio_termlist_body_materialize:n {#1}
     \tl_set:Nx \l_semio_termlist_title_tl { \use:c { semio_#1_title_text: } }
+    % 🩹 Keep consecutive termlists on separate pages (Glossar then
+    % Abkürzungen). Chrome/header for the second table is restored by omitting
+    % empty \endfirsthead in \semio@table@long@render; clearpage avoids stacking
+    % LTpost/LTpre cream between two register tables on one page.
+    \bool_if:NT \g_semio_termlist_shipped_bool { \clearpage }
+    \bool_gset_true:N \g_semio_termlist_shipped_bool
     \group_begin:
     \ExplSyntaxOff
     \makeatletter
@@ -3102,10 +3110,10 @@
 % calibrated for chips+baseline height).
 \newif\ifsemio@window@header@draw@baseline
 \semio@window@header@draw@baselinetrue
-% Flush: chip row / baseline span exactly \linewidth (no \moveleft overhang).
+% Flush: chip row / baseline span exactly \linewidth (no overhang).
 % Required for tcolorbox windows so chip L/R sit on the continuous leftrule/
-% rightrule. Long-table chrome keeps the moveleft path (borders live outside a
-% shrunk \linewidth; overhang T-joins those \vrule slots).
+% rightrule. Long-table chrome keeps the overhang path (borders live outside a
+% shrunk \linewidth; pull left by one hairline so chip L matches border@L).
 \newif\ifsemio@window@header@flush
 \semio@window@header@flushfalse
 
@@ -3125,7 +3133,13 @@
   \ifsemio@window@header@flush
     \hbox to \linewidth{#1}%
   \else
-    \moveleft\semio@stroke@hairline\hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{#1}%
+    % 🩹 Pull left by one hairline and span inner+2·hairline so chip L/R sit on
+    % the outer faces of border@L/R (title chip L and number chip R). \hspace*
+    % (not \moveleft) so the pull works in the chrome hlist.
+    \hbox{%
+      \hspace*{-\semio@stroke@hairline}%
+      \hbox to \dimexpr\linewidth+\semio@stroke@hairline+\semio@stroke@hairline\relax{#1}%
+    }%
   \fi
 }
 
@@ -3139,7 +3153,7 @@
       }%
     \else
       \setlength{\semio@window@gap@w}{%
-        \dimexpr\linewidth+\semio@stroke@hairline-\wd\semio@window@tab@box\relax
+        \dimexpr\linewidth+\semio@stroke@hairline+\semio@stroke@hairline-\wd\semio@window@tab@box\relax
       }%
     \fi
     \semio@window@header@row@wrap{%
@@ -3159,7 +3173,7 @@
       }%
     \else
       \setlength{\semio@window@gap@w}{%
-        \dimexpr\linewidth+\semio@stroke@hairline-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box+\semio@stroke@hairline\relax
+        \dimexpr\linewidth+\semio@stroke@hairline+\semio@stroke@hairline-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box+\semio@stroke@hairline\relax
       }%
     \fi
     \semio@window@header@row@wrap{%
@@ -3184,8 +3198,11 @@
         \semio@window@stroke@h{semio-chrome-border-normal}{\linewidth}%
       }%
     \else
-      \moveleft\semio@stroke@hairline\hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
-        \semio@window@stroke@h{semio-chrome-border-normal}{\dimexpr\linewidth+\semio@stroke@hairline\relax}%
+      \hbox{%
+        \hspace*{-\semio@stroke@hairline}%
+        \hbox to \dimexpr\linewidth+\semio@stroke@hairline+\semio@stroke@hairline\relax{%
+          \semio@window@stroke@h{semio-chrome-border-normal}{\dimexpr\linewidth+\semio@stroke@hairline+\semio@stroke@hairline\relax}%
+        }%
       }%
     \fi
   \fi

@@ -1,0 +1,122 @@
+[
+  {
+    "page": 78,
+    "needle": "Tabelle",
+    "hit": {
+      "x": 3523.5,
+      "y": 677.6,
+      "str": "Tabelle: BB.M.a"
+    },
+    "cream": 242.7,
+    "chipL": 3474,
+    "bodyL": 748,
+    "dPx": 2726,
+    "dPt": 340.75,
+    "hairlinePx": 6
+  },
+  {
+    "page": 78,
+    "needle": "Marktpl",
+    "hit": {
+      "x": 798.2,
+      "y": 661.5,
+      "str": "Marktplätze · Zugang und Kanäle"
+    },
+    "cream": 242.7,
+    "chipL": 748,
+    "bodyL": 748,
+    "dPx": 0,
+    "dPt": 0,
+    "hairlinePx": 6
+  },
+  {
+    "page": 24,
+    "needle": "P.K.1",
+    "hit": {
+      "x": 3951.6,
+      "y": 1506.1,
+      "str": "P.K.1"
+    },
+    "cream": 242.7,
+    "chipL": 3902,
+    "bodyL": 748,
+    "dPx": 3154,
+    "dPt": 394.25,
+    "hairlinePx": 6
+  },
+  {
+    "page": 19,
+    "needle": "Risiken",
+    "hit": {
+      "x": 616.7,
+      "y": 830.6,
+      "str": "Risiken und Maßnahmen"
+    },
+    "cream": 242.7,
+    "chipL": 567,
+    "bodyL": 567,
+    "dPx": 0,
+    "dPt": 0,
+    "hairlinePx": 6
+  },
+  {
+    "page": 18,
+    "needle": "Meilensteine",
+    "hit": {
+      "x": 798.2,
+      "y": 662.6,
+      "str": "Förderrechtliche Meilensteine"
+    },
+    "cream": 242.7,
+    "chipL": 748,
+    "bodyL": 748,
+    "dPx": 0,
+    "dPt": 0,
+    "hairlinePx": 6
+  },
+  {
+    "page": 76,
+    "needle": "Hürden",
+    "hit": {
+      "x": 748.3,
+      "y": 918.6,
+      "str": "zierten Hürden in einer Arbeitsübersicht ohne Gewichtung."
+    },
+    "cream": 242.7,
+    "chipL": 40,
+    "bodyL": 748,
+    "dPx": -708,
+    "dPt": -88.5,
+    "hairlinePx": 6
+  },
+  {
+    "page": 122,
+    "needle": "Glossar",
+    "hit": {
+      "x": 798.2,
+      "y": 661.5,
+      "str": "Glossar"
+    },
+    "cream": 242.7,
+    "chipL": 748,
+    "bodyL": 748,
+    "dPx": 0,
+    "dPt": 0,
+    "hairlinePx": 6
+  },
+  {
+    "page": 2,
+    "needle": "Inhaltsverzeichnis",
+    "hit": {
+      "x": 616.7,
+      "y": 662.6,
+      "str": "Inhaltsverzeichnis"
+    },
+    "cream": 242.7,
+    "chipL": 567,
+    "bodyL": 567,
+    "dPx": 0,
+    "dPt": 0,
+    "hairlinePx": 6
+  }
+]

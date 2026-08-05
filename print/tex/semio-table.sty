@@ -265,6 +265,14 @@
 \newcommand{\semio@table@border@R@chrome}{%
   \vrule width\arrayrulewidth height\z@ depth\z@
 }
+% Chrome-row left edge: same phantom. A live border@L behind the title chip
+% hid a 1-device-pixel inset of the chip's own left stroke (outer L looked flush
+% because border@L ink was continuous, but the chip top-left corner sat inside
+% ? tiny gap/jog). Body rows still paint \semio@table@border@L; the muted chip
+% paints L only in the chrome band, pulled onto the same x.
+\newcommand{\semio@table@border@L@chrome}{%
+  \vrule width\arrayrulewidth height\z@ depth\z@
+}
 
 \newcommand{\semio@table@colspec@register@long}{@{\semio@table@border@L}@{\semio@table@padendL}>{\semio@table@long@cellfill}m{\dimexpr0.12\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr0.78\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfillR}m{\dimexpr0.10\semio@table@long@inner@w\relax}<{\semio@register@lastclose}@{\semio@table@padendR}@{\semio@table@border@R}}
 
@@ -376,42 +384,41 @@
 % extend through \noalign ? the join band must therefore carry border ink at
 % the L/R x-positions or cream shows through as a notch at every row.
 %
-% owns@sides: one hbox paints the mid-rule. Smashed L/R pillars sit in the
-% border slots and overlap 3pt into the adjacent rows so per-row side strokes
-% read as one continuous outer edge; the inner horizontal spans only between
-% those slots so it never crosses the outer edge. Smash keeps band advance =
-% one hairline (no vskip back/forward ? that dance could ghost a second
-% hairline under some PDF viewers).
+% owns@sides: full-width \hrule plus smashed L/R pillars that overlap into
+% adjacent rows so per-row side strokes read as one continuous outer edge.
+% Smash keeps band advance = one hairline. (A single hbox of inner \vrule +
+% pillars measured as a 1.5pt double hairline under longtable continuation
+% heads ? TOC p3+ ? so the horizontal is an \hrule again.)
+%
+% Mid-rule pillars extend only upward (weld into the row above) so they cannot
+% stick down into LTpost / inter-table gaps (Glossar?Abk?rzungen page-cream
+% hole with floating stems).
 %
 % Windowed short tables: the tcolorbox leftrule/rightrule is the sole
 % continuous outer edge. Mid-rules stay exactly \linewidth so they meet the
 % INNER face of that frame.
+\newcommand{\semio@table@rule@pillars}[1]{%
+  \vskip-\arrayrulewidth
+  \hbox to \linewidth{%
+    \smash{#1}%
+    \hss
+    \smash{#1}%
+  }%
+  \vskip\arrayrulewidth
+}
+\newcommand{\semio@table@rule@pillar@up}{%
+  \vrule width\arrayrulewidth
+         height\dimexpr\arrayrulewidth+3pt\relax depth\z@
+}
 \newcommand{\semio@table@rule}{%
   \noalign{%
     \begingroup
       \color{semio-chrome-border-normal}%
       \ifsemio@table@owns@sides
-        % Single \hrule (full width) + smashed L/R pillars. Pillars overlap 3pt
-        % into adjacent rows so per-row side strokes read continuous; smash
-        % keeps band advance = one hairline.
+        % Pillars only upward: still weld into the row above, but never stick
+        % down into LTpost / the next table (Glossar?Abk?rzungen gap stubs).
         \hrule height\arrayrulewidth width\linewidth
-        \vskip-\arrayrulewidth
-        \hbox to \linewidth{%
-          \smash{%
-            \raisebox{-3pt}{%
-              \vrule width\arrayrulewidth
-                     height\dimexpr\arrayrulewidth+6pt\relax depth\z@
-            }%
-          }%
-          \hss
-          \smash{%
-            \raisebox{-3pt}{%
-              \vrule width\arrayrulewidth
-                     height\dimexpr\arrayrulewidth+6pt\relax depth\z@
-            }%
-          }%
-        }%
-        \vskip\arrayrulewidth
+        \semio@table@rule@pillars{\semio@table@rule@pillar@up}%
       \else
         \hrule height\arrayrulewidth width\linewidth
       \fi
@@ -471,16 +478,15 @@
 \newcommand{\semio@table@long@title@chrome@prepare}{}
 
 \newcommand{\semio@table@long@title@chrome@row}[1]{%
-  % Side \vrule borders ride in this row too ? otherwise the chip baseline is a
-  % full-width hairline with no verticals, and the table's L/R strokes only start
-  % on the next row, reading as a floating chip + gapped corners.
-  % Shrink \linewidth/\hsize to the span BETWEEN those borders: muted chips
-  % draw `\hbox to \linewidth+\hairline` with `\moveleft\hairline` so the
-  % baseline T-joins the frame; with borders outside an unshrunk \linewidth
-  % the baseline overshoots and corner joins notch.
+  % Side slots reserve border width, but chrome L/R phantoms carry no ink —
+  % the muted title/number chips paint those verticals so chip L coincides with
+  % body \semio@table@border@L (a live border@L behind the chip hid a sub-pt
+  % inset of the chip stroke and read as a tiny left gap).
   %
-  % border@R@chrome is a width phantom (no ink) ? see its definition.
-  \multicolumn{#1}{@{\semio@table@border@L}@{}l@{\semio@table@border@R@chrome}}{%
+  % Shrink \linewidth to the span BETWEEN those slots; non-flush muted chrome
+  % pulls left by one hairline and spans inner+2·hairline so chip L/R sit on
+  % the outer faces.
+  \multicolumn{#1}{@{\semio@table@border@L@chrome}@{}l@{\semio@table@border@R@chrome}}{%
     \begingroup
       \setlength{\linewidth}{\dimexpr\linewidth-2\arrayrulewidth\relax}%
       \setlength{\hsize}{\linewidth}%
@@ -550,13 +556,15 @@
   \setlength{\LTleft}{0pt}%
   \setlength{\LTright}{0pt}%
   \setlength{\LTcapwidth}{\linewidth}%
+  % Do not call \endfirsthead. An empty \endfirsthead stores a non-void
+  % empty \LT@firsthead, so page 1 ships that blank box and skips \LT@head
+  % (measured: Abkuerzungen after Glossar lost chrome/header; cream gap +
+  % pillar stubs between Test-Case and AP). With firsthead left void,
+  % longtable uses \LT@head on page 1 and every continuation — one chrome,
+  % one column-header (filling BOTH firsthead and head doubled Marktplaetze
+  % chips ~48pt apart).
+  \global\setbox\LT@firsthead=\box\voidb@x
   \begin{longtable}{#1}%
-  % One head definition only. Filling BOTH firsthead and head made this
-  % longtable stack emit chrome+column-labels TWICE on page 1 (measured: two
-  % "Marktpl?tze" chip rows ~48pt apart). With firsthead empty, \endhead is
-  % used for the first page as well as continuations ? single chip, single
-  % header, no floating gap.
-  \endfirsthead
   \semio@table@long@continuation@chrome{#5}%
   #3%
   \endhead
@@ -1107,24 +1115,21 @@
 % page-coloured strip (the old chrome-only bandpad left that gap when body pads
 % moved to net chrome+cellpad).
 %
-% Inset: a bare top box left the photo flush on the chip baseline (measured
-% 0pt). Top air is \semio@window@bodypad (5.5pt). MUST be a canvas-coloured
-% rule ? plain \vskip is unpainted glue, so page cream/dark shows through as a
-% gap under the shared chip hairline. Meta uses \vbox to bandheight + \vss so
-% both cells share one height. Sides use \semio@table@long@cellpad. Photo
-% height absorbs the top pad (~26mm band).
-% Top air for the overview band. A TikZ cover photo is a tall box (height ?
-% toppad) whose upward extent in paragraph mode swallows any preceding line ?
-% toppad and photo MUST share one \vbox so the photo hbox sits strictly below
-% the pad. Nested tabular: canvas rule row (bodypad) then photo/meta. Validated
-% with a red debug rule ? pad is real; TikZ cover sits below it.
+% Top air is \semio@window@bodypad (canvas-coloured \hrule, not unpainted
+% \vskip). Photo and meta each wrap that rule + content in a \vtop so their
+% tabular baselines coincide at the toppad and "Stadt" lines up with the photo
+% top (a \vbox would bottom-align the meta). Sides use \semio@table@long@cellpad;
+% photo height absorbs the top pad (~26mm band).
 \newcommand{\semio@project@overview@band}[7]{%
   \multicolumn{2}{@{\semio@table@border@L}@{\semio@project@padendL}p{\semio@project@photow}@{\semio@project@padcp}}{%
     \cellcolor{semio-chrome-canvas}%
-    % \vbox + vmode \hrule (not an \hbox{\rule}): TikZ cover with baseline=0pt
-    % is a tall upward box; in paragraph mode it can swallow a preceding line
-    % box. A vmode \hrule is a vertical-list item the photo cannot climb over.
-    \vbox{%
+    % \vtop (not \vbox): a plain \vbox's reference point is its BOTTOM, so in a
+    % tabular row the shorter meta cell sat on the photo's bottom edge and
+    % "Stadt" dropped to mid/lower band. \vtop pins the reference to the first
+    % item (the toppad rule) so photo and meta share one top baseline.
+    % vmode \hrule (not an \hbox{\rule}): TikZ cover with baseline=0pt is a tall
+    % upward box that can swallow a preceding line box in paragraph mode.
+    \vtop{%
       \color{semio-chrome-canvas}%
       \hrule height\semio@window@bodypad depth\z@ width\dimexpr\linewidth\relax
       \nointerlineskip
@@ -1137,7 +1142,7 @@
   &
   \multicolumn{6}{@{}>{\raggedright\arraybackslash}p{\semio@project@metaw}@{\semio@project@padendR}@{\semio@table@border@R}}{%
     \cellcolor{semio-chrome-canvas}%
-    \vbox{%
+    \vtop{%
       \color{semio-chrome-canvas}%
       \hrule height\semio@window@bodypad depth\z@ width\dimexpr\linewidth\relax
       \nointerlineskip
