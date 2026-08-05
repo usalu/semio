@@ -845,6 +845,17 @@
 % name for call sites inside ExplSyntaxOn; latex overlays use this alias.
 \cs_new_eq:NN \semio@window@header@overlay@baseline \semio_window_header_overlay_baseline:
 
+% 🪟 Breakable `enhanced` skins reserve bottomrule-at-break geometry but do not
+% paint the south hairline on first/middle parts — sides hang open into the
+% footer. Define here (before tcbset) so overlay~first/~middle tokens resolve.
+% Unbroken/last still use skin bottomrule. Spaces as ~ under ExplSyntaxOn.
+\cs_new_protected:Npn \semio@window@frame@bottom@stroke {
+  \draw[
+    draw=semio-chrome-border-normal,
+    line~width=\semio@stroke@hairline,
+  ] (frame.south~west) -- (frame.south~east);
+}
+
 \tcbset{
   semio~window/.style={
     enhanced,
@@ -857,11 +868,17 @@
     % toprule=0: the shared top hairline is the inline chip baseline (page 1)
     % / the continuation chip baseline — not a skin toprule (that doubled).
     toprule=0pt,
+    % Continuations own the top via chip baseline — no skin toprule at break.
+    toprule~at~break=0pt,
     % Continuous L/R: skin leftrule/rightrule are single strokes for the whole
     % frame (not per-row segments). Flush chips sit on these same x-positions.
     leftrule=\semio@stroke@hairline,
     rightrule=\semio@stroke@hairline,
     bottomrule=\semio@stroke@hairline,
+    % First/middle parts need the same bottom hairline budget as unbroken/last
+    % so side rules meet a real south edge (overlay paints it — enhanced does
+    % not draw horizontals at break by itself).
+    bottomrule~at~break=\semio@stroke@hairline,
     colback=semio-chrome-canvas,
     coltext=semio-chrome-text-normal,
     top=\semio@window@bodypad,
@@ -878,11 +895,18 @@
     parbox=false,
     % Page 1: chips+baseline are inline; do NOT TikZ-restroke frame.north (that
     % was the extra parallel hairline when the seam was a hair off). Continuations
-    % redraw chips+baseline (no inline header on those parts).
+    % redraw chips+baseline (no inline header on those parts). First/middle also
+    % close the south edge (enhanced leaves break bottoms undrawn).
     overlay~unbroken={\semio@window@break@record{1}},
-    overlay~first={},
-    overlay~middle={\semio@window@header@overlay@continuation},
-    overlay~last={\semio@window@header@overlay@continuation\semio@window@break@record{\arabic{tcbbreakpart}}},
+    overlay~first={\semio@window@frame@bottom@stroke},
+    overlay~middle={%
+      \semio@window@header@overlay@continuation
+      \semio@window@frame@bottom@stroke
+    },
+    overlay~last={%
+      \semio@window@header@overlay@continuation
+      \semio@window@break@record{\arabic{tcbbreakpart}}%
+    },
   },
   semio~window~table/.style={
     semio~window,

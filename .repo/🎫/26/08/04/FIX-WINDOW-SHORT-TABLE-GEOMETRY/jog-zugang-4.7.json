@@ -1,0 +1,23 @@
+{
+  "needle": "09",
+  "page": 55,
+  "scale": 4.7,
+  "leftMode": 333,
+  "rightMode": 2357,
+  "leftUnique": [
+    333
+  ],
+  "rightUnique": [
+    2357
+  ],
+  "leftDevPx": 0,
+  "rightDevPx": 0,
+  "midThicknessPx": [
+    3,
+    3,
+    3,
+    3
+  ],
+  "maxMidThickness": 3,
+  "hairlinePx": 3.5250000000000004
+}

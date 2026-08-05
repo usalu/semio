@@ -1,0 +1,26 @@
+{
+  "needle": "Seite",
+  "page": 3,
+  "scale": 6,
+  "leftMode": 2920,
+  "leftUnique": [
+    2524,
+    2920,
+    3007,
+    3008,
+    3009,
+    3010,
+    3011,
+    3013,
+    3025,
+    3026,
+    3069,
+    3074
+  ],
+  "rightUnique": [],
+  "leftDevPx": 111,
+  "rightDevPx": 0,
+  "midThicknessPx": [],
+  "maxMidThickness": 0,
+  "hairlinePx": 4.5
+}

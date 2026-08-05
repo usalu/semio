@@ -381,44 +381,32 @@
 \newcommand{\semio@table@short@hhline@current}{}
 \newif\ifsemio@table@window@rules
 % Row separator. Side \vrule segments live only inside row boxes and do not
-% extend through \noalign ? the join band must therefore carry border ink at
+% extend through \noalign — the join band must therefore carry border ink at
 % the L/R x-positions or cream shows through as a notch at every row.
 %
-% owns@sides: full-width \hrule plus smashed L/R pillars that overlap into
-% adjacent rows so per-row side strokes read as one continuous outer edge.
-% Smash keeps band advance = one hairline. (A single hbox of inner \vrule +
-% pillars measured as a 1.5pt double hairline under longtable continuation
-% heads ? TOC p3+ ? so the horizontal is an \hrule again.)
-%
-% Mid-rule pillars extend only upward (weld into the row above) so they cannot
-% stick down into LTpost / inter-table gaps (Glossar?Abk?rzungen page-cream
-% hole with floating stems).
+% owns@sides mid-rule is a single picture-frame hbox: L stub | inner hairline |
+% R stub. The stubs span only the join band (no +3pt climb into the row
+% above). Full-width \hrule + overlapping upward pillars double-painted the
+% outer L/R x and read as stacked "tiny" segments / jogs at fractional PDF
+% zoom; an earlier hbox+extra-pillar pass also stacked a second hairline under
+% longtable \endhead reinsertion — keep ONE hbox, no follow-up pillar pass.
 %
 % Windowed short tables: the tcolorbox leftrule/rightrule is the sole
 % continuous outer edge. Mid-rules stay exactly \linewidth so they meet the
 % INNER face of that frame.
-\newcommand{\semio@table@rule@pillars}[1]{%
-  \vskip-\arrayrulewidth
+\newcommand{\semio@table@rule@band}{%
   \hbox to \linewidth{%
-    \smash{#1}%
-    \hss
-    \smash{#1}%
+    \vrule width\arrayrulewidth height\arrayrulewidth depth\z@
+    \rule{\dimexpr\linewidth-2\arrayrulewidth\relax}{\arrayrulewidth}%
+    \vrule width\arrayrulewidth height\arrayrulewidth depth\z@
   }%
-  \vskip\arrayrulewidth
-}
-\newcommand{\semio@table@rule@pillar@up}{%
-  \vrule width\arrayrulewidth
-         height\dimexpr\arrayrulewidth+3pt\relax depth\z@
 }
 \newcommand{\semio@table@rule}{%
   \noalign{%
     \begingroup
       \color{semio-chrome-border-normal}%
       \ifsemio@table@owns@sides
-        % Pillars only upward: still weld into the row above, but never stick
-        % down into LTpost / the next table (Glossar?Abk?rzungen gap stubs).
-        \hrule height\arrayrulewidth width\linewidth
-        \semio@table@rule@pillars{\semio@table@rule@pillar@up}%
+        \semio@table@rule@band
       \else
         \hrule height\arrayrulewidth width\linewidth
       \fi
@@ -1000,6 +988,10 @@
 
 \newlength{\semio@project@bandheight}
 \setlength{\semio@project@bandheight}{26mm}
+% Half the residual top/bottom packing mismatch outside the photo box, so
+% cellpad top+bottom pads still read visually even (same idea as text cells'
+% asymmetric \semio@table@vtop/@vbot strut pair).
+\newcommand{\semio@project@photo@vbias}{\dimexpr0.35\semio@table@long@cellpad+0.2pt\relax}
 % Photo / meta widths match the shared padend geometry (net chrome+cellpad each
 % edge, same as \semio@table@padendL/R). Photo spans cols 1?2:
 %   padendL + (0.28?inner ? 2?cellpad) + padcp  =  chrome + 0.28?inner
@@ -1111,28 +1103,28 @@
 % page-coloured strip (the old chrome-only bandpad left that gap when body pads
 % moved to net chrome+cellpad).
 %
-% Top air is \semio@window@bodypad (canvas-coloured \hrule, not unpainted
-% \vskip). Photo and meta each wrap that rule + content in a \vtop so their
-% tabular baselines coincide at the toppad and "Stadt" lines up with the photo
-% top (a \vbox would bottom-align the meta). Sides use \semio@table@long@cellpad;
-% photo height absorbs the top pad (~26mm band).
+% Photo: \semio@table@long@cellpad on all four sides (matches cell-text inset;
+% left gap unchanged). Meta: toppad \semio@window@bodypad + \semio@cell@inset so
+% Stadt stays in the Menge column. Both cells are \vtop-wrapped.
 \newcommand{\semio@project@overview@band}[7]{%
   \multicolumn{2}{@{\semio@table@border@L}@{\semio@project@padendL}p{\semio@project@photow}@{\semio@project@padcp}}{%
     \cellcolor{semio-chrome-canvas}%
-    % \vtop (not \vbox): a plain \vbox's reference point is its BOTTOM, so in a
-    % tabular row the shorter meta cell sat on the photo's bottom edge and
-    % "Stadt" dropped to mid/lower band. \vtop pins the reference to the first
-    % item (the toppad rule) so photo and meta share one top baseline.
-    % vmode \hrule (not an \hbox{\rule}): TikZ cover with baseline=0pt is a tall
-    % upward box that can swallow a preceding line box in paragraph mode.
+    % Photo inset matches cell text: \semio@table@long@cellpad on every side.
+    % Left gap is already that pad — keep it. Equal top/bottom cellpads alone
+    % still look uneven because row packing below the photo box is larger than
+    % above (~array strut); \semio@project@photo@vbias shifts the photo down
+    % inside the band (larger top pad, smaller bottom pad, same photo height)
+    % so the visible gaps match without touching the meta cell (Stadt / Menge).
     \vtop{%
       \color{semio-chrome-canvas}%
-      \hrule height\semio@window@bodypad depth\z@ width\dimexpr\linewidth\relax
+      \hrule height\dimexpr\semio@table@long@cellpad+\semio@project@photo@vbias\relax depth\z@ width\dimexpr\linewidth\relax
       \nointerlineskip
       \hbox{%
         \hspace{\semio@table@long@cellpad}%
-        \SemioProjectPhoto{#1}{\dimexpr\linewidth-2\semio@table@long@cellpad\relax}{\dimexpr\semio@project@bandheight-\semio@window@bodypad\relax}%
+        \SemioProjectPhoto{#1}{\dimexpr\linewidth-2\semio@table@long@cellpad\relax}{\dimexpr\semio@project@bandheight-2\semio@table@long@cellpad\relax}%
       }%
+      \nointerlineskip
+      \hrule height\dimexpr\semio@table@long@cellpad-\semio@project@photo@vbias\relax depth\z@ width\dimexpr\linewidth\relax
     }%
   }%
   &

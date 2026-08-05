@@ -1,0 +1,92 @@
+{
+  "outPng": ".repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/corner-toc-L.png",
+  "size": {
+    "width": 400,
+    "height": 305
+  },
+  "topY": 0,
+  "rightX": 399,
+  "cornerPixelInk": false,
+  "cornerLum": 236,
+  "notchGap": false,
+  "sample": [
+    {
+      "x": 393,
+      "y": 0,
+      "lum": 236,
+      "ink": false
+    },
+    {
+      "x": 394,
+      "y": 0,
+      "lum": 236,
+      "ink": false
+    },
+    {
+      "x": 395,
+      "y": 0,
+      "lum": 236,
+      "ink": false
+    },
+    {
+      "x": 396,
+      "y": 0,
+      "lum": 236,
+      "ink": false
+    },
+    {
+      "x": 397,
+      "y": 0,
+      "lum": 236,
+      "ink": false
+    },
+    {
+      "x": 398,
+      "y": 0,
+      "lum": 236,
+      "ink": false
+    },
+    {
+      "x": 399,
+      "y": 0,
+      "lum": 236,
+      "ink": false
+    },
+    {
+      "x": 399,
+      "y": 1,
+      "lum": 236,
+      "ink": false
+    },
+    {
+      "x": 399,
+      "y": 2,
+      "lum": 236,
+      "ink": false
+    },
+    {
+      "x": 399,
+      "y": 3,
+      "lum": 236,
+      "ink": false
+    },
+    {
+      "x": 399,
+      "y": 4,
+      "lum": 236,
+      "ink": false
+    },
+    {
+      "x": 399,
+      "y": 5,
+      "lum": 236,
+      "ink": false
+    },
+    {
+      "x": 399,
+      "y": 6,
+      "lum": 236,
+      "ink": false
+    }
+  ]
+}
