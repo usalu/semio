@@ -2,7 +2,7 @@
 /** @emoji 🎨️ `@semio-tech/ui-styling` centralizes palette CSS, Tailwind entry, and the shared typography preset for ui consumers. */
 // #endregion 🧲️Header
 
-export { tailwindConfig, tailwindConfig as default } from "../../../🎨️styling/⚡️implementations/🦀️rust/🎨️tailwind/🎨️tailwind.config.ts";
+export { tailwindConfig, tailwindConfig as default } from "../../📦️packages/🦀️rust/🎨️tailwind/🎨️tailwind.config.ts";
 export {
   STYLING_BOARD_PALETTES,
   STYLING_CANVAS_FONTS,

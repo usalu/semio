@@ -118,7 +118,7 @@ procedural = { path = "../../../../../../../✏️s/🔌️plugins/🌀️proced
 
 cad = { path = "../../../../../../../✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust", package = "semio-s-plugin-cad" }
 
-puzzle_3d_ui = { path = "../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust", package = "semio-s-app-puzzle-3d-ui" }
+puzzle_3d_ui = { path = "../../../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle" }
 
 sourcing = { path = "../../../../../../../✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust", package = "semio-s-plugin-sourcing" }
 

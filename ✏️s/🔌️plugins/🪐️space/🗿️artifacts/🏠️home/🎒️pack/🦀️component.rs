@@ -17,6 +17,7 @@ pub fn decode(bytes: &[u8]) -> Result<SHomeDocument, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::home::config::HomeConfig;
 
     #[test]
     fn home_pack_round_trips_default_and_populated_documents() {

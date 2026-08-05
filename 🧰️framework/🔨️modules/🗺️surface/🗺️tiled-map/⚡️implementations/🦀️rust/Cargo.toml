@@ -27,7 +27,7 @@ crate-type = ["rlib", "cdylib"]
 path = "../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs"
 
 [dependencies]
-ui_styling = { path = "../../../../🖱️ui/🎨️styling/⚡️implementations/🦀️rust", package = "semio-framework-ui-styling" }
+ui_styling = { path = "../../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 infinite_canvas = { path = "../../../../../🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

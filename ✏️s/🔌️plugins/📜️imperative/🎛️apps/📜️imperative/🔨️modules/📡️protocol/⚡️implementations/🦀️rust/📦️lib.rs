@@ -67,6 +67,34 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
+    // [DEBUG] wire baseline dump for CRATE-CONSOLIDATION migration — remove after diffing.
+    #[test]
+    fn wire_baseline_dump() {
+        use protocol::{OpBinary, OpText};
+        fn hex(bytes: &[u8]) -> String {
+            bytes.iter().map(|b| format!("{b:02x}")).collect()
+        }
+        let cases: Vec<(&str, ImperativeCommand)> = vec![
+            ("AddStep(index=Some)", ImperativeCommand::AddStep { kind: "log.print".into(), index: Some(1) }),
+            ("AddStep(index=None)", ImperativeCommand::AddStep { kind: "log.print".into(), index: None }),
+            ("AddStepAt", ImperativeCommand::AddStepAt { kind: "log.print".into(), index: None, owner: Some("step-if".into()), slot: Some("then".into()) }),
+            ("RemoveStep", ImperativeCommand::RemoveStep { id: "step-1".into() }),
+            ("RemoveStepAt", ImperativeCommand::RemoveStepAt { id: "step-1".into(), owner: Some("step-if".into()), slot: Some("then".into()) }),
+            ("MoveStep", ImperativeCommand::MoveStep { id: "step-1".into(), index: 2 }),
+            ("MoveStepAt", ImperativeCommand::MoveStepAt { id: "step-1".into(), index: 2, owner: None, slot: None }),
+            ("SetStepParams", ImperativeCommand::SetStepParams { id: "step-1".into(), params: imperative::dictionary_to_value_dsl_map(&imperative::Dictionary::new().insert("message", neural_engine::Value::Atom(neural_engine::Atom::String("updated".into())))) }),
+            ("SetStepParamsAt", ImperativeCommand::SetStepParamsAt { id: "step-1".into(), owner: Some("step-if".into()), slot: Some("then".into()), params: imperative::dictionary_to_value_dsl_map(&imperative::Dictionary::new().insert("message", neural_engine::Value::Atom(neural_engine::Atom::String("updated".into())))) }),
+            ("SetSelection", ImperativeCommand::SetSelection { ids: vec!["step-1".into(), "step-2".into()] }),
+            ("Run", ImperativeCommand::Run),
+            ("SetLocale", ImperativeCommand::SetLocale { value: "de-DE".into() }),
+        ];
+        for (label, command) in cases {
+            let printed = command.print_op();
+            let bytes = command.encode_op().expect("encode");
+            println!("[DEBUG-WIRE] {label} | text={printed} | hex={}", hex(&bytes));
+        }
+    }
+
     #[test]
     fn document_text_round_trip_with_applied_operation() {
         use imperative::{Dictionary, ImperativeDocument, Step};

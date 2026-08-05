@@ -1,0 +1,176 @@
+# ⚠️🚧️ TEMPORARY (verification overlay, see the bottom of this file) — removed at registrar handoff.
+cargo-features = ["trim-paths"]
+
+[package]
+name = "semio-s-plugin-norm"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Norm plugin — fifteen compliance-standard document apps (DIN/EN/ISO/VDI) with headless NormHost-backed checking in one hot-swappable WASM component"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:norm"
+
+[package.metadata.semio]
+role = "plugin"
+
+[[package.metadata.semio.playground]]
+variant = "din4108"
+app = "norm-din-4108-play"
+ports = { react = 6091, wgpu = 6191 }
+
+[[package.metadata.semio.playground]]
+variant = "din16798"
+app = "norm-din-en-16798-play"
+ports = { react = 6092, wgpu = 6192 }
+
+[[package.metadata.semio.playground]]
+variant = "din18599"
+app = "norm-din-v-18599-play"
+ports = { react = 6093, wgpu = 6193 }
+
+[[package.metadata.semio.playground]]
+variant = "en1990"
+app = "norm-en-1990-play"
+ports = { react = 6094, wgpu = 6194 }
+
+[[package.metadata.semio.playground]]
+variant = "en1991"
+app = "norm-en-1991-play"
+ports = { react = 6095, wgpu = 6195 }
+
+[[package.metadata.semio.playground]]
+variant = "en1992"
+app = "norm-en-1992-play"
+ports = { react = 6096, wgpu = 6196 }
+
+[[package.metadata.semio.playground]]
+variant = "en1993"
+app = "norm-en-1993-play"
+ports = { react = 6097, wgpu = 6197 }
+
+[[package.metadata.semio.playground]]
+variant = "en1994"
+app = "norm-en-1994-play"
+ports = { react = 6098, wgpu = 6198 }
+
+[[package.metadata.semio.playground]]
+variant = "en1995"
+app = "norm-en-1995-play"
+ports = { react = 6099, wgpu = 6199 }
+
+[[package.metadata.semio.playground]]
+variant = "en1996"
+app = "norm-en-1996-play"
+ports = { react = 6100, wgpu = 6200 }
+
+[[package.metadata.semio.playground]]
+variant = "en1997"
+app = "norm-en-1997-play"
+ports = { react = 6101, wgpu = 6201 }
+
+[[package.metadata.semio.playground]]
+variant = "en1998"
+app = "norm-en-1998-play"
+ports = { react = 6102, wgpu = 6202 }
+
+[[package.metadata.semio.playground]]
+variant = "en1999"
+app = "norm-en-1999-play"
+ports = { react = 6103, wgpu = 6203 }
+
+[[package.metadata.semio.playground]]
+variant = "iso16757"
+app = "norm-iso-16757-play"
+ports = { react = 6104, wgpu = 6204 }
+
+[[package.metadata.semio.playground]]
+variant = "vdi3805"
+app = "norm-vdi-3805-play"
+ports = { react = 6105, wgpu = 6205 }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../📦️lib.rs"
+
+[dependencies]
+dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+vcs = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+# 🏗️ Cross-plugin: EN 1992/EN 1993 solve a simply supported beam with the FEM plugin's shared kernel
+# before running their ULS checks. Repoint to `semio-s-plugin-fem` (`fem::core::…`) as part of 🏗️fem's
+# own registrar pass — see this plugin's ticket handoff.
+fem_core = { path = "../../../🏗️fem/🔨️modules/🫀️core/⚡️implementations/🦀️rust", package = "semio-s-plugin-fem-core" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+# ⚠️🚧️ TEMPORARY VERIFICATION OVERLAY — DELETE BEFORE THE REGISTRAR HANDOFF (TEMPLATE.md §3).
+# The old bundle crate still owns the `semio-s-plugin-norm` package name inside the root workspace, so
+# this manifest cannot be a member yet; declaring its own workspace root lets `cargo check/clippy/test
+# --manifest-path` run against it in isolation. Values copied verbatim from root `Cargo.toml` so
+# artefact fingerprints match and the shared `target/` stays warm.
+[workspace]
+members = ["."]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[workspace.dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+thiserror = "2.0.18"
+
+[workspace.lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"
+
+[profile.dev]
+debug = false
+incremental = true
+
+[profile.dev.build-override]
+opt-level = 3
+
+[profile.dev.package.semio-framework-os-kernel-store]
+codegen-units = 1
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"
+incremental = false
+trim-paths = "object"
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+incremental = false
+trim-paths = "object"
+
+[profile.wasm-release.package.semio-framework-os-kernel-store]
+codegen-units = 1

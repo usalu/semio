@@ -1,0 +1,224 @@
+//! 📜️ `trinity.graph` artifact — textual document grammar surface + laws (constitutional: dsl).
+
+use crate::artifacts::jack::{Camera, GraphFixture, Node, Port, PortDirection, PropertyBag, TrinityRamError};
+use store::{DocumentDsl, PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
+
+//#region 🔖️DslMirrors
+/// 🔒️ Local twin of `PortDirection` (foreign, re-exported from `mathematical_graph_manifest` and
+/// consumed by the shared jack query kernel/`semio_s_plugin_trinity`/`framework::*` — this crate does
+/// not own the freedom to reshape it) purely so the DSL engine's derive macros have something local to
+/// bind: the orphan rule blocks `impl dsl::DslField for PortDirection` directly in this crate.
+/// Converted at the `Port`/`PortDsl` boundary via `From`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar)]
+enum PortDirectionDsl {
+    In,
+    Out,
+}
+
+impl From<PortDirection> for PortDirectionDsl {
+    fn from(value: PortDirection) -> Self {
+        match value {
+            PortDirection::In => PortDirectionDsl::In,
+            PortDirection::Out => PortDirectionDsl::Out,
+        }
+    }
+}
+
+impl From<PortDirectionDsl> for PortDirection {
+    fn from(value: PortDirectionDsl) -> Self {
+        match value {
+            PortDirectionDsl::In => PortDirection::In,
+            PortDirectionDsl::Out => PortDirection::Out,
+        }
+    }
+}
+
+/// 🔌️ Local mirror of `Port` for DSL round-tripping — `Port.direction: PortDirection` is foreign, so
+/// `Port` itself cannot derive `dsl::DslRecord` (orphan rule); this twin swaps in `PortDirectionDsl`.
+/// `pub(crate)` because `📡️spr`'s own `TrinityGraphOperationDsl` mirror (the `CreateNode.ports` field)
+/// reuses this exact twin rather than redefining it.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+pub(crate) struct PortDsl {
+    id: String,
+    kind: String,
+    direction: PortDirectionDsl,
+    properties: PropertyBag,
+}
+
+pub(crate) fn port_to_port_dsl(port: &Port) -> PortDsl {
+    PortDsl { id: port.id.clone(), kind: port.kind.clone(), direction: port.direction.into(), properties: port.properties.clone() }
+}
+
+pub(crate) fn port_dsl_to_port(port: PortDsl) -> Port {
+    Port { id: port.id, kind: port.kind, direction: port.direction.into(), properties: port.properties }
+}
+
+/// 🧩️ Local mirror of `Node` — needed only because `Node.ports: Vec<Port>` transitively carries
+/// `Port`'s foreign `direction` field; every other `Node` field is already DSL-ready directly.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct NodeDsl {
+    id: String,
+    kind: String,
+    name: String,
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+    properties: PropertyBag,
+    #[dsl(table)]
+    ports: Vec<PortDsl>,
+}
+
+fn node_to_node_dsl(node: &Node) -> NodeDsl {
+    NodeDsl { id: node.id.clone(), kind: node.kind.clone(), name: node.name.clone(), x: node.x, y: node.y, width: node.width, height: node.height, properties: node.properties.clone(), ports: node.ports.iter().map(port_to_port_dsl).collect() }
+}
+
+fn node_dsl_to_node(node: NodeDsl) -> Node {
+    Node { id: node.id, kind: node.kind, name: node.name, x: node.x, y: node.y, width: node.width, height: node.height, properties: node.properties, ports: node.ports.into_iter().map(port_dsl_to_port).collect() }
+}
+
+/// 📦️ Local mirror of `GraphFixture` for the `.trinity` document DSL. `manifest: Manifest` is
+/// deliberately NOT a field here — the manifest is resolved from `manifestId` at load time (see
+/// `GraphFixture::resolve_manifest`), never round-tripped as text.
+#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+#[dsl(extension = "trinity", layout = "lines")]
+struct GraphFixtureDsl {
+    schema: String,
+    name: String,
+    manifest_id: Option<String>,
+    #[dsl(block)]
+    camera: Camera,
+    #[dsl(table)]
+    nodes: Vec<NodeDsl>,
+    #[dsl(table)]
+    edges: Vec<crate::artifacts::jack::Edge>,
+    root_node_id: Option<String>,
+}
+
+fn graph_fixture_to_dsl(fixture: &GraphFixture) -> GraphFixtureDsl {
+    GraphFixtureDsl {
+        schema: fixture.schema.clone(),
+        name: fixture.name.clone(),
+        manifest_id: fixture.manifest_id.clone(),
+        camera: fixture.camera.clone(),
+        nodes: fixture.nodes.iter().map(node_to_node_dsl).collect(),
+        edges: fixture.edges.clone(),
+        root_node_id: fixture.root_node_id.clone(),
+    }
+}
+
+/// 🔁️ Reconstructs the real `manifest` field via `resolve_manifest` (looked up from `manifest_id`).
+fn graph_fixture_dsl_to_graph_fixture(parsed: GraphFixtureDsl) -> Result<GraphFixture, TrinityRamError> {
+    let mut fixture = GraphFixture {
+        schema: parsed.schema,
+        name: parsed.name,
+        manifest_id: parsed.manifest_id,
+        manifest: crate::artifacts::jack::Manifest::default(),
+        camera: parsed.camera,
+        nodes: parsed.nodes.into_iter().map(node_dsl_to_node).collect(),
+        edges: parsed.edges,
+        root_node_id: parsed.root_node_id,
+    };
+    fixture.resolve_manifest()?;
+    Ok(fixture)
+}
+//#endregion 🔖️DslMirrors
+
+//#region 🔖️DslDocument
+/// 📜️ `.trinity` textual notation for a whole [`GraphFixture`] (`store::DocumentDsl`), delegating to
+/// the derive-generated `GraphFixtureDsl` mirror. Also hand-implements `dsl::DslField` (normally
+/// auto-emitted alongside `#[derive(dsl::DslDocument)]`) so `GraphFixture` can be nested as an
+/// ordinary field too — `TrinityGraphOperation::SetFixture` embeds a whole fixture snapshot.
+impl DocumentDsl for GraphFixture {
+    const EXTENSION: &'static str = "trinity";
+
+    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+        let parsed = <GraphFixtureDsl as DocumentDsl>::parse_dsl(text)?;
+        graph_fixture_dsl_to_graph_fixture(parsed).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
+    }
+
+    fn print_dsl(&self) -> String {
+        <GraphFixtureDsl as DocumentDsl>::print_dsl(&graph_fixture_to_dsl(self))
+    }
+}
+
+impl dsl::DslField for GraphFixture {
+    fn shape() -> dsl::Shape {
+        <GraphFixtureDsl as dsl::DslField>::shape()
+    }
+
+    fn to_value(&self) -> dsl::FieldValue {
+        <GraphFixtureDsl as dsl::DslField>::to_value(&graph_fixture_to_dsl(self))
+    }
+
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        let parsed = <GraphFixtureDsl as dsl::DslField>::from_value(value)?;
+        graph_fixture_dsl_to_graph_fixture(parsed).map_err(|error| error.to_string())
+    }
+}
+//#endregion 🔖️DslDocument
+
+//#region 🔖️Pack
+/// 📦️ Binary pack notation for a whole [`GraphFixture`] (`store::DocumentPack`), delegating through
+/// the same mirror + `graph_fixture_to_dsl`/`graph_fixture_dsl_to_graph_fixture` pair as the DSL impl
+/// above (kept here, next to the mirror types it depends on, rather than in `🎒️pack` — the mirror is
+/// private to this file).
+impl store::DocumentPack for GraphFixture {
+    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+        <GraphFixtureDsl as store::DocumentPack>::encode_pack_with(&graph_fixture_to_dsl(self), options)
+    }
+
+    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
+        let parsed = <GraphFixtureDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
+        graph_fixture_dsl_to_graph_fixture(parsed).map_err(|error| store::text_error_to_pack_error(TextError::new(error.to_string(), TextSpan::at(1, 1))))
+    }
+}
+//#endregion 🔖️Pack
+
+/// 📄️ The Nakagin Capsule Tower example fixture, handcrafted in the `.trinity` DSL.
+pub const NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../../../../../✏️s/🔌️plugins/🔱️trinity/📚️examples/🔱️nakagin-capsule-tower.trinity");
+
+/// 📖️ Parses `.trinity` DSL text into a `GraphFixture`.
+pub fn parse_dsl(text: &str) -> Result<GraphFixture, TextError> {
+    <GraphFixture as DocumentDsl>::parse_dsl(text)
+}
+
+/// 🖨️ Prints a `GraphFixture` back to `.trinity` DSL text.
+pub fn print_dsl(document: &GraphFixture) -> String {
+    DocumentDsl::print_dsl(document)
+}
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::artifacts::jack::empty_trinity_graph_fixture;
+
+    #[test]
+    fn nakagin_example_dsl_round_trips() {
+        let document = parse_dsl(NAKAGIN_EXAMPLE_TEXT).expect("parse nakagin example");
+        store::test_support::assert_dsl_round_trip(&document);
+    }
+
+    #[test]
+    fn empty_document_dsl_round_trips() {
+        store::test_support::assert_dsl_round_trip(&empty_trinity_graph_fixture());
+    }
+
+    #[test]
+    fn parse_dsl_rejects_unknown_keyword() {
+        let err = GraphFixture::parse_dsl("bogus line").expect_err("unknown keyword");
+        assert!(err.message.contains("expected"));
+    }
+
+    #[test]
+    fn dsl_round_trip_mini_and_bundled_fixtures() {
+        let nakagin = parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap();
+        store::test_support::assert_dsl_round_trip(&nakagin);
+        store::test_support::assert_dsl_pack_equivalence(&nakagin);
+        let branch = parse_dsl(include_str!("../../../../../../../✏️s/🔌️plugins/🔱️trinity/📚️examples/🔱️branch-chain.trinity")).unwrap();
+        store::test_support::assert_dsl_round_trip(&branch);
+        store::test_support::assert_dsl_pack_equivalence(&branch);
+    }
+}
+//#endregion 🧪️Tests

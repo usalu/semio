@@ -1,0 +1,13 @@
+{
+  "title": "Remodel Plugin Migration To Crate And Taxonomy Consolidation",
+  "emoji": "📸️",
+  "status": "open",
+  "description": "Merge 📸️remodel's 16 rust crates (bundle semio-s-plugin-remodel, app facade semio-s-app-remodel, 6 app modules op/pack/protocol/dsl/ui/engine, 10 plugin-level modules mesh/video/sfm/motion/geo/camera/images/feature/engine/dense — ~28k lines) into ONE crate `semio-s-plugin-remodel` at ✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/ with the full taxonomy source tree, per the master ticket 26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE and its 📋️TEMPLATE.md recipe. Split the heavy photogrammetry engine into sibling topic files under the artifact's ⚙️engine/. Verify with cargo check (native + wasm32-wasip2), clippy -D warnings, and full cargo test with wire-format diff proof; then delete old crate manifests and hand off the registrar step.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2477"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪ede0138c9d2c46488b0f9853ab8535b2"
+  ]
+}

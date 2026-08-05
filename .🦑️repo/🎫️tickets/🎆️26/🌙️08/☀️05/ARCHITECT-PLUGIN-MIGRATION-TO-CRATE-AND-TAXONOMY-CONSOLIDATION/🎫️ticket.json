@@ -1,0 +1,13 @@
+{
+  "title": "Architect Plugin Migration To Crate And Taxonomy Consolidation",
+  "emoji": "🏛️",
+  "status": "open",
+  "description": "Migrate the 🏛️architect plugin's 9 old crates (bundle semio-s-plugin-architect-spine, spine module semio-s-plugin-architect-spine-module 18.5k lines, and 7 constitutional facade crates) into ONE crate `semio-s-plugin-architect` at ✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/ with the full taxonomy tree per the master ticket 26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE and its 📋️TEMPLATE.md. Decompose 🦴️spine into the artifact's 🦀️component.rs + 🔧️op/🔺️diff/🗣️dsl/🎒️pack/📡️spr components + ⚙️engine topic files per spine's existing top-level mod structure (adjacency, analyze, exchange, kernel, operations, outputs, program, registers, report, search, status_summary, template, trace, validate). Verify with cargo check (native + wasm32-wasip2), clippy -D warnings, cargo test with wire-format diff proof, then delete old crate manifests and hand off to the registrar.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2478"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪290b2a6149ea4d7797124ff709191f2a"
+  ]
+}

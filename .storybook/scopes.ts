@@ -30,6 +30,14 @@ export type StoryScope = {
   readonly assets?: readonly PlaygroundAssetSpec[];
   /** Lazy scope-gated Vite plugins (only imported when this scope is active). */
   readonly vitePlugins?: () => Promise<Plugin[]>;
+  /**
+   * Explicit story glob(s) for this scope, overriding the default `./stories/<id>/**` derivation —
+   * added for `26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE` W7 story co-location, where a scope's
+   * stories live beside their component (`🧱️elements/<Element>/🧪️story.tsx`, which doesn't match a
+   * `*.stories.*` glob) rather than under `.storybook/stories/<id>/`. List every glob this scope needs,
+   * including the legacy `./stories/<id>/**` one if any stories still live there.
+   */
+  readonly storyGlobs?: readonly string[];
 };
 // #endregion 🔖️ScopeModel
 
@@ -42,7 +50,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
     id: "ui",
     titlePrefix: "🖱️ui⚛️react",
     sourceRoots: [
-      repoRelative("🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript"),
+      repoRelative("🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"),
       repoRelative("🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript"),
       repoRelative("🧰️framework/🔨️modules/🖱️ui/🖼️assets/⚡️implementations/🟦️typescript"),
       repoRelative("✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript"),
@@ -50,7 +58,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
     ],
     aliases: {
       "@semio-tech/infinite-canvas-react-renderer": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementations/🟦️typescript/📦️index.tsx",
-      "@elements/ui/globals.css": "🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/🎨️globals.css",
+      "@elements/ui/globals.css": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️globals.css",
       "@semio-tech/coda-desktop/renderer": "compose/client/ui/desktop/js/renderer.tsx",
       "@semio-tech/compose-rs-wasm": "compose/client/lib/rs/pkg/compose.js",
     },
@@ -90,7 +98,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
     titlePrefix: "🏘️compose",
     sourceRoots: [repoRelative("compose/client/lib/js"), repoRelative("compose/client/lib/rs"), repoRelative("🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript"), repoRelative("compose/fixture"), repoRelative("compose/dev/algorithm")],
     aliases: {
-      "@semio-tech/ui-react/globals.css": "🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/🎨️globals.css",
+      "@semio-tech/ui-react/globals.css": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️globals.css",
       "@semio-tech/compose-rs-wasm": "compose/client/lib/rs/pkg/compose.js",
     },
     optimizeDepsExclude: ["@semio-tech/compose-react", "@semio-tech/compose-js", "@semio-tech/assets"],
@@ -152,7 +160,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
       { kind: "static-dir", route: "/renderer-modules", root: "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/📺️renderer-modules" },
     ],
     vitePlugins: async () => {
-      const { playgroundIframeEmbedHeadersPlugin } = await import(/* @vite-ignore */ "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts");
+      const { playgroundIframeEmbedHeadersPlugin } = await import(/* @vite-ignore */ "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts");
       return [playgroundIframeEmbedHeadersPlugin()];
     },
   },
@@ -211,11 +219,11 @@ export function resolveActiveScopes(expr: string): StoryScope[] {
   return STORY_SCOPES.filter((s) => tokens.some((token) => scopeTokenMatches(token, s.id)));
 }
 
-/** @emoji 📖️ One story glob per active scope id (parent globs already subsume children via `**`, so a de-duplicated top-level set suffices). */
+/** @emoji 📖️ One or more story globs per active scope (parent globs already subsume children via `**`, so a de-duplicated top-level set suffices). A scope with `storyGlobs` set uses those verbatim instead of the default `./stories/<id>/**` derivation — see `StoryScope.storyGlobs`. */
 export function buildScopeStoryGlobs(activeScopes: readonly StoryScope[]): string[] {
   const ids = activeScopes.map((s) => s.id);
-  const topLevel = ids.filter((id) => !ids.some((other) => other !== id && scopeTokenMatches(other, id)));
-  return topLevel.map((id) => `./stories/${id}/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)`);
+  const topLevel = activeScopes.filter((s) => !ids.some((other) => other !== s.id && scopeTokenMatches(other, s.id)));
+  return topLevel.flatMap((s) => s.storyGlobs ?? [`./stories/${s.id}/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)`]);
 }
 
 /** @emoji 🔗️ Merges auto-derived workspace aliases with each active scope's irregular `aliases`. Throws on a key registered with two different values (config-time conflict, not silent last-wins). */
@@ -281,9 +289,9 @@ if (import.meta.vitest) {
 
   describe("buildScopeAliases", () => {
     it("merges workspace and scope aliases without conflict", () => {
-      const aliases = buildScopeAliases(resolveActiveScopes("ui"), { "@semio-tech/ui-react": "🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript" });
-      expect(aliases["@semio-tech/ui-react"]).toBe("🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript");
-      expect(aliases["@elements/ui/globals.css"]).toBe("🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/🎨️globals.css");
+      const aliases = buildScopeAliases(resolveActiveScopes("ui"), { "@semio-tech/ui-react": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react" });
+      expect(aliases["@semio-tech/ui-react"]).toBe("🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react");
+      expect(aliases["@elements/ui/globals.css"]).toBe("🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️globals.css");
     });
 
     it("throws on a genuine key conflict between scopes", () => {
@@ -303,7 +311,7 @@ if (import.meta.vitest) {
     it("ignores inactive scopes' source roots", () => {
       const ignores = buildScopeWatchIgnores(resolveActiveScopes("ui"));
       expect(ignores).toContain("**/compose/client/lib/js/**");
-      expect(ignores.some((g) => g.includes("🧰️framework/🔨️modules/🖱️ui/⚛️react"))).toBe(false);
+      expect(ignores.some((g) => g.includes("🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"))).toBe(false);
     });
 
     it("ignores nothing when every scope is active", () => {

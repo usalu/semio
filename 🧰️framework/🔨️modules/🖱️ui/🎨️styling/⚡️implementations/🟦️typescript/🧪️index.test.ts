@@ -17,7 +17,7 @@ import {
   resolveElementFillKind,
   resolveElementState,
 } from "../../../🎨️styling/⚡️implementations/🟦️typescript/📦️index.ts";
-import { meshCollectionVitePlugin, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, type PlaygroundAssetSpec } from "../../../🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts";
+import { meshCollectionVitePlugin, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, type PlaygroundAssetSpec } from "../../📦️packages/🦀️rust/🟦️vite-elements-assets.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../..");
 const uiCss = readFileSync(resolve(import.meta.dir, "🎨️ui.css"), "utf8");

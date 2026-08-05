@@ -16,7 +16,7 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
-import { semioViteProductionBuild } from "../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts";
+import { semioViteProductionBuild } from "../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts";
 // #endregion 🔌️Adapters
 
 /**

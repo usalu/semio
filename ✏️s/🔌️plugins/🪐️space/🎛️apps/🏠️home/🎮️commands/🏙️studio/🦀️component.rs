@@ -11,6 +11,7 @@ use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 //#region 🔖️CreateStudio
 pub mod create_studio {
     use super::*;
+    #[cfg(not(target_arch = "wasm32"))]
     use semio_framework_os::VcsError;
     use serde::{Deserialize, Serialize};
 
@@ -70,6 +71,7 @@ pub mod create_studio {
 //#region 🔖️BindSpaceFile
 pub mod bind_space_file {
     use super::*;
+    #[cfg(not(target_arch = "wasm32"))]
     use semio_framework_os::VcsError;
     use serde::{Deserialize, Serialize};
 

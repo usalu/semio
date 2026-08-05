@@ -27,8 +27,7 @@ crate-type = ["rlib", "cdylib"]
 path = "../../../🎲️board-2d/⚡️implementations/🦀️rust/📦️lib.rs"
 
 [dependencies]
-puzzle_2d_engine = { path = "../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-puzzle-2d-engine" }
-puzzle_2d = { path = "../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/⚡️implementations/🦀️rust", package = "semio-s-app-puzzle-2d" }
+puzzle = { path = "../../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle" }
 store = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
 mathematical_geometry = { path = "../../../../../../🧰️framework/🔨️modules/🧮️math/📐️geometry/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-geometry" }
 serde = { version = "1.0.219", features = ["derive"] }

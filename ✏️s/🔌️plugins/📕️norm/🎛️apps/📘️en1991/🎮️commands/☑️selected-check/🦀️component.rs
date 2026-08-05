@@ -1,0 +1,48 @@
+//! ☑️ EN 1991 play app command — point the inspection panel at a different computed check.
+//!
+//! 📌️ Config-only: it emits `config_operations`, never document operations — the selected row is view
+//! state, not compliance content. Declared as a `view_action`, so the registry's kind discipline
+//! actively rejects it if it ever starts emitting document operations.
+
+use crate::artifacts::en1991::op::Operation;
+use crate::artifacts::en1991::Document;
+use crate::core::{NormConfig, NormConfigOperation};
+use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Payload
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[dsl(keyword = "selected-check")]
+pub struct SetSelectedCheckIndex {
+    /// 👁️ `None` means "the first check" — the same fallback `crate::core::app::render_inspection` applies.
+    pub index: Option<u32>,
+}
+//#endregion 🔖️Payload
+
+//#region 🔖️Handler
+pub fn handle(payload: &SetSelectedCheckIndex, _doc: &DocumentView<'_, Document>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Operation, NormConfigOperation>, Fault> {
+    crate::core::app::commit_selected_check_index(payload.index)
+}
+//#endregion 🔖️Handler
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use semio_framework_plugin::HistoryView;
+
+    #[test]
+    fn handle_emits_only_a_config_operation() {
+        let projection = Document::default();
+        let config = NormConfig::default();
+        let emit = handle(
+            &SetSelectedCheckIndex { index: Some(4) },
+            &DocumentView { projection: &projection, history: &HistoryView::empty() },
+            &ConfigView { projection: &config },
+        )
+        .expect("handle");
+        assert!(emit.document_operations.is_empty(), "a view action must never emit document operations");
+        assert_eq!(emit.config_operations, vec![NormConfigOperation::SetSelectedCheckIndex { index: Some(4) }]);
+    }
+}
+//#endregion 🧪️Tests

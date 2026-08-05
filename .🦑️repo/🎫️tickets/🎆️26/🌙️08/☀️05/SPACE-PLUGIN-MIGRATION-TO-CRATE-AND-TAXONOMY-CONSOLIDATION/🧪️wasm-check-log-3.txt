@@ -1,0 +1,30 @@
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3273:68
+     |
+3273 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3273 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3273 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust/../../../../../../🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust/📦️lib.rs:2859:48
+     |
+2859 |         let Ok(value) = serde_json::from_str::<serde_json::Value>(json) else {
+     |                                                ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2859 -         let Ok(value) = serde_json::from_str::<serde_json::Value>(json) else {
+2859 +         let Ok(value) = serde_json::from_str::<Value>(json) else {
+     |
+
+warning: `semio-framework-os-kernel-infinite-board-port-directed-dag` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os-kernel-infinite-board-port-directed-dag` to apply 1 suggestion)
+    Checking semio-s-plugin-space v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 1.64s

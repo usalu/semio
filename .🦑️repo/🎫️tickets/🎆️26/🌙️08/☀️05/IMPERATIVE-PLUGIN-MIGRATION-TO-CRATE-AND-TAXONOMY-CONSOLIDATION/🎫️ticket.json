@@ -1,0 +1,13 @@
+{
+  "title": "Imperative Plugin Migration To Crate And Taxonomy Consolidation",
+  "emoji": "📜️",
+  "status": "open",
+  "description": "Migrate the 📜️imperative plugin (✏️s/🔌️plugins/📜️imperative/**) from its 8-crate constitutional layout (1 manifest/artifact bundle + 1 app crate + 6 module crates: engine, pack, protocol, op, ui, dsl) plus 5 extension crates (control, text, logic, math, core) into ONE crate `semio-s-plugin-imperative` at ✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/ with the full taxonomy tree (🗿️artifacts/🔺️diff/🗣️dsl/🎒️pack/🔧️op/📡️spr/⚙️engine, 🎛️apps/.../🎭️modes/.../🪟️windows/..., 🎮️commands, 📌️panels), per master ticket 26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE and its TEMPLATE.md recipe. Preserve every [package.metadata.*] table verbatim. 🧩️extensions/* stay untouched (Rust-crate merge only). Do NOT touch root Cargo.toml, root script.ts, registry script, launch.json, any other plugin, or AGENTS.md anywhere. Do NOT touch ✏️s/🔨️modules/📜️imperative/ (different, unrelated s-module kernel crate with the same name).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2480"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪99833179c7314501a2f6bc0c6da7d5c1"
+  ]
+}

@@ -27,7 +27,16 @@ export interface Taxonomy {
   readonly artifactChildDirsExtra: readonly string[];
   readonly windowChildDirs: readonly string[];
   readonly taxonomyLeafParentDirs: readonly string[];
-  readonly taxonomyLeafFilename: string;
+  /** 🎯️ Optional per-lang render-target axis: `<owner>/📦️packages/<lang>/🎯️targets/<target>/<manifest>` — see `targetsDirName`. */
+  readonly targetsDirName: string;
+  /** 🧱️ Flat co-location dir holding one subdir per logical element, each with a sibling leaf file per lang/target (see `taxonomyLeafFilenames`). */
+  readonly elementsDirName: string;
+  /** 🍃️ Leaf component filename, keyed by target when a package has one (e.g. `"🧊️wgpu"`), else by lang (e.g. `"🦀️rust"` for plugins, which never have a target level). */
+  readonly taxonomyLeafFilenames: Readonly<Record<string, string>>;
+  /** 🚪️ Wiring-only entry filename per lang (`📦️lib.rs` for rust, `📦️index.tsx` for typescript) — the `#[path]`/barrel file that must stay under `libWiringLineBudget`. */
+  readonly entryFilenames: Readonly<Record<string, string>>;
+  /** 🧪️ Co-located story leaf filename (does not match a `*.stories.*` glob — callers must list it literally). */
+  readonly storyLeafFilename: string;
   readonly libWiringLineBudget: number;
   readonly forbiddenPathSegments: readonly string[];
   readonly packagesDirName: string;
@@ -61,16 +70,30 @@ export function areaOf(repoRelPath: string, taxonomy: Taxonomy = loadTaxonomy())
 export type PackageRole = "plugin" | "framework" | "product" | "hub" | "s-module" | "extension" | "testkit" | "tool";
 
 /** 🌐️ Ecosystem a discovered package's manifest belongs to. */
-export type PackageLang = "🦀️rust" | "🟦️typescript" | "🐹️go" | "🐍️python";
+export type PackageLang = "🦀️rust" | "🟦️typescript" | "🐹️go" | "🐍️python" | "🔷️dotnet";
 
-/** 📦️ One package discovered under `<owner>/📦️packages/<lang>/`, with its role/id marker resolved. */
+/** 🎯️ A lang's render/build target when the package sits under `🎯️targets/<target>/` (three-level shape) — open vocabulary, e.g. `"⚛️react"`, `"🧊️wgpu"`, `"⌨️tui"`. */
+export type PackageTarget = string;
+
+/** 📦️ One package discovered under `<owner>/📦️packages/<lang>/` (two-level, e.g. plugins/styling) or `<owner>/📦️packages/<lang>/🎯️targets/<target>/` (three-level, e.g. ui/renderer-engine), with its role/id marker resolved. */
 export interface DiscoveredPackage {
   readonly ownerRel: string;
   readonly lang: PackageLang;
+  /** 🎯️ Set only for the three-level shape; `undefined` for a direct `📦️packages/<lang>/` package. */
+  readonly target?: PackageTarget;
+  /** 📁️ Repo-relative dir holding the manifest (i.e. `dirname(manifestPath)`). */
+  readonly packageRel: string;
   readonly manifestPath: string;
   readonly role: PackageRole;
   readonly id: string;
   readonly area: string;
+}
+
+/** ⚠️ A discovery-time problem `discoverPackages` does not fail on but must not stay silent about — see `discoverPackageProblems`. */
+export interface DiscoveryProblem {
+  readonly kind: "ambiguous-lang-shape" | "target-without-manifest" | "manifest-without-marker";
+  readonly path: string;
+  readonly message: string;
 }
 
 const MANIFEST_FILENAME: Partial<Record<PackageLang, string>> = {
@@ -165,19 +188,52 @@ function fallbackPackageId(manifestPath: string, lang: PackageLang, ownerRel: st
     .join("-");
 }
 
+/** 🚫️ Areas where a markerless manifest is expected (not yet migrated) and must stay a silent skip, not a `DiscoveryProblem`. */
+const DISCOVERY_QUIET_AREAS = new Set(["legacy", "mixed", "exempt", ""]);
+
+interface DiscoveryResult {
+  readonly packages: DiscoveredPackage[];
+  readonly problems: DiscoveryProblem[];
+}
+
 /**
- * 🗺️ Walks `repoRoot` for every `<owner>/📦️packages/<lang>/` directory holding a lang manifest
- * (`Cargo.toml` for 🦀️rust, `package.json` for 🟦️typescript), reads its role marker via
- * `readSemioMarker`, and returns the flattened catalog — the repo-wide package discovery contract this
- * taxonomy vocabulary exists to serve (extending discovery beyond plugins to framework, hub, s kernels,
- * repo product, print, mit-bestand — see master ticket
- * `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`). A `📦️packages/<lang>/` dir whose
- * manifest carries no resolvable role marker is skipped (not yet migrated, or an ecosystem not yet
- * touched).
+ * 🗺️ Walks `repoRoot` for every `<owner>/📦️packages/<lang>/` directory, resolving each lang entry as
+ * either a direct manifest (two-level — plugins, styling: `📦️packages/<lang>/<manifest>`) or a
+ * `🎯️targets/<target>/<manifest>` tree (three-level — ui, renderer-engine: one package per render
+ * target). Reads each manifest's role marker via `readSemioMarker` and returns the flattened catalog —
+ * the repo-wide package discovery contract this taxonomy vocabulary exists to serve (extending discovery
+ * beyond plugins to framework, hub, s kernels, repo product, print, mit-bestand — see master ticket
+ * `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, and the 🎯️targets axis added by
+ * `26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE`). A markerless manifest is skipped silently in a
+ * `legacy`/`mixed`/`exempt`/undeclared area (not yet migrated); anywhere else it is reported via
+ * `discoverPackageProblems` instead of vanishing from the catalog unnoticed.
  */
-export function discoverPackages(repoRoot: string, taxonomy: Taxonomy = loadTaxonomy()): DiscoveredPackage[] {
+function discoverPackagesWithProblems(repoRoot: string, taxonomy: Taxonomy): DiscoveryResult {
   const packagesDirName = taxonomy.packagesDirName;
-  const found: DiscoveredPackage[] = [];
+  const targetsDirName = taxonomy.targetsDirName;
+  const packages: DiscoveredPackage[] = [];
+  const problems: DiscoveryProblem[] = [];
+
+  const resolveOne = (manifestAbs: string, lang: PackageLang, ownerRel: string, target: PackageTarget | undefined, area: string): void => {
+    const manifestPath = relative(repoRoot, manifestAbs).replaceAll("\\", "/");
+    const marker = readSemioMarker(manifestAbs, lang);
+    if (!marker) {
+      if (!DISCOVERY_QUIET_AREAS.has(area)) {
+        problems.push({ kind: "manifest-without-marker", path: manifestPath, message: `"${manifestPath}" has no resolvable semio role marker (area "${area}" requires one).` });
+      }
+      return;
+    }
+    packages.push({
+      ownerRel,
+      lang,
+      target,
+      packageRel: relative(repoRoot, dirname(manifestAbs)).replaceAll("\\", "/"),
+      manifestPath,
+      role: marker.role,
+      id: marker.id ?? fallbackPackageId(manifestAbs, lang, ownerRel),
+      area,
+    });
+  };
 
   const walk = (absDir: string): void => {
     for (const entry of readdirSafe(absDir)) {
@@ -188,26 +244,51 @@ export function discoverPackages(repoRoot: string, taxonomy: Taxonomy = loadTaxo
         continue;
       }
       const ownerRel = relative(repoRoot, absDir).replaceAll("\\", "/");
+      const area = areaOf(ownerRel, taxonomy) ?? "";
       for (const langEntry of readdirSafe(absChild)) {
         if (!langEntry.isDirectory()) continue;
         const lang = langEntry.name as PackageLang;
         const manifestFilename = MANIFEST_FILENAME[lang];
-        if (!manifestFilename) continue;
-        const manifestAbs = join(absChild, langEntry.name, manifestFilename);
-        const marker = readSemioMarker(manifestAbs, lang);
-        if (!marker) continue;
-        found.push({
-          ownerRel,
-          lang,
-          manifestPath: relative(repoRoot, manifestAbs).replaceAll("\\", "/"),
-          role: marker.role,
-          id: marker.id ?? fallbackPackageId(manifestAbs, lang, ownerRel),
-          area: areaOf(ownerRel, taxonomy) ?? "",
-        });
+        if (!manifestFilename) continue; // known lang, discovery-opaque (e.g. 🔷️dotnet) until its manifest contract lands
+        const langAbs = join(absChild, langEntry.name);
+        const directManifestAbs = join(langAbs, manifestFilename);
+        const targetsAbs = join(langAbs, targetsDirName);
+        const hasDirect = existsSync(directManifestAbs);
+        const hasTargets = existsSync(targetsAbs);
+
+        if (hasDirect && hasTargets) {
+          problems.push({ kind: "ambiguous-lang-shape", path: relative(repoRoot, langAbs).replaceAll("\\", "/"), message: `"${relative(repoRoot, langAbs).replaceAll("\\", "/")}" has both a direct manifest and a ${targetsDirName}/ dir — a lang is either two-level or three-level, never both.` });
+          continue;
+        }
+        if (hasDirect) {
+          resolveOne(directManifestAbs, lang, ownerRel, undefined, area);
+          continue;
+        }
+        if (!hasTargets) continue;
+        for (const targetEntry of readdirSafe(targetsAbs)) {
+          if (!targetEntry.isDirectory()) continue;
+          const targetManifestAbs = join(targetsAbs, targetEntry.name, manifestFilename);
+          if (!existsSync(targetManifestAbs)) {
+            problems.push({ kind: "target-without-manifest", path: relative(repoRoot, join(targetsAbs, targetEntry.name)).replaceAll("\\", "/"), message: `"${relative(repoRoot, join(targetsAbs, targetEntry.name)).replaceAll("\\", "/")}" has no ${manifestFilename}.` });
+            continue;
+          }
+          resolveOne(targetManifestAbs, lang, ownerRel, targetEntry.name, area);
+        }
       }
     }
   };
   walk(repoRoot);
-  return found.sort((a, b) => a.ownerRel.localeCompare(b.ownerRel));
+  packages.sort((a, b) => a.ownerRel.localeCompare(b.ownerRel) || (a.target ?? "").localeCompare(b.target ?? ""));
+  return { packages, problems };
+}
+
+/** 📦️ See `discoverPackagesWithProblems` — the catalog half. */
+export function discoverPackages(repoRoot: string, taxonomy: Taxonomy = loadTaxonomy()): DiscoveredPackage[] {
+  return discoverPackagesWithProblems(repoRoot, taxonomy).packages;
+}
+
+/** ⚠️ See `discoverPackagesWithProblems` — the diagnostics half (ambiguous shapes, dangling target dirs, unmarked manifests outside legacy areas). */
+export function discoverPackageProblems(repoRoot: string, taxonomy: Taxonomy = loadTaxonomy()): DiscoveryProblem[] {
+  return discoverPackagesWithProblems(repoRoot, taxonomy).problems;
 }
 //#endregion 🧭️Discovery

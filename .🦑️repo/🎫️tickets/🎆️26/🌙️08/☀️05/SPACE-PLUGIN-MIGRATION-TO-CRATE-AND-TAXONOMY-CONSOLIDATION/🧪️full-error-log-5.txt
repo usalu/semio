@@ -1,0 +1,261 @@
+warning: unused import: `serde_json::Value`
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:19:5
+   |
+19 | use serde_json::Value;
+   |     ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:481:16
+    |
+481 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+481 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+481 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:482:24
+    |
+482 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+482 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+482 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:492:16
+    |
+492 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+492 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+492 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:493:24
+    |
+493 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+493 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+493 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:553:41
+    |
+553 |     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+553 -     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+553 +     pub fn receive(&mut self, envelope: OperationEnvelope) -> Result<(), SyncError> {
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:735:42
+    |
+735 |                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+735 -                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+735 +                         let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:739:38
+    |
+739 |                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+739 -                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+739 +                     let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:1208:37
+     |
+1208 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1208 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1208 +             let wire_envelopes: Vec<OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:1208:100
+     |
+1208 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1208 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1208 +             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:1275:37
+     |
+1275 |     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |                                     ^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1275 -     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+1275 +     fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |
+
+warning: structure field `pendingOperations` should have a snake case name
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:153:9
+    |
+153 |     pub pendingOperations: usize,
+    |         ^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `pending_operations`
+    |
+    = note: `#[warn(non_snake_case)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3273:68
+     |
+3273 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3273 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3273 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: `semio-framework-os-kernel-store-sync` (lib) generated 12 warnings (run `cargo fix --lib -p semio-framework-os-kernel-store-sync` to apply 11 suggestions)
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust/../../../../../../🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust/📦️lib.rs:2859:48
+     |
+2859 |         let Ok(value) = serde_json::from_str::<serde_json::Value>(json) else {
+     |                                                ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2859 -         let Ok(value) = serde_json::from_str::<serde_json::Value>(json) else {
+2859 +         let Ok(value) = serde_json::from_str::<Value>(json) else {
+     |
+
+warning: `semio-framework-os-kernel-infinite-board-port-directed-dag` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os-kernel-infinite-board-port-directed-dag` to apply 1 suggestion)
+   Compiling semio-s-plugin-space v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 5.68s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests ../../📦️lib.rs (✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/target/debug/deps/semio_s_plugin_space-1225fcc69ca6e86b)
+
+running 85 tests
+test apps::home::commands::settings::tests::home_command_op_text_round_trips_every_variant ... ok
+test apps::home::commands::settings::tests::set_active_panel_tab_emits_config_operation ... ok
+test apps::home::commands::vfs::tests::home_command_op_text_round_trips_every_variant ... ok
+test apps::home::commands::studio::tests::home_command_op_text_round_trips_every_variant ... ok
+test apps::home::config::tests::home_config_default_locale_is_english ... ok
+test apps::home::config::tests::home_config_dsl_text_round_trips ... ok
+test apps::home::component::tests::home_manifest_uses_home_app_id ... ok
+test apps::home::component::tests::home_declares_create_space_action ... ok
+test apps::home::config::tests::home_config_operation_round_trips_via_apply_and_backwards ... ok
+test apps::home::config::tests::home_config_op_text_round_trips_every_variant ... ok
+test apps::home::component::tests::space_document_persists_through_backbone_port ... ok
+test apps::space::commands::connections::tests::space_command_op_text_round_trips_every_variant ... ok
+test apps::space::commands::engagement::tests::space_command_op_text_round_trips_every_variant ... ok
+test apps::space::commands::graph_edit::tests::space_command_op_text_round_trips_every_variant ... ok
+test apps::home::commands::studio::tests::creates_studio_via_home_action ... ok
+test apps::space::commands::connections::tests::connect_media_ports_negotiates_a_contract_for_compatible_types ... ok
+test apps::space::commands::instance_nav::tests::open_and_close_focused_instance ... ok
+test apps::space::commands::connections::tests::connect_media_ports_rejects_incompatible_types_via_notice ... ok
+test apps::home::modes::explore::windows::main::component::tests::home_vfs_lists_seeded_studio ... ok
+test apps::space::commands::instance_nav::tests::space_command_op_text_round_trips_every_variant ... ok
+test apps::home::commands::studio::tests::temporary_studio_uses_ephemeral_registry_not_catalog ... ok
+test apps::home::component::tests::home_labels_resolve_native_english_by_default ... ok
+test apps::home::component::tests::home_labels_resolve_native_german_locale ... ok
+test apps::space::commands::instance_nav::tests::open_instance_emits_open_plugin_instance_effect_matching_instance ... ok
+test apps::space::commands::media::tests::space_command_op_text_round_trips_every_variant ... ok
+test apps::space::commands::navigation::tests::space_command_op_text_round_trips_every_variant ... ok
+test apps::space::commands::navigation::tests::set_app_registrations_command_registers_app_and_surfaces_empty_document_apps_in_catalogue ... ok
+test apps::space::commands::graph_edit::tests::node_graph_edit_set_fixture_moves_node_and_persists_camera ... ok
+test apps::space::commands::nodes::tests::move_media_node_emits_coalesced_move_operation ... ok
+test apps::space::commands::nodes::tests::space_command_op_text_round_trips_every_variant ... ok
+test apps::space::commands::nodes::tests::patch_app_instances_updates_labels ... ok
+test apps::space::commands::nodes::tests::spawns_draw_app_instance ... ok
+test apps::space::commands::media::tests::export_media_emits_download_effect_and_import_requests_file_open ... ok
+test apps::space::commands::nodes::tests::spawns_puzzle5d_and_shooting_with_multi_port_registrations ... ok
+test apps::space::commands::nodes::tests::undo_redo_round_trip_on_spawn ... ok
+test apps::space::commands::parameters::tests::patch_parameter_action_updates_value ... ok
+test apps::space::commands::parameters::tests::space_command_op_text_round_trips_every_variant ... ok
+test apps::space::commands::presence::tests::space_command_op_text_round_trips_every_variant ... ok
+test apps::space::commands::nodes::tests::spawns_draw_app_instance_at_drop_position ... ok
+test apps::space::commands::studio_io::tests::open_studio_loads_ephemeral_created_studio ... ok
+test apps::space::commands::selection::tests::presence_heartbeat_publishes_peer_for_other_clients ... ok
+test apps::space::commands::studio_io::tests::create_space_navigates_without_download_and_opens_empty ... ok
+test apps::space::commands::selection::tests::space_command_op_text_round_trips_every_variant ... ok
+test apps::space::commands::studio_io::tests::open_studio_unknown_id_returns_not_found ... ok
+test apps::space::commands::studio_io::tests::space_command_op_text_round_trips_every_variant ... ok
+test apps::space::commands::studio_io::tests::open_studio_loads_created_empty_catalog_studio ... ok
+test apps::space::commands::viewport::tests::space_command_op_text_round_trips_every_variant ... ok
+test apps::space::commands::parameters::tests::unbind_parameter_field_removes_binding ... ok
+test apps::space::commands::presence::tests::presence_heartbeat_declares_none_ui_scope ... ok
+test apps::space::component::tests::commit_checkpoint_round_trips_projection ... ok
+test apps::space::component::tests::initial_projection_is_empty_not_demo ... ok
+test apps::space::component::tests::demo_document_has_instances_and_edges ... ok
+test apps::space::component::tests::checkout_checkpoint_restores_projection ... ok
+test apps::space::commands::viewport::tests::node_graph_viewport_persists_camera ... ok
+test apps::space::commands::studio_io::tests::open_studio_demo_explicit_loads_demo_fixture ... ok
+test apps::space::config::tests::set_active_panel_tab_round_trips ... ok
+test apps::space::config::tests::set_camera_round_trips_and_keys_by_window_id ... ok
+test apps::space::config::tests::set_selection_round_trips ... ok
+test apps::space::config::tests::space_config_default_matches_the_expected_sticky_defaults ... ok
+test apps::space::config::tests::space_config_dsl_text_round_trips ... ok
+test apps::space::config::tests::space_config_dsl_pack_equivalence ... ok
+test apps::space::component::tests::space_manifest_uses_studio_app_id ... ok
+test apps::space::component::tests::space_workflow_context_menu_stays_within_budget_with_destructive_tail ... ok
+test apps::space::component::tests::space_window_kind_actions_scope_editing_to_workflow ... ok
+test apps::space::component::tests::space_labels_resolve_native_german_locale ... ok
+test apps::space::component::tests::testkit_studio_emit_smoke_test ... ok
+test apps::space::modes::main::windows::workflow::component::tests::renders_workflow_scene ... ok
+test apps::space::modes::main::windows::workflow::component::tests::workflow_scene_uses_flow_engine_with_fixture ... ok
+test apps::space::panels::catalogue::tests::catalogue_tree_nests_apps_by_canonical_document ... ok
+test artifacts::home::dsl::tests::home_dsl_round_trips_bundled_default_example ... ok
+test apps::space::config::tests::space_config_op_text_round_trips_every_variant ... ok
+test apps::space::component::tests::space_labels_resolve_native_english_by_default ... ok
+test apps::space::component::tests::two_instances_converge_on_disjoint_edits_via_backbone ... ok
+test apps::space::modes::main::windows::compiled_dag::component::tests::renders_compiled_dag_editor ... ok
+test apps::space::engine::tests::compiled_dag_wire_literal_mentions_app_instances ... ok
+test artifacts::home::op::tests::home_op_text_round_trips_every_variant ... ok
+test artifacts::home::pack::tests::home_config_dsl_pack_equivalence ... ok
+test apps::space::panels::inspection::tests::inspector_tree_exposes_label_field ... ok
+test artifacts::home::pack::tests::home_pack_round_trips_default_and_populated_documents ... ok
+test artifacts::home::pack::tests::pack_round_trips_populated_document ... ok
+test artifacts::home::spr::tests::op_binary_round_trips_and_agrees_with_text ... ok
+test apps::space::engine::tests::patch_parameter_op_updates_numeric_value ... ok
+test artifacts::home::dsl::tests::home_dsl_round_trips_default_and_populated_documents ... ok
+test artifacts::home::spr::tests::home_document_text_round_trips_through_the_store ... ok
+test apps::space::component::tests::space_declares_expected_actions_and_examples ... ok
+
+test result: ok. 85 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+

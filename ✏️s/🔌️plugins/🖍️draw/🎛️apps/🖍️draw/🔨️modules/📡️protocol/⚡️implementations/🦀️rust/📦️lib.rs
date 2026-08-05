@@ -193,5 +193,54 @@ mod tests {
         let command = DrawCommand::AddLayer { kind: "path".into() };
         store::test_support::assert_op_text_binary_equivalence(&command);
     }
+
+    //#region 🔖️DebugWireBaseline
+    /// [DEBUG] temporary wire-baseline dump for the crate-consolidation migration — one line per
+    /// `DrawCommand` variant: `print_op(&c) | bytes.len() | hex(bytes)`. Deleted with the rest of this
+    /// old crate once the new taxonomy crate's equivalent dump diffs identical.
+    #[test]
+    fn debug_wire_baseline_dump() {
+        use protocol::OpText;
+        fn line(c: &DrawCommand) {
+            let text = c.print_op();
+            let bytes = encode_op(&draw_op::DrawOperation::SetDocument { document: default_draw_document("x", None) }).unwrap_or_default();
+            let _ = bytes;
+            let cmd_bytes = c.encode_op().expect("encode");
+            println!("{} | {} | {}", text, cmd_bytes.len(), cmd_bytes.iter().map(|b| format!("{b:02x}")).collect::<String>());
+        }
+        line(&DrawCommand::SetDocument { document: default_draw_document("cmd-doc", None) });
+        line(&DrawCommand::CommitDocument { document: default_draw_document("cmd-doc-2", None) });
+        line(&DrawCommand::SetFixtureJson { json: "{}".into() });
+        line(&DrawCommand::SetActiveExample { example_id: "semio".into() });
+        line(&DrawCommand::SetSelectedOpacity { value: 0.5 });
+        line(&DrawCommand::EngagementSubmit { value: Some("Renamed \"layer\"".into()) });
+        line(&DrawCommand::EngagementSubmit { value: None });
+        line(&DrawCommand::AddLayer { kind: "shape:rect".into() });
+        line(&DrawCommand::DropLayerKind { kind: "path".into(), target_row_id: "draw-play-layers".into(), drop_position: "inside".into() });
+        line(&DrawCommand::MoveLayer { layer_id: "layer-1".into(), target_row_id: "draw-play-layers".into(), drop_position: "after".into() });
+        line(&DrawCommand::DeleteLayer { layer_id: "layer-1".into() });
+        line(&DrawCommand::DuplicateLayer { layer_id: "layer-1".into() });
+        line(&DrawCommand::ToggleLayerVisible { layer_id: "layer-1".into() });
+        line(&DrawCommand::CombineBoolean { operation: "union".into(), ids: vec!["a".into(), "b".into()] });
+        line(&DrawCommand::PatchLayer { layer_id: "layer-1".into(), field: "opacity".into(), value: "0.4".into() });
+        line(&DrawCommand::PatchLayers { layer_ids: vec!["a".into(), "b".into()], field: "blendMode".into(), value: "\"multiply\"".into() });
+        line(&DrawCommand::SetActiveUtility { utility_id: "pen".into() });
+        line(&DrawCommand::SetCamera { camera: DrawCamera { x: 1.0, y: 2.0, zoom: 1.5 } });
+        line(&DrawCommand::SetCameraZoom { value: 2.0 });
+        line(&DrawCommand::SetSelection { ids: vec!["a".into(), "b".into()] });
+        line(&DrawCommand::SetHover { id: Some("a".into()) });
+        line(&DrawCommand::SetHover { id: None });
+        line(&DrawCommand::SelectAll);
+        line(&DrawCommand::ClearSelection);
+        line(&DrawCommand::EngagementInput { value: "typing".into() });
+        line(&DrawCommand::SetLocale { value: "de-DE".into() });
+        line(&DrawCommand::CanvasPointerDown { x: 1.0, y: 2.0, width: 800.0, height: 600.0, shift: true, ctrl: false, meta: false });
+        line(&DrawCommand::CanvasPointerMove { x: 1.0, y: 2.0, width: 800.0, height: 600.0 });
+        line(&DrawCommand::CanvasPointerUp { x: 1.0, y: 2.0, width: 800.0, height: 600.0, shift: false, ctrl: true, meta: false });
+        line(&DrawCommand::CanvasDoubleClick);
+        line(&DrawCommand::CanvasCommitDraft);
+        line(&DrawCommand::CanvasEscape);
+    }
+    //#endregion 🔖️DebugWireBaseline
 }
 //#endregion 🧪️Tests

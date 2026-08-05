@@ -6,7 +6,7 @@ use protocol::{Operation, OperationDiff};
 use semio_framework_plugin::testkit;
 use semio_framework_plugin::{
     create_default_layout, ui_stack_vertical, ui_text, App, AppIo, ArtifactKindSpec, ArtifactPresentation, ConfigView, DocumentApp, DocumentView, Emit, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
-    MediaPortDirection, MediaPortSpec, MediaType, OsMediaCapability, PanelGroup, PortMultiplicity, SurfaceKind, UiNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+    Fault, MediaPortDirection, MediaPortSpec, MediaType, OsMediaCapability, PanelGroup, PortMultiplicity, SurfaceKind, UiNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
@@ -214,8 +214,8 @@ macro_rules! define_norm_family_app {
 
                 fn handle(&self, command: &Command, doc: &DocumentView<'_, Document>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Operation, NormConfigOperation>, Fault> {
                     match command {
-                        Command::SetDocument { document } => Ok(Emit::commit(vec![SetDocumentOperation::SetDocument { document: document.clone() }], "setDocument"),
-                        Command::Evaluate => Ok(Emit::commit(vec![SetDocumentOperation::SetDocument { document: doc.projection.clone() }], "evaluate"),
+                        Command::SetDocument { document } => Ok(Emit::commit(vec![SetDocumentOperation::SetDocument { document: document.clone() }], "setDocument")),
+                        Command::Evaluate => Ok(Emit::commit(vec![SetDocumentOperation::SetDocument { document: doc.projection.clone() }], "evaluate")),
                         Command::SetSelectedCheckIndex { index } => Ok(Emit::config(vec![NormConfigOperation::SetSelectedCheckIndex { index: *index }])),
                     }
                 }
@@ -483,6 +483,72 @@ mod tests {
         assert_eq!(backwards, vec![NormConfigOperation::Snapshot { config: base.clone() }]);
         let restored = backwards[0].diff(&next);
         assert_eq!(restored, base);
+    }
+
+    /// [DEBUG] temporary wire-format baseline dump — removed with the old bundle crate.
+    #[test]
+    fn debug_wire_baseline_dump() {
+        use protocol::{OpBinary, OpText};
+
+        fn dump<C: OpText + OpBinary>(app: &str, label: &str, command: &C) {
+            let text = command.print_op().replace('\n', "\\n");
+            let bytes = command.encode_op().expect("encode");
+            let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
+            println!("[WIRE] {app} | {label} | {text} | {} | {hex}", bytes.len());
+        }
+
+        macro_rules! dump_family {
+            ($module:ident, $doc_crate:ident) => {{
+                use super::$module::Command;
+                let app = stringify!($module);
+                dump(app, "set-document/default", &Command::SetDocument { document: <::$doc_crate::Document as Default>::default() });
+                dump(app, "evaluate", &Command::Evaluate);
+                dump(app, "selected-check/some", &Command::SetSelectedCheckIndex { index: Some(2) });
+                dump(app, "selected-check/none", &Command::SetSelectedCheckIndex { index: None });
+            }};
+        }
+
+        dump_family!(din4108, din4108);
+        dump_family!(din16798, din16798);
+        dump_family!(din18599, din18599);
+        dump_family!(en1990, en1990);
+        dump_family!(en1991, en1991);
+        dump_family!(en1992, en1992);
+        dump_family!(en1993, en1993);
+        dump_family!(en1994, en1994);
+        dump_family!(en1995, en1995);
+        dump_family!(en1996, en1996);
+        dump_family!(en1997, en1997);
+        dump_family!(en1998, en1998);
+        dump_family!(en1999, en1999);
+        dump_family!(iso16757, iso16757);
+        dump_family!(vdi3805, vdi3805);
+
+        dump("norm", "config/snapshot-default", &NormConfigOperation::Snapshot { config: NormConfig::default() });
+        dump("norm", "config/snapshot-9", &NormConfigOperation::Snapshot { config: NormConfig { selected_check_index: Some(9) } });
+        dump("norm", "config/selected-check-some", &NormConfigOperation::SetSelectedCheckIndex { index: Some(2) });
+        dump("norm", "config/selected-check-none", &NormConfigOperation::SetSelectedCheckIndex { index: None });
+
+        macro_rules! dump_op {
+            ($module:ident, $doc_crate:ident) => {{
+                dump(stringify!($module), "op/set-document-default", &norm_core::SetDocumentOperation::SetDocument { document: <::$doc_crate::Document as Default>::default() });
+            }};
+        }
+        dump_op!(din4108, din4108);
+        dump_op!(din16798, din16798);
+        dump_op!(din18599, din18599);
+        dump_op!(en1990, en1990);
+        dump_op!(en1991, en1991);
+        dump_op!(en1992, en1992);
+        dump_op!(en1993, en1993);
+        dump_op!(en1994, en1994);
+        dump_op!(en1995, en1995);
+        dump_op!(en1996, en1996);
+        dump_op!(en1997, en1997);
+        dump_op!(en1998, en1998);
+        dump_op!(en1999, en1999);
+        dump_op!(iso16757, iso16757);
+        dump_op!(vdi3805, vdi3805);
     }
 
     #[test]

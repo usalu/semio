@@ -2033,7 +2033,7 @@ pub mod engine_canvas {
         sync_cache: NodeGraphSyncCache,
         map_host: Option<framework_surface_tiled_map::MapHost>,
         map_sync_cache: MapSyncCache,
-        board_host: Option<puzzle_2d_engine::BoardHost>,
+        board_host: Option<puzzle::artifacts::puzzle2d::engine::BoardHost>,
         board_sync_cache: BoardSyncCache,
         board_pending_events: Vec<BoardEventRow>,
         board_pointer_inside: bool,
@@ -3366,7 +3366,7 @@ pub mod engine_canvas {
     //#endregion TiledMap
 
     //#region Board2d
-    /// @emoji 🧩️ Raw event row drained from {@link puzzle_2d_engine::BoardHost::drain_events_json}; mirrors the TS `BoardEventRow` shape.
+    /// @emoji 🧩️ Raw event row drained from {@link puzzle::artifacts::puzzle2d::engine::BoardHost::drain_events_json}; mirrors the TS `BoardEventRow` shape.
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
     pub struct BoardEventRow {
         pub name: String,
@@ -3440,7 +3440,7 @@ pub mod engine_canvas {
     }
 
     /// @emoji 🔁️ Applies scene fields onto `host`, diffing against `cache` so only changed fields re-sync. Mirrors `applyFixtureToSession` plus the independent per-field effects in the React host: reparsing the fixture resets selection/camera, so both are silently re-applied right after. Skips fixture/selection/camera sync entirely while `host` defers descriptor sync (mid-gesture), matching `pendingFixtureSceneRef`.
-    fn sync_board_host(host: &mut puzzle_2d_engine::BoardHost, scene: &ui_wgpu::Board2dScene, cache: &mut BoardSyncCache, pw: u32, ph: u32, dpr: f64) {
+    fn sync_board_host(host: &mut puzzle::artifacts::puzzle2d::engine::BoardHost, scene: &ui_wgpu::Board2dScene, cache: &mut BoardSyncCache, pw: u32, ph: u32, dpr: f64) {
         let size_key = format!("{pw}x{ph}@{dpr}");
         if sync_field(&mut cache.size_key, &size_key) {
             host.set_size(pw, ph, dpr);
@@ -3524,7 +3524,7 @@ pub mod engine_canvas {
             let mut map = cell.borrow_mut();
             let entry = map.get_mut(&scene.surface_id).expect("engine surface");
             if entry.board_host.is_none() {
-                entry.board_host = Some(puzzle_2d_engine::puzzle_board_host());
+                entry.board_host = Some(puzzle::artifacts::puzzle2d::engine::board_host::puzzle_board_host());
                 entry.board_sync_cache = BoardSyncCache::default();
             }
             let host = entry.board_host.as_mut().expect("board host");
@@ -3540,7 +3540,7 @@ pub mod engine_canvas {
         }
     }
 
-    pub fn with_board_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut puzzle_2d_engine::BoardHost) -> R) -> Option<R> {
+    pub fn with_board_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut puzzle::artifacts::puzzle2d::engine::BoardHost) -> R) -> Option<R> {
         ENGINE_SURFACES.with(|cell| {
             let mut map = cell.borrow_mut();
             let entry = map.get_mut(surface_id)?;
@@ -3549,7 +3549,7 @@ pub mod engine_canvas {
         })
     }
 
-    pub fn with_board_host<R>(surface_id: &str, f: impl FnOnce(&puzzle_2d_engine::BoardHost) -> R) -> Option<R> {
+    pub fn with_board_host<R>(surface_id: &str, f: impl FnOnce(&puzzle::artifacts::puzzle2d::engine::BoardHost) -> R) -> Option<R> {
         ENGINE_SURFACES.with(|cell| {
             let map = cell.borrow();
             let entry = map.get(surface_id)?;

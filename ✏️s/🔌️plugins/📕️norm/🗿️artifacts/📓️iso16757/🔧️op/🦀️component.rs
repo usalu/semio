@@ -1,0 +1,35 @@
+//! ⚡️ ISO 16757 artifact — the operation alias, its store aliases, and its laws.
+//!
+//! 🧬️ `SetDocumentOperation<Document>` (whole-document replace) already implements both
+//! `store::Operation<Document>` and, now that `Document` derives `dsl::DslDocument` (i.e.
+//! `store::DocumentDsl`), `store::OpText` too — see `crate::core`'s generic `impl<D: DocumentDsl + ...>
+//! OpText for SetDocumentOperation<D>`. A coarse, whole-value-replace operation is the legitimate,
+//! sufficient choice: this reference/lookup-table document has no interactive editor driving
+//! fine-grained field-level edits, so reusing the generic pair (rather than hand-deriving a redundant
+//! one-variant `#[derive(dsl::DslOps)]` enum that would duplicate exactly this shape) keeps every norm
+//! artifact's operation layer DRY. The `NormFamily` binding lives in `⚙️engine`, next to `evaluate`.
+
+use crate::artifacts::iso16757::Document;
+use crate::core::SetDocumentOperation;
+
+//#region 🔖️Types
+/// 🧬️ See module doc comment.
+pub type Operation = SetDocumentOperation<Document>;
+
+/// 📦️ VCS envelope/store aliases for the ISO 16757 document, now that `Document`/`Operation` both
+/// satisfy `store::DocumentDsl`/`store::OpText`.
+pub type Iso16757Envelope = store::DocumentEnvelope<Document, Operation>;
+pub type Iso16757Store = store::DocumentStore<Document, Operation>;
+//#endregion 🔖️Types
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn set_document_operation_op_text_round_trips_for_iso16757() {
+        store::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: Document::reference_fixture() });
+    }
+}
+//#endregion 🧪️Tests

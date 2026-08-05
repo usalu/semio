@@ -17,7 +17,7 @@ export default defineConfig({
       { find: "@semio-tech/animate-present-core", replacement: resolve(root, "../../📦️index.ts") },
       { find: "@semio-tech/animate-present-renderer-react", replacement: resolve(root, "📦️index.tsx") },
       { find: "@semio-tech/framework-core", replacement: resolve(repoRoot, "./🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts") },
-      { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx") },
+      { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx") },
       {
         find: "@semio-tech/mit-bestand-praesentation-projektetage-spec",
         replacement: resolve(repoRoot, "./♻️mit-bestand/🎤️präsentation/📅️33.projektetage/⚡️implementations/🟦️typescript/📦️index.ts"),

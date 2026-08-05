@@ -1,0 +1,119 @@
+# UI element inventory — generated 2026-08-05
+# source: 🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx (40693 lines)
+# top-level regions: 35
+# story files in .storybook/stories/ui: 75
+# duplicate region names: 1
+# unclosed regions at EOF: 0
+# orphan #endregion (no matching #region): 0
+
+DUPLICATE REGION NAME: "🔎️WindowSearch" at lines 22740, 23215
+
+1	12	12	barrel-stay	🧲️Header
+14	156	143	core-candidate	🔌️Adapters
+158	216	59	core-candidate	🔌️Ports
+218	313	96	core-candidate	🔌️PortWiring
+315	420	106	core-candidate	🐚️ShellScope
+422	509	88	core-candidate	🐚️ShellActivity
+511	744	234	core-candidate	🔖️IconRenderPort
+746	871	126	core-candidate	🖼️ReferenceMedia
+873	880	8	core-candidate	🔌️PortWiringAliases
+882	6553	5672	core-candidate	🎼️Utilities
+6555	6572	18	core-candidate	🔊️Section Specificity
+6574	6797	224	core-candidate	🔤️Interaction Context
+6799	8088	1290	core-candidate	🎓️Introduction
+8090	8630	541	core-candidate	🎥️Tutorial
+8632	8685	54	element:Dialog	🗨️Dialog
+8687	11274	2588	core-candidate	🎈️Level Context
+11276	11502	227	core-candidate	🐹️Element
+11504	11633	130	element:Command	🪆️Command
+11637	11688	52	element:ShellSearchDialog	🔎️ShellSearchDialog
+11690	11731	42	element:ShellFindDialog	🔎️ShellFindDialog
+11733	11738	6	core-candidate	🎛️CommandPanel
+11740	11784	45	element:Footer	🎮️Footer
+11786	11857	72	element:Layout	🪨️Layout
+11859	11915	57	element:Popover	🌐️Popover
+11917	12161	245	element:Tooltip	🎙️Tooltip
+12163	12344	182	group-header (no children — dissolve, unclassified content)	🌥️Base Components
+12388	12441	54	core-candidate	[🏷️Display Components] 📣️Aside
+12443	12598	156	element:Avatar	[🏷️Display Components] 📔️Avatar
+12600	12647	48	element:Card	[🏷️Display Components] 🎬️Card
+12649	12674	26	core-candidate	[🏷️Display Components] 🎹️Spinner
+12676	12712	37	core-candidate	[🏷️Display Components] 🎍️NotFound
+12714	12877	164	core-candidate	[🏷️Display Components] 🚦️StatusSurface
+12879	12882	4	core-candidate	[🏷️Display Components] 🧭️UiElementRegistry
+12884	12911	28	core-candidate	[🏷️Display Components] 🎺️LoadingRow
+12913	13036	124	element:Skeletons	[🏷️Display Components] 🦴Skeletons
+13038	13098	61	element:DiagramNode	[🏷️Display Components] 🔓️DiagramNode
+13100	13146	47	element:HoverCard	[🏷️Display Components] 🔧️HoverCard
+13148	13185	38	element:Icons	[🏷️Display Components] 🛒️Icons
+13187	13218	32	core-candidate	[🏷️Display Components] 🖲️Section
+13220	13239	20	element:Steps	[🏷️Display Components] 🪬️Steps
+13241	13279	39	element:Field	[🏷️Display Components] 🏷️Field
+13285	13501	217	element:ActionGroup	[🛒️Input Components] 🌩️ActionGroup
+13689	13797	109	element:Combobox	[🛒️Input Components] 📧️Combobox
+13799	14295	497	element:Input	[🛒️Input Components] 🩺️Input
+14297	14514	218	element:Select	[🛒️Input Components] 🔎️Select
+14516	14842	327	element:Slider	[🛒️Input Components] 🏩️Slider
+14844	15122	279	element:Stepper	[🛒️Input Components] 🏬️Stepper
+15124	15266	143	element:Textarea	[🛒️Input Components] 🎏️Textarea
+15268	15337	70	element:Toggle	[🛒️Input Components] 🗡️Toggle
+15339	15658	320	element:ToggleGroup	[🛒️Input Components] 🧩️ToggleGroup
+15660	15709	50	element:Orb	[🛒️Input Components] 🎄️Orb
+15711	15869	159	element:Ring	[🛒️Input Components] 🧫️Ring
+15875	15920	46	element:Accordion	[🗼️Aggregation Components] 🛒️Accordion
+15922	15948	27	element:Collapsible	[🗼️Aggregation Components] 🖥️Collapsible
+15950	16069	120	element:Dialog	[🗼️Aggregation Components] 🧸️Dialog
+16071	16295	225	element:Resizable	[🗼️Aggregation Components] 🪬️Resizable
+16297	16332	36	element:Scrollable	[🗼️Aggregation Components] 🎮️Scrollable
+16334	16385	52	element:Band	[🗼️Aggregation Components] 🥁️Band
+16387	16438	52	element:Strip	[🗼️Aggregation Components] 📢️Strip
+16440	16588	149	core-candidate	[🗼️Aggregation Components] 🖥️Fullscreen
+16590	16748	159	element:Navbar	[🗼️Aggregation Components] 🩺️Navbar
+16750	16777	28	core-candidate	[🗼️Aggregation Components] 🔗️RouteLink
+16779	16816	38	core-candidate	[🗼️Aggregation Components] 🪟️DesktopTitlebar
+16818	16866	49	element:Tabs	[🗼️Aggregation Components] 🏷️Tabs
+16868	17096	229	element:IconSelector	[🗼️Aggregation Components] 🖼️IconSelector
+17098	21295	4198	element:Tree	[🗼️Aggregation Components] 📜️Tree
+21301	21483	183	element:Breadcrumb	[🔷️Navigation Components] 💡️Breadcrumb
+21485	21539	55	element:PageNavigation	[🔷️Navigation Components] 🪩️PageNavigation
+21545	22073	529	element:Panel	[📷️Panel Components] 🧭️Panel
+22075	22422	348	core-candidate	[📷️Panel Components] 🪟️Pane
+22424	22489	66	element:MobilePanel	[📷️Panel Components] 💧️MobilePanel
+22539	22583	45	element:Ribbon	[🩻️Ribbon Components] 🎀️Ribbon
+22587	23489	903	core-candidate	🧭️Shell
+23493	23898	406	element:Window	[🔍️Window Components] 🌊️Window
+23900	23955	56	element:Page	[🔍️Window Components] 🌈️Page
+23957	24661	705	element:Diagram	[🔍️Window Components] 🧫️Diagram
+24663	26787	2125	element:Scene	[🔍️Window Components] 📍️Scene
+26789	27302	514	element:Table	[🔍️Window Components] 🛎️Table
+27304	27501	198	element:HistoryTable	[🔍️Window Components] 🗄️HistoryTable
+27503	28039	537	element:VirtualFileSystem	[🔍️Window Components] 📁️VirtualFileSystem
+28041	29977	1937	element:Canvas	[🔍️Window Components] ⚙️Canvas
+36891	36959	69	barrel-stay	🗿️Framework Re-exports
+
+# story files with no matched top-2-level region (need manual mapping in W2/W3 — likely nested deeper than depth 1, or share a region with another element): 25
+  - ActionDropdown
+  - App
+  - BasicChatPanel
+  - Button
+  - ButtonGroup
+  - CanvasPickMenu
+  - ContextMenu
+  - DragAndDrop
+  - Engagement
+  - FileTree
+  - Geometry
+  - IconShotFrame
+  - Label
+  - Mode
+  - NavbarExampleSelect
+  - OntologyTree
+  - PanelTabBar
+  - Providers
+  - SelectionMarquee
+  - SortableTreeItems
+  - UI
+  - UIDialog
+  - UIIntroduction
+  - UnifiedGumball
+  - ValidationTree

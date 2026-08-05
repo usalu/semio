@@ -42,7 +42,7 @@ kernel_3d_brepkit = { path = "../../../../🔨️modules/🧊️3d/📐️brep/�
 kernel_3d_engine = { path = "../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-brep-engine" }
 mathematical_graph_dsl = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🕸️graph/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph-dsl" }
 mathematical_graph_manifest = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph-manifest" }
-ui_wgpu = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust", package = "semio-framework-ui-wgpu" }
+ui_wgpu = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu", package = "semio-framework-ui-wgpu" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
 semio-framework-core = { path = "../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }

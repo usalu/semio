@@ -36,7 +36,7 @@ store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨
 protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 mathematical_graph = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph" }
 mathematical_geometry = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📐️geometry/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-geometry" }
-ui_wgpu = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust", package = "semio-framework-ui-wgpu" }
+ui_wgpu = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu", package = "semio-framework-ui-wgpu" }
 semio-framework-core = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 serde = { workspace = true }

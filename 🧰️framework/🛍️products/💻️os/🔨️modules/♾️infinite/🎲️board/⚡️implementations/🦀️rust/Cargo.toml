@@ -13,7 +13,7 @@ crate-type = ["rlib"]
 path = "../../../🎲️board/⚡️implementations/🦀️rust/📦️lib.rs"
 
 [dependencies]
-ui_styling = { path = "../../../../../../../🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust", package = "semio-framework-ui-styling" }
+ui_styling = { path = "../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 infinite_canvas = { path = "../../../🖼️canvas/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
 mathematical_graph = { path = "../../../../../../../🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph" }
 mathematical_graph_drawing = { path = "../../../../../../../🔨️modules/🧮️math/🕸️graph/🖊️drawing/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph-drawing" }

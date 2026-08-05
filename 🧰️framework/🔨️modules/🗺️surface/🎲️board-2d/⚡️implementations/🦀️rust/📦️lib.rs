@@ -5,11 +5,13 @@
 //! except the pure host (`BoardHost`) already lives in `infinite_board_port_directed_normal` and is
 //! re-exported by `puzzle_2d_engine` — this crate only owns the wasm session wrapper around it.
 
-use puzzle_2d::Puzzle2dProjection;
-use puzzle_2d_engine::{
-    apply_edge_handle_snap_to_fixture_v1_json, canvas, compute_edge_bezier_points, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle, normalize_board_descriptor_hidden_to_visible, puzzle_2d_lod_scale_json, puzzle_board_host,
-    puzzle_board_host_normal, redraw_layout_fixture_json, BoardHost, CubicBez, Point, SceneDescriptorJson,
+use puzzle::artifacts::puzzle2d::Puzzle2dProjection;
+use puzzle::artifacts::puzzle2d::engine::{
+    apply_edge_handle_snap_to_fixture_v1_json, canvas, compute_edge_bezier_points, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle, normalize_board_descriptor_hidden_to_visible, puzzle_2d_lod_scale_json,
+    BoardHost, CubicBez, Point, SceneDescriptorJson,
 };
+use puzzle::artifacts::puzzle2d::engine::board_host::{puzzle_board_host, puzzle_board_host_normal};
+use puzzle::artifacts::puzzle2d::engine::layout::redraw_layout_fixture_json;
 
 // #region 🔖️WasmHost
 #[cfg(target_arch = "wasm32")]

@@ -1,0 +1,34 @@
+//! 🎒️ Architect program artifact — the binary document surface (constitutional: pack).
+
+use crate::artifacts::program::Program;
+use store::PackError;
+
+/// 🎒️ Encodes an Architect program into its binary pack representation.
+pub fn encode(document: &Program) -> Vec<u8> {
+    store::DocumentPack::encode_pack(document)
+}
+
+/// 📖️ Decodes an Architect program from its binary pack representation.
+pub fn decode(bytes: &[u8]) -> Result<Program, PackError> {
+    <Program as store::DocumentPack>::decode_pack(bytes)
+}
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::artifacts::program::{empty_plugin, sample_plugin};
+
+    #[test]
+    fn pack_round_trips_the_empty_program() {
+        let document = empty_plugin();
+        assert_eq!(decode(&encode(&document)).expect("decode"), document);
+    }
+
+    #[test]
+    fn pack_round_trips_the_sample_program() {
+        let document = sample_plugin();
+        assert_eq!(decode(&encode(&document)).expect("decode"), document);
+    }
+}
+//#endregion 🧪️Tests

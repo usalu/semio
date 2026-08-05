@@ -97,7 +97,7 @@ fn register_sourcing_exports() {
 fn register_demonstrator_exports() {
     register_procedural_exports();
     register_cad_exports();
-    puzzle_3d_ui::register_puzzle3d_exports();
+    puzzle_3d_ui::apps::puzzle3d::register_puzzle3d_exports();
     register_sourcing_exports();
     register_process3d_exports();
     register_gis_exports();
@@ -108,7 +108,7 @@ fn bundle() -> semio_framework_plugin::PluginBundle {
     semio_framework_plugin::PluginBundle::new("demonstrator", "Entwerfen mit Bestand", "0.1.0")
         .register_document_app(procedural::apps::procedural3d::create_procedural3d_app(), || <procedural::apps::procedural3d::Procedural3dPlayApp as ::std::default::Default>::default())
         .register_document_app(cad::apps::cad::create_cad_app(), || <cad::apps::cad::CadPlayApp as ::std::default::Default>::default())
-        .register_document_app(puzzle_3d_ui::create_puzzle3d_app(), || <puzzle_3d_ui::Puzzle3dPlayApp as ::std::default::Default>::default())
+        .register_document_app(puzzle_3d_ui::apps::puzzle3d::create_puzzle3d_app(), || <puzzle_3d_ui::apps::puzzle3d::Puzzle3dPlayApp as ::std::default::Default>::default())
         .register_document_app(sourcing::apps::curate::create_sourcing_curate_app(), || sourcing::apps::curate::SourcingCurateApp)
         .register_document_app(process_3d::apps::process3d::create_process3d_app(), || process_3d::apps::process3d::Process3dPlayApp)
         .register_document_app(gis::apps::gis2d::create_gis2d_app(), || gis::apps::gis2d::Gis2dPlayApp)

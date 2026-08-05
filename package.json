@@ -4,7 +4,7 @@
   "type": "module",
   "description": "🧩️ Design-Information-Modeling for Kit-of-Parts 🏘️",
   "workspaces": [
-    "🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react",
     "🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript",
     "🧰️framework/⚡️implementations/🟦️typescript",
     "🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust",

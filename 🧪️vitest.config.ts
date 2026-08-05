@@ -67,7 +67,7 @@ const KNOWN_BROKEN_IN_AGGREGATOR = new Map<string, string>([
     "📜️script.ts has a pre-existing 'Cannot access join before initialization' bug reproducible standalone (bun:sqlite/env-transform ordering) — unrelated to this file",
   ],
   [
-    "🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/🧪️vitest.config.ts",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️vitest.config.ts",
     "imports the unresolved package '@semio-tech/assets' — pre-existing, unrelated to this file",
   ],
   [

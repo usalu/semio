@@ -1,0 +1,13 @@
+{
+  "title": "Draw Plugin Migration To Crate And Taxonomy Consolidation",
+  "emoji": "🖍️",
+  "status": "open",
+  "description": "Migrate the 🖍️draw plugin's 7-crate constitutional layout (🛂️manifest/🗿️artifact, 🎛️apps/🖍️draw/⚡️implementations, 🎛️apps/🖍️draw/🔨️modules/{🔄️fsm,🔧️op,🎒️pack,📡️protocol,🗣️dsl,🖱️ui,⚙️engine}) into ONE crate `semio-s-plugin-draw` at ✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/ with the full taxonomy tree (🗿️artifacts/\u003ca\u003e/{🔺️diff,🗣️dsl,🎒️pack,🔧️op,📡️spr,⚙️engine}, 🎛️apps/\u003capp\u003e/{🦀️component.rs,🦀️config.rs,🦀️terminology.rs,🎮️commands/*,🎭️modes/*}), following TEMPLATE.md's exact ordered checklist (26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE/📋️TEMPLATE.md). Preserve every [package.metadata.*] table verbatim from the old bundle crate. Fix the pre-existing systemic 'unclosed Ok(' corruption in the old ui crate's lib.rs as a natural side effect of porting handle() into app_commands! handlers (9th confirmed instance of this repo-wide pattern, per master doc). Verify: cargo check (native + wasm32-wasip2), cargo clippy -D warnings, cargo test (wire-format byte-identical proof against baseline), then delete old crate manifests and report registrar handoff (root Cargo.toml lines to remove/add, workspace.dependencies changes, cross-plugin dependents found via Cargo.toml + use-line greps, especially dsl/fixture-sweep and dsl/registry). Do not touch root Cargo.toml, root script.ts, registry script, launch.json, any other plugin, or any AGENTS.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2481"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪5efbbac591ee4e44ac3d17c2ae77a9ee"
+  ]
+}

@@ -1,0 +1,73 @@
+warning: unused import: `DrawCircle`
+ --> ✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/⚙️engine/⚡️implementations/🦀️rust/../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/⚙️engine/⚡️implementations/🦀️rust/📦️lib.rs:5:116
+  |
+5 |     default_draw_trace_params, default_draw_transform, DocumentDsl, DrawArtboard, DrawAttributes, DrawBooleanBody, DrawCircle, DrawDo...
+  |                                                                                                                    ^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-app-draw-engine` (lib) generated 1 warning (run `cargo fix --lib -p semio-s-app-draw-engine` to apply 1 suggestion)
+warning: unused imports: `DrawTextBody` and `PathSegment`
+ --> ✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/🔧️op/⚡️implementations/🦀️rust/../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/🔧️op/⚡️implementations/🦀️rust/📦️lib.rs:3:53
+  |
+3 | use draw::{DrawCamera, DrawDocument, DrawLayerNode, DrawTextBody, DrawTraceParams, DrawTransform, FillStyle, PathSegment, StrokeStyle};
+  |                                                     ^^^^^^^^^^^^                                             ^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-app-draw-op` (lib) generated 1 warning (run `cargo fix --lib -p semio-s-app-draw-op` to apply 1 suggestion)
+   Compiling semio-s-app-draw-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/📡️protocol/⚡️implementations/🦀️rust)
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs:206:36
+    |
+206 | ...   let bytes = encode_op(&draw_op::DrawOperation::SetDocument { document: default_draw_document("x", None) }).unwrap_or_default();
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+206 -             let bytes = encode_op(&draw_op::DrawOperation::SetDocument { document: default_draw_document("x", None) }).unwrap_or_default();
+206 +             let bytes = encode_op(&DrawOperation::SetDocument { document: default_draw_document("x", None) }).unwrap_or_default();
+    |
+
+warning: `semio-s-app-draw-protocol` (lib test) generated 1 warning (run `cargo fix --lib -p semio-s-app-draw-protocol --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized] target(s) in 1.59s
+     Running unittests ../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_draw_protocol-70e0e447aa8610b5)
+
+running 1 test
+set-document document { schema=draw.document id=cmd-doc layers { path base { id=path-1 name="Layer 1" visible=true locked=false opacity=1 blend-mode=normal transform { x=0 y=0 scale-x=1 scale-y=1 rotation=0rad } attributes { fill { } } } segments { } } artboard { width=1024 height=1024 } } | 186 | 010006074c61796572203107636d642d646f630d647261772e646f63756d656e74066e6f726d616c047061746806706174682d3101000e0d04000602010601030e0f010402000e0d08000605010600020203010405000000000000f03f050603060e0d0500050000000000000000010500000000000000000205000000000000f03f0305000000000000f03f04050000000000000000070e0d01000e0f00010e0f00050e0d020005000000000000904001050000000000009040
+commit-document document { schema=draw.document id=cmd-doc-2 layers { path base { id=path-3 name="Layer 1" visible=true locked=false opacity=1 blend-mode=normal transform { x=0 y=0 scale-x=1 scale-y=1 rotation=0rad } attributes { fill { } } } segments { } } artboard { width=1024 height=1024 } } | 188 | 010106074c61796572203109636d642d646f632d320d647261772e646f63756d656e74066e6f726d616c047061746806706174682d3301000e0d04000602010601030e0f010402000e0d08000605010600020203010405000000000000f03f050603060e0d0500050000000000000000010500000000000000000205000000000000f03f0305000000000000f03f04050000000000000000070e0d01000e0f00010e0f00050e0d020005000000000000904001050000000000009040
+fixture-json json="{}" | 10 | 010201027b7d01000600
+active-example example-id=semio | 13 | 0103010573656d696f01000600
+selected-opacity value=0.5 | 14 | 010400010005000000000000e03f
+engagement-submit value="Renamed \"layer\"" | 23 | 0105010f52656e616d656420226c617965722201000600
+engagement-submit | 4 | 01050000
+add-layer kind="shape:rect" | 18 | 0106010a73686170653a7265637401000600
+drop-layer-kind kind=path target-row-id=draw-play-layers drop-position=inside | 42 | 01070310647261772d706c61792d6c617965727306696e73696465047061746803000602010600020601
+move-layer layer-id=layer-1 target-row-id=draw-play-layers drop-position=after | 44 | 01080305616674657210647261772d706c61792d6c6179657273076c617965722d3103000602010601020600
+delete-layer layer-id=layer-1 | 15 | 010901076c617965722d3101000600
+duplicate-layer layer-id=layer-1 | 15 | 010a01076c617965722d3101000600
+toggle-layer-visible layer-id=layer-1 | 15 | 010b01076c617965722d3101000600
+combine-boolean operation=union ids=[ a b ] | 24 | 010c030161016205756e696f6e02000602010c0206000601
+patch-layer layer-id=layer-1 field=opacity value="0.4" | 33 | 010d0303302e34076c617965722d31076f70616369747903000601010602020600
+patch-layers field=blendMode value="\"multiply\"" layer-ids=[ a b ] | 42 | 010e040a226d756c7469706c79220161016209626c656e644d6f646503000c0206010602010603020600
+active-utility utility-id=pen | 11 | 010f010370656e01000600
+camera camera { x=1 y=2 zoom=1.5 } | 38 | 01100001000e0d030005000000000000f03f010500000000000000400205000000000000f83f
+camera-zoom value=2 | 14 | 0111000100050000000000000040
+set-selection ids=[ a b ] | 15 | 0112020161016201000c0206000601
+set-hover id=a | 9 | 011301016101000600
+set-hover | 4 | 01130000
+select-all | 4 | 01140000
+clear-selection | 4 | 01150000
+engagement-input value=typing | 14 | 01160106747970696e6701000600
+locale value=de-DE | 13 | 0117010564652d444501000600
+canvas-pointer-down x=1 y=2 width=800 height=600 shift=true ctrl=false meta=false | 50 | 011800070005000000000000f03f010500000000000000400205000000000000894003050000000000c08240040205010601
+canvas-pointer-move x=1 y=2 width=800 height=600 | 44 | 011900040005000000000000f03f010500000000000000400205000000000000894003050000000000c08240
+canvas-pointer-up x=1 y=2 width=800 height=600 shift=false ctrl=true meta=false | 50 | 011a00070005000000000000f03f010500000000000000400205000000000000894003050000000000c08240040105020601
+canvas-double-click | 4 | 011b0000
+canvas-commit-draft | 4 | 011c0000
+canvas-escape | 4 | 011d0000
+test tests::debug_wire_baseline_dump ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+

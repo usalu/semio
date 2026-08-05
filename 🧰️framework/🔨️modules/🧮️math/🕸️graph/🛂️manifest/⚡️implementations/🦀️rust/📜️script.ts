@@ -56,7 +56,15 @@ function findManifestFiles(root: string): string[] {
       }
       if (st.isDirectory()) {
         walk(path);
-      } else if (name.endsWith(".manifest.json") && (path.includes("/🛂️manifest/") || path.includes("/manifest/"))) {
+        // 🏷️ A manifest source is tagged by its filename, not by living in a directory named "manifest" — the
+        // `🗿️artifacts/<component>/🛂️manifest.json` taxonomy (one manifest per artifact, no descriptor needed)
+        // sits directly under the component's own artifact folder with no "manifest"-named parent directory at
+        // all. Requiring `path.includes("/manifest/")` silently dropped every manifest fixture that migrated to
+        // that layout (flow-dag, writer-languages, note-blocks, wires) out of codegen with no error — the import
+        // just dangled. Matching on the `🛂️manifest.json` filename prefix alone (bare for a single manifest per
+        // directory, or suffixed with `<descriptor>.manifest.json` to disambiguate multiple in one directory,
+        // e.g. `🛂️manifest.jsonnakagin.manifest.json`) is the actual invariant and needs no directory convention.
+      } else if (name.startsWith("🛂️manifest.json") && name.endsWith(".json")) {
         out.push(path);
       }
     }

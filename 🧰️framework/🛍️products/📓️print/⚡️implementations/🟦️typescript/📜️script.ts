@@ -6,11 +6,11 @@ import { arch, platform } from "node:os";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { BundleScript, ScriptRouter, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runCmd, runCmdStatus, runProbe, tryRun, TEST_LEVELS } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
-import { oklabMix } from "../../../../🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/📜️script.ts";
+import { oklabMix } from "../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts";
 
 const printRoot = import.meta.dir;
 const repoRoot = getWorkspaceRoot();
-const tokensPath = join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🔣️tokens.json");
+const tokensPath = join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🔣️tokens.json");
 const texDir = join(printRoot, "../🖋️latex");
 const templateRoot = join(printRoot, "📄️template");
 const assetRoot = join(printRoot, "asset");

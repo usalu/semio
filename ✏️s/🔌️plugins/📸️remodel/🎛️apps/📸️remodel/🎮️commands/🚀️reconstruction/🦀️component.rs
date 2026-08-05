@@ -1,0 +1,253 @@
+//! 🚀️ Remodel play app commands — staged reconstruction.
+//!
+//! 🧭️ B1: `runReconstruction`/`retryStage`/`runStage` run the WHOLE staged pipeline synchronously
+//! inside one pure `handle()` call (bounded by [`REMODEL_MAX_RECONSTRUCTION_TICKS`], a totality safety
+//! valve, not a real-world limit). `handle` is `&self` and pure — there is no legal place to park a
+//! live, non-`Clone`/non-`Serialize` compute engine between calls, so there is no
+//! `advanceReconstruction` tick and no `cancelReconstruction` (a synchronous compute has nothing
+//! running in the background to cancel). All three rows share the same body: a retry/stage request is
+//! a fresh whole run, since a partial resume would need exactly the runtime state B1 removed.
+
+use crate::apps::remodel::config::{RemodelConfig, RemodelConfigOperation};
+use crate::artifacts::remodel::engine::{
+    build_qc_snapshot, build_engine_params, camera_pose_preview, decode_still_image, next_remodel_id, raster_to_png_asset, reconstruction as remodel_engine, watertight_snapshot,
+};
+use crate::artifacts::remodel::op::RemodelOperation;
+use crate::artifacts::remodel::{CameraPosePreview, CameraTrajectory, GeoProducts, ImageAsset, MeshSource, PackedF32, ReconstructionJob, ReconstructionStage, RemodelMesh, RemodelScene, SparseCloud};
+use base64::Engine as _;
+use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Constants
+/// ⚙️ Bounded units of engine work performed per internal `advance()` call within one synchronous
+/// `RunReconstruction` — small enough that no single `advance` call does an unreasonable burst of work.
+const RECONSTRUCTION_STEP_BUDGET: usize = 8;
+/// 🛑️ Pure-function totality safety valve for the synchronous reconstruction loop (see the module doc
+/// comment): a real project's total ticks is bounded by its frame/point/triangle counts, never this —
+/// this only guards against an engine bug spinning `handle()` forever.
+const REMODEL_MAX_RECONSTRUCTION_TICKS: u32 = 200_000;
+//#endregion 🔖️Constants
+
+//#region 🔖️Run
+/// 🚀️ Validates ≥2 accepted frames, builds an engine from the current document params, pushes every
+/// stream's already-persisted frames into it, then loops `advance()` in-process until `Done`/`Failed`
+/// and returns exactly one `Emit` carrying only the FINAL state — one call, one `Emit`, one undo step;
+/// no coalesce key needed. Shared by all three rows in this group.
+pub fn run_whole_pipeline(doc: &DocumentView<'_, RemodelScene>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    let scene = doc.projection;
+    let engine_params = build_engine_params(&scene.params);
+    let mut engine = remodel_engine::ReconstructionEngine::new(&engine_params);
+    let mut pushed = 0u32;
+    for stream in &scene.streams {
+        for frame_ref in &stream.frames {
+            let Some(asset) = scene.assets.get(&frame_ref.asset_id) else { continue };
+            let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(&asset.data) else { continue };
+            if let Ok(image) = decode_still_image(&asset.mime, &bytes) {
+                engine.push_frame(frame_ref.index, image, frame_ref.timestamp_ms);
+                pushed += 1;
+            }
+        }
+    }
+    if pushed < 2 {
+        return Ok(Emit::default()); // fewer than 2 accepted frames: too little to reconstruct from
+    }
+    let job_id = next_remodel_id("job");
+    let mut last_progress = 0.0f32;
+    let mut ticks = 0u32;
+    loop {
+        ticks += 1;
+        if ticks > REMODEL_MAX_RECONSTRUCTION_TICKS {
+            let job = ReconstructionJob {
+                id: job_id,
+                stage: ReconstructionStage::Failed,
+                progress_0_1: last_progress,
+                cancel_requested: false,
+                stage_cursor: 0,
+                started_at_ms: None,
+                error: Some("reconstruction did not converge within the bounded tick budget".into()),
+                camera_poses_preview: Vec::new(),
+                sparse_point_cloud_preview: PackedF32::default(),
+            };
+            return Ok(Emit::operations(vec![RemodelOperation::SetJob { job }]));
+        }
+        match engine.advance(RECONSTRUCTION_STEP_BUDGET) {
+            remodel_engine::EngineStatus::Working { progress, .. } => {
+                last_progress = progress;
+            }
+            remodel_engine::EngineStatus::Done => {
+                let accepted_count = engine.frame_source().accepted_count();
+                let preview = engine.sparse_preview();
+                let quality = engine.take_quality();
+                let mesh_data = engine.take_mesh();
+                let geo_products = engine.take_geo_products();
+
+                let registered_count = preview.camera_poses.len();
+                let camera_previews: Vec<CameraPosePreview> = preview.camera_poses.iter().enumerate().map(|(index, pose)| camera_pose_preview(index as u32, pose)).collect();
+
+                let job = ReconstructionJob {
+                    id: job_id.clone(),
+                    stage: ReconstructionStage::Done,
+                    progress_0_1: 1.0,
+                    cancel_requested: false,
+                    stage_cursor: 0,
+                    started_at_ms: None,
+                    error: None,
+                    camera_poses_preview: camera_previews.clone(),
+                    sparse_point_cloud_preview: PackedF32::from_f32_slice(&preview.packed_points),
+                };
+
+                let mut operations = vec![RemodelOperation::SetJob { job }];
+                operations.push(RemodelOperation::SetSparse { sparse: Some(SparseCloud { points: PackedF32::from_f32_slice(&preview.packed_points), colors: None }) });
+                if !camera_previews.is_empty() {
+                    operations.push(RemodelOperation::SetTrajectory { trajectory: Some(CameraTrajectory { poses: camera_previews }) });
+                }
+                if let Some(mesh_data) = mesh_data {
+                    let watertight = quality.as_ref().and_then(|quality| quality.watertight.as_ref()).map(watertight_snapshot);
+                    let mut texture_asset_id = None;
+                    if let Some(texture) = &mesh_data.paint_texture_base64 {
+                        let texture_size = scene.params.mesh.texture_size;
+                        let asset_id = format!("mesh-texture-{job_id}");
+                        operations.push(RemodelOperation::SetAsset { key: asset_id.clone(), value: Some(ImageAsset { mime: "image/png".into(), data: texture.clone(), width: texture_size, height: texture_size }) });
+                        texture_asset_id = Some(asset_id);
+                    }
+                    operations.push(RemodelOperation::SetMeshResult { mesh: Box::new(RemodelMesh { mesh: mesh_data, source: MeshSource::Reconstructed, texture_asset_id, watertight }) });
+                }
+                if let Some(quality) = &quality {
+                    operations.push(RemodelOperation::SetQc { qc: Some(build_qc_snapshot(quality, registered_count, accepted_count, scene.gcps.len())) });
+                }
+                if let Some(geo) = geo_products {
+                    let dsm_id = format!("geo-dsm-{job_id}");
+                    let dtm_id = format!("geo-dtm-{job_id}");
+                    operations.push(RemodelOperation::SetAsset { key: dsm_id.clone(), value: Some(raster_to_png_asset(&geo.dsm)) });
+                    operations.push(RemodelOperation::SetAsset { key: dtm_id.clone(), value: Some(raster_to_png_asset(&geo.dtm)) });
+                    operations.push(RemodelOperation::SetGeoProducts { geo: Some(GeoProducts { dsm_asset_id: Some(dsm_id), dtm_asset_id: Some(dtm_id), ortho_asset_id: None }) });
+                }
+                return Ok(Emit::operations(operations));
+            }
+            remodel_engine::EngineStatus::Failed(message) => {
+                let job = ReconstructionJob {
+                    id: job_id,
+                    stage: ReconstructionStage::Failed,
+                    progress_0_1: last_progress,
+                    cancel_requested: false,
+                    stage_cursor: 0,
+                    started_at_ms: None,
+                    error: Some(message),
+                    camera_poses_preview: Vec::new(),
+                    sparse_point_cloud_preview: PackedF32::default(),
+                };
+                return Ok(Emit::operations(vec![RemodelOperation::SetJob { job }]));
+            }
+        }
+    }
+}
+//#endregion 🔖️Run
+
+//#region 🔖️RunReconstruction
+pub mod run_reconstruction {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "run-reconstruction")]
+    pub struct RunReconstruction {}
+
+    pub fn handle(_payload: &RunReconstruction, doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+        run_whole_pipeline(doc)
+    }
+}
+//#endregion 🔖️RunReconstruction
+
+//#region 🔖️RetryStage
+pub mod retry_stage {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "retry-stage")]
+    pub struct RetryStage {
+        pub stage: String,
+    }
+
+    /// 🔁️ A retry is a fresh whole run (see the module doc comment): resuming at `payload.stage` would
+    /// need the mid-pipeline engine state B1 removed, so the stage name is accepted and ignored.
+    pub fn handle(_payload: &RetryStage, doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+        run_whole_pipeline(doc)
+    }
+}
+//#endregion 🔖️RetryStage
+
+//#region 🔖️RunStage
+pub mod run_stage {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "run-stage")]
+    pub struct RunStage {
+        pub stage: String,
+    }
+
+    /// ▶️ Same body as `retry_stage` — see the module doc comment.
+    pub fn handle(_payload: &RunStage, doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+        run_whole_pipeline(doc)
+    }
+}
+//#endregion 🔖️RunStage
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use crate::apps::remodel::commands::ingest::testkit_import_checker_stream;
+    use crate::apps::remodel::testkit::{app, dispatch};
+    use crate::apps::remodel::RemodelCommand;
+    use crate::artifacts::remodel::ReconstructionStage;
+    use semio_framework_plugin::PluginApp;
+
+    /// 🚀️ The staged execution model is synchronous, end-to-end — `RunReconstruction` ingests two
+    /// imported checker frames and runs the WHOLE pipeline to a terminal `Done`/`Failed` stage inside
+    /// the ONE dispatch (no `advanceReconstruction` re-dispatch loop).
+    #[test]
+    fn run_reconstruction_runs_synchronously_to_a_terminal_stage() {
+        let mut app = app();
+        testkit_import_checker_stream(&mut app, 2);
+        let run = dispatch(&mut app, RemodelCommand::RunReconstruction(super::run_reconstruction::RunReconstruction {}));
+        assert!(!run.operations.is_empty(), "a completed run publishes at least the final SetJob");
+        let scene = app.projection().expect("projection");
+        assert!(scene.job.stage == ReconstructionStage::Done || scene.job.stage == ReconstructionStage::Failed, "a synchronous run always ends terminal");
+        if scene.job.stage == ReconstructionStage::Done {
+            assert_eq!(scene.job.progress_0_1, 1.0);
+            assert!(scene.results.sparse.is_some(), "a Done run publishes a sparse cloud");
+        } else {
+            assert!(scene.job.error.is_some(), "a Failed run must carry an error message");
+        }
+    }
+
+    /// 🔁️ `retryStage` starts a fresh run (a new job id) even after a prior run already reached a
+    /// terminal stage.
+    #[test]
+    fn retry_stage_starts_a_fresh_run_with_a_new_job_id() {
+        let mut app = app();
+        testkit_import_checker_stream(&mut app, 2);
+        dispatch(&mut app, RemodelCommand::RunReconstruction(super::run_reconstruction::RunReconstruction {}));
+        let first_job_id = app.projection().expect("projection").job.id;
+
+        dispatch(&mut app, RemodelCommand::RetryStage(super::retry_stage::RetryStage { stage: "extracting-features".into() }));
+        let scene = app.projection().expect("projection");
+        assert!(scene.job.stage == ReconstructionStage::Done || scene.job.stage == ReconstructionStage::Failed);
+        assert_ne!(scene.job.id, first_job_id, "retryStage must start a new job");
+    }
+
+    /// 📦️ The whole run collapses into exactly one undo step: undoing once after a run reaches
+    /// `Done`/`Failed` must fully revert the job (and any published results) back to the pristine
+    /// pre-run document.
+    #[test]
+    fn full_run_collapses_into_a_single_undo_step() {
+        let mut app = app();
+        testkit_import_checker_stream(&mut app, 2);
+        let before_job = app.projection().expect("projection").job;
+        dispatch(&mut app, RemodelCommand::RunReconstruction(super::run_reconstruction::RunReconstruction {}));
+        assert_ne!(app.projection().expect("projection").job, before_job, "run must have changed the job");
+
+        app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
+        assert_eq!(app.projection().expect("projection").job, before_job, "one undo must fully revert the run");
+    }
+}
+//#endregion 🧪️Tests

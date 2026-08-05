@@ -7323,11 +7323,7 @@ dependencies = [
  "semio-s-app-norm-en1999",
  "semio-s-app-norm-iso16757",
  "semio-s-app-norm-vdi3805",
- "semio-s-app-puzzle-2d",
- "semio-s-app-puzzle-3d",
- "semio-s-app-puzzle-5d",
  "semio-s-app-remodel",
- "semio-s-app-space-home",
  "semio-s-app-trinity-rewrite",
  "semio-s-plugin-animate",
  "semio-s-plugin-block",
@@ -7339,11 +7335,13 @@ dependencies = [
  "semio-s-plugin-note",
  "semio-s-plugin-procedural",
  "semio-s-plugin-process",
+ "semio-s-plugin-puzzle",
  "semio-s-plugin-raster",
  "semio-s-plugin-reasoning-mindmap",
  "semio-s-plugin-sequence",
  "semio-s-plugin-shooting",
  "semio-s-plugin-sourcing",
+ "semio-s-plugin-space",
  "semio-s-plugin-trinity-ram",
  "semio-s-plugin-vcs",
  "semio-s-plugin-writer",
@@ -8432,8 +8430,7 @@ dependencies = [
  "js-sys",
  "semio-framework-os-kernel-math-geometry",
  "semio-framework-os-kernel-store",
- "semio-s-app-puzzle-2d",
- "semio-s-app-puzzle-2d-engine",
+ "semio-s-plugin-puzzle",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -8560,7 +8557,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-plugin-host",
  "semio-framework-ui-wgpu",
- "semio-s-app-puzzle-2d-engine",
+ "semio-s-plugin-puzzle",
  "serde",
  "serde_json",
  "tiny-skia",
@@ -10148,281 +10145,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-app-puzzle-2d"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-store",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-2d-dsl"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-puzzle-2d",
- "semio-s-app-puzzle-2d-op",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-2d-engine"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-infinite-board-port-directed-normal",
- "semio-framework-os-kernel-math-graph-manifest",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-puzzle-2d",
- "semio-s-kernel-reasoning-mindmap",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-2d-op"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-puzzle-2d",
- "semio-s-app-puzzle-2d-engine",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-2d-pack"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-puzzle-2d",
- "semio-s-app-puzzle-2d-dsl",
- "semio-s-app-puzzle-2d-op",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-2d-protocol"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-puzzle-2d",
- "semio-s-app-puzzle-2d-engine",
- "semio-s-app-puzzle-2d-op",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-2d-ui"
-version = "0.1.0"
-dependencies = [
- "semio-framework-core",
- "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-plugin",
- "semio-s-app-puzzle-2d",
- "semio-s-app-puzzle-2d-dsl",
- "semio-s-app-puzzle-2d-engine",
- "semio-s-app-puzzle-2d-op",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-3d"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-store",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-3d-dsl"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-puzzle-3d",
- "semio-s-app-puzzle-3d-op",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-3d-engine"
-version = "0.1.0"
-dependencies = [
- "nalgebra 0.33.3",
- "parry3d",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-math-graph-manifest",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-puzzle-3d",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-3d-op"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-puzzle-3d",
- "semio-s-app-puzzle-3d-engine",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-3d-pack"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-puzzle-3d",
- "semio-s-app-puzzle-3d-dsl",
- "semio-s-app-puzzle-3d-op",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-3d-protocol"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-puzzle-3d",
- "semio-s-app-puzzle-3d-engine",
- "semio-s-app-puzzle-3d-op",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-3d-ui"
-version = "0.1.0"
-dependencies = [
- "semio-framework-core",
- "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-plugin",
- "semio-s-app-puzzle-3d",
- "semio-s-app-puzzle-3d-dsl",
- "semio-s-app-puzzle-3d-engine",
- "semio-s-app-puzzle-3d-op",
- "serde",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-5d"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-store",
- "semio-s-app-puzzle-3d",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-5d-dsl"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-puzzle-5d",
- "semio-s-app-puzzle-5d-op",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-5d-engine"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-math-graph-manifest",
- "semio-framework-os-kernel-store",
- "semio-s-app-puzzle-3d",
- "semio-s-app-puzzle-3d-engine",
- "semio-s-app-puzzle-5d",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-5d-op"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-puzzle-5d",
- "semio-s-app-puzzle-5d-engine",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-5d-pack"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-puzzle-5d",
- "semio-s-app-puzzle-5d-op",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-5d-protocol"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-puzzle-5d",
- "semio-s-app-puzzle-5d-engine",
- "semio-s-app-puzzle-5d-op",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-app-puzzle-5d-ui"
-version = "0.1.0"
-dependencies = [
- "semio-framework-core",
- "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-infinite-board-port-directed-normal",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-plugin",
- "semio-s-app-puzzle-5d",
- "semio-s-app-puzzle-5d-dsl",
- "semio-s-app-puzzle-5d-engine",
- "semio-s-app-puzzle-5d-op",
- "serde",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "semio-s-app-remodel"
 version = "0.1.0"
 dependencies = [
@@ -10516,181 +10238,6 @@ dependencies = [
  "semio-s-plugin-remodel-engine",
  "semio-s-plugin-remodel-image",
  "semio-s-plugin-remodel-video",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-app-space-home"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-store",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-app-space-home-dsl"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-store",
- "semio-s-app-space-home",
-]
-
-[[package]]
-name = "semio-s-app-space-home-engine"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-space-home",
- "semio-s-app-space-home-dsl",
- "serde",
-]
-
-[[package]]
-name = "semio-s-app-space-home-op"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-space-home",
- "semio-s-app-space-home-engine",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-app-space-home-pack"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-store",
- "semio-s-app-space-home",
- "semio-s-app-space-home-engine",
-]
-
-[[package]]
-name = "semio-s-app-space-home-protocol"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-space-home",
- "semio-s-app-space-home-op",
- "serde",
-]
-
-[[package]]
-name = "semio-s-app-space-home-ui"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os",
- "semio-framework-os-kernel-store",
- "semio-framework-plugin",
- "semio-s-app-space-home",
- "semio-s-app-space-home-engine",
- "semio-s-app-space-home-op",
- "semio-s-app-space-home-protocol",
- "semio-s-plugin-space-shared",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-app-space-space"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "serde",
-]
-
-[[package]]
-name = "semio-s-app-space-space-dsl"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os",
- "semio-framework-os-kernel-store",
- "semio-s-app-space-space-engine",
- "semio-s-plugin-space-shared",
-]
-
-[[package]]
-name = "semio-s-app-space-space-engine"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-infinite-board-port-directed-dag",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-plugin",
- "semio-s-app-space-space",
- "semio-s-plugin-space-shared",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-app-space-space-op"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
- "semio-s-app-space-space",
- "semio-s-app-space-space-engine",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-app-space-space-pack"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-store",
- "semio-s-app-space-space-engine",
- "semio-s-plugin-space-shared",
-]
-
-[[package]]
-name = "semio-s-app-space-space-protocol"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "serde",
-]
-
-[[package]]
-name = "semio-s-app-space-space-ui"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "semio-framework-core",
- "semio-framework-os",
- "semio-framework-os-kernel-infinite-board-port-directed-dag",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-plugin",
- "semio-s-app-space-home-engine",
- "semio-s-app-space-home-protocol",
- "semio-s-app-space-home-ui",
- "semio-s-app-space-space",
- "semio-s-app-space-space-engine",
- "semio-s-app-space-space-op",
- "semio-s-app-space-space-protocol",
- "semio-s-plugin-space-shared",
- "serde",
  "serde_json",
 ]
 
@@ -11159,11 +10706,11 @@ dependencies = [
  "semio-framework-os-kernel-3d-brep",
  "semio-framework-os-kernel-infinite-canvas",
  "semio-framework-plugin",
- "semio-s-app-puzzle-3d-ui",
  "semio-s-plugin-cad",
  "semio-s-plugin-gis",
  "semio-s-plugin-procedural",
  "semio-s-plugin-process",
+ "semio-s-plugin-puzzle",
  "semio-s-plugin-sourcing",
  "serde_json",
 ]
@@ -11575,11 +11122,23 @@ dependencies = [
 name = "semio-s-plugin-puzzle"
 version = "0.1.0"
 dependencies = [
+ "nalgebra 0.33.3",
+ "parry3d",
+ "semio-framework-core",
+ "semio-framework-os",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-infinite-board-port-directed-normal",
  "semio-framework-os-kernel-infinite-canvas",
+ "semio-framework-os-kernel-math-graph-manifest",
+ "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
  "semio-framework-plugin",
- "semio-s-app-puzzle-2d-ui",
- "semio-s-app-puzzle-3d-ui",
- "semio-s-app-puzzle-5d-ui",
+ "semio-s-kernel-reasoning-mindmap",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -11840,19 +11399,18 @@ dependencies = [
 name = "semio-s-plugin-space"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
+ "semio-framework-core",
  "semio-framework-os",
- "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-plugin",
- "semio-s-app-space-home-ui",
- "semio-s-app-space-space-ui",
-]
-
-[[package]]
-name = "semio-s-plugin-space-shared"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-infinite-board-port-directed-dag",
+ "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
+ "semio-framework-os-kernel-vcs",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

@@ -72,9 +72,15 @@ module.exports = {
       },
     },
     {
+      // 🧭️ Matches the RESOLVED dependency path, not the raw import specifier — dependency-cruiser is
+      // invoked from the repo root, so this only fires when a resolved local import lands 4+ levels
+      // above the repo root, i.e. actually escapes the checkout. A `📜️script.ts`'s own relative
+      // specifier (`../../../../../../../🧰️framework/…`, 6-8 `../` segments to reach repo-lib) resolves
+      // to an ordinary in-repo path and never trips this — do not "fix" it into a specifier-depth rule,
+      // that would break every script.ts in the repo (see ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE).
       name: "no-escaping-relative-imports",
       severity: "error",
-      comment: "Relative imports must not escape the owning package root",
+      comment: "Relative imports must not resolve to a path outside the repo checkout",
       from: {},
       to: {
         dependencyTypes: ["local"],
@@ -101,12 +107,29 @@ module.exports = {
       },
     },
     {
+      // 🧭️ Was stale since before this rule's own introduction: it matched
+      // `📺️renderer/⚡️implementations/🟦️typescript/🧑️‍🎨️engine/⚛️react/`, but the real dir order has always
+      // been `🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/` — zero paths ever matched `from`, so
+      // this rule has never fired. Repointed (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE) at the
+      // FUTURE co-located shape (`📦️packages/🟦️typescript/🎯️targets/⚛️react/` + `🧱️elements/`) rather
+      // than the current dead path — stays a deliberate no-op until that restructure's W4 move lands,
+      // at which point it starts enforcing for real. Do not "fix" it back to the current dir; that would
+      // just trade one dead path for another about to be deleted.
       name: "renderer-hosts-only-ui",
       severity: "error",
       comment: "the react renderer host may depend only on ui/styling, framework-core protocol types, react, and itself — never os-shell, ui-interpreter, or app packages",
-      from: { path: "^🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript/🧑️‍🎨️engine/⚛️react/" },
+      from: { path: "^🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/(📦️packages/🟦️typescript/🎯️targets/⚛️react|🧱️elements)/" },
       to: {
-        pathNot: ["^🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript/🧑️‍🎨️engine/⚛️react/", "^@semio-tech/ui-", "^@semio-tech/framework-core", "^react$", "^react/", "^react-dom$", "^react-dom/", "^node:"],
+        pathNot: [
+          "^🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/(📦️packages/🟦️typescript/🎯️targets/⚛️react|🧱️elements)/",
+          "^@semio-tech/ui-",
+          "^@semio-tech/framework-core",
+          "^react$",
+          "^react/",
+          "^react-dom$",
+          "^react-dom/",
+          "^node:",
+        ],
       },
     },
     {

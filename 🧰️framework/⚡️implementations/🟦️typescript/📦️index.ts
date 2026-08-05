@@ -623,7 +623,7 @@ export type ContextMenuItemSpec = {
 //#region 🗂️ContextMenuOrganizer
 /** 🗂️ Canonical ribbon-parent taxonomy — TS twin of the Rust `RIBBON_PARENT_CATEGORIES` const
  * (`🧰️framework/🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust/📦️lib.rs`) and of ui-react's closed
- * `UiRibbonParentCategory` union (`🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx`
+ * `UiRibbonParentCategory` union (`🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx`
  * ~3419). Id spelling and order are load-bearing: `organizeContextMenu` sorts `menu.group.<category>`
  * rows by this order (unknown categories sort after, in emit order). */
 const RIBBON_PARENT_CATEGORIES = [

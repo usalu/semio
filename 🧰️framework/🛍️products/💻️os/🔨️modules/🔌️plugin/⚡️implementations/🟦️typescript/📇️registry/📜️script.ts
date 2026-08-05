@@ -2,7 +2,7 @@
 /** 📜️ `@semio-tech/plugin-registry` — single-source plugin registry codegen from workspace crates. */
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, loadTaxonomy, discoverPackages, discoverPackageProblems } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
 
 //#region 🔖️PluginRegistryEntry
 export type PluginHostMetadata = {
@@ -84,7 +84,10 @@ function findPluginCargoFiles(root: string): string[] {
           // `[package.metadata.component]`, so `tryParsePluginCargo` drops them below — matching how
           // ordinary (non-plugin) module crates already get silently filtered out of the registry today.
           const isNewPluginCrate = isNewContractPluginManifestPath(path);
-          const isNewFrameworkCrate = !isNewPluginCrate && /\/🧰️framework\/.*\/📦️packages\/🦀️rust\/Cargo\.toml$/.test(path);
+          // 🎯️ `(?:🎯️targets\/[^/]+\/)?` widened for UI-ELEMENT-CO-LOCATION-RESTRUCTURE: a framework
+          // module may have one crate per render target (`📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml`)
+          // instead of a single crate directly under `📦️packages/🦀️rust/`.
+          const isNewFrameworkCrate = !isNewPluginCrate && /\/🧰️framework\/.*\/📦️packages\/🦀️rust\/(?:🎯️targets\/[^/]+\/)?Cargo\.toml$/.test(path);
           if (isNewPluginCrate || isNewFrameworkCrate) {
             const text = readFileSync(path, "utf8");
             if (hasSemioRole(text, isNewPluginCrate ? "plugin" : "framework")) out.push(path);
@@ -742,12 +745,25 @@ function validateConstitutionalCrates(repoRoot: string, migratedPluginIds: Reado
 //#endregion 🏛️ConstitutionalCrateGate
 
 //#region 🗿️TaxonomyValidator
-/** @emoji 🗿️ Every artifact node must carry all five taxonomy component slots (see the discovery
- * contract in master ticket `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`). */
-const TAXONOMY_ARTIFACT_COMPONENTS = ["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr"] as const;
+/** @emoji 🗿️ Every artifact node must carry all five taxonomy component slots — sourced from
+ * `🔣️taxonomy.json` (single vocabulary source of truth, see master ticket
+ * `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`; this used to be an independently
+ * hand-maintained copy, which is exactly the drift `🔣️taxonomy.json` exists to prevent). */
+const TAXONOMY_ARTIFACT_COMPONENTS = loadTaxonomy().artifactComponentDirs;
 /** @emoji 🪟️ A window dir may only contain these children, each itself a `🦀️component.rs` leaf. */
-const TAXONOMY_WINDOW_CHILDREN = new Set(["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options"]);
-const TAXONOMY_LEAF_FILENAME = "🦀️component.rs";
+const TAXONOMY_WINDOW_CHILDREN = new Set(loadTaxonomy().windowChildDirs);
+const TAXONOMY_LEAF_FILENAME = loadTaxonomy().taxonomyLeafFilenames["🦀️rust"] ?? "🦀️component.rs";
+
+//#region 🏛️FrameworkPackageGate
+/** @emoji 🖼️ `discoverPackages` results filtered to `role === "framework"` — the framework-module-family
+ * analogue of `findNewContractPluginRoots`, added by `26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE`.
+ * Reuses the shared discovery walk (three-level `🎯️targets` aware) instead of hand-rolling a second
+ * walker, so plugin and framework package catalogs never drift apart. Empty until a framework module
+ * (ui, renderer-engine, styling, assets, …) actually carries a `role = "framework"` marker. */
+function discoverFrameworkPackages(repoRoot: string) {
+  return discoverPackages(repoRoot).filter((p) => p.role === "framework");
+}
+//#endregion 🏛️FrameworkPackageGate
 
 /** @emoji 🧭️ Plugin roots discovered via the *new* taxonomy contract (`📦️packages/🦀️rust/Cargo.toml`
  * with `role = "plugin"`) — distinct from `findPluginCargoFiles`, which also matches the legacy
@@ -949,7 +965,18 @@ class CheckScript extends BundleScript {
         for (const finding of taxonomyFindings) console.warn(`  - ${finding}`);
       }
     }
-    console.log(`plugin registry catalog is fresh (${entries.length} plugin crates, ${playgrounds.length} playgrounds).`);
+    // 🏛️ Framework-package discovery (`role === "framework"`, three-level `🎯️targets`-aware) — warn-only
+    // report, same posture as the plugin taxonomy audit above. Empty until a framework module (ui,
+    // renderer-engine, styling, assets, …) carries a `role = "framework"` marker (UI-ELEMENT-CO-LOCATION-
+    // RESTRUCTURE W1+); a non-empty `discoverPackageProblems` outside a legacy/mixed/exempt area means a
+    // manifest lost its marker or a `🎯️targets/<target>/` dir is missing its manifest.
+    const frameworkPackages = discoverFrameworkPackages(repoRoot);
+    const discoveryProblems = discoverPackageProblems(repoRoot);
+    if (discoveryProblems.length > 0) {
+      console.warn("package discovery problems:");
+      for (const problem of discoveryProblems) console.warn(`  - [${problem.kind}] ${problem.message}`);
+    }
+    console.log(`plugin registry catalog is fresh (${entries.length} plugin crates, ${playgrounds.length} playgrounds, ${frameworkPackages.length} framework packages).`);
   }
 }
 

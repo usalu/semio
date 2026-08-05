@@ -184,75 +184,99 @@ mod tests {
     }
 
     //#region 🔖️RemodelCommandTests
+    /// ⚡️ One representative value per `RemodelCommand` row, in declaration (= binary ordinal) order.
+    fn every_remodel_command() -> Vec<RemodelCommand> {
+        vec![
+            RemodelCommand::RunReconstruction,
+            RemodelCommand::RetryStage { stage: "extracting-features".into() },
+            RemodelCommand::RunStage { stage: "dense-stereo".into() },
+            RemodelCommand::ImportFramePayload { payload: "data:image/png;base64,abc".into(), name: "frame.png".into(), index: 0 },
+            RemodelCommand::ImportVideoFramePayload { payload: "data:image/jpeg;base64,abc".into(), name: "clip.mp4".into(), index: 1, frame_index: 1, timestamp_ms: 33.3 },
+            RemodelCommand::ImportVideoDone { name: "clip.mp4".into(), duration_ms: 400.0, frame_count: 4, width: 24, height: 24, codec: "mjpeg".into() },
+            RemodelCommand::ImportVideoBytesPayload { payload: "data:video/mp4;base64,abc".into(), name: "clip.mp4".into() },
+            RemodelCommand::AddStream { name: "Stream".into(), kind: "video".into(), camera_id: "cam-0".into() },
+            RemodelCommand::RemoveStream { stream_id: "stream-1".into() },
+            RemodelCommand::SetStreamSync { stream_id: "stream-1".into(), sync_offset_ms: 12.5 },
+            RemodelCommand::EditCalibration {
+                camera_id: "cam-1".into(),
+                label: "Front".into(),
+                model: "pinhole".into(),
+                fx: 1000.0,
+                fy: 1000.0,
+                cx: 0.0,
+                cy: 0.0,
+                skew: 0.0,
+                k1: 0.0,
+                k2: 0.0,
+                k3: 0.0,
+                p1: 0.0,
+                p2: 0.0,
+                locked: false,
+            },
+            RemodelCommand::CalibrateCameras,
+            RemodelCommand::AddGcp { name: "GCP".into(), world_x: 0.0, world_y: 0.0, world_z: 0.0 },
+            RemodelCommand::RemoveGcp { gcp_id: "gcp-1".into() },
+            RemodelCommand::PlaceGcpObservation { gcp_id: "gcp-1".into(), stream_id: "stream-1".into(), frame_index: 0, pixel_x: 10.0, pixel_y: 20.0 },
+            RemodelCommand::SetIngestParams { frame_sample_stride: 5, max_frames: 200, downscale_long_edge_px: 1600, min_sharpness: 0.3 },
+            RemodelCommand::SetFeatureParams { detector: "orb".into(), target_count: 4000, octaves: 4, edge_threshold: 10.0 },
+            RemodelCommand::SetMatchParams { matcher: "brute-force".into(), ratio_test: 0.8, cross_check: true, sequential_window: 8, max_pairs_per_frame: 16, loop_closure: true },
+            RemodelCommand::SetSfmParams { ransac_iterations: 1000, ransac_threshold_px: 2.0, min_track_length: 3, ba_max_iterations: 50, robust_loss: "huber".into(), huber_delta_px: 1.5 },
+            RemodelCommand::SetDenseParams { resolution: "medium".into(), window_radius_px: 3, min_view_consistency: 3, confidence_threshold: 0.5, max_points: 500_000 },
+            RemodelCommand::SetMeshParams {
+                tsdf_voxel_size_mm: 5.0,
+                tsdf_truncation_mm: 20.0,
+                decimate_target_triangles: 200_000,
+                smoothing_iterations: 2,
+                texture_enabled: true,
+                texture_size: 2048,
+                guarantee_watertight: true,
+                hole_fill_max_boundary_verts: 512,
+                self_intersection_check: false,
+            },
+            RemodelCommand::SetMotionParams { enabled: false, max_tracks: 64, track_window_px: 21, min_track_quality: 0.3, min_track_length_frames: 5 },
+            RemodelCommand::SetGeoParams { enabled: false, origin_lon: None, origin_lat: Some(1.0), origin_alt: None, gsd_m: 0.05, dsm_cell_m: 0.1, dtm_filter_radius_m: 2.0, ortho_max_px: 4096 },
+            RemodelCommand::ResetPlaceholderMesh,
+            RemodelCommand::ClearSparse,
+            RemodelCommand::ClearDense,
+            RemodelCommand::ClearMeshResult,
+            RemodelCommand::ClearTracks,
+            RemodelCommand::ClearGeoProducts,
+            RemodelCommand::ClearResult,
+            RemodelCommand::SetSelection { mode: "rectangle".into(), ids: vec!["a".into()] },
+            RemodelCommand::SetCamera { camera: remodel_engine::RemodelWorldCamera::default() },
+            RemodelCommand::SetLayerVisibility { layer: "dense".into(), visible: false },
+            RemodelCommand::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 },
+            RemodelCommand::SetFrameCursor { stream_id: None, frame_index: 0 },
+            RemodelCommand::SetReportTable { table: "gcps".into() },
+            RemodelCommand::SetActiveUtility { utility_id: "measure".into() },
+            RemodelCommand::SetLocale { value: "de-DE".into() },
+            RemodelCommand::ImportFrames,
+            RemodelCommand::ImportVideo,
+            RemodelCommand::ExportQcReport,
+        ]
+    }
+
     #[test]
     fn every_command_variant_roundtrips_through_op_text() {
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::RunReconstruction);
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::RetryStage { stage: "extracting-features".into() });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::RunStage { stage: "dense-stereo".into() });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::ImportFramePayload { payload: "data:image/png;base64,abc".into(), name: "frame.png".into(), index: 0 });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::ImportVideoFramePayload { payload: "data:image/jpeg;base64,abc".into(), name: "clip.mp4".into(), index: 1, frame_index: 1, timestamp_ms: 33.3 });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::ImportVideoDone { name: "clip.mp4".into(), duration_ms: 400.0, frame_count: 4, width: 24, height: 24, codec: "mjpeg".into() });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::ImportVideoBytesPayload { payload: "data:video/mp4;base64,abc".into(), name: "clip.mp4".into() });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::AddStream { name: "Stream".into(), kind: "video".into(), camera_id: "cam-0".into() });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::RemoveStream { stream_id: "stream-1".into() });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::SetStreamSync { stream_id: "stream-1".into(), sync_offset_ms: 12.5 });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::EditCalibration {
-            camera_id: "cam-1".into(),
-            label: "Front".into(),
-            model: "pinhole".into(),
-            fx: 1000.0,
-            fy: 1000.0,
-            cx: 0.0,
-            cy: 0.0,
-            skew: 0.0,
-            k1: 0.0,
-            k2: 0.0,
-            k3: 0.0,
-            p1: 0.0,
-            p2: 0.0,
-            locked: false,
-        });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::CalibrateCameras);
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::AddGcp { name: "GCP".into(), world_x: 0.0, world_y: 0.0, world_z: 0.0 });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::RemoveGcp { gcp_id: "gcp-1".into() });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::PlaceGcpObservation { gcp_id: "gcp-1".into(), stream_id: "stream-1".into(), frame_index: 0, pixel_x: 10.0, pixel_y: 20.0 });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::SetIngestParams { frame_sample_stride: 5, max_frames: 200, downscale_long_edge_px: 1600, min_sharpness: 0.3 });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::SetFeatureParams { detector: "orb".into(), target_count: 4000, octaves: 4, edge_threshold: 10.0 });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::SetMatchParams { matcher: "brute-force".into(), ratio_test: 0.8, cross_check: true, sequential_window: 8, max_pairs_per_frame: 16, loop_closure: true });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::SetSfmParams { ransac_iterations: 1000, ransac_threshold_px: 2.0, min_track_length: 3, ba_max_iterations: 50, robust_loss: "huber".into(), huber_delta_px: 1.5 });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::SetDenseParams { resolution: "medium".into(), window_radius_px: 3, min_view_consistency: 3, confidence_threshold: 0.5, max_points: 500_000 });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::SetMeshParams {
-            tsdf_voxel_size_mm: 5.0,
-            tsdf_truncation_mm: 20.0,
-            decimate_target_triangles: 200_000,
-            smoothing_iterations: 2,
-            texture_enabled: true,
-            texture_size: 2048,
-            guarantee_watertight: true,
-            hole_fill_max_boundary_verts: 512,
-            self_intersection_check: false,
-        });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::SetMotionParams { enabled: false, max_tracks: 64, track_window_px: 21, min_track_quality: 0.3, min_track_length_frames: 5 });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::SetGeoParams { enabled: false, origin_lon: None, origin_lat: Some(1.0), origin_alt: None, gsd_m: 0.05, dsm_cell_m: 0.1, dtm_filter_radius_m: 2.0, ortho_max_px: 4096 });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::ResetPlaceholderMesh);
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::ClearSparse);
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::ClearDense);
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::ClearMeshResult);
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::ClearTracks);
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::ClearGeoProducts);
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::ClearResult);
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::SetSelection { mode: "rectangle".into(), ids: vec!["a".into()] });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::SetCamera { camera: remodel_engine::RemodelWorldCamera::default() });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::SetLayerVisibility { layer: "dense".into(), visible: false });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::SetFrameCursor { stream_id: None, frame_index: 0 });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::SetReportTable { table: "gcps".into() });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::SetActiveUtility { utility_id: "measure".into() });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::SetLocale { value: "de-DE".into() });
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::ImportFrames);
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::ImportVideo);
-        store::test_support::assert_op_line_round_trip(&RemodelCommand::ExportQcReport);
+        for command in every_remodel_command() {
+            store::test_support::assert_op_line_round_trip(&command);
+        }
     }
     //#endregion 🔖️RemodelCommandTests
+
+    //#region 🔖️WireBaselineDump
+    /// 🧪️ [DEBUG] Temporary pre-migration wire dump (TEMPLATE.md §0.4) — delete once the post-migration
+    /// diff is clean.
+    #[test]
+    fn debug_dump_remodel_command_wire_baseline() {
+        use protocol::{OpBinary as _, OpText as _};
+        for command in every_remodel_command() {
+            let printed = command.print_op();
+            let bytes = command.encode_op().expect("encode");
+            let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
+            println!("[DEBUG][WIRE] {printed} | {} | {hex}", bytes.len());
+        }
+    }
+    //#endregion 🔖️WireBaselineDump
 }
 //#endregion 🧪️Tests

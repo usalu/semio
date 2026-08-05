@@ -3,8 +3,8 @@
 // #endregion 🧲️Header
 
 import type * as React from "react";
-import type { NavbarItem, UiLocale } from "../../🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx";
-import { cn } from "../../🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx";
+import type { NavbarItem, UiLocale } from "../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { cn } from "../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 
 //#region 🏛️ZukunftBauLogo
 /** @emoji 🏛️ Zukunft Bau wordmark, used to credit the BBSR research funding programme in app chrome. @see https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506 */

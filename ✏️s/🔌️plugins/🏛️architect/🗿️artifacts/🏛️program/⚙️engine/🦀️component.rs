@@ -1,0 +1,48 @@
+//! ⚙️ Architect program artifact engine — headless compute over the program projection.
+//!
+//! The engine is genuinely multi-topic (the ex-`🦴️spine` crate's ten compute domains), so each topic
+//! keeps its own sibling `🦀️<topic>.rs` file and this node is the hub: the plugin-runtime `register()`
+//! hook plus a flat re-export of every topic, so `crate::artifacts::program::engine::*` reaches all of
+//! them without a caller needing to know which topic file owns a given function.
+
+pub use crate::artifacts::program::engine::adjacency::*;
+pub use crate::artifacts::program::engine::analyze::*;
+pub use crate::artifacts::program::engine::exchange::*;
+pub use crate::artifacts::program::engine::outputs::*;
+pub use crate::artifacts::program::engine::report::*;
+pub use crate::artifacts::program::engine::search::*;
+pub use crate::artifacts::program::engine::status_summary::*;
+pub use crate::artifacts::program::engine::template::*;
+pub use crate::artifacts::program::engine::trace::*;
+pub use crate::artifacts::program::engine::validate::*;
+
+//#region 🔖️Register
+/// 🗂️ Registers `Program`'s pack↔dsl codec under `ARCHITECT_PROGRAM_SCHEMA`. Called from the plugin
+/// root's `semio_plugin!{ setup: … }`.
+pub fn register() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::architect::ArchitectPlayApp>(crate::artifacts::program::ARCHITECT_PROGRAM_SCHEMA);
+}
+//#endregion 🔖️Register
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use crate::artifacts::program::sample_plugin;
+
+    /// 🧭️ The hub's flat re-export reaches every topic module — one representative entry point per
+    /// topic file, so a dropped `pub use` fails here rather than at some distant call site.
+    #[test]
+    fn the_hub_re_exports_every_engine_topic() {
+        use super::*;
+        let program = sample_plugin();
+        let _ = undirected_edges(&program);
+        let _ = run_analysis(&program, crate::artifacts::program::registers::AnalysisKind::Gap);
+        let _ = export_registers_csv(&program);
+        let _ = build_report(&program, crate::artifacts::program::registers::ReportKind::ExecutiveSummary);
+        let _ = search_plugin(&program, &SearchQuery::default(), None, None);
+        let _ = status_summary(&program);
+        let _ = audit_trail(&program, None);
+        let _ = validate_plugin(&program);
+    }
+}
+//#endregion 🧪️Tests

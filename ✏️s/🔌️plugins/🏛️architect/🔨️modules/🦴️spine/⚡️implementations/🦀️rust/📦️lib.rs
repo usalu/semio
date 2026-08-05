@@ -18466,3 +18466,119 @@ pub use status_summary::*;
 pub use template::*;
 pub use trace::*;
 pub use validate::*;
+
+// [DEBUG] TEMPORARY wire-format baseline capture for ticket
+// 26/08/05/ARCHITECT-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION (TEMPLATE.md §0.4).
+// Deleted together with this whole crate at §8.
+#[cfg(test)]
+mod wire_baseline {
+    use super::*;
+    use protocol::{OpBinary, OpText};
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+    pub enum ArchitectCommand {
+        #[dsl(key = "set-selection")]
+        SetSelection { ids: Vec<String> },
+        #[dsl(key = "select-register")]
+        SelectRegister { register_id: String },
+        #[dsl(key = "add-register-item")]
+        AddRegisterItem { register_id: String, name: String, template_id: Option<String> },
+        #[dsl(key = "remove-register-item")]
+        RemoveRegisterItem { register_id: String, entity_id: String },
+        #[dsl(key = "patch-register-item")]
+        PatchRegisterItem { register_id: String, entity_id: String, patch_json: String },
+        #[dsl(key = "set-adjacency-field")]
+        SetAdjacencyField { entity_id: String, field: String, value_json: String },
+        #[dsl(key = "apply-template")]
+        ApplyTemplate { template_id: String },
+        #[dsl(key = "export-registers-csv")]
+        ExportRegistersCsv,
+        #[dsl(key = "import-registers-csv")]
+        ImportRegistersCsv { csv: String, strategy: String },
+        #[dsl(key = "add-element")]
+        AddElement { name: String },
+        #[dsl(key = "remove-element")]
+        RemoveElement { element_id: String },
+        #[dsl(key = "run-validation")]
+        RunValidation,
+        #[dsl(key = "run-analysis")]
+        RunAnalysis { analysis_kind: String },
+        #[dsl(key = "run-report")]
+        RunReport { report_kind: String },
+        #[dsl(key = "export-program")]
+        ExportProgram,
+        #[dsl(key = "import-program-request")]
+        ImportProgramRequest,
+        #[dsl(key = "import-program")]
+        ImportProgram { payload: String },
+        #[dsl(key = "node-graph-edit")]
+        NodeGraphEdit { operations_json: String },
+        #[dsl(key = "node-graph-viewport")]
+        NodeGraphViewport { viewport_json: String },
+        #[dsl(key = "set-adjacency-kind")]
+        SetAdjacencyKind { element_a_id: String, element_b_id: String, kind: Option<String>, cycle: bool },
+        #[dsl(key = "search")]
+        Search { query: String },
+        #[dsl(key = "set-adjacency-filter")]
+        SetAdjacencyFilter { kind: Option<String> },
+    }
+
+    fn every_command() -> Vec<ArchitectCommand> {
+        vec![
+            ArchitectCommand::SetSelection { ids: vec!["a".into(), "b".into()] },
+            ArchitectCommand::SetSelection { ids: Vec::new() },
+            ArchitectCommand::SelectRegister { register_id: "risks".into() },
+            ArchitectCommand::AddRegisterItem { register_id: "elements".into(), name: "Room".into(), template_id: None },
+            ArchitectCommand::AddRegisterItem { register_id: "elements".into(), name: "Room".into(), template_id: Some("t1".into()) },
+            ArchitectCommand::RemoveRegisterItem { register_id: "elements".into(), entity_id: "e1".into() },
+            ArchitectCommand::PatchRegisterItem { register_id: "elements".into(), entity_id: "e1".into(), patch_json: "{\"name\":\"X\"}".into() },
+            ArchitectCommand::SetAdjacencyField { entity_id: "a1".into(), field: "kind".into(), value_json: "\"required\"".into() },
+            ArchitectCommand::ApplyTemplate { template_id: "t1".into() },
+            ArchitectCommand::ExportRegistersCsv,
+            ArchitectCommand::ImportRegistersCsv { csv: "a,b".into(), strategy: "upsert".into() },
+            ArchitectCommand::AddElement { name: "Room".into() },
+            ArchitectCommand::RemoveElement { element_id: "e1".into() },
+            ArchitectCommand::RunValidation,
+            ArchitectCommand::RunAnalysis { analysis_kind: "gap".into() },
+            ArchitectCommand::RunReport { report_kind: "executiveSummary".into() },
+            ArchitectCommand::ExportProgram,
+            ArchitectCommand::ImportProgramRequest,
+            ArchitectCommand::ImportProgram { payload: "text".into() },
+            ArchitectCommand::NodeGraphEdit { operations_json: "[]".into() },
+            ArchitectCommand::NodeGraphViewport { viewport_json: "{}".into() },
+            ArchitectCommand::SetAdjacencyKind { element_a_id: "a".into(), element_b_id: "b".into(), kind: None, cycle: true },
+            ArchitectCommand::SetAdjacencyKind { element_a_id: "a".into(), element_b_id: "b".into(), kind: Some("required".into()), cycle: false },
+            ArchitectCommand::Search { query: "hall".into() },
+            ArchitectCommand::SetAdjacencyFilter { kind: None },
+            ArchitectCommand::SetAdjacencyFilter { kind: Some("required".into()) },
+        ]
+    }
+
+    #[test]
+    fn dump_command_wire_baseline() {
+        for command in every_command() {
+            let bytes = OpBinary::encode_op(&command).expect("encode");
+            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+            println!("[WIRE] {} | {} | {}", OpText::print_op(&command), bytes.len(), hex);
+        }
+    }
+
+    #[test]
+    fn dump_operation_wire_baseline() {
+        let program = crate::program::sample_plugin();
+        let adjacency = program.adjacencies.first().expect("adjacency").clone();
+        let operations = vec![
+            ProgramOperation::UpdateMeta { patch: ProgramMetaPatch { title: Some("Clinic".into()), ..Default::default() } },
+            ProgramOperation::SetAdjacency { adjacency },
+            ProgramOperation::ClearAdjacency { id: EntityId("adjacency-1".into()) },
+            ProgramOperation::Elements(protocol::CollectionOperation::Remove { id: EntityId("element-1".into()) }),
+            ProgramOperation::Elements(protocol::CollectionOperation::Move { id: EntityId("element-1".into()), to: 2 }),
+        ];
+        for operation in &operations {
+            let bytes = OpBinary::encode_op(operation).expect("encode");
+            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+            println!("[OP] {} | {} | {}", OpText::print_op(operation), bytes.len(), hex);
+        }
+    }
+}

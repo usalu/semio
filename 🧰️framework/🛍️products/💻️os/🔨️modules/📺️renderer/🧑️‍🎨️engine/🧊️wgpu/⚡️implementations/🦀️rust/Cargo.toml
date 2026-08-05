@@ -24,9 +24,9 @@ infinite_world = { path = "../../../../../../../../../🧰️framework/🛍️pr
 # `//#region 🎬️Tutorial` in lib.rs.
 kernel_3d_scene = { path = "../../../../../../../../../✏️s/🔨️modules/🧊️3d/🎬️scene/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-scene" }
 framework_surface_tiled_map = { path = "../../../../../../../../🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-surface-tiled-map" }
-puzzle_2d_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-puzzle-2d-engine" }
+puzzle = { path = "../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle" }
 flow_core = { path = "../../../../../🌊️flow/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-flow-core" }
-ui_wgpu = { path = "../../../../../../../../🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust", features = ["engine"], package = "semio-framework-ui-wgpu" }
+ui_wgpu = { path = "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu", features = ["engine"], package = "semio-framework-ui-wgpu" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", package = "semio-framework-plugin" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

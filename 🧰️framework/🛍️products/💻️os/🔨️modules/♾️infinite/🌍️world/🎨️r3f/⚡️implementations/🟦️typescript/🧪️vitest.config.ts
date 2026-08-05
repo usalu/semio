@@ -10,7 +10,7 @@ const root = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   root,
   resolve: {
-    alias: [{ find: "@semio-tech/ui-react", replacement: resolve(root, "../../../../../../../../🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx") }],
+    alias: [{ find: "@semio-tech/ui-react", replacement: resolve(root, "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx") }],
   },
   test: {
     name: "@semio-tech/infinite-world-r3f",

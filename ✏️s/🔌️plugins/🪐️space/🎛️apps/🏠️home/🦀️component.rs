@@ -13,11 +13,13 @@ use crate::apps::home::terminology::SHomeLabels;
 use crate::artifacts::home::SHomeDocument;
 use crate::core::{ensure_space_fixtures_registered, parse_demo_space_document};
 use semio_framework_os::{
-    artifact_backbone_uri, collection_backbone_uri, create_backbone_document, decode_backbone_payload, document_backbone_ref, draft_catalog_for, draft_uri, empty_space_projection, empty_workflow_document, encode_backbone_payload,
+    artifact_backbone_uri, collection_backbone_uri, create_backbone_document, decode_backbone_payload, draft_catalog_for, draft_uri, empty_space_projection, empty_workflow_document, encode_backbone_payload,
     export_backbone_pack, export_os_space_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_projection, seed_os_space_catalog_if_empty, ArtifactBody, CollectionOperation, CollectionProjection, DraftCatalog,
-    MemoryBackbonePort, OsBackbonePort, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort, SpaceKind, SpaceOperation, SpaceProjection, SpaceRole, SpaceUser, SpaceVisibility, VcsError, WorkflowDocument, WorkflowOperation,
+    MemoryBackbonePort, OsBackbonePort, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort, SpaceKind, SpaceOperation, SpaceProjection, SpaceRole, SpaceUser, SpaceVisibility, WorkflowDocument, WorkflowOperation,
     S_COLLECTION_SCHEMA, S_SPACE_SCHEMA, S_WORKFLOW_SCHEMA,
 };
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os::{document_backbone_ref, VcsError};
 use semio_framework_plugin::{app_commands, create_tab_stack_layout, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultOrigin, Label, LocalizedLabel, UiNode};
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -234,6 +236,7 @@ pub fn register_studio_port_for_test(space_id: &str, port: Arc<dyn OsBackbonePor
     register_studio_port(space_id, port);
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn sync_os_space_document_helper(document: &OsSpaceDocument, backbone_uri: &str, port: &Arc<dyn OsBackbonePort>) -> Result<(), VcsError> {
     let mut synced = document.clone();
     synced.backbone = Some(document_backbone_ref(backbone_uri));

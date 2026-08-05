@@ -141,7 +141,7 @@ fn space_workflow_context_menu_items(
 ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     use semio_framework_plugin::{selection_count_phrase, selection_domains_from_surface, ContextMenuItemSpec, Menu};
 
-    let hits = surface.map_or(&[], |target| target.hits.as_slice());
+    let hits: &[semio_framework_plugin::ContextMenuHit] = surface.map_or(&[], |target| target.hits.as_slice());
     let (nodes, _) = selection_domains_from_surface(surface, selected_node_ids, &[]);
     let hit_node = hits.iter().find(|hit| hit.domain == "node").map(|hit| hit.id.as_str());
     let mut menu = Menu::of(registry);
@@ -535,7 +535,7 @@ pub fn create_space_app() -> App {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_os::{MediaPortDirection, MediaPortSpec, MediaType, WorkflowMediaPort};
+    use semio_framework_os::{MediaPortDirection, MediaPortSpec, MediaType, WorkflowMediaPort, WorkflowNode};
     use semio_framework_os::{apply_workflow_operation, register_app_io, ArtifactPresentation, MediaClass, MediaForm, PortMultiplicity};
     use semio_framework_plugin::{App, AppIo, HistoryView, LocalizedLabel, SurfaceKind};
 
@@ -606,6 +606,7 @@ pub(crate) mod testkit {
 mod tests {
     use super::*;
     use crate::apps::space::testkit::{empty_history, studio_emit};
+    use crate::core::demo_space_projection;
     use semio_framework_plugin::testkit as plugin_testkit;
     use semio_framework_plugin::{PluginApp, VcsDocumentApp};
 

@@ -1,0 +1,207 @@
+    Blocking waiting for file lock on build directory
+   Compiling semio-s-plugin-remodel-sfm v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🔨️modules/📸️sfm/⚡️implementations/🦀️rust)
+   Compiling semio-s-plugin-remodel-motion v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🔨️modules/🏃️motion/⚡️implementations/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 3.17s
+     Running unittests ../../../../../../../✏️s/🔌️plugins/📸️remodel/🔨️modules/🌟️feature/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_plugin_remodel_feature-1269d40937b9f022)
+
+running 29 tests
+test tests::detect_harris_keypoints_returns_empty_for_zero_target_or_empty_image ... ok
+test tests::diffusion_step_returns_input_clone_for_zero_sized_image ... ok
+test tests::detect_orb_keypoints_returns_empty_for_empty_pyramid_or_zero_target ... ok
+test tests::akaze_grid_top_k_returns_empty_for_no_candidates_or_zero_target ... ok
+test tests::describe_orb_is_deterministic_and_self_hamming_zero ... ok
+test tests::fed_tau_schedule_returns_empty_for_non_positive_time ... ok
+test tests::fast_corners_detects_planted_corner_not_flat_region ... ok
+test tests::forward_backward_prune_skips_already_invalid_points ... ok
+test tests::forward_backward_prune_invalidates_degenerate_track_and_keeps_good_one ... ok
+test tests::klt_track_flags_invalid_on_singular_flat_region ... ok
+test tests::detect_harris_keypoints_clusters_near_known_corner ... ok
+test tests::harris_response_is_low_on_flat_and_high_on_corner ... ok
+test tests::klt_track_returns_invalid_for_empty_pyramid_levels ... ok
+test tests::match_brute_desc_b_empty_returns_empty ... ok
+test tests::match_brute_mutual_filters_non_reciprocal_matches ... ok
+test tests::klt_track_recovers_known_shift_and_flags_out_of_bounds ... ok
+test tests::match_guided_epipolar_handles_vertical_epipolar_line ... ok
+test tests::match_guided_epipolar_returns_empty_for_empty_kp_b_and_degenerate_matrix ... ok
+test tests::match_zncc_fallback_no_match_when_correlation_below_threshold ... ok
+test tests::match_brute_single_candidate_bypasses_ratio_test ... ok
+test tests::match_zncc_fallback_returns_empty_for_empty_kp_b ... ok
+test tests::quadratic_refine_2d_returns_zero_offset_for_singular_hessian ... ok
+test tests::match_zncc_fallback_finds_correct_correspondence_within_radius ... ok
+test tests::shi_tomasi_grid_handles_zero_cell_without_panicking ... ok
+test tests::describe_akaze_is_deterministic_and_self_hamming_zero ... ok
+test tests::shi_tomasi_grid_prefers_planted_corner_and_caps_per_cell ... ok
+test tests::detect_orb_keypoints_returns_roughly_target_count_and_spread ... ok
+test tests::match_brute_recovers_known_translation_correspondences ... ok
+test tests::akaze_repeatability_is_at_least_orb_repeatability_under_scale_and_rotation ... ok
+
+test result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.15s
+
+     Running unittests ../../../../../../../✏️s/🔌️plugins/📸️remodel/🔨️modules/🖼️images/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_plugin_remodel_image-396a5a55867c687e)
+
+running 27 tests
+test tests::extract_patch_quarter_turn_matches_transpose_relation ... ok
+test tests::downsample_half_averages_two_by_two_blocks ... ok
+test tests::gray_sample_bilinear_interpolates_between_pixels ... ok
+test tests::integral_image_rect_sums_match_brute_force ... ok
+test tests::jpeg_decode_rejects_missing_soi ... ok
+test tests::census_transform_and_hamming_behave_on_known_pattern ... ok
+test tests::gaussian_blur_preserves_mean_and_reduces_variance ... ok
+test tests::box_blur_integral_matches_brute_force_average ... ok
+test tests::jpeg_progressive_marker_is_unsupported ... ok
+test tests::build_pyramid_halves_resolution_per_level ... ok
+test tests::jpeg_single_mcu_cosine_pattern_recovers_within_quantization_error ... ok
+test tests::luma_conversion_matches_bt601_weights ... ok
+test tests::non_max_suppression_keeps_planted_peaks_sorted ... ok
+test tests::jpeg_flat_color_round_trips_with_near_zero_error ... ok
+test tests::png_codec_rejects_dimension_mismatch ... ok
+test tests::jpeg_decode_never_panics_on_truncated_input ... ok
+test tests::png_gray16_encode_decodes_back_losslessly ... ok
+test tests::png_rgba_round_trip_is_lossless ... ok
+test tests::rgba_sample_rgb_normalizes_and_interpolates ... ok
+test tests::scharr_gradients_recover_ramp_slopes ... ok
+test tests::remap_identity_returns_original ... ok
+test tests::warp_affine_identity_returns_original ... ok
+test tests::zncc_is_invariant_to_gain_and_bias_and_flips_sign ... ok
+test tests::warp_homography_inverse_round_trips_away_from_borders ... ok
+test tests::jpeg_round_trip_checkerboard_meets_psnr_floor ... ok
+test tests::jpeg_round_trip_gradient_meets_psnr_floor ... ok
+test tests::jpeg_higher_quality_yields_lower_error ... ok
+
+test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests ../../../../../../../✏️s/🔌️plugins/📸️remodel/🔨️modules/🏃️motion/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_plugin_remodel_motion-3ad6192b0b9fe2b4)
+
+running 13 tests
+test tests::stabilization_warps_are_near_identity_for_matching_poses ... ok
+test tests::multi_object_tracker_associates_spawns_and_prunes ... ok
+test tests::rolling_shutter_velocity_and_rectify_maps_are_sane ... ok
+test tests::estimate_offset_and_refine_subframe_recover_a_fractional_shift ... ok
+test tests::velocity_and_acceleration_recover_planted_constant_motion ... ok
+test tests::smooth_camera_path_reduces_planted_jitter ... ok
+test tests::triangulate_tracks_recovers_a_slow_moving_point_from_a_single_orbiting_camera ... ok
+test tests::modal_analysis_recovers_a_planted_frequency ... ok
+test tests::track_rigid_body_recovers_a_known_rotating_translating_cube_with_partial_visibility ... ok
+test tests::wiener_deconvolve_measurably_sharpens_a_blurred_image ... ok
+test tests::neighborhood_affine_strain_distinguishes_rotation_from_stretch ... ok
+test tests::build_and_fit_deformation_graph_recovers_a_planted_bend_for_held_out_points ... ok
+test tests::tracker2d_maintains_tracks_and_redetects_lost_coverage ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+     Running unittests ../../../../../../../✏️s/🔌️plugins/📸️remodel/🔨️modules/📸️sfm/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_plugin_remodel_sfm-e489b3bda43a80d4)
+
+running 24 tests
+test tests::apply_gcp_prior_residual_matches_scaled_difference ... ok
+test tests::align_to_priors_recovers_planted_similarity ... ok
+test tests::epnp_and_refine_pose_lm_recover_pose_within_tolerance_at_one_pixel_noise ... ok
+test tests::fixtures_are_internally_consistent ... ok
+test tests::five_point_candidates_include_the_true_essential_matrix ... ok
+test tests::estimate_homography_recovers_planted_outliers_on_planar_scene ... ok
+test tests::keyframe_index_and_detect_loops_find_a_planted_revisit ... ok
+test tests::decompose_essential_recovers_relative_pose_within_tolerance ... ok
+test tests::p3p_grunert_returns_ground_truth_among_solutions ... ok
+test tests::p3p_true_pose_is_among_the_candidate_roots ... ok
+test tests::estimate_fundamental_recovers_planted_outliers_and_satisfies_epipolar_constraint ... ok
+test tests::rotation_and_translation_averaging_recover_pose_graph_from_noisy_relative_measurements ... ok
+test tests::triangulate_and_validate_rejects_low_angle_and_accepts_well_conditioned_points ... ok
+test tests::select_two_view_model_prefers_homography_on_planar_scene ... ok
+test tests::triangulate_dlt_and_refine_point_lm_recover_points_within_reprojection_tolerance ... ok
+test tests::pnp_ransac_recovers_pose_despite_planted_outliers ... ok
+test tests::triangulation_recovers_points_within_noise_scaled_tolerance ... ok
+test tests::pose_graph_optimize_reduces_drift_at_loop_closure_edge ... ok
+test tests::estimate_init_pair_essential_prefers_five_point_on_planar_scene ... ok
+test tests::five_point_recovers_pose_on_planar_scene_where_eight_point_struggles ... ok
+test tests::init_pair_recovers_pose_and_triangulates_on_low_parallax_pair ... ok
+test tests::bundle_adjustment_converges_near_noise_floor ... ok
+test tests::eight_point_ransac_recovers_relative_pose_with_noise_and_outliers ... ok
+test tests::run_all_reconstructs_synthetic_multi_camera_scene ... ok
+
+test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.89s
+
+     Running unittests ../../../../../../../✏️s/🔌️plugins/📸️remodel/🔨️modules/🎥️video/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_plugin_remodel_video-8fcfee20866e6de5)
+
+running 80 tests
+test tests::boundary_strength_covers_all_branches ... ok
+test tests::bitreader_more_rbsp_data_detects_remaining_bits ... ok
+test tests::chroma_qp_maps_table_and_clamps_offset ... ok
+test tests::avi_probe_rejects_non_riff_magic ... ok
+test tests::block4x4_grid_pos_covers_full_4x4_grid_bijectively ... ok
+test tests::chroma_quad_pos_maps_known_indices ... ok
+test tests::avi_probe_rejects_non_avi_riff_form ... ok
+test tests::clip_u8_clamps_to_byte_range ... ok
+test tests::bitreader_ue_se_roundtrip_via_bitwriter ... ok
+test tests::codec_fourcc_hint_maps_each_codec_variant ... ok
+test tests::dc_pred_all_neighbor_availability_branches ... ok
+test tests::avi_probe_audio_only_stream_reports_no_video_track ... ok
+test tests::dequant4x4_applies_shift_and_rounding_branches ... ok
+test tests::extract_frames_avi_rejects_unsupported_codec_with_provenance ... ok
+test tests::filter_chroma_normal_returns_none_above_threshold ... ok
+test tests::extract_frames_mjpeg_propagates_jpeg_decode_error ... ok
+test tests::filter_chroma_normal_computes_expected_values_when_below_threshold ... ok
+test tests::filter_chroma_strong_averages_when_below_threshold ... ok
+test tests::extract_frames_rejects_unsupported_codec_with_provenance ... ok
+test tests::filter_chroma_strong_returns_none_above_threshold ... ok
+test tests::filter_luma_normal_computes_expected_deltas_when_below_threshold ... ok
+test tests::filter_luma_normal_returns_none_above_threshold ... ok
+test tests::filter_luma_strong_computes_expected_edge_samples ... ok
+test tests::filter_luma_strong_passes_through_unfiltered_above_threshold ... ok
+test tests::fourcc_debug_and_display_render_printable_ascii ... ok
+test tests::fourcc_debug_and_display_render_non_ascii_as_hex ... ok
+test tests::frame_iter_sample_bytes_errors_on_overflow_and_out_of_bounds ... ok
+test tests::h264_b_slice_is_unsupported ... ok
+test tests::h264_cabac_pps_is_unsupported ... ok
+test tests::avi_probe_falls_back_to_movi_scan_without_idx1 ... ok
+test tests::h264_error_display_messages ... ok
+test tests::h264_decode_sample_rejects_multiple_slice_nals_in_one_access_unit ... ok
+test tests::h264_decode_sample_rejects_nonzero_first_mb_in_slice ... ok
+test tests::h264_garbage_bytes_error_not_panic ... ok
+test tests::h264_new_rejects_interlaced_sps ... ok
+test tests::h264_new_rejects_multiple_slice_groups_pps ... ok
+test tests::h264_new_rejects_non_baseline_profile ... ok
+test tests::h264_new_rejects_pic_order_cnt_type_one ... ok
+test tests::h264_new_rejects_pic_order_cnt_type_out_of_range ... ok
+test tests::h264_new_rejects_transform_8x8_mode_pps ... ok
+test tests::h264_new_rejects_truncated_or_missing_sps_pps ... ok
+test tests::h264_i_pcm_single_frame_decodes_bit_exactly ... ok
+test tests::hadamard4_1d_basic_butterfly ... ok
+test tests::h264_truncated_nal_errors_not_panics ... ok
+test tests::idct4x4_dc_only_produces_uniform_output ... ok
+test tests::idct4x4_zero_input_is_zero ... ok
+test tests::extract_frames_mjpeg_lazily_skips_undecoded_frames ... ok
+test tests::median_mv_predict_falls_back_to_componentwise_median ... ok
+test tests::median_mv_predict_single_ref_match_shortcut ... ok
+test tests::mp4_probe_audio_only_track_reports_no_video_track ... ok
+test tests::h264_p_skip_chain_propagates_the_i_pcm_frame_unchanged ... ok
+test tests::mp4_probe_co64_and_multi_entry_stsc_resolve_sample_offsets ... ok
+test tests::h264_i_pcm_with_deblocking_enabled_flat_picture_stays_flat ... ok
+test tests::mp4_probe_ctts_sample_count_mismatch_errors ... ok
+test tests::mp4_probe_missing_ftyp_or_moov_errors ... ok
+test tests::mp4_probe_ctts_shifts_presentation_timestamps ... ok
+test tests::mp4_probe_stsc_resolved_sample_count_mismatch_errors ... ok
+test tests::mp4_probe_detects_avc1_codec_from_avcc_sample_entry ... ok
+test tests::mp4_probe_stsd_zero_entries_errors ... ok
+test tests::mp4_probe_stts_sample_count_mismatch_errors ... ok
+test tests::norm_adjust_selects_scale_by_position_parity ... ok
+test tests::plane_pred_flat_neighbors_are_a_noop ... ok
+test tests::predict_intra4x4_rejects_out_of_range_mode ... ok
+test tests::predict_intra4x4_dc_mode_averages_available_neighbors ... ok
+test tests::predict_intra4x4_uniform_neighbors_yield_uniform_output_for_all_modes ... ok
+test tests::predict_intra4x4_vertical_and_horizontal_require_their_neighbor ... ok
+test tests::resolve_samples_rejects_empty_stsc ... ok
+test tests::read_te_variants_by_max_val ... ok
+test tests::samples_per_chunk_for_errors_on_invalid_first_chunk_or_uncovered_chunk ... ok
+test tests::select_sample_indices_max_frames_zero_is_unbounded ... ok
+test tests::select_sample_indices_treats_stride_zero_as_one_and_respects_max_frames ... ok
+test tests::split_annexb_nals_splits_multiple_start_coded_nals ... ok
+test tests::transform_chroma_dc_computes_expected_values ... ok
+test tests::transform_luma16x16_dc_zero_input_is_zero ... ok
+test tests::video_error_display_messages ... ok
+test tests::extract_frames_mjpeg_applies_stride_and_max_frames_exactly ... ok
+test tests::probe_dispatches_by_riff_magic ... ok
+test tests::write_avi_mjpg_probe_round_trip_reports_exact_frames ... ok
+test tests::write_mp4_mjpeg_probe_round_trip_reports_exact_frames ... ok
+test tests::mp4_probe_truncated_at_every_prefix_length_errors_not_panics ... ok
+
+test result: ok. 80 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.02s
+

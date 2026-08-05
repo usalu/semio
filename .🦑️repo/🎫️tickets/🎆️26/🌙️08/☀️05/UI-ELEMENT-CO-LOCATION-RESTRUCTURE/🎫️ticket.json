@@ -1,0 +1,13 @@
+{
+  "title": "UI Element Co-location Restructure",
+  "emoji": "🧱️",
+  "status": "open",
+  "description": "Restructure UI code (🖱️ui react/wgpu/tui, OS renderer engine react/wgpu, styling, assets) into `📦️packages/\u003clang\u003e/🎯️targets/\u003ctarget\u003e/` + flat `🧱️elements/\u003cElement\u003e/` co-located multi-language component files, per the approved plan at /Users/ueli/.claude/plans/the-codebase-is-currently-jaunty-nygaard.md. This is the master ticket tracking wave progress (W0 mechanisms → W1 package moves → W2 pilot → W3 batch extraction → W4 renderer engine → W5 styling/assets → W6 activation/teardown → W7 story co-location). Sub-tickets opened per wave/work-unit. Package/crate names (@semio-tech/ui-react, semio-framework-ui-wgpu, semio-framework-ui-tui, semio-framework-ui-styling, @semio-tech/framework-renderer-react, etc.) MUST be preserved throughout. No git-modifying commands; no worktree isolation; root Cargo.toml/Cargo.lock edits go through the existing crate-consolidation registrar protocol. Subagents working sub-slices MUST NOT close the shared master ticket.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2475"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪87ad1fb2795a4a408ab1d33e46b23ba4"
+  ]
+}

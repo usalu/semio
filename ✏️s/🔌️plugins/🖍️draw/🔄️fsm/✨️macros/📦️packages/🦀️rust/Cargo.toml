@@ -1,0 +1,48 @@
+# 🚧️ TEMPORARY verification-only overlay (TEMPLATE.md §3 chicken-and-egg) — see the sibling
+# `fsm` crate's Cargo.toml for the full explanation. DELETE at registrar handoff.
+cargo-features = ["trim-paths"]
+
+[package]
+name = "semio-s-plugin-draw-fsm-macros"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Draw plugin - fsm statechart! proc-macro (draw-fsm's sibling; a proc-macro crate can never be merged into a normal rlib/cdylib crate)"
+
+[lints]
+workspace = true
+
+[lib]
+proc-macro = true
+path = "../../📦️lib.rs"
+
+[dependencies]
+syn = { version = "2.0", features = ["full", "extra-traits"] }
+quote = "1.0"
+proc-macro2 = "1.0"
+
+[workspace]
+
+[workspace.lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"
+
+[profile.dev]
+debug = false
+incremental = true
+
+[profile.dev.build-override]
+opt-level = 3

@@ -1,0 +1,40 @@
+Wire baseline for ImperativeCommand, captured from the OLD semio-s-app-imperative-protocol crate
+(before deletion) via a temporary [DEBUG] test (`wire_baseline_dump`), run with:
+  DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo test -p semio-s-app-imperative-protocol wire_baseline_dump -- --nocapture
+
+[DEBUG-WIRE] AddStep(index=Some) | text=add-step kind=log.print index=1 | hex=010001096c6f672e7072696e7402000600010401
+[DEBUG-WIRE] AddStep(index=None) | text=add-step kind=log.print | hex=010001096c6f672e7072696e7401000600
+[DEBUG-WIRE] AddStepAt | text=add-step-at kind=log.print owner=step-if slot=then | hex=010103096c6f672e7072696e7407737465702d6966047468656e03000600020601030602
+[DEBUG-WIRE] RemoveStep | text=remove-step id=step-1 | hex=01020106737465702d3101000600
+[DEBUG-WIRE] RemoveStepAt | text=remove-step-at id=step-1 owner=step-if slot=then | hex=01030306737465702d3107737465702d6966047468656e03000600010601020602
+[DEBUG-WIRE] MoveStep | text=move-step id=step-1 index=2 | hex=01040106737465702d3102000600010402
+[DEBUG-WIRE] MoveStepAt | text=move-step-at id=step-1 index=2 | hex=01050106737465702d3102000600010402
+[DEBUG-WIRE] SetStepParams | text=set-step-params id=step-1 params={ message=text=updated } | hex=010603076d65737361676506737465702d3107757064617465640200060101100106000d01040602
+[DEBUG-WIRE] SetStepParamsAt | text=set-step-params-at id=step-1 owner=step-if slot=then params={ message=text=updated } | hex=010705076d65737361676506737465702d3107737465702d6966047468656e07757064617465640400060101060202060303100106000d01040604
+[DEBUG-WIRE] SetSelection | text=set-selection ids=[ step-1 step-2 ] | hex=01080206737465702d3106737465702d3201000c0206000601
+[DEBUG-WIRE] Run | text=run | hex=01090000
+[DEBUG-WIRE] SetLocale | text=locale value=de-DE | hex=010a010564652d444501000600
+
+Notes:
+- MoveStepAt printed identically to MoveStep in this old code (owner/slot both None in this sample) —
+  the old MoveStepAt hand-written variant apparently didn't print owner/slot fields when both None
+  (bare-ident omission), consistent with the rest of the *At variants' Option<String> printing rule.
+- Row/ordinal order above matches the OLD ImperativeCommand enum declaration order exactly (ordinal
+  0..10), which the new app_commands! invocation's row order preserves 1:1.
+
+--- AFTER (new semio-s-plugin-imperative crate, app_commands!-generated ImperativeCommand) ---
+[DEBUG-WIRE-NEW] addStep | text=add-step kind=log.print index=1 | hex=010001096c6f672e7072696e7402000600010401
+[DEBUG-WIRE-NEW] addStepAt | text=add-step-at kind=log.print owner=step-if slot=then | hex=010103096c6f672e7072696e7407737465702d6966047468656e03000600020601030602
+[DEBUG-WIRE-NEW] removeStep | text=remove-step id=step-1 | hex=01020106737465702d3101000600
+[DEBUG-WIRE-NEW] removeStepAt | text=remove-step-at id=step-1 owner=step-if slot=then | hex=01030306737465702d3107737465702d6966047468656e03000600010601020602
+[DEBUG-WIRE-NEW] moveStep | text=move-step id=step-1 index=2 | hex=01040106737465702d3102000600010402
+[DEBUG-WIRE-NEW] moveStepAt | text=move-step-at id=step-1 index=2 | hex=01050106737465702d3102000600010402
+[DEBUG-WIRE-NEW] setStepParams | text=set-step-params id=step-1 params={ message=text=updated } | hex=010603076d65737361676506737465702d3107757064617465640200060101100106000d01040602
+[DEBUG-WIRE-NEW] setStepParamsAt | text=set-step-params-at id=step-1 owner=step-if slot=then params={ message=text=updated } | hex=010705076d65737361676506737465702d3107737465702d6966047468656e07757064617465640400060101060202060303100106000d01040604
+[DEBUG-WIRE-NEW] setSelection | text=set-selection ids=[ step-1 step-2 ] | hex=01080206737465702d3106737465702d3201000c0206000601
+[DEBUG-WIRE-NEW] run | text=run | hex=01090000
+[DEBUG-WIRE-NEW] setLocale | text=locale value=de-DE | hex=010a010564652d444501000600
+
+RESULT: byte-identical to the BEFORE dump above, row for row (moveStepAt's owner/slot both None in
+this sample so it matches moveStep's bytes exactly in both before/after, consistent). Wire-format
+migration proof: PASS.

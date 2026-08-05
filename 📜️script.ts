@@ -10,9 +10,11 @@ import {
   coverageEnabled,
   daemonBudgetOpts,
   devToolingEnv,
+  discoverPackages,
   dispatchPolicyArgv,
   dispatchSubcommand,
   defineLint,
+  loadTaxonomy,
   enforceCoverageThreshold,
   frameworkOsPlaygroundDevEnv,
   getWorkspaceRoot,
@@ -3334,6 +3336,43 @@ function policyTaxonomyLibShapeBreaches(repoRoot: string, crates: readonly Polic
   return breaches;
 }
 
+/**
+ * 📏️TS analogue of `policyTaxonomyLibShapeBreaches`, added by ticket
+ * `26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE` (Single-File-Repo hazard ruling, scope note 2): a
+ * `"taxonomy"`-area TypeScript package's entry file (`taxonomy.entryFilenames["🟦️typescript"]`, e.g.
+ * `📦️index.tsx`) must stay a wiring-only re-export barrel — counts non-import/export/comment/blank lines
+ * and flags a breach past `libWiringLineBudget`. Warn-only (`priority: "medium"`) and vacuous today: no
+ * `taxonomy.areas` entry is `"taxonomy"` yet (that flip is the W6 activation step of that ticket) and no
+ * package yet carries a `role = "framework"` marker, so `discoverPackages` returns nothing to check
+ * against — seeded empty exactly like `policyTaxonomyLibShapeBreaches` was for W0.
+ */
+const POLICY_BARREL_WIRING_LINE_RE = /^\s*(\/\/.*)?$|^\s*export\s+(type\s+)?(\*|\{[^}]*\})\s+from\s+"[^"]+";?\s*(\/\/.*)?$|^\s*import\s+.+\s+from\s+"[^"]+";?\s*(\/\/.*)?$/;
+
+function policyTaxonomyBarrelShapeBreaches(repoRoot: string): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const entryFilename = taxonomy.entryFilenames["🟦️typescript"];
+  if (!entryFilename) return [];
+  const breaches: BreachRecord[] = [];
+  for (const pkg of discoverPackages(repoRoot, taxonomy)) {
+    if (pkg.lang !== "🟦️typescript" || pkg.area !== "taxonomy") continue;
+    const entryAbs = join(repoRoot, pkg.packageRel, entryFilename);
+    if (!existsSync(entryAbs)) continue;
+    const lines = readFileSync(entryAbs, "utf8").split(/\r?\n/);
+    const nonWiring = lines.filter((l) => l.trim() && !POLICY_BARREL_WIRING_LINE_RE.test(l));
+    if (nonWiring.length <= taxonomy.libWiringLineBudget) continue;
+    breaches.push({
+      id: `taxonomy-barrel-shape-${pkg.manifestPath}`,
+      summary: `"${pkg.packageRel}/${entryFilename}" has ~${nonWiring.length} non-wiring lines — a taxonomy package's entry file must stay a re-export barrel`,
+      kind: "taxonomy/barrel-shape",
+      scope: pkg.id,
+      priority: "medium",
+      reason: "Single-File-Repo hazard ruling (TS extension, ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE): a taxonomy package's entry barrel is import/export wiring only — real component logic lives in 🧱️elements/<Element>/ leaf files, never inlined back.",
+      solution: `Move the non-wiring content out of ${entryFilename} into its owning 🧱️elements/<Element>/ leaf file(s); the entry file should only import/re-export.`,
+    });
+  }
+  return breaches;
+}
+
 const POLICY_PROTOCOL_SEGMENT_RE = /^protocol$/i;
 
 /** 📏️Discovery-contract clause 4: no path segment (dir or file stem) or `mod`/`struct`/`enum`/`type` identifier fragment named "protocol" may exist under a migrated plugin — `spr` is the only accepted name for that concept going forward. */
@@ -3420,6 +3459,7 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyTaxonomyDirsBreaches(repoRoot, crateDirs));
   breaches.push(...policyComponentFileBreaches(repoRoot, crateDirs));
   breaches.push(...policyTaxonomyLibShapeBreaches(repoRoot, crateDirs));
+  breaches.push(...policyTaxonomyBarrelShapeBreaches(repoRoot));
   breaches.push(...policySprNamingBreaches(repoRoot, crateDirs));
   breaches.push(...policyJsonFixtureBreaches(repoRoot));
   breaches.push(...policyOpsGrammarBreaches(repoRoot));

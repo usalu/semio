@@ -13,7 +13,7 @@ import { dirname, join, resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import type { StorybookConfig } from "@storybook/react-vite";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import { semioAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts";
+import { semioAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
@@ -26,7 +26,7 @@ const __dirname = dirname(__filename);
 const repoRootPath = resolve(__dirname, "..");
 const storybookScope = process.env.STORYBOOK_SCOPE ?? "";
 
-const uiReactDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript");
+const uiReactDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react");
 const uiStylingDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript");
 const composeJsDir = resolve(repoRootPath, "compose/client/lib/js");
 const composeAssetsDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript");
@@ -98,7 +98,7 @@ const config: StorybookConfig = {
     const aliasRecord: Record<string, string> = {
       ...buildStorybookAliases(),
       "vite/internal": resolve(repoRootPath, "node_modules/vite/dist/node/index.js"),
-      "@compose/ui": resolve(repoRootPath, "🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx"),
+      "@compose/ui": resolve(repoRootPath, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx"),
       "@semio-tech/framework-platform-core": resolve(repoRootPath, "🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts"),
       "@semio-tech/framework-playground-core": resolve(repoRootPath, "🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts"),
       "@semio-tech/framework-platform-renderer-react": resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx"),

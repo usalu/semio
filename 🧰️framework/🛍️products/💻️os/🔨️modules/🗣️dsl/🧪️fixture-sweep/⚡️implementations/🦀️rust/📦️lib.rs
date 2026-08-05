@@ -58,7 +58,7 @@ mod tests {
     use playbook::PlaybookSpec as FormSpec;
     use gis::artifacts::gismap::GisMapDocument;
     use gis::artifacts::gisterrain::Gis3dTerrainDocument;
-    use home::SHomeDocument;
+    use home::artifacts::home::SHomeDocument;
     use imperative::ImperativeDocument;
     use iso16757::Document as Iso16757Document;
     use layout::artifacts::layout::LayoutDocument;
@@ -70,9 +70,9 @@ mod tests {
     use procedural::artifacts::procedural2d::Procedural2dDocument;
     use procedural::artifacts::procedural3d::Procedural3dDocument;
     use process_3d::artifacts::process3d::Process3dDocument;
-    use puzzle_2d::Puzzle2dProjection;
-    use puzzle_3d::Puzzle3dProjection;
-    use puzzle_5d::Puzzle5dProjection;
+    use puzzle::artifacts::puzzle2d::Puzzle2dProjection;
+    use puzzle::artifacts::puzzle3d::Puzzle3dProjection;
+    use puzzle::artifacts::puzzle5d::Puzzle5dProjection;
     use raster::artifacts::raster::RasterProjection;
     use reasoning_mindmap_plugin::artifacts::wires::MindmapWiresDocument;
     use remodel::RemodelScene;

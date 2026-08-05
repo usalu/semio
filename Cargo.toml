@@ -161,9 +161,9 @@ members = [
     "✏️s/🔨️modules/🧊️3d/🎬️scene/⚡️implementations/🦀️rust",
     "✏️s/🔨️modules/🧊️3d/🥽️mesh/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚡️implementations/🦀️rust",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/⚡️implementations/🦀️rust",
     "✏️s/🔨️modules/💭️mindmap/⚡️implementations/🦀️rust",
     "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust",
@@ -225,22 +225,7 @@ members = [
     "✏️s/🔌️plugins/🔱️trinity/🎛️apps/✏️rewrite/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🔱️trinity/🎛️apps/✏️rewrite/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
     "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪐️space/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪐️space/🔨️modules/🤝️shared/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
+    "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️implementations/🦀️rust",
@@ -483,8 +468,8 @@ semio-framework-os-kernel-math-random = { path = "🧰️framework/🔨️module
 semio-framework-os-kernel-math-spatial = { path = "🧰️framework/🔨️modules/🧮️math/🗺️spatial/⚡️implementations/🦀️rust" }  # 6 refs
 
 # ---- ui (2) ----
-semio-framework-ui-styling = { path = "🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust" }  # 15 refs
-semio-framework-ui-wgpu = { path = "🧰️framework/🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust" }  # 15 refs
+semio-framework-ui-styling = { path = "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust" }  # 15 refs
+semio-framework-ui-wgpu = { path = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu" }  # 15 refs
 
 # ---- plugin (62) ----
 semio-framework-os-kernel-3d-brep = { path = "✏️s/🔨️modules/🧊️3d/📐️brep/⚡️implementations/🦀️rust" }  # 8 refs
@@ -522,7 +507,7 @@ semio-s-app-remodel = { path = "✏️s/🔌️plugins/📸️remodel/🎛️app
 semio-s-plugin-sequence = { path = "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust" }
 semio-s-plugin-shooting = { path = "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust" }
 semio-s-plugin-sourcing = { path = "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust" }
-semio-s-app-space-home = { path = "✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/⚡️implementations/🦀️rust" }  # 7 refs
+semio-s-plugin-space = { path = "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust" }
 semio-s-app-trinity-rewrite = { path = "✏️s/🔌️plugins/🔱️trinity/🎛️apps/✏️rewrite/⚡️implementations/🦀️rust" }  # 8 refs
 semio-s-plugin-vcs = { path = "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust" }
 semio-s-plugin-writer = { path = "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust" }

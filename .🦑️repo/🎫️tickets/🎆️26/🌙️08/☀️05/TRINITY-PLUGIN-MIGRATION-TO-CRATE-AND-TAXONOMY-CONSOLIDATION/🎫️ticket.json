@@ -1,0 +1,13 @@
+{
+  "title": "Trinity Plugin Migration To Crate And Taxonomy Consolidation",
+  "emoji": "🔺️",
+  "status": "open",
+  "description": "Migrate the 🔱️trinity plugin (2-app: 🔌️jack, ✏️rewrite, plus a shared 🔨️modules/🐏️ram crate, jack's own 🐚️shell bin and 🧠️lsp server-with-embedded-TS-worker) from the old multi-app 7-crate-per-app layout to the new single-crate taxonomy layout at ✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/semio-s-plugin-trinity, following CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE/TEMPLATE.md. Determine artifact count from actual document-schema boundaries (jack vs rewrite - verify shared schema or not, don't assume). Full baseline tests, wire-format proofs per app, cargo check/clippy/test on the new crate via temp workspace overlay, then delete old crate manifests and hand off registrar block. jack's 🐚️shell and 🧠️lsp (with embedded TS worker.ts) are flagged as residuals for a later TS-focused pass per the dispatching session's instructions - not touched in this migration, only the core Rust plugin crates (bundle + 2 apps + ram module) are in scope.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2479"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪d33dd7dd05ac4856bdd611dd02a02924"
+  ]
+}
