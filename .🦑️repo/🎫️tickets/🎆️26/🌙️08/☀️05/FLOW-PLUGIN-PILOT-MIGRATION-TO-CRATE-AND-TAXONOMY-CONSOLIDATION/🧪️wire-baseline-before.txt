@@ -1,0 +1,43 @@
+[DEBUG][WIRE] add-widget kind=inputSlider x=10 | 29 | 0100010b696e707574536c696465720200060002050000000000002440
+[DEBUG][WIRE] add-widget kind=neuron neuron-kind=math.add | 26 | 010002086d6174682e616464066e6575726f6e02000601010600
+[DEBUG][WIRE] remove-widget widget-id=n1 | 10 | 010101026e3101000600
+[DEBUG][WIRE] delete-selection | 4 | 01020000
+[DEBUG][WIRE] disconnect synapse-id=s1 | 10 | 01030102733101000600
+[DEBUG][WIRE] connect-media-ports source-node-id=n1 source-port-id=out target-node-id=n2 target-port-id=in | 29 | 01040402696e026e31026e32036f757404000601010603020602030600
+[DEBUG][WIRE] move-media-node node-id=n1 x=1 y=2 | 30 | 010501026e31030006000105000000000000f03f02050000000000000040
+[DEBUG][WIRE] reorganize | 4 | 01060000
+[DEBUG][WIRE] patch-flow-widgets field=value value="5" widget-ids=[ n1 n2 ] | 31 | 0107040135026e31026e320576616c756503000c0206010602010603020600
+[DEBUG][WIRE] rename-flow-widget old-id=n1 value=renamed | 21 | 010802026e310772656e616d656402000600010601
+[DEBUG][WIRE] node-graph-edit set-fixture fixture-json="{}" delete-selection connect source-node-id=n1 source-port-id=out target-node-id=n2 target-port-id=in | 81 | 01090807636f6e6e6563741064656c6574652d73656c656374696f6e02696e026e31026e32036f75740b7365742d66697874757265027b7d01000f03060100060701000004000603010605020604030602
+[DEBUG][WIRE] spotlight-commit delete-selection | 26 | 010a011064656c6574652d73656c656374696f6e01000f010000
+[DEBUG][WIRE] run-extension-action action-id=flow.extension.reorganize | 33 | 010b0119666c6f772e657874656e73696f6e2e72656f7267616e697a6501000600
+[DEBUG][WIRE] evaluate | 4 | 010c0000
+[DEBUG][WIRE] select-all | 4 | 010d0000
+[DEBUG][WIRE] focus-selection | 4 | 010e0000
+[DEBUG][WIRE] set-selection ids=[ n1 ] edge-ids=[ e1 ] handle-ids=[ ] | 23 | 010f02026531026e3103000c010601010c010600020c00
+[DEBUG][WIRE] select-node node-id=n1 | 10 | 011001026e3101000600
+[DEBUG][WIRE] node-graph-select node-ids=[ n1 n2 ] | 17 | 011102026e31026e3201000c0206000601
+[DEBUG][WIRE] node-graph-hover | 4 | 01120000
+[DEBUG][WIRE] graph-pointer-down | 4 | 01130000
+[DEBUG][WIRE] node-graph-viewport camera { x=1 y=2 zoom=1.5 } | 38 | 01140001000e0d030005000000000000f03f010500000000000000400205000000000000f83f
+[DEBUG][WIRE] set-lod-mode value=micro | 13 | 011501056d6963726f01000600
+[DEBUG][WIRE] set-proximity-distance value=48 | 14 | 0116000100050000000000004840
+[DEBUG][WIRE] set-grid-visible pressed=true | 6 | 011700010002
+[DEBUG][WIRE] set-grid-visible | 4 | 01170000
+[DEBUG][WIRE] set-grid-snap-enabled | 4 | 01180000
+[DEBUG][WIRE] set-grid-factor value=10 | 14 | 0119000100050000000000002440
+[DEBUG][WIRE] clear-selection | 4 | 011a0000
+[DEBUG][WIRE] context-menu-at id=n1 | 10 | 011b01026e3101000600
+[DEBUG][WIRE] set-preview-off value=true ids=[ n1 ] | 14 | 011c01026e3102000c0106000102
+[DEBUG][WIRE] open-spotlight | 4 | 011d0000
+[DEBUG][WIRE] replace-image id=n1 | 10 | 011e01026e3101000600
+[DEBUG][WIRE] set-catalogue-sections sections-json="[]" | 10 | 011f01025b5d01000600
+[DEBUG][WIRE] toggle-extension id=auto-layout enabled=true | 21 | 0120010b6175746f2d6c61796f7574020006000102
+[DEBUG][WIRE] add-generation | 4 | 01210000
+[DEBUG][WIRE] remove-generation id=g1 | 10 | 01220102673101000600
+[DEBUG][WIRE] select-generation id=g1 | 10 | 01230102673101000600
+[DEBUG][WIRE] rename-generation id=g1 name=Copy | 18 | 01240204436f707902673102000601010600
+[DEBUG][WIRE] update-generation-values generation-id=g1 question-id=q1 value=5 | 27 | 012502026731027131030006000106010211050000000000001440
+[DEBUG][WIRE] locale value=de-DE | 13 | 0126010564652d444501000600
+[DEBUG][WIRE] flow-eval-tick | 4 | 01270000
+[DEBUG][WIRE] flow-eval-resolve node-hash=42 output-json="{}" | 13 | 012801027b7d0200042a010600

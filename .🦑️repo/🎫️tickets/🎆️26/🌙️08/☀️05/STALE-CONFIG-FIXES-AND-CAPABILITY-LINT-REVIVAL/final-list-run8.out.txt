@@ -1,0 +1,487 @@
+failed to load config from /Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[🧪️vitest.config.ts] failed to load, skipping: ✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript/🧪️vitest.config.ts -> ENOENT: no such file or directory, stat '/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/PRINT-SOLID-HEADING-CHIP-ROW-PARITY/harness/font/anta/Anta-Regular.ttf'
+[@semio-tech/framework-core] 📦️index.ts > DockLayoutStore > returns null when nothing persisted
+[@semio-tech/framework-core] 📦️index.ts > DockLayoutStore > app layer wins over os layer when both are set
+[@semio-tech/framework-core] 📦️index.ts > DockLayoutStore > falls back to os layer when app layer absent
+[@semio-tech/framework-core] 📦️index.ts > DockLayoutStore > save(null) removes the app-layer key
+[@semio-tech/framework-core] 📦️index.ts > DockLayoutStore > reset() clears both layers
+[@semio-tech/framework-core] 📦️index.ts > DockLayoutStore > returns null on corrupt JSON rather than throwing
+[@semio-tech/framework-core] 📦️index.ts > DockLayoutStore > discards a stale version-1 (corners) blob instead of migrating it
+[@semio-tech/framework-core] 📦️index.ts > DockLayoutStore > discards a stale version-2 (six-anchor) blob instead of migrating it to eight anchors
+[@semio-tech/framework-core] 📦️index.ts > DockUiStateStore > returns null when nothing persisted
+[@semio-tech/framework-core] 📦️index.ts > DockUiStateStore > app layer wins over os layer when both are set
+[@semio-tech/framework-core] 📦️index.ts > DockUiStateStore > falls back to os layer when app layer absent
+[@semio-tech/framework-core] 📦️index.ts > DockUiStateStore > save(null) removes the app-layer key
+[@semio-tech/framework-core] 📦️index.ts > DockUiStateStore > reset() clears both layers
+[@semio-tech/framework-core] 📦️index.ts > DockUiStateStore > returns null on corrupt JSON rather than throwing
+[@semio-tech/framework-core] 📦️index.ts > DockUiStateStore > discards a stale version-1 (corners) blob instead of migrating it
+[@semio-tech/framework-core] 📦️index.ts > DockUiStateStore > discards a stale version-2 (six-anchor) blob instead of migrating it to eight anchors
+[@semio-tech/framework-core] 📦️index.ts > DockUiStateStore > uses a distinct key from DockLayoutStore for an app literally named "ui"
+[@semio-tech/framework-core] 📦️index.ts > WindowPaneStateStore > returns null when nothing persisted
+[@semio-tech/framework-core] 📦️index.ts > WindowPaneStateStore > app layer wins over os layer when both are set
+[@semio-tech/framework-core] 📦️index.ts > WindowPaneStateStore > falls back to os layer when app layer absent
+[@semio-tech/framework-core] 📦️index.ts > WindowPaneStateStore > save(null) removes the app-layer key
+[@semio-tech/framework-core] 📦️index.ts > WindowPaneStateStore > reset() clears both layers
+[@semio-tech/framework-core] 📦️index.ts > WindowPaneStateStore > returns null on corrupt JSON rather than throwing
+[@semio-tech/framework-core] 📦️index.ts > WindowPaneStateStore > discards a foreign-version blob instead of migrating it
+[@semio-tech/framework-core] 📦️index.ts > PlaygroundResolution > resolves host config from generated program metadata
+[@semio-tech/framework-core] 📦️index.ts > PlaygroundResolution > resolves playground aliases to registry plugin ids
+[@semio-tech/framework-core] 📦️index.ts > PlaygroundResolution > rebuilds program rows when the generated session variant is stale
+[@semio-tech/framework-core] 📦️index.ts > organizeContextMenu > keeps a flat within-budget menu as-is, with groups sorted after leaves
+[@semio-tech/framework-core] 📦️index.ts > organizeContextMenu > shares the Rust fixture's grouped structure for a flat 12-item over-budget menu
+[@semio-tech/framework-core] 📦️index.ts > pluginWorkerUrl (hot-reload cache-busting regression) > swaps the plugin's own bridge filename for the generic worker bootstrap script
+[@semio-tech/framework-core] 📦️index.ts > pluginWorkerUrl (hot-reload cache-busting regression) > strips a cache-busting ?v= query before swapping the filename — a bare .js-suffix regex silently no-ops on a query string
+[@semio-tech/framework-core] 📦️index.ts > pluginWorkerUrl (hot-reload cache-busting regression) > also strips a trailing hash fragment
+[@semio-tech/framework-core] 📦️index.ts > PluginSource > list() returns the registry it was created with
+[@semio-tech/framework-core] 📦️index.ts > PluginSource > moduleUrl() passes through unbusted without rebuiltAt
+[@semio-tech/framework-core] 📦️index.ts > PluginSource > moduleUrl() cache-busts with a rebuiltAt query param
+[@semio-tech/framework-core] 📦️index.ts > PluginSource > moduleUrl() throws for an unknown pluginId
+[@semio-tech/framework-core] 📦️index.ts > PluginSource > subscribe() is a harmless no-op without a global EventSource (node/vitest)
+[@semio-tech/framework-core] 📦️index.ts > LeasePool evictNow (hot-swap reload eviction) > disposes a fully-released key immediately
+[@semio-tech/framework-core] 📦️index.ts > LeasePool evictNow (hot-swap reload eviction) > skips (does not throw) a key with an active lease, matching a reload that hasn't released the old handle yet
+[@semio-tech/framework-core] 📦️index.ts > LeasePool evictNow (hot-swap reload eviction) > treats two cache-busted URLs of the same pluginId as independent keys
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework sync utilities > builds three sync backbone toggles
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework sync utilities > has no active toggle when detached
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework sync utilities > groups File, Folder, and Remote under a single Sync category collection
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > live measure dispatch > serializes document updates and skips stale slider values
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > live measure dispatch > coalesces straight slider movement but preserves a down-up reversal
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > live measure dispatch > caps queued direction reversals so a jittery drag cannot grow the queue unbounded
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > reveal cutoff store > notifies only same-group subscribers and reflects the latest set value
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > reveal cutoff store > isRevealCutoffHidden hides instances at or past the live cutoff, and never instances without a revealIndex
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > reveal cutoff store > isRevealCutoffHidden treats a JSON null revealIndex as untagged, even at the boot cutoff of 0
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > reveal cutoff store > committed reveal cutoff reconciliation ignores same-value identity churn so a live fill drag is not reset by fillBuildTick
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > in-flight skipping interval > drops overlapping ticks instead of queueing them behind a slow run
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > coalescing action dispatcher > dedupes unchanged values and keeps at most one in-flight dispatch
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > starts every panel anchor at the same 300px width
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > toggles the overlays slice via a direct value without touching unrelated slices
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > starts, advances, and dismisses an introduction via SET_INTRODUCTION_STEP without touching unrelated slices
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > COMPLETE_INTRODUCTION_INTERACTION appends and dedupes indices; SET_INTRODUCTION_STEP resets them
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > opens, replaces, and closes a dialog via SET_DIALOG without touching unrelated slices
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > toggles the layout slice via an updater function
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > toggles a middle anchor via SET_PANEL_VISIBLE the same way as a corner
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > rewrites window icons via SET_WINDOW_ICON for extras and base kinds
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > rewrites window titles via SET_WINDOW_TITLE for extras and base kinds
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > resets the dock override, every anchor's active path/visible/size, drill-down memory, and tree expansion via RESET_DOCK
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > HYDRATE_DOCK_UI restores a persisted size for the top-middle anchor
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > updates the uiPrefs slice and leaves the sync slice referentially unchanged
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > action-panel slice: fold/expand/stage/reset/active-utility update only their own keys and preserve identity on no-operations
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > actionPane slice: SET_ACTIVE_TOOL updates only activeToolId and preserves identity on no-operations (mode-scoped, not per-window)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > commandPanel slice: expand/collapse and stage/reset update only their own keys and preserve identity on no-operations (category active/fold state now lives in layout.panels['bottom-middle'], not this slice)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > command palette category is the bottom-middle anchor's own SET_PANEL_PATH; the UI's category-switch handler additionally dispatches SET_COMMAND_EXPANDED:null (reproducing the old single-action collapse-on-switch behavior across two actions)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > tutorial slice: SET_TUTORIAL starts a tutorial, resets rate/deviated, and clears an active introduction (mutual exclusivity)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > tutorial slice: SET_INTRODUCTION_STEP (non-null) clears an active tutorial (mutual exclusivity, reverse direction)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > tutorial slice: play/pause resets deviated only when transitioning to playing; rate/muted/captions/recording/deviated update independently
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > APPLY_TUTORIAL_UI_SNAPSHOT atomically restores layout/panels/tree/utility/tool/dialog/search across their owning slices
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > UPSERT_LOADED_PLUGIN inserts a new pluginId and replaces an existing one in place (order preserved)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > REMOVE_LOADED_PLUGIN drops only the matching pluginId
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell store reducer > SET_PLUGIN_STATUS tracks per-pluginId status independent of loadedPlugins membership
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > ui identity preservation (puzzle 2d perf) > preserveJsonIdentity reuses the previous reference for structurally-equal values
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > ui identity preservation (puzzle 2d perf) > preserveJsonIdentity returns the new reference when content actually differs
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > ui identity preservation (puzzle 2d perf) > preserveJsonIdentity treats nested arrays/objects structurally, not just top-level fields
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > ui identity preservation (puzzle 2d perf) > preserveJsonIdentity treats undefined previous as always-changed
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > ui identity preservation (puzzle 2d perf) > mergeRecordPreservingIdentity reuses the whole previous record when every key is unchanged
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > ui identity preservation (puzzle 2d perf) > mergeRecordPreservingIdentity reuses per-key references, replacing only the changed key
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > ui identity preservation (puzzle 2d perf) > mergeRecordPreservingIdentity treats a key being added or removed as a change
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > batched ui refresh request/response (puzzle 2d perf round 3) > buildActiveUtilityByWindowId omits null utilities for batched refresh
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > batched ui refresh request/response (puzzle 2d perf round 3) > buildUiRefreshRequest forwards per-window utility map on viewState without a focused-window singular leak
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > batched ui refresh request/response (puzzle 2d perf round 3) > buildActiveUtilityByWindowId makes a just-activated transform visible to refresh before the next React render
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > batched ui refresh request/response (puzzle 2d perf round 3) > buildUiRefreshRequest for a full scope requests every window/panel/engagements/measures/labels section (utility bars are now registry-derived, not a plugin section)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > batched ui refresh request/response (puzzle 2d perf round 3) > buildUiRefreshRequest for none returns null
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > batched ui refresh request/response (puzzle 2d perf round 3) > buildUiRefreshRequest for a partial scope requests only the listed window/panel bodies and flags
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > batched ui refresh request/response (puzzle 2d perf round 3) > buildUiRefreshRequest returns null for a partial scope that matches nothing in this app
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > batched ui refresh request/response (puzzle 2d perf round 3) > buildUiRefreshRequest attaches the cached hash for a section that was already fetched once
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > batched ui refresh request/response (puzzle 2d perf round 3) > buildUiRefreshRequest gives two instances of the same window kind distinct keys and independent cached hashes
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > batched ui refresh request/response (puzzle 2d perf round 3) > applyUiRefreshResponseToCache writes changed sections and ignores hash-only (unchanged) ones
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > batched ui refresh request/response (puzzle 2d perf round 3) > buildUiRefreshRequest for a full scope also requests the mode-level tools section (keyed by tool id, not a window)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > batched ui refresh request/response (puzzle 2d perf round 3) > buildUiRefreshRequest for a partial scope requests tools only when the scope's `tools` flag is set
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > batched ui refresh request/response (puzzle 2d perf round 3) > applyUiRefreshResponseToCache caches the tools section same as measures/engagements/labels
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework plugin runtime > preserves batched UI refreshes through the React program adapter
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework plugin runtime > loads plugin modules through framework-core, refcounted
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework plugin runtime > parses a typed InvocationResponse, including requestedEffects, from a plugin handle-action response
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework plugin runtime > falls back to an empty InvocationResponse for malformed handle-action JSON
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework plugin runtime > serializes concurrent program wasm handle calls
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework plugin runtime > adaptPluginHandle.handleAction round-trips an action through AppCommand::Command and reassembles requestedEffects/uiScope-free InvocationResponse
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework plugin runtime > detects jco payload-shaped plugin instance busy errors
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer types > keeps window tabs concise while retaining the app fallback
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer types > flattens a recursive panelTabs tree to its leaves, depth-first
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer types > accepts component scene nodes
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer types > accepts graph-timeline component scene nodes
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework external slots > degrades a resolvable external slot to 'unavailable' until the binary-channel render path lands
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework external slots > renders external slot fallback text when unresolved
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > declarative forms parity > renders declarative text with appearance-aware foreground
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > declarative forms parity > dag overlay label fills resolve to Canvas2D-safe hex for appearance
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > declarative forms parity > renders field description, required marker and inline error
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > declarative forms parity > renders slider unit readout
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > declarative forms parity > renders numberStepper as a single-border Stepper control, not hand-rolled double-bordered buttons
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > declarative forms parity > shows the mixed-values placeholder on a non-uniform numberStepper
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > declarative forms parity > renders a group node as a labeled section nesting its child controls (Origin > X/Y/Z steppers)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > declarative forms parity > tokenizes stack node gap/padding instead of hardcoded rem inline styles, and keeps separators off raw border-border
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > declarative forms parity > passes number bounds and file accept to inputs
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > declarative forms parity > disables gated wizard buttons
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > declarative forms parity > renders selectable builder cards with selection ring
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > declarative forms parity > renders image nodes from url sources
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > declarative forms parity > dispatches the tree drop action with payload, target and position
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > renders node graph host from workflow scene json
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > renders editable node graph host with find items
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > uses the live session camera for node graph wheel viewport actions
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > encodes node graph scenes as pack bytes for wasm sync
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > parses slider overlay state json for flow graph hosts
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > renders graph slider overlays as track-only controls without a nested value readout
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > scales graph slider overlay chrome with canvas zoom so the knob matches other elements
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > renders canvas 2d host with infinite canvas session
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > renders canvas 2d host with draw gradient/blend/overlay/meta scene records
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > renders puzzle 2d board host shell
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > uses the live puzzle 2d board camera for wheel persistence actions
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > coalesces puzzle 2d board events: drops transients, keeps the latest camera, coalesces nodeMove per id
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > coalesces puzzle 2d board events: drops nodeMove rows once a nodeDragEnd follows
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > flushes puzzle 2d board events immediately for select/brushPlace/edge/delete rows, not for camera/nodeMove alone
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > collects live mirror operations: coalesces nodeMove to the latest per id, ignores unrelated rows
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > collects live mirror operations: nodeDragEnd.moves produce final positions
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > collects live mirror operations: preselect sets the live highlight, select/preselectCancel commit selection and clear it
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > peer registry: registers/unregisters, excludes own surfaceId and other controllerIds
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > peer gesture ownership: begin/end tracks the owning surfaceId; a pane never defers against its own gesture
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > pushes live mirror operations into peer sessions, skipping the source pane
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > notifies peers when a gesture ends, skipping the source pane, passing whether it flushed
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > maps context menu specs onto UI items with icons, colors, hover, and select handlers
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > maps suggestion-style specs without a color swatch field
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > enriches context menu shortcuts from app keybindings
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > formats keybinding chords for menu shortcut labels
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > numbers suggestion menu rows with digit shortcuts for the first nine candidates
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > enriches context menu shortcuts from app keybindings via mapContextMenuSpecs
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > parses a catalogue drag payload and builds a drop-preview JSON
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > rejects a catalogue drag payload without a kindId
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > parses a puzzle 3d catalogue drag payload and snaps drop origins to the grid
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > raycasts the Z=0 ground under orthographic top and perspective cameras
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > shares the world catalogue drop preview across all registered hosts
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > shares live world selection previews across sibling panes without allowing an idle pane to clear the active gesture
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > pushes fixture-drop previews to every board2d peer on the same controller
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > inverts the canonical screen-to-world transform for a fixture drop
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > puzzle2dWorldToScreen is the exact inverse of puzzle2dScreenToWorld
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > maps a world-centered node inside the viewport with canonical camera math
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > canvas-2d surface colors follow the light theme canvas token instead of a hardcoded dark fill
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > renders world 3d empty state without mounting r3f canvas
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > marks every non-empty world-3d host with the bottom-right orbit view gizmo
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > keeps world-3d orbit camera seed local per viewport once detached
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > buildWorldCameraDispatchArgs carries position/target/zoom/up but never a projection field
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > worldCameraSetCameraDispatchArgs nests the camera pose under a `camera` key, never flat alongside windowId
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > worldCameraPoseApproxEqual matches exact poses and float-noise, rejects a genuinely different pose
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > shouldReattachWorldViewportCamera suppresses a self-echo of the last dispatched camera but not a genuinely different pose
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > preserves projectionSpec.view from gizmo snaps instead of clobbering to top
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > accepts extended world 3d scene fields
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > parses GIS 3D terrain style JSON, defaulting missing fields, and rejects a missing tileUrlTemplate
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > blocks instance picking for fill, brush, and volume brush engagements but not move
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > resolves vortex pointer-down to select in brush or vertex mode and click-or-drag otherwise
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > scopes suggestion menu ownership to the opening world window so sibling panes stay interactive
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > revisions vortex materials when selection or hover state changes
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > revisions world mesh materials when style kind changes so deselection clears selected paint
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > uses the world surface selection mode instead of a stale shared invertive mode
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > resolves mesh style by priority: disabled > celebrated > selected > highlighted > hovered > neutral
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > celebrateWorldInstances stamps ids and cancel clears them so paint prefers celebrated over selected
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > maps edge hover to line paint so coplanar edges stay distinct from face hover fill
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > treats centerline meshes without shaded triangles as curve-only instances
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > derives marquee bounds from edge samples when positions are empty
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > renders the new group selection as active and only objects leaving the old selection as highlighted
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > builds addBrushObject args from a parsed brush preview, or null when there is nothing to place
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > defaults sourceVortexIndex to 0 when the brush preview omits it
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > resolves brush/suggestion ghost mesh URLs even when the kind is not yet among scene meshes
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > resolves the right-click context menu target by priority: vortex, then object, then reference
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > renders text editor host
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > renders text editor host with hover/newline/rename scene fields
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > multiSpanReplace renames every occurrence and remaps spans
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > lineRangeAt finds the line containing an offset
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > renders table host with ui-react table
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > renders vcs history host with an ancestor graph fork
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > renders paint-2d host canvas surface from document sync scene
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > renders paint-2d navigator host with the composite viewport overlay channel
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > renders paint-2d host empty fallback without a scene
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > framework renderer hosts > interprets virtual file system component scenes
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > dag marquee overlay > computes a rect overlay with numeric bounds for the rectangle method
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > dag marquee overlay > computes a rect overlay from the rust tuple-array wire format
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > dag marquee overlay > computes a lasso overlay carrying the raw points for the lasso method
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > dag marquee overlay > computes a lasso overlay from the rust tuple-array wire format
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > dag marquee overlay > infers lasso from a non-rectangular path when method is omitted
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > dag marquee overlay > infers rectangle from four axis-aligned corner points when method is omitted
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > dag marquee overlay > returns null for fewer than two points
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > dag marquee overlay > returns null for malformed point entries
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > dag marquee overlay > renders a rect overlay from a computeDagMarqueeOverlay rect result without crashing
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > dag marquee overlay > renders a polygon overlay from a computeDagMarqueeOverlay lasso result without crashing
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > ink canvas host > renders the semio example composite scene with rich text, table, and math fallback
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > ink canvas host > shows the grid pattern in composite mode but not in navigator mode
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > ink canvas host > resizes with a minimum size and scales ink points when a group is resized
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > ink canvas host > splits an ink stroke into fragments when erasing its middle point
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > ink canvas host > round-trips bold and link marks between paragraphs and html
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > ink canvas host > round-trips a clipboard payload of note blocks
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > ink canvas host > computes ink block bounds from its local points
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > ink canvas host > applies the canonical wheel-zoom camera formula symmetrically for screen<->world conversion
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > spawned window chrome > builds spawned engagement and measures chrome from program contributions
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > partitionWindowMeasures > unwraps a tagged group's children into utilityOptions only when its utility is active
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > partitionWindowMeasures > drops a tagged group from both buckets when a different or no utility is active
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > partitionWindowMeasures > keeps untagged groups and non-group measures in general, unaffected by the active utility
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > partitionWindowMeasures > wires a utility-scoped group into spawnedWindowChromeForKind's utilityOptions slot only when its utility is active
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > partitionWindowMeasures > parses the real ui_wgpu camelCase wire JSON and unwraps a utility-scoped fill group into flat utilityOptions (snake_case divergence regression guard)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > utility ribbon > sorts utility nodes by order
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > utility ribbon > recurses into a collection level only when the path names one of its collections
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > utility ribbon > ignores a path entry that no longer names an enabled collection at that level
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > utility ribbon > emits a picker segment alongside loose leaves at the same depth
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > utility ribbon > reconciles an active path by truncating at the first stale entry instead of substituting a default
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > utility ribbon > buckets top-level utility nodes into ordered category collections (uncategorized nodes default to tools now that the Actions category is gone)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > utility ribbon > drops separator-only category buckets so an empty group never appears as a picker option
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > utility ribbon > reuses a category's single already-meaningful collection instead of re-wrapping it, avoiding a duplicate-looking picker level
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > utility ribbon > still wraps a category with multiple top-level nodes in a synthetic collection
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > utility ribbon > scopes grouping to the given categories only
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > utility ribbon > deduplicates utility nodes by id across window utility lists for a single shared footer entry
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > utility ribbon > renders utility ribbon with picker and batched toggles
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > utility ribbon > stacks the window utility bar ribbon upward, showing only the base picker row until a group is activated
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > utility ribbon > renders UtilityTree with a custom id for per-window namespacing
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > utility ribbon > renders utilityOptions as an extra ribbon row when direction is up
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > s workflow flow routing > selects the flow engine for scenes with engine flow capabilities
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > s workflow flow routing > renders presence peers from the scene payload
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > s workflow flow routing > parses a catalogue app drag payload, ignoring extra keys
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > s workflow flow routing > rejects catalogue app drag payloads missing pluginId/appId, and garbage
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > s workflow flow routing > builds a ghost neuron descriptor, preferring label over appId
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > s workflow flow routing > builds addWidget descriptors from catalogue items
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > s workflow flow routing > ranks catalogue suggestions by exact/prefix match with neurons first
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > s workflow flow routing > returns every catalogue item for empty query without a 20-item cap
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > s workflow flow routing > enables overflow scrolling only when spotlight suggestions are expanded
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > s workflow flow routing > attaches a drag-and-drop controller to tree panels whose items carry drag data
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > s workflow flow routing > omits the drag-and-drop controller for tree panels without drag data
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > s workflow flow routing > resolves a fixture widget id to its workflow instance id, independent of selection state
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > s workflow flow routing > parses studio and studio+instance shell paths, and rejects non-studio routes
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > s workflow flow routing > classifies shell routes into landing, space, and notFound
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > s workflow flow routing > isolates render faults in ShellFaultBoundary
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > s workflow flow routing > folds spawned focus into viewState so a subsequent host-effect session write keeps activeSpawnedId
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > ui search/find (fuse re-export from @semio-tech/ui-react) > UISearch renders all items and fuzzy-filters them via the shared Fuse re-export
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > ui search/find (fuse re-export from @semio-tech/ui-react) > UIFind renders and fuzzy-filters items registered on its context via the shared Fuse re-export
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > window action panel — staging and single dispatch (P1/P2) > stages both args locally, dispatches nothing until Execute, then fires exactly one merged descriptor and keeps staged values
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > window action panel — staging and single dispatch (P1/P2) > gates Execute on required args, but a default-satisfied required arg counts without staging
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > window action panel — staging and single dispatch (P1/P2) > Reset restores defaults while keeping the form expanded
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > window action panel — staging and single dispatch (P1/P2) > a zero-arg action row fires immediately with no args object
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > window action panel — staging and single dispatch (P1/P2) > renders every row disabled when an active utility gates actions
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > window action panel — staging and single dispatch (P1/P2) > groups actions into category sections like the command panel
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > palette redirect and keybinding rule (P3/P4) > only arg-carrying actions redirect to a staged form (P3 decision)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > palette redirect and keybinding rule (P3/P4) > keybinding intent: arg-less fires, arg-action opens unless already expanded and valid then executes (P4)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > registry-derived utilities and activation (P5) > resolveUtilities scopes to the window kind's refs, falling back to all app utilities when unset
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > registry-derived utilities and activation (P5) > derives grouped utility nodes with the active utility pressed and a setActiveUtility onChange tagged by window
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > registry-derived utilities and activation (P5) > deriveUtilityNodes twin marks exactly the active utility pressed
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > registry-derived utilities and activation (P5) > deriveUtilityNodes hoists a single-child group to a top-level toggle
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > registry-derived utilities and activation (P5) > resolveUtilityActivation toggles: click activates, re-click or empty deactivates
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > registry-derived utilities and activation (P5) > findPressedUtilityLeafId walks nested collections
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > registry-derived utilities and activation (P5) > isWorldTransformGumballMode requires an explicit move/rotate/scale/transform mode
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > registry-derived utilities and activation (P5) > worldGumballConfigForProjection intersects transform mode with planar window projections
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > registry-derived utilities and activation (P5) > gumballTransformDeltaBetweenPoses emits incremental translate/rotate/scale args
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > registry-derived utilities and activation (P5) > gumballLivePreviewDeltaBetweenPoses applies local start→current deltas for instant mid-drag preview
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > registry-derived utilities and activation (P5) > resolveWindowActions surfaces panel-eligible actions and excludes history/setActiveUtility orphans
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > registry-derived utilities and activation (P5) > panelTabDefinitionToNode maps the framework-injected History panel tab through its rendered body
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > resolveCommands / commandCategories (footer command panel registry) > aggregates os + program + app-scope + active-mode's mode-scope commands, excluding other modes' mode-scope commands
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > resolveCommands / commandCategories (footer command panel registry) > switching the active mode swaps which mode-scope commands resolve
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > resolveCommands / commandCategories (footer command panel registry) > resolves only os commands with no session (null program manifest / app)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > resolveCommands / commandCategories (footer command panel registry) > commandCategories orders and dedupes categories by first appearance
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > resolveModeTools / buildToolTabs (footer tool panel registry) > resolves the active mode's tools in declared order
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > resolveModeTools / buildToolTabs (footer tool panel registry) > tools are opt-in per mode — no orphan fallback for a mode that declares none
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > resolveModeTools / buildToolTabs (footer tool panel registry) > resolves nothing for an app/mode that doesn't exist
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > resolveModeTools / buildToolTabs (footer tool panel registry) > buildToolTabs builds one leaf per resolved tool, whose lazily-resolved tree reflects the current active tool and its measures
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > resolveModeTools / buildToolTabs (footer tool panel registry) > buildToolTabs' activation toggle dispatches setActiveTool with this tool's id
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > resolveModeTools / buildToolTabs (footer tool panel registry) > toolIdFromPanelTabId extracts the mode tool id from a tool leaf tab id
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > Introduce App command > is available only for apps with an introduction
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > Introduce App command > starts the introduction at its first step
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > Play/Record Tutorial commands > os.playTutorial appears only when at least one tutorial is declared, offering each as a Select option
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > Play/Record Tutorial commands > os.recordTutorial appears only when the recorder is available (dev/studio), independent of declared tutorials
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > Play/Record Tutorial commands > os-scope Play/Record Tutorial commands are NOT handled by dispatchOsCommand (routed earlier, through the shell's own startTutorialRef/toggleTutorialRecordingRef bridge)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > resolves valid locale/appearance and falls back with a warning on invalid values while staying locked
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > accepts any non-empty terminology id verbatim (app-declared ids can't be validated at boot)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > returns an empty object for undefined locks
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > initialShellState applies locked values over stored/default prefs
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > mergeShellLockSources keeps brand locks locked and lets a defined env lock win per key
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > resolveShellDefaults prefers env defaults over brand defaults and initialShellState seeds without locking
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > resolveBootExampleId seeds the first registered example when nothing is active or defaulted
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > shouldReplayIntroductionOnLoad opts a brand into replaying its tour after every window refresh
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > isEphemeralShellBrand skips durable shell state so a refresh boots from brand defaults only
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > registers all six Entwerfen mit Bestand demonstrator shell brands
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND introduction is app-specific only after the general landing tour was split out
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > mit-bestand/demonstrator footer credits render the funding/partner logos, links, and locale text
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > buildOsCommands omits only the commands for locked prefs
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > dispatchOsCommand is a no-operation for a locked pref even if invoked directly
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > buildCommandCategoryTree / buildCommandCategoryTabs (command palette as a real bottom-middle Panel) > a zero-arg command row fires onExecute directly on click; only one command-list section is present when nothing is expanded
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > buildCommandCategoryTree / buildCommandCategoryTabs (command palette as a real bottom-middle Panel) > auto-expands a singleton arg-carrying category into a flat form with section actions and no disclosure list
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > buildCommandCategoryTree / buildCommandCategoryTabs (command palette as a real bottom-middle Panel) > an arg-carrying command row toggles expansion instead of executing, and a synthetic arg-form section only appears while expanded
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > buildCommandCategoryTree / buildCommandCategoryTabs (command palette as a real bottom-middle Panel) > Execute is disabled until the required arg is staged, and calling it passes the effective (staged) args; Reset dispatches onResetArgs
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > buildCommandCategoryTree / buildCommandCategoryTabs (command palette as a real bottom-middle Panel) > buildCommandCategoryTabs builds one namespaced PanelTabLeaf per category, whose lazily-resolved tree only contains that category's commands
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, D5 RequestMediaFrames) > scheduleDispatchAction (D2): fires dispatchOne with action/args only after delayMs elapses
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, D5 RequestMediaFrames) > scheduleDispatchAction (D2): delayMs 0 still defers to a scheduled tick, not a synchronous call
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, D5 RequestMediaFrames) > dispatchOpenedFiles (D3): single-file (multiple=false) makes exactly one call with {payload, name} and no index/total
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, D5 RequestMediaFrames) > dispatchOpenedFiles (D3): multiple=true dispatches once per file, in order, each extended with {index, total}
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, D5 RequestMediaFrames) > sampleMediaFrameTimestampsMs (D5): steps by sampleStride/fpsHint seconds, capped at maxFrames
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, D5 RequestMediaFrames) > runTier2VideoFrames (D5): dispatches frameAction once per sampled timestamp, in order, then doneAction exactly once
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, D5 RequestMediaFrames) > runRequestMediaFrames (D5): Tier 2 failure (video element throws mid-seek) ⇒ dispatches fallbackAction exactly once with raw bytes as a data URL, no frame/done calls
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, D5 RequestMediaFrames) > runRequestMediaFrames (D5): payload bytes in hand ⇒ Tier 2 seek-capture runs, ending in doneAction (no picker needed)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > Display Windows tab — projection drag templates > shows window kind icons on section headers and kind rows
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > Display Windows tab — projection drag templates > nests the full Parallel/Perspective projection taxonomy under a world-3d window kind
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > Display Windows tab — projection drag templates > keeps a flat single drag entry for non-world-3d window kinds
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > Display Windows tab — projection drag templates > pre-reverses every level so the bottom-anchored (direction="up") Tree's own sibling-reversal renders Parallel children top-to-bottom
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > Display Windows tab — projection drag templates > each projection leaf's drag payload decodes back to its WorldProjectionSpec
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > createFrameworkPluginsPanelTabs (plugin panel, bottom-right dock) > shows an unavailable placeholder when no host is mounted yet
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > createFrameworkPluginsPanelTabs (plugin panel, bottom-right dock) > groups plugins into one section per source, sorted by pluginId within a source
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > createFrameworkPluginsPanelTabs (plugin panel, bottom-right dock) > marks installing/reloading rows as loading, and every status is reflected in the row label
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > createFrameworkPluginsPanelTabs (plugin panel, bottom-right dock) > routes install/uninstall/reload clicks for one row back through the host without touching others
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > createFrameworkPluginsPanelTabs (plugin panel, bottom-right dock) > disables uninstall for the host/primary plugin and the active session's plugin (canUninstall: false)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > introductionTargetsWindow > matches both the window kind and every open instance of that kind
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > introductionTargetsWindow > matches action-rail segments against the kind and its instances
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > windowMeasureTreeContainsId > finds nested measure ids used as introduction targets
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > renderWindowMeasuresTree > puts toggle icons before labels and uses checkboxes instead of icon toggles
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > resolveFrameworkLayoutSeed — multi-pane default layouts > does not infer focus when an app has no explicit layout
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > resolveFrameworkLayoutSeed — multi-pane default layouts > hydrates Top (1/3) + Perspective (2/3) instances and projection templates
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > resolveFrameworkLayoutSeed — multi-pane default layouts > treats instance-id panes as extras so the host fetches bodies keyed by instance id, not only by kind
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > resolveFrameworkLayoutSeed — multi-pane default layouts > re-derives window titles from localized windowKind labels on locale/terminology switch
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > resolveFrameworkLayoutSeed — multi-pane default layouts > re-derives titles for extra window instances based on their windowKindId
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > classifyWindowLayoutChange > returns null when the layout is identical (deep-equal, not just same reference)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > classifyWindowLayoutChange > returns null for a pure active-window-flag change (skeleton and sizes both unchanged)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > classifyWindowLayoutChange > returns 'resize' when only pane sizes differ
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > classifyWindowLayoutChange > returns 'rearrange' when window ids/nesting structure differ (drag-to-new-position, split, close)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > classifyWindowLayoutChange > returns null when both are null
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > noteShellCommand > buildNoteShellCommandAction builds a noteShellCommand action descriptor targeting the given controller, carrying detail only when provided
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > noteShellCommand > is excluded from tutorial recording, alongside world-navigation/introduction/tutorial-control action ids
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > TutorialRecorder LocalizedLabel synthesis > synthesizeLocalizedLabel broadcasts a string across all 4 cells (native/reuse x en/de)
+[@semio-tech/framework-renderer-react] 🧪️index.test.ts > TutorialRecorder LocalizedLabel synthesis > TutorialRecorder synthesizes LocalizedLabel for addChapter and build titles
+[@semio-tech/framework-renderer-wgpu] 🧪️index.test.ts > framework renderer wgpu > builds plugin bridge handles
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > chunkKey > buckets origins by chunk size
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > chunkDistanceVisible > uses hysteresis for exit
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > resolveWorldOrbitMouseButtonsIdle > maps an unmodified middle click to pan in every projection
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > resolveWorldOrbitMouseButtonsIdle > pans an orthographic plan camera on an unmodified middle drag
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > resolveWorldOrbitMouseButtonsIdle > always maps middle click to pan when rotation is disabled (plan/oblique/one-point projections), even in the orthographic family
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > classifyWorldNavigationGestures > detects pan when only the target translates
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > classifyWorldNavigationGestures > detects zoom via distance change in perspective projection
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > classifyWorldNavigationGestures > detects zoom via the zoom factor in orthographic projection, ignoring unchanged distance
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > classifyWorldNavigationGestures > detects orbit when the camera direction around the target rotates
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > classifyWorldNavigationGestures > returns no gestures when every delta is below threshold
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > classifyWorldNavigationGestures > never misreads a pure pan as orbit, and a pure orbit as pan
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > classifyWorldNavigationGestures > can report multiple gestures from a single combined movement
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > resolveWorldOrbitRightMouseAction > reserves plain right click for context menu and maps modifiers to orbit and pan
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > shouldAssignWorldOrbitRightMouse > suppresses orbit's own button assignment when onRightPointerDown returns false
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > computeOrbitCameraViewState > places top view directly above the target with orthographic projection
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > computeOrbitCameraViewState > maps north to +Y and perspective to an oblique direction
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > resolveOrbitGizmoViewFromDirection > maps dominant axis clicks to orthographic orbit views
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > resolveProjectionGizmoSpec > dispatches a repeated gizmo orientation so an orbited camera snaps back
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > resolveProjectionGizmoSpec > sets orientation only and preserves the active projection mode
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > resolveProjectionGizmoSpec > preserves axonometric mode params when snapping corners
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > resolveProjectionGizmoSpec > composes every mode with gizmo top orientation (top works for fisheye, 2pt, axo, …)
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > orbitViewToWorldProjectionSpec / worldProjectionSpecToOrbitView > round-trips orthographic and isometric orbit views
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionKindSwitchSpec > emits defaults for every projection kind
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionKindSwitchSpec > preserves perspective fov when switching kinds
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionKindSwitchSpec > preserves gizmo orientation when switching mode
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionTemplateSelectionId / worldProjectionTemplateApplySpec / worldProjectionSwitchTreeItems > selects the same leaf ids the display template tree uses
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionTemplateSelectionId / worldProjectionTemplateApplySpec / worldProjectionSwitchTreeItems > preserves gizmo orientation when applying a template mode
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionTemplateSelectionId / worldProjectionTemplateApplySpec / worldProjectionSwitchTreeItems > mirrors createWorldProjectionTemplates labels and ids in the switch tree
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionModeOptions > lists axonometric/oblique/curvilinear flat variants for callers that still want a ribbon
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > resolveOrbitCameraViewFromTemplateId > maps display-tree template ids to orbit views
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > shouldApplyOrbitCameraViewRigSeed > applies only when the seed token changes
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > shouldApplyOrbitCameraViewRigSeed > re-applies when orbit controls become ready after the rig camera mounts
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > applyOrbitProjectionToCameraState > applies orthographic zoom defaults while preserving pose
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > createOrbitCameraViewTemplates > emits the orthographic/perspective template tree
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > createOrbitCameraViewTemplates > still supports flat custom view lists
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > createOrbitCameraViewLayoutDescriptors > includes grouped single and quad layouts
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > createOrbitCameraViewLayoutDescriptors > sizes Top | Perspective as one-third / two-thirds
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionFamily > treats orthographic/axonometric/oblique as parallel and everything else as perspective
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionGumballPlane > maps planar orthographic views to drafting planes and leaves 3D projections unconstrained
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionGumballPlane > maps legacy orbit camera view ids the same way
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > computeWorldProjectionPose > places plan/top directly above the target with orthographic projection
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > computeWorldProjectionPose > accepts an explicit orthographic zoom including values below the legacy default
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > computeWorldProjectionPose > preserves live parallel zoom across gizmo snaps and upgrades perspective unit zoom
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > computeWorldProjectionPose > derives the classic 35.264/45 isometric direction from the 30/30 axis angles
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > computeWorldProjectionPose > mirrors quadrant sign flips for axonometric corners
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > computeWorldProjectionPose > places lower-hemisphere axonometric corners below the target
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > computeWorldProjectionPose > keeps oblique cabinet/cavalier at the front pose and rotates military's up vector by its angle
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > computeWorldProjectionPose > reports perspective projection for the perspective family
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionTransitionPose > keeps eye and target when only mode changes with the same orientation
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionTransitionPose > re-looks from the same target and distance when orientation changes
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionTransitionPose > matches apparent scale (not the legacy zoom-50 default) for a persp→ortho mode-only switch when a viewport is supplied
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionTransitionPose > never moves the camera for an ortho→persp mode-only switch even when a viewport is supplied
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionTransitionPose > never moves the camera across a perspective FOV change with the same orientation even when a viewport is supplied
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionPerspectiveFov > defaults threePoint/onePoint/twoPoint fov and caps curvilinear at 160°
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionMatchedOrthoZoom > scales inversely with distance and directly with viewport height
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionMatchedOrthoZoom > round-trips with worldProjectionMatchedPerspectiveDistance
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldObliqueShearMatrix > shears cavalier/cabinet by depthScale·angle and military by a fixed unit length at a right angle
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldObliqueShearMatrix > ramps shear elements linearly with strength
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionGoalMatrix > matches a real OrthographicCamera's pixel frustum for parallel specs
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionGoalMatrix > matches a real PerspectiveCamera for perspective specs
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionGoalMatrix > post-multiplies the oblique shear onto the orthographic base
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionGoalMatrix > shifts the two-point vertical projection element
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionMorphMatrix > equals from exactly at t=0 and closely approximates to at t=1
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionMorphMatrix > interpolates every element linearly
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionMorphMatrix > ramps oblique shear to half-magnitude at t=0.5 when morphing from an unsheared ortho matrix
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > projectionGizmoHover > marks the hovered hit and dims the rest
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > projectionGizmoHover > brightens axis and neutral fills on hover
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > frameWorldProjectionPose > centers top orthographic on reference bounds and fits width in the viewport
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > frameWorldProjectionPose > worldSceneContentBoundsKey changes when fill expands the scene footprint
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionOrbitConstraints > locks rotation for plan, oblique, and one-point; locks polar for two-point; frees the rest
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldCurvilinearUnproject > is the identity mapping at strength 0 (rectilinear passthrough)
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > WorldCurvilinearPass capture quality > stores the capture in linear working space with linear filtering (no nearest-pixelation)
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > WorldCurvilinearPass capture quality > applies Three output color-space conversion on the fisheye blit
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionSpecIconId > maps orthographic and three-point specs to distinct projection icons
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > createWorldProjectionTemplates > emits Parallel/Perspective mode tree without gizmo orientations
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > encodeWorldProjectionTemplateId / decodeWorldProjectionTemplateId > round-trips a spec through the template id string
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > encodeWorldProjectionTemplateId / decodeWorldProjectionTemplateId > returns null for undefined, unrelated, or malformed template ids
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldProjectionSpecLabel > matches the exact labels createWorldProjectionTemplates uses for every leaf, so a dragged pane's title matches the tree entry it came from
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > floatingOriginRebase > subtracts anchor
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > lodFromCameraDistance > maps orbit distance to scale ratio
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > lodOrbitDistanceForCamera > keeps perspective eye distance and maps orthographic zoom through the matched-perspective inverse so scroll retunes LOD
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > lodGridStepWorld > keeps the configured spacing at close range and stays sparse at every larger LOD
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > cameraGridFadeDistance > grows with camera Z while fading fully before the far clipping plane
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > cameraGridFadeDistance > grows with orthographic zoom-out so the plane always overfills the viewport corners
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > cameraGridVisibleRadius > scales inversely with orthographic zoom and with perspective distance
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > adaptiveOrbitCameraFar > keeps the far plane ahead of extreme orbit zoom in stable power-of-two bands
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldMeshBorderColor > returns an srgb-compatible color
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > applyWorldMeshEdgeBorders > adds one outline child per mesh
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > applyWorldReferenceTransform > writes gumball pose onto reference props
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldReferenceAppearance > returns hover and selection fills with halved content opacity when selected
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > applyWorldVolumeTransform > writes gumball pose onto volume props
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldVolumesContainAabb > returns true when no volumes are defined
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldVolumesContainAabb > accepts an AABB fully inside a unit volume at the origin
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldVolumesContainAabb > rejects an AABB that extends outside the volume
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldReferencePose > patchWorldReferenceProps updates origin rotation and scale
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldEntityFlags > treats hidden and locked entities as non-selectable
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldEntityFlags > excludes locked entities from canvas pick so a click equals background
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldEntityFlags > treats hidden entities as non-inspectable and locked entities as inspectable
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldEntityFlags > reveals hidden entities on demand
+[@semio-tech/infinite-world-r3f] 📦️index.tsx > worldEntityFlags > resolves render mode for hidden reveal and locked dim
+[@semio-tech/ui-styling] 📜️script.ts > levels: oklabMix > t=0 returns a and t=1 returns b unchanged
+[@semio-tech/ui-styling] 📜️script.ts > levels: derived appearance paints > injects exactly 6 level + 6 element paints into every appearance's chrome group
+[@semio-tech/ui-styling] 📜️script.ts > levels: derived appearance paints > monotonic lightness per appearance across the 6 levels (light darkens, dark lightens)
+[@semio-tech/ui-styling] 📜️script.ts > levels: derived appearance paints > contrast against foreground stays >= 4.5:1 at every level, both appearances
+[@semio-tech/ui-styling] 📜️script.ts > levels: derived appearance paints > monotone alpha ladder: alpha(k) = 1 - k*glassAlphaStep, strictly decreasing
+[@semio-tech/ui-styling] 📜️script.ts > levels: derived appearance paints > monotone blur ladder: blur(k) = k*glassBlurStepPx, strictly increasing
+[@semio-tech/ui-styling] 📜️script.ts > levels: derived appearance paints > pinned hex snapshot: light appearance level backgrounds
+[@semio-tech/ui-styling] 📜️script.ts > levels: derived appearance paints > pinned hex snapshot: dark appearance level backgrounds
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > playgroundFlowWasmDevStubPlugin > resolves bare @semio-tech/flow-core to the wasm-pack entry, not the stub
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > playgroundFlowWasmDevStubPlugin > falls back to stub for an unbuilt @semio-tech wasm package subpath
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > isPlaygroundOptimizedDepUrl > matches Vite prebundle chunk URLs
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > playgroundSceneHostResolveAliases > pins fiber and drei to node_modules entries
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > resolveGisMapTileServeMode > defaults to fetch
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > resolveGisMapTileServeMode > selects bundle only for bundle
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > tileProxyVitePlugin > adds a build copy plugin only for bundle mode
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > playgroundAssetVitePlugins > dispatches each asset kind to its generic factory and dedupes by kind+route
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > contentTypeForStaticDirAsset > assigns module script mime types for wasm plugin artifacts
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > listMapTilesForBounds > covers Switzerland at z0 with a single world tile
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > listMapTilesForBounds > returns more tiles at higher zoom
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > prefetchMapTiles > skips tiles already present in cache without fetching
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > resolveSemioAssetRoot > resolves the merged asset package with fonts
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > resolveSemioAssetRoot > throws when fonts are missing
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > playgroundPlayBootHtmlPlugin > registers index html boot injection
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > playgroundPlayBootHtmlPlugin > exposes inline appearance and reveal scripts
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > playgroundPlayBootHtmlPlugin > exposes an inline theme bootstrap script reading the persisted theme snapshot
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > playgroundPlayBootHtmlPlugin > injects the theme script after the appearance script and before the stylesheet link
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > rewriteSpaFallbackToEmojiEntry > rewrites /index.html to the emoji entry
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > rewriteSpaFallbackToEmojiEntry > preserves query and hash on /index.html
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > rewriteSpaFallbackToEmojiEntry > leaves asset paths unchanged
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > semioHostHtmlString > renders title, entry module, root mount, favicon links, and boot scripts
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > semioHostHtmlString > honors rootId, bodyClass, csp, and loading overrides
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > semioHostHtmlVitePlugin > bundles favicon serving and static-deploy-marker plugins alongside the host html plugin
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > semioHostHtmlVitePlugin > renders the same document semioHostHtmlString produces
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > statusSurfaceHtml > renders title, description, and status kind with no external CSS dependency
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > statusSurfaceHtml > omits the description paragraph when none is given
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > semioFaviconVitePlugin > points at round dark emblem svg and ico under asset/logo
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > semioFaviconVitePlugin > registers serve and build plugins
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > semioFaviconVitePlugin > injects opaque bleed into round dark favicon svg
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > meshCollectionVitePlugin > points at metabolism and abbau-aufbau kit glbs plus shared placeholder
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > meshCollectionVitePlugin > registers serve and build plugins named after the route
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > meshCollectionVitePlugin > startAssetServer serves 🧊️base.glb as model/gltf-binary
+[@semio-tech/ui-styling] 🟦️vite-elements-assets.ts > createWorkspaceViteResolveConfig > pins scene hosts and excludes workspace packages from optimizeDeps

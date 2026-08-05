@@ -9,8 +9,7 @@
 // #endregion 🧲️Header
 
 // #region 🎩️Band
-import { Band, Button, Input, Strip, Toggle } from "@semio-tech/ui-react";
-import { AddIcon, AwardIcon, DocumentIcon, FolderIcon, LayoutIcon, TypeIcon, UserIcon } from "@semio-tech/assets";
+import { AddIcon, AwardIcon, Band, Button, DocumentIcon, FolderIcon, Input, LayoutIcon, Strip, Toggle, TypeIcon, UserIcon } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {

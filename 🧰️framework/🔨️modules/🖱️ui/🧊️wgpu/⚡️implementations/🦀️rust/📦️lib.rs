@@ -8784,6 +8784,102 @@ pub mod geometry {
     // #endregion geometry
 }
 
+/// 🗺️ Reusable minimap-navigator layout math — panel/viewport placement, content-fit checks, and
+/// screen<->world mapping for a bottom-right pannable-camera minimap widget (wgpu parity with the dag
+/// board's `MinimapWidget`). Relocated (as pure geometry, not the paint call) from
+/// `♾️infinite/🎲️board/directed/🕸️dag`'s private `impl` methods — see
+/// `.🦑️repo/🎫️tickets/26/08/05/FRAMEWORK-BUILDER-PASSTHROUGHS-APP-COMMANDS-MACRO-WIDGET-EXTRACTION`.
+///
+/// Deliberately NOT nested inside `widgets` (that module is `#[cfg(feature = "engine")]`, pulling in
+/// wgpu/winit/parley/kernel_3d_scene): this math has zero rendering-backend dependency, so it lives at
+/// the crate's lightweight (default-feature) tier instead, letting a vello/canvas-based consumer like the
+/// dag board depend on `ui_wgpu` WITHOUT the heavyweight `engine` feature. The dag board's own
+/// `paint_minimap_widget` (the actual `vello::Scene` fill/stroke calls, keyed off DAG-specific node types)
+/// stays where it is — that part is genuinely backend- and app-specific, not portable geometry.
+pub mod minimap {
+    // #region minimap
+    /// 🗺️ Computed screen-space layout for one minimap frame.
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct MinimapLayout {
+        pub panel: (f64, f64, f64, f64),
+        pub world_min_x: f64,
+        pub world_min_y: f64,
+        pub scale: f64,
+        pub map_origin_x: f64,
+        pub map_origin_y: f64,
+        pub viewport: (f64, f64, f64, f64),
+    }
+
+    /// 🗺️ Axis-aligned content bounds in world space (already padded by the caller).
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct MinimapContentBounds {
+        pub min_x: f64,
+        pub min_y: f64,
+        pub max_x: f64,
+        pub max_y: f64,
+    }
+
+    /// 🗺️ True when a `viewport_w`x`viewport_h` viewport at `camera_zoom` centered on
+    /// `(camera_x, camera_y)` already shows the whole of `content` (within `tolerance_px` screen
+    /// pixels) — the minimap should hide itself in this case.
+    pub fn content_fully_visible(content: &MinimapContentBounds, viewport_w: u32, viewport_h: u32, camera_x: f64, camera_y: f64, camera_zoom: f64, tolerance_px: f64) -> bool {
+        let zoom = camera_zoom.max(1e-9);
+        let half_w = viewport_w as f64 / (2.0 * zoom);
+        let half_h = viewport_h as f64 / (2.0 * zoom);
+        let tol = tolerance_px / zoom;
+        camera_x - half_w <= content.min_x + tol && camera_x + half_w >= content.max_x - tol && camera_y - half_h <= content.min_y + tol && camera_y + half_h >= content.max_y - tol
+    }
+
+    /// 🗺️ Bottom-right inset panel of `panel_w`x`panel_h` with `margin` from the viewport edge, its
+    /// content scaled to fit `content_fit_ratio` (clamped `0.5..=0.98`) of the panel, plus the camera's
+    /// current view rect mapped into minimap-local coordinates.
+    #[allow(clippy::too_many_arguments, reason = "mirrors the dag board's own MinimapWidgetLayout inputs 1:1 — a struct would just move the same arity into a constructor")]
+    pub fn layout(content: &MinimapContentBounds, viewport_w: u32, viewport_h: u32, camera_x: f64, camera_y: f64, camera_zoom: f64, panel_w: f64, panel_h: f64, margin: f64, content_fit_ratio: f64) -> MinimapLayout {
+        let ratio = content_fit_ratio.clamp(0.5, 0.98);
+        let panel_x0 = viewport_w as f64 - margin - panel_w;
+        let panel_y0 = viewport_h as f64 - margin - panel_h;
+        let panel_x1 = panel_x0 + panel_w;
+        let panel_y1 = panel_y0 + panel_h;
+        let inset_x = panel_w * (1.0 - ratio) * 0.5;
+        let inset_y = panel_h * (1.0 - ratio) * 0.5;
+        let inner = (panel_x0 + inset_x, panel_y0 + inset_y, panel_x1 - inset_x, panel_y1 - inset_y);
+        let inner_w = inner.2 - inner.0;
+        let inner_h = inner.3 - inner.1;
+        let cw = (content.max_x - content.min_x).max(1e-6);
+        let ch = (content.max_y - content.min_y).max(1e-6);
+        let scale = (inner_w / cw).min(inner_h / ch);
+        let graph_w = cw * scale;
+        let graph_h = ch * scale;
+        let offset_x = inner.0 + (inner_w - graph_w) * 0.5;
+        let offset_y = inner.1 + (inner_h - graph_h) * 0.5;
+        let zoom = camera_zoom.max(1e-9);
+        let half_w = viewport_w as f64 / (2.0 * zoom);
+        let half_h = viewport_h as f64 / (2.0 * zoom);
+        let view_min_x = camera_x - half_w;
+        let view_min_y = camera_y - half_h;
+        let view_max_x = camera_x + half_w;
+        let view_max_y = camera_y + half_h;
+        let to_mini = |wx: f64, wy: f64| (offset_x + (wx - content.min_x) * scale, offset_y + (wy - content.min_y) * scale);
+        let (vx0, vy0) = to_mini(view_min_x, view_min_y);
+        let (vx1, vy1) = to_mini(view_max_x, view_max_y);
+        let viewport = (vx0.min(vx1), vy0.min(vy1), vx0.max(vx1), vy1.max(vy1));
+        MinimapLayout { panel: (panel_x0, panel_y0, panel_x1, panel_y1), world_min_x: content.min_x, world_min_y: content.min_y, scale, map_origin_x: offset_x, map_origin_y: offset_y, viewport }
+    }
+
+    /// 🗺️ Inverse of `layout`'s world -> minimap mapping — a minimap-local screen point `(sx, sy)` back
+    /// to world coordinates, given the `world_min_x`/`world_min_y`/`scale`/`map_origin_x`/`map_origin_y`
+    /// a prior `layout()` call returned.
+    pub fn screen_to_world(map_origin_x: f64, map_origin_y: f64, world_min_x: f64, world_min_y: f64, scale: f64, sx: f64, sy: f64) -> (f64, f64) {
+        (world_min_x + (sx - map_origin_x) / scale, world_min_y + (sy - map_origin_y) / scale)
+    }
+
+    /// 🗺️ Point-in-axis-aligned-rect test — shared by panel/viewport hit-testing.
+    pub fn point_in_rect((x0, y0, x1, y1): (f64, f64, f64, f64), sx: f64, sy: f64) -> bool {
+        sx >= x0 && sx <= x1 && sy >= y0 && sy <= y1
+    }
+    // #endregion minimap
+}
+
 #[cfg(feature = "engine")]
 pub mod gpu {
     // #region gpu
@@ -17811,6 +17907,159 @@ pub mod widgets {
     pub fn draw_text_overlay<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
         draw_text_overlay_on(ctx.draw, ctx.atlas, text, x, y, size, color);
     }
+
+    //#region 🔖️Gizmo
+    /** 🧭️ Screen-space XYZ orientation gizmo (wgpu parity with React `WorldOrbitViewGizmo`) — placement,
+    hit-testing, and paint. Relocated verbatim from `♾️infinite/🌍️world` (see
+    `.🦑️repo/🎫️tickets/26/08/05/FRAMEWORK-BUILDER-PASSTHROUGHS-APP-COMMANDS-MACRO-WIDGET-EXTRACTION`) so any
+    plugin's world-3d window can reuse it, not only `♾️infinite`'s own. `World3dState`-specific hover-state
+    plumbing (`update_world_orbit_view_gizmo_hover`, which owns `&mut World3dState`) stays in `♾️infinite/🌍️world`
+    — app-specific config plumbing, not paint logic — and now calls through to `orbit_view_gizmo_placement`/
+    `orbit_view_gizmo_tips`/`orbit_view_gizmo_hit_test` here. */
+    pub mod gizmo {
+        use crate::widgets::WidgetContext;
+        use crate::{Camera3d, Rect, Rgba, Vec3};
+
+        /// 🧭️ Permanent X/Y/Z paints — primary / secondary / tertiary (semio tokens), not muted chrome.
+        pub fn spatial_axis_rgba(axis: u8, alpha: f32) -> Rgba {
+            match axis {
+                0 => Rgba::new(1.0, 0.204, 0.310, alpha),   // primary #ff344f
+                1 => Rgba::new(0.204, 0.820, 0.749, alpha), // secondary #34d1bf
+                _ => Rgba::new(0.980, 0.584, 0.0, alpha),   // tertiary #fa9500
+            }
+        }
+
+        /// 🧭️ Mirrors `resolveSceneGizmoViewportPlacement` — bottom-right corner inset matching pane `--spacing-single` chrome.
+        pub fn orbit_view_gizmo_placement(viewport: Rect) -> (f32, f32) {
+            let chrome_inset = 4.0_f32;
+            let gizmo_half_extent = 28.0_f32;
+            let preferred = chrome_inset + gizmo_half_extent;
+            let max_fit = (viewport.w.min(viewport.h) / 3.0).floor().max(22.0);
+            let margin = preferred.min(max_fit);
+            (margin, margin)
+        }
+
+        /// 🧭️ Screen-space tip used for orbit-view gizmo hover hit-testing and paint.
+        pub struct OrbitViewGizmoTip {
+            pub screen_x: f32,
+            pub screen_y: f32,
+            pub depth: f32,
+            pub pick_radius: f32,
+            pub color: Rgba,
+            pub is_corner: bool,
+            pub prominent: bool,
+        }
+
+        pub fn orbit_view_gizmo_tips(camera: &Camera3d, viewport: Rect) -> Vec<OrbitViewGizmoTip> {
+            let (margin_x, margin_y) = orbit_view_gizmo_placement(viewport);
+            let origin_x = viewport.x + viewport.w - margin_x;
+            let origin_y = viewport.y + viewport.h - margin_y;
+            let axis_len = (viewport.w.min(viewport.h) * 0.04).clamp(14.0, 24.0);
+            let forward = camera.position.sub(camera.target);
+            let forward_len = forward.length();
+            if forward_len < 1e-5 {
+                return Vec::new();
+            }
+            let forward = forward.scale(1.0 / forward_len);
+            let right = forward.cross(camera.up);
+            let right_len = right.length();
+            if right_len < 1e-5 {
+                return Vec::new();
+            }
+            let right = right.scale(1.0 / right_len);
+            let up = right.cross(forward).normalize();
+            let neutral = Rgba::new(0.62, 0.62, 0.66, 0.9);
+            let axes = [
+                (Vec3::new(1.0, 0.0, 0.0), spatial_axis_rgba(0, 1.0), true),
+                (Vec3::new(-1.0, 0.0, 0.0), spatial_axis_rgba(0, 0.75), false),
+                (Vec3::new(0.0, 1.0, 0.0), spatial_axis_rgba(1, 1.0), true),
+                (Vec3::new(0.0, -1.0, 0.0), spatial_axis_rgba(1, 0.75), false),
+                (Vec3::new(0.0, 0.0, 1.0), spatial_axis_rgba(2, 1.0), true),
+                (Vec3::new(0.0, 0.0, -1.0), spatial_axis_rgba(2, 0.75), false),
+            ];
+            let corners = [
+                (Vec3::new(0.72, 0.72, 0.72), true),
+                (Vec3::new(-0.72, 0.72, 0.72), true),
+                (Vec3::new(0.72, -0.72, 0.72), true),
+                (Vec3::new(-0.72, -0.72, 0.72), true),
+                (Vec3::new(0.72, 0.72, -0.72), false),
+                (Vec3::new(-0.72, 0.72, -0.72), false),
+                (Vec3::new(0.72, -0.72, -0.72), false),
+                (Vec3::new(-0.72, -0.72, -0.72), false),
+            ];
+            let mut tips: Vec<OrbitViewGizmoTip> = axes
+                .into_iter()
+                .map(|(axis, color, prominent)| {
+                    let sx = axis.dot(right);
+                    let sy = -axis.dot(up);
+                    let depth = axis.dot(forward);
+                    let tip_x = origin_x + sx * axis_len;
+                    let tip_y = origin_y + sy * axis_len;
+                    let pick_radius = if prominent { 10.0 } else { 7.0 };
+                    OrbitViewGizmoTip { screen_x: tip_x, screen_y: tip_y, depth, pick_radius, color, is_corner: false, prominent }
+                })
+                .chain(corners.into_iter().map(|(axis, prominent)| {
+                    let sx = axis.dot(right);
+                    let sy = -axis.dot(up);
+                    let depth = axis.dot(forward);
+                    let tip_x = origin_x + sx * axis_len;
+                    let tip_y = origin_y + sy * axis_len;
+                    let pick_radius = if prominent { 10.0 } else { 7.0 };
+                    OrbitViewGizmoTip { screen_x: tip_x, screen_y: tip_y, depth, pick_radius, color: neutral, is_corner: true, prominent }
+                }))
+                .collect();
+            tips.push(OrbitViewGizmoTip { screen_x: origin_x, screen_y: origin_y, depth: 0.0, pick_radius: 9.0, color: neutral, is_corner: false, prominent: true });
+            tips
+        }
+
+        pub fn orbit_view_gizmo_hit_test(x: f32, y: f32, tips: &[OrbitViewGizmoTip]) -> Option<usize> {
+            tips.iter()
+                .enumerate()
+                .filter_map(|(index, tip)| {
+                    let distance = ((x - tip.screen_x).powi(2) + (y - tip.screen_y).powi(2)).sqrt();
+                    if distance <= tip.pick_radius + 3.0 {
+                        Some((index, distance))
+                    } else {
+                        None
+                    }
+                })
+                .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
+                .map(|(index, _)| index)
+        }
+
+        /// 🧭️ Screen-space XYZ orientation gizmo in the lower-right of every world-3d window (wgpu parity with React `WorldOrbitViewGizmo`).
+        pub fn paint_orbit_view_gizmo<E>(ctx: &mut WidgetContext<'_, E>, camera: &Camera3d, viewport: Rect, hovered_tip: Option<usize>) {
+            let (margin_x, margin_y) = orbit_view_gizmo_placement(viewport);
+            let origin_x = viewport.x + viewport.w - margin_x;
+            let origin_y = viewport.y + viewport.h - margin_y;
+            let tips = orbit_view_gizmo_tips(camera, viewport);
+            let mut ordered: Vec<(f32, usize)> = tips.iter().enumerate().map(|(index, tip)| (tip.depth, index)).collect();
+            ordered.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+            let has_hover = hovered_tip.is_some();
+            for (_, index) in ordered {
+                let tip = &tips[index];
+                let hovered = hovered_tip == Some(index);
+                let depth_fade = if tip.depth > 0.05 { 0.45 } else { 1.0 };
+                let hover_fade = if has_hover && !hovered { 0.42 } else { 1.0 };
+                let alpha = (tip.color.a * depth_fade * hover_fade).min(1.0);
+                let stroke = Rgba::new(tip.color.r, tip.color.g, tip.color.b, if hovered { tip.color.a.min(1.0) } else { alpha });
+                ctx.draw.push_line_overlay(origin_x, origin_y, tip.screen_x, tip.screen_y, stroke, if tip.is_corner { 1.5 } else { 2.0 });
+                let r = if tip.prominent {
+                    if hovered {
+                        3.6
+                    } else {
+                        3.0
+                    }
+                } else if hovered {
+                    2.4
+                } else {
+                    2.0
+                };
+                ctx.draw.push_solid_overlay([tip.screen_x - r, tip.screen_y - r, tip.screen_x + r, tip.screen_y + r], stroke);
+            }
+        }
+    }
+    //#endregion 🔖️Gizmo
     // #endregion widgets
 }
 

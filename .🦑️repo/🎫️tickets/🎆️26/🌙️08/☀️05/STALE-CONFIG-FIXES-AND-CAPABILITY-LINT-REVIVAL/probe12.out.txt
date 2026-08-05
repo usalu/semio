@@ -1,0 +1,73 @@
+[probe9] matches: 25
+[probe9] OK   🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚡️implementations/🟦️typescript/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementations/🦀️rust/🧪️vitest.config.ts
+[probe9] OK   🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   🧰️framework/🛍️products/💻️os/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   🧰️framework/🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/⚡️implementations/🟦️typescript/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🧪️vitest.config.ts
+[probe9] OK   🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   🧰️framework/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   ✏️s/🔨️modules/🧊️3d/📐️brep/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   ✏️s/🔨️modules/◻2d/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   ✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   ✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   ✏️s/🔌️plugins/📐️cad/🔨️modules/🔍️query/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+failed to load config from /Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] FAIL ✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript/🧪️vitest.config.ts -> ENOENT: no such file or directory, stat '/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/PRINT-SOLID-HEADING-CHIP-ROW-PARITY/harness/font/anta/Anta-Regular.ttf'
+[probe9] OK   ✏️s/🔌️plugins/📐️cad/🔨️modules/📐️brepjs/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   ✏️s/🔌️plugins/📐️cad/🔨️modules/🏃️runtime/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   ✏️s/🔌️plugins/📐️cad/🔨️modules/🎰️stately/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   ✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] OK   ✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe9] total projects loaded: 24
+
+There were unhandled errors during test collection
+{
+  stack: 'EnvironmentTeardownError: [vitest-worker]: Closing rpc while "onCollected" was pending\n' +
+    '    at file:///Users/ueli/Documents/semio/node_modules/vitest/dist/chunks/init.k9zZ9sLh.js:133:12\n' +
+    '    at file:///Users/ueli/Documents/semio/node_modules/vitest/dist/chunks/index.Chj8NDwU.js:139:11\n' +
+    '    at Array.map (<anonymous>)\n' +
+    '    at Proxy.$rejectPendingCalls (file:///Users/ueli/Documents/semio/node_modules/vitest/dist/chunks/index.Chj8NDwU.js:137:62)\n' +
+    '    at file:///Users/ueli/Documents/semio/node_modules/vitest/dist/chunks/init.k9zZ9sLh.js:132:26\n' +
+    '    at file:///Users/ueli/Documents/semio/node_modules/vitest/dist/chunks/init.k9zZ9sLh.js:161:42\n' +
+    '    at Array.map (<anonymous>)\n' +
+    '    at execute (file:///Users/ueli/Documents/semio/node_modules/vitest/dist/chunks/init.k9zZ9sLh.js:161:30)\n' +
+    '    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n' +
+    '    at process.onMessage (file:///Users/ueli/Documents/semio/node_modules/vitest/dist/chunks/init.k9zZ9sLh.js:331:14)',
+  message: '[vitest-worker]: Closing rpc while "onCollected" was pending',
+  name: 'EnvironmentTeardownError',
+  constructor: 'Function<EnvironmentTeardownError>',
+  toString: 'Function<toString>',
+  VITEST_TEST_NAME: undefined,
+  VITEST_TEST_PATH: '/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/⚡️implementations/🟦️typescript/🟦️backbone-worker.ts',
+  type: 'Unhandled Rejection'
+}
+{
+  stack: 'EnvironmentTeardownError: [vitest-worker]: Closing rpc while "onCollected" was pending\n' +
+    '    at file:///Users/ueli/Documents/semio/node_modules/vitest/dist/chunks/init.k9zZ9sLh.js:133:12\n' +
+    '    at file:///Users/ueli/Documents/semio/node_modules/vitest/dist/chunks/index.Chj8NDwU.js:139:11\n' +
+    '    at Array.map (<anonymous>)\n' +
+    '    at Proxy.$rejectPendingCalls (file:///Users/ueli/Documents/semio/node_modules/vitest/dist/chunks/index.Chj8NDwU.js:137:62)\n' +
+    '    at file:///Users/ueli/Documents/semio/node_modules/vitest/dist/chunks/init.k9zZ9sLh.js:132:26\n' +
+    '    at file:///Users/ueli/Documents/semio/node_modules/vitest/dist/chunks/init.k9zZ9sLh.js:161:42\n' +
+    '    at Array.map (<anonymous>)\n' +
+    '    at execute (file:///Users/ueli/Documents/semio/node_modules/vitest/dist/chunks/init.k9zZ9sLh.js:161:30)\n' +
+    '    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n' +
+    '    at process.onMessage (file:///Users/ueli/Documents/semio/node_modules/vitest/dist/chunks/init.k9zZ9sLh.js:331:14)',
+  message: '[vitest-worker]: Closing rpc while "onCollected" was pending',
+  name: 'EnvironmentTeardownError',
+  constructor: 'Function<EnvironmentTeardownError>',
+  toString: 'Function<toString>',
+  VITEST_TEST_NAME: undefined,
+  VITEST_TEST_PATH: '/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/⚡️implementations/🟦️typescript/🟦️backbone-worker.ts',
+  type: 'Unhandled Rejection'
+}
+
+
+

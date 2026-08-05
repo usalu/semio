@@ -1,0 +1,14 @@
+{
+  "title": "Fix Dangling Anta Font Path And Workspace Scan",
+  "emoji": "🔤",
+  "status": "closed",
+  "description": "Fix dangling Anta-Regular.ttf font symlink under stale ticket folder 26/08/03/PRINT-SOLID-HEADING-CHIP-ROW-PARITY/harness/font/ and make findWorkspacePackages in vite-elements-assets.ts robust against hidden/dot directories (.git, .nx, .repo, .🦑️repo, .agents, .cache) and dangling symlinks.",
+  "summary": "Fixed the dangling font path issue and secured workspace package scanning across the monorepo:\n\n1. Repointed dangling symlinks in `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/PRINT-SOLID-HEADING-CHIP-ROW-PARITY/harness/` (font TTFs and LaTeX files) to their real, permanent homes under `🧰️framework/🛍️products/📓️print/⚡️implementations/` (which was renamed from singular `product/implementation` to plural `products/implementations` by a prior refactoring ticket).\n\n2. Updated `findWorkspacePackages` in `🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts` to skip all hidden/dot directories (`entry.startsWith(\".\")`, including `.git`, `.nx`, `.repo`, `.🦑️repo`, `.agents`, `.cache`, etc.) and safely catch `statSync` / `readFileSync` errors so dangling symlinks or missing files anywhere in the repo will never crash workspace scanning or Vite/Vitest/Storybook config initialization.\n\n3. Added unit tests for `findWorkspacePackages` in `vite-elements-assets.ts` asserting that hidden dot directories are skipped and workspace packages are properly discovered.\n\n4. Verified:\n- `bun nx run @semio-tech/ui-styling-tokens:test` passes all 86 unit tests cleanly in ~1s.\n- `bunx vitest run --config \"✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript/🧪️vitest.config.ts\"` loads the CAD renderer vitest config cleanly with 0 startup errors.\n- `STORYBOOK_SCOPE=styling bunx storybook build -c .storybook` builds past the \"Building preview\" step without any font ENOENT errors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2443"
+  },
+  "goal": "AI-OPTIMIZED-REPO/SINGLE-FILE-REPO",
+  "sessions": [
+    "⚪fa25d127-51b3-4431-ba35-e8662ebf1e1d"
+  ]
+}

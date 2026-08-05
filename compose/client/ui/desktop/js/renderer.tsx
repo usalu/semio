@@ -9,7 +9,6 @@
 // #region ⛩️Renderer
 
 // #region 🔌️Adapters
-import { mountPlatform } from "@semio-tech/framework-platform-renderer-react";
 import { configureSketchpadKitFactories, createComposeKitStoreFromJsStore, ensureSketchpadPlatform, importKit, InMemoryComposeKitStore, type ComposeKitStore } from "@semio-tech/compose-sketchpad";
 import { createRoot } from "react-dom/client";
 // #endregion 🔌️Adapters
@@ -83,7 +82,7 @@ void (async () => {
     console.error("Failed to get user ID:", error);
   }
   try {
-    await mountPlatform(ensureSketchpadPlatform);
+    await ensureSketchpadPlatform();
   } catch (error) {
     console.error("[compose.desktop] sketchpad mount failed:", error);
   }

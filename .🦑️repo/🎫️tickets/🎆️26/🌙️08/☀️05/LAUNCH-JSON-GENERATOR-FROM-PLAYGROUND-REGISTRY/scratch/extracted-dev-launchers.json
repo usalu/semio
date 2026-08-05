@@ -1,0 +1,877 @@
+{
+  "aggregator": {
+    "namePrefix": "🏚️mitbestand🧱️aggregator",
+    "order": 212,
+    "command": "bun run dev:mit-bestand:aggregator",
+    "reactEnv": {
+      "S_OS_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "animate": {
+    "namePrefix": "🎬️animateplay",
+    "order": 170,
+    "command": "bun run dev:animate",
+    "reactEnv": {
+      "PRESENTATION_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 170.1,
+    "wgpuEnv": {
+      "PRESENTATION_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "architect": {
+    "namePrefix": "🏛️architect",
+    "order": 142,
+    "command": "bun run dev:architect",
+    "reactEnv": {
+      "ARCHITECT_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 142.1,
+    "wgpuEnv": {
+      "ARCHITECT_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "aussuchen": {
+    "namePrefix": "🏚️mitbestand🪵️aussuchen",
+    "order": 216,
+    "command": "bun run dev:mit-bestand:aussuchen",
+    "reactEnv": {
+      "S_OS_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "bearbeiten": {
+    "namePrefix": "🏚️mitbestand🏭️bearbeiten",
+    "order": 217,
+    "command": "bun run dev:mit-bestand:bearbeiten",
+    "reactEnv": {
+      "S_OS_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "block2d": {
+    "namePrefix": "🧱️block🩻️2d",
+    "order": 261,
+    "command": "bun run dev:block:2d",
+    "reactEnv": {
+      "BLOCK_2D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 261.1,
+    "wgpuEnv": {
+      "BLOCK_2D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "block3d": {
+    "namePrefix": "🧱️block🏙️3d",
+    "order": 262,
+    "command": "bun run dev:block:3d",
+    "reactEnv": {
+      "BLOCK_3D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 262.1,
+    "wgpuEnv": {
+      "BLOCK_3D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "block5d": {
+    "namePrefix": "🧱️block👯️5d",
+    "order": 263,
+    "command": "bun run dev:block:5d",
+    "reactEnv": {
+      "BLOCK_5D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 263.1,
+    "wgpuEnv": {
+      "BLOCK_5D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "cad": {
+    "namePrefix": "📐️cad",
+    "order": 10,
+    "command": "bun ./📜️script.ts dev cad",
+    "reactEnv": {
+      "CAD_JS_RENDERER_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 10.1,
+    "wgpuEnv": {
+      "CAD_JS_RENDERER_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "dag": {
+    "namePrefix": "🌳️dag",
+    "order": 140,
+    "command": "bun run dev:dag",
+    "reactEnv": {
+      "DAG_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 140.1,
+    "wgpuEnv": {
+      "DAG_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "draw": {
+    "namePrefix": "✏️draw",
+    "order": 387,
+    "command": "bun nx run @semio-tech/framework-os-dev:dev",
+    "reactEnv": {
+      "S_OS_PORT": "{PORT}",
+      "SEMIO_PLUGIN": "draw",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 387.1,
+    "wgpuEnv": {
+      "S_OS_PORT": "{PORT}",
+      "SEMIO_PLUGIN": "draw",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "fem2d": {
+    "namePrefix": "🏗️fem🩻️2d",
+    "order": 392,
+    "command": "bun run dev:fem:2d",
+    "reactEnv": {
+      "FEM_2D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 392.1,
+    "wgpuEnv": {
+      "FEM_2D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "fem3d": {
+    "namePrefix": "🏗️fem🏙️3d",
+    "order": 392.3,
+    "command": "bun run dev:fem:3d",
+    "reactEnv": {
+      "FEM_3D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 392.4,
+    "wgpuEnv": {
+      "FEM_3D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "flow": {
+    "namePrefix": "🌊️flow",
+    "order": 150,
+    "command": "bun run dev:flow",
+    "reactEnv": {
+      "FLOW_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 150.1,
+    "wgpuEnv": {
+      "FLOW_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "forms": {
+    "namePrefix": "📋️forms",
+    "order": 385,
+    "command": "bun run dev:forms",
+    "reactEnv": {
+      "FORMS_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 385.1,
+    "wgpuEnv": {
+      "FORMS_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "generator": {
+    "namePrefix": "🏚️mitbestand⚙️generator",
+    "order": 214,
+    "command": "bun run dev:mit-bestand:generator",
+    "reactEnv": {
+      "S_OS_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "gis2d": {
+    "namePrefix": "🌐️gis📍️2d",
+    "order": 160,
+    "command": "bun run dev:gis:2d",
+    "reactEnv": {
+      "GIS_2D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 160.1,
+    "wgpuEnv": {
+      "GIS_2D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "gis3d": {
+    "namePrefix": "🌐️gis⛰️3d",
+    "order": 160.3,
+    "command": "bun run dev:gis:3d",
+    "reactEnv": {
+      "GIS_3D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 160.4,
+    "wgpuEnv": {
+      "GIS_3D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "imperative": {
+    "namePrefix": "⚙️imperative",
+    "order": 155,
+    "command": "bun run dev:imperative",
+    "reactEnv": {
+      "IMPERATIVE_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 155.1,
+    "wgpuEnv": {
+      "IMPERATIVE_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "koordinator": {
+    "namePrefix": "🏚️mitbestand🧭️koordinator",
+    "order": 215,
+    "command": "bun run dev:mit-bestand:koordinator",
+    "reactEnv": {
+      "S_OS_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "layout": {
+    "namePrefix": "📄️layout",
+    "order": 158,
+    "command": "bun run dev:layout",
+    "reactEnv": {
+      "LAYOUT_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 158.1,
+    "wgpuEnv": {
+      "LAYOUT_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "lowpoly": {
+    "namePrefix": "🔷️lowpoly",
+    "order": 157,
+    "command": "bun run dev:lowpoly",
+    "reactEnv": {
+      "LOWPOLY_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 157.1,
+    "wgpuEnv": {
+      "LOWPOLY_PLAY_PORT": "{PORT}",
+      "SEMIO_PLUGIN": "lowpoly",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s?plugin=lowpoly"
+    }
+  },
+  "mathematical": {
+    "namePrefix": "🧮️mathematical",
+    "order": 141,
+    "command": "bun run dev:mathematical",
+    "reactEnv": {
+      "MATHEMATICAL_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 141.1,
+    "wgpuEnv": {
+      "MATHEMATICAL_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "note": {
+    "namePrefix": "📝️note",
+    "order": 388,
+    "command": "bun run dev:note",
+    "reactEnv": {
+      "NOTE_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 388.1,
+    "wgpuEnv": {
+      "NOTE_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "procedural2d": {
+    "namePrefix": "🔧️procedural🩻️2d",
+    "order": 180,
+    "command": "bun run dev:procedural:2d",
+    "reactEnv": {
+      "PROCEDURAL_2D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 180.1,
+    "wgpuEnv": {
+      "PROCEDURAL_2D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "procedural3d": {
+    "namePrefix": "🔧️procedural🏙️3d",
+    "order": 190,
+    "command": "bun run dev:procedural:3d",
+    "reactEnv": {
+      "PROCEDURAL_3D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 190.1,
+    "wgpuEnv": {
+      "PROCEDURAL_3D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "process3d": {
+    "namePrefix": "🪚️process🏙️3d",
+    "order": 195,
+    "command": "bun run dev:process:3d",
+    "reactEnv": {
+      "PROCESS_3D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 195.1,
+    "wgpuEnv": {
+      "PROCESS_3D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "puzzle2d": {
+    "namePrefix": "🧩️puzzle🩻️2d",
+    "order": 220,
+    "command": "bun run dev:puzzle:2d",
+    "reactEnv": {
+      "PUZZLE_2D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 220.1,
+    "wgpuEnv": {
+      "PUZZLE_2D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "puzzle3d": {
+    "namePrefix": "🧩️puzzle🏙️3d",
+    "order": 230,
+    "command": "bun run dev:puzzle:3d",
+    "reactEnv": {
+      "PUZZLE_3D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 230.1,
+    "wgpuEnv": {
+      "PUZZLE_3D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "puzzle5d": {
+    "namePrefix": "🧩️puzzle👯️5d",
+    "order": 250,
+    "command": "bun run dev:puzzle:5d",
+    "reactEnv": {
+      "PUZZLE_5D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 250.1,
+    "wgpuEnv": {
+      "PUZZLE_5D_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "raster": {
+    "namePrefix": "🖼️raster",
+    "order": 386,
+    "command": "bun run dev:raster",
+    "reactEnv": {
+      "RASTER_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 386.1,
+    "wgpuEnv": {
+      "RASTER_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "reasoning-wires": {
+    "namePrefix": "🧠️reasoning🔗️wires",
+    "order": 270,
+    "command": "bun run dev:reasoning:wires",
+    "reactEnv": {
+      "WIRES_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 270.1,
+    "wgpuEnv": {
+      "WIRES_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "remodel": {
+    "namePrefix": "🏺️remodel",
+    "order": 389,
+    "command": "bun run dev:remodel",
+    "reactEnv": {
+      "REMODEL_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 389.1,
+    "wgpuEnv": {
+      "REMODEL_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "s": {
+    "namePrefix": "🖥️s",
+    "order": 386.2,
+    "command": "bun nx run @semio-tech/framework-os-dev:dev",
+    "reactEnv": {
+      "S_OS_PORT": "{PORT}",
+      "SEMIO_PLUGIN": "s",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 386,
+    "wgpuEnv": {
+      "S_OS_PORT": "{PORT}",
+      "SEMIO_PLUGIN": "s",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "sequence": {
+    "namePrefix": "📜️sequence",
+    "order": 156,
+    "command": "bun run dev:sequence",
+    "reactEnv": {
+      "SEQUENCE_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 156.1,
+    "wgpuEnv": {
+      "SEQUENCE_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "shooting": {
+    "namePrefix": "📸️shooting",
+    "order": 290,
+    "command": "bun run dev:shooting",
+    "reactEnv": {
+      "SHOOTING_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 290.1,
+    "wgpuEnv": {
+      "SHOOTING_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "sourcing": {
+    "namePrefix": "🛒️sourcing",
+    "order": 196,
+    "command": "bun run dev:sourcing",
+    "reactEnv": {
+      "S_OS_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 196.1,
+    "wgpuEnv": {
+      "S_OS_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "trinity-jack": {
+    "namePrefix": "🔺️trinity🃏️jack",
+    "order": 360,
+    "command": "bun run dev:trinity:jack",
+    "reactEnv": {
+      "TRINITY_JACK_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 360.1,
+    "wgpuEnv": {
+      "TRINITY_JACK_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "trinity-rewrite": {
+    "namePrefix": "🔺️trinity♻️rewrite",
+    "order": 380,
+    "command": "bun run dev:trinity:rewrite",
+    "reactEnv": {
+      "TRINITY_REWRITE_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 380.1,
+    "wgpuEnv": {
+      "TRINITY_REWRITE_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "vcs": {
+    "namePrefix": "🗄️vcs🎛️play",
+    "order": 385,
+    "command": "bun run dev:vcs",
+    "reactEnv": {
+      "VCS_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 385.1,
+    "wgpuEnv": {
+      "VCS_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "verfolgen": {
+    "namePrefix": "🏚️mitbestand🌍️verfolgen",
+    "order": 218,
+    "command": "bun run dev:mit-bestand:verfolgen",
+    "reactEnv": {
+      "S_OS_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):{PORT})",
+      "uriFormat": "%s"
+    }
+  },
+  "writer": {
+    "namePrefix": "✍️writer",
+    "order": 387,
+    "command": "bun run dev:writer",
+    "reactEnv": {
+      "WRITER_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "react"
+    },
+    "reactServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    },
+    "wgpuOrder": 387.1,
+    "wgpuEnv": {
+      "WRITER_PLAY_PORT": "{PORT}",
+      "SEMIO_RENDERER": "wgpu"
+    },
+    "wgpuServerReadyAction": {
+      "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
+      "uriFormat": "%s"
+    }
+  }
+}

@@ -20186,9 +20186,14 @@ function syncFlowSessionEvalFromScene(session: FlowWasmSession, scene: NodeGraph
   else if (scene.computingJson) session.setComputingProgress(scene.computingJson);
 }
 
-function syncFlowSessionStructureFromScene(session: FlowWasmSession, scene: NodeGraphScene, applyCamera: boolean): void {
+function syncFlowSessionStructureFromScene(
+  session: FlowWasmSession,
+  scene: NodeGraphScene,
+  applyCamera: boolean,
+  skipFixture = false,
+): void {
   if (scene.operators) session.setNeuronKindInfosJson(JSON.stringify(scene.operators));
-  if (scene.fixtureJson) {
+  if (!skipFixture && scene.fixtureJson) {
     if (session.resyncFixtureJson) session.resyncFixtureJson(scene.fixtureJson);
     else session.loadFixtureJson(scene.fixtureJson);
   }
@@ -20385,7 +20390,10 @@ export function FlowGraphCanvasHost({
     }
     const session = sessionRef.current;
     if (session) {
-      syncFlowSessionFromScene(session, sceneRef.current, false);
+      // 🎚️ Gesture end: resync catalogue/selection/lod from the lagging scene document, but keep the wasm
+      // session's live fixture (slider seeds) and skip stale `evalJson`/`statusJson` until the plugin
+      // worker's `flowEvalTick` chain publishes a fresh scene after `commitFixture`.
+      syncFlowSessionStructureFromScene(session, sceneRef.current, false, true);
       try {
         session.renderFrame();
       } catch {
@@ -20490,9 +20498,11 @@ export function FlowGraphCanvasHost({
   useEffect(() => {
     const session = sessionRef.current;
     if (!session || !sessionReady) return;
-    if (isGestureActiveRef.current) {
-      syncFlowSessionEvalFromScene(session, scene);
-    } else {
+    // 🎚️ While a slider (or other continuous) gesture is active, the wasm session already holds the live
+    // fixture edits via `setSliderValue`; applying `scene.evalJson` here would install a stale baseline
+    // (new slider seeds + old channel outputs) and wipe computing chrome mid-drag. Full resync waits for
+    // `handleGesturePointerUp`.
+    if (!isGestureActiveRef.current) {
       syncFlowSessionFromScene(session, scene, false);
     }
     session.renderFrame();
@@ -20811,7 +20821,14 @@ export function FlowGraphCanvasHost({
         editable={editable}
         occluderRect={parseDagMinimapWidgetOccluder(labelStateJson)}
         onSliderChange={(widgetId, value) => {
-          sessionRef.current?.setSliderValue(widgetId, value);
+          const session = sessionRef.current;
+          if (!session) return;
+          session.setSliderValue(widgetId, value);
+          try {
+            session.renderFrame();
+          } catch {
+            /* gpu not ready */
+          }
           commitFixtureThrottled();
           paintOverlays();
         }}

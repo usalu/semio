@@ -1,0 +1,42 @@
+Launch.json generator — verification log
+=========================================
+
+1. bun 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🖥️launch.ts generate --check
+   -> ".vscode/launch.json is fresh." (exit 0) — run BEFORE any write, against the pre-existing hand-authored file. Confirms byte-identical regeneration.
+
+2. bun 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🖥️launch.ts generate
+   -> wrote .vscode/launch.json
+
+3. git diff --stat .vscode/launch.json
+   -> (empty output, zero changes)
+
+4. git status --porcelain .vscode/
+   -> only ?? .vscode/🧩️launch.seed.jsonc (new file); launch.json itself untouched per git.
+
+Design notes (for whoever next touches this):
+- .vscode/launch.json is now a GENERATED FILE. Never hand-edit it — edit .vscode/🧩️launch.seed.jsonc
+  (verbatim entries for groups 1_keyboard/2_mouse/4_build/5_publish, the compounds section, and every
+  3_dev entry that is not a plain react/wgpu playground launcher: wgpu-native launchers, fixture-variant
+  launchers, and bespoke tooling like dashboard/coda/compose/storybook/repo/os-hub/os-run/print), or the
+  `devLaunchers` table at the bottom of that same seed file (per-playground-variant name/order/command/
+  env/serverReadyAction templates — the only place a "{PORT}" token appears, substituted at generation
+  time from generatePlaygroundRegistry()'s ports).
+- Of today's 215 configurations + 1 compound: 78 entries (42 playground variants, 36 with both react+wgpu,
+  6 demonstrator sub-apps with react only) are mechanically generated; the remaining 137 + the compound
+  are verbatim seed content.
+- 16 registry playground variants (11 norm compliance docs: din4108/din16798/din18599/en1990-en1999/
+  iso16757/vdi3805, plus playbook) currently have NO 3_dev launch entry at all — not a bug in the
+  generator, that's genuinely today's state (confirmed no launch.json entry references their ports).
+  Adding them later is a one-line devLaunchers row plus regenerate.
+- Pre-existing bug discovered, deliberately NOT fixed by this ticket (would break byte-identical
+  reproduction, out of scope for a zero-behavior-change mechanism-prep ticket): the two hand-authored
+  "🛠️dev🧩️playbook⚛️react/wgpu" launch entries use env values 6078/6178, which are actually lowpoly's
+  registry ports (playbook's own registry ports are 6085/6185). These two entries were preserved
+  byte-for-byte in the seed file (not wired into devLaunchers, since their ports don't match their own
+  registry entry). Flagged in the final report for a human/future agent to fix.
+
+Extraction method: scratch/extracted-dev-launchers.json is the raw per-variant table (Python) that was
+hand-embedded into 🧩️launch.seed.jsonc's `devLaunchers` key; kept here for traceability of how the 42
+templates were derived from the original file (port-value cross-reference against the registry's
+generatePlaygroundRegistry() output, canonical = lowest presentation.order entry per variant/renderer
+when duplicates existed from fixture variants sharing a base port).

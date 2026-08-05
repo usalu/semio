@@ -1,0 +1,111 @@
+[verify] dependency-cruiser boundaries…
+Saved lockfile
+
+✔ no dependency violations found (205 modules, 309 dependencies cruised)
+
+[verify] generated catalog freshness…
+
+> nx run @semio-tech/plugin-registry:check
+
+> bun ./📜️script.ts check
+
+plugin registry catalog is fresh (36 plugin crates, 58 playgrounds).
+
+
+
+ NX   Successfully ran target check for project @semio-tech/plugin-registry
+
+
+[verify] region/host-contract script lints…
+
+> nx run @semio-tech/framework-renderer-react:lint
+
+> bun ./📜️script.ts lint
+
+framework-renderer-react: region/host-contract lint passed
+
+
+
+ NX   Successfully ran target lint for project @semio-tech/framework-renderer-react
+
+
+
+> nx run @semio-tech/framework-os-dev:plugin lint
+
+> bun ./📜️script.ts plugin lint
+
+[DEBUG] program capability lint passed
+
+
+
+ NX   Successfully ran target plugin for project @semio-tech/framework-os-dev
+
+
+
+> nx run @semio-tech/ui-styling-tokens:check-no-px
+
+> bun ./📜️script.ts check-no-px
+
+framework/ui/styling: no hardcoded px sizing violations
+
+
+
+ NX   Successfully ran target check-no-px for project @semio-tech/ui-styling-tokens
+
+
+[verify] framework-core ts-rs binding freshness…
+
+> nx run @semio-tech/framework-core-rs:check
+
+> bun ./📜️script.ts check
+
+[0m[1m1346 |[0m       [0m[35mif[0m (resolved) {
+[0m[1m1347 |[0m         formattedArgs[[0m[33m0[0m] = resolved[0m[2m;[0m
+[0m[1m1348 |[0m       }
+[0m[1m1349 |[0m     }
+[0m[1m1350 |[0m   }
+[0m[1m1351 |[0m   [0m[35mconst[0m result = spawnSync(cmd, formattedArgs, {
+                        [31m[1m^[0m
+[0m[31mENOENT[0m[2m:[0m [1mno such file or directory, posix_spawn 'cargo'[0m
+      path[0m[2m:[0m [0m[32m"cargo"[0m[0m[2m,[0m
+   syscall[0m[2m:[0m [0m[32m"spawnSync cargo"[0m[0m[2m,[0m
+     errno[0m[2m:[0m [0m[33m-2[0m[0m[2m,[0m
+ spawnargs[0m[2m:[0m [ [0m[32m"test"[0m[0m[0m[2m,[0m [0m[32m"--features"[0m[0m[0m[2m,[0m [0m[32m"typegen"[0m[0m[0m[2m,[0m [0m[32m"exports_typescript_bindings"[0m[0m ][0m[2m,[0m
+      code[0m[2m:[0m [32m"ENOENT"[0m
+
+[0m      [2mat [0m[0m[1m[3mspawnSync[0m[2m ([0m[0m[36mnode:child_process[0m[2m:[0m[33m226[0m[2m:[33m22[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunCmdInternal[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts[0m[2m:[0m[33m1351[0m[2m:[33m18[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunTypegenExportTest[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/🧰️framework/⚡️implementations/🦀️rust/[0m[36m📜️script.ts[0m[2m:[0m[33m37[0m[2m:[33m18[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mbuildManifest[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/🧰️framework/⚡️implementations/🦀️rust/[0m[36m📜️script.ts[0m[2m:[0m[33m78[0m[2m:[33m3[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/🧰️framework/⚡️implementations/🦀️rust/[0m[36m📜️script.ts[0m[2m:[0m[33m101[0m[2m:[33m22[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts[0m[2m:[0m[33m814[0m[2m:[33m71[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunBundleScriptMain[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts[0m[2m:[0m[33m844[0m[2m:[33m16[0m[2m)[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+Warning: command "bun ./📜️script.ts check" exited with non-zero status code
+
+
+ NX   Running target check for project @semio-tech/framework-core-rs failed
+
+Failed tasks:
+
+- @semio-tech/framework-core-rs:check
+
+Hint: run the command with --verbose for more details.
+
+1370 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1371 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1372 |  */
+1373 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1374 |   const status = runCmdInternal(cmd, args, opts);
+1375 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: bun nx run @semio-tech/framework-core-rs:check exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts:1375:31)
+      at runGate (/Users/ueli/Documents/semio/📜️script.ts:663:5)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:643:16)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts:814:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts:849:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:3062:11
+
+Bun v1.3.14 (macOS arm64)

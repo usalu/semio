@@ -176,6 +176,72 @@ mod tests {
         store::test_support::assert_document_pack_round_trip(&doc_store);
     }
 
+    /// 🧪️ [DEBUG] TEMPORARY wire-shape baseline dump for the W1 taxonomy migration — prints every
+    /// `FlowCommand` variant's `print_op()` line plus its `encode_op()` byte length so the post-merge
+    /// `app_commands!`-generated enum can be byte-diffed against this exact output.
+    #[test]
+    fn debug_dump_flow_command_wire_baseline() {
+        for command in baseline_commands() {
+            let printed = protocol::OpText::print_op(&command);
+            let bytes = protocol::OpBinary::encode_op(&command).expect("encode");
+            println!("[DEBUG][WIRE] {} | {} | {}", printed, bytes.len(), bytes.iter().map(|b| format!("{b:02x}")).collect::<String>());
+        }
+    }
+
+    fn baseline_commands() -> Vec<FlowCommand> {
+        vec![
+            FlowCommand::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(10.0), y: None },
+            FlowCommand::AddWidget { kind: "neuron".into(), neuron_kind: Some("math.add".into()), x: None, y: None },
+            FlowCommand::RemoveWidget { widget_id: "n1".into() },
+            FlowCommand::DeleteSelection,
+            FlowCommand::Disconnect { synapse_id: "s1".into() },
+            FlowCommand::ConnectMediaPorts { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() },
+            FlowCommand::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 },
+            FlowCommand::Reorganize,
+            FlowCommand::PatchFlowWidgets { widget_ids: vec!["n1".into(), "n2".into()], field: "value".into(), value: "5".into() },
+            FlowCommand::RenameFlowWidget { old_id: "n1".into(), value: "renamed".into() },
+            FlowCommand::NodeGraphEdit {
+                operations: vec![
+                    FlowNodeGraphEditOp::SetFixture { fixture_json: "{}".into() },
+                    FlowNodeGraphEditOp::DeleteSelection,
+                    FlowNodeGraphEditOp::Connect { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() },
+                ],
+            },
+            FlowCommand::SpotlightCommit { operations: vec![FlowNodeGraphEditOp::DeleteSelection] },
+            FlowCommand::RunExtensionAction { action_id: "flow.extension.reorganize".into() },
+            FlowCommand::Evaluate,
+            FlowCommand::SelectAll,
+            FlowCommand::FocusSelection,
+            FlowCommand::SetSelection { ids: vec!["n1".into()], edge_ids: vec!["e1".into()], handle_ids: Vec::new() },
+            FlowCommand::SelectNode { node_id: "n1".into() },
+            FlowCommand::NodeGraphSelect { node_ids: vec!["n1".into(), "n2".into()] },
+            FlowCommand::NodeGraphHover,
+            FlowCommand::GraphPointerDown,
+            FlowCommand::NodeGraphViewport { camera: CameraJson { x: 1.0, y: 2.0, zoom: 1.5 } },
+            FlowCommand::SetLodMode { value: "micro".into() },
+            FlowCommand::SetProximityDistance { value: 48.0 },
+            FlowCommand::SetGridVisible { pressed: Some(true) },
+            FlowCommand::SetGridVisible { pressed: None },
+            FlowCommand::SetGridSnapEnabled { pressed: None },
+            FlowCommand::SetGridFactor { value: 10.0 },
+            FlowCommand::ClearSelection,
+            FlowCommand::ContextMenuAt { id: "n1".into() },
+            FlowCommand::SetPreviewOff { ids: vec!["n1".into()], value: true },
+            FlowCommand::OpenSpotlight,
+            FlowCommand::ReplaceImage { id: "n1".into() },
+            FlowCommand::SetCatalogueSections { sections_json: "[]".into() },
+            FlowCommand::ToggleExtension { id: "auto-layout".into(), enabled: true },
+            FlowCommand::AddGeneration,
+            FlowCommand::RemoveGeneration { id: "g1".into() },
+            FlowCommand::SelectGeneration { id: "g1".into() },
+            FlowCommand::RenameGeneration { id: "g1".into(), name: "Copy".into() },
+            FlowCommand::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: dsl::DslValue::Number(5.0) },
+            FlowCommand::SetLocale { value: "de-DE".into() },
+            FlowCommand::FlowEvalTick,
+            FlowCommand::FlowEvalResolve { node_hash: 42, output_json: "{}".into() },
+        ]
+    }
+
     #[test]
     fn flow_command_text_binary_round_trips_document_mutating_variants() {
         store::test_support::assert_op_text_binary_equivalence(&FlowCommand::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(10.0), y: None });

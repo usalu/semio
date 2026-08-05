@@ -2177,6 +2177,7 @@ pub mod engine_canvas {
         if sync_eq_field(&mut cache.operators, &graph.operators) {
             host.set_neuron_kind_infos(&graph.operators);
         }
+        let mut fixture_semantic_changed = false;
         if let Some(fixture_json) = &graph.fixture_json {
             let fixture_json = effective_json_field(fixture_json);
             if sync_field(&mut cache.fixture_json, &fixture_json) {
@@ -2185,10 +2186,12 @@ pub mod engine_canvas {
                         host.set_camera(fixture.camera.x, fixture.camera.y, fixture.camera.zoom);
                     } else {
                         host.replace_fixture(fixture);
+                        fixture_semantic_changed = true;
                     }
                 }
             }
         }
+        let mut status_or_computing_applied = false;
         // 🧵️ Never evaluates: `eval_json` comes from the plugin worker's off-main-thread `flowEvalTick`
         // chain (see `FlowEvalDriver`) — this host is a pure view, mirroring the React canvas session.
         if let Some(json) = &graph.eval_json {
@@ -2216,6 +2219,7 @@ pub mod engine_canvas {
             let json = effective_json_field(json);
             if sync_field(&mut cache.status_json, &json) {
                 host.set_node_statuses_from_json(&json);
+                status_or_computing_applied = true;
             }
         } else if let Some(json) = &graph.computing_json {
             let json = effective_json_field(json);
@@ -2225,7 +2229,11 @@ pub mod engine_canvas {
                     let stale: Vec<String> = value.get("stale").and_then(|v| v.as_array()).map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect()).unwrap_or_default();
                     host.set_computing_progress(active.as_deref(), &stale);
                 }
+                status_or_computing_applied = true;
             }
+        }
+        if fixture_semantic_changed && !status_or_computing_applied {
+            host.refresh_computing_chrome_from_pending();
         }
         if let Some(json) = &graph.lod_json {
             let json = effective_json_field(json);

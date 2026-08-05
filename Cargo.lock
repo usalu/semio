@@ -7505,6 +7505,7 @@ dependencies = [
  "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-vcs",
  "semio-framework-ui-styling",
+ "semio-framework-ui-wgpu",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -12446,7 +12447,9 @@ dependencies = [
 name = "semio-s-app-sequence-ui"
 version = "0.1.0"
 dependencies = [
+ "js-sys",
  "semio-framework-os-kernel-infinite-board-port-directed-dag",
+ "semio-framework-os-kernel-infinite-canvas",
  "semio-framework-plugin",
  "semio-s-app-sequence",
  "semio-s-app-sequence-engine",
@@ -12454,6 +12457,9 @@ dependencies = [
  "semio-s-app-sequence-protocol",
  "serde",
  "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]
@@ -13560,7 +13566,6 @@ name = "semio-s-plugin-flow-extension-bim"
 version = "0.1.0"
 dependencies = [
  "getrandom 0.3.4",
- "js-sys",
  "semio-framework-core",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -14003,17 +14008,9 @@ dependencies = [
 name = "semio-s-plugin-sequence"
 version = "0.1.0"
 dependencies = [
- "js-sys",
- "semio-framework-os-kernel-infinite-board-port-directed-dag",
- "semio-framework-os-kernel-infinite-canvas",
  "semio-framework-plugin",
  "semio-s-app-sequence",
- "semio-s-app-sequence-engine",
  "semio-s-app-sequence-ui",
- "serde_json",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
 ]
 
 [[package]]

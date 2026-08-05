@@ -10,9 +10,7 @@
     "email": "ueli@semio-tech.com",
     "url": "https://github.com/usalu"
   },
-  "dependencies": {
-    "@semio-tech/ui-react": "workspace:*"
-  },
+  "dependencies": {},
   "bundleKind": "asset",
   "exports": {
     ".": "./📦️index.ts"

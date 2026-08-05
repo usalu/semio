@@ -1,1 +1,1 @@
-/Users/ueli/Documents/semio/🧰️framework/🛍️product/📓️print/⚡️implementation/🖋️latex/🖋️zukunftbau.cls
+/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/⚡️implementations/🖋️latex/zukunftbau.cls

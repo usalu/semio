@@ -8,20 +8,19 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      # `puzzle-2d-play`/`puzzle-3d-play`/`puzzle-5d-play`/`cad-js-renderer` were removed from this
+      # matrix in ticket 26/08/05/STALE-CONFIG-FIXES-AND-CAPABILITY-LINT-REVIVAL: none of the four
+      # nx projects exist anymore under any name (verified with a repo-wide grep) and
+      # `@semio-tech/cad-js-renderer`'s surviving project.json has no `build` target at all — their
+      # standalone static-site builds were superseded by the unified `framework-os-dev` playground
+      # build (`bun ./📜️script.ts build <plugin>`), which doesn't fit this one-dist-per-project
+      # matrix shape. Re-add once/if a per-plugin static-site build target exists again.
       matrix:
         include:
           - project: "@semio-tech/compose-sketchpad-play"
             dist: compose/client/lib/sketchpad/play/dist
-          - project: "@semio-tech/cad-js-renderer"
-            dist: cad/js/renderer/play/dist
-          - project: "@semio-tech/puzzle-2d-play"
-            dist: puzzle/2d/play/dist
-          - project: "@semio-tech/puzzle-3d-play"
-            dist: puzzle/3d/play/dist
-          - project: "@semio-tech/puzzle-5d-play"
-            dist: puzzle/5d/play/dist
           - project: "@semio-tech/mit-bestand-praesentation-projektetage"
-            dist: mit-bestand/präsentation/33.projektetage/dist
+            dist: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/⚡️implementation/🟦️typescript/dist
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2

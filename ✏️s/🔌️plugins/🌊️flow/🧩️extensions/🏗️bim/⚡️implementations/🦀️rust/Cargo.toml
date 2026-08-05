@@ -39,5 +39,4 @@ semio-framework-core = { path = "../../../../../../../🧰️framework/⚡️imp
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.3", features = ["wasm_js"] }
-js-sys = "0.3.77"
 wasm-bindgen = { version = "0.2.106", optional = true }

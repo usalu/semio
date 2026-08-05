@@ -1,0 +1,14 @@
+{
+  "title": "Single File Repo Goal Rescope And Hazard Documentation",
+  "emoji": "🎯️",
+  "status": "closed",
+  "description": "Re-scope the open, past-due SINGLE-FILE-REPO goal so it no longer reads as license to inline #[path]-attributed taxonomy component files (created by the concurrent Crate Consolidation \u0026 Plugin Taxonomy Restructure) back into a single lib.rs. Amend only the description/prompt text fields of .🦑️repo/🎯️goals/AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/🎯️goal.json (status/dates/github/client/llm/parent untouched, no lifecycle action). Refine (not replace) the \"Single-File-Repo hazard ruling\" and \"Plugin-ownership schedule\" sections of the master ticket doc at 26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE/📋️master.md. Do NOT edit any AGENTS.md file (forbidden by CLAUDE.md) even though the plan document mentions it.",
+  "summary": "Re-scoped the open SINGLE-FILE-REPO goal to defuse the known reversion hazard against the concurrent crate-consolidation/plugin-taxonomy restructure, without editing AGENTS.md (forbidden by CLAUDE.md) and without any goal lifecycle action. Amended only the description and prompt free-text fields of 🎯️goal.json (the Goal struct in the repo CLI's 🐹️main.go exposes no separate exclusions/scope field) to state that \"single file\" means one file per semantic component, not one file per crate, and to explicitly list plugin taxonomy directories (🗿️artifacts, 🎛️apps, 🎭️modes, 🪟️windows, 🍱️panes, 🪀️widgets, 🪛️utilities, 🎬️actions, 🎚️options, 📌️panels, 🎮️commands, 🛠️tools) plus consolidated-framework-crate #[path] module files as out of scope for inlining, with a pointer to the master ticket. status/dates/github/client/llm/parent fields verified byte-identical before/after (only description/prompt changed) and the file re-verified as valid JSON. Refined (not replaced) the master ticket's \"Single-File-Repo hazard ruling\" section to quote the amended goal text and record that the AGENTS.md leg of the original plan was deliberately dropped, and expanded \"Plugin-ownership schedule\" into a scannable Wave/Batch/Plugin/Agent/Status/Notes table template (W1 flow pilot + W2's 4 batches, demonstrator-last rule, heavy-plugin list) for later waves to fill in — did not assign any of the 31 remaining plugins. Left the master doc's Discovery contract and Wave status sections untouched, and did not call ticket_close/ticket_reopen on the master ticket.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2444"
+  },
+  "goal": "🎯aioptimizedrepo🎯singlefilerepo",
+  "sessions": [
+    "⚪bbb07d32a15246a2a3864bf221edb58e"
+  ]
+}

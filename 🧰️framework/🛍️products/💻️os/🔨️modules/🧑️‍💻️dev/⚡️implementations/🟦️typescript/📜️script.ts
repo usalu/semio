@@ -1636,6 +1636,41 @@ function walkRustSources(dir: string, out: string[]): void {
   }
 }
 
+/** 🕵️ Statically scans this playground's own `⚙️vite.config.ts` for its hardcoded
+ * `{ find: "...", replacement: path.resolve(repoRoot, "...") }` `resolve.alias` entries and
+ * asserts every `replacement` target exists on disk — a plain text/regex scan rather than an
+ * `import()` of the config module itself, since that module's default export executes a full
+ * `defineConfig({...})` (brand/plugin/renderer resolution, plugin-factory calls with real I/O)
+ * as an unconditional side effect of module evaluation, which would be unsafe and slow to
+ * trigger merely to read one array. Scanning the source text keeps `⚙️vite.config.ts` itself as
+ * the single source of truth (no second, independently-stale-able alias list) while still
+ * catching a stale alias before it ships silently. Dynamic mount points (`/plugin-modules`,
+ * `/renderer-modules`) aren't in this pattern (they resolve local `const` dir variables, not an
+ * inline `path.resolve(repoRoot, "...")` literal) and are intentionally not checked here —
+ * `renderer-modules` in particular is a build-output directory that legitimately doesn't exist
+ * until a wgpu build populates it. */
+async function checkPlaygroundAliasFreshness(): Promise<string[]> {
+  const viteConfigPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/⚙️vite.config.ts");
+  const source = await Bun.file(viteConfigPath).text();
+  const aliasPattern = /\{\s*find:\s*"([^"]+)",\s*replacement:\s*path\.resolve\(repoRoot,\s*"([^"]+)"\)\s*\}/g;
+  const failures: string[] = [];
+  for (const [, find, relativeTarget] of source.matchAll(aliasPattern)) {
+    if (!existsSync(join(repoRoot, relativeTarget))) {
+      failures.push(`⚙️vite.config.ts: alias "${find}" -> "${relativeTarget}" does not exist on disk`);
+    }
+  }
+  return failures;
+}
+
+/** 🚧️ Pre-existing capability-rule violations, real but predating this lint's revival (ticket
+ * 26/08/05/STALE-CONFIG-FIXES-AND-CAPABILITY-LINT-REVIVAL): the filter this rule ran against used
+ * to match zero packages, so these went undetected for as long as they've existed. Grandfathered
+ * as WARN (not a `verify gate` failure) so reviving the rule with real teeth doesn't redden the
+ * gate for unrelated pre-existing plugin work — mirrors the master ticket's general
+ * warn-until-finalization pattern for revived W0 checks. Any violation NOT already listed here
+ * still hard-fails the gate; remove an entry once its underlying violation is fixed. */
+const KNOWN_CAPABILITY_VIOLATIONS = new Set<string>([]);
+
 class PluginCapabilityLintScript extends BundleScript {
   async run(): Promise<void> {
     const metadataResult = runProbe("cargo", ["metadata", "--format-version", "1", "--no-deps"], { cwd: repoRoot, budgetMs: buildBudgetMs() });
@@ -1663,10 +1698,16 @@ class PluginCapabilityLintScript extends BundleScript {
       "wgpu-core": "forbidden",
       winit: "forbidden",
     };
+    // 🕵️ Real registry membership, not a path substring: the pre-emoji-rename
+    // `/plugin/rs/Cargo.toml` substring this used to filter on matches zero packages under
+    // today's `✏️s/🔌️plugins/**/⚡️implementations/🦀️rust/Cargo.toml` layout, so every plugin
+    // silently skipped this lint entirely — revived in ticket
+    // 26/08/05/STALE-CONFIG-FIXES-AND-CAPABILITY-LINT-REVIVAL.
+    let checkedPackageCount = 0;
     const failures: string[] = [];
     for (const pkg of metadata.packages) {
-      if (!pkg.manifest_path.includes("/plugin/rs/Cargo.toml")) continue;
-      if (pkg.manifest_path.includes("/framework/plugin/rs/")) continue;
+      if (!pluginPackageNames.has(pkg.name)) continue;
+      checkedPackageCount++;
       const manifestText = await Bun.file(pkg.manifest_path).text();
       const declared = new Set<string>();
       const metaMatch = manifestText.match(/\[package\.metadata\.semio\][\s\S]*?capabilities\s*=\s*\[([^\]]*)\]/);
@@ -1708,11 +1749,14 @@ class PluginCapabilityLintScript extends BundleScript {
         }
       }
     }
-    if (failures.length > 0) {
-      for (const failure of failures) console.error(`[plugin-capability-lint] ${failure}`);
-      throw new Error(`plugin capability lint failed (${failures.length} issues)`);
+    const grandfathered = failures.filter((f) => KNOWN_CAPABILITY_VIOLATIONS.has(f));
+    const blocking = [...failures.filter((f) => !KNOWN_CAPABILITY_VIOLATIONS.has(f)), ...(await checkPlaygroundAliasFreshness())];
+    for (const warning of grandfathered) console.warn(`[plugin-capability-lint] WARN (grandfathered, see spawned fix-it task): ${warning}`);
+    if (blocking.length > 0) {
+      for (const failure of blocking) console.error(`[plugin-capability-lint] ${failure}`);
+      throw new Error(`plugin capability lint failed (${blocking.length} issue(s), ${checkedPackageCount} plugin package(s) evaluated)`);
     }
-    console.log("[DEBUG] program capability lint passed");
+    console.log(`[DEBUG] program capability lint passed (${checkedPackageCount} plugin package(s) evaluated, ${grandfathered.length} grandfathered warning(s))`);
   }
 }
 

@@ -1,0 +1,14 @@
+failed to load config from /Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[🧪️vitest.config.ts] failed to load, skipping: ✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript/🧪️vitest.config.ts -> ENOENT: no such file or directory, stat '/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/PRINT-SOLID-HEADING-CHIP-ROW-PARITY/harness/font/anta/Anta-Regular.ttf'
+Error: Cannot find package '@semio-tech/assets' imported from /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx
+ ❯ ../../../../🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/ð¦ï¸index.tsx:146:1
+ ❯ index.ts:11:1
+      9|
+     10| // #region 🔌️Adapters
+     11| import {
+       | ^
+     12|   AlgorithmApp,
+     13|   WindowKind,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }

@@ -2332,15 +2332,22 @@ impl DagHost {
         Some(WorldBox { min_x: union.min_x - pad, min_y: union.min_y - pad, max_x: union.max_x + pad, max_y: union.max_y + pad })
     }
 
+    /// 🗺️ Thin wrapper over `ui_wgpu::minimap::content_fully_visible` — pure layout math relocated there
+    /// (see `.🦑️repo/🎫️tickets/26/08/05/FRAMEWORK-BUILDER-PASSTHROUGHS-APP-COMMANDS-MACRO-WIDGET-EXTRACTION`).
     fn minimap_camera_fully_shows_content(&self, content: &WorldBox, viewport_w: u32, viewport_h: u32) -> bool {
-        let zoom = self.fixture.camera.zoom.max(1e-9);
-        let half_w = viewport_w as f64 / (2.0 * zoom);
-        let half_h = viewport_h as f64 / (2.0 * zoom);
         let cam = &self.fixture.camera;
-        let tol = 12.0 / zoom;
-        cam.x - half_w <= content.min_x + tol && cam.x + half_w >= content.max_x - tol && cam.y - half_h <= content.min_y + tol && cam.y + half_h >= content.max_y - tol
+        ui_wgpu::minimap::content_fully_visible(
+            &ui_wgpu::minimap::MinimapContentBounds { min_x: content.min_x, min_y: content.min_y, max_x: content.max_x, max_y: content.max_y },
+            viewport_w,
+            viewport_h,
+            cam.x,
+            cam.y,
+            cam.zoom,
+            12.0,
+        )
     }
 
+    /// 🗺️ Thin wrapper over `ui_wgpu::minimap::layout` — see `minimap_camera_fully_shows_content` above.
     fn minimap_widget_layout(&self, viewport_w: u32, viewport_h: u32) -> Option<MinimapWidgetLayout> {
         if !self.minimap_widget_visible {
             return None;
@@ -2352,46 +2359,31 @@ impl DagHost {
         let w = ui_styling::metrics::dag::MINIMAP_WIDGET_WIDTH;
         let h = ui_styling::metrics::dag::MINIMAP_WIDGET_HEIGHT;
         let margin = ui_styling::metrics::dag::MINIMAP_WIDGET_MARGIN;
-        let ratio = ui_styling::metrics::dag::MINIMAP_WIDGET_MAX_CONTENT_RATIO.clamp(0.5, 0.98);
-        let panel_x0 = viewport_w as f64 - margin - w;
-        let panel_y0 = viewport_h as f64 - margin - h;
-        let panel_x1 = panel_x0 + w;
-        let panel_y1 = panel_y0 + h;
-        let inset_x = w * (1.0 - ratio) * 0.5;
-        let inset_y = h * (1.0 - ratio) * 0.5;
-        let inner = (panel_x0 + inset_x, panel_y0 + inset_y, panel_x1 - inset_x, panel_y1 - inset_y);
-        let inner_w = inner.2 - inner.0;
-        let inner_h = inner.3 - inner.1;
-        let cw = (content.max_x - content.min_x).max(1e-6);
-        let ch = (content.max_y - content.min_y).max(1e-6);
-        let scale = (inner_w / cw).min(inner_h / ch);
-        let graph_w = cw * scale;
-        let graph_h = ch * scale;
-        let offset_x = inner.0 + (inner_w - graph_w) * 0.5;
-        let offset_y = inner.1 + (inner_h - graph_h) * 0.5;
-        let zoom = self.fixture.camera.zoom.max(1e-9);
-        let half_w = viewport_w as f64 / (2.0 * zoom);
-        let half_h = viewport_h as f64 / (2.0 * zoom);
+        let ratio = ui_styling::metrics::dag::MINIMAP_WIDGET_MAX_CONTENT_RATIO;
         let cam = &self.fixture.camera;
-        let view_min_x = cam.x - half_w;
-        let view_min_y = cam.y - half_h;
-        let view_max_x = cam.x + half_w;
-        let view_max_y = cam.y + half_h;
-        let to_mini = |wx: f64, wy: f64| (offset_x + (wx - content.min_x) * scale, offset_y + (wy - content.min_y) * scale);
-        let (vx0, vy0) = to_mini(view_min_x, view_min_y);
-        let (vx1, vy1) = to_mini(view_max_x, view_max_y);
-        let viewport = (vx0.min(vx1), vy0.min(vy1), vx0.max(vx1), vy1.max(vy1));
-        Some(MinimapWidgetLayout { panel: (panel_x0, panel_y0, panel_x1, panel_y1), world_min_x: content.min_x, world_min_y: content.min_y, scale, map_origin_x: offset_x, map_origin_y: offset_y, viewport })
+        let layout = ui_wgpu::minimap::layout(
+            &ui_wgpu::minimap::MinimapContentBounds { min_x: content.min_x, min_y: content.min_y, max_x: content.max_x, max_y: content.max_y },
+            viewport_w,
+            viewport_h,
+            cam.x,
+            cam.y,
+            cam.zoom,
+            w,
+            h,
+            margin,
+            ratio,
+        );
+        Some(MinimapWidgetLayout { panel: layout.panel, world_min_x: layout.world_min_x, world_min_y: layout.world_min_y, scale: layout.scale, map_origin_x: layout.map_origin_x, map_origin_y: layout.map_origin_y, viewport: layout.viewport })
     }
 
+    /// 🗺️ Thin wrapper over `ui_wgpu::minimap::screen_to_world` — see `minimap_camera_fully_shows_content` above.
     fn minimap_widget_screen_to_world(&self, layout: &MinimapWidgetLayout, sx: f64, sy: f64) -> (f64, f64) {
-        let wx = layout.world_min_x + (sx - layout.map_origin_x) / layout.scale;
-        let wy = layout.world_min_y + (sy - layout.map_origin_y) / layout.scale;
-        (wx, wy)
+        ui_wgpu::minimap::screen_to_world(layout.map_origin_x, layout.map_origin_y, layout.world_min_x, layout.world_min_y, layout.scale, sx, sy)
     }
 
-    fn minimap_widget_point_in_rect((x0, y0, x1, y1): (f64, f64, f64, f64), sx: f64, sy: f64) -> bool {
-        sx >= x0 && sx <= x1 && sy >= y0 && sy <= y1
+    /// 🗺️ Thin wrapper over `ui_wgpu::minimap::point_in_rect` — see `minimap_camera_fully_shows_content` above.
+    fn minimap_widget_point_in_rect(rect: (f64, f64, f64, f64), sx: f64, sy: f64) -> bool {
+        ui_wgpu::minimap::point_in_rect(rect, sx, sy)
     }
 
     fn minimap_widget_pointer_hit(&self, sx: f64, sy: f64) -> Option<(MinimapWidgetLayout, bool)> {

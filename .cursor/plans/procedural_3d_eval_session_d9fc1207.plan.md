@@ -22,7 +22,7 @@ todos:
     status: completed
   - id: verify
     content: Extend existing tests to cover the config round-trip and convergence; add data-status-json; run the Playwright probe on the hexagonal column in both renderers and confirm settle from the logs
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

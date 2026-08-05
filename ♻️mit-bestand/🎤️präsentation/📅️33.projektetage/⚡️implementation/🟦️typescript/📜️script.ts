@@ -4,7 +4,7 @@ import { BundleScript, ScriptRouter, playPollingEnv, playgroundDevPortString, pl
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
-    runViteBunxDev(this.root, ["--config", "js/⚙️vite.config.ts", ...segments], {
+    runViteBunxDev(this.root, ["--config", "⚙️vite.config.ts", ...segments], {
       portEnv: playgroundPortEnv("projektetage"),
       defaultPort: playgroundDevPortString("projektetage"),
       fixedPort: true,
@@ -14,7 +14,7 @@ class DevScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   run(segments: string[]): void {
-    runBun(["run", "vite", "build", "--config", "js/⚙️vite.config.ts", ...segments], this.root, playPollingEnv());
+    runBun(["run", "vite", "build", "--config", "⚙️vite.config.ts", ...segments], this.root, playPollingEnv());
   }
 }
 

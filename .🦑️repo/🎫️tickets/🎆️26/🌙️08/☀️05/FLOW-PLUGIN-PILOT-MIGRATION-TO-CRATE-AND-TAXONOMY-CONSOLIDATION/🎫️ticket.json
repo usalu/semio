@@ -1,0 +1,13 @@
+{
+  "title": "Flow Plugin Pilot Migration To Crate And Taxonomy Consolidation",
+  "emoji": "🌊️",
+  "status": "open",
+  "description": "W1 pilot of the CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE master ticket (26/08/05). Merge the 🌊️flow plugin's 8 Rust crates (bundle + app facade + engine/dsl/op/pack/protocol/ui modules) into ONE crate at ✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/ with the full taxonomy source tree (🗿️artifacts/🌊️flow/{component,diff,op,dsl,pack,spr,engine}, 🎛️apps/🌊️flow/{component,config,terminology,commands,modes,panels}) wired from a plugin-root 📦️lib.rs via explicit #[path] mod declarations. Decompose FlowCommand with the new app_commands! macro, stitch the manifest from per-node definition() fns using the new AppBuilder .mode_def/.window_kind_def/.panel_tab_def passthroughs, preserve wire format exactly, keep every existing test. Then write 📋️TEMPLATE.md into the master ticket folder documenting the reusable recipe for the other 31 plugins. Never touch root Cargo.toml / launch.json / registry script / other plugins — report the registrar handoff lines instead.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2447"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪16f2c4d87a23492aae5b54baed41011d"
+  ]
+}

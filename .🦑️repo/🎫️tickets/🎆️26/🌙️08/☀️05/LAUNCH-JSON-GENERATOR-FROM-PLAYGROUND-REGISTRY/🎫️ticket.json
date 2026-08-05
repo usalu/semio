@@ -1,0 +1,14 @@
+{
+  "title": "Launch.json Generator From Playground Registry",
+  "emoji": "🖥️",
+  "status": "closed",
+  "description": "Turn the currently hand-maintained `.vscode/launch.json` into a generated artifact so the ~175 per-plugin dev-launcher entries (of 215 total) can never drift from the plugin/playground registry again. Part of the Crate Consolidation \u0026 Plugin Taxonomy Restructure W0 mechanism-prep wave (see master ticket .🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE/📋️master.md, plan section \".vscode/launch.json | Generate it\").\n\nScope:\n1. Split .vscode/launch.json into a hand-maintained seed (.vscode/🧩️launch.seed.jsonc) holding everything not mechanically derivable from the plugin/playground registry (keyboard/mouse shortcuts, bespoke tooling launchers, wgpu-native launchers, fixture-variant launchers, build/publish groups, the one compound config) plus a devLaunchers metadata table (per-playground-variant name/command/order/env/serverReadyAction templates with {PORT} tokens).\n2. Add a new generator file 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🖥️launch.ts (sibling to the owned registry script.ts, imports generatePlaygroundRegistry read-only) that combines the seed + registry ports into the full launch.json text, runnable as `bun 🖥️launch.ts generate` / `generate --check`.\n3. Verify byte-identical regeneration of today's file (acceptance test) and zero git diff.\n\nOwnership: .vscode/launch.json, .vscode/🧩️launch.seed.jsonc, and the new 🖥️launch.ts file only. Do not edit 📇️registry/📜️script.ts or root 📜️script.ts (owned by other W0 agents this wave).",
+  "summary": "Made .vscode/launch.json a generated artifact. Split today's 215 configurations + 1 compound into a new hand-maintained seed (.vscode/🧩️launch.seed.jsonc: 137 verbatim entries + the compound + a `devLaunchers` metadata table for 42 playground variants) and a new generator (🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🖥️launch.ts) that combines the seed with generatePlaygroundRegistry() ports to emit the other 78 react/wgpu dev-launcher entries. `bun 🖥️launch.ts generate --check` confirmed byte-identical regeneration of the original file before any write; `generate` then wrote it and `git diff --stat .vscode/launch.json` showed zero changes. Did not touch 📇️registry/📜️script.ts or root 📜️script.ts (owned by other W0 agents). Flagged for follow-up: root-level `verify gate` wiring for freshness checking, and a pre-existing bug where playbook's two launch entries use lowpoly's ports instead of its own registry ports (preserved byte-for-byte in the seed rather than silently fixed).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2446"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪6e64a84bbddf48ddb5fd46fd606d3140"
+  ]
+}

@@ -18,6 +18,10 @@ store = { path = "../../../../../../../../../../../🧰️framework/🛍️produ
 protocol = { path = "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 dsl = { path = "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 ui_styling = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust", package = "semio-framework-ui-styling" }
+# 🗺️ Default features only (NOT "engine") — just the `minimap` layout-math module, kept lightweight so this
+# vello/`infinite_canvas`-based crate never pulls in wgpu/winit/parley/kernel_3d_scene. See
+# `.🦑️repo/🎫️tickets/26/08/05/FRAMEWORK-BUILDER-PASSTHROUGHS-APP-COMMANDS-MACRO-WIDGET-EXTRACTION`.
+ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust", package = "semio-framework-ui-wgpu" }
 infinite_board_port_directed = { path = "../../../../../../🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed" }
 mathematical_graph_manifest = { path = "../../../../../../../../../../🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph-manifest" }
 mathematical_graph_dsl = { path = "../../../../../../../../../../🔨️modules/🧮️math/🕸️graph/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph-dsl" }

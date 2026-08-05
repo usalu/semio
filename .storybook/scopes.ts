@@ -41,49 +41,56 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   {
     id: "ui",
     titlePrefix: "🖱️ui⚛️react",
-    sourceRoots: [repoRelative("framework/module/ui/js/react"), repoRelative("framework/module/ui/styling"), repoRelative("framework/module/ui/asset"), repoRelative("s/plugin/puzzle/module/asset"), repoRelative("framework/product/os/module/infinite/canvas/react-renderer"), repoRelative("compose/client/ui/desktop")],
+    sourceRoots: [
+      repoRelative("🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript"),
+      repoRelative("🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript"),
+      repoRelative("🧰️framework/🔨️modules/🖱️ui/🖼️assets/⚡️implementations/🟦️typescript"),
+      repoRelative("✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript"),
+      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementations/🟦️typescript"),
+    ],
     aliases: {
-      "@semio-tech/infinite-canvas-react-renderer": "framework/product/os/module/infinite/canvas/react-renderer/index.tsx",
-      "@elements/ui/globals.css": "framework/module/ui/js/react/globals.css",
+      "@semio-tech/infinite-canvas-react-renderer": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementations/🟦️typescript/📦️index.tsx",
+      "@elements/ui/globals.css": "🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/🎨️globals.css",
       "@semio-tech/coda-desktop/renderer": "compose/client/ui/desktop/js/renderer.tsx",
+      "@semio-tech/compose-rs-wasm": "compose/client/lib/rs/pkg/compose.js",
     },
   },
   {
     id: "styling",
     titlePrefix: "🎨️styling",
-    sourceRoots: [repoRelative("framework/module/ui/styling")],
+    sourceRoots: [repoRelative("🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript")],
   },
   {
     id: "puzzle",
     titlePrefix: "🧩️puzzle",
-    sourceRoots: [repoRelative("s/plugin/puzzle/module/asset")],
+    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript")],
   },
   {
     id: "puzzle/2d",
     titlePrefix: "🧩️puzzle🩻️2d",
-    sourceRoots: [repoRelative("s/plugin/puzzle/app/2d"), repoRelative("s/plugin/puzzle/module/asset")],
+    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d"), repoRelative("✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript")],
   },
   {
     id: "puzzle/3d",
     titlePrefix: "🧩️puzzle🧊️3d",
-    sourceRoots: [repoRelative("s/plugin/puzzle/app/3d"), repoRelative("s/plugin/puzzle/module/asset"), repoRelative("framework/product/os/module/infinite/world/r3f")],
+    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d"), repoRelative("✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript"), repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/⚡️implementations/🟦️typescript")],
   },
   {
     id: "puzzle/5d",
     titlePrefix: "🧩️puzzle🕐️5d",
-    sourceRoots: [repoRelative("s/plugin/puzzle/app/5d"), repoRelative("s/plugin/puzzle/module/asset")],
+    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d"), repoRelative("✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript")],
   },
   {
     id: "block",
     titlePrefix: "🧱️block",
-    sourceRoots: [repoRelative("s/plugin/block")],
+    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧱️block")],
   },
   {
     id: "compose",
     titlePrefix: "🏘️compose",
-    sourceRoots: [repoRelative("compose/client/lib/js"), repoRelative("compose/client/lib/rs"), repoRelative("framework/module/asset"), repoRelative("compose/fixture"), repoRelative("compose/dev/algorithm")],
+    sourceRoots: [repoRelative("compose/client/lib/js"), repoRelative("compose/client/lib/rs"), repoRelative("🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript"), repoRelative("compose/fixture"), repoRelative("compose/dev/algorithm")],
     aliases: {
-      "@semio-tech/ui-react/globals.css": "framework/module/ui/js/react/globals.css",
+      "@semio-tech/ui-react/globals.css": "🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/🎨️globals.css",
       "@semio-tech/compose-rs-wasm": "compose/client/lib/rs/pkg/compose.js",
     },
     optimizeDepsExclude: ["@semio-tech/compose-react", "@semio-tech/compose-js", "@semio-tech/assets"],
@@ -91,7 +98,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   {
     id: "compose/ui",
     titlePrefix: "🏘️compose⚛️react",
-    sourceRoots: [repoRelative("compose/client/lib/js"), repoRelative("compose/client/lib/rs"), repoRelative("framework/module/asset"), repoRelative("compose/fixture")],
+    sourceRoots: [repoRelative("compose/client/lib/js"), repoRelative("compose/client/lib/rs"), repoRelative("🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript"), repoRelative("compose/fixture")],
   },
   {
     // Directory is singular (`stories/compose/algorithm/`) though the story `title`s read "algorithms" (plural) —
@@ -106,49 +113,65 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   {
     id: "framework",
     titlePrefix: "🛠️framework",
-    sourceRoots: [repoRelative("framework/product/os/module/renderer/js/react"), repoRelative("framework/js")],
+    sourceRoots: [repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript"), repoRelative("🧰️framework/⚡️implementations/🟦️typescript")],
   },
   {
     id: "framework/hosts",
     titlePrefix: "🛠️framework🔌️hosts",
-    sourceRoots: [repoRelative("framework/product/os/module/renderer/js/react"), repoRelative("framework/js"), repoRelative("framework/module/surface"), repoRelative("framework/module/editor"), repoRelative("framework/product/os/module/flow/core/rs")],
+    sourceRoots: [
+      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript"),
+      repoRelative("🧰️framework/⚡️implementations/🟦️typescript"),
+      repoRelative("🧰️framework/🔨️modules/🗺️surface"),
+      repoRelative("🧰️framework/🔨️modules/✍️editor"),
+      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust"),
+    ],
     aliases: {
-      "@semio-tech/framework-renderer-react": "framework/product/os/module/renderer/js/react/index.tsx",
-      "@semio-tech/framework-core": "framework/js/index.ts",
+      "@semio-tech/framework-renderer-react": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx",
+      "@semio-tech/framework-core": "🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts",
     },
   },
   {
     id: "framework/os",
     titlePrefix: "🛠️framework🖥️os",
-    sourceRoots: [repoRelative("framework/product/os/module/renderer/js/react"), repoRelative("framework/product/os/module/renderer/wgpu"), repoRelative("framework/js"), repoRelative("framework/product/os/module/plugin/registry"), repoRelative("framework/product/os")],
+    sourceRoots: [
+      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript"),
+      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementations/🦀️rust"),
+      repoRelative("🧰️framework/⚡️implementations/🟦️typescript"),
+      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry"),
+      repoRelative("🧰️framework/🛍️products/💻️os"),
+    ],
     aliases: {
-      "@semio-tech/framework-renderer-react": "framework/product/os/module/renderer/js/react/index.tsx",
-      "@semio-tech/framework-renderer-wgpu": "framework/product/os/module/renderer/wgpu/index.ts",
-      "@semio-tech/framework-core": "framework/js/index.ts",
-      "/plugin-modules": "framework/product/os/module/dev/js/plugin-modules",
-      "/renderer-modules": "framework/product/os/module/dev/js/renderer-modules",
+      "@semio-tech/framework-renderer-react": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx",
+      "@semio-tech/framework-renderer-wgpu": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementations/🦀️rust/📦️index.ts",
+      "@semio-tech/framework-core": "🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts",
+      "/plugin-modules": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/🔌️plugin-modules",
+      "/renderer-modules": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/📺️renderer-modules",
     },
     assets: [
-      { kind: "static-dir", route: "/plugin-modules", root: "framework/product/os/module/dev/js/plugin-modules" },
-      { kind: "static-dir", route: "/renderer-modules", root: "framework/product/os/module/dev/js/renderer-modules" },
+      { kind: "static-dir", route: "/plugin-modules", root: "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/🔌️plugin-modules" },
+      { kind: "static-dir", route: "/renderer-modules", root: "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/📺️renderer-modules" },
     ],
     vitePlugins: async () => {
-      const { playgroundIframeEmbedHeadersPlugin } = await import("../🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts");
+      const { playgroundIframeEmbedHeadersPlugin } = await import(/* @vite-ignore */ "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts");
       return [playgroundIframeEmbedHeadersPlugin()];
     },
   },
   {
     id: "infinite",
     titlePrefix: "♾️infinite",
-    sourceRoots: [repoRelative("framework/product/os/module/infinite/canvas/react-renderer"), repoRelative("framework/product/os/module/infinite/world/r3f"), repoRelative("framework/product/os/module/infinite/fixture")],
+    sourceRoots: [
+      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementations/🟦️typescript"),
+      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/⚡️implementations/🟦️typescript"),
+      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures"),
+    ],
     aliases: {
-      "@semio-tech/infinite-canvas-react-renderer": "framework/product/os/module/infinite/canvas/react-renderer/index.tsx",
+      "@semio-tech/infinite-canvas-react-renderer": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementations/🟦️typescript/📦️index.tsx",
     },
   },
   {
     id: "cad",
     titlePrefix: "📐️cad",
-    sourceRoots: [repoRelative("s/plugin/cad/module/renderer"), repoRelative("s/plugin/cad/asset"), repoRelative("s/plugin/cad/fixture")],
+    sourceRoots: [repoRelative("✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript"), repoRelative("✏️s/🔌️plugins/📐️cad/🖼️assets"), repoRelative("✏️s/🔌️plugins/📐️cad/🧫️fixtures")],
   },
   {
     id: "coda",
@@ -161,7 +184,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   {
     id: "animate",
     titlePrefix: "🎬️animate",
-    sourceRoots: [repoRelative("s/plugin/animate/app/present/js/renderer/react")],
+    sourceRoots: [repoRelative("✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/⚡️implementations/🟦️typescript")],
   },
 ];
 // #endregion 🔖️ScopeRegistry
@@ -258,9 +281,9 @@ if (import.meta.vitest) {
 
   describe("buildScopeAliases", () => {
     it("merges workspace and scope aliases without conflict", () => {
-      const aliases = buildScopeAliases(resolveActiveScopes("ui"), { "@semio-tech/ui-react": "framework/module/ui/js/react" });
-      expect(aliases["@semio-tech/ui-react"]).toBe("framework/module/ui/js/react");
-      expect(aliases["@elements/ui/globals.css"]).toBe("framework/module/ui/js/react/globals.css");
+      const aliases = buildScopeAliases(resolveActiveScopes("ui"), { "@semio-tech/ui-react": "🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript" });
+      expect(aliases["@semio-tech/ui-react"]).toBe("🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript");
+      expect(aliases["@elements/ui/globals.css"]).toBe("🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/🎨️globals.css");
     });
 
     it("throws on a genuine key conflict between scopes", () => {
@@ -280,7 +303,7 @@ if (import.meta.vitest) {
     it("ignores inactive scopes' source roots", () => {
       const ignores = buildScopeWatchIgnores(resolveActiveScopes("ui"));
       expect(ignores).toContain("**/compose/client/lib/js/**");
-      expect(ignores.some((g) => g.includes("framework/module/ui/js/react"))).toBe(false);
+      expect(ignores.some((g) => g.includes("🧰️framework/🔨️modules/🖱️ui/⚛️react"))).toBe(false);
     });
 
     it("ignores nothing when every scope is active", () => {

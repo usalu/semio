@@ -377,7 +377,7 @@ const WASM_LOADERS: Record<string, () => Promise<void>> = {
   "paint-2d": singleFlightWasmInit("paint-2d", () => import("@semio-tech/framework-surface-paint-rs/pkg/framework_surface_paint.js")),
   "tiled-map": singleFlightWasmInit("tiled-map", () => import("@semio-tech/framework-surface-tiled-map-rs/pkg/framework_surface_tiled_map.js")),
   terrain: singleFlightWasmInit("terrain", () => import("@semio-tech/framework-surface-terrain-rs/pkg/framework_surface_terrain.js")),
-  flow: singleFlightWasmInit("flow", () => import("@semio-tech/flow-core/pkg/flow_core.js")),
+  flow: singleFlightWasmInit("flow", () => import("@semio-tech/flow-core/flow_core.js")),
 };
 
 type WasmGateState = "idle" | "loading" | "ready" | "error";

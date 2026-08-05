@@ -97,6 +97,11 @@ const config: StorybookConfig = {
     const workspaceResolve = createWorkspaceViteResolveConfig(repoRootPath);
     const aliasRecord: Record<string, string> = {
       ...buildStorybookAliases(),
+      "vite/internal": resolve(repoRootPath, "node_modules/vite/dist/node/index.js"),
+      "@semio-tech/framework-platform-core": resolve(repoRootPath, "🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts"),
+      "@semio-tech/framework-playground-core": resolve(repoRootPath, "🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts"),
+      "@semio-tech/framework-platform-renderer-react": resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx"),
+      "@semio-tech/framework-playground-renderer-react": resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx"),
     };
     for (const item of workspaceResolve.resolve?.alias ?? []) {
       if (typeof item === "object" && item && "find" in item && "replacement" in item && typeof item.find === "string") {
@@ -185,6 +190,11 @@ const config: StorybookConfig = {
     };
     config.build = config.build || {};
     config.build.target = "es2022";
+    config.build.rollupOptions = config.build.rollupOptions || {};
+    const existingExternal = config.build.rollupOptions.external;
+    config.build.rollupOptions.external = Array.isArray(existingExternal)
+      ? [...existingExternal, /\.node$/]
+      : [/\.node$/];
     const scopeDefines = {
       __STORYBOOK_SCOPE__: JSON.stringify(storybookScope),
       __STORYBOOK_ACTIVE_SCOPES__: JSON.stringify(activeScopeIds),

@@ -1,0 +1,61 @@
+failed to load config from /Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[🧪️vitest.config.ts] failed to load, skipping: ✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript/🧪️vitest.config.ts -> ENOENT: no such file or directory, stat '/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/PRINT-SOLID-HEADING-CHIP-ROW-PARITY/harness/font/anta/Anta-Regular.ttf'
+Error: Failed to resolve import "@semio-tech/animate-present-core" from "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx:56:7
+  22 |    splitFigureGrid,
+  23 |    unionDispositionPositions
+  24 |  } from "@semio-tech/animate-present-core";
+     |          ^
+  25 |  import {
+  26 |    applyElementsSurfaceChrome,
+ ❯ TransformPluginContext._formatLog ../../../../../../../../../node_modules/vite/dist/node/chunks/config.js:29079:43
+ ❯ TransformPluginContext.error ../../../../../../../../../node_modules/vite/dist/node/chunks/config.js:29076:14
+ ❯ normalizeUrl ../../../../../../../../../node_modules/vite/dist/node/chunks/config.js:27199:18
+ ❯ ../../../../../../../../../node_modules/vite/dist/node/chunks/config.js:27257:32
+ ❯ TransformPluginContext.transform ../../../../../../../../../node_modules/vite/dist/node/chunks/config.js:27225:4
+ ❯ EnvironmentPluginContainer.transform ../../../../../../../../../node_modules/vite/dist/node/chunks/config.js:28877:14
+ ❯ loadAndTransform ../../../../../../../../../node_modules/vite/dist/node/chunks/config.js:22746:26
+ ❯ fetchModule ../../../../../../../../../node_modules/vite/dist/node/chunks/config.js:34073:15
+
+Error: Cannot find package '@semio-tech/assets' imported from /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx
+ ❯ ../../../../🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/ð¦ï¸index.tsx:146:1
+ ❯ index.ts:11:1
+      9|
+     10| // #region 🔌️Adapters
+     11| import {
+       | ^
+     12|   AlgorithmApp,
+     13|   WindowKind,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+Error: Cannot find package '@semio-tech/framework-platform-core' imported from /Users/ueli/Documents/semio/compose/client/lib/sketchpad/js/index.ts
+ ❯ index.ts:12:1
+     10| import { gunzipSync } from "fflate";
+     11| import type { Store as JsKitStore } from "@semio-tech/compose-js";
+     12| import {
+       | ^
+     13|   ActionBus,
+     14|   Component,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+Error: Cannot bundle built-in module "bun:sqlite" imported from "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/📜️script.ts". Consider disabling environments.client.noExternal or remove the built-in dependency.
+  Plugin: vite:import-analysis
+  File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/📜️script.ts:87:80
+  54 |  let backboneDatabaseCtor;
+  55 |  async function backboneDatabaseCtorLazy() {
+  56 |    if (!backboneDatabaseCtor) ({ Database: backboneDatabaseCtor } = await import("bun:sqlite"));
+     |                                                                                  ^
+  57 |    return backboneDatabaseCtor;
+  58 |  }
+ ❯ ResolveIdContext._formatLog ../../../../../../../node_modules/vite/dist/node/chunks/config.js:29079:43
+ ❯ ResolveIdContext.error ../../../../../../../node_modules/vite/dist/node/chunks/config.js:29076:14
+ ❯ ResolveIdContext.handler ../../../../../../../node_modules/vite/dist/node/chunks/config.js:32658:13
+ ❯ EnvironmentPluginContainer.resolveId ../../../../../../../node_modules/vite/dist/node/chunks/config.js:28797:56
+ ❯ TransformPluginContext.resolve ../../../../../../../node_modules/vite/dist/node/chunks/config.js:29009:13
+ ❯ normalizeUrl ../../../../../../../node_modules/vite/dist/node/chunks/config.js:27191:22
+ ❯ ../../../../../../../node_modules/vite/dist/node/chunks/config.js:27257:32
+ ❯ TransformPluginContext.transform ../../../../../../../node_modules/vite/dist/node/chunks/config.js:27225:4
+

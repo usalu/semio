@@ -79,7 +79,21 @@ import {
   type NavigationLevel,
   type SearchItemSpec,
 } from "@semio-tech/framework-core";
-import { type RelationshipKind, type WiresFixture, wiresFixtureBoard, wiresKitInstanceId } from "@semio-tech/reasoning-mindmap-wires-react";
+export type RelationshipKind = "owns" | "has" | "is" | "references";
+export type WiresFixture = {
+  schema?: string;
+  source?: { kitPath?: string; kitId?: string; kitName?: string };
+  identities: { identityId: number; label: string; nodeId: string; identityKind: string }[];
+  relationships: { relationshipId: number; sourceIdentityId: number; targetIdentityId: number; kind: RelationshipKind; edgeId: string }[];
+  board?: any;
+  kindCatalogs?: any;
+};
+export function wiresKitInstanceId(kitId: string): string {
+  return `${kitId}:wires`;
+}
+export function wiresFixtureBoard(fixture: WiresFixture): any {
+  return fixture.board ?? fixture;
+}
 //#endregion 🔌️Adapters
 
 //#region 🪁️ComposeUiI18n
@@ -16918,7 +16932,7 @@ if (import.meta.vitest) {
     });
 
     it("emits relative fixtures flattened through puzzle 5d", async () => {
-      const { compose5d, prepareTopologyModel } = await import("@semio-tech/puzzle-5d-react");
+      const { compose5d, prepareTopologyModel } = await import(/* @vite-ignore */ "@semio-tech/puzzle-5d-react");
       const design = {
         id: "d",
         pieces: [

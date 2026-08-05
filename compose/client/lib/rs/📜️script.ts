@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀️ `@semio-tech/compose-rs-wasm` router: `bun ./📜️script.ts <wasm|build|test>`. */
-import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runWasmPackWebBuild, runCargoTestBudgeted, resolveTestLevel, runCmd } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runWasmPackWebBuild, runCargoTestBudgeted, resolveTestLevel, runCmd } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
 
 class WasmScript extends BundleScript {
   run(): void {

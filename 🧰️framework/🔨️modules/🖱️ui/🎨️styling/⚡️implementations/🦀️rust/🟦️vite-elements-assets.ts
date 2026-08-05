@@ -1609,18 +1609,27 @@ export const PLAYGROUND_PLAY_STATIC_ASSETS: readonly Extract<PlaygroundAssetSpec
 export function findWorkspacePackages(repoRoot: string): string[] {
   const packages: string[] = [];
   const scan = (dir: string) => {
-    for (const entry of readdirSync(dir)) {
-      if (entry === "node_modules" || entry === ".git" || entry === ".nx" || entry === "dist" || entry === "target" || entry === "storybook-static") continue;
+    let entries: string[];
+    try {
+      entries = readdirSync(dir);
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (entry === "node_modules" || entry === "dist" || entry === "target" || entry === "storybook-static" || entry.startsWith(".")) continue;
       const full = resolve(dir, entry);
-      if (statSync(full).isDirectory()) {
-        scan(full);
-      } else if (entry === "package.json" && full !== resolve(repoRoot, "package.json")) {
-        try {
+      try {
+        const stat = statSync(full);
+        if (stat.isDirectory()) {
+          scan(full);
+        } else if (entry === "package.json" && full !== resolve(repoRoot, "package.json")) {
           const pkg = JSON.parse(readFileSync(full, "utf8"));
-          if (pkg.name && pkg.name.startsWith("@semio-tech/")) {
+          if (pkg.name && typeof pkg.name === "string" && pkg.name.startsWith("@semio-tech/")) {
             packages.push(pkg.name);
           }
-        } catch {}
+        }
+      } catch {
+        /* ignore statSync or readFileSync errors (e.g. broken symlinks or unreadable files) */
       }
     }
   };
@@ -2026,5 +2035,18 @@ if (import.meta.vitest) {
       20000,
     );
   });
+
+  describe("findWorkspacePackages", () => {
+    it(
+      "discovers workspace packages while skipping hidden dot directories",
+      () => {
+        const pkgs = findWorkspacePackages(repoRoot);
+        expect(pkgs).toContain("@semio-tech/ui-react");
+        expect(pkgs.every((p) => p.startsWith("@semio-tech/"))).toBe(true);
+      },
+      20000,
+    );
+  });
 }
 //#endregion 🔖️ViteElementsAssets
+

@@ -4,7 +4,7 @@ pub use infinite_board_port_directed_dag as dag;
 pub use infinite_canvas as canvas;
 pub use neural_engine as neural;
 
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex};
 
 use dag::{
@@ -2169,17 +2169,35 @@ impl FlowHost {
             self.dag.clear_computing();
             return;
         }
-        self.last_eval_json = json.to_string();
         let outputs = outputs_from_channel_eval_json(json);
         let inputs = inputs_from_channel_eval_json(json);
-        self.outputs = outputs.clone();
-        self.apply_preview_outputs(&outputs);
-        self.apply_export_outputs(&outputs);
+        let channels = EvalChannels { outputs, inputs };
         let tree = self.build_tree();
         let seeds = self.build_seeds();
-        self.previous_snapshot = Some(TreeSnapshot::capture(&tree, &seeds));
-        self.previous_channels = Some(EvalChannels { outputs, inputs });
-        self.dag.clear_computing();
+        let snapshot = TreeSnapshot::capture(&tree, &seeds);
+        let dirty = compute_dirty_set(self.previous_snapshot.as_ref(), &snapshot);
+        let converged = self.probe_eval_outputs_converged(&tree, &seeds, &dirty, &channels);
+        self.last_eval_json = json.to_string();
+        if converged {
+            self.outputs = channels.outputs.clone();
+            self.apply_preview_outputs(&channels.outputs);
+            self.apply_export_outputs(&channels.outputs);
+            self.previous_snapshot = Some(snapshot);
+            self.previous_channels = Some(channels);
+            self.dag.clear_computing();
+        } else {
+            self.refresh_computing_chrome_from_pending();
+        }
+    }
+
+    fn probe_eval_outputs_converged(&self, tree: &Tree, seeds: &HashMap<String, Dictionary>, dirty: &HashSet<String>, channels: &EvalChannels) -> bool {
+        let registry = flow_registry();
+        let evaluator = Evaluator::new(registry.as_ref());
+        let mut probe_never_dispatches = |kind: &str, _: &Dictionary| -> Result<Dictionary, EvalError> { Err(EvalError::InvalidInput(format!("apply_eval_outputs_json probed a dispatch for {kind}"))) };
+        match evaluator.evaluate_channels_budgeted(tree, seeds, &self.kind_infos, &mut probe_never_dispatches, &self.neural_cache, dirty, Some(channels), 0) {
+            Ok(BudgetedEval { remaining, .. }) => remaining.is_empty(),
+            Err(_) => false,
+        }
     }
 
     /// 🧵️ Installs a durable eval baseline from an off-thread driver onto this ephemeral host.
@@ -5948,6 +5966,22 @@ mod tests {
         let pending = fresh.pending_eval_widget_ids();
         assert!(pending.contains(&"add".to_string()));
         assert!(!pending.contains(&"slider".to_string()));
+    }
+
+    #[test]
+    fn apply_eval_outputs_json_skips_baseline_when_outputs_stale_for_seeds() {
+        let mut host = host_with_test_bridge();
+        let stale_eval_json = host.last_eval_json.clone();
+        host.set_slider_value("slider", 9.0);
+        host.apply_eval_outputs_json(&stale_eval_json);
+        let pending = host.pending_eval_widget_ids();
+        assert!(pending.contains(&"add".to_string()), "stale channel outputs must not converge the baseline after a seed change");
+        assert!(!pending.contains(&"slider".to_string()));
+        host.evaluate_internal();
+        assert_eq!(host.preview_text(), "9");
+        let fresh_eval_json = host.last_eval_json.clone();
+        host.apply_eval_outputs_json(&fresh_eval_json);
+        assert!(host.pending_eval_widget_ids().is_empty(), "fresh eval for the current seeds must establish a converged baseline");
     }
 
     #[test]

@@ -20,6 +20,29 @@ export type PluginRegistryEntry = {
   readonly host?: PluginHostMetadata;
 };
 
+//#region 🏛️DiscoveryContract
+/** @emoji 🧭️ Accepts both the current 7-crate-per-app plugin shape and the future one-crate-per-plugin
+ * taxonomy shape (`📦️packages/🦀️rust/Cargo.toml` + `[package.metadata.semio] role = "…"`) while
+ * migration is in flight — see the discovery contract in master ticket
+ * `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`. A plugin discoverable under both
+ * shapes at once is "in-flight", not an error. Flipped off in the W4 finalization wave once every
+ * plugin/framework-module-family has migrated, at which point the legacy regexes are deleted outright. */
+const LEGACY_LAYOUT_TOLERANT = true;
+
+/** @emoji 🎛️ Single source of truth for the taxonomy tree's apps-container segment name, so anything
+ * deriving an app-root path (the constitutional gate, example discovery) shares one literal instead of
+ * duplicating it independently and drifting apart if the segment is ever renamed. */
+const APPS_DIRNAME = "🎛️apps";
+
+/** @emoji 🏛️ True when a manifest's `[package.metadata.semio]` block declares `role = "<role>"` — the
+ * identity check for the new one-crate-per-plugin/framework-module-family taxonomy contract. */
+function hasSemioRole(text: string, role: "plugin" | "framework"): boolean {
+  const block = tomlBlocksAfterHeader(text.split("\n"), (line) => line === "[package.metadata.semio]")[0];
+  if (!block) return false;
+  return new RegExp(`^role\\s*=\\s*"${role}"\\s*$`, "m").test(block.join("\n"));
+}
+//#endregion 🏛️DiscoveryContract
+
 function findPluginCargoFiles(root: string): string[] {
   const out: string[] = [];
   function walk(dir: string) {
@@ -45,6 +68,19 @@ function findPluginCargoFiles(root: string): string[] {
         const isPluginBundleCrate = /\/✏️s\/🔌️plugins\/[^/]+\/🛂️manifest\/🗿️artifact\/⚡️implementations\/🦀️rust\/Cargo\.toml$/.test(path);
         if (isModuleCrate || isExtensionCrate || isPluginBundleCrate) {
           out.push(path);
+          continue;
+        }
+        if (LEGACY_LAYOUT_TOLERANT) {
+          // 🏛️ New taxonomy contract crates, identified by `[package.metadata.semio] role` rather than
+          // by path shape. Framework crates are discovered the same way but never carry
+          // `[package.metadata.component]`, so `tryParsePluginCargo` drops them below — matching how
+          // ordinary (non-plugin) module crates already get silently filtered out of the registry today.
+          const isNewPluginCrate = /\/✏️s\/🔌️plugins\/[^/]+\/📦️packages\/🦀️rust\/Cargo\.toml$/.test(path);
+          const isNewFrameworkCrate = !isNewPluginCrate && /\/🧰️framework\/.*\/📦️packages\/🦀️rust\/Cargo\.toml$/.test(path);
+          if (isNewPluginCrate || isNewFrameworkCrate) {
+            const text = readFileSync(path, "utf8");
+            if (hasSemioRole(text, isNewPluginCrate ? "plugin" : "framework")) out.push(path);
+          }
         }
       }
     }
@@ -201,7 +237,10 @@ function discoverExamplesForPlayground(repoRoot: string, cratePath: string, plug
   if (existsSync(rootDir)) return idsIn(rootDir);
   if (variant.startsWith(pluginId) && variant.length > pluginId.length) {
     const suffix = variant.slice(pluginId.length);
-    const dir = join(repoRoot, techRoot, "🎛️apps", suffix, "📚️examples");
+    // 🎛️ Uses the shared `APPS_DIRNAME` constant (not an independently hardcoded literal) so this
+    // keeps resolving correctly once a plugin's crate path collapses to one crate per plugin — the
+    // apps-container segment name is single-sourced against the constitutional gate below.
+    const dir = join(repoRoot, techRoot, APPS_DIRNAME, suffix, "📚️examples");
     if (existsSync(dir)) return idsIn(dir);
   }
   return [];
@@ -639,7 +678,7 @@ function validateConstitutionalCrates(repoRoot: string): string[] {
   const pluginRoot = join(repoRoot, "✏️s", "🔌️plugins");
   if (!existsSync(pluginRoot)) return errors;
   for (const pluginName of readdirSync(pluginRoot).sort()) {
-    const appRoot = join(pluginRoot, pluginName, "🎛️apps");
+    const appRoot = join(pluginRoot, pluginName, APPS_DIRNAME);
     if (!existsSync(appRoot) || !statSync(appRoot).isDirectory()) continue;
     const isFlatSingleApp = existsSync(join(appRoot, "⚡️implementations", "🦀️rust", "Cargo.toml"));
     const appDirs = isFlatSingleApp ? [{ label: pluginName, dir: appRoot }] : readdirSync(appRoot)
@@ -661,19 +700,151 @@ function validateConstitutionalCrates(repoRoot: string): string[] {
 }
 //#endregion 🏛️ConstitutionalCrateGate
 
-/** @emoji 🧪️ Verifies that representative standalone and studio launches expand to complete sessions. */
+//#region 🗿️TaxonomyValidator
+/** @emoji 🗿️ Every artifact node must carry all five taxonomy component slots (see the discovery
+ * contract in master ticket `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`). */
+const TAXONOMY_ARTIFACT_COMPONENTS = ["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr"] as const;
+/** @emoji 🪟️ A window dir may only contain these children, each itself a `🦀️component.rs` leaf. */
+const TAXONOMY_WINDOW_CHILDREN = new Set(["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options"]);
+const TAXONOMY_LEAF_FILENAME = "🦀️component.rs";
+
+/** @emoji 🧭️ Plugin roots discovered via the *new* taxonomy contract (`📦️packages/🦀️rust/Cargo.toml`
+ * with `role = "plugin"`) — distinct from `findPluginCargoFiles`, which also matches the legacy
+ * 7-crate shape. Empty until a plugin has migrated (W1+); the taxonomy validator below is a no-op
+ * until then. */
+function findNewContractPluginRoots(repoRoot: string): { pluginId: string; pluginRoot: string }[] {
+  const roots: { pluginId: string; pluginRoot: string }[] = [];
+  const pluginsDir = join(repoRoot, "✏️s", "🔌️plugins");
+  if (!existsSync(pluginsDir)) return roots;
+  for (const pluginId of readdirSync(pluginsDir).sort()) {
+    const manifestPath = join(pluginsDir, pluginId, "📦️packages", "🦀️rust", "Cargo.toml");
+    if (!existsSync(manifestPath)) continue;
+    if (hasSemioRole(readFileSync(manifestPath, "utf8"), "plugin")) roots.push({ pluginId, pluginRoot: join(pluginsDir, pluginId) });
+  }
+  return roots;
+}
+
+function listDirs(dir: string): string[] {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir).filter((name) => statSync(join(dir, name)).isDirectory());
+}
+
+/** @emoji 🚦️ Warn-only structural audit of one migrated plugin's taxonomy tree. Not wired to fail
+ * `check` yet — every plugin is still on the legacy shape, so this only ever runs against
+ * `findNewContractPluginRoots` results, which are empty until W1+. Promoted to a hard error in W4
+ * finalization once every plugin has moved (replaces `validateConstitutionalCrates` at that point). */
+function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
+  const findings: string[] = [];
+
+  const artifactsDir = join(pluginRoot, "🗿️artifacts");
+  for (const artifact of listDirs(artifactsDir)) {
+    for (const component of TAXONOMY_ARTIFACT_COMPONENTS) {
+      if (!existsSync(join(artifactsDir, artifact, component, TAXONOMY_LEAF_FILENAME))) {
+        findings.push(`${pluginId}: artifact "${artifact}" is missing ${component}/${TAXONOMY_LEAF_FILENAME}`);
+      }
+    }
+  }
+
+  // 🪟️ windows live under apps/<app>/modes/<mode>/windows/<w> and may only contain the fixed child set.
+  const appsDir = join(pluginRoot, APPS_DIRNAME);
+  for (const app of listDirs(appsDir)) {
+    const modesDir = join(appsDir, app, "🎭️modes");
+    for (const mode of listDirs(modesDir)) {
+      const windowsDir = join(modesDir, mode, "🪟️windows");
+      for (const w of listDirs(windowsDir)) {
+        for (const child of listDirs(join(windowsDir, w))) {
+          if (!TAXONOMY_WINDOW_CHILDREN.has(child)) {
+            findings.push(`${pluginId}: window "${app}/${mode}/${w}" has unexpected child "${child}" (expected one of ${[...TAXONOMY_WINDOW_CHILDREN].join(", ")})`);
+          }
+        }
+      }
+    }
+  }
+
+  // 🦀️ collect every actual component.rs on disk (for the lib.rs cross-check below) and flag any
+  // taxonomy leaf file that isn't literally named `component.rs`.
+  const componentFiles: string[] = [];
+  const taxonomyLeafParents = new Set<string>([...TAXONOMY_ARTIFACT_COMPONENTS, ...TAXONOMY_WINDOW_CHILDREN]);
+  function walkPluginTree(dir: string) {
+    for (const name of readdirSync(dir)) {
+      if (name.startsWith(".") || name === "target" || name === "node_modules") continue;
+      const path = join(dir, name);
+      if (statSync(path).isDirectory()) {
+        walkPluginTree(path);
+        continue;
+      }
+      if (!name.endsWith(".rs")) continue;
+      if (name === TAXONOMY_LEAF_FILENAME) {
+        componentFiles.push(path);
+      } else if (taxonomyLeafParents.has(dir.split("/").pop() ?? "")) {
+        findings.push(`${pluginId}: taxonomy leaf file must be named ${TAXONOMY_LEAF_FILENAME}, found ${relative(pluginRoot, path)}`);
+      }
+    }
+  }
+  walkPluginTree(pluginRoot);
+
+  // 📦️ lib.rs mod/#[path] cross-check: every component.rs on disk must be declared, and no declared
+  // #[path] target may dangle (point at a file that doesn't exist) — reported as separate findings.
+  const libRsPath = join(pluginRoot, "📦️lib.rs");
+  if (existsSync(libRsPath)) {
+    const libText = readFileSync(libRsPath, "utf8");
+    const declaredPaths = [...libText.matchAll(/#\[path\s*=\s*"([^"]+)"\]/g)].map((m) => m[1]);
+    const declaredAbs = new Set(declaredPaths.map((p) => join(pluginRoot, p)));
+    for (const file of componentFiles) {
+      if (!declaredAbs.has(file)) findings.push(`${pluginId}: ${relative(pluginRoot, file)} is not declared by any #[path] in 📦️lib.rs`);
+    }
+    for (const p of declaredPaths) {
+      if (p.endsWith(".rs") && !existsSync(join(pluginRoot, p))) findings.push(`${pluginId}: 📦️lib.rs declares #[path = "${p}"] but the file does not exist on disk`);
+    }
+  } else {
+    findings.push(`${pluginId}: missing 📦️lib.rs at plugin root`);
+  }
+
+  // 🚫️ no `📡️protocol` path segment may remain under a migrated plugin (renamed to `📡️spr`).
+  function containsProtocolSegment(dir: string): boolean {
+    for (const name of readdirSync(dir)) {
+      if (name.startsWith(".") || name === "target" || name === "node_modules") continue;
+      const path = join(dir, name);
+      if (!statSync(path).isDirectory()) continue;
+      if (name === "📡️protocol" || containsProtocolSegment(path)) return true;
+    }
+    return false;
+  }
+  if (containsProtocolSegment(pluginRoot)) findings.push(`${pluginId}: found a "📡️protocol" path segment under the plugin dir (renamed to 📡️spr)`);
+
+  return findings;
+}
+//#endregion 🗿️TaxonomyValidator
+
+/** @emoji 🧪️ Verifies that representative standalone and studio launches expand to complete sessions,
+ * asserting shape rather than hardcoded plugin-id lists/counts so a plugin's crate-name change (or the
+ * crate-consolidation restructure itself) can't silently break this check. */
 function validatePlaygroundSessions(repoRoot: string): string[] {
   const errors: string[] = [];
-  const standalone = buildPlaygroundSession("playbook", repoRoot);
+
+  const standaloneVariant = "playbook";
+  const standalone = buildPlaygroundSession(standaloneVariant, repoRoot);
   const standalonePluginIds = standalone.plugins.map((entry) => entry.pluginId).sort();
-  if (standalone.registryPluginId !== "playbook" || standalone.studioMode || standalonePluginIds.join(",") !== "playbook,playbook-module-procedural") {
-    errors.push(`playbook session resolved unexpectedly (${JSON.stringify({ registryPluginId: standalone.registryPluginId, studioMode: standalone.studioMode, pluginIds: standalonePluginIds })})`);
+  // 🎯️ "standalone session = target plugin plus every plugin whose `contributes` intersects the
+  // target's `consumes`" — exactly what `resolveRegistryPluginIdsForFilter` computes, so re-derive the
+  // expectation instead of asserting a hardcoded id list.
+  const expectedStandaloneIds = [...resolveRegistryPluginIdsForFilter(standaloneVariant)].sort();
+  const expectedRegistryPluginId = resolveRegistryPluginIdForFilter(standaloneVariant, repoRoot);
+  if (standalone.registryPluginId !== expectedRegistryPluginId || standalone.studioMode || standalonePluginIds.join(",") !== expectedStandaloneIds.join(",")) {
+    errors.push(`standalone session "${standaloneVariant}" resolved unexpectedly (${JSON.stringify({ registryPluginId: standalone.registryPluginId, expectedRegistryPluginId, studioMode: standalone.studioMode, pluginIds: standalonePluginIds, expectedPluginIds: expectedStandaloneIds })})`);
   }
-  const studio = buildPlaygroundSession("s", repoRoot);
-  if (!studio.studioMode || studio.host?.landingAppId !== "home" || studio.host.hostAppId !== "studio" || studio.plugins.length <= 10) {
-    errors.push(`studio session resolved unexpectedly (${JSON.stringify({ studioMode: studio.studioMode, host: studio.host, pluginCount: studio.plugins.length })})`);
+
+  const studioVariant = "s";
+  const studio = buildPlaygroundSession(studioVariant, repoRoot);
+  // 🎯️ "studio/host session has landingAppId==='home', hostAppId==='studio', and includes every
+  // registry plugin" — `buildPlaygroundSession` expands studio sessions with no filter, so the exact
+  // registry plugin count is the structural expectation, not a magic threshold.
+  const totalRegistryPlugins = generatePluginRegistry(repoRoot).length;
+  if (!studio.studioMode || studio.host?.landingAppId !== "home" || studio.host.hostAppId !== "studio" || studio.plugins.length !== totalRegistryPlugins) {
+    errors.push(`studio session "${studioVariant}" resolved unexpectedly (${JSON.stringify({ studioMode: studio.studioMode, host: studio.host, pluginCount: studio.plugins.length, totalRegistryPlugins })})`);
   }
-  if (!isStudioPluginFilter("s", repoRoot) || isStudioPluginFilter("puzzle3d", repoRoot)) {
+
+  if (!isStudioPluginFilter(studioVariant, repoRoot) || isStudioPluginFilter(standaloneVariant, repoRoot)) {
     errors.push("studio filter metadata does not distinguish host and standalone playgrounds");
   }
   return errors;
@@ -724,6 +895,16 @@ class CheckScript extends BundleScript {
       console.error("plugin registry catalog has playground validation errors:");
       for (const violation of violations) console.error(`  - ${violation}`);
       process.exit(1);
+    }
+    // 🗿️ Taxonomy tree audit for plugins already discovered via the new one-crate-per-plugin contract
+    // (see `findNewContractPluginRoots`). Warn-only during migration — promoted to a hard failure in
+    // W4 finalization once every plugin has moved off the legacy 7-crate shape.
+    if (LEGACY_LAYOUT_TOLERANT) {
+      const taxonomyFindings = findNewContractPluginRoots(repoRoot).flatMap(({ pluginId, pluginRoot }) => validateTaxonomyTree(pluginRoot, pluginId));
+      if (taxonomyFindings.length > 0) {
+        console.warn("plugin taxonomy tree findings (in-flight plugins — not failing the gate yet):");
+        for (const finding of taxonomyFindings) console.warn(`  - ${finding}`);
+      }
     }
     console.log(`plugin registry catalog is fresh (${entries.length} plugin crates, ${playgrounds.length} playgrounds).`);
   }

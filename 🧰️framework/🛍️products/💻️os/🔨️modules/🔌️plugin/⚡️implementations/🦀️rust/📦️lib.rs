@@ -127,6 +127,14 @@ pub mod app {
         pub engagement: Option<WindowEngagement>,
         pub actions: Vec<ActionRef>,
         pub utilities: Vec<UtilityRef>,
+        /// 🧱️ Carried verbatim from `.window_kind_def(WindowKindDefinition)`; the scalar-arg constructors
+        /// (`.window_kind()`/`.window_kind_with_engagement()`) always leave these `None`/empty, matching
+        /// `build_definition`'s prior hardcoded defaults for those paths.
+        pub params_schema: Option<String>,
+        pub document_projection_schema: Option<String>,
+        pub input_event_schema: Option<String>,
+        pub output_schema: Option<String>,
+        pub capabilities: Vec<CapabilityRequirement>,
     }
 
     /// 🌳️ A leaf carries `body_key` (its rendered panel); a branch carries `children` (the tab row shown below it) — exactly one of the two.
@@ -173,6 +181,42 @@ pub mod app {
     /// 🌳️ Converts one plugin-declared `PanelTabSpec` (recursively) into a `PanelTabDefinition`.
     fn panel_tab_spec_to_definition(tab: PanelTabSpec) -> PanelTabDefinition {
         PanelTabDefinition { kind: tab.kind, label: tab.label, group: tab.group, body_key: tab.body_key, children: tab.children.into_iter().map(panel_tab_spec_to_definition).collect() }
+    }
+
+    /// 🔁️ Inverse of `ModeSpec` -> `ModeDefinition` in `build_definition` — lets `.mode_def()` accept an
+    /// already-built `ModeDefinition` (e.g. from a taxonomy `🎭️modes/<mode>/🦀️component.rs` file) and
+    /// store it through the same `ModeSpec` pipeline as the scalar `.mode(...)` args. Fields line up 1:1.
+    fn mode_definition_to_spec(def: ModeDefinition) -> ModeSpec {
+        ModeSpec { id: def.id, label: def.label, icon_id: def.icon_id, tools: def.tools, layout_id: def.layout_id, commands: def.commands }
+    }
+
+    /// 🔁️ Inverse of `WindowKindSpec` -> `WindowKindDefinition` in `build_definition` — unpacks
+    /// `WindowOptions` back into `measures`/`engagement` so a full `WindowKindDefinition` can be pushed
+    /// through the same `WindowKindSpec` pipeline as `.window_kind()`/`.window_kind_with_engagement()`.
+    fn window_kind_definition_to_spec(def: WindowKindDefinition) -> WindowKindSpec {
+        WindowKindSpec {
+            id: def.id,
+            label: def.label,
+            body_key: def.body_key,
+            surface_kind: def.surface_kind,
+            icon_id: def.icon_id,
+            measures: def.options.measures,
+            engagement: def.options.engagement.as_option().cloned(),
+            actions: def.actions,
+            utilities: def.utilities,
+            params_schema: def.params_schema,
+            document_projection_schema: def.document_projection_schema,
+            input_event_schema: def.input_event_schema,
+            output_schema: def.output_schema,
+            capabilities: def.capabilities,
+        }
+    }
+
+    /// 🔁️ Inverse of `panel_tab_spec_to_definition` — lets `.panel_tab_def()` accept an already-built
+    /// (possibly nested) `PanelTabDefinition` and store it through the same `PanelTabSpec` pipeline as
+    /// `.panel_tab()`/`.panel_tab_tree()`.
+    fn panel_tab_definition_to_spec(def: PanelTabDefinition) -> PanelTabSpec {
+        PanelTabSpec { kind: def.kind, label: def.label, group: def.group, body_key: def.body_key, children: def.children.into_iter().map(panel_tab_definition_to_spec).collect() }
     }
 
     /// 📝️ Asserts every `ActionArgDef` in `args` (belonging to `owner`, e.g. an action or dialog id) has
@@ -446,7 +490,22 @@ pub mod app {
         }
 
         pub fn window_kind(mut self, id: impl Into<String>, label: impl Into<LocalizedLabel>, body_key: impl Into<String>, surface_kind: SurfaceKind, icon_id: impl Into<IconName>) -> Self {
-            self.window_kinds.push(WindowKindSpec { id: id.into(), label: label.into(), body_key: body_key.into(), surface_kind, icon_id: icon_id.into(), measures: Vec::new(), engagement: None, actions: Vec::new(), utilities: Vec::new() });
+            self.window_kinds.push(WindowKindSpec {
+                id: id.into(),
+                label: label.into(),
+                body_key: body_key.into(),
+                surface_kind,
+                icon_id: icon_id.into(),
+                measures: Vec::new(),
+                engagement: None,
+                actions: Vec::new(),
+                utilities: Vec::new(),
+                params_schema: None,
+                document_projection_schema: None,
+                input_event_schema: None,
+                output_schema: None,
+                capabilities: Vec::new(),
+            });
             self
         }
 
@@ -461,7 +520,36 @@ pub mod app {
                 engagement: Some(engagement),
                 actions: Vec::new(),
                 utilities: Vec::new(),
+                params_schema: None,
+                document_projection_schema: None,
+                input_event_schema: None,
+                output_schema: None,
+                capabilities: Vec::new(),
             });
+            self
+        }
+
+        /// @emoji 🧱️ Declares a mode from an already-built `ModeDefinition` — e.g. assembled by a taxonomy
+        /// `🎭️modes/<mode>/🦀️component.rs` component file instead of the scalar `.mode(...)` args. Stored
+        /// through the same `ModeSpec` pipeline as `.mode()`, so `.mode_commands()`/`.mode_tools()`/
+        /// `.mode_layout()` still apply post-hoc and `build_definition`'s validation runs unchanged.
+        pub fn mode_def(mut self, def: ModeDefinition) -> Self {
+            self.modes.push(mode_definition_to_spec(def));
+            self
+        }
+
+        /// @emoji 🧱️ Declares a window kind from an already-built `WindowKindDefinition` — mirrors
+        /// `.mode_def()`. `.window_kind_measures()`/`.window_kind_actions()`/`.window_kind_utilities()`
+        /// still apply post-hoc.
+        pub fn window_kind_def(mut self, def: WindowKindDefinition) -> Self {
+            self.window_kinds.push(window_kind_definition_to_spec(def));
+            self
+        }
+
+        /// @emoji 🧱️ Declares a (possibly nested) panel tab tree from an already-built `PanelTabDefinition`
+        /// — mirrors `.panel_tab_tree()`, converting recursively through the same `PanelTabSpec` pipeline.
+        pub fn panel_tab_def(mut self, def: PanelTabDefinition) -> Self {
+            self.panel_tabs.push(panel_tab_definition_to_spec(def));
             self
         }
 
@@ -885,11 +973,11 @@ pub mod app {
                             options: WindowOptions { measures: window.measures, engagement: window.engagement.map_or(WindowEngagementSlot::None, WindowEngagementSlot::Some) },
                             actions: window.actions,
                             utilities: window.utilities,
-                            params_schema: None,
-                            document_projection_schema: None,
-                            input_event_schema: None,
-                            output_schema: None,
-                            capabilities: vec![],
+                            params_schema: window.params_schema,
+                            document_projection_schema: window.document_projection_schema,
+                            input_event_schema: window.input_event_schema,
+                            output_schema: window.output_schema,
+                            capabilities: window.capabilities,
                         })
                         .collect::<Vec<_>>(),
                 )
@@ -2780,6 +2868,288 @@ pub mod app {
         }
     };
 }
+
+    //#region 🔖️AppCommands
+    /// @emoji 🎮️ Generates a closed per-app `DocumentApp::Command` enum from `"id" => module::Payload`
+    /// rows — the taxonomy-decomposed replacement for a hand-written
+    /// `#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)] pub enum XCommand { #[dsl(key = "...")] Variant { .. }, .. }`
+    /// (see e.g. `flow_protocol::FlowCommand`, `dag_protocol::DagCommand`, `shooting_protocol::ShootingCommand`
+    /// — every hand-written Command enum in the repo already follows this exact derive/attribute shape, none
+    /// use `#[serde(tag = ...)]`; the real wire codec is `dsl::DslOps`'s generated `OpText`/`OpBinary`, keyed
+    /// by each variant's `#[dsl(key = ..)]` string).
+    ///
+    /// Each row becomes a single-field tuple variant `$Payload($module::$Payload)`. This is deliberate, not
+    /// incidental: `dsl::DslOps`'s codegen special-cases single-field tuple variants (see
+    /// `dsl_variants_codegen` in the `dsl-derive` crate) to delegate ENTIRELY to the inner type's own
+    /// `DslField` impl — its `RecordSpec` IS the payload type's, not a wrapper with one positional field — so
+    /// a payload struct declared with `#[derive(dsl::DslRecord)]` (its own fields, no extra nesting) prints/
+    /// parses byte-identically whether reached through this enum or used standalone. Concretely: migrating a
+    /// hand-written `AddWidget { kind: String, x: Option<f64> }` struct-variant into a
+    /// `🎮️commands/add_widget/🦀️component.rs` payload `struct AddWidget { kind: String, x: Option<f64> }`
+    /// (deriving `DslRecord`) plus `AddWidget(add_widget::AddWidget)` here reproduces the exact same
+    /// `OpText`/`OpBinary` wire bytes for the same `#[dsl(key = "...")]` string — the migration is pure code
+    /// motion, not a wire-format change.
+    ///
+    /// Expands to:
+    /// - the enum itself (`$vis enum $Name`), deriving `Clone, Debug, PartialEq, ::serde::Serialize,
+    ///   ::serde::Deserialize, dsl::DslOps` — satisfies `DocumentApp::Command: protocol::OpBinary + Send`
+    ///   directly. `dsl`/`serde` are referenced unqualified/fully-qualified (not via `$crate`, since they are
+    ///   NOT the defining crate) — every crate that hosts `🎮️commands/*` payload modules already depends on
+    ///   `dsl` directly (payloads themselves derive `dsl::DslRecord`), matching the convention every existing
+    ///   hand-written `*_protocol` crate already follows.
+    /// - `command_id(&self) -> &'static str`, returning each row's `$id` — mirrors the per-command labeling
+    ///   `DocumentApp::command_id` needs (today hand-rolled as a parallel `match` per app, e.g.
+    ///   `TestApp::command_id` above).
+    /// - `dispatch(&self, doc: &DocumentView<'_, $Projection>, cfg: &ConfigView<'_, $Config>) -> Result<Emit<$Operation, $ConfigOperation>, Fault>`,
+    ///   matching each variant to `$module::handle(payload, doc, cfg)` — `$Projection`/`$Operation`/`$Config`/
+    ///   `$ConfigOperation` are the four types declared after `for` in the invocation (see below).
+    ///
+    /// # 🔖️DispatchDesignChoice
+    /// The macro invocation names the app's four `DocumentApp` associated types up front —
+    /// `enum $Name for $Projection, $Operation, $Config, $ConfigOperation { .. }` — so `dispatch` can be a
+    /// perfectly ordinary, CONCRETE (non-generic) inherent method. This was chosen over the alternative
+    /// tried first: a `dispatch<P, O, C, CO>` generic over all four, inferring them from the call site. That
+    /// alternative does not type-check, and the `app_commands_tests` module below hit exactly this in
+    /// practice — every real `🎮️commands/<command>/🦀️component.rs::handle` fn will be written against ONE
+    /// app's concrete `Projection`/`Operation`/`Config`/`ConfigOperation` (the same way
+    /// `flow_protocol`/`dag_protocol`/... payload handlers are today), never generically; a generic
+    /// `dispatch<P,O,C,CO>` body calling a concrete-typed `$module::handle` fails to unify (`P` is not
+    /// literally `FlowFixture`, even though there is only ever one real instantiation). Naming the four
+    /// types once, at the `app_commands!` invocation, costs one extra clause per app but produces a
+    /// `dispatch` whose signature matches `DocumentApp::handle` exactly — so an app's whole `handle` impl
+    /// collapses to one line, `command.dispatch(doc, cfg)`. A per-command closure/trait-object API (the
+    /// plan's other suggested option) would force hand-rolling one closure per row at adoption time instead
+    /// — strictly more ceremony than stating the four types once.
+    ///
+    /// # 🔖️KeyedAndContextualForms
+    /// Two further arms exist, both discovered as hard requirements by the W1 🌊️flow pilot (the first real
+    /// consumer) and additive to the plain arm above, which is unchanged:
+    ///
+    /// 1. **Keyed rows** — `"commandId" as "wire-key" => module::Payload`. Every hand-written Command enum in
+    ///    the repo keys its wire form in kebab-case (`#[dsl(key = "add-widget")]`) while `command_id()` must
+    ///    return the camelCase manifest ACTION id (`"addWidget"`) the app declared via `.operation()`/
+    ///    `.view_action()`. The plain arm conflates the two into one literal, which silently rewrites the wire
+    ///    format of any existing app it is applied to. Stating both keeps a migration pure code motion.
+    /// 2. **A dispatch context** — `…, $ConfigOperation:ty, ctx = $Ctx:ty { … }` adds a fourth
+    ///    `ctx: &mut $Ctx` parameter to `dispatch` and to every row's `$module::handle`. Apps whose handlers
+    ///    need app-struct state that is deliberately NOT in the document or the config (flow's
+    ///    `Mutex<FlowEvalSession>` off-main-thread eval driver, reached once per dispatch and threaded through
+    ///    every handler) have nowhere else to put it — `handle(&self, …)` on `DocumentApp` has `&self`, but the
+    ///    macro-generated `dispatch` does not.
+    ///
+    /// The two are independent; combine them or use `ctx = ()` when only the keys differ.
+    #[macro_export]
+    macro_rules! app_commands {
+    ($vis:vis enum $Name:ident for $Projection:ty, $Operation:ty, $Config:ty, $ConfigOperation:ty, ctx = $Ctx:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
+        #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslOps)]
+        $vis enum $Name {
+            $(
+                #[dsl(key = $key)]
+                $Payload($module::$Payload),
+            )*
+        }
+
+        impl $Name {
+            /// 🏷️ Each row's `$id` — the manifest action id, distinct from the `$key` wire keyword.
+            pub fn command_id(&self) -> &'static str {
+                match self {
+                    $(Self::$Payload(_) => $id,)*
+                }
+            }
+
+            /// 🎯️ Matches each variant to `$module::handle(payload, doc, cfg, ctx)` — see
+            /// `🔖️KeyedAndContextualForms` for why `ctx` exists.
+            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Projection>, cfg: &$crate::ConfigView<'_, $Config>, ctx: &mut $Ctx) -> Result<$crate::Emit<$Operation, $ConfigOperation>, $crate::Fault> {
+                match self {
+                    $(Self::$Payload(payload) => $module::handle(payload, doc, cfg, ctx),)*
+                }
+            }
+        }
+    };
+
+    ($vis:vis enum $Name:ident for $Projection:ty, $Operation:ty, $Config:ty, $ConfigOperation:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
+        #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslOps)]
+        $vis enum $Name {
+            $(
+                #[dsl(key = $key)]
+                $Payload($module::$Payload),
+            )*
+        }
+
+        impl $Name {
+            /// 🏷️ Each row's `$id` — the manifest action id, distinct from the `$key` wire keyword.
+            pub fn command_id(&self) -> &'static str {
+                match self {
+                    $(Self::$Payload(_) => $id,)*
+                }
+            }
+
+            /// 🎯️ Matches each variant to `$module::handle(payload, doc, cfg)`.
+            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Projection>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Operation, $ConfigOperation>, $crate::Fault> {
+                match self {
+                    $(Self::$Payload(payload) => $module::handle(payload, doc, cfg),)*
+                }
+            }
+        }
+    };
+
+    ($vis:vis enum $Name:ident for $Projection:ty, $Operation:ty, $Config:ty, $ConfigOperation:ty { $($id:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
+        #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslOps)]
+        $vis enum $Name {
+            $(
+                #[dsl(key = $id)]
+                $Payload($module::$Payload),
+            )*
+        }
+
+        impl $Name {
+            /// 🏷️ Each row's `$id` — mirrors `DocumentApp::command_id`'s per-command labeling need.
+            pub fn command_id(&self) -> &'static str {
+                match self {
+                    $(Self::$Payload(_) => $id,)*
+                }
+            }
+
+            /// 🎯️ Matches each variant to `$module::handle(payload, doc, cfg)` — see `🔖️DispatchDesignChoice`
+            /// above for why this is concrete (not generic) in the app's own associated types.
+            pub fn dispatch(&self, doc: &$crate::DocumentView<'_, $Projection>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Operation, $ConfigOperation>, $crate::Fault> {
+                match self {
+                    $(Self::$Payload(payload) => $module::handle(payload, doc, cfg),)*
+                }
+            }
+        }
+    };
+}
+
+    /// 🧪️ Minimal end-to-end proof for `app_commands!` — no real plugin adopts it yet (payload modules
+    /// land per-command in W1/W2), so this defines 2 trivial fake payload modules inline and exercises the
+    /// macro's full generated surface: enum construction, `command_id()`, `dispatch()`, and the
+    /// `dsl::DslOps` wire round trip (`OpText`/`OpBinary`) via the same `store::test_support` helper every
+    /// real `*_protocol` crate's own Command enum tests use (see e.g. `flow_protocol`'s
+    /// `flow_command_text_binary_round_trips_document_mutating_variants`).
+    #[cfg(test)]
+    mod app_commands_tests {
+        use crate::{ConfigView, DocumentView, Emit, HistoryView, NoConfigOperation};
+
+        mod add_widget {
+            #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslRecord)]
+            pub struct AddWidget {
+                pub kind: String,
+                pub x: f64,
+            }
+
+            /// 🎯️ Mirrors the shape a real `🎮️commands/add_widget/🦀️component.rs::handle` will have —
+            /// `(payload, doc, cfg) -> Result<Emit<Operation, ConfigOperation>, Fault>`.
+            pub fn handle(payload: &AddWidget, _doc: &crate::DocumentView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>) -> Result<crate::Emit<String, crate::NoConfigOperation>, crate::Fault> {
+                Ok(crate::Emit::operations(vec![format!("add:{}:{}", payload.kind, payload.x)]))
+            }
+        }
+
+        mod delete_selection {
+            #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslRecord)]
+            pub struct DeleteSelection {
+                pub id: String,
+            }
+
+            pub fn handle(payload: &DeleteSelection, _doc: &crate::DocumentView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>) -> Result<crate::Emit<String, crate::NoConfigOperation>, crate::Fault> {
+                Ok(crate::Emit::operations(vec![format!("delete:{}", payload.id)]))
+            }
+        }
+
+        app_commands! {
+            pub enum TestFakeCommand for u32, String, (), NoConfigOperation {
+                "addWidget" => add_widget::AddWidget,
+                "deleteSelection" => delete_selection::DeleteSelection,
+            }
+        }
+
+        #[test]
+        fn command_id_matches_declared_row() {
+            assert_eq!(TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), x: 1.5 }).command_id(), "addWidget");
+            assert_eq!(TestFakeCommand::DeleteSelection(delete_selection::DeleteSelection { id: "n1".into() }).command_id(), "deleteSelection");
+        }
+
+        #[test]
+        fn dispatch_forwards_to_the_payload_modules_own_handle() {
+            let projection = 0u32;
+            let config = ();
+            let doc = DocumentView { projection: &projection, history: &HistoryView::empty() };
+            let cfg = ConfigView { projection: &config };
+
+            let emit: Emit<String, NoConfigOperation> = TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), x: 1.5 }).dispatch(&doc, &cfg).expect("dispatch add-widget");
+            assert_eq!(emit.document_operations, vec!["add:inputSlider:1.5".to_string()]);
+
+            let emit: Emit<String, NoConfigOperation> = TestFakeCommand::DeleteSelection(delete_selection::DeleteSelection { id: "n1".into() }).dispatch(&doc, &cfg).expect("dispatch delete-selection");
+            assert_eq!(emit.document_operations, vec!["delete:n1".to_string()]);
+        }
+
+        #[test]
+        fn wire_round_trips_through_dsl_ops_op_text_and_op_binary() {
+            store::test_support::assert_op_text_binary_equivalence(&TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "neuron".into(), x: 2.0 }));
+            store::test_support::assert_op_text_binary_equivalence(&TestFakeCommand::DeleteSelection(delete_selection::DeleteSelection { id: "n1".into() }));
+        }
+
+        mod keyed {
+            #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslRecord)]
+            pub struct AddWidget {
+                pub kind: String,
+            }
+
+            pub fn handle(payload: &AddWidget, _doc: &crate::DocumentView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>, ctx: &mut u32) -> Result<crate::Emit<String, crate::NoConfigOperation>, crate::Fault> {
+                *ctx += 1;
+                Ok(crate::Emit::operations(vec![format!("add:{}:{ctx}", payload.kind)]))
+            }
+        }
+
+        mod keyed_unit {
+            #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslRecord)]
+            pub struct DeleteSelection {}
+
+            pub fn handle(_payload: &DeleteSelection, _doc: &crate::DocumentView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>, _ctx: &mut u32) -> Result<crate::Emit<String, crate::NoConfigOperation>, crate::Fault> {
+                Ok(crate::Emit::operations(vec!["delete".to_string()]))
+            }
+        }
+
+        app_commands! {
+            pub enum TestKeyedCommand for u32, String, (), NoConfigOperation, ctx = u32 {
+                "addWidget" as "add-widget" => keyed::AddWidget,
+                "deleteSelection" as "delete-selection" => keyed_unit::DeleteSelection,
+            }
+        }
+
+        /// 🧪️ The keyed arm must keep `command_id()` (manifest action id) and the `dsl` wire keyword
+        /// independent — the exact split every hand-written `*_protocol` Command enum already has.
+        #[test]
+        fn keyed_rows_separate_the_command_id_from_the_wire_keyword() {
+            let command = TestKeyedCommand::AddWidget(keyed::AddWidget { kind: "inputSlider".into() });
+            assert_eq!(command.command_id(), "addWidget");
+            assert!(protocol::OpText::print_op(&command).starts_with("add-widget "), "wire keyword must be the kebab `as` literal, got {:?}", protocol::OpText::print_op(&command));
+            store::test_support::assert_op_text_binary_equivalence(&command);
+        }
+
+        /// 🧪️ A fieldless payload struct must print/encode exactly like the unit variant it replaces —
+        /// the migration-safety property for every `DeleteSelection`-style bare variant.
+        #[test]
+        fn fieldless_payload_matches_a_unit_variants_wire_form() {
+            let command = TestKeyedCommand::DeleteSelection(keyed_unit::DeleteSelection {});
+            assert_eq!(protocol::OpText::print_op(&command), "delete-selection");
+            assert_eq!(protocol::OpBinary::encode_op(&command).expect("encode"), vec![1u8, 1, 0, 0]);
+            store::test_support::assert_op_text_binary_equivalence(&command);
+        }
+
+        #[test]
+        fn ctx_is_threaded_through_dispatch_into_every_handler() {
+            let projection = 0u32;
+            let config = ();
+            let doc = DocumentView { projection: &projection, history: &HistoryView::empty() };
+            let cfg = ConfigView { projection: &config };
+            let mut ctx = 41u32;
+            let emit: Emit<String, NoConfigOperation> = TestKeyedCommand::AddWidget(keyed::AddWidget { kind: "neuron".into() }).dispatch(&doc, &cfg, &mut ctx).expect("dispatch");
+            assert_eq!(emit.document_operations, vec!["add:neuron:42".to_string()]);
+            assert_eq!(ctx, 42);
+        }
+    }
+    //#endregion 🔖️AppCommands
 
     /// @emoji 🧩️ Typed, per-app author surface. An app declares its `Projection` and `Operation` (a
     /// `store::Operation<Projection>`), mutates nothing directly, and returns an {@link ActionEmit} whose

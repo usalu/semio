@@ -1,0 +1,287 @@
+[probe13] matches: 24
+failed to load config from /Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript/🧪️vitest.config.ts
+[probe13] FAIL ✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript/🧪️vitest.config.ts -> ENOENT: no such file or directory, stat '/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/PRINT-SOLID-HEADING-CHIP-ROW-PARITY/harness/font/anta/Anta-Regular.ttf'
+[probe13] total projects loaded: 23
+Error: Failed to resolve import "@semio-tech/animate-present-core" from "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx:56:7
+  22 |    splitFigureGrid,
+  23 |    unionDispositionPositions
+  24 |  } from "@semio-tech/animate-present-core";
+     |          ^
+  25 |  import {
+  26 |    applyElementsSurfaceChrome,
+ ❯ TransformPluginContext._formatLog ../../../../../../../../../node_modules/vite/dist/node/chunks/config.js:29079:43
+ ❯ TransformPluginContext.error ../../../../../../../../../node_modules/vite/dist/node/chunks/config.js:29076:14
+ ❯ normalizeUrl ../../../../../../../../../node_modules/vite/dist/node/chunks/config.js:27199:18
+ ❯ ../../../../../../../../../node_modules/vite/dist/node/chunks/config.js:27257:32
+ ❯ TransformPluginContext.transform ../../../../../../../../../node_modules/vite/dist/node/chunks/config.js:27225:4
+ ❯ EnvironmentPluginContainer.transform ../../../../../../../../../node_modules/vite/dist/node/chunks/config.js:28877:14
+ ❯ loadAndTransform ../../../../../../../../../node_modules/vite/dist/node/chunks/config.js:22746:26
+ ❯ fetchModule ../../../../../../../../../node_modules/vite/dist/node/chunks/config.js:34073:15
+
+ReferenceError: Cannot access 'join' before initialization
+ ❯ ðï¸script.ts:69:30
+
+ReferenceError: Element is not defined
+ ❯ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/ð§ªï¸index.test.ts:251:1
+
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/animate-presentation-deck.spec.ts:33:1
+     31| }
+     32|
+     33| test("animate three-slide deck: boots with the title slide visible and…
+       | ^
+     34|   await expectAnimateStory(page, "animate--three-slide-deck");
+     35|   await expect(page.locator("body")).toContainText("Semio Storybook");
+
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/cad-renderer.spec.ts:50:1
+     48| }
+     49|
+     50| test("cad idle: boots with the fresh primitive.box interaction, no com…
+       | ^
+     51|   const { debug } = await expectCadStory(page, "📐️cad--idle");
+     52|   const state = await readCadBoxDebug(debug);
+
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/coda-trees.spec.ts:36:1
+     34| }
+     35|
+     36| test("coda OntologyTree uncovered kinds: renders AllValuesFrom/MinCard…
+       | ^
+     37|   await expectCodaStory(page, "coda-ontologytree--uncovered-kinds");
+     38|   for (const glyph of ["∀", "≥n", "≤n", "∀d", "D"]) {
+
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/framework-hosts-no-wasm.spec.ts:52:1
+     50| // what a real host app would do once the header becomes clickable) bu…
+     51| // interaction that's actually wired end to end today: row click → `se…
+     52| test("TableHost sortable-with-actions: loads with the initial row orde…
+       | ^
+     53|   await expectStoryLoads(page, "🛠️framework🔌️hosts-tablehost--sortab…
+     54|   type Debug = { readonly order: readonly string[]; readonly selectedI…
+
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/framework-hosts-wasm.spec.ts:42:1
+     40|
+     41| //#region NodeGraphHost
+     42| test("NodeGraphHost workflow: boots the real GraphSession WASM engine …
+       | ^
+     43|   await expectHostStory(page, "🛠️framework🔌️hosts-nodegraphhost--wor…
+     44|   await expect(page.locator(".semio-node-graph-host")).toBeVisible();
+
+Error: Cannot find module '../framework/product/os/module/plugin/registry/generated/plugins.ts' imported from /Users/ueli/Documents/semio/.storybook/os-plugins.spec.ts
+ ❯ .storybook/os-plugins.spec.ts:10:1
+      8| import { expect, test, type Page } from "@playwright/test";
+      9|
+     10| import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget…
+       | ^
+     11|
+     12| const PLUGINS_STORY_TITLE_ID = "🛠️framework🖥️os-plugins";
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/puzzle-2d.spec.ts:63:1
+     61| }
+     62|
+     63| test("puzzle2d overview select: loads with the initial fixture reflect…
+       | ^
+     64|   const { debug } = await expectBoardStory(page, "puzzle-2d--overview-…
+     65|   const state = await readPuzzle2dDebug(debug);
+
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/puzzle-3d-5d-infinite.spec.ts:38:1
+     36|
+     37| //#region puzzle/2d Fixtures
+     38| test("puzzle2d fixtures nakagin: real 180-node/179-edge fixture round-…
+       | ^
+     39|   await expectStoryLoads(page, "🧩️puzzle🩻️2d-fixtures--nakagin-capsu…
+     40|   const debug = JSON.parse(await page.getByTestId("puzzle2d-fixture-de…
+
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/styling.spec.ts:38:1
+     36|
+     37| //#region 🔖️Theme
+     38| test("styling/Theme AllThemes: renders every builtin theme's light+dar…
+       | ^
+     39|   await expectStylingStory(page, "🎨️styling-theme--all-themes");
+     40|   await expect(page.getByText("semio", { exact: false }).first()).toBe…
+
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/ui-new-stories.spec.ts:83:3
+     81|
+     82| for (const storyId of NEW_UI_STORY_IDS) {
+     83|   test(`ui scope story "${storyId}" mounts with no console/page errors…
+       |   ^
+     84|     await expectStoryMounts(page, storyId);
+     85|   });
+
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .storybook/ui-uncovered-components-stories.spec.ts:75:3
+     73|
+     74| for (const storyId of UNCOVERED_UI_STORY_IDS) {
+     75|   test(`ui scope story "${storyId}" mounts with no console/page errors…
+       |   ^
+     76|     await expectStoryMounts(page, storyId);
+     77|   });
+
+Error: Playwright Test did not expect test.describe() to be called here.
+Most common reasons include:
+- You are calling test.describe() in a configuration file.
+- You are calling test.describe() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test.describe() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._describe node_modules/playwright/lib/common/index.js:2304:24
+ ❯ Function.describe node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .🦑️repo/🎫️tickets/🎆️26/🌙️02/☀️02/FIX-D3-FORCE-DIAGRAM-NODE-EDGE-ALIGNMENT/test-node-edge-alignment.spec.ts:4:6
+      2| import { test, expect } from "@playwright/test";
+      3|
+      4| test.describe("Kit Diagram Node-Edge Alignment", () => {
+       |      ^
+      5|   test("measure node avatar size vs edge connection points", async ({ …
+      6|     await page.goto("http://localhost:5173");
+
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .🦑️repo/🎫️tickets/🎆️26/🌙️02/☀️11/FIX-ALL-SIX-FAILING-SKETCHPAD-PLAYWRIGHT-TESTS/debug.test.ts:2:1
+      1| import { test, expect } from "@playwright/test";
+      2| test("debug", async ({ page }) => {
+       | ^
+      3|   await page.goto("/");
+      4|   await page.waitForLoadState("networkidle");
+
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test() from an async test.describe() block. Only sync ones are supported.
+ ❯ _TestTypeImpl._currentSuite node_modules/playwright/lib/common/index.js:2263:13
+ ❯ _TestTypeImpl._createTest node_modules/playwright/lib/common/index.js:2277:24
+ ❯ node_modules/playwright/lib/common/index.js:1209:12
+ ❯ .🦑️repo/🎫️tickets/🎆️26/🌙️03/☀️20/FIX-ALGORITHM-STORYBOOK-INFINITE-HANG-ON-LOAD/seed.spec.ts:3:1
+      1| import { test } from "@playwright/test";
+      2|
+      3| test("seed", async ({ page }) => {
+       | ^
+      4|   await page.goto("http://localhost:6007/iframe.html?id=compose-algori…
+      5|   await page.waitForLoadState("domcontentloaded");
+
+Error: Cannot find package 'bun:test' imported from /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript/🧪️index.test.ts
+ ❯ 🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript/ð§ªï¸index.test.ts:1:1
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+Error: Cannot find package 'bun:test' imported from /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🧪️index.test.ts
+ ❯ 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/ð§ªï¸index.test.ts:1:1
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+Error: Cannot find package 'vscode' imported from /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/⚡️implementations/🟦️typescript/🟦️extension.test.ts
+ ❯ 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/⚡️implementations/🟦️typescript/ð¦ï¸extension.test.ts:13:1
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }

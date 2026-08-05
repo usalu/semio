@@ -12,7 +12,7 @@ use serde::de::Error as DeError;
 use serde::Deserialize;
 use serde_json::json;
 use std::collections::{HashMap, HashSet};
-use ui_wgpu::{draw_text, mesh_content_version, paint_selection_marquee, ActionDescriptor, GpuContext, HitKind, HitTarget, PointerModifiers, Rect, Rgba, UiComponentSceneNode, WidgetContext};
+use ui_wgpu::{draw_text, mesh_content_version, paint_selection_marquee, widgets::gizmo, ActionDescriptor, GpuContext, HitKind, HitTarget, PointerModifiers, Rect, Rgba, UiComponentSceneNode, WidgetContext};
 
 fn action_args(value: serde_json::Value) -> Option<semio_framework_core::DslValue> {
     optional_json_to_dsl(Some(value))
@@ -2060,7 +2060,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
         let crossing = marquee_is_crossing_from_path(&state.marquee_points, state.selection_method == "lasso");
         paint_selection_marquee(ctx.draw, theme, crossing, state.selection_method == "lasso", &state.marquee_points, false);
     }
-    paint_world_orbit_view_gizmo(ctx, &camera, inner, state.gizmo_hovered_tip);
+    gizmo::paint_orbit_view_gizmo(ctx, &camera, inner, state.gizmo_hovered_tip);
     if scene.world_3d.is_none() {
         draw_text(ctx, "world-3d (empty)", inner.x + 12.0, inner.y + 20.0, theme.font_size_small, theme.text_muted);
     }
@@ -2068,115 +2068,12 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
 }
 
 //#region 🧭️WorldOrbitViewGizmo
-/** 🧭️ Permanent X/Y/Z paints — primary / secondary / tertiary (semio tokens), not muted chrome. */
-fn spatial_axis_rgba(axis: u8, alpha: f32) -> Rgba {
-    match axis {
-        0 => Rgba::new(1.0, 0.204, 0.310, alpha),   // primary #ff344f
-        1 => Rgba::new(0.204, 0.820, 0.749, alpha), // secondary #34d1bf
-        _ => Rgba::new(0.980, 0.584, 0.0, alpha),   // tertiary #fa9500
-    }
-}
-
-/** 🧭️ Mirrors `resolveSceneGizmoViewportPlacement` — bottom-right corner inset matching pane `--spacing-single` chrome. */
-pub fn world_orbit_view_gizmo_placement(viewport: Rect) -> (f32, f32) {
-    let chrome_inset = 4.0_f32;
-    let gizmo_half_extent = 28.0_f32;
-    let preferred = chrome_inset + gizmo_half_extent;
-    let max_fit = (viewport.w.min(viewport.h) / 3.0).floor().max(22.0);
-    let margin = preferred.min(max_fit);
-    (margin, margin)
-}
-
-/** 🧭️ Screen-space tip used for orbit-view gizmo hover hit-testing and paint. */
-struct WorldOrbitViewGizmoTip {
-    screen_x: f32,
-    screen_y: f32,
-    depth: f32,
-    pick_radius: f32,
-    color: Rgba,
-    is_corner: bool,
-    prominent: bool,
-}
-
-fn world_orbit_view_gizmo_tips(camera: &Camera3d, viewport: Rect) -> Vec<WorldOrbitViewGizmoTip> {
-    let (margin_x, margin_y) = world_orbit_view_gizmo_placement(viewport);
-    let origin_x = viewport.x + viewport.w - margin_x;
-    let origin_y = viewport.y + viewport.h - margin_y;
-    let axis_len = (viewport.w.min(viewport.h) * 0.04).clamp(14.0, 24.0);
-    let forward = camera.position.sub(camera.target);
-    let forward_len = forward.length();
-    if forward_len < 1e-5 {
-        return Vec::new();
-    }
-    let forward = forward.scale(1.0 / forward_len);
-    let right = forward.cross(camera.up);
-    let right_len = right.length();
-    if right_len < 1e-5 {
-        return Vec::new();
-    }
-    let right = right.scale(1.0 / right_len);
-    let up = right.cross(forward).normalize();
-    let neutral = Rgba::new(0.62, 0.62, 0.66, 0.9);
-    let axes = [
-        (Vec3::new(1.0, 0.0, 0.0), spatial_axis_rgba(0, 1.0), true),
-        (Vec3::new(-1.0, 0.0, 0.0), spatial_axis_rgba(0, 0.75), false),
-        (Vec3::new(0.0, 1.0, 0.0), spatial_axis_rgba(1, 1.0), true),
-        (Vec3::new(0.0, -1.0, 0.0), spatial_axis_rgba(1, 0.75), false),
-        (Vec3::new(0.0, 0.0, 1.0), spatial_axis_rgba(2, 1.0), true),
-        (Vec3::new(0.0, 0.0, -1.0), spatial_axis_rgba(2, 0.75), false),
-    ];
-    let corners = [
-        (Vec3::new(0.72, 0.72, 0.72), true),
-        (Vec3::new(-0.72, 0.72, 0.72), true),
-        (Vec3::new(0.72, -0.72, 0.72), true),
-        (Vec3::new(-0.72, -0.72, 0.72), true),
-        (Vec3::new(0.72, 0.72, -0.72), false),
-        (Vec3::new(-0.72, 0.72, -0.72), false),
-        (Vec3::new(0.72, -0.72, -0.72), false),
-        (Vec3::new(-0.72, -0.72, -0.72), false),
-    ];
-    let mut tips: Vec<WorldOrbitViewGizmoTip> = axes
-        .into_iter()
-        .map(|(axis, color, prominent)| {
-            let sx = axis.dot(right);
-            let sy = -axis.dot(up);
-            let depth = axis.dot(forward);
-            let tip_x = origin_x + sx * axis_len;
-            let tip_y = origin_y + sy * axis_len;
-            let pick_radius = if prominent { 10.0 } else { 7.0 };
-            WorldOrbitViewGizmoTip { screen_x: tip_x, screen_y: tip_y, depth, pick_radius, color, is_corner: false, prominent }
-        })
-        .chain(corners.into_iter().map(|(axis, prominent)| {
-            let sx = axis.dot(right);
-            let sy = -axis.dot(up);
-            let depth = axis.dot(forward);
-            let tip_x = origin_x + sx * axis_len;
-            let tip_y = origin_y + sy * axis_len;
-            let pick_radius = if prominent { 10.0 } else { 7.0 };
-            WorldOrbitViewGizmoTip { screen_x: tip_x, screen_y: tip_y, depth, pick_radius, color: neutral, is_corner: true, prominent }
-        }))
-        .collect();
-    tips.push(WorldOrbitViewGizmoTip { screen_x: origin_x, screen_y: origin_y, depth: 0.0, pick_radius: 9.0, color: neutral, is_corner: false, prominent: true });
-    tips
-}
-
-fn world_orbit_view_gizmo_hit_test(x: f32, y: f32, tips: &[WorldOrbitViewGizmoTip]) -> Option<usize> {
-    tips.iter()
-        .enumerate()
-        .filter_map(|(index, tip)| {
-            let distance = ((x - tip.screen_x).powi(2) + (y - tip.screen_y).powi(2)).sqrt();
-            if distance <= tip.pick_radius + 3.0 {
-                Some((index, distance))
-            } else {
-                None
-            }
-        })
-        .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
-        .map(|(index, _)| index)
-}
-
+/** 🧭️ The pure placement/tip-geometry/paint logic relocated to `ui_wgpu::widgets::gizmo` (see
+`.🦑️repo/🎫️tickets/26/08/05/FRAMEWORK-BUILDER-PASSTHROUGHS-APP-COMMANDS-MACRO-WIDGET-EXTRACTION`) — this
+region now only keeps the `World3dState`-specific hover-state plumbing (app config, not paint), calling
+through to `gizmo::orbit_view_gizmo_placement`/`gizmo::orbit_view_gizmo_tips`/`gizmo::orbit_view_gizmo_hit_test`. */
 fn update_world_orbit_view_gizmo_hover(state: &mut World3dState, x: f32, y: f32, inner: Rect) {
-    let (margin_x, margin_y) = world_orbit_view_gizmo_placement(inner);
+    let (margin_x, margin_y) = gizmo::orbit_view_gizmo_placement(inner);
     let origin_x = inner.x + inner.w - margin_x;
     let origin_y = inner.y + inner.h - margin_y;
     let zone_radius = 56.0;
@@ -2185,40 +2082,8 @@ fn update_world_orbit_view_gizmo_hover(state: &mut World3dState, x: f32, y: f32,
         return;
     }
     let camera = state.orbit.to_camera();
-    let tips = world_orbit_view_gizmo_tips(&camera, inner);
-    state.gizmo_hovered_tip = world_orbit_view_gizmo_hit_test(x, y, &tips);
-}
-
-/** 🧭️ Screen-space XYZ orientation gizmo in the lower-right of every world-3d window (wgpu parity with React `WorldOrbitViewGizmo`). */
-fn paint_world_orbit_view_gizmo<E>(ctx: &mut WidgetContext<'_, E>, camera: &Camera3d, viewport: Rect, hovered_tip: Option<usize>) {
-    let (margin_x, margin_y) = world_orbit_view_gizmo_placement(viewport);
-    let origin_x = viewport.x + viewport.w - margin_x;
-    let origin_y = viewport.y + viewport.h - margin_y;
-    let tips = world_orbit_view_gizmo_tips(camera, viewport);
-    let mut ordered: Vec<(f32, usize)> = tips.iter().enumerate().map(|(index, tip)| (tip.depth, index)).collect();
-    ordered.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
-    let has_hover = hovered_tip.is_some();
-    for (_, index) in ordered {
-        let tip = &tips[index];
-        let hovered = hovered_tip == Some(index);
-        let depth_fade = if tip.depth > 0.05 { 0.45 } else { 1.0 };
-        let hover_fade = if has_hover && !hovered { 0.42 } else { 1.0 };
-        let alpha = (tip.color.a * depth_fade * hover_fade).min(1.0);
-        let stroke = Rgba::new(tip.color.r, tip.color.g, tip.color.b, if hovered { tip.color.a.min(1.0) } else { alpha });
-        ctx.draw.push_line_overlay(origin_x, origin_y, tip.screen_x, tip.screen_y, stroke, if tip.is_corner { 1.5 } else { 2.0 });
-        let r = if tip.prominent {
-            if hovered {
-                3.6
-            } else {
-                3.0
-            }
-        } else if hovered {
-            2.4
-        } else {
-            2.0
-        };
-        ctx.draw.push_solid_overlay([tip.screen_x - r, tip.screen_y - r, tip.screen_x + r, tip.screen_y + r], stroke);
-    }
+    let tips = gizmo::orbit_view_gizmo_tips(&camera, inner);
+    state.gizmo_hovered_tip = gizmo::orbit_view_gizmo_hit_test(x, y, &tips);
 }
 //#endregion 🧭️WorldOrbitViewGizmo
 
@@ -3527,14 +3392,14 @@ mod tests {
 
     #[test]
     fn world_orbit_view_gizmo_placement_matches_react_bottom_right_insets() {
-        assert_eq!(world_orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 1280.0, h: 720.0 }), (32.0, 32.0));
-        assert_eq!(world_orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 120.0, h: 160.0 }), (32.0, 32.0));
-        assert_eq!(world_orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 40.0, h: 48.0 }), (22.0, 22.0));
+        assert_eq!(gizmo::orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 1280.0, h: 720.0 }), (32.0, 32.0));
+        assert_eq!(gizmo::orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 120.0, h: 160.0 }), (32.0, 32.0));
+        assert_eq!(gizmo::orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 40.0, h: 48.0 }), (22.0, 22.0));
     }
 
     #[test]
     fn world_orbit_view_gizmo_preserves_label_free_hit_targets() {
-        let tips = world_orbit_view_gizmo_tips(&Camera3d::default(), Rect { x: 0.0, y: 0.0, w: 1280.0, h: 720.0 });
+        let tips = gizmo::orbit_view_gizmo_tips(&Camera3d::default(), Rect { x: 0.0, y: 0.0, w: 1280.0, h: 720.0 });
         assert_eq!(tips.len(), 15);
         assert_eq!(tips.iter().filter(|tip| tip.prominent).count(), 8);
         assert!(tips.iter().all(|tip| tip.pick_radius >= 7.0));
