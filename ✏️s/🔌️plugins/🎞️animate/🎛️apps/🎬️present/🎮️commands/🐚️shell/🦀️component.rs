@@ -41,7 +41,7 @@ pub mod export_video_from_deck {
 
     pub fn handle(payload: &ExportVideoFromDeck, _doc: &DocumentView<'_, PresentDeck>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
         let scene = serde_json::from_str::<PresentScene>(&payload.scene_json).unwrap_or_else(|_| PresentScene::empty("Deck export"));
-        match super::export_video_from_deck(&scene, &payload.output_dir) {
+        match export_video_from_deck(&scene, &payload.output_dir) {
             Ok(bundles) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: "animate-video-export.ops".into(), mime_type: "text/plain".into(), data: serde_json::to_string_pretty(&bundles).unwrap_or_else(|_| "[]".into()), encoding: None })),
             Err(error) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: "animate-video-export-error.txt".into(), mime_type: "text/plain".into(), data: error.to_string(), encoding: None })),
         }
@@ -56,7 +56,6 @@ mod tests {
     use crate::apps::present::testkit::{present_app, present_app_with_registry};
     use crate::apps::present::PresentCommand;
     use semio_framework_plugin::testkit::meta;
-    use semio_framework_plugin::PluginApp;
 
     #[test]
     fn copy_prompt_is_shell_effect_not_view_mutation() {

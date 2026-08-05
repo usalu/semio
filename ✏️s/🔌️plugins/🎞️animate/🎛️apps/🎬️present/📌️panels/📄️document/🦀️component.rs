@@ -89,7 +89,6 @@ mod tests {
     #[test]
     fn document_lists_seeded_tiles() {
         use semio_framework_plugin::testkit::meta;
-        use semio_framework_plugin::PluginApp;
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::SeedGrid(crate::apps::present::commands::grid::seed_grid::SeedGrid { rows: 1, columns: 2 }), &meta("local")).expect("seed grid");
         let document = render_body(&mut app, PRESENT_PLAY_BODY_DOCUMENT);

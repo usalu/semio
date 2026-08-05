@@ -3,7 +3,7 @@
 //! See `procedural2d`'s sibling `🗣️dsl/🦀️component.rs` docstring for why the `*Dsl` mirror types below
 //! are LOCAL structural twins rather than derives on the foreign `flow_core`/`playbook` types directly.
 
-use crate::artifacts::procedural3d::{widget_id, Procedural3dDocument, PROCEDURAL_3D_SCHEMA};
+use crate::artifacts::procedural3d::Procedural3dDocument;
 use flow_core::neural::{Atom, Dictionary, Value as NeuralValue};
 use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use playbook::{FormGeneration, GenerationPlayState};
@@ -95,7 +95,7 @@ pub fn camera_to_dsl(camera: &CameraJson) -> CameraJsonDsl {
     CameraJsonDsl { x: camera.x, y: camera.y, zoom: camera.zoom }
 }
 
-pub fn camera_from_dsl(camera: CameraJsonDsl) -> CameraJson {
+pub fn camera_from_dsl(camera: &CameraJsonDsl) -> CameraJson {
     CameraJson { x: camera.x, y: camera.y, zoom: camera.zoom }
 }
 
@@ -109,7 +109,7 @@ pub fn layout_to_dsl(layout: &WidgetLayout) -> WidgetLayoutDsl {
     WidgetLayoutDsl { x: layout.x, y: layout.y }
 }
 
-pub fn layout_from_dsl(layout: WidgetLayoutDsl) -> WidgetLayout {
+pub fn layout_from_dsl(layout: &WidgetLayoutDsl) -> WidgetLayout {
     WidgetLayout { x: layout.x, y: layout.y }
 }
 
@@ -275,9 +275,9 @@ fn procedural3d_document_to_dsl(document: &Procedural3dDocument) -> Procedural3d
 fn procedural3d_document_from_dsl(parsed: Procedural3dDocumentDsl) -> Result<Procedural3dDocument, store::TextError> {
     let widgets = parsed.widgets.into_iter().map(widget_from_dsl).collect::<Result<Vec<_>, _>>()?;
     let synapses = parsed.synapses.into_iter().map(synapse_from_dsl).collect();
-    let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(entry))).collect();
+    let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(&entry))).collect();
     Ok(Procedural3dDocument {
-        fixture: FlowFixture { schema: parsed.schema, camera: camera_from_dsl(parsed.camera), widgets, synapses, layout },
+        fixture: FlowFixture { schema: parsed.schema, camera: camera_from_dsl(&parsed.camera), widgets, synapses, layout },
         generation: GenerationPlayState { generations: parsed.generations.into_iter().map(form_generation_from_dsl).collect(), selected_generation_id: parsed.selected_generation_id, preview_text: parsed.preview_text },
     })
 }
@@ -321,6 +321,7 @@ pub fn print_dsl(document: &Procedural3dDocument) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA;
     use store::{test_support, DocumentDsl};
 
     #[test]

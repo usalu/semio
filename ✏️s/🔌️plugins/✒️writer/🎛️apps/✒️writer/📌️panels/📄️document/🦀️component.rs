@@ -94,7 +94,7 @@ pub fn render(document: &WriterProjection, config: &WriterConfig, labels: &Write
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::writer::testkit::{new_app, render as render_body};
+    use crate::apps::writer::testkit::{app_with_jack, new_app, render as render_body};
 
     #[test]
     fn renders_document_tree_for_jack() {
@@ -114,10 +114,20 @@ mod tests {
         assert!(definition.children.iter().all(|child| child.body_key.as_deref() == Some(WRITER_PLAY_BODY_DOCUMENT)));
     }
 
+    /// 🌳️ The AST section only appears for `jack`-language documents (see `render`'s early return for
+    /// any other language) — load the jack fixture first.
     #[test]
-    fn document_lists_the_ast_section() {
-        let mut app = new_app();
+    fn document_lists_the_ast_section_for_jack_documents() {
+        let mut app = app_with_jack();
         assert!(render_body(&mut app, WRITER_PLAY_BODY_DOCUMENT).contains("writer-play-document.ast"));
+    }
+
+    /// 📄️ A non-jack (default/plaintext) document renders the plain id/language fallback section
+    /// instead of the AST tree.
+    #[test]
+    fn document_falls_back_to_a_plain_section_for_non_jack_documents() {
+        let mut app = new_app();
+        assert!(render_body(&mut app, WRITER_PLAY_BODY_DOCUMENT).contains("writer-document"));
     }
 }
 //#endregion 🧪️Tests

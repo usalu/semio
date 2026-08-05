@@ -1100,7 +1100,7 @@ mod tests {
 //#region 🔖️ExportConcreteForestMeshTests
 #[cfg(test)]
 mod export_concrete_forest_mesh_tests {
-    use cad_document_engine::geometry_import::{objects_from_fixture_model, parse_geometry};
+    use cad_plugin::artifacts::cad::engine::geometry_import::{objects_from_fixture_model, parse_geometry};
     use kernel_3d_brepkit::BrepkitKernel;
     use kernel_3d_engine::GeometryHandle;
     use kernel_3d_mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};

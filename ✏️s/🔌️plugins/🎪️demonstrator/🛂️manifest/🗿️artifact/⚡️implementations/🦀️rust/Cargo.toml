@@ -114,18 +114,13 @@ kernel_3d_brepkit = { path = "../../../../../../🔨️modules/🧊️3d/📐️
 infinite_canvas = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
 serde_json = "1.0.140"
 
-procedural_3d = { path = "../../../../../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-procedural-3d" }
-procedural_3d_engine = { path = "../../../../../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-procedural-3d-engine" }
-procedural_3d_ui = { path = "../../../../../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust", package = "semio-s-app-procedural-3d-ui" }
+procedural = { path = "../../../../../../../✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", package = "semio-s-plugin-procedural" }
 
-cad_document = { path = "../../../../../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/⚡️implementations/🦀️rust", package = "semio-s-app-cad" }
-cad_document_engine = { path = "../../../../../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-cad-engine" }
-cad_document_ui = { path = "../../../../../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/🖱️ui/⚡️implementations/🦀️rust", package = "semio-s-app-cad-ui" }
+cad = { path = "../../../../../../../✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust", package = "semio-s-plugin-cad" }
 
 puzzle_3d_ui = { path = "../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust", package = "semio-s-app-puzzle-3d-ui" }
 
-sourcing = { path = "../../../../../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/⚡️implementations/🦀️rust", package = "semio-s-app-sourcing-curate" }
-sourcing_ui = { path = "../../../../../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🔨️modules/🖱️ui/⚡️implementations/🦀️rust", package = "semio-s-app-sourcing-curate-ui" }
+sourcing = { path = "../../../../../../../✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust", package = "semio-s-plugin-sourcing" }
 
 process_3d = { path = "../../../../../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-process-3d" }
 process_3d_engine = { path = "../../../../../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-process-3d-engine" }

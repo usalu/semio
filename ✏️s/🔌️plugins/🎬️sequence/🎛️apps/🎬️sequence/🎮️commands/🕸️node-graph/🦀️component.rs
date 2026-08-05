@@ -81,7 +81,7 @@ mod tests {
     use crate::apps::sequence::testkit::{dispatch, new_app};
     use crate::apps::sequence::SequenceCommand;
     use crate::artifacts::sequence::SequenceCamera;
-    use semio_framework_plugin::ViewState;
+    use semio_framework_plugin::{PluginApp, ViewState};
     use serde_json::{json, Value};
 
     use super::set_viewport::SetViewport;

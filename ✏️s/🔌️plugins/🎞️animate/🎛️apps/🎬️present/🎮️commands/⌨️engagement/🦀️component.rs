@@ -74,7 +74,7 @@ mod tests {
     use super::*;
     use crate::apps::present::testkit::{dispatch, present_app};
     use crate::apps::present::PresentCommand;
-    use semio_framework_plugin::{HostEffect, PluginApp};
+    use semio_framework_plugin::HostEffect;
 
     #[test]
     fn engagement_input_stores_draft_and_submit_parses_grid_pattern() {

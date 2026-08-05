@@ -2,8 +2,8 @@
 //! generations and resets ephemeral view state).
 
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigOperation};
-use crate::artifacts::procedural3d::engine::{default_projection, example_projection, is_procedural3d_example_id, procedural3d_fixture_operations};
-use crate::artifacts::procedural3d::op::Procedural3dOperation;
+use crate::artifacts::procedural3d::engine::{default_projection, example_projection, is_procedural3d_example_id};
+use crate::artifacts::procedural3d::op::{procedural3d_fixture_operations, Procedural3dOperation};
 use crate::artifacts::procedural3d::Procedural3dDocument;
 use flow_core::{CameraJson, FlowEvalSession};
 use playbook::GenerationOperation;
@@ -53,8 +53,7 @@ pub mod set_active_example {
         };
         let mut operations: Vec<Procedural3dOperation> = doc.projection.generation.generations.iter().map(|generation| Procedural3dOperation::Generation(GenerationOperation::Remove { id: generation.id.clone() })).collect();
         operations.extend(procedural3d_fixture_operations(fixture, &target.fixture));
-        let camera = target.fixture.camera.clone();
-        Ok(Emit { document_operations: operations, config_operations: vec![Procedural3dConfigOperation::Snapshot { config: config_after_example_load(cfg.projection, &camera) }], ..Default::default() })
+        Ok(Emit { document_operations: operations, config_operations: vec![Procedural3dConfigOperation::Snapshot { config: config_after_example_load(cfg.projection, &target.fixture.camera) }], ..Default::default() })
     }
 }
 //#endregion 🔖️SetActiveExample
@@ -71,6 +70,7 @@ mod tests {
 
     #[test]
     fn set_active_example_via_string_action_loads_fixture() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app_with_registry();
         app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_FILLET })), &semio_framework_plugin::testkit::meta("local")).expect("set example");
         let projection = app.projection().expect("projection");
@@ -79,10 +79,11 @@ mod tests {
 
     #[test]
     fn unknown_example_id_is_a_no_op() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
-        let before = app.projection().expect("projection").clone();
+        let before = app.projection().expect("projection");
         dispatch(&mut app, Procedural3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "not-a-real-example".into() }));
-        assert_eq!(app.projection().expect("projection"), &before);
+        assert_eq!(app.projection().expect("projection"), before);
     }
 }
 //#endregion 🧪️Tests

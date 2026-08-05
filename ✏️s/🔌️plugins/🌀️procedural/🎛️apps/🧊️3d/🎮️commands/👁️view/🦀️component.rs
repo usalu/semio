@@ -81,23 +81,24 @@ mod tests {
     use super::*;
     use crate::apps::procedural3d::testkit::{app, app_with_registry, dispatch};
     use crate::apps::procedural3d::Procedural3dCommand;
-    use semio_framework_plugin::PluginApp;
 
     #[test]
     fn set_lod_mode_is_a_view_action_with_no_document_operations() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
-        let before = app.projection().expect("projection").clone();
+        let before = app.projection().expect("projection");
         dispatch(&mut app, Procedural3dCommand::SetLodMode(set_lod_mode::SetLodMode { value: "wireframe".into() }));
-        assert_eq!(app.projection().expect("projection"), &before, "setLodMode must not mutate the document");
+        assert_eq!(app.projection().expect("projection"), before, "setLodMode must not mutate the document");
     }
 
     #[test]
     fn set_active_utility_switch_clears_scratch_and_emits_no_operations() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app_with_registry();
-        let before = app.projection().expect("projection").clone();
+        let before = app.projection().expect("projection");
         let result = app.dispatch_typed(Procedural3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "rotate".into() }), &semio_framework_plugin::testkit::meta("local")).expect("switch utility");
         assert!(result.operations.is_empty(), "utility switching never emits document operations");
-        assert_eq!(app.projection().expect("projection"), &before, "utility switching records no history entry");
+        assert_eq!(app.projection().expect("projection"), before, "utility switching records no history entry");
     }
 }
 //#endregion 🧪️Tests

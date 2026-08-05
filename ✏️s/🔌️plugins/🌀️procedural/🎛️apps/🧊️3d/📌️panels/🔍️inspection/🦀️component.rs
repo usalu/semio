@@ -73,7 +73,7 @@ pub fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Proc
             error: None,
             menu: None,
         }));
-        fields.push(ui_inspector_readonly_field("procedural-play-inspector.range", labels.range_field, &format!("{min}..{max}")));
+        fields.push(ui_inspector_readonly_field("procedural-play-inspector.range", labels.range_field, format!("{min}..{max}")));
     }
     if let Widget::InputNote { text, .. } = widget {
         fields.push(ui_inspector_readonly_field("procedural-play-inspector.note", labels.value_field, text));
@@ -103,6 +103,7 @@ mod tests {
 
     #[test]
     fn inspector_shows_no_selection_by_default() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_INSPECTION).contains("Schema:"));
     }

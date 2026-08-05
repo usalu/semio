@@ -4,8 +4,8 @@ use crate::apps::procedural2d::terminology::Procedural2dLabels;
 use crate::apps::procedural2d::PROCEDURAL2D_PLAY_APP_ID;
 use crate::artifacts::procedural2d::Procedural2dDocument;
 use flow_core::forms_bridge::flow_fixture_to_form_spec;
-use playbook::{selected_generation, GenerationPlayState};
-use semio_framework_plugin::{render_generation_form_body, ui_text, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use playbook::{render_generation_form_body, selected_generation, GenerationPlayState};
+use semio_framework_plugin::{ui_text, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const PROCEDURAL2D_PLAY_WINDOW_GENERATE_FORM: &str = "procedural2d-generate-form";

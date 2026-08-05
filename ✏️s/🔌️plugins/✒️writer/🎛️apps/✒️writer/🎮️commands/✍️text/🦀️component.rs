@@ -65,10 +65,10 @@ pub mod set_document {
 //#region 🔖️JsonSetters
 /// 🙈️ Shared body for `SetDocumentJson`/`SetFixtureJson` — both replace the whole document from a raw
 /// JSON string, silently no-op'ing on a parse failure (dev-only chrome setters, never user-facing).
-fn parse_document_json(json: &str) -> Result<Emit<WriterOperation, WriterConfigOperation>, Fault> {
+fn parse_document_json(json: &str) -> Emit<WriterOperation, WriterConfigOperation> {
     match serde_json::from_str::<WriterProjection>(json) {
-        Ok(document) => Ok(Emit::operations(vec![WriterOperation::SetDocument { document }])),
-        Err(_) => Ok(Emit::default()),
+        Ok(document) => Emit::operations(vec![WriterOperation::SetDocument { document }]),
+        Err(_) => Emit::default(),
     }
 }
 
@@ -82,7 +82,7 @@ pub mod set_document_json {
     }
 
     pub fn handle(payload: &SetDocumentJson, _doc: &DocumentView<'_, WriterProjection>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterOperation, WriterConfigOperation>, Fault> {
-        parse_document_json(&payload.json)
+        Ok(parse_document_json(&payload.json))
     }
 }
 
@@ -96,7 +96,7 @@ pub mod set_fixture_json {
     }
 
     pub fn handle(payload: &SetFixtureJson, _doc: &DocumentView<'_, WriterProjection>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterOperation, WriterConfigOperation>, Fault> {
-        parse_document_json(&payload.json)
+        Ok(parse_document_json(&payload.json))
     }
 }
 //#endregion 🔖️JsonSetters

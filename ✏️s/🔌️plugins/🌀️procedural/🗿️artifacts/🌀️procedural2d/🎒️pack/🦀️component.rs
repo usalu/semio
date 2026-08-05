@@ -36,7 +36,10 @@ mod tests {
     fn dsl_pack_equivalence_with_generation_state() {
         let mut projection = Procedural2dDocument::default();
         let mut values = serde_json::Map::new();
-        values.insert("count".into(), serde_json::json!(3.0));
+        // 🌱️ Fractional (not whole-number) so `dsl::from_dsl_value`'s int-normalization of whole
+        // `DslValue::Number`s (an engine-owned behavior, see the sibling dsl test) doesn't make this
+        // round trip spuriously unequal.
+        values.insert("count".into(), serde_json::json!(3.5));
         projection.generation.generations.push(playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
         projection.generation.selected_generation_id = Some("generation-1".into());
         projection.generation.preview_text = Some("42".into());

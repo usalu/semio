@@ -13,7 +13,7 @@ use crate::apps::shooting::modes::edit;
 use crate::apps::shooting::modes::edit::windows::icon as icon_window;
 use crate::apps::shooting::modes::edit::windows::scene as scene_window;
 use crate::apps::shooting::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::apps::shooting::terminology::{shooting_play_labels, ShootingLabels};
+use crate::apps::shooting::terminology::shooting_play_labels;
 use crate::artifacts::shooting::op::ShootingOperation;
 use crate::artifacts::shooting::{ShootingFixture, SHOOTING_FIXTURE_SCHEMA};
 use semio_framework_plugin::{
@@ -156,7 +156,7 @@ impl DocumentApp for ShootingPlayApp {
         match port {
             "photos:out" => crate::artifacts::shooting::engine::shooting_photo_media(doc.projection),
             "document:out" => {
-                let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+                let media_type = self.io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = store::DocumentPack::encode_pack(doc.projection);
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -346,7 +346,7 @@ pub fn create_shooting_app() -> App {
             // here rather than duplicated (`command_grammar` stays `CommandGrammar::empty()`: this app's
             // typed commands are dispatched via `ShootingCommand`'s `OpBinary` codec directly, not a
             // keyword-parsed text grammar).
-            .config(ShootingPlayApp::default().config_spec())
+            .config(ShootingPlayApp.config_spec())
             .io(crate::artifacts::shooting::engine::shooting_io()),
     )
     .example(SHOOTING_EXAMPLE_DEFAULT_ID, LocalizedLabel::native("Default Base Icon", "Standard-Basissymbol"), crate::artifacts::shooting::engine::default_fixture_json(), "camera")

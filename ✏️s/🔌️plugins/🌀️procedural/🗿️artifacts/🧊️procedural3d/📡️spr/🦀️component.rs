@@ -85,9 +85,9 @@ fn procedural3d_operation_from_dsl(operation: Procedural3dOperationDsl) -> Resul
         Procedural3dOperationDsl::RemoveWidget { id } => Procedural3dOperation::RemoveWidget { id },
         Procedural3dOperationDsl::SetSynapse { index, synapse } => Procedural3dOperation::SetSynapse { index, synapse: synapse_from_dsl(synapse) },
         Procedural3dOperationDsl::RemoveSynapse { id } => Procedural3dOperation::RemoveSynapse { id },
-        Procedural3dOperationDsl::SetLayout { id, layout } => Procedural3dOperation::SetLayout { id, layout: layout_from_dsl(layout) },
+        Procedural3dOperationDsl::SetLayout { id, layout } => Procedural3dOperation::SetLayout { id, layout: layout_from_dsl(&layout) },
         Procedural3dOperationDsl::RemoveLayout { id } => Procedural3dOperation::RemoveLayout { id },
-        Procedural3dOperationDsl::SetCamera { camera } => Procedural3dOperation::SetCamera { camera: camera_from_dsl(camera) },
+        Procedural3dOperationDsl::SetCamera { camera } => Procedural3dOperation::SetCamera { camera: camera_from_dsl(&camera) },
         Procedural3dOperationDsl::SetSchema { schema } => Procedural3dOperation::SetSchema { schema },
         Procedural3dOperationDsl::GenerationAdd { generation } => Procedural3dOperation::Generation(GenerationOperation::Add { generation: form_generation_from_dsl(generation) }),
         Procedural3dOperationDsl::GenerationRemove { id } => Procedural3dOperation::Generation(GenerationOperation::Remove { id }),
@@ -107,7 +107,7 @@ impl protocol::OpText for Procedural3dOperation {
     }
 }
 
-impl protocol::OpBinary for Procedural3dOperation {
+impl OpBinary for Procedural3dOperation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         procedural3d_operation_to_dsl(self).encode_op()
     }

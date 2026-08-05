@@ -87,7 +87,6 @@ mod tests {
     use super::toggle_line_numbers;
     use crate::apps::writer::testkit::new_app;
     use crate::apps::writer::WriterCommand;
-    use semio_framework_plugin::PluginApp;
 
     #[test]
     fn view_action_emits_no_operations() {

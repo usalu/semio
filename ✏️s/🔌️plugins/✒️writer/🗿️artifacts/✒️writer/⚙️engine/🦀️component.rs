@@ -227,7 +227,7 @@ pub fn jack_ast_node_by_id<'a>(root: &'a JackAstNode, id: &str) -> Option<&'a Ja
 }
 
 /// 🖱️ Smallest AST node that fully contains a selection range.
-pub fn jack_ast_node_for_selection<'a>(root: &'a JackAstNode, start: usize, end: usize) -> Option<&'a JackAstNode> {
+pub fn jack_ast_node_for_selection(root: &JackAstNode, start: usize, end: usize) -> Option<&JackAstNode> {
     fn visit<'a>(node: &'a JackAstNode, start: usize, end: usize, best: &mut Option<&'a JackAstNode>) {
         if node.start <= start && node.end >= end {
             let is_better = match best {
@@ -506,7 +506,7 @@ pub fn jack_newline_allowed_at(text: &str, offset: usize) -> bool {
             return true;
         }
         if matches!(prev.token, Token::Ident(_) | Token::Number(_) | Token::StringLit(_)) {
-            return next.map_or(true, |n| n.token != Token::Dot);
+            return next.is_none_or(|n| n.token != Token::Dot);
         }
         if matches!(prev.token, Token::LParen | Token::LBracket | Token::Colon | Token::Eq | Token::Ne | Token::Dash) {
             return true;
@@ -619,7 +619,7 @@ pub fn jack_symbol_at_offset(text: &str, offset: usize) -> Option<JackSymbolAtCu
 /// ✏️ Apply a semantic jack rename across all occurrence spans (premigration `applyJackRename`).
 pub fn apply_jack_rename(text: &str, occurrences: &[(usize, usize)], new_name: &str) -> String {
     let mut sorted: Vec<(usize, usize)> = occurrences.to_vec();
-    sorted.sort_by(|a, b| b.0.cmp(&a.0));
+    sorted.sort_by_key(|a| std::cmp::Reverse(a.0));
     let mut out = text.to_string();
     for (start, end) in sorted {
         if start <= end && end <= out.len() {

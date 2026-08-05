@@ -72,7 +72,6 @@ mod tests {
 
     #[test]
     fn seed_grid_action_adds_tiles() {
-        use semio_framework_plugin::PluginApp;
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 }));
         assert_eq!(app.projection().expect("projection").tiles.len(), 4);
@@ -80,7 +79,6 @@ mod tests {
 
     #[test]
     fn set_active_example_demo_resets_to_default_deck_after_seed() {
-        use semio_framework_plugin::PluginApp;
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 }));
         app.dispatch_typed(PresentCommand::SetActiveExample(crate::apps::present::commands::source::set_active_example::SetActiveExample { example_id: "demo".into() }), &meta("local")).expect("reset demo");

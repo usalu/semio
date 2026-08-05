@@ -69,7 +69,7 @@ pub fn host_operations(fixture: &FlowFixture, mutate: impl FnOnce(&mut FlowHost)
 }
 
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
-    endpoint.split_once('@').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), "out".into()))
+    endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
 pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {

@@ -1,6 +1,6 @@
 //! ⚡️ Procedural2d artifact — operation enum + laws (constitutional: op).
 
-use crate::artifacts::procedural2d::diff::{Procedural2dDiff, WidgetsDiff};
+use crate::artifacts::procedural2d::diff::Procedural2dDiff;
 use crate::artifacts::procedural2d::{widget_id, Procedural2dDocument};
 use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use playbook::{invert_generation_operation, GenerationOperation};
@@ -128,7 +128,7 @@ pub type Procedural2dStore = DocumentStore<Procedural2dDocument, Procedural2dOpe
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::procedural2d::diff::SynapsesDiff;
+    use crate::artifacts::procedural2d::diff::{SynapsesDiff, WidgetsDiff};
     use crate::artifacts::procedural2d::engine::empty_procedural2d_projection;
     use vcs::apply_operation;
 

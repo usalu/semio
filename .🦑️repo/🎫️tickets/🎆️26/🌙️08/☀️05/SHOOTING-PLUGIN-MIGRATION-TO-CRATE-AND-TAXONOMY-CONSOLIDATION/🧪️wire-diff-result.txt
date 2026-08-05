@@ -1,0 +1,2 @@
+WIRE FORMAT DIFF: byte-identical across all 49 representative command values (rows 00-48, one per ShootingCommand variant, matching the pre-migration ShootingCommand enum's declaration order). Confirms the app_commands! decomposition preserved print_op text and encode_op binary bytes exactly.
+no diff (clean)

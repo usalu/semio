@@ -63,7 +63,7 @@ fn frame_media_name(port: &str, media: &Media) -> Result<String, MediaError> {
     match &media.payload {
         MediaPayload::Structured { json, .. } => {
             let value: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-            Ok(value.get("name").and_then(|v| v.as_str()).or_else(|| value.get("src").and_then(|v| v.as_str())).map(str::to_string).unwrap_or_else(|| "Imported frame".into()))
+            Ok(value.get("name").and_then(|v| v.as_str()).or_else(|| value.get("src").and_then(|v| v.as_str())).map_or_else(|| "Imported frame".into(), str::to_string))
         }
         MediaPayload::Binary { blob_hash, .. } => Ok(format!("frame-{}", &blob_hash[..blob_hash.len().min(8)])),
     }
@@ -362,7 +362,7 @@ mod tests {
         instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
 
         instance_a.dispatch_typed(PresentCommand::AddTile(add_tile::AddTile { crop: Some(crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 0.3, height: 0.3 }) }), &meta("actor-a")).expect("a adds tile");
-        let mut source = instance_b.projection().expect("projection").source.clone();
+        let mut source = instance_b.projection().expect("projection").source;
         source.kind = "video".into();
         instance_b.dispatch_typed(PresentCommand::SetSource(set_source::SetSource { source }), &meta("actor-b")).expect("b sets source kind");
 
@@ -390,7 +390,7 @@ mod tests {
     fn import_media_frames_in_inserts_a_new_tile() {
         use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
         use serde_json::json;
-        let mut app = crate::apps::present::testkit::present_app_with_registry();
+        let mut app = testkit::present_app_with_registry();
         let before = app.projection().expect("projection").tiles.len();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: json!({ "name": "hero-frame", "src": "/frames/hero.png" }).to_string() } };
         app.import_media("frames:in", &media, &meta("local")).expect("import frames:in");
@@ -403,7 +403,7 @@ mod tests {
     fn import_media_frames_in_places_repeated_imports_in_distinct_cells() {
         use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
         use serde_json::json;
-        let mut app = crate::apps::present::testkit::present_app_with_registry();
+        let mut app = testkit::present_app_with_registry();
         for _ in 0..2 {
             let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: json!({ "name": "frame" }).to_string() } };
             app.import_media("frames:in", &media, &meta("local")).expect("import frames:in");
@@ -416,7 +416,7 @@ mod tests {
     #[test]
     fn import_media_rejects_unknown_port() {
         use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
-        let mut app = crate::apps::present::testkit::present_app_with_registry();
+        let mut app = testkit::present_app_with_registry();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: "{}".into() } };
         assert!(app.import_media("not-a-port", &media, &meta("local")).is_err());
     }

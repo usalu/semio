@@ -49,9 +49,9 @@ mod tests {
     #[test]
     fn set_selection_updates_config_only() {
         let mut app = app();
-        let before = app.projection().expect("projection").clone();
+        let before = app.projection().expect("projection");
         dispatch(&mut app, Procedural2dCommand::SetSelection(set_selection::SetSelection { ids: vec!["w1".into()] }));
-        assert_eq!(app.projection().expect("projection"), &before, "setSelection must not mutate the document");
+        assert_eq!(app.projection().expect("projection"), before, "setSelection must not mutate the document");
     }
 }
 //#endregion 🧪️Tests

@@ -9,7 +9,7 @@
 //! and `imperative_core`'s `ValueDsl`/`StepNodeDsl`/`PathDsl`) — `Procedural2dDocument`/
 //! `Procedural2dOperation` themselves keep their ORIGINAL foreign field types unchanged.
 
-use crate::artifacts::procedural2d::{widget_id, Procedural2dDocument, PROCEDURAL_2D_SCHEMA};
+use crate::artifacts::procedural2d::Procedural2dDocument;
 use flow_core::neural::{Atom, Dictionary, Value as NeuralValue};
 use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use playbook::{FormGeneration, GenerationPlayState};
@@ -104,7 +104,7 @@ pub fn camera_to_dsl(camera: &CameraJson) -> CameraJsonDsl {
     CameraJsonDsl { x: camera.x, y: camera.y, zoom: camera.zoom }
 }
 
-pub fn camera_from_dsl(camera: CameraJsonDsl) -> CameraJson {
+pub fn camera_from_dsl(camera: &CameraJsonDsl) -> CameraJson {
     CameraJson { x: camera.x, y: camera.y, zoom: camera.zoom }
 }
 
@@ -119,7 +119,7 @@ pub fn layout_to_dsl(layout: &WidgetLayout) -> WidgetLayoutDsl {
     WidgetLayoutDsl { x: layout.x, y: layout.y }
 }
 
-pub fn layout_from_dsl(layout: WidgetLayoutDsl) -> WidgetLayout {
+pub fn layout_from_dsl(layout: &WidgetLayoutDsl) -> WidgetLayout {
     WidgetLayout { x: layout.x, y: layout.y }
 }
 
@@ -292,9 +292,9 @@ fn procedural2d_document_to_dsl(document: &Procedural2dDocument) -> Procedural2d
 fn procedural2d_document_from_dsl(parsed: Procedural2dDocumentDsl) -> Result<Procedural2dDocument, store::TextError> {
     let widgets = parsed.widgets.into_iter().map(widget_from_dsl).collect::<Result<Vec<_>, _>>()?;
     let synapses = parsed.synapses.into_iter().map(synapse_from_dsl).collect();
-    let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(entry))).collect();
+    let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(&entry))).collect();
     Ok(Procedural2dDocument {
-        fixture: FlowFixture { schema: parsed.schema, camera: camera_from_dsl(parsed.camera), widgets, synapses, layout },
+        fixture: FlowFixture { schema: parsed.schema, camera: camera_from_dsl(&parsed.camera), widgets, synapses, layout },
         generation: GenerationPlayState { generations: parsed.generations.into_iter().map(form_generation_from_dsl).collect(), selected_generation_id: parsed.selected_generation_id, preview_text: parsed.preview_text },
     })
 }
@@ -341,6 +341,7 @@ pub fn print_dsl(document: &Procedural2dDocument) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::procedural2d::PROCEDURAL_2D_SCHEMA;
     use store::{test_support, DocumentDsl};
 
     //#region 🔖️DslTests
@@ -361,8 +362,13 @@ mod tests {
     fn dsl_round_trip_with_generation_state() {
         let mut projection = Procedural2dDocument::default();
         let mut values = serde_json::Map::new();
-        values.insert("count".into(), serde_json::json!(3.0));
-        projection.generation.generations.push(playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
+        // 🌱️ A fractional literal, not a whole number: `dsl::from_dsl_value` normalizes a whole-number
+        // `DslValue::Number` (the engine's single-`f64` number shape) to an integer-backed
+        // `serde_json::Number` on the way back out — a real, engine-owned behavior, not a bug in this
+        // crate's mirror/conversion code — so a whole-number input like `3.0` would legitimately compare
+        // unequal to its round-tripped `3` here. `3.5` has no such ambiguity.
+        values.insert("count".into(), serde_json::json!(3.5));
+        projection.generation.generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
         projection.generation.selected_generation_id = Some("generation-1".into());
         projection.generation.preview_text = Some("42".into());
         test_support::assert_dsl_round_trip(&projection);

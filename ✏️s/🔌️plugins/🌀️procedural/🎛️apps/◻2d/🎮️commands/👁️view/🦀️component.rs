@@ -90,9 +90,9 @@ mod tests {
     #[test]
     fn set_show_mode_is_config_only() {
         let mut app = app();
-        let before = app.projection().expect("projection").clone();
+        let before = app.projection().expect("projection");
         dispatch(&mut app, Procedural2dCommand::SetShowMode(set_show_mode::SetShowMode { value: "wire".into() }));
-        assert_eq!(app.projection().expect("projection"), &before);
+        assert_eq!(app.projection().expect("projection"), before);
     }
 }
 //#endregion 🧪️Tests

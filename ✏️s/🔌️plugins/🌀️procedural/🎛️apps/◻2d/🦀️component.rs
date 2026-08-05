@@ -18,10 +18,7 @@ use crate::artifacts::procedural2d::engine::procedural2d_io;
 use crate::artifacts::procedural2d::op::Procedural2dOperation;
 use crate::artifacts::procedural2d::{artifact_kind, Procedural2dDocument, PROCEDURAL_2D_SCHEMA};
 use flow_core::FlowEvalSession;
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, UiNode,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, UiNode};
 use serde_json::Value;
 use std::sync::Mutex;
 
@@ -120,6 +117,77 @@ impl DocumentApp for Procedural2dPlayApp {
 
     fn command_id(&self, command: &Procedural2dCommand) -> &str {
         command.command_id()
+    }
+
+    /// 🎯️ Maps host action id + JSON args onto `Procedural2dCommand` — preserved verbatim from the
+    /// pre-migration hand-rolled dispatch so React/wgpu callers that still speak the stringly
+    /// `{action,args}` wire (rather than `OpBinary` bytes) keep working unchanged.
+    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+        let args = args.cloned().unwrap_or(Value::Null);
+        let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
+        let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
+        let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
+        match action {
+            "nodeGraphEdit" => Ok(Procedural2dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
+                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(|value| value.to_string())).unwrap_or_else(|| "[]".into()),
+            })),
+            "moveMediaNode" => Ok(Procedural2dCommand::MoveMediaNode(move_media_node::MoveMediaNode {
+                node_id: str_arg(&["nodeId", "node_id", "id"]).unwrap_or_default(),
+                x: f64_arg(&["x"]).unwrap_or(0.0),
+                y: f64_arg(&["y"]).unwrap_or(0.0),
+            })),
+            "addWidget" => Ok(Procedural2dCommand::AddWidget(add_widget::AddWidget {
+                kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()),
+                neuron_kind: str_arg(&["neuronKind", "neuron_kind"]),
+                x: f64_arg(&["x"]),
+                y: f64_arg(&["y"]),
+            })),
+            "removeWidget" => Ok(Procedural2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() })),
+            "connectMediaPorts" => Ok(Procedural2dCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts {
+                source_node_id: str_arg(&["sourceNodeId", "source_node_id"]).unwrap_or_default(),
+                source_port_id: str_arg(&["sourcePortId", "source_port_id"]).unwrap_or_default(),
+                target_node_id: str_arg(&["targetNodeId", "target_node_id"]).unwrap_or_default(),
+                target_port_id: str_arg(&["targetPortId", "target_port_id"]).unwrap_or_default(),
+            })),
+            "reorganize" => Ok(Procedural2dCommand::Reorganize(reorganize::Reorganize {})),
+            "addGeneration" => Ok(Procedural2dCommand::AddGeneration(add_generation::AddGeneration {})),
+            "removeGeneration" => Ok(Procedural2dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
+            "renameGeneration" => Ok(Procedural2dCommand::RenameGeneration(rename_generation::RenameGeneration { id: str_arg(&["id"]).unwrap_or_default(), name: str_arg(&["name"]).unwrap_or_default() })),
+            "updateGenerationValues" => {
+                let value = args.get("value").map(|entry| dsl::to_dsl_value(entry).unwrap_or(dsl::DslValue::Null)).unwrap_or(dsl::DslValue::Null);
+                Ok(Procedural2dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues {
+                    generation_id: str_arg(&["generationId", "generation_id"]),
+                    question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
+                    value,
+                }))
+            }
+            "nodeGraphViewport" => {
+                let viewport_json = str_arg(&["viewportJson", "viewport_json"])
+                    .or_else(|| args.get("camera").map(|value| if value.is_string() { value.as_str().unwrap_or("{}").to_string() } else { value.to_string() }))
+                    .unwrap_or_else(|| "{}".into());
+                Ok(Procedural2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json }))
+            }
+            "setSelection" => Ok(Procedural2dCommand::SetSelection(set_selection::SetSelection { ids: string_list("ids") })),
+            "selectNode" => Ok(Procedural2dCommand::SelectNode(select_node::SelectNode { ids: string_list("ids") })),
+            "nodeGraphSelect" => Ok(Procedural2dCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { ids: string_list("ids") })),
+            "nodeGraphHover" => Ok(Procedural2dCommand::NodeGraphHover(node_graph_hover::NodeGraphHover {})),
+            "setShowMode" => Ok(Procedural2dCommand::SetShowMode(set_show_mode::SetShowMode { value: str_arg(&["value", "showMode"]).unwrap_or_default() })),
+            "generate" => Ok(Procedural2dCommand::Generate(enter_generate::Generate {})),
+            "setEvalOutputs" => Ok(Procedural2dCommand::SetEvalOutputs(set_eval_outputs::SetEvalOutputs {
+                outputs_json: str_arg(&["outputsJson", "outputs_json", "evalJson"]).unwrap_or_else(|| "{}".into()),
+            })),
+            "canvasPointerDown" => Ok(Procedural2dCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {})),
+            "canvasPointerMove" => Ok(Procedural2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {})),
+            "canvasPointerUp" => Ok(Procedural2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {})),
+            "canvasWheel" => Ok(Procedural2dCommand::CanvasWheel(canvas_wheel::CanvasWheel {})),
+            "selectGeneration" => Ok(Procedural2dCommand::SelectGeneration(select_generation::SelectGeneration { id: str_arg(&["id"]) })),
+            "flowEvalTick" => Ok(Procedural2dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {})),
+            "setLocale" => Ok(Procedural2dCommand::SetLocale(set_locale::SetLocale { value: str_arg(&["value", "locale"]).unwrap_or_default() })),
+            other => Err(Fault::from(format!(
+                "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
+                 app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+            ))),
+        }
     }
 
     fn handle(&self, command: &Procedural2dCommand, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
@@ -343,101 +411,45 @@ mod tests {
         }
     }
 
-    /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword.
+    /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — pinned
+    /// explicitly per row (not derived from the command id) since `setLocale`/`locale` is the one row
+    /// where the two vocabularies genuinely diverge. This is what a missing `#[dsl(keyword = ..)]` on a
+    /// payload struct silently breaks (the record prints with no keyword at all and fails to re-parse).
     #[test]
     fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
-        let expectations: [(&Procedural2dCommand, &str); 25] = {
-            let commands = every_command_static();
-            [
-                (&commands.0, "node-graph-edit"),
-                (&commands.1, "move-media-node"),
-                (&commands.2, "add-widget"),
-                (&commands.3, "remove-widget"),
-                (&commands.4, "connect-media-ports"),
-                (&commands.5, "reorganize"),
-                (&commands.6, "add-generation"),
-                (&commands.7, "remove-generation"),
-                (&commands.8, "rename-generation"),
-                (&commands.9, "update-generation-values"),
-                (&commands.10, "node-graph-viewport"),
-                (&commands.11, "set-selection"),
-                (&commands.12, "select-node"),
-                (&commands.13, "node-graph-select"),
-                (&commands.14, "node-graph-hover"),
-                (&commands.15, "set-show-mode"),
-                (&commands.16, "generate"),
-                (&commands.17, "set-eval-outputs"),
-                (&commands.18, "canvas-pointer-down"),
-                (&commands.19, "canvas-pointer-move"),
-                (&commands.20, "canvas-pointer-up"),
-                (&commands.21, "canvas-wheel"),
-                (&commands.22, "select-generation"),
-                (&commands.23, "flow-eval-tick"),
-                (&commands.24, "locale"),
-            ]
-        };
-        for (command, expected_keyword) in expectations {
+        let expected_keywords = [
+            "node-graph-edit",
+            "move-media-node",
+            "add-widget",
+            "remove-widget",
+            "connect-media-ports",
+            "reorganize",
+            "add-generation",
+            "remove-generation",
+            "rename-generation",
+            "update-generation-values",
+            "node-graph-viewport",
+            "set-selection",
+            "select-node",
+            "node-graph-select",
+            "node-graph-hover",
+            "set-show-mode",
+            "generate",
+            "set-eval-outputs",
+            "canvas-pointer-down",
+            "canvas-pointer-move",
+            "canvas-pointer-up",
+            "canvas-wheel",
+            "select-generation",
+            "flow-eval-tick",
+            "locale",
+        ];
+        let commands = every_command();
+        assert_eq!(commands.len(), expected_keywords.len(), "every_command() and expected_keywords must stay in the same declaration order");
+        for (command, expected_keyword) in commands.iter().zip(expected_keywords) {
             let printed = protocol::OpText::print_op(command);
             assert_eq!(printed.split(' ').next().unwrap_or_default(), expected_keyword, "wire keyword drifted for command {}: {printed:?}", command.command_id());
         }
-    }
-
-    #[allow(clippy::type_complexity)]
-    fn every_command_static() -> (
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-        Procedural2dCommand,
-    ) {
-        let all = every_command();
-        (
-            all[0].clone(),
-            all[1].clone(),
-            all[2].clone(),
-            all[3].clone(),
-            all[4].clone(),
-            all[5].clone(),
-            all[6].clone(),
-            all[7].clone(),
-            all[8].clone(),
-            all[9].clone(),
-            all[10].clone(),
-            all[11].clone(),
-            all[12].clone(),
-            all[13].clone(),
-            all[14].clone(),
-            all[15].clone(),
-            all[16].clone(),
-            all[17].clone(),
-            all[18].clone(),
-            all[19].clone(),
-            all[20].clone(),
-            all[21].clone(),
-            all[22].clone(),
-            all[23].clone(),
-            all[24].clone(),
-        )
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.

@@ -63,6 +63,7 @@ mod tests {
 
     #[test]
     fn flow_eval_tick_does_not_panic_with_nothing_pending() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
         dispatch(&mut app, Procedural3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}));
     }

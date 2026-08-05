@@ -86,6 +86,7 @@ store::impl_whole_record_config!(ShootingConfig);
 /// `diff()` returns "the full config after this op", and `store::impl_whole_record_config!` supplies the
 /// `OperationDiff<ShootingConfig>` that returns that snapshot verbatim, ignoring `base`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[allow(clippy::large_enum_variant, reason = "Snapshot{config: ShootingConfig} mirrors the pre-migration shape verbatim (a whole-record config snapshot, not a size regression this migration introduced); boxing it would change the wire shape")]
 pub enum ShootingConfigOperation {
     #[dsl(key = "snapshot")]
     Snapshot {

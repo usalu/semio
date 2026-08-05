@@ -3,7 +3,7 @@
 //! macro's value is that every locale×terminology combination is compile-checked in one place.
 
 use crate::apps::present::config::PresentConfig;
-use semio_framework_plugin::{Locale, Terminology};
+use semio_framework_plugin::{AppLabels, Locale, Terminology};
 
 //#region 🔖️Labels
 semio_framework_plugin::app_labels! {

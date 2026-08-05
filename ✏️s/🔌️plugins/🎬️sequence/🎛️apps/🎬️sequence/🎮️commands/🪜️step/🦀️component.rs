@@ -179,7 +179,7 @@ pub mod set_step_collapsed {
 
     pub fn handle(payload: &SetStepCollapsed, doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceOperation, SequenceConfigOperation>, Fault> {
         let fixture = doc.projection;
-        let collapsed = fixture.steps.iter().find(|step| step.id == payload.id).map(|step| !step.collapsed).unwrap_or(true);
+        let collapsed = fixture.steps.iter().find(|step| step.id == payload.id).is_none_or(|step| !step.collapsed);
         Ok(Emit::operations(ops_from_host_mutation(fixture, |host| {
             host.set_step_collapsed(&payload.id, collapsed);
         })))

@@ -137,6 +137,10 @@ store::impl_whole_record_config!(Procedural3dConfig);
 //#region 🔖️ConfigOperations
 /// 🧮️ [`Procedural3dConfig`]'s operation enum — one variant per settled interaction, plus a generic
 /// `Snapshot` every variant's `backwards()` returns.
+// 🧯️ `Snapshot` genuinely needs to carry the whole config by value (it IS the inverse of every other
+// variant); boxing it would only relocate the allocation for an enum that is never stored in bulk
+// (one value per dispatch, immediately consumed), so the size lint is suppressed rather than chased.
+#[allow(clippy::large_enum_variant)]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum Procedural3dConfigOperation {
     #[dsl(key = "snapshot")]

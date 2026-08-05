@@ -83,7 +83,6 @@ mod tests {
     use crate::apps::present::testkit::{dispatch, present_app, render};
     use crate::apps::present::{PresentCommand, PRESENT_PLAY_BODY_CATALOGUE, PRESENT_PLAY_BODY_DETAILS};
     use semio_framework_plugin::testkit::meta;
-    use semio_framework_plugin::PluginApp;
 
     #[test]
     fn animate_present_labels_resolve_native_by_default() {

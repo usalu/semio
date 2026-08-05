@@ -1693,6 +1693,47 @@ mod tests {
         }
     }
 
+    /// 🧱️ The manifest stitch: every window kind / panel tab the taxonomy nodes export lands in the
+    /// built `AppDefinition` with the same id, body key, surface kind and (empty) manifest measures the
+    /// pre-consolidation scalar `.window_kind(..)`/`.panel_tab(..)` calls produced — measures stay
+    /// config-derived per frame via `DocumentApp::window_measures`, never frozen into the manifest.
+    #[test]
+    fn manifest_stitches_every_taxonomy_node_with_its_pre_migration_shape() {
+        let definition = create_cad_app().definition;
+        let windows: Vec<(&str, &str)> = definition.window_kinds.iter().map(|window| (window.id.as_str(), window.body_key.as_str())).collect();
+        assert_eq!(
+            windows,
+            vec![
+                (shape::WINDOW_KIND_ID, shape::BODY_KEY),
+                (building::WINDOW_KIND_ID, building::BODY_KEY),
+                (energy::WINDOW_KIND_ID, energy::BODY_KEY),
+                (structure_classic::WINDOW_KIND_ID, structure_classic::BODY_KEY),
+            ]
+        );
+        for window in definition.window_kinds.iter() {
+            assert_eq!(window.surface_kind, ui_wgpu::SurfaceKind::World3d, "window {} surface kind", window.id);
+            assert!(window.options.measures.is_empty(), "window {} must not freeze measures into the manifest", window.id);
+        }
+        let modes: Vec<&str> = definition.modes.iter().map(|mode| mode.id.as_str()).collect();
+        assert_eq!(modes, vec![edit::CAD_PLAY_MODE_EDIT]);
+        assert_eq!(definition.default_mode_id, edit::CAD_PLAY_MODE_EDIT);
+        // 🕰️ The framework appends its own history tab after the app-declared ones.
+        let panels: Vec<(&str, Option<&str>)> = definition.panel_tabs.iter().map(|tab| (tab.id(), tab.body_key.as_deref())).take(3).collect();
+        assert_eq!(
+            panels,
+            vec![
+                (semio_framework_plugin::FRAMEWORK_PANEL_TAB_DOCUMENT_ID, Some(document::CAD_PLAY_BODY_DOCUMENT)),
+                (semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID, Some(catalogue::CAD_PLAY_BODY_CATALOGUE)),
+                (semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID, Some(inspection::CAD_PLAY_BODY_PROPERTIES)),
+            ]
+        );
+        let layout_json = serde_json::to_string(&edit::layout()).expect("layout json");
+        for window_kind_id in [shape::WINDOW_KIND_ID, building::WINDOW_KIND_ID, energy::WINDOW_KIND_ID, structure_classic::WINDOW_KIND_ID] {
+            assert!(layout_json.contains(window_kind_id), "default quad layout must place {window_kind_id}: {layout_json}");
+        }
+        assert_eq!(definition.artifact_kinds.iter().map(|kind| kind.id.as_str()).collect::<Vec<_>>(), vec!["3d.cad"]);
+    }
+
     #[test]
     fn internal_and_plumbing_actions_excluded_from_palette() {
         let definition = create_cad_app().definition;

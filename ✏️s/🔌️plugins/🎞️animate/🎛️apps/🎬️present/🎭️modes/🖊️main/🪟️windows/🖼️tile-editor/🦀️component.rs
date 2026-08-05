@@ -90,7 +90,6 @@ mod tests {
     use crate::apps::present::testkit::{present_app, render as render_body};
     use crate::apps::present::PresentCommand;
     use semio_framework_plugin::testkit::meta;
-    use semio_framework_plugin::PluginApp;
     use serde_json::Value;
 
     #[test]

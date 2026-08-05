@@ -23,6 +23,6 @@ serde_json = "1.0.140"
 thiserror = "2.0.12"
 
 [dev-dependencies]
-cad_document_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-cad-engine" }
+cad_plugin = { path = "../../../../../../../../../✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust", package = "semio-s-plugin-cad" }
 kernel_3d_brepkit = { path = "../../../../../../../../🔨️modules/🧊️3d/📐️brep/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-brep" }
 kernel_3d_engine = { path = "../../../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-brep-engine" }

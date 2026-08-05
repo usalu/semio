@@ -22,7 +22,7 @@ crate-type = ["cdylib", "rlib"]
 path = "../../../../../../../✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/⚡️implementations/🦀️rust/📦️lib.rs"
 
 [dependencies]
-sourcing_curate = { path = "../../../../../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-sourcing-curate-engine" }
+sourcing_curate = { path = "../../../../../../../✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust", package = "semio-s-plugin-sourcing" }
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-core = { path = "../../../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
 serde_json = "1.0.140"

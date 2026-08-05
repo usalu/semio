@@ -1,0 +1,101 @@
+📐️cad migration — verification log
+=================================
+
+BASELINE (pre-migration, old 8-crate layout)
+--------------------------------------------
+cargo test -p semio-s-app-cad          6 passed
+cargo test -p semio-s-app-cad-dsl      3 passed
+cargo test -p semio-s-app-cad-pack     3 passed
+cargo test -p semio-s-app-cad-op       2 passed
+cargo test -p semio-s-app-cad-protocol 6 passed
+cargo test -p semio-s-app-cad-engine  31 passed
+cargo test -p semio-s-app-cad-ui       DID NOT COMPILE (pre-existing breakage, see below)
+cargo test -p semio-s-plugin-cad       DID NOT COMPILE (depends on -ui)
+                                      --------
+baseline compiling total              51 passed
+
+PRE-EXISTING BREAKAGE FOUND AND FIXED
+--------------------------------------
+`semio-s-app-cad-ui` was committed broken at HEAD (fa51b5c82f) — 51 rustc parse errors:
+an automated repo-wide edit had wrapped `DocumentApp::handle`'s match arms in `Ok(` without
+adding the closing paren (`return Ok(Emit::default();`), left `Emit::amend_config(..)` arms
+unwrapped, and never imported `Fault` for the new `Result<_, Fault>` return type. Repaired as
+part of the migration (every arm is now a `🎮️commands/*` handler returning
+`Result<Emit<..>, Fault>`), so all 67 of that crate's tests run for the first time.
+
+AFTER (new single crate `semio-s-plugin-cad`)
+----------------------------------------------
+1. cargo check   --manifest-path .../📦️packages/🦀️rust/Cargo.toml            OK, 0 warnings
+2. cargo check   --manifest-path ... --target wasm32-wasip2                   OK, 0 warnings
+3. cargo clippy  --manifest-path ... --all-targets -- -D warnings             OK, 0 findings
+4. cargo test    --manifest-path ...                                          125 passed, 0 failed
+
+   test distribution
+     apps::cad::component                58   (incl. semio_plugin! sanity tests)
+     artifacts::cad::engine::interaction 14
+     artifacts::cad::interaction_spec     6
+     apps::cad::panels::inspection        6
+     artifacts::cad::spr                  5
+     artifacts::cad::engine::geometry_import 5
+     artifacts::cad::engine::construct    5
+     apps::cad::panels::document          5
+     apps::cad::config                    5
+     artifacts::cad::pack                 3
+     artifacts::cad::op                   3
+     artifacts::cad::dsl                  3
+     artifacts::cad::engine::transformation 2
+     artifacts::cad::diff                 2
+     apps::cad::panels::catalogue         1
+     __semio_plugin_sanity_*              2
+
+   All 67 pre-existing `semio-s-app-cad-ui` test fns are present (verified by name-set diff);
+   the only rename is `context_menu_is_grouped_and_keeps_deleteObject_last` ->
+   `..._delete_object_last` (rustc `non_snake_case`, which `-D warnings` rejects).
+
+4b. WIRE FORMAT DIFF (the real correctness proof)
+   Commands:   69 rows (one per `app_commands!` row + a None-everywhere twin for every row with
+               Option fields) dumped as `print_op | len | hex` before and after.
+               diff 🧪️wire-baseline-before.txt 🧪️wire-after.txt -> BYTE-IDENTICAL.
+   Operations: 16 `CadOperation` rows + 2 `CadConfigOperation` rows, same technique.
+               diff 🧪️wire-baseline-operations-before.txt 🧪️wire-operations-after.txt -> BYTE-IDENTICAL.
+   The ONLY difference anywhere is `serde_json` shape for the 5 fieldless commands
+   ("EngagementAbort" -> {"EngagementAbort":{}}) — the documented, expected consequence of
+   `app_commands!`'s single-field-tuple encoding (TEMPLATE §5.5). Verified unused on any wire:
+   `DocumentApp::Command` crosses the ABI via `protocol::OpBinary::decode_op`
+   (`VcsDocumentApp::dispatch_command_bytes`), never via serde; `command_from_action`'s default
+   impl is an error return and cad never overrode it.
+   Permanent guards kept: `every_command()` + text/binary/keyword law, and
+   `optional_field_rows_keep_their_pre_migration_bytes` (12 pinned hex strings) in the app
+   component; the same pair for `CadOperation` in 🗿️artifacts/📐️cad/🔧️op.
+
+4c. TAXONOMY AUDIT (mirror of registry `validateTaxonomyTree`)
+   bun 🔍️taxonomy-audit.ts  ->  "taxonomy tree clean: 📐️cad"
+
+5. old crate manifests deleted (8 dirs) — only after 1-4 were green.
+
+6. registry discovery contract: `bun …/📇️registry/📜️script.ts check` no longer reports cad at all
+   (it reports duplicate-playground errors only for sibling plugins still carrying BOTH their old
+   bundle manifest and their new 📦️packages one — animate, procedural×2, sequence, shooting,
+   writer). cad is absent from that list, i.e. its new crate is discovered and its old one is gone.
+
+7. WASM COMPONENT BUILD + JCO TRANSPILE (TEMPLATE §9 step 6)
+   cargo build --manifest-path .../📦️packages/🦀️rust/Cargo.toml --target wasm32-wasip2
+     -> target/wasm32-wasip2/debug/semio_s_plugin_cad.wasm (29,730,956 bytes), Finished in 32.97s
+   bunx @bytecodealliance/jco transpile <artifact> -o <tmp> \
+        --name semio_s_plugin_cad_component --map "semio:framework/host=./🟨️host-shim.js"
+     -> OK. Emitted .core.wasm (28.3 MiB) + .js (242 KiB) + .d.ts.
+        The generated world declares `export * as plugin from './interfaces/semio-framework-plugin.js'`
+        (export semio:framework/plugin) and imports semio:framework/{host,types} + wasi 0.2.9 —
+        the exact component ABI shape the host loader expects.
+   (The `--profile wasm-release` build was started and then abandoned mid-way to free the shared cargo
+   lock for the other in-flight migration agents; the dev-profile component build + transpile proves
+   the same ABI, and the release build is part of the registrar's `framework-os-dev:plugin -- cad` pass.)
+
+8. temporary nested-[workspace] overlay, Cargo.lock and target/ removed from
+   ✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/. That directory now holds exactly:
+   Cargo.toml, 📋️project.json, 📜️script.ts.
+
+STILL UN-RUN (needs a healthy root workspace, which is currently red from sibling in-flight
+migrations AND from cad's own now-dangling member lines — registrar work):
+   cargo check --workspace, nx :test targets, framework-os-dev:plugin -- cad, dev boot smoke,
+   parity probe, verify gate, registry generate.

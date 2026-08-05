@@ -1,7 +1,7 @@
 //! 🔧️ Animate present artifact — operation enum + laws (constitutional: op).
 
 use crate::artifacts::present::diff::PresentDiff;
-use crate::artifacts::present::{FigureTileDraft, FigureTileDraftPatch, FigureTileFrame, FigureTileSource, PresentDeck};
+use crate::artifacts::present::{FigureTileDraft, FigureTileDraftPatch, FigureTileSource, PresentDeck};
 use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionOperation, Operation};
 use serde::{Deserialize, Serialize};
 
@@ -137,7 +137,7 @@ impl protocol::OpBinary for PresentOperation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::present::{default_figure_tile_source, default_present_deck};
+    use crate::artifacts::present::{default_figure_tile_source, default_present_deck, FigureTileFrame};
     use crate::artifacts::present::engine::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
     use store::test_support;
 
@@ -155,7 +155,7 @@ mod tests {
     fn set_tiles_and_clear_round_trip() {
         let deck = default_present_deck();
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
-        let seeded = round_trip(&deck, &PresentOperation::SetTiles { tiles: tiles.clone() });
+        let seeded = round_trip(&deck, &PresentOperation::SetTiles { tiles });
         assert_eq!(seeded.tiles.len(), 4);
         let cleared = round_trip(&seeded, &PresentOperation::SetTiles { tiles: Vec::new() });
         assert!(cleared.tiles.is_empty());

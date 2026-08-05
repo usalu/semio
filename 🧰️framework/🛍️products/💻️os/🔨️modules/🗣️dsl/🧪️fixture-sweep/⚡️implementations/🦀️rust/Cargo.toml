@@ -20,8 +20,13 @@ store = { path = "../../../../../../../../🧰️framework/🛍️products/💻�
 # now lives at `writer::artifacts::writer::WriterProjection` (see this crate's `📦️lib.rs`).
 writer = { path = "../../../../../../../../✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust", package = "semio-s-plugin-writer" }
 mathematical = { path = "../../../../../../../../✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/⚡️implementations/🦀️rust", package = "semio-s-app-mathematical" }
-procedural_2d = { path = "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/⚡️implementations/🦀️rust", package = "semio-s-app-procedural-2d" }
-procedural_3d = { path = "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-procedural-3d" }
+# 🌀️ `Procedural2dDocument`/`Procedural3dDocument` are genuinely plugin-owned (no shared kernel crate
+# the way flow has), so they now live at `procedural::artifacts::procedural2d::Procedural2dDocument`/
+# `procedural::artifacts::procedural3d::Procedural3dDocument` (see this crate's `📦️lib.rs`) — the
+# deleted `semio-s-app-procedural-2d`/`semio-s-app-procedural-3d` facade crates were merged into
+# `semio-s-plugin-procedural` by the crate-consolidation taxonomy migration (ticket
+# 26/08/05/PROCEDURAL-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION).
+procedural = { path = "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", package = "semio-s-plugin-procedural" }
 # 🌊️ `FlowFixture` and its `store::DocumentDsl` impl have always lived in the flow kernel crate; the
 # deleted `semio-s-app-flow` facade only re-exported them (it was merged into `semio-s-plugin-flow` by
 # the W1 taxonomy pilot). Pointing at the real owner keeps this sweep independent of plugin packaging.
@@ -38,8 +43,18 @@ vcs_app = { path = "../../../../../../../../✏️s/🔌️plugins/🌿️vcs/�
 # 26/08/05/ANIMATE-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION) — the deleted `semio-s-app-animate-present`
 # facade crate only ever re-exported it (see this crate's `📦️lib.rs`'s `use present::artifacts::present::PresentDeck;`).
 present = { path = "../../../../../../../../✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust", package = "semio-s-plugin-animate" }
-shooting = { path = "../../../../../../../../✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/⚡️implementations/🦀️rust", package = "semio-s-app-shooting" }
-sequence = { path = "../../../../../../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/⚡️implementations/🦀️rust", package = "semio-s-app-sequence" }
+# 🎥️ `ShootingFixture` and its `store::DocumentDsl` impl are genuinely plugin-owned (no shared kernel
+# crate the way flow has), so they now live at `shooting::artifacts::shooting::ShootingFixture` (see this
+# crate's `📦️lib.rs`) — the deleted `semio-s-app-shooting` facade crate was merged into
+# `semio-s-plugin-shooting` by the crate-consolidation taxonomy migration (ticket
+# 26/08/05/SHOOTING-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION).
+shooting = { path = "../../../../../../../../✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust", package = "semio-s-plugin-shooting" }
+# 🎬️ `SequenceFixture` and its `store::DocumentDsl` impl are genuinely plugin-owned (no shared kernel
+# crate the way flow has), so they now live at `sequence::artifacts::sequence::SequenceFixture` (see
+# this crate's `📦️lib.rs`) — the deleted `semio-s-app-sequence` facade crate was merged into
+# `semio-s-plugin-sequence` by the crate-consolidation taxonomy migration (ticket
+# 26/08/05/SEQUENCE-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION).
+sequence = { path = "../../../../../../../../✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust", package = "semio-s-plugin-sequence" }
 fem2d = { path = "../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/⚡️implementations/🦀️rust", package = "semio-s-app-fem-2d" }
 fem3d = { path = "../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-fem-3d" }
 process_3d = { path = "../../../../../../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-process-3d" }
@@ -84,5 +99,5 @@ block_5d = { path = "../../../../../../../../✏️s/🔌️plugins/🧱️block
 block_3d = { path = "../../../../../../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-block-3d" }
 home = { path = "../../../../../../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/⚡️implementations/🦀️rust", package = "semio-s-app-space-home" }
 semio_framework_os = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
-sourcing = { path = "../../../../../../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/⚡️implementations/🦀️rust", package = "semio-s-app-sourcing-curate" }
+sourcing = { path = "../../../../../../../../✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust", package = "semio-s-plugin-sourcing" }
 space = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-space" }

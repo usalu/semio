@@ -55,7 +55,7 @@ pub fn render(document: &Procedural2dDocument, config: &Procedural2dConfig, sess
         for widget in &fixture.widgets {
             let id = crate::artifacts::procedural2d::widget_id(widget).to_string();
             if config.selected_ids.is_empty() || config.selected_ids.iter().any(|selected| selected == &id) {
-                let (x, y) = fixture.layout.get(&id).map(|layout| (layout.x, layout.y)).unwrap_or((48.0, 240.0));
+                let (x, y) = fixture.layout.get(&id).map_or((48.0, 240.0), |layout| (layout.x, layout.y));
                 layers.push(serde_json::json!({
                     "id": format!("widget-{id}"),
                     "kind": "node",

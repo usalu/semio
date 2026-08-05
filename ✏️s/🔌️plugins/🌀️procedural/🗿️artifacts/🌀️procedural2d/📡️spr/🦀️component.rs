@@ -88,9 +88,9 @@ fn procedural2d_operation_from_dsl(operation: Procedural2dOperationDsl) -> Resul
         Procedural2dOperationDsl::RemoveWidget { id } => Procedural2dOperation::RemoveWidget { id },
         Procedural2dOperationDsl::SetSynapse { index, synapse } => Procedural2dOperation::SetSynapse { index, synapse: synapse_from_dsl(synapse) },
         Procedural2dOperationDsl::RemoveSynapse { id } => Procedural2dOperation::RemoveSynapse { id },
-        Procedural2dOperationDsl::SetLayout { id, layout } => Procedural2dOperation::SetLayout { id, layout: layout_from_dsl(layout) },
+        Procedural2dOperationDsl::SetLayout { id, layout } => Procedural2dOperation::SetLayout { id, layout: layout_from_dsl(&layout) },
         Procedural2dOperationDsl::RemoveLayout { id } => Procedural2dOperation::RemoveLayout { id },
-        Procedural2dOperationDsl::SetCamera { camera } => Procedural2dOperation::SetCamera { camera: camera_from_dsl(camera) },
+        Procedural2dOperationDsl::SetCamera { camera } => Procedural2dOperation::SetCamera { camera: camera_from_dsl(&camera) },
         Procedural2dOperationDsl::SetSchema { schema } => Procedural2dOperation::SetSchema { schema },
         Procedural2dOperationDsl::GenerationAdd { generation } => Procedural2dOperation::Generation(GenerationOperation::Add { generation: form_generation_from_dsl(generation) }),
         Procedural2dOperationDsl::GenerationRemove { id } => Procedural2dOperation::Generation(GenerationOperation::Remove { id }),
@@ -114,7 +114,7 @@ impl protocol::OpText for Procedural2dOperation {
 
 /// ⚡️ Binary mirror of the `OpText` bridge above — `Procedural2dOperationDsl` already derives
 /// `OpBinary` via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
-impl protocol::OpBinary for Procedural2dOperation {
+impl OpBinary for Procedural2dOperation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         procedural2d_operation_to_dsl(self).encode_op()
     }

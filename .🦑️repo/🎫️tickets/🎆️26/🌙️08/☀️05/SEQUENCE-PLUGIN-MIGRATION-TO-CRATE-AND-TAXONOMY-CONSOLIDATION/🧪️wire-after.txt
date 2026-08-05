@@ -1,0 +1,34 @@
+Wire-format byte-identity proof — new semio-s-plugin-sequence crate vs. wire-baseline-before.txt
+(captured from the pre-migration semio-s-app-sequence-protocol crate's temp [DEBUG] dump test).
+
+All 19 dumps (18 SequenceCommand variants + one SequenceOperation::StepsAdd) are byte-identical,
+hex-for-hex, to the pre-migration baseline. Verified by direct line-by-line comparison; the only
+row requiring a fix was SetLocale, whose app_commands! row was initially mis-keyed "locale"
+(copied from the flow pilot's documented id/keyword divergence) instead of the sequence
+protocol's actual original key "set-locale" — corrected before this dump was taken.
+
+AddStep              | add-step kind=log.print x=1 y=2 | 37 | 010001096c6f672e7072696e74030006000105000000000000f03f02050000000000000040
+AddStepToSlot        | add-step-to-slot kind=log.print x=1 y=2 owner=step-1 slot-name=then | 55 | 010103096c6f672e7072696e7406737465702d31047468656e050006000105000000000000f03f02050000000000000040030601040602
+AddStepDropped(Some) | add-step-dropped kind=log.print x=1 y=2 picked-step-id=step-1 | 47 | 010202096c6f672e7072696e7406737465702d31040006000105000000000000f03f02050000000000000040030601
+AddStepDropped(None) | add-step-dropped kind=log.print x=1 y=2 | 37 | 010201096c6f672e7072696e74030006000105000000000000f03f02050000000000000040
+RemoveStep           | remove-step id=step-1 | 14 | 01030106737465702d3101000600
+DeleteSelection      | delete-selection | 4 | 01040000
+MoveStep             | move-step node-id=step-1 x=5 y=6 | 34 | 01050106737465702d31030006000105000000000000144002050000000000001840
+ConnectSteps         | connect-steps source-node-id=step-1 target-node-id=step-2 | 24 | 01060206737465702d3106737465702d3202000600010601
+DisconnectSteps      | disconnect-steps from-id=step-1 to-id=step-2 | 24 | 01070206737465702d3106737465702d3202000600010601
+SetStepParams        | set-step-params id=step-1 params-json="{\"a\":1}" | 25 | 01080206737465702d31077b2261223a317d02000600010601
+SetStepCollapsed     | set-step-collapsed id=step-1 | 14 | 01090106737465702d3101000600
+Reorganize           | reorganize | 4 | 010a0000
+NodeGraphEdit        | node-graph-edit operations-json="[]" | 10 | 010b01025b5d01000600
+SetSelection         | set-selection step-ids=[ step-1 step-2 ] | 25 | 010c0206737465702d3106737465702d3201000c0206000601
+SetOrientation       | set-orientation value=topBottom | 17 | 010d0109746f70426f74746f6d01000600
+Run                  | run | 4 | 010e0000
+Stop                 | stop | 4 | 010f0000
+SetViewport          | set-viewport camera { x=1 y=2 zoom=3 } | 38 | 01100001000e0d030005000000000000f03f0105000000000000004002050000000000000840
+SetLocale            | set-locale value=de-DE | 13 | 0111010564652d444501000600
+StepsAdd             | steps-add index=2 item { id=step-99 kind=log.print params="{}" x=5 y=-6.5 collapsed=false } | 63 | 010003096c6f672e7072696e7407737465702d3939027b7d02000402010e0d060006010106000206020305000000000000144004050000000000001ac00601
+
+Baseline test totals (old 8 crates, --lib): sequence(facade)=0, dsl=3, engine=49, op=19, pack=4,
+protocol=5 (+1 debug dump), ui=19, bundle-sanity=2 => 101 real tests.
+New crate total: 122 tests, 0 failed (includes the same 101 preserved plus additional coverage
+split per taxonomy node, 2 taxonomy-aware sanity tests, and new per-node definition()/render() tests).

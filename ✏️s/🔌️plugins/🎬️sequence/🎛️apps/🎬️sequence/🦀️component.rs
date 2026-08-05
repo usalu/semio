@@ -48,9 +48,11 @@ semio_framework_plugin::app_commands! {
     /// 🎯️ `SequencePlayApp::Command` — the SOLE dispatch surface for sequence's own behavior,
     /// assembled from the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id
     /// (`command_id()`, the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword
-    /// (the kebab-case `#[dsl(key = ..)]` the codec uses) — they are genuinely different vocabularies;
-    /// `setLocale`/`locale` is the row that proves it. **Row order is the binary variant ordinal:
-    /// appending is safe, reordering is a wire-format break.**
+    /// (the kebab-case `#[dsl(key = ..)]` the codec uses) — every row's wire keyword happens to be the
+    /// plain kebab-case of its id (no `flow`-style divergence here), but the two are still copied
+    /// independently from the pre-migration `sequence_protocol` enum's `command_id()` match arm and
+    /// `#[dsl(key = ..)]` attribute respectively, never derived one from the other. **Row order is the
+    /// binary variant ordinal: appending is safe, reordering is a wire-format break.**
     pub enum SequenceCommand for SequenceFixture, SequenceOperation, SequenceConfig, SequenceConfigOperation {
         "addStep" as "add-step" => add_step::AddStep,
         "addStepToSlot" as "add-step-to-slot" => add_step_to_slot::AddStepToSlot,
@@ -69,7 +71,7 @@ semio_framework_plugin::app_commands! {
         "run" as "run" => run_command::Run,
         "stop" as "stop" => stop_command::Stop,
         "setViewport" as "set-viewport" => set_viewport::SetViewport,
-        "setLocale" as "locale" => set_locale::SetLocale,
+        "setLocale" as "set-locale" => set_locale::SetLocale,
     }
 }
 //#endregion 🔖️Commands
@@ -295,8 +297,8 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::sequence::testkit::{dispatch, new_app, new_app_with_registry_wired, SequenceApp};
-    use semio_framework_plugin::{testkit::assert_undo_redo_round_trip, PluginApp, Locale, Terminology, ViewState};
+    use crate::apps::sequence::testkit::{dispatch, new_app, new_app_with_registry_wired};
+    use semio_framework_plugin::{testkit::assert_undo_redo_round_trip, Locale, PluginApp, Terminology};
 
     #[test]
     fn default_fixture_has_steps() {
@@ -338,7 +340,7 @@ mod tests {
     #[test]
     fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         let mut app = new_app();
-        assert!(crate::apps::sequence::testkit::render(&mut app, "sequence.play.nope").contains("Unknown body"));
+        assert!(testkit::render(&mut app, "sequence.play.nope").contains("Unknown body"));
     }
 
     //#region 🔖️ManifestSanity
@@ -383,7 +385,7 @@ mod tests {
     fn import_media_steps_in_inserts_a_new_step_from_an_object_payload() {
         let mut app = new_app_with_registry_wired();
         let before = app.projection().expect("projection").steps.len();
-        let media = semio_framework_plugin::Media {
+        let media = Media {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Any },
             payload: MediaPayload::Structured { schema: "computation.value".into(), json: json!({ "message": "from upstream" }).to_string() },
         };
@@ -398,7 +400,7 @@ mod tests {
     #[test]
     fn import_media_steps_in_wraps_a_bare_scalar_payload() {
         let mut app = new_app_with_registry_wired();
-        let media = semio_framework_plugin::Media {
+        let media = Media {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Any },
             payload: MediaPayload::Structured { schema: "computation.value".into(), json: "42".into() },
         };
@@ -411,7 +413,7 @@ mod tests {
     #[test]
     fn import_media_rejects_unknown_port() {
         let mut app = new_app_with_registry_wired();
-        let media = semio_framework_plugin::Media {
+        let media = Media {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Any },
             payload: MediaPayload::Structured { schema: "computation.value".into(), json: "{}".into() },
         };
@@ -443,13 +445,12 @@ mod tests {
     }
 
     /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — the
-    /// kebab-cased command id, except for the one documented divergence (`setLocale` → `locale`, an
-    /// undeclared host-pushed command).
+    /// kebab-cased command id, for every row (sequence has no `flow`-style id/keyword divergence).
     #[test]
     fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let id = command.command_id();
-            let expected = if id == "setLocale" { "locale".to_string() } else { id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect() };
+            let expected: String = id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect();
             let printed = protocol::OpText::print_op(&command);
             assert_eq!(printed.split(' ').next().unwrap_or_default(), expected, "wire keyword drifted for command {id}: {printed:?}");
         }

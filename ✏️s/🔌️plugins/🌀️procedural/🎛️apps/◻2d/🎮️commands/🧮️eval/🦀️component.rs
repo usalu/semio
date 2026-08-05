@@ -69,9 +69,9 @@ mod tests {
     #[test]
     fn set_eval_outputs_does_not_mutate_the_document() {
         let mut app = app();
-        let before = app.projection().expect("projection").clone();
+        let before = app.projection().expect("projection");
         dispatch(&mut app, Procedural2dCommand::SetEvalOutputs(set_eval_outputs::SetEvalOutputs { outputs_json: "{}".into() }));
-        assert_eq!(app.projection().expect("projection"), &before);
+        assert_eq!(app.projection().expect("projection"), before);
     }
 }
 //#endregion 🧪️Tests

@@ -80,7 +80,6 @@ mod tests {
 
     #[test]
     fn set_source_replaces_source_and_clears_tiles_when_src_changes() {
-        use semio_framework_plugin::PluginApp;
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(crate::apps::present::commands::grid::seed_grid::SeedGrid { rows: 2, columns: 2 }));
         assert_eq!(app.projection().expect("projection").tiles.len(), 4);
@@ -96,10 +95,9 @@ mod tests {
 
     #[test]
     fn set_source_with_same_src_keeps_existing_tiles() {
-        use semio_framework_plugin::PluginApp;
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(crate::apps::present::commands::grid::seed_grid::SeedGrid { rows: 2, columns: 2 }));
-        let mut source = app.projection().expect("projection").source.clone();
+        let mut source = app.projection().expect("projection").source;
         source.kind = "figure".into();
         dispatch(&mut app, PresentCommand::SetSource(set_source::SetSource { source }));
         assert_eq!(app.projection().expect("projection").tiles.len(), 4, "unchanged src does not clear tiles");
@@ -109,7 +107,6 @@ mod tests {
     fn set_frame_updates_source_frame() {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SetFrame(set_frame::SetFrame { frame: FigureTileFrame { x: 0.1, y: 0.2, width: 0.3, height: 0.4 } }));
-        use semio_framework_plugin::PluginApp;
         let frame = app.projection().expect("projection").source.frame;
         assert_eq!(frame.x, 0.1);
         assert_eq!(frame.y, 0.2);
@@ -119,7 +116,6 @@ mod tests {
 
     #[test]
     fn set_active_example_demo_resets_to_default_deck() {
-        use semio_framework_plugin::PluginApp;
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(crate::apps::present::commands::grid::seed_grid::SeedGrid { rows: 2, columns: 2 }));
         dispatch(&mut app, PresentCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }));
@@ -128,7 +124,6 @@ mod tests {
 
     #[test]
     fn set_active_example_unknown_id_is_a_no_op() {
-        use semio_framework_plugin::PluginApp;
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(crate::apps::present::commands::grid::seed_grid::SeedGrid { rows: 2, columns: 2 }));
         dispatch(&mut app, PresentCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "other".into() }));

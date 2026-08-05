@@ -63,8 +63,8 @@ mod tests {
     use note_app::NoteDocument;
     use playbook::PlaybookSpec;
     use present::artifacts::present::PresentDeck;
-    use procedural_2d::Procedural2dDocument;
-    use procedural_3d::Procedural3dDocument;
+    use procedural::artifacts::procedural2d::Procedural2dDocument;
+    use procedural::artifacts::procedural3d::Procedural3dDocument;
     use process_3d::Process3dDocument;
     use puzzle_2d::Puzzle2dProjection;
     use puzzle_3d::Puzzle3dProjection;
@@ -74,9 +74,9 @@ mod tests {
     use remodel::RemodelScene;
     use rewrite::RewriteRuleState;
     use semio_framework_os::WorkflowDocument;
-    use sequence::SequenceFixture;
-    use shooting::ShootingFixture;
-    use sourcing::CurateDocument;
+    use sequence::artifacts::sequence::SequenceFixture;
+    use shooting::artifacts::shooting::ShootingFixture;
+    use sourcing::artifacts::curate::CurateDocument;
     use space::{CollectionProjection, SpaceProjection};
     use trinity_ram::GraphFixture;
     use vcs_app::artifacts::vcs::VcsDemoProjection;

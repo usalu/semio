@@ -365,6 +365,50 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+The codebase still has the pattern of
+
+```
+<bundle>
+  <package>
+    <component*>
+      implementations
+        rust
+          Cargo.toml
+          package.json
+          project.json
+          …
+        typescript
+          package.json
+          project.json
+          …
+          …
+```
+
+to
+
+```
+<bundle>
+  <package>
+    rust
+      Cargo.toml
+      package.json
+      project.json
+      …
+    typescript
+      package.json
+      project.json
+      …
+      …
+  <component*>
+    component.rs
+    component.ts
+    component.py
+    …
+```
+
+Use a general domain-driven tree taxonomy for all components and add a new packages folder for each implementation that stays a package. Reduce the amount of packages and crates. Only leave packages that require each other e.g. plugins are used as a whole or not at all, hence plugins are a package. The individual componentns of a plugin wouldnt make sense on their own are just in a tree of component and the individual implementations are flat next to each other (favors language neutrality and multi-language support - follwing the repo principle that when logic is duplicated it must be close to each other). After the reafctor not a single implementations folder must exist.
+---
+
 The codebase has currently a lot of godfiles and too many packages (e.g. too many crates). Introduce the crates where they are needed and make sense (e.g. each plugin is installable on its own hence needs its own crate but all the components of a plugin shouldnt be different crates because they a plugin without the componentn wouldnt work.)
 ```
 plugin

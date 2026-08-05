@@ -1,0 +1,19 @@
+[DEBUG] seed-grid rows=2 columns=3 | 10 | 01000002000402010403
+[DEBUG] add-tile crop { x=0.1 y=0.1 width=0.2 height=0.2 } | 48 | 01010001000e0d0400059a9999999999b93f01059a9999999999b93f02059a9999999999c93f03059a9999999999c93f
+[DEBUG] delete-tile id=t1 | 10 | 01020102743101000600
+[DEBUG] delete-selection | 4 | 01030000
+[DEBUG] rename-tiles value=Hero ids=[ t1 t2 ] | 25 | 010403044865726f02743102743202000c0206010602010600
+[DEBUG] patch-tile-crops field=width value=0.4 ids=[ t1 ] | 31 | 01050202743105776964746803000c01060001060102059a9999999999d93f
+[DEBUG] set-source source { src="/🖼️bauteilbörse.png" kind=figure source-aspect=1.3638392857142858 frame { x=0.127 y=0.1 width=0.746 height=0.75 } } | 101 | 010602192ff09f96bcefb88f6261757465696c62c3b67273652e706e670666696775726501000e0d04000600010601020e0d040005a8c64b378941c03f01059a9999999999b93f0205ac1c5a643bdfe73f0305000000000000e83f03052549922449d2f53f
+[DEBUG] set-frame frame { x=0 y=0 width=1 height=1 } | 48 | 01070001000e0d0400050000000000000000010500000000000000000205000000000000f03f0305000000000000f03f
+[DEBUG] set-active-example example-id=demo | 12 | 0108010464656d6f01000600
+[DEBUG] clear-tiles | 4 | 01090000
+[DEBUG] engagement-submit value="2x2" | 11 | 010a010332783201000600
+[DEBUG] reset-grid | 4 | 010b0000
+[DEBUG] set-selected-ids ids=[ t1 ] | 12 | 010c0102743101000c010600
+[DEBUG] engagement-input value=add | 11 | 010d010361646401000600
+[DEBUG] canvas-pointer-down layer-id=t1 | 10 | 010e0102743101000600
+[DEBUG] set-locale value=de-DE | 13 | 010f010564652d444501000600
+[DEBUG] no-op | 4 | 01100000
+[DEBUG] copy-prompt | 4 | 01110000
+[DEBUG] export-video-from-deck output-dir=output/x scene-json="{}" | 22 | 011202086f75747075742f78027b7d02000600010601

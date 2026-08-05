@@ -62,7 +62,7 @@ pub mod add_generation {
     pub struct AddGeneration {}
 
     pub fn handle(_payload: &AddGeneration, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
-        Ok(super::handle_generation("addGeneration", None, doc, cfg, session))
+        Ok(handle_generation("addGeneration", None, doc, cfg, session))
     }
 }
 //#endregion 🔖️AddGeneration
@@ -78,7 +78,7 @@ pub mod remove_generation {
     }
 
     pub fn handle(payload: &RemoveGeneration, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
-        Ok(super::handle_generation("removeGeneration", Some(&json!({ "id": payload.id })), doc, cfg, session))
+        Ok(handle_generation("removeGeneration", Some(&json!({ "id": payload.id })), doc, cfg, session))
     }
 }
 //#endregion 🔖️RemoveGeneration
@@ -95,7 +95,7 @@ pub mod rename_generation {
     }
 
     pub fn handle(payload: &RenameGeneration, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
-        Ok(super::handle_generation("renameGeneration", Some(&json!({ "id": payload.id, "name": payload.name })), doc, cfg, session))
+        Ok(handle_generation("renameGeneration", Some(&json!({ "id": payload.id, "name": payload.name })), doc, cfg, session))
     }
 }
 //#endregion 🔖️RenameGeneration
@@ -114,7 +114,7 @@ pub mod update_generation_values {
 
     pub fn handle(payload: &UpdateGenerationValues, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
         let value_json = dsl::from_dsl_value(payload.value.clone()).unwrap_or(Value::Null);
-        Ok(super::handle_generation("updateGenerationValues", Some(&json!({ "generationId": payload.generation_id, "questionId": payload.question_id, "value": value_json })), doc, cfg, session))
+        Ok(handle_generation("updateGenerationValues", Some(&json!({ "generationId": payload.generation_id, "questionId": payload.question_id, "value": value_json })), doc, cfg, session))
     }
 }
 //#endregion 🔖️UpdateGenerationValues
@@ -130,7 +130,7 @@ pub mod select_generation {
     }
 
     pub fn handle(payload: &SelectGeneration, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
-        Ok(super::handle_generation("selectGeneration", Some(&json!({ "id": payload.id })), doc, cfg, session))
+        Ok(handle_generation("selectGeneration", Some(&json!({ "id": payload.id })), doc, cfg, session))
     }
 }
 //#endregion 🔖️SelectGeneration
@@ -169,9 +169,9 @@ mod tests {
     #[test]
     fn generate_is_a_view_action_with_no_document_operations() {
         let mut app = app();
-        let before = app.projection().expect("projection").clone();
+        let before = app.projection().expect("projection");
         dispatch(&mut app, Procedural2dCommand::Generate(enter_generate::Generate {}));
-        assert_eq!(app.projection().expect("projection"), &before, "generate must not mutate the document");
+        assert_eq!(app.projection().expect("projection"), before, "generate must not mutate the document");
     }
 }
 //#endregion 🧪️Tests

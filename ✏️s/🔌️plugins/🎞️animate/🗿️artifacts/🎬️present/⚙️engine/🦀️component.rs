@@ -50,7 +50,7 @@ pub mod compiler {
         fs::create_dir_all(&scene_dir).map_err(|error| PresentCompileError::new(error.to_string()))?;
         let config = AnimateConfig::from_quality(QualityPreset::Medium).with_output_dir(&scene_dir).with_media_dir(scene_dir.join("media")).with_subtitles_path(scene_dir.join("scene.srt"));
         let scene = scene_for_hash(config.clone(), scene_hash);
-        let outputs = render_scene(scene, config, &[OutputFormat::Mp4, OutputFormat::LastFrame]).map_err(|error| PresentCompileError::new(error.to_string()))?;
+        let outputs = render_scene(scene, &config, &[OutputFormat::Mp4, OutputFormat::LastFrame]).map_err(|error| PresentCompileError::new(error.to_string()))?;
         Ok(SceneAssetBundle { scene_hash: scene_hash.into(), mp4: outputs.mp4, last_frame: outputs.last_frame, subtitles: Some(scene_dir.join("scene.srt")), sections: outputs.sections })
     }
 
@@ -215,29 +215,29 @@ pub mod compiler {
             let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
             let deck = PresentDeck { tiles, ..deck };
             let output = std::env::temp_dir().join(format!("animate-present-{}", std::process::id()));
-            let _ = std::fs::remove_dir_all(&output);
+            let _ = fs::remove_dir_all(&output);
             compile_present_site(&deck, &output).expect("compile site");
-            let index = std::fs::read_to_string(output.join("🌐️index.html")).expect("🌐️index.html");
+            let index = fs::read_to_string(output.join("🌐️index.html")).expect("🌐️index.html");
             assert!(index.contains("animate.present.deck"));
             assert!(index.contains("semio_s_plugin_animate.js"));
-            let player = std::fs::read_to_string(output.join("player.js")).expect("player.js");
+            let player = fs::read_to_string(output.join("player.js")).expect("player.js");
             assert!(player.contains("sceneClips"));
-            let manifest: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(output.join("manifest.json")).expect("manifest")).expect("json");
+            let manifest: serde_json::Value = serde_json::from_str(&fs::read_to_string(output.join("manifest.json")).expect("manifest")).expect("json");
             assert_eq!(manifest.get("schema").and_then(|v| v.as_str()), Some("animate.present.site"));
             assert_eq!(manifest.pointer("/player/wasm").and_then(|v| v.as_str()), Some("/animate/plugin/wasm/animate_plugin_bg.wasm"));
-            let deck_file: PresentDeck = serde_json::from_str(&std::fs::read_to_string(output.join("deck.json")).expect("deck.json")).expect("deck");
+            let deck_file: PresentDeck = serde_json::from_str(&fs::read_to_string(output.join("deck.json")).expect("deck.json")).expect("deck");
             assert_eq!(deck_file.tiles.len(), 4);
-            let _ = std::fs::remove_dir_all(&output);
+            let _ = fs::remove_dir_all(&output);
         }
 
         #[test]
         fn compile_scene_to_assets_writes_mp4() {
             let output = std::env::temp_dir().join(format!("animate-scene-assets-{}", std::process::id()));
-            let _ = std::fs::remove_dir_all(&output);
+            let _ = fs::remove_dir_all(&output);
             let bundle = compile_scene_to_assets("demo123", &output).expect("compile scene");
             assert_eq!(bundle.scene_hash, "demo123");
             assert!(bundle.mp4.as_ref().is_some_and(|path| path.exists()));
-            let _ = std::fs::remove_dir_all(&output);
+            let _ = fs::remove_dir_all(&output);
         }
     }
 }
@@ -387,7 +387,7 @@ pub fn next_frame_tile_crop(existing_tile_count: usize) -> crate::artifacts::pre
     let cell = 1.0 / FRAME_IMPORT_GRID_COLUMNS as f64;
     let column = existing_tile_count % FRAME_IMPORT_GRID_COLUMNS;
     let row = existing_tile_count / FRAME_IMPORT_GRID_COLUMNS;
-    clamp_tile_crop(crate::artifacts::present::FigureTileFrame { x: column as f64 * cell, y: (row as f64 * cell).min(1.0 - cell), width: cell, height: cell })
+    clamp_tile_crop(&crate::artifacts::present::FigureTileFrame { x: column as f64 * cell, y: (row as f64 * cell).min(1.0 - cell), width: cell, height: cell })
 }
 //#endregion 🔖️Io
 
@@ -420,6 +420,7 @@ pub fn empty_present_deck() -> crate::artifacts::present::PresentDeck {
 //#region 🔖️TilePlay
 pub const NORMALIZED_RECT_MIN_FRACTION: f64 = 0.02;
 
+#[derive(Clone, Copy)]
 pub struct SplitFigureGridSpec<'a> {
     pub rows: u32,
     pub columns: u32,
@@ -433,6 +434,7 @@ pub struct SplitGridCell {
     pub crop: crate::artifacts::present::FigureTileFrame,
 }
 
+#[derive(Clone, Copy)]
 pub struct FigureTileGridSeedSpec<'a> {
     pub source: &'a crate::artifacts::present::FigureTileSource,
     pub rows: u32,
@@ -445,7 +447,7 @@ pub fn clamp_normalized_fraction(value: f64) -> f64 {
     value.clamp(0.0, 1.0)
 }
 
-pub fn clamp_tile_crop(crop: crate::artifacts::present::FigureTileFrame) -> crate::artifacts::present::FigureTileFrame {
+pub fn clamp_tile_crop(crop: &crate::artifacts::present::FigureTileFrame) -> crate::artifacts::present::FigureTileFrame {
     let width = crop.width.max(NORMALIZED_RECT_MIN_FRACTION);
     let height = crop.height.max(NORMALIZED_RECT_MIN_FRACTION);
     let x = clamp_normalized_fraction(crop.x.min(1.0 - width));

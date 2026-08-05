@@ -11,7 +11,7 @@ pub fn measure(fixture: &ShootingFixture, labels: &ShootingLabels) -> WindowMeas
     WindowMeasure::Select {
         id: "shooting.measure.format".into(),
         label: Some(labels.format_select_label.into()),
-        value: shot.map(|entry| entry.format.clone()).unwrap_or_else(|| "svg".into()),
+        value: shot.map_or_else(|| "svg".into(), |entry| entry.format.clone()),
         items: vec![
             MeasureSelectItem { id: "shooting.measure.format.svg".into(), value: "svg".into(), label: labels.format_svg.into() },
             MeasureSelectItem { id: "shooting.measure.format.png".into(), value: "png".into(), label: labels.format_png.into() },

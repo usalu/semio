@@ -276,40 +276,12 @@ members = [
     "✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🏭️process/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
+    "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪵️sourcing/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎬️sequence/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌀️procedural/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
+    "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🏗️fem/🔨️modules/🫀️core/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🏗️fem/🔨️modules/🤝️shared/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/⚡️implementations/🦀️rust",
@@ -375,14 +347,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎥️shooting/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
+    "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🗺️surface/🎨️paint/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🖨️raster/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/⚡️implementations/🦀️rust",
@@ -408,23 +373,9 @@ members = [
     "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌿️vcs/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
+    "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/✒️writer/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
+    "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🗒️note/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
@@ -455,15 +406,8 @@ members = [
     "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📐️cad/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
+    "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
     # 🧹️ Adopted 2026-07-18 (RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN): these crates lived
     # inside the workspace dir but were neither members nor excluded, so they could
     # not run any cargo command standalone. Adoption fixes real breakage.
@@ -479,16 +423,7 @@ members = [
     "compose/client/lib/rs",
     "compose/client/lib/query/rs",
     "compose/client/bin/gql/rs",
-    "✏️s/🔌️plugins/🎞️animate/🔨️modules/🫀️core/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎞️animate/🔨️modules/🎥️video/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🎞️animate/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
+    "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/📕️norm/🔨️modules/🫀️core/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/📕️norm/🎛️apps/📕️din4108/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/📕️norm/🎛️apps/📕️din4108/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
@@ -685,12 +620,11 @@ semio-framework-ui-wgpu = { path = "🧰️framework/🔨️modules/🖱️ui/�
 # ---- plugin (62) ----
 semio-framework-os-kernel-3d-brep = { path = "✏️s/🔨️modules/🧊️3d/📐️brep/⚡️implementations/🦀️rust" }  # 8 refs
 semio-framework-os-kernel-3d-brep-engine = { path = "✏️s/🔨️modules/🧊️3d/📐️brep/⚙️engine/⚡️implementations/🦀️rust" }  # 10 refs
-semio-s-app-animate-present = { path = "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/⚡️implementations/🦀️rust" }  # 8 refs
-semio-s-app-animate-present-engine = { path = "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🔨️modules/⚙️engine/⚡️implementations/🦀️rust" }  # 6 refs
+semio-s-plugin-animate = { path = "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust" }
 semio-s-app-block-2d = { path = "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/⚡️implementations/🦀️rust" }  # 7 refs
 semio-s-app-block-3d = { path = "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/⚡️implementations/🦀️rust" }  # 7 refs
 semio-s-app-block-5d = { path = "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/⚡️implementations/🦀️rust" }  # 7 refs
-semio-s-app-cad = { path = "✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/⚡️implementations/🦀️rust" }  # 9 refs
+semio-s-plugin-cad = { path = "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust" }
 semio-s-app-draw = { path = "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/⚡️implementations/🦀️rust" }  # 8 refs
 semio-s-app-draw-engine = { path = "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/⚙️engine/⚡️implementations/🦀️rust" }  # 6 refs
 semio-s-app-fem-2d = { path = "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/⚡️implementations/🦀️rust" }  # 8 refs
@@ -721,8 +655,7 @@ semio-s-app-norm-iso16757 = { path = "✏️s/🔌️plugins/📕️norm/🎛️
 semio-s-app-norm-vdi3805 = { path = "✏️s/🔌️plugins/📕️norm/🎛️apps/📔️vdi3805/⚡️implementations/🦀️rust" }  # 8 refs
 semio-s-app-note = { path = "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/⚡️implementations/🦀️rust" }  # 9 refs
 semio-s-app-playbook = { path = "✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/⚡️implementations/🦀️rust" }  # 6 refs
-semio-s-app-procedural-2d = { path = "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/⚡️implementations/🦀️rust" }  # 8 refs
-semio-s-app-procedural-3d = { path = "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/⚡️implementations/🦀️rust" }  # 9 refs
+semio-s-plugin-procedural = { path = "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust" }
 semio-s-app-process-3d = { path = "✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/⚡️implementations/🦀️rust" }  # 13 refs
 semio-s-app-puzzle-2d = { path = "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/⚡️implementations/🦀️rust" }  # 8 refs
 semio-s-app-puzzle-3d = { path = "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/⚡️implementations/🦀️rust" }  # 9 refs
@@ -730,14 +663,13 @@ semio-s-app-puzzle-5d = { path = "✏️s/🔌️plugins/🧩️puzzle/🎛️ap
 semio-s-app-raster = { path = "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/⚡️implementations/🦀️rust" }  # 8 refs
 semio-s-app-reasoning-wires = { path = "✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/⚡️implementations/🦀️rust" }  # 8 refs
 semio-s-app-remodel = { path = "✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/⚡️implementations/🦀️rust" }  # 8 refs
-semio-s-app-sequence = { path = "✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/⚡️implementations/🦀️rust" }  # 8 refs
-semio-s-app-shooting = { path = "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/⚡️implementations/🦀️rust" }  # 8 refs
-semio-s-app-sourcing-curate = { path = "✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/⚡️implementations/🦀️rust" }  # 9 refs
-semio-s-app-sourcing-curate-engine = { path = "✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🔨️modules/⚙️engine/⚡️implementations/🦀️rust" }  # 6 refs
+semio-s-plugin-sequence = { path = "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust" }
+semio-s-plugin-shooting = { path = "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust" }
+semio-s-plugin-sourcing = { path = "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust" }
 semio-s-app-space-home = { path = "✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/⚡️implementations/🦀️rust" }  # 7 refs
 semio-s-app-trinity-rewrite = { path = "✏️s/🔌️plugins/🔱️trinity/🎛️apps/✏️rewrite/⚡️implementations/🦀️rust" }  # 8 refs
-semio-s-app-vcs = { path = "✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/⚡️implementations/🦀️rust" }  # 8 refs
-semio-s-app-writer = { path = "✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/⚡️implementations/🦀️rust" }  # 9 refs
+semio-s-plugin-vcs = { path = "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust" }
+semio-s-plugin-writer = { path = "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust" }
 semio-s-plugin-block-shared = { path = "✏️s/🔌️plugins/🧱️block/🔨️modules/🤝️shared/⚡️implementations/🦀️rust" }  # 19 refs
 semio-s-plugin-fem-core = { path = "✏️s/🔌️plugins/🏗️fem/🔨️modules/🫀️core/⚡️implementations/🦀️rust" }  # 9 refs
 semio-s-plugin-norm-core = { path = "✏️s/🔌️plugins/📕️norm/🔨️modules/🫀️core/⚡️implementations/🦀️rust" }  # 52 refs

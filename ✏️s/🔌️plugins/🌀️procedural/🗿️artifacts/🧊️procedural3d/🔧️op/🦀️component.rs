@@ -138,7 +138,7 @@ mod tests {
 
     #[test]
     fn store_applies_widget_add() {
-        let mut store = store::DocumentStore::<Procedural3dDocument, Procedural3dOperation>::new(store::create_document_envelope(crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_projection(), None));
+        let mut store = DocumentStore::<Procedural3dDocument, Procedural3dOperation>::new(store::create_document_envelope(crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_projection(), None));
         store.dispatch(store::DocumentCommand::Apply { operations: vec![Procedural3dOperation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
         assert!(store.projection().expect("projection").fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));
     }
@@ -169,8 +169,7 @@ mod tests {
 
     #[test]
     fn procedural3d_fixture_operations_detects_widget_synapse_layout_schema_changes() {
-        let mut before = FlowFixture::default();
-        before.schema = "old-schema".into();
+        let mut before = FlowFixture { schema: "old-schema".into(), ..Default::default() };
         before.widgets = vec![Widget::InputNote { id: "w-gone".into(), text: String::new() }, Widget::InputNote { id: "w-keep".into(), text: "old".into() }];
         before.synapses = vec![
             SynapseSpec { id: "s-gone".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() },
@@ -179,8 +178,7 @@ mod tests {
         before.layout.insert("l-gone".into(), WidgetLayout { x: 0.0, y: 0.0 });
         before.layout.insert("l-keep".into(), WidgetLayout { x: 1.0, y: 1.0 });
 
-        let mut after = FlowFixture::default();
-        after.schema = "new-schema".into();
+        let mut after = FlowFixture { schema: "new-schema".into(), ..Default::default() };
         after.widgets = vec![Widget::InputNote { id: "w-keep".into(), text: "new".into() }, Widget::InputNote { id: "w-new".into(), text: String::new() }];
         after.synapses = vec![
             SynapseSpec { id: "s-keep".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "new".into() },

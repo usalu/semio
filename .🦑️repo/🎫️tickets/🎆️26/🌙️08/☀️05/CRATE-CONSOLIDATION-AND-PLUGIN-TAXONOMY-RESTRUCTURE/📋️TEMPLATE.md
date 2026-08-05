@@ -199,7 +199,7 @@ created inside `📦️packages/🦀️rust/`.
 | `📡️protocol` — the `Command` enum | **rebuilt** by `app_commands!` in app `🦀️component.rs` — see §5 |
 | `🖱️ui` Constants | the node that owns them (a window's body/surface keys go in that window's file; app-wide ids stay in app `🦀️component.rs`) |
 | `🖱️ui` Locale/Terminology | app `🦀️terminology.rs` — ONE `app_labels!` block, never split |
-| `🖱️ui` DocumentHelpers | **one consumer → that consumer's file; two or more → artifact `⚙️engine`.** State the rule in the engine's module doc so the next reader knows where to add |
+| `🖱️ui` DocumentHelpers | **one consumer → that consumer's file; two or more → artifact `⚙️engine`, UNLESS the helper takes an app-only view-state type (e.g. `<X>Config`) as a parameter — then it stays at app level (`🦀️component.rs` or a shared app-level helper file) no matter how many app-level consumers it has, because artifacts must never depend on apps.** State the rule in the engine's module doc so the next reader knows where to add |
 | `🖱️ui` Panels (`build_*_tree`) | `📌️panels/<panel>/🦀️component.rs`, each exporting `definition() -> PanelTabDefinition` + `render(…) -> UiNode` |
 | `🖱️ui` WindowMeasures | `🎭️modes/<m>/🪟️windows/<w>/🎚️options/<o>/🦀️component.rs`, one file per `WindowMeasure`/`Group` root, each exporting `measure(config, labels)` |
 | `🖱️ui` Render (`render_*`) | the matching window's `render()` |
@@ -417,3 +417,43 @@ extend in the same style and record it here.
    marker the discovery contract uses (a plugin-root `📦️lib.rs` beside `🗿️artifacts/`) and checks the
    taxonomy components instead — the Rust twin of `validateTaxonomyTree`. Both shapes pass while the
    migration is in flight.
+5. **Registry `validateConstitutionalCrates` now exempts migrated plugins.** The orchestrator found this
+   one right after the flow registrar step: the legacy gate walked every plugin's `🎛️apps/` dir looking
+   for the seven old crate slots, and correctly-but-uselessly flagged a freshly-migrated plugin as
+   "missing all seven" — it isn't missing anything, it moved on. Fixed by passing the set of
+   `findNewContractPluginRoots` plugin ids into `validateConstitutionalCrates` and skipping them; those
+   plugins are validated by `validateTaxonomyTree` instead. If `bun …/📇️registry/📜️script.ts check`
+   reports your plugin as missing constitutional slots right after you finish, that fix has already
+   landed — pull the current file, don't reimplement it.
+
+---
+
+## 12. Batch-1 findings (from cad, vcs, shooting, sourcing — read before you start)
+
+1. **NEVER background your own verification commands.** Several batch-1 agents ran `cargo check`/`clippy`/
+   `test` with `run_in_background: true` and then stopped, waiting — and were never woken up, because that
+   auto-resume mechanism only exists for the main orchestrating session, not for a subagent. If you
+   background a long cargo command, your task silently stalls forever until the orchestrator notices and
+   resends you a message. **Always run cargo/verification commands as plain synchronous Bash calls.** If a
+   cold build is slow, raise the `timeout` parameter (e.g. 300000–600000ms) instead of backgrounding it.
+2. **Shared options across multiple windows in one mode: one `🎚️options` set at the mode level, not one
+   per window.** cad has 4 windows in its one edit mode that all expose the same 3 option kinds
+   (projection/sun/dislocate). Duplicating them under every `🪟️window/🎚️options/` is needless — put them
+   once at `🎭️modes/<mode>/🎚️options/<option>/🦀️component.rs` and have each window's `definition()` bind
+   the same option ids. `validateTaxonomyTree` only constrains what's *directly under* a window dir, so
+   this passes cleanly; it also passed the root `📜️script.ts` taxonomy lints as-is. Apply this to any
+   plugin with more than one window sharing option kinds (watch for it in puzzle, gis, norm).
+3. **A pre-existing, repo-wide broken commit affects some old ui crates.** cad's old `…-app-cad-ui` crate
+   was flat-out non-compiling at HEAD (`fa51b5c82f`) — an automated repo-wide edit had wrapped `handle`'s
+   match arms in `Ok(` without closing the paren, left some `Emit::amend_config` arms unwrapped, and never
+   imported `Fault`. vcs and shooting independently hit the *same* corruption pattern in their own old ui
+   crates. If your plugin's old ui crate fails to even `cargo check` before you've changed anything, this
+   is very likely why — read the `handle` match arms for unbalanced `Ok(`/missing `Fault` imports before
+   assuming you introduced a bug. Fixing it as part of the port (which is what step 4 of §0's baseline
+   naturally forces you to do, since you can't get a passing baseline otherwise) is correct; just call it
+   out plainly in your final report so the pattern's spread across plugins is visible to the orchestrator.
+4. **Cross-plugin test-only dependents aren't just demonstrator.** cad's agent found that 💠️lowpoly's
+   engine crate `dev-depends` on `semio-s-app-cad-engine` for one test module — nothing in the plan or
+   TEMPLATE flagged this. Do the §0 step 5 dependent-search thoroughly (including `[dev-dependencies]`,
+   not just `[dependencies]`) — a hit outside your plugin dir is still yours to report, even if it's just
+   a test-only dependency that won't break the dependent's `lib` build, only its `cargo test`.

@@ -115,8 +115,8 @@ fn escape_svg_text(value: &str) -> String {
 pub fn shooting_scene_svg(fixture: &ShootingFixture) -> (String, u32, u32) {
     let shot = active_shot(fixture);
     let asset = active_asset(fixture);
-    let (width, height) = shot.map(|entry| (entry.width, entry.height)).unwrap_or((256, 256));
-    let shape = shot.map(|entry| entry.shape.as_str()).unwrap_or("rectangle");
+    let (width, height) = shot.map_or((256, 256), |entry| (entry.width, entry.height));
+    let shape = shot.map_or("rectangle", |entry| entry.shape.as_str());
     let background = if fixture.scene.background.is_empty() { "#0f172a" } else { fixture.scene.background.as_str() };
     let clip = if shape == "ellipse" {
         format!("<ellipse cx=\"{cx}\" cy=\"{cy}\" rx=\"{rx}\" ry=\"{ry}\" fill=\"{background}\"/>", cx = width as f64 / 2.0, cy = height as f64 / 2.0, rx = width as f64 / 2.0, ry = height as f64 / 2.0,)
@@ -130,7 +130,7 @@ pub fn shooting_scene_svg(fixture: &ShootingFixture) -> (String, u32, u32) {
         .filter(|data| !data.is_empty())
         .map(|data| format!("<image href=\"data:image/png;base64,{data}\" x=\"0\" y=\"0\" width=\"{width}\" height=\"{height}\" preserveAspectRatio=\"xMidYMid meet\"/>"))
         .unwrap_or_default();
-    let label = asset.map(|entry| entry.name.as_str()).unwrap_or("Untitled");
+    let label = asset.map_or("Untitled", |entry| entry.name.as_str());
     let font_size = (height as f64 * 0.09).max(10.0);
     let text = format!("<text x=\"50%\" y=\"{y}\" font-size=\"{font_size}\" fill=\"white\" text-anchor=\"middle\" font-family=\"sans-serif\">{label}</text>", y = height as f64 * 0.92, label = escape_svg_text(label),);
     semio_framework_os::wrap_svg(width, height, &format!("{clip}{emblem}{text}"))
@@ -198,7 +198,7 @@ pub fn shooting_icon_render_request_json(fixture: &ShootingFixture, shot: &Shoot
 /// (`&DwgDrawing -> Result<Value, String>`) has no channel back into that runtime state, so this no
 /// longer reframes the camera to the drawing extent (dropped, not moved — see the ticket notes).
 pub fn shooting_document_json_from_dwg(_drawing: &semio_framework_plugin::DwgDrawing) -> Result<Value, String> {
-    serde_json::to_value(&default_fixture()).map_err(|error| error.to_string())
+    serde_json::to_value(default_fixture()).map_err(|error| error.to_string())
 }
 //#endregion 🔖️MediaImport
 
@@ -281,9 +281,7 @@ mod tests {
     /// surviving intent: import still succeeds and stays schema-valid for a non-trivial extent.
     #[test]
     fn dwg_import_stays_schema_valid_for_a_non_trivial_extent() {
-        let mut drawing = semio_framework_plugin::DwgDrawing::default();
-        drawing.extmin = [0.0, 0.0, 0.0];
-        drawing.extmax = [100.0, 200.0, 0.0];
+        let drawing = semio_framework_plugin::DwgDrawing { extmin: [0.0, 0.0, 0.0], extmax: [100.0, 200.0, 0.0], ..Default::default() };
         let document = shooting_document_json_from_dwg(&drawing).expect("dwg import never errors");
         let fixture: ShootingFixture = serde_json::from_value(document).expect("schema-valid fixture");
         assert_eq!(fixture.schema, SHOOTING_FIXTURE_SCHEMA);

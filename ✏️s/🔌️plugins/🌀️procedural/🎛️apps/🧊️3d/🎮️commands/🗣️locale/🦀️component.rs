@@ -49,6 +49,7 @@ mod tests {
 
     #[test]
     fn set_locale_updates_config_locale() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
         dispatch(&mut app, Procedural3dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));
     }

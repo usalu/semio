@@ -11,15 +11,12 @@ use crate::apps::procedural3d::modes::edit::windows::{flow, preview as edit_prev
 use crate::apps::procedural3d::modes::generate::windows::{form, generations, preview as generate_preview};
 use crate::apps::procedural3d::modes::{edit, generate};
 use crate::apps::procedural3d::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::apps::procedural3d::terminology::{procedural3d_labels, Procedural3dLabels};
+use crate::apps::procedural3d::terminology::procedural3d_labels;
 use crate::artifacts::procedural3d::engine::procedural3d_io;
 use crate::artifacts::procedural3d::op::Procedural3dOperation;
 use crate::artifacts::procedural3d::{artifact_kind, Procedural3dDocument, PROCEDURAL_3D_SCHEMA};
 use flow_core::FlowEvalSession;
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaType, PanelGroup, UiNode,
-    UtilityDefinition, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaType, UiNode, UtilityDefinition, WindowMeasure};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Mutex;
@@ -107,6 +104,28 @@ fn eval_session_lock(app: &Procedural3dPlayApp) -> std::sync::MutexGuard<'_, Flo
     app.eval_session.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
+/// 🎥️ Parses the flow-graph camera out of `command_from_action`'s JSON args — either a nested
+/// `{camera: {...}}` object or flat `x`/`y`/`zoom` keys.
+fn parse_flow_camera_json(args: &Value) -> flow_core::CameraJson {
+    if let Some(camera) = args.get("camera") {
+        if let Ok(parsed) = serde_json::from_value::<flow_core::CameraJson>(camera.clone()) {
+            return parsed;
+        }
+    }
+    flow_core::CameraJson { x: args.get("x").and_then(Value::as_f64).unwrap_or(0.0), y: args.get("y").and_then(Value::as_f64).unwrap_or(0.0), zoom: args.get("zoom").and_then(Value::as_f64).unwrap_or(1.0) }
+}
+
+/// 🎥️ Parses the 3D preview camera out of `command_from_action`'s JSON args; falls back to the default
+/// camera on any malformed/missing `camera` object.
+fn parse_preview_camera_json(args: &Value) -> crate::apps::procedural3d::config::Procedural3dPreviewCamera {
+    if let Some(camera) = args.get("camera") {
+        if let Ok(parsed) = serde_json::from_value::<crate::apps::procedural3d::config::Procedural3dPreviewCamera>(camera.clone()) {
+            return parsed;
+        }
+    }
+    crate::apps::procedural3d::config::Procedural3dPreviewCamera::default()
+}
+
 impl DocumentApp for Procedural3dPlayApp {
     type Projection = Procedural3dDocument;
     type Operation = Procedural3dOperation;
@@ -139,7 +158,7 @@ impl DocumentApp for Procedural3dPlayApp {
                 Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "3d.mesh".into(), json: serde_json::to_string(&mesh).unwrap_or_default() } })
             }
             "document:out" => {
-                let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+                let media_type = self.io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = store::DocumentPack::encode_pack(doc.projection);
                 Ok(semio_framework_plugin::Media { media_type, payload: semio_framework_plugin::MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -173,6 +192,122 @@ impl DocumentApp for Procedural3dPlayApp {
 
     fn command_id(&self, command: &Procedural3dCommand) -> &str {
         command.command_id()
+    }
+
+    /// 🎯️ Maps host action id + JSON args onto `Procedural3dCommand` — preserved verbatim from the
+    /// pre-migration hand-rolled dispatch so React/wgpu callers that still speak the stringly
+    /// `{action,args}` wire (rather than `OpBinary` bytes) keep working unchanged.
+    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+        let args = args.cloned().unwrap_or(Value::Null);
+        let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
+        let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
+        let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
+        match action {
+            "setActiveExample" => Ok(Procedural3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_arg(&["exampleId", "example_id", "value"]).unwrap_or_default() })),
+            "nodeGraphEdit" => Ok(Procedural3dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
+                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(|value| value.to_string())).unwrap_or_else(|| "[]".into()),
+            })),
+            "deleteSelection" => Ok(Procedural3dCommand::DeleteSelection(delete_selection::DeleteSelection {})),
+            "removeWidget" => Ok(Procedural3dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() })),
+            "moveMediaNode" => Ok(Procedural3dCommand::MoveMediaNode(move_media_node::MoveMediaNode {
+                node_id: str_arg(&["nodeId", "node_id", "id"]).unwrap_or_default(),
+                x: f64_arg(&["x"]).unwrap_or(0.0),
+                y: f64_arg(&["y"]).unwrap_or(0.0),
+            })),
+            "addWidget" => Ok(Procedural3dCommand::AddWidget(add_widget::AddWidget { kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()), x: f64_arg(&["x"]), y: f64_arg(&["y"]) })),
+            "patchFlowWidgets" => Ok(Procedural3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets {
+                widget_ids: {
+                    let mut ids = string_list("widgetIds");
+                    if ids.is_empty() {
+                        ids = string_list("widget_ids");
+                    }
+                    ids
+                },
+                field: str_arg(&["field"]).unwrap_or_default(),
+                value: f64_arg(&["value"]),
+            })),
+            "reorganize" => Ok(Procedural3dCommand::Reorganize(reorganize::Reorganize {})),
+            "translateSelection" => {
+                let mut node_ids = string_list("nodeIds");
+                if node_ids.is_empty() {
+                    node_ids = string_list("node_ids");
+                }
+                if node_ids.is_empty() {
+                    node_ids = string_list("ids");
+                }
+                Ok(Procedural3dCommand::TranslateSelection(translate_selection::TranslateSelection { node_ids, dx: f64_arg(&["dx"]).unwrap_or(0.0), dy: f64_arg(&["dy"]).unwrap_or(0.0), dz: f64_arg(&["dz"]).unwrap_or(0.0) }))
+            }
+            "rotateSelection" => {
+                let mut node_ids = string_list("nodeIds");
+                if node_ids.is_empty() {
+                    node_ids = string_list("node_ids");
+                }
+                if node_ids.is_empty() {
+                    node_ids = string_list("ids");
+                }
+                Ok(Procedural3dCommand::RotateSelection(rotate_selection::RotateSelection {
+                    node_ids,
+                    ax: f64_arg(&["ax"]).unwrap_or(0.0),
+                    ay: f64_arg(&["ay"]).unwrap_or(0.0),
+                    az: f64_arg(&["az"]).unwrap_or(0.0),
+                    angle: f64_arg(&["angle"]).unwrap_or(0.0),
+                }))
+            }
+            "scaleSelection" => {
+                let mut node_ids = string_list("nodeIds");
+                if node_ids.is_empty() {
+                    node_ids = string_list("node_ids");
+                }
+                if node_ids.is_empty() {
+                    node_ids = string_list("ids");
+                }
+                Ok(Procedural3dCommand::ScaleSelection(scale_selection::ScaleSelection { node_ids, sx: f64_arg(&["sx"]).unwrap_or(1.0), sy: f64_arg(&["sy"]).unwrap_or(1.0), sz: f64_arg(&["sz"]).unwrap_or(1.0) }))
+            }
+            "addGeneration" => Ok(Procedural3dCommand::AddGeneration(add_generation::AddGeneration {})),
+            "removeGeneration" => Ok(Procedural3dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
+            "renameGeneration" => Ok(Procedural3dCommand::RenameGeneration(rename_generation::RenameGeneration { id: str_arg(&["id"]).unwrap_or_default(), name: str_arg(&["name"]).unwrap_or_default() })),
+            "updateGenerationValues" => {
+                let value = args.get("value").map(|entry| dsl::to_dsl_value(entry).unwrap_or(dsl::DslValue::Null)).unwrap_or(dsl::DslValue::Null);
+                Ok(Procedural3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues {
+                    generation_id: str_arg(&["generationId", "generation_id"]),
+                    question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
+                    value,
+                }))
+            }
+            "nodeGraphViewport" => Ok(Procedural3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: parse_flow_camera_json(&args) })),
+            "setSelection" => Ok(Procedural3dCommand::SetSelection(set_selection::SetSelection { node_ids: string_list("ids") })),
+            "selectNode" => Ok(Procedural3dCommand::SelectNode(select_node::SelectNode { node_ids: string_list("ids").into_iter().chain(string_list("nodeIds")).collect() })),
+            "nodeGraphSelect" => Ok(Procedural3dCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { node_ids: string_list("ids").into_iter().chain(string_list("nodeIds")).collect() })),
+            "nodeGraphHover" => Ok(Procedural3dCommand::NodeGraphHover(node_graph_hover::NodeGraphHover { widget_id: str_arg(&["widgetId", "widget_id"]) })),
+            "setHover" => Ok(Procedural3dCommand::SetHover(set_hover::SetHover { object_id: str_arg(&["objectId", "object_id", "id"]) })),
+            "worldPointerDown" => Ok(Procedural3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown {})),
+            "graphPointerDown" => Ok(Procedural3dCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {})),
+            "worldSelect" => Ok(Procedural3dCommand::WorldSelect(world_select::WorldSelect { ids: string_list("ids"), merge: str_arg(&["merge"]).unwrap_or_else(|| "replace".into()) })),
+            "worldHover" => Ok(Procedural3dCommand::WorldHover(world_hover::WorldHover { id: str_arg(&["id", "objectId", "object_id"]) })),
+            "setSelectionMethod" => Ok(Procedural3dCommand::SetSelectionMethod(set_selection_method::SetSelectionMethod { method: str_arg(&["value", "method", "selectionMethod"]).unwrap_or_default() })),
+            "setLodMode" => Ok(Procedural3dCommand::SetLodMode(set_lod_mode::SetLodMode { value: str_arg(&["value", "lodMode", "lod_mode"]).unwrap_or_default() })),
+            "setShowMode" => Ok(Procedural3dCommand::SetShowMode(set_show_mode::SetShowMode { value: str_arg(&["value", "showMode", "show_mode"]).unwrap_or_default() })),
+            "toggleSun" => Ok(Procedural3dCommand::ToggleSun(toggle_sun::ToggleSun {})),
+            "setSunAzimuth" => Ok(Procedural3dCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: f64_arg(&["value"]).unwrap_or(0.0) })),
+            "setSunElevation" => Ok(Procedural3dCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: f64_arg(&["value"]).unwrap_or(0.0) })),
+            "setSunIntensity" => Ok(Procedural3dCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: f64_arg(&["value"]).unwrap_or(1.0) })),
+            "setCamera" => Ok(Procedural3dCommand::SetCamera(set_camera::SetCamera { camera: parse_preview_camera_json(&args) })),
+            "selectGeneration" => Ok(Procedural3dCommand::SelectGeneration(select_generation::SelectGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
+            "setActiveUtility" => Ok(Procedural3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: str_arg(&["utilityId", "utility_id"]).unwrap_or_default() })),
+            "setLocale" => Ok(Procedural3dCommand::SetLocale(set_locale::SetLocale { value: str_arg(&["value", "locale"]).unwrap_or_default() })),
+            "setContributions" => Ok(Procedural3dCommand::SetContributions(set_contributions::SetContributions {
+                json: str_arg(&["json", "contributionsJson", "contributions_json"]).or_else(|| args.get("contributions").map(|value| value.to_string())).unwrap_or_else(|| "[]".into()),
+            })),
+            "flowEvalTick" => Ok(Procedural3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {})),
+            "flowEvalResolve" => Ok(Procedural3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve {
+                node_hash: args.get("nodeHash").or_else(|| args.get("node_hash")).and_then(Value::as_u64).unwrap_or(0),
+                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_else(|| "{}".into()),
+            })),
+            other => Err(Fault::from(format!(
+                "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
+                 app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+            ))),
+        }
     }
 
     fn handle(&self, command: &Procedural3dCommand, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation>, Fault> {
@@ -372,7 +507,7 @@ pub(crate) mod testkit {
         app.pending_effects();
         for _ in 0..1000 {
             let result = app.dispatch_typed(Procedural3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}), &meta("local")).expect("flowEvalTick");
-            if !result.requested_effects.iter().any(|effect| matches!(effect, semio_framework_core::kernel::HostEffect::DispatchAction { action, .. } if action == "flowEvalTick")) {
+            if !result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == "flowEvalTick")) {
                 return;
             }
         }
@@ -388,13 +523,137 @@ mod tests {
     use crate::apps::procedural3d::testkit::{app, app_with_registry, drain_flow_eval_ticks};
     use semio_framework_plugin::PluginApp;
 
+    //#region 🔖️CommandSurface
+    #[test]
+    fn command_ids_are_unique_and_cover_every_row() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let commands = every_command();
+        let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
+        let mut sorted = ids.clone();
+        sorted.sort_unstable();
+        sorted.dedup();
+        assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
+        assert_eq!(ids.len(), 39, "every Procedural3dCommand row must be covered by every_command()");
+    }
+
+    #[test]
+    fn every_command_round_trips_through_text_and_binary() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        for command in every_command() {
+            store::test_support::assert_op_text_binary_equivalence(&command);
+        }
+    }
+
+    /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — pinned
+    /// explicitly per row since procedural3d's wire keys frequently diverge from a mechanical
+    /// kebab-case of the command id (e.g. `nodeGraphViewport` → `viewport`, `setLocale` → `locale`).
+    #[test]
+    fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
+        let expected_keywords = [
+            "active-example",
+            "graph-edit",
+            "delete-selection",
+            "remove-widget",
+            "move-node",
+            "add-widget",
+            "patch-flow-widgets",
+            "reorganize",
+            "translate-selection",
+            "rotate-selection",
+            "scale-selection",
+            "add-generation",
+            "remove-generation",
+            "rename-generation",
+            "update-generation-values",
+            "viewport",
+            "set-selection",
+            "select-node",
+            "graph-select",
+            "graph-hover",
+            "set-hover",
+            "world-pointer-down",
+            "graph-pointer-down",
+            "world-select",
+            "world-hover",
+            "selection-method",
+            "lod-mode",
+            "show-mode",
+            "toggle-sun",
+            "sun-azimuth",
+            "sun-elevation",
+            "sun-intensity",
+            "camera",
+            "select-generation",
+            "active-utility",
+            "locale",
+            "contributions",
+            "flow-eval-tick",
+            "flow-eval-resolve",
+        ];
+        let commands = every_command();
+        assert_eq!(commands.len(), expected_keywords.len(), "every_command() and expected_keywords must stay in the same declaration order");
+        for (command, expected_keyword) in commands.iter().zip(expected_keywords) {
+            let printed = protocol::OpText::print_op(command);
+            assert_eq!(printed.split(' ').next().unwrap_or_default(), expected_keyword, "wire keyword drifted for command {}: {printed:?}", command.command_id());
+        }
+    }
+
+    /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
+    pub(super) fn every_command() -> Vec<Procedural3dCommand> {
+        vec![
+            Procedural3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "hexagonal-mushroom-column".into() }),
+            Procedural3dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }),
+            Procedural3dCommand::DeleteSelection(delete_selection::DeleteSelection {}),
+            Procedural3dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "extrude".into() }),
+            Procedural3dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: "extrude".into(), x: 1.0, y: 2.0 }),
+            Procedural3dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), x: Some(10.0), y: None }),
+            Procedural3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["height".into()], field: "value".into(), value: Some(9.5) }),
+            Procedural3dCommand::Reorganize(reorganize::Reorganize {}),
+            Procedural3dCommand::TranslateSelection(translate_selection::TranslateSelection { node_ids: vec!["extrude".into()], dx: 1.0, dy: 2.0, dz: 3.0 }),
+            Procedural3dCommand::RotateSelection(rotate_selection::RotateSelection { node_ids: vec!["extrude".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 1.5 }),
+            Procedural3dCommand::ScaleSelection(scale_selection::ScaleSelection { node_ids: vec!["extrude".into()], sx: 2.0, sy: 2.0, sz: 2.0 }),
+            Procedural3dCommand::AddGeneration(add_generation::AddGeneration {}),
+            Procedural3dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: "generation-1".into() }),
+            Procedural3dCommand::RenameGeneration(rename_generation::RenameGeneration { id: "generation-1".into(), name: "Renamed".into() }),
+            Procedural3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("generation-1".into()), question_id: "q1".into(), value: dsl::DslValue::Number(5.0) }),
+            Procedural3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: flow_core::CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }),
+            Procedural3dCommand::SetSelection(set_selection::SetSelection { node_ids: vec!["a".into()] }),
+            Procedural3dCommand::SelectNode(select_node::SelectNode { node_ids: vec!["a".into()] }),
+            Procedural3dCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { node_ids: vec!["a".into()] }),
+            Procedural3dCommand::NodeGraphHover(node_graph_hover::NodeGraphHover { widget_id: Some("extrude".into()) }),
+            Procedural3dCommand::SetHover(set_hover::SetHover { object_id: None }),
+            Procedural3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown {}),
+            Procedural3dCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {}),
+            Procedural3dCommand::WorldSelect(world_select::WorldSelect { ids: vec!["a".into()], merge: "replace".into() }),
+            Procedural3dCommand::WorldHover(world_hover::WorldHover { id: Some("a".into()) }),
+            Procedural3dCommand::SetSelectionMethod(set_selection_method::SetSelectionMethod { method: "lasso".into() }),
+            Procedural3dCommand::SetLodMode(set_lod_mode::SetLodMode { value: "coarse".into() }),
+            Procedural3dCommand::SetShowMode(set_show_mode::SetShowMode { value: "wireframe".into() }),
+            Procedural3dCommand::ToggleSun(toggle_sun::ToggleSun {}),
+            Procedural3dCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 90.0 }),
+            Procedural3dCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: 45.0 }),
+            Procedural3dCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: 1.0 }),
+            Procedural3dCommand::SetCamera(set_camera::SetCamera { camera: crate::apps::procedural3d::config::Procedural3dPreviewCamera::default() }),
+            Procedural3dCommand::SelectGeneration(select_generation::SelectGeneration { id: "generation-1".into() }),
+            Procedural3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "rotate".into() }),
+            Procedural3dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
+            Procedural3dCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
+            Procedural3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}),
+            Procedural3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { node_hash: 42, output_json: "{}".into() }),
+        ]
+    }
+    //#endregion 🔖️CommandSurface
+
     #[test]
     fn declared_actions_bridge_to_commands() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<Procedural3dPlayApp>(create_procedural3d_app);
     }
 
     #[test]
     fn the_manifest_stitches_every_taxonomy_node() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let json = serde_json::to_string(&create_procedural3d_app().definition).expect("app definition json");
         for id in [flow::PROCEDURAL_3D_PLAY_WINDOW_MAIN, edit_preview::PROCEDURAL_3D_PLAY_WINDOW_PREVIEW, generations::PROCEDURAL_3D_PLAY_WINDOW_GENERATIONS, form::PROCEDURAL_3D_PLAY_WINDOW_GENERATE_FORM, generate_preview::PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
@@ -407,6 +666,7 @@ mod tests {
 
     #[test]
     fn each_example_loads_distinct_fixture_and_preview_geometry() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         use crate::artifacts::procedural3d::engine::*;
         use crate::artifacts::procedural3d::widget_id;
         let examples = [
@@ -430,30 +690,33 @@ mod tests {
 
     #[test]
     fn refresh_pending_effects_arms_flow_eval_tick_chain() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
-        app.dispatch_typed(Procedural3dCommand::SetActiveExample(example::set_active_example::SetActiveExample { example_id: crate::artifacts::procedural3d::engine::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() }), &semio_framework_plugin::testkit::meta("local"))
+        app.dispatch_typed(Procedural3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::artifacts::procedural3d::engine::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() }), &semio_framework_plugin::testkit::meta("local"))
             .expect("set example");
         let effects = app.pending_effects();
-        assert!(effects.iter().any(|effect| matches!(effect, semio_framework_core::kernel::HostEffect::DispatchAction { action, .. } if action == "flowEvalTick")));
+        assert!(effects.iter().any(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == "flowEvalTick")));
         drain_flow_eval_ticks(&mut app);
     }
 
     #[test]
     fn undo_redo_round_trips_flow_graph_edits() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
         let before = app.projection().expect("projection").fixture.widgets.len();
-        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, Procedural3dCommand::AddWidget(widget::add_widget::AddWidget { kind: "inputNote".into(), x: None, y: None }), |app| app.projection().expect("projection").fixture.widgets.len(), before, before + 1);
+        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, Procedural3dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), x: None, y: None }), |app| app.projection().expect("projection").fixture.widgets.len(), before, before + 1);
     }
 
     #[test]
     fn two_instances_converge_disjoint_widget_moves() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let widgets: Vec<String> = app().projection().expect("projection").fixture.widgets.iter().map(|widget| crate::artifacts::procedural3d::widget_id(widget).to_string()).collect();
         assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
         let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
         semio_framework_plugin::testkit::assert_two_instances_converge::<Procedural3dPlayApp, (Option<f64>, Option<f64>)>(
             "mem://procedural3d-convergence",
-            Procedural3dCommand::MoveMediaNode(graph::move_media_node::MoveMediaNode { node_id: w0.clone(), x: 111.0, y: 5.0 }),
-            Procedural3dCommand::MoveMediaNode(graph::move_media_node::MoveMediaNode { node_id: w1.clone(), x: 222.0, y: 6.0 }),
+            Procedural3dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w0.clone(), x: 111.0, y: 5.0 }),
+            Procedural3dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w1.clone(), x: 222.0, y: 6.0 }),
             move |app| {
                 let layout = &app.projection().expect("projection").fixture.layout;
                 (layout.get(&w0).map(|entry| entry.x), layout.get(&w1).map(|entry| entry.x))
@@ -463,31 +726,34 @@ mod tests {
 
     #[test]
     fn procedural3d_labels_translate_catalogue_and_inspector_in_german() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
-        app.dispatch_typed(Procedural3dCommand::SetLocale(locale::set_locale::SetLocale { value: "de-DE".into() }), &semio_framework_plugin::testkit::meta("local")).expect("set locale");
-        let catalogue = crate::apps::procedural3d::testkit::render(&mut app, catalogue_panel::PROCEDURAL_3D_PLAY_BODY_CATALOGUE);
+        app.dispatch_typed(Procedural3dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), &semio_framework_plugin::testkit::meta("local")).expect("set locale");
+        let catalogue = testkit::render(&mut app, catalogue_panel::PROCEDURAL_3D_PLAY_BODY_CATALOGUE);
         assert!(catalogue.contains("\"Elemente\""));
-        let inspector = crate::apps::procedural3d::testkit::render(&mut app, inspection_panel::PROCEDURAL_3D_PLAY_BODY_INSPECTION);
+        let inspector = testkit::render(&mut app, inspection_panel::PROCEDURAL_3D_PLAY_BODY_INSPECTION);
         assert!(inspector.contains("Elemente:"));
     }
 
     #[test]
     fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app_with_registry();
         let widgets: Vec<String> = app.projection().expect("projection").fixture.widgets.iter().map(|widget| crate::artifacts::procedural3d::widget_id(widget).to_string()).collect();
         assert!(!widgets.is_empty(), "default fixture needs at least one widget for the test");
-        app.dispatch_typed(Procedural3dCommand::SetSelection(selection::set_selection::SetSelection { node_ids: widgets.clone() }), &semio_framework_plugin::testkit::meta("local")).expect("set selection");
+        app.dispatch_typed(Procedural3dCommand::SetSelection(set_selection::SetSelection { node_ids: widgets }), &semio_framework_plugin::testkit::meta("local")).expect("set selection");
         let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
         let menu = app.context_menu(&request);
         assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
         let last = menu.last().expect("grouped disclosure menu should not be empty");
         let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true);
-        let last_is_group_ending_in_destructive = last.children.as_ref().and_then(|children| children.last()).map(|child| child.destructive == Some(true)).unwrap_or(false);
+        let last_is_group_ending_in_destructive = last.children.as_ref().and_then(|children| children.last()).is_some_and(|child| child.destructive == Some(true));
         assert!(last_is_destructive_leaf || last_is_group_ending_in_destructive, "known destructive deleteSelection must be last: {menu:?}");
     }
 
     #[test]
     fn sun_measures_are_exposed_on_preview_windows() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
         let measures = app.window_measures();
         assert!(measures.contains_key(edit_preview::PROCEDURAL_3D_PLAY_WINDOW_PREVIEW));

@@ -62,6 +62,9 @@ fn neural_value_to_dsl_value(value: &Value) -> dsl::DslValue {
     dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
 }
 
+// 🧯️ `unnecessary_wraps` — mirrors `IoPortSpec::value_type`'s `Option<String>` field shape; every
+// branch here happens to be populated today, but the field itself is genuinely optional.
+#[allow(clippy::unnecessary_wraps)]
 fn channel_spec_value_type(spec: &ChannelSpec) -> Option<String> {
     if spec.operators.is_empty() {
         Some("value".into())
@@ -148,11 +151,11 @@ pub fn register() {
 /// trait impl here would violate the orphan rule. Only this engine (which already depends on the DAG
 /// kernel for `SequenceHost`) needs the conversion, so plain functions here are both legal and
 /// sufficient.
-pub fn sequence_camera_from_dag(value: DagCamera) -> SequenceCamera {
+pub fn sequence_camera_from_dag(value: &DagCamera) -> SequenceCamera {
     SequenceCamera { x: value.x, y: value.y, zoom: value.zoom }
 }
 
-pub fn dag_camera_from_sequence(value: SequenceCamera) -> DagCamera {
+pub fn dag_camera_from_sequence(value: &SequenceCamera) -> DagCamera {
     DagCamera { x: value.x, y: value.y, zoom: value.zoom }
 }
 //#endregion 🔖️Camera
@@ -393,6 +396,10 @@ impl SequenceHost {
             .collect();
         let mut edges = Vec::new();
         for (from, to) in dag_pairs {
+            // 🧯️ `map_unwrap_or` — `map_or_else` would need to build the `&mut self`-capturing
+            // fallback closure alongside the `self.fixture.edges`-borrowing lookup in one call,
+            // which the borrow checker rejects; the two-step form sequences the borrows correctly.
+            #[allow(clippy::map_unwrap_or)]
             let id = self.fixture.edges.iter().find(|edge| edge.from == from && edge.to == to).map(|edge| edge.id.clone()).unwrap_or_else(|| self.next_edge_id());
             edges.push(SequenceEdge { id, from, to });
         }
@@ -400,7 +407,7 @@ impl SequenceHost {
     }
 
     pub fn sync_from_dag(&mut self) {
-        self.camera = sequence_camera_from_dag(self.dag.fixture.camera.clone());
+        self.camera = sequence_camera_from_dag(&self.dag.fixture.camera);
         self.sync_edges_from_dag();
         for step in &mut self.fixture.steps {
             let Some(node) = self.dag.fixture.nodes.iter().find(|node| node.id == step.id) else {
@@ -550,12 +557,12 @@ impl SequenceHost {
             .filter(|edge| !would_create_cycle(&existing, &edge.from, &edge.to))
             .map(|edge| DagFixtureEdge { id: edge.id.clone(), source: format!("{}@{}", edge.from, FLOW_OUTPUT_PORT), target: format!("{}@{}", edge.to, FLOW_INPUT_PORT), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::new() })
             .collect();
-        DagFixture { schema: "dag.fixture".into(), camera: dag_camera_from_sequence(self.camera.clone()), nodes, edges }
+        DagFixture { schema: "dag.fixture".into(), camera: dag_camera_from_sequence(&self.camera), nodes, edges }
     }
 
     fn step_to_dag_node(&self, step: &SequenceStep) -> DagNodeSpec {
         let info = self.registry.operator_info(&step.kind);
-        let (name, mut abbreviation, icon) = info.as_ref().map(|entry| (entry.name.clone(), entry.abbreviation.clone(), entry.icon.clone())).unwrap_or_else(|| (step.kind.clone(), step.kind.clone(), "emoji:⚡️".into()));
+        let (name, mut abbreviation, icon) = info.as_ref().map_or_else(|| (step.kind.clone(), step.kind.clone(), "emoji:⚡️".into()), |entry| (entry.name.clone(), entry.abbreviation.clone(), entry.icon.clone()));
         if is_control_kind(&step.kind) {
             let count = self.slot_member_count(&step.id);
             abbreviation = if step.collapsed { format!("▸️ {count}") } else { format!("▾️ {count}") };

@@ -127,16 +127,17 @@ pub mod set_selection_method {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::procedural3d::testkit::{app, app_with_registry, dispatch};
+    use crate::apps::procedural3d::testkit::{app_with_registry, dispatch};
     use crate::apps::procedural3d::Procedural3dCommand;
 
     #[test]
     fn set_active_utility_switch_clears_scratch_and_emits_no_operations() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app_with_registry();
         dispatch(&mut app, Procedural3dCommand::WorldHover(world_hover::WorldHover { id: Some("extrude".into()) }));
-        let before = app.projection().expect("projection").clone();
+        let before = app.projection().expect("projection");
         dispatch(&mut app, Procedural3dCommand::SetSelection(set_selection::SetSelection { node_ids: vec!["extrude".into()] }));
-        assert_eq!(app.projection().expect("projection"), &before, "selection changes never touch the document");
+        assert_eq!(app.projection().expect("projection"), before, "selection changes never touch the document");
     }
 }
 //#endregion 🧪️Tests

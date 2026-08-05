@@ -79,6 +79,9 @@ mod tests {
 
     #[test]
     fn renders_world_preview_scene() {
+        // 🧵️ Rendering the preview body tessellates BRep geometry through the same process-wide cache
+        // `artifacts::procedural3d::engine`'s own tests serialize on — see that module's `test_support`.
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
         crate::apps::procedural3d::testkit::drain_flow_eval_ticks(&mut app);
         let json = render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_PREVIEW);

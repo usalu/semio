@@ -260,7 +260,7 @@ pub fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
 /// app's session-only live camera (never a document field; see `ShootingConfig::camera` in the app's
 /// `🦀️config.rs`) when the shot has no saved camera of its own.
 pub fn shooting_resolve_shot_camera(fixture: &ShootingFixture, shot: &ShootingShot, fallback: &ShootingCamera) -> ShootingCamera {
-    shot.camera_id.as_ref().and_then(|camera_id| fixture.saved_cameras.iter().find(|entry| &entry.id == camera_id)).map(|entry| entry.camera.clone()).unwrap_or_else(|| fallback.clone())
+    shot.camera_id.as_ref().and_then(|camera_id| fixture.saved_cameras.iter().find(|entry| &entry.id == camera_id)).map_or_else(|| fallback.clone(), |entry| entry.camera.clone())
 }
 //#endregion 🔖️Domain
 

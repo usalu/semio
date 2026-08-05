@@ -11,7 +11,7 @@ pub fn measure(fixture: &ShootingFixture, labels: &ShootingLabels) -> WindowMeas
     WindowMeasure::Select {
         id: "shooting.measure.shape".into(),
         label: Some(labels.shape_select_label.into()),
-        value: shot.map(|entry| entry.shape.clone()).unwrap_or_else(|| "rectangle".into()),
+        value: shot.map_or_else(|| "rectangle".into(), |entry| entry.shape.clone()),
         items: vec![
             MeasureSelectItem { id: "shooting.measure.shape.rectangle".into(), value: "rectangle".into(), label: labels.shape_rectangle.into() },
             MeasureSelectItem { id: "shooting.measure.shape.ellipse".into(), value: "ellipse".into(), label: labels.shape_ellipse.into() },

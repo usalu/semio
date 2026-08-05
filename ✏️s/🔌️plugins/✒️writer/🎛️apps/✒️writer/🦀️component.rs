@@ -56,11 +56,13 @@ fn writer_hidden_view(id: &str, label: LocalizedLabel) -> ActionDefinition {
 //#endregion 🔖️Constants
 
 //#region 🔖️DocumentHelpers
-/// 🐁️ Resolves tree/editor hover cross-highlighting: (highlighted AST id, tree-hover span, hover
-/// occurrences). Lives at APP level, not the artifact's `⚙️engine`, even though it has two consumers
-/// (the main window and the document panel) — it takes `WriterConfig`, an app-only view-state type, and
-/// artifacts must never depend on apps.
-pub fn editor_hover_context(document: &WriterProjection, config: &WriterConfig) -> (Option<String>, Option<(usize, usize)>, Vec<(usize, usize)>) {
+/// 🐁️ (highlighted AST id, tree-hover span, hover occurrences) — the tuple [`editor_hover_context`] resolves.
+type HoverContext = (Option<String>, Option<(usize, usize)>, Vec<(usize, usize)>);
+
+/// 🐁️ Resolves tree/editor hover cross-highlighting. Lives at APP level, not the artifact's `⚙️engine`,
+/// even though it has two consumers (the main window and the document panel) — it takes `WriterConfig`,
+/// an app-only view-state type, and artifacts must never depend on apps.
+pub fn editor_hover_context(document: &WriterProjection, config: &WriterConfig) -> HoverContext {
     use crate::artifacts::writer::engine::{find_deepest_jack_ast_node_at, jack_ast_node_by_id, jack_symbol_at_offset, parse_jack_ast, JackSymbolKind};
 
     if document.language_id != "jack" {
@@ -123,7 +125,7 @@ semio_framework_plugin::app_commands! {
 /// entry makes sense for them), so they stay bespoke `.item(...)` rows per `Menu::of`'s escape hatch;
 /// `requestCompletions`/`lintDocument`/`formatDocument`/`commitRename` are declared actions and resolve
 /// through `.action(...)` against `registry`.
-fn writer_context_menu_items<'a>(registry: &'a AppActionRegistry, text: Option<&ContextMenuTextContext>, is_de: bool) -> Vec<ContextMenuItemSpec> {
+fn writer_context_menu_items(registry: &AppActionRegistry, text: Option<&ContextMenuTextContext>, is_de: bool) -> Vec<ContextMenuItemSpec> {
     let can_suggest = text.is_some_and(|t| t.has_completions);
     let has_selection = text.is_some_and(|t| t.has_selection);
     let can_rename = text.is_some_and(|t| t.can_rename);
@@ -397,7 +399,7 @@ pub(crate) mod testkit {
     }
 
     pub fn main_window_measures(app: &mut WriterApp) -> Vec<WindowMeasure> {
-        app.window_measures().get(main::WRITER_PLAY_WINDOW_KIND).cloned().expect("main window measures")
+        app.window_measures().get(WRITER_PLAY_WINDOW_KIND).cloned().expect("main window measures")
     }
 }
 //#endregion 🧪️Testkit
@@ -531,12 +533,22 @@ mod tests {
     #[test]
     fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_writer_app().definition).expect("app definition json");
-        assert!(json.contains(main::WRITER_PLAY_WINDOW_KIND), "window kind missing from the manifest: {json}");
+        assert!(json.contains(WRITER_PLAY_WINDOW_KIND), "window kind missing from the manifest: {json}");
         assert!(json.contains(edit::WRITER_PLAY_MODE_EDIT), "mode missing from the manifest");
         for body in [WRITER_PLAY_BODY_DOCUMENT, WRITER_PLAY_BODY_CATALOGUE, WRITER_PLAY_BODY_INSPECTION] {
             assert!(json.contains(body), "panel body {body} missing from the manifest");
         }
         assert!(json.contains("text.document"), "artifact kind missing from the manifest");
+    }
+
+    /// 📄️ Both declared examples ("jack" and "dag.jack") must be registered on the app — the
+    /// `semio_plugin!` macro's own generated sanity test only checks that the app id itself appears in
+    /// the bundle manifest, not that a specific named example is registered.
+    #[test]
+    fn manifest_includes_both_examples() {
+        let app = create_writer_app();
+        assert!(app.examples.iter().any(|example| example.id == "jack"), "jack example missing from the manifest");
+        assert!(app.examples.iter().any(|example| example.id == "dag.jack"), "dag.jack example missing from the manifest");
     }
     //#endregion 🔖️ManifestSanity
 
@@ -629,6 +641,74 @@ mod tests {
         let replacement = jack_projection();
         let operation = app.whole_document_operation(replacement.clone()).expect("whole document operation");
         assert_eq!(operation, WriterOperation::SetDocument { document: replacement });
+    }
+
+    #[test]
+    fn window_engagements_expose_format_lint_placeholder() {
+        let mut app = testkit::new_app();
+        let engagements = app.window_engagements();
+        let main = engagements.get(WRITER_PLAY_WINDOW_KIND).expect("main engagement");
+        let placeholder = main.input.as_ref().and_then(|i| i.placeholder.as_ref()).expect("placeholder");
+        assert!(placeholder.contains("Format"));
+        assert_eq!(main.possible_engagements.as_ref().map(|v| v.len()), Some(3));
+    }
+
+    #[test]
+    fn window_engagements_include_format_and_lint_possible_engagements() {
+        let mut app = testkit::new_app();
+        let engagements = app.window_engagements();
+        let engagement = engagements.get(WRITER_PLAY_WINDOW_KIND).expect("writer window engagement");
+        let ids: Vec<&str> = engagement.possible_engagements.as_ref().expect("possible engagements").iter().map(|possible| possible.id.as_str()).collect();
+        assert!(ids.contains(&"writer-format"));
+        assert!(ids.contains(&"writer-lint"));
+    }
+
+    /// 🗣️ Cross-cutting locale check across every rendering surface (inspection, catalogue,
+    /// engagements, measures) at once — narrower per-node locale tests live beside each node, but this
+    /// is the integration-level guarantee that locale threads through the whole app consistently.
+    #[test]
+    fn writer_labels_resolve_native_english_by_default_across_every_surface() {
+        let mut app = testkit::new_app();
+        let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &semio_framework_plugin::ViewState::default()).expect("render");
+        let inspection_json = serde_json::to_string(&inspection).unwrap();
+        assert!(inspection_json.contains("\"Document\""));
+        assert!(inspection_json.contains("\"Camera\""));
+        let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &semio_framework_plugin::ViewState::default()).expect("render");
+        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        assert!(catalogue_json.contains("\"Language\""));
+        assert!(catalogue_json.contains("Cypher-inspired"));
+        let engagements = app.window_engagements();
+        let engagements_json = serde_json::to_string(&engagements).unwrap();
+        assert!(engagements_json.contains("\"Format\""));
+        assert!(engagements_json.contains("\"Lint\""));
+        let measures = app.window_measures();
+        let measures_json = serde_json::to_string(&measures).unwrap();
+        assert!(measures_json.contains("Font size"));
+        assert!(measures_json.contains("Line numbers"));
+        assert!(!measures_json.contains("Schriftgröße"));
+    }
+
+    #[test]
+    fn writer_labels_resolve_german_locale_across_every_surface() {
+        let mut app = testkit::new_app();
+        app.dispatch_typed(WriterCommand::SetLocale(set_locale::SetLocale { value: "de".into() }), &semio_framework_plugin::testkit::meta("local")).expect("set locale");
+        let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &semio_framework_plugin::ViewState::default()).expect("render");
+        let inspection_json = serde_json::to_string(&inspection).unwrap();
+        assert!(inspection_json.contains("Dokument"));
+        assert!(inspection_json.contains("Kamera"));
+        assert!(!inspection_json.contains("\"Camera\""));
+        let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &semio_framework_plugin::ViewState::default()).expect("render");
+        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        assert!(catalogue_json.contains("Sprache"));
+        let measures = app.window_measures();
+        let measures_json = serde_json::to_string(&measures).unwrap();
+        assert!(measures_json.contains("Schriftgröße"));
+        assert!(measures_json.contains("Zeilennummern"));
+        let engagements = app.window_engagements();
+        let engagements_json = serde_json::to_string(&engagements).unwrap();
+        assert!(engagements_json.contains("Texteditor"));
+        assert!(engagements_json.contains("Formatieren"));
+        assert!(engagements_json.contains("Prüfen"));
     }
     //#endregion 🔖️CrossCutting
 }

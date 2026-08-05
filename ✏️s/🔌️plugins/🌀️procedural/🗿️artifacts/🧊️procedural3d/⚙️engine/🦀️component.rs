@@ -8,7 +8,7 @@ use crate::artifacts::procedural3d::dsl::{
 use crate::artifacts::procedural3d::{widget_id, Procedural3dDocument};
 use flow_core::dag::DagFixture;
 use flow_core::forms_bridge::apply_generation_values_to_fixture;
-use flow_core::{flow_host_with_session, CameraJson, FlowEvalSession, FlowFixture, FlowHost, Widget};
+use flow_core::{flow_host_with_session, FlowEvalSession, FlowFixture, FlowHost, Widget};
 use flow_extension_brep::tessellate_geometry;
 use playbook::{selected_generation, GenerationPlayState};
 use serde_json::{json, Value};
@@ -223,7 +223,7 @@ pub fn commit_fixture(before: &FlowFixture, target: &FlowFixture) -> Vec<crate::
 }
 
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
-    endpoint.split_once('@').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), "out".into()))
+    endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
 pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<ui_wgpu::NodeGraphNodeRecord>, Vec<ui_wgpu::NodeGraphEdgeRecord>) {
@@ -515,7 +515,7 @@ pub fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &s
     if host.fixture.widgets.iter().any(|widget| widget_id(widget) == transform_id) {
         return Ok(transform_id);
     }
-    let (source_x, source_y) = host.fixture.layout.get(selected_id).map(|layout| (layout.x, layout.y)).unwrap_or((0.0, 0.0));
+    let (source_x, source_y) = host.fixture.layout.get(selected_id).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
     let descriptor = json!({ "kind": "neuron", "id": transform_id, "neuronKind": gumball_xform_kind(operation) }).to_string();
     host.add_widget(&descriptor, source_x + 220.0, source_y).map_err(|err| err.to_string())?;
     let outgoing_port = host.fixture.synapses.iter().find(|synapse| synapse.from == selected_id).map(|synapse| synapse.from_port.clone());
@@ -548,6 +548,27 @@ pub fn register() {
 }
 //#endregion 🔖️DocumentHelpers
 
+//#region 🧪️TestSupport
+/// 🧵️ `flow_extension_brep::tessellate_geometry` (and the flow-eval neuron kernel cache it sits behind)
+/// is a process-wide cache shared by every test in this ONE merged crate — before the crate
+/// consolidation, the artifact/app constitutional crates each ran in their own `cargo test` process, so
+/// a `TEST_SERIAL` local to one of them never had to coordinate with the other's. Now that every
+/// taxonomy node's tests share one test binary, ANY test that evaluates a flow fixture and/or tessellates
+/// BRep geometry (directly here, or indirectly via the app's preview-window `render()`) must acquire
+/// THIS single crate-wide lock — see `crate::apps::procedural3d::modes::edit::windows::preview`'s test
+/// for the app-side half of this.
+#[cfg(test)]
+pub(crate) mod test_support {
+    use std::sync::{Mutex, MutexGuard};
+
+    static TEST_SERIAL: Mutex<()> = Mutex::new(());
+
+    pub fn lock() -> MutexGuard<'static, ()> {
+        TEST_SERIAL.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+}
+//#endregion 🧪️TestSupport
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -555,10 +576,8 @@ mod tests {
     use kernel_3d_scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Mesh3d, Vec3};
     use std::sync::MutexGuard;
 
-    static TEST_SERIAL: Mutex<()> = Mutex::new(());
-
     fn test_serial() -> MutexGuard<'static, ()> {
-        TEST_SERIAL.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+        test_support::lock()
     }
 
     fn preview_payload_from_evaluated_fixture(fixture: &FlowFixture, cfg: &Procedural3dConfig) -> (String, String) {
@@ -576,8 +595,8 @@ mod tests {
         let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
         assert_ne!(meshes_json, "[]", "meshes_json was empty");
         assert_ne!(instances_json, "[]", "instances_json was empty");
-        let meshes: Vec<serde_json::Value> = serde_json::from_str(&meshes_json).expect("meshes json");
-        let instances: Vec<serde_json::Value> = serde_json::from_str(&instances_json).expect("instances json");
+        let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes json");
+        let instances: Vec<Value> = serde_json::from_str(&instances_json).expect("instances json");
         assert!(!meshes.is_empty());
         assert!(!instances.is_empty());
         for mesh in &meshes {
@@ -605,7 +624,7 @@ mod tests {
             let data: semio_framework_core::MeshData = serde_json::from_value(mesh.get("data").cloned().unwrap_or_default()).expect("mesh data");
             let mesh3d = Mesh3d::from_buffers(data.positions, data.normals, data.indices);
             let position =
-                instance.get("position").and_then(|value| value.as_array()).map(|items| [items[0].as_f64().unwrap_or(0.0) as f32, items[1].as_f64().unwrap_or(0.0) as f32, items[2].as_f64().unwrap_or(0.0) as f32]).unwrap_or([0.0, 0.0, 0.0]);
+                instance.get("position").and_then(|value| value.as_array()).map_or([0.0, 0.0, 0.0], |items| [items[0].as_f64().unwrap_or(0.0) as f32, items[1].as_f64().unwrap_or(0.0) as f32, items[2].as_f64().unwrap_or(0.0) as f32]);
             assert_eq!(position, [0.0, 0.0, 0.0], "preview instances stay in world space");
             let model = Instance3d::model_from_trs(position, [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]);
             let (min, max) = transform_aabb(model, mesh3d.aabb_min, mesh3d.aabb_max);
@@ -655,7 +674,7 @@ mod tests {
         let projection = Procedural3dDocument::parse_dsl(PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
         let config = Procedural3dConfig::default();
         let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
-        let meshes: Vec<serde_json::Value> = serde_json::from_str(&meshes_json).expect("meshes");
+        let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");
         assert!(!meshes.is_empty(), "rectangle wire preview should tessellate curve edges");
         let data: semio_framework_core::MeshData = serde_json::from_value(meshes[0].get("data").cloned().unwrap_or_default()).expect("mesh data");
         assert!(data.indices.is_empty(), "wire preview has no shaded triangles");
@@ -674,10 +693,9 @@ mod tests {
     fn wireframe_show_mode_strips_shaded_triangles() {
         let _serial = test_serial();
         let projection = default_projection();
-        let mut config = Procedural3dConfig::default();
-        config.show_mode = "wireframe".into();
+        let config = Procedural3dConfig { show_mode: "wireframe".into(), ..Default::default() };
         let (meshes_json, _) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
-        let meshes: Vec<serde_json::Value> = serde_json::from_str(&meshes_json).expect("meshes");
+        let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");
         assert!(!meshes.is_empty());
         let data: semio_framework_core::MeshData = serde_json::from_value(meshes[0].get("data").cloned().unwrap_or_default()).expect("mesh data");
         assert!(data.indices.is_empty());

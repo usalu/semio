@@ -1,8 +1,0 @@
-{
-  "name": "@semio-tech/animate-present",
-  "private": true,
-  "workspaces": [
-    "core",
-    "renderer/react"
-  ]
-}

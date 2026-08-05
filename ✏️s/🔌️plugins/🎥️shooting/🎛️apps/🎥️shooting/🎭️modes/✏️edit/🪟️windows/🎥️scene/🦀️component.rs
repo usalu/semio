@@ -130,7 +130,7 @@ fn world_instances_json(fixture: &ShootingFixture, cfg: &ShootingConfig) -> Stri
             let active = fixture.active_asset_id == asset.id || (fixture.active_asset_id.is_empty() && fixture.assets.first().map(|entry| &entry.id) == Some(&asset.id));
             let selected = cfg.selected_asset_ids.contains(&asset.id) || active;
             let hovered = cfg.hovered_asset_id.as_deref() == Some(asset.id.as_str());
-            let mesh_id = resolve_asset_mesh_url(asset).map(|url| world3d_mesh_id_from_url(&url)).unwrap_or_else(|| SHOOTING_FALLBACK_MESH_KIND.into());
+            let mesh_id = resolve_asset_mesh_url(asset).map_or_else(|| SHOOTING_FALLBACK_MESH_KIND.into(), |url| world3d_mesh_id_from_url(&url));
             json!({
                 "id": asset.id,
                 "meshId": mesh_id,
@@ -225,7 +225,7 @@ mod tests {
     use super::*;
     use crate::apps::shooting::testkit::{scene_window_measures, shooting_app};
     use crate::apps::shooting::SHOOTING_PLAY_BODY_SCENE as BODY_SCENE;
-    use semio_framework_plugin::ViewState;
+    use semio_framework_plugin::{PluginApp, ViewState};
 
     #[test]
     fn renders_world_model_scene() {

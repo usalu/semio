@@ -175,6 +175,7 @@ mod tests {
 
     #[test]
     fn set_lod_mode_is_a_view_action_with_no_document_operations_via_reorganize_baseline() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
         let before = app.projection().expect("projection").fixture.widgets.len();
         dispatch(&mut app, Procedural3dCommand::Reorganize(reorganize::Reorganize {}));

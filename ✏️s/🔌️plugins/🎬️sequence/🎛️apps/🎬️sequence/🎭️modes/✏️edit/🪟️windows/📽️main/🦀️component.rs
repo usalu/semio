@@ -35,7 +35,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Helpers
 /// 🎯️ Single consumer (this window's `render`), so it lives here rather than the artifact engine.
 fn split_endpoint(endpoint: &str) -> (String, String) {
-    endpoint.split_once('@').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), "next".into()))
+    endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "next".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
 fn fixture_to_workflow(fixture: &infinite_board_port_directed_dag::DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {

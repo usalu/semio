@@ -58,7 +58,7 @@ pub fn engagement(fixture: &ShootingFixture, labels: &ShootingLabels) -> WindowE
         }),
         control: None,
         controls: None,
-        status: Some(vec![WindowEngagementStatus { id: "shooting.status.icon".into(), text: shot.map(|entry| format!("{}×{} {}", entry.width, entry.height, entry.format.to_uppercase())).unwrap_or_else(|| labels.no_shot.into()) }]),
+        status: Some(vec![WindowEngagementStatus { id: "shooting.status.icon".into(), text: shot.map_or_else(|| labels.no_shot.into(), |entry| format!("{}×{} {}", entry.width, entry.height, entry.format.to_uppercase())) }]),
         possible_engagements: None,
     }
 }
@@ -80,7 +80,7 @@ mod tests {
     use super::*;
     use crate::apps::shooting::testkit::{icon_window_measures, shooting_app};
     use crate::apps::shooting::SHOOTING_PLAY_BODY_ICON as BODY_ICON;
-    use semio_framework_plugin::ViewState;
+    use semio_framework_plugin::{PluginApp, ViewState};
     use serde_json::{json, Value};
 
     #[test]

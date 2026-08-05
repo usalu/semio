@@ -454,6 +454,7 @@ mod tests {
     /// 🎞️ A fixture exercising every field/variant — duplicated verbatim across the `dsl`/`op`/`pack`
     /// crates' worth of tests (each is its own compilation unit, so a shared cross-crate test-only
     /// helper isn't worth a dependency).
+    #[allow(clippy::approx_constant, reason = "0.7071 is deliberately an approximate quaternion component in this fixture, not the FRAC_1_SQRT_2 constant")]
     fn representative_fixture() -> ShootingFixture {
         ShootingFixture {
             schema: SHOOTING_FIXTURE_SCHEMA.into(),
@@ -598,7 +599,7 @@ mod tests {
     #[test]
     fn shooting_op_text_round_trips_collection_variants() {
         let asset = sample_asset("a1");
-        store::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: asset.clone(), at: 0 }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: asset, at: 0 }));
         store::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Remove { id: "a1".into() }));
         store::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Move { id: "a1".into(), to: 2 }));
         store::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Patch {
@@ -607,7 +608,7 @@ mod tests {
         }));
 
         let shot = sample_shot("s1");
-        store::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Add { id: "s1".into(), item: shot.clone(), at: 0 }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Add { id: "s1".into(), item: shot, at: 0 }));
         store::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Remove { id: "s1".into() }));
         store::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Move { id: "s1".into(), to: 1 }));
         store::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Patch {
@@ -616,7 +617,7 @@ mod tests {
         }));
 
         let saved_camera = ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() };
-        store::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Add { id: "cam1".into(), item: saved_camera.clone(), at: 0 }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Add { id: "cam1".into(), item: saved_camera, at: 0 }));
         store::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Remove { id: "cam1".into() }));
         store::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Move { id: "cam1".into(), to: 0 }));
         store::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Patch {

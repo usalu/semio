@@ -140,7 +140,7 @@ pub mod patch_tile_crops {
                     "height" => crop.height = payload.value,
                     _ => {}
                 }
-                PresentOperation::Tiles(CollectionOperation::Patch { id: tile.id.clone(), patch: FigureTileDraftPatch { name: None, crop: Some(clamp_tile_crop(crop)) } })
+                PresentOperation::Tiles(CollectionOperation::Patch { id: tile.id.clone(), patch: FigureTileDraftPatch { name: None, crop: Some(clamp_tile_crop(&crop)) } })
             })
             .collect();
         if operations.is_empty() {
@@ -166,7 +166,6 @@ mod tests {
 
     #[test]
     fn add_delete_and_rename_tile_round_trip_through_operations() {
-        use semio_framework_plugin::PluginApp;
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::AddTile(add_tile::AddTile { crop: None }), &meta("local")).expect("add tile");
         let tile_id = app.projection().expect("projection").tiles[0].id.clone();
@@ -182,7 +181,7 @@ mod tests {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::AddTile(add_tile::AddTile { crop: None }), &meta("local")).expect("add tile");
         let tile_id = app.projection().expect("projection").tiles[0].id.clone();
-        app.dispatch_typed(PresentCommand::PatchTileCrops(patch_tile_crops::PatchTileCrops { ids: vec![tile_id.clone()], field: "width".into(), value: 0.5 }), &meta("local")).expect("patch crop");
+        app.dispatch_typed(PresentCommand::PatchTileCrops(patch_tile_crops::PatchTileCrops { ids: vec![tile_id], field: "width".into(), value: 0.5 }), &meta("local")).expect("patch crop");
         assert_eq!(app.projection().expect("projection").tiles[0].crop.width, 0.5);
         app.handle_action("undo", None, &meta("local")).expect("undo");
         assert_eq!(app.projection().expect("projection").tiles[0].crop.width, 0.2);
@@ -190,7 +189,6 @@ mod tests {
 
     #[test]
     fn delete_selection_removes_selected_tiles_and_clears_selection() {
-        use semio_framework_plugin::PluginApp;
         let mut app = present_app();
         seed_2x2(&mut app);
         let first_id = app.projection().expect("projection").tiles[0].id.clone();
@@ -201,7 +199,6 @@ mod tests {
 
     #[test]
     fn delete_selection_with_no_selection_is_a_no_op() {
-        use semio_framework_plugin::PluginApp;
         let mut app = present_app();
         seed_2x2(&mut app);
         app.dispatch_typed(PresentCommand::SetSelectedIds(crate::apps::present::commands::view::set_selected_ids::SetSelectedIds { ids: vec![] }), &meta("local")).expect("clear selection");
@@ -211,7 +208,6 @@ mod tests {
 
     #[test]
     fn delete_tile_with_unknown_id_is_a_no_op() {
-        use semio_framework_plugin::PluginApp;
         let mut app = present_app();
         seed_2x2(&mut app);
         app.dispatch_typed(PresentCommand::DeleteTile(delete_tile::DeleteTile { id: "does-not-exist".into() }), &meta("local")).expect("delete missing");
@@ -220,7 +216,6 @@ mod tests {
 
     #[test]
     fn rename_tiles_with_blank_value_leaves_name_unchanged() {
-        use semio_framework_plugin::PluginApp;
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::AddTile(add_tile::AddTile { crop: None }), &meta("local")).expect("add tile");
         let tile_id = app.projection().expect("projection").tiles[0].id.clone();
@@ -231,7 +226,6 @@ mod tests {
 
     #[test]
     fn rename_tiles_with_unknown_ids_is_a_no_op() {
-        use semio_framework_plugin::PluginApp;
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::AddTile(add_tile::AddTile { crop: None }), &meta("local")).expect("add tile");
         app.dispatch_typed(PresentCommand::RenameTiles(rename_tiles::RenameTiles { ids: vec!["nope".into()], value: "Hero".into() }), &meta("local")).expect("rename unknown");
@@ -240,7 +234,6 @@ mod tests {
 
     #[test]
     fn patch_tile_crops_covers_all_fields_across_multiple_tiles() {
-        use semio_framework_plugin::PluginApp;
         let mut app = present_app();
         seed_2x2(&mut app);
         let ids: Vec<String> = app.projection().expect("projection").tiles.iter().map(|tile| tile.id.clone()).collect();
@@ -255,7 +248,6 @@ mod tests {
 
     #[test]
     fn patch_tile_crops_targeting_no_existing_tile_is_a_no_op() {
-        use semio_framework_plugin::PluginApp;
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::PatchTileCrops(patch_tile_crops::PatchTileCrops { ids: vec!["ghost".into()], field: "width".into(), value: 0.4 }), &meta("local")).expect("patch ghost");
         assert!(app.projection().expect("projection").tiles.is_empty());

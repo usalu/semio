@@ -1,7 +1,7 @@
 //! 🧬️ Procedural2d play app — the `generate` mode: generations list + input form + output preview.
 
 use crate::apps::procedural2d::modes::generate::windows::{form, generations, preview};
-use semio_framework_plugin::{create_default_layout, create_named_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::{create_default_layout, create_named_layout, LocalizedLabel, ModeDefinition, NamedLayout};
 
 pub const PROCEDURAL2D_PLAY_MODE_GENERATE: &str = "generate";
 pub const PROCEDURAL2D_PLAY_LAYOUT_GENERATE: &str = "procedural2d-generate";
@@ -11,7 +11,7 @@ pub fn definition() -> ModeDefinition {
     ModeDefinition { id: PROCEDURAL2D_PLAY_MODE_GENERATE.into(), label: LocalizedLabel::native("Generate", "Generieren"), icon_id: "sparkles".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
-pub fn layout() -> WindowLayout {
+pub fn layout() -> NamedLayout {
     create_named_layout(
         PROCEDURAL2D_PLAY_LAYOUT_GENERATE,
         "Generate",

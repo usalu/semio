@@ -88,10 +88,11 @@ mod tests {
 
     #[test]
     fn toggle_sun_never_mutates_the_document() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
-        let before = app.projection().expect("projection").clone();
+        let before = app.projection().expect("projection");
         dispatch(&mut app, Procedural3dCommand::ToggleSun(toggle_sun::ToggleSun {}));
-        assert_eq!(app.projection().expect("projection"), &before, "toggleSun must not mutate the document");
+        assert_eq!(app.projection().expect("projection"), before, "toggleSun must not mutate the document");
     }
 }
 //#endregion 🧪️Tests

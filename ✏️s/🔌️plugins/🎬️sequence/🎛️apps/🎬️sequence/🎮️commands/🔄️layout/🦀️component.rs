@@ -61,15 +61,15 @@ mod tests {
     use crate::apps::sequence::testkit::{dispatch, new_app};
     use crate::apps::sequence::SequenceCommand;
 
-    use super::move_step_helper::move_all_steps_to_origin;
     use super::reorganize::Reorganize;
     use super::set_orientation::SetOrientation;
+    use move_step_helper::move_all_steps_to_origin;
 
     mod move_step_helper {
         use crate::apps::sequence::commands::step::move_step::MoveStep;
         use crate::apps::sequence::testkit::dispatch;
         use crate::apps::sequence::SequenceCommand;
-        use semio_framework_plugin::{PluginApp, VcsDocumentApp};
+        use semio_framework_plugin::VcsDocumentApp;
 
         pub fn move_all_steps_to_origin(app: &mut VcsDocumentApp<crate::apps::sequence::SequencePlayApp>) {
             let ids: Vec<String> = app.projection().expect("projection").steps.iter().map(|step| step.id.clone()).collect();

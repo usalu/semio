@@ -95,6 +95,7 @@ mod tests {
     use super::*;
     use crate::apps::shooting::testkit::{dispatch, shooting_app};
     use crate::apps::shooting::ShootingCommand;
+    use semio_framework_plugin::PluginApp;
 
     #[test]
     fn gumball_transform_drag_coalesces_into_one_edit() {

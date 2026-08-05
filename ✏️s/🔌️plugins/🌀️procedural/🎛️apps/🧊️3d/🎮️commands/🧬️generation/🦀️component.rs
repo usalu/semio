@@ -45,7 +45,7 @@ pub mod add_generation {
     pub struct AddGeneration {}
 
     pub fn handle(_payload: &AddGeneration, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation>, Fault> {
-        Ok(super::handle_generation("addGeneration", None, doc.projection, cfg.projection))
+        Ok(handle_generation("addGeneration", None, doc.projection, cfg.projection))
     }
 }
 //#endregion 🔖️AddGeneration
@@ -61,7 +61,7 @@ pub mod remove_generation {
     }
 
     pub fn handle(payload: &RemoveGeneration, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation>, Fault> {
-        Ok(super::handle_generation("removeGeneration", Some(&json!({ "id": payload.id })), doc.projection, cfg.projection))
+        Ok(handle_generation("removeGeneration", Some(&json!({ "id": payload.id })), doc.projection, cfg.projection))
     }
 }
 //#endregion 🔖️RemoveGeneration
@@ -78,7 +78,7 @@ pub mod rename_generation {
     }
 
     pub fn handle(payload: &RenameGeneration, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation>, Fault> {
-        Ok(super::handle_generation("renameGeneration", Some(&json!({ "id": payload.id, "name": payload.name })), doc.projection, cfg.projection))
+        Ok(handle_generation("renameGeneration", Some(&json!({ "id": payload.id, "name": payload.name })), doc.projection, cfg.projection))
     }
 }
 //#endregion 🔖️RenameGeneration
@@ -97,7 +97,7 @@ pub mod update_generation_values {
 
     pub fn handle(payload: &UpdateGenerationValues, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation>, Fault> {
         let value_json = dsl::from_dsl_value(payload.value.clone()).unwrap_or(Value::Null);
-        Ok(super::handle_generation("updateGenerationValues", Some(&json!({ "generationId": payload.generation_id, "questionId": payload.question_id, "value": value_json })), doc.projection, cfg.projection))
+        Ok(handle_generation("updateGenerationValues", Some(&json!({ "generationId": payload.generation_id, "questionId": payload.question_id, "value": value_json })), doc.projection, cfg.projection))
     }
 }
 //#endregion 🔖️UpdateGenerationValues
@@ -133,24 +133,27 @@ mod tests {
 
     #[test]
     fn add_generation_records_an_undoable_generation_operation() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
         assert_undo_redo_round_trip(&mut app, Procedural3dCommand::AddGeneration(add_generation::AddGeneration {}), |app| app.projection().expect("projection").generation.generations.len(), 0, 1);
     }
 
     #[test]
     fn generate_mode_renders_surfaces() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
         assert!(crate::apps::procedural3d::testkit::render(&mut app, crate::apps::procedural3d::modes::generate::windows::generations::PROCEDURAL_3D_PLAY_BODY_GENERATIONS).contains("addGeneration"));
     }
 
     #[test]
     fn select_generation_does_not_mutate_the_document() {
+        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         let mut app = app();
         dispatch(&mut app, Procedural3dCommand::AddGeneration(add_generation::AddGeneration {}));
-        let before = app.projection().expect("projection").clone();
+        let before = app.projection().expect("projection");
         let generation_id = before.generation.generations.first().expect("generation").id.clone();
         dispatch(&mut app, Procedural3dCommand::SelectGeneration(select_generation::SelectGeneration { id: generation_id }));
-        assert_eq!(app.projection().expect("projection"), &before);
+        assert_eq!(app.projection().expect("projection"), before);
     }
 }
 //#endregion 🧪️Tests

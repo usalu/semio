@@ -44,7 +44,6 @@ mod tests {
     use crate::apps::writer::commands::text::set_active_example;
     use crate::apps::writer::testkit::new_app_with_registry;
     use crate::apps::writer::WriterCommand;
-    use semio_framework_plugin::PluginApp;
 
     #[test]
     fn lint_is_a_view_action_and_example_default_materializes() {

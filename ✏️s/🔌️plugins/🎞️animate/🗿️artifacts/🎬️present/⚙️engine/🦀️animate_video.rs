@@ -159,10 +159,10 @@ pub mod cache {
             fs::write(&first, b"a").expect("first");
             fs::write(&second, b"b").expect("second");
             fs::write(&third, b"c").expect("third");
-            cache.insert("first".into(), first.clone()).expect("insert first");
-            cache.insert("second".into(), second.clone()).expect("insert second");
+            cache.insert("first".into(), first).expect("insert first");
+            cache.insert("second".into(), second).expect("insert second");
             cache.get("first");
-            cache.insert("third".into(), third.clone()).expect("insert third");
+            cache.insert("third".into(), third).expect("insert third");
             assert!(!cache.entries.contains_key("second"));
             assert!(cache.entries.contains_key("first"));
             assert!(cache.entries.contains_key("third"));
@@ -193,7 +193,7 @@ pub mod preview {
         }
         #[cfg(not(feature = "preview-window"))]
         {
-            let outcome = preview_scene_window_metadata(&mut scene, max_frames)?;
+            let outcome = preview_scene_window_metadata(&mut scene, max_frames);
             scene.tear_down();
             Ok(outcome)
         }
@@ -305,13 +305,13 @@ pub mod preview {
         }
     }
 
-    fn preview_scene_window_metadata<S: Scene>(scene: &mut S, max_frames: Option<u64>) -> Result<PreviewOutcome, VideoError> {
+    fn preview_scene_window_metadata<S: Scene>(scene: &mut S, max_frames: Option<u64>) -> PreviewOutcome {
         let max = max_frames.unwrap_or(120);
         let mut stderr = std::io::stderr();
         preview_scene_loop(scene, max, |frame: &SceneFrame| {
             let _ = writeln!(stderr, "[animate-preview] frame={} time={:.3}s mobjects={} section={:?}", frame.frame, frame.time, frame.mobject_count, frame.section);
         });
-        Ok(PreviewOutcome::MetadataOnly)
+        PreviewOutcome::MetadataOnly
     }
 
     /// 🧪️ Headless preview used by CLI `--preview` flag.
@@ -413,8 +413,8 @@ pub mod render {
     }
 
     /// 🎬️ Renders any `Scene` implementation to configured outputs.
-    pub fn render_scene<S: Scene>(mut scene: S, config: AnimateConfig, formats: &[OutputFormat]) -> Result<OutputPaths, VideoError> {
-        scene.setup(&config);
+    pub fn render_scene<S: Scene>(mut scene: S, config: &AnimateConfig, formats: &[OutputFormat]) -> Result<OutputPaths, VideoError> {
+        scene.setup(config);
         let mut recorder = FrameRecorder { inner: scene, captures: Vec::new() };
         recorder.construct();
         recorder.tear_down();
@@ -429,7 +429,7 @@ pub mod render {
 
         let camera = recorder.inner.camera().clone();
         let mut renderer = VelloRenderer::new(config.width, config.height)?;
-        let mut writer = SceneFileWriter::new(&config, formats)?;
+        let mut writer = SceneFileWriter::new(config, formats)?;
         let mut cache = if config.cache.enabled { Some(PartialMovieCache::open_with_limit(config.cache.partial_movie_dir.clone(), config.cache.max_entries)?) } else { None };
 
         let mut current_hash = String::new();
@@ -437,7 +437,7 @@ pub mod render {
         let mut last_pixels: Option<Vec<u8>> = None;
 
         for (frame_index, capture) in recorder.captures.iter().enumerate() {
-            let hash = frame_hash(capture, &config);
+            let hash = frame_hash(capture, config);
             if hash != current_hash {
                 if let Some(partial) = current_partial.take() {
                     let encoded = writer.finalize_partial(&partial)?;
@@ -456,7 +456,7 @@ pub mod render {
                 current_hash = hash.clone();
                 current_partial = Some(writer.begin_partial(&hash, frame_index as u32)?);
             }
-            let pixels = renderer.render_capture(capture, &camera, &config)?;
+            let pixels = renderer.render_capture(capture, &camera, config)?;
             if let Some(ref partial) = current_partial {
                 writer.write_frame_png(partial, &pixels, frame_index as u32)?;
             }
@@ -633,7 +633,7 @@ pub mod render {
             let dir = std::env::temp_dir().join(format!("animate_render_test_{stamp}"));
             let config = AnimateConfig::default().with_resolution(64, 64).with_frame_rate(15.0).with_output_dir(&dir).with_media_dir(dir.join("media"));
             let scene = DemoScene::new(config.clone());
-            let outputs = render_scene(scene, config, &[OutputFormat::LastFrame]).expect("render");
+            let outputs = render_scene(scene, &config, &[OutputFormat::LastFrame]).expect("render");
             let last = outputs.last_frame.expect("last frame path");
             assert!(last.exists());
         }
@@ -743,13 +743,13 @@ pub mod renderer {
         scene
     }
 
-    fn scene_affine(camera: &Camera, width: u32, height: u32) -> vello::kurbo::Affine {
+    fn scene_affine(camera: &Camera, width: u32, height: u32) -> kurbo::Affine {
         let sx = width as f64 / camera.frame_width;
         let sy = height as f64 / camera.frame_height;
-        vello::kurbo::Affine::new([sx, 0.0, 0.0, -sy, width as f64 * 0.5 - camera.frame_center.x() * sx, height as f64 * 0.5 + camera.frame_center.y() * sy]) * camera.transform.to_kurbo()
+        kurbo::Affine::new([sx, 0.0, 0.0, -sy, width as f64 * 0.5 - camera.frame_center.x() * sx, height as f64 * 0.5 + camera.frame_center.y() * sy]) * camera.transform.to_kurbo()
     }
 
-    fn paint_mobject(scene: &mut Scene, mobj: &dyn Sobject, view: vello::kurbo::Affine) {
+    fn paint_mobject(scene: &mut Scene, mobj: &dyn Sobject, view: kurbo::Affine) {
         let transform = view * mobj.transform().to_kurbo();
         let style = mobj.style();
         let opacity = mobj.effective_opacity();
@@ -1110,7 +1110,7 @@ pub mod writer {
         #[test]
         fn writer_writes_srt_from_sections() {
             let config = temp_config();
-            let sections = crate::artifacts::present::engine::animate_core::SectionList::default();
+            let sections = SectionList::default();
             let path = config.output_dir.join("scene.srt");
             write_sections_srt(&sections, &path).expect("srt");
             assert!(path.exists());

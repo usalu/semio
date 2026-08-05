@@ -178,9 +178,9 @@ mod tests {
     #[test]
     fn reorganize_emits_operations() {
         let mut app = app();
-        let before = app.projection().expect("projection").fixture.clone();
+        let before = app.projection().expect("projection").fixture;
         dispatch(&mut app, Procedural2dCommand::Reorganize(reorganize::Reorganize {}));
-        let after = app.projection().expect("projection").fixture.clone();
+        let after = app.projection().expect("projection").fixture;
         assert_ne!(before.layout, after.layout);
     }
 

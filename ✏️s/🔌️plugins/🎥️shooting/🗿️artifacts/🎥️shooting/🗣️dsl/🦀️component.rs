@@ -27,6 +27,7 @@ mod tests {
     use crate::artifacts::shooting::{ShootingAmbient, ShootingAsset, ShootingCamera, ShootingMaterial, ShootingSavedCamera, ShootingSceneLighting, ShootingShadow, ShootingShot, ShootingSun, SHOOTING_FIXTURE_SCHEMA};
 
     /// 🎞️ A fixture exercising every field/variant, shared verbatim by the DSL and OpText law tests.
+    #[allow(clippy::approx_constant, reason = "0.7071 is deliberately an approximate quaternion component in this fixture, not the FRAC_1_SQRT_2 constant")]
     fn representative_fixture() -> ShootingFixture {
         ShootingFixture {
             schema: SHOOTING_FIXTURE_SCHEMA.into(),

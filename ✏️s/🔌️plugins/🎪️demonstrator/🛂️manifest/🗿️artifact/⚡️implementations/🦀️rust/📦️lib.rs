@@ -15,19 +15,19 @@ use serde_json::Value;
 
 //#region 🔖️CadExports
 fn cad_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
-    cad_document_engine::cad_mesh_from_document(doc)
+    cad::artifacts::cad::engine::cad_mesh_from_document(doc)
 }
 
 fn cad_document_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Result<Value, String> {
-    cad_document_engine::cad_document_from_dwg(drawing)
+    cad::artifacts::cad::engine::cad_document_from_dwg(drawing)
 }
 
 fn cad_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
-    cad_document_engine::cad_document_from_mesh(mesh)
+    cad::artifacts::cad::engine::cad_document_from_mesh(mesh)
 }
 
 fn register_cad_exports() {
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<cad_document_ui::CadPlayApp>(cad_document::CAD_DOCUMENT_SCHEMA);
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<cad::apps::cad::CadPlayApp>(cad::artifacts::cad::CAD_DOCUMENT_SCHEMA);
     semio_framework_os::register_solid_exporter("3d.cad", Box::new(kernel_3d_brepkit::ObjSolidExporter));
     semio_framework_os::register_solid_exporter("3d.cad", Box::new(kernel_3d_brepkit::StlSolidExporter));
     semio_framework_os::register_solid_exporter("3d.cad", Box::new(kernel_3d_brepkit::StepSolidExporter));
@@ -45,15 +45,15 @@ fn register_cad_exports() {
 /// 🪶️ Only the 3d half of procedural's setup — the demonstrator's `generator` pane boots
 /// `procedural3d-play` exclusively; `procedural_2d_ui` isn't a dependency of this bundle at all.
 fn register_procedural_exports() {
-    semio_framework_os::register_mesh_exporter("3d.procedural", "procedural", procedural_3d_engine::procedural3d_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
-    semio_framework_os::register_mesh_exporter("3d.procedural", "procedural", procedural_3d_engine::procedural3d_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
-    semio_framework_os::register_mesh_exporter("3d.procedural", "procedural", procedural_3d_engine::procedural3d_mesh_from_document, Box::new(semio_framework_plugin::StlExporter));
-    semio_framework_os::register_mesh_dwg_export_handler("3d.procedural", "procedural", procedural_3d_engine::procedural3d_mesh_from_document);
-    semio_framework_os::register_mesh_importer("3d.procedural", procedural_3d_engine::procedural3d_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
-    semio_framework_os::register_mesh_importer("3d.procedural", procedural_3d_engine::procedural3d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
-    semio_framework_os::register_mesh_importer("3d.procedural", procedural_3d_engine::procedural3d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
-    semio_framework_os::register_mesh_dwg_import_handler("3d.procedural", procedural_3d_engine::procedural3d_document_from_mesh);
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<procedural_3d_ui::Procedural3dPlayApp>(procedural_3d::PROCEDURAL_3D_SCHEMA);
+    semio_framework_os::register_mesh_exporter("3d.procedural", "procedural", procedural::artifacts::procedural3d::engine::procedural3d_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
+    semio_framework_os::register_mesh_exporter("3d.procedural", "procedural", procedural::artifacts::procedural3d::engine::procedural3d_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
+    semio_framework_os::register_mesh_exporter("3d.procedural", "procedural", procedural::artifacts::procedural3d::engine::procedural3d_mesh_from_document, Box::new(semio_framework_plugin::StlExporter));
+    semio_framework_os::register_mesh_dwg_export_handler("3d.procedural", "procedural", procedural::artifacts::procedural3d::engine::procedural3d_mesh_from_document);
+    semio_framework_os::register_mesh_importer("3d.procedural", procedural::artifacts::procedural3d::engine::procedural3d_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
+    semio_framework_os::register_mesh_importer("3d.procedural", procedural::artifacts::procedural3d::engine::procedural3d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
+    semio_framework_os::register_mesh_importer("3d.procedural", procedural::artifacts::procedural3d::engine::procedural3d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
+    semio_framework_os::register_mesh_dwg_import_handler("3d.procedural", procedural::artifacts::procedural3d::engine::procedural3d_document_from_mesh);
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<procedural::apps::procedural3d::Procedural3dPlayApp>(procedural::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA);
 }
 //#endregion 🔖️ProceduralExports
 
@@ -89,7 +89,7 @@ fn register_gis_exports() {
 
 //#region 🔖️SourcingExports
 fn register_sourcing_exports() {
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<sourcing_ui::SourcingCurateApp>(sourcing::SOURCING_CURATE_SCHEMA);
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<sourcing::apps::curate::SourcingCurateApp>(sourcing::artifacts::curate::SOURCING_CURATE_SCHEMA);
 }
 //#endregion 🔖️SourcingExports
 
@@ -106,10 +106,10 @@ fn register_demonstrator_exports() {
 fn bundle() -> semio_framework_plugin::PluginBundle {
     register_demonstrator_exports();
     semio_framework_plugin::PluginBundle::new("demonstrator", "Entwerfen mit Bestand", "0.1.0")
-        .register_document_app(procedural_3d_ui::create_procedural3d_app(), || procedural_3d_ui::Procedural3dPlayApp)
-        .register_document_app(cad_document_ui::create_cad_app(), || <cad_document_ui::CadPlayApp as ::std::default::Default>::default())
+        .register_document_app(procedural::apps::procedural3d::create_procedural3d_app(), || procedural::apps::procedural3d::Procedural3dPlayApp)
+        .register_document_app(cad::apps::cad::create_cad_app(), || <cad::apps::cad::CadPlayApp as ::std::default::Default>::default())
         .register_document_app(puzzle_3d_ui::create_puzzle3d_app(), || <puzzle_3d_ui::Puzzle3dPlayApp as ::std::default::Default>::default())
-        .register_document_app(sourcing_ui::create_sourcing_curate_app(), || sourcing_ui::SourcingCurateApp)
+        .register_document_app(sourcing::apps::curate::create_sourcing_curate_app(), || sourcing::apps::curate::SourcingCurateApp)
         .register_document_app(process_3d_ui::create_process3d_app(), || process_3d_ui::Process3dPlayApp)
         .register_document_app(gis2d_ui::create_gis2d_app(), || gis2d_ui::Gis2dPlayApp)
 }
