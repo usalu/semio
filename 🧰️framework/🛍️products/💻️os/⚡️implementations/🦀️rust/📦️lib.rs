@@ -92,11 +92,12 @@ pub mod host {
             let next_apps: Vec<String> = program.manifest.apps.iter().map(|app| app.id.clone()).collect();
             for app in &program.manifest.apps {
                 self.registry.register_app(app.clone());
+                // 🪐️ B1 ripple resolved: seeds `registry::APP_REGISTRATIONS` (`workflow_palette()`'s
+                // backing store) at native/test load time — the wasm-hosted browser shell has no direct
+                // call path here, so it pushes the equivalent over the wire instead (see the space app's
+                // `SpaceCommand::SetAppRegistrations`).
+                crate::registry::register_app_io(&plugin_id, app);
             }
-            // 🚧️ B1 ripple: `WorkflowDefinition`/`PluginManifest.workflows` were deleted from
-            // framework-core (WP-0.1, concurrent) — workflow-registry seeding moves to
-            // `register_app_io`/`workflow_palette()` in Wave 1 (AppIo-driven). Loop dropped here so
-            // this crate keeps compiling in the interim.
             crate::registry::register_artifact_descriptors(&program.manifest);
             self.programs.insert(plugin_id.clone(), program);
             self.supervisor.insert(plugin_id.clone(), ProgramSupervisorState::Running);
@@ -132,8 +133,9 @@ pub mod host {
             let version = program.manifest.version.clone();
             for app in &program.manifest.apps {
                 self.registry.register_app(app.clone());
+                // 🪐️ See the `load_plugin` sibling loop's comment above.
+                crate::registry::register_app_io(&plugin_id, app);
             }
-            // 🚧️ B1 ripple: see the `load_plugin` sibling loop's comment above.
             crate::registry::register_artifact_descriptors(&program.manifest);
             self.programs.insert(plugin_id.clone(), program);
             for (instance_id, controller_id) in controller_rebindings {

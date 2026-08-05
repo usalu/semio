@@ -7,22 +7,22 @@ todos:
     status: completed
   - id: session
     content: Replace FlowEvalDriver with a non-serializable FlowEvalSession owning cache + baseline + queue; hold it as Mutex<FlowEvalSession> on Procedural3dPlayApp; delete eval_driver_json and SetEvalDriver across the three flow-backed apps
-    status: pending
+    status: completed
   - id: cache-epoch
     content: Fix NeuralCache so reads refresh the entry epoch (or route the budgeted walk through get_or_insert_with), so sweep stops evicting every cache hit
-    status: in_progress
+    status: completed
   - id: status-model
     content: Introduce NodeEvalStatus (ok/stale/queued/computing/error/blocked), emit it per widget in build_channel_eval_json, and replace computing_json with statusJson through the scene into DagHost::set_node_statuses
-    status: pending
+    status: completed
   - id: paint
     content: Paint the new statuses in DagNodePaintChrome with dedicated nodeStrokeComputing/Stale/Error/Blocked tokens; add per-port resolved state to IoPortSpec labels
-    status: pending
+    status: completed
   - id: throughput
     content: Replace one-node-per-round-trip ticking with a time-budgeted step, and scope brep geometry-handle retention per session
-    status: pending
+    status: completed
   - id: verify
     content: Extend existing tests to cover the config round-trip and convergence; add data-status-json; run the Playwright probe on the hexagonal column in both renderers and confirm settle from the logs
-    status: pending
+    status: in_progress
 isProject: false
 ---
 

@@ -624,6 +624,14 @@ incremental = true
 [profile.dev.build-override]
 opt-level = 3
 
+# 🩹️ `store`'s dev-profile wasm32-wasip2 build crashes rust-lld with a SIGSEGV inside
+# `lld::wasm::ElemSection::writeBody` at `-O0`/`codegen-units=16` (verified reproducible,
+# unrelated to any code-correctness issue — `[profile.wasm-release.package...store]` below
+# already carries the same `codegen-units = 1` fix for the release path). Mirroring it here
+# for `dev` so plugin dev-loop builds (`SEMIO_PLUGIN_PROFILE` unset) don't hit the same crash.
+[profile.dev.package.semio-framework-os-kernel-store]
+codegen-units = 1
+
 # 🚀️ Ship profile for native binaries (`cargo build --release`, compose hub/gql, os-run in CI).
 # Dev loops use `[profile.dev]` only — see root `📜️script.ts` `os run` and wgpu native defaults.
 [profile.release]

@@ -4,22 +4,22 @@ use flow::{FlowFixture, FLOW_DOCUMENT_SCHEMA};
 use flow_core::{
     dag::{dag_lod_scale_json, DagDrawLod},
     forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
-    CameraJson, FlowHost, Widget, FLOW_LOD_MODE_AUTOMATIC,
+    flow_backed_node_graph_extras, flow_fixture_operations, flow_host_with_session, CameraJson, FlowEvalSession, FlowHost, Widget, FLOW_LOD_MODE_AUTOMATIC,
 };
-use flow_core::{flow_backed_node_graph_extras, flow_fixture_operations};
-use flow_engine::{fixture_to_workflow, flow_play_neural_cache, flow_widget_descriptor, flow_widget_drag_json, seed_host_catalogue, sync_host_selection, sync_host_selection_domains, widget_id, widget_kind_label, widget_tree_label, FlowConfig};
+use flow_engine::{fixture_to_workflow, flow_widget_descriptor, flow_widget_drag_json, seed_host_catalogue, sync_host_selection, sync_host_selection_domains, widget_id, widget_kind_label, widget_tree_label, FlowConfig};
 use flow_op::{FlowConfigOperation, FlowOperation};
 use flow_protocol::{FlowCommand, FlowNodeGraphEditOp};
 use playbook::{handle_generation_action, render_generation_form_body, render_generation_preview_text, render_generations_tree, selected_generation};
 use semio_framework_plugin::{
         build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppLabels, ArtifactKindSpec, ConfigView,
-    ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, HostEffect, Label, Locale, LocalizedLabel, MeasureSelectItem, MediaClass, MediaForm, MediaType, NodeGraphScene, NodeGraphViewport, OsMediaCapability, PanelGroup,
+    ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, Locale, LocalizedLabel, MeasureSelectItem, MediaClass, MediaForm, MediaType, NodeGraphScene, NodeGraphViewport, OsMediaCapability, PanelGroup,
     PanelTreeBuilder, SurfaceKind, Terminology, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UiTreeSectionNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
+use std::sync::Mutex;
 
 //#region 🔖️Constants
 const FLOW_PLAY_APP_ID: &str = "flow-play";
@@ -67,19 +67,19 @@ fn apply_canvas_options(host: &mut FlowHost, config: &FlowConfig) {
     let _ = host.set_grid_factor(config.grid_factor);
 }
 
-fn host_from_fixture(fixture: &FlowFixture, config: &FlowConfig) -> FlowHost {
-    let mut host = FlowHost::from_fixture_with_cache(fixture.clone(), flow_play_neural_cache());
-    host.set_neuron_kind_infos_json(&flow_core::flow_neuron_kind_infos_json());
+fn eval_session_lock(app: &FlowPlayApp) -> std::sync::MutexGuard<'_, FlowEvalSession> {
+    app.eval_session.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
+fn host_from_fixture(fixture: &FlowFixture, config: &FlowConfig, session: &FlowEvalSession) -> FlowHost {
+    let mut host = flow_host_with_session(fixture, session);
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
     apply_canvas_options(&mut host, config);
-    config.eval_driver().install_baseline_into(&mut host);
     host
 }
 
-/// 🌉️ Runs a `FlowHost` mutation over the current document fixture and diffs the result into granular
-/// `FlowOperation`s. `mutate` returns `true` if it changed the fixture; a non-mutating call yields no operations.
-fn host_operations(fixture: &FlowFixture, config: &FlowConfig, mutate: impl FnOnce(&mut FlowHost) -> bool) -> Vec<FlowOperation> {
-    let mut host = host_from_fixture(fixture, config);
+fn host_operations(fixture: &FlowFixture, config: &FlowConfig, session: &FlowEvalSession, mutate: impl FnOnce(&mut FlowHost) -> bool) -> Vec<FlowOperation> {
+    let mut host = host_from_fixture(fixture, config, session);
     if !mutate(&mut host) {
         return Vec::new();
     }
@@ -146,29 +146,24 @@ fn patched_widgets_fixture(fixture: &FlowFixture, widget_ids: &[String], field: 
     next
 }
 
-fn focus_selection_camera(fixture: &FlowFixture, config: &FlowConfig) -> Option<CameraJson> {
+fn focus_selection_camera(fixture: &FlowFixture, config: &FlowConfig, session: &FlowEvalSession) -> Option<CameraJson> {
     if config.selected_node_ids.is_empty() {
         return None;
     }
-    let mut host = host_from_fixture(fixture, config);
+    let mut host = host_from_fixture(fixture, config, session);
     host.dag.set_viewport(1280, 800, 1.0);
     host.dag.set_selection(&config.selected_node_ids);
     host.focus_selection_camera(1.2)
 }
 
-/// 🧵️ Probes/arms the off-main-thread `flowEvalTick` chain (see `flow_core::FlowEvalDriver::sync`) and
-/// persists the driver's new state via `SetEvalDriver` — shared by `FlowCommand::Evaluate` and
-/// `RunExtensionAction`'s "evaluate" effect (both were the same `handle_action` "evaluate" logic
-/// pre-B1, reachable from two different action ids).
-fn evaluate_result(fixture: &FlowFixture, config: &FlowConfig) -> Emit<FlowOperation, FlowConfigOperation> {
-    let mut driver = config.eval_driver();
-    let host = host_from_fixture(fixture, config);
-    let needs_tick = driver.sync(&host);
-    let config_operations = vec![FlowConfigOperation::SetEvalDriver { json: serde_json::to_string(&driver).unwrap_or_default() }];
-    if needs_tick {
-        Emit { config_operations, effects: vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }], ..Default::default() }
+/// 🧵️ Probes/arms the off-main-thread `flowEvalTick` chain via `FlowEvalSession::sync` — shared by
+/// `FlowCommand::Evaluate` and `RunExtensionAction`'s "evaluate" effect.
+fn evaluate_result(fixture: &FlowFixture, config: &FlowConfig, session: &mut FlowEvalSession) -> Emit<FlowOperation, FlowConfigOperation> {
+    let host = host_from_fixture(fixture, config, session);
+    if session.sync(&host) {
+        Emit { effects: vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }], ..Default::default() }
     } else {
-        Emit { config_operations, ..Default::default() }
+        Emit::default()
     }
 }
 
@@ -189,11 +184,11 @@ fn evaluate_generation_preview(fixture: &FlowFixture, config: &FlowConfig, value
 /// generations config-tracked rather than document-operation-backed (unlike the sibling
 /// `procedural_3d`/`procedural_2d` apps) since flow's document model is out of scope for this
 /// conversion — see `flow_engine::FlowConfig::generation_json`'s doc comment.
-fn handle_generation(action_id: &str, args: Option<&Value>, fixture: &FlowFixture, config: &FlowConfig) -> Emit<FlowOperation, FlowConfigOperation> {
+fn handle_generation(action_id: &str, args: Option<&Value>, fixture: &FlowFixture, config: &FlowConfig, session: &mut FlowEvalSession) -> Emit<FlowOperation, FlowConfigOperation> {
     let spec = flow_fixture_to_form_spec(fixture);
     let mut generation = config.generation();
     if !handle_generation_action(action_id, args, &mut generation, &spec, FLOW_PLAY_APP_ID) {
-        return Ok(Emit::default();
+        return Emit::default();
     }
     let mut config_operations = Vec::new();
     if matches!(action_id, "addGeneration" | "selectGeneration" | "updateGenerationValues") {
@@ -201,9 +196,7 @@ fn handle_generation(action_id: &str, args: Option<&Value>, fixture: &FlowFixtur
             Some(active) => {
                 let preview = evaluate_generation_preview(fixture, config, &active.values.clone());
                 generation.preview_text = Some(preview.clone());
-                let mut driver = config.eval_driver();
-                driver.set_eval_json(preview);
-                config_operations.push(FlowConfigOperation::SetEvalDriver { json: serde_json::to_string(&driver).unwrap_or_default() });
+                session.set_eval_json(preview);
             }
             None => generation.preview_text = None,
         }
@@ -219,10 +212,10 @@ fn handle_generation(action_id: &str, args: Option<&Value>, fixture: &FlowFixtur
 /// `handle_action` match arm). The `deleteSelection` sub-op only clears `selected_node_ids` on success
 /// (leaves `selected_edge_ids`/`selected_handle_ids` untouched) — matches the pre-B1 behavior exactly,
 /// distinct from the top-level `FlowCommand::DeleteSelection`, which clears all three.
-fn node_graph_edit_result(fixture: &FlowFixture, config: &FlowConfig, operations: &[FlowNodeGraphEditOp]) -> Emit<FlowOperation, FlowConfigOperation> {
+fn node_graph_edit_result(fixture: &FlowFixture, config: &FlowConfig, session: &FlowEvalSession, operations: &[FlowNodeGraphEditOp]) -> Emit<FlowOperation, FlowConfigOperation> {
     let selected = config.selected_node_ids.clone();
     let mut clear_selection = false;
-    let document_operations = host_operations(fixture, config, |host| {
+    let document_operations = host_operations(fixture, config, &session, |host| {
         let mut changed = false;
         for sub_operation in operations {
             match sub_operation {
@@ -429,8 +422,8 @@ fn build_document_tree(fixture: &FlowFixture, selected: &[String], labels: &Flow
         .build()
 }
 
-fn build_catalogue_tree(fixture: &FlowFixture, config: &FlowConfig, labels: &FlowPlayLabels) -> UiNode {
-    let host = host_from_fixture(fixture, config);
+fn build_catalogue_tree(fixture: &FlowFixture, config: &FlowConfig, session: &FlowEvalSession, labels: &FlowPlayLabels) -> UiNode {
+    let host = host_from_fixture(fixture, config, session);
     let sections: Vec<Value> = host.catalogue_json().ok().and_then(|raw| serde_json::from_str(&raw).ok()).unwrap_or_default();
     let tree_sections: Vec<UiTreeSectionNode> = sections
         .iter()
@@ -748,14 +741,13 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], labels: &Flo
 //#endregion 🔖️Panels
 
 //#region 🔖️Render
-fn render_main_graph(fixture: &FlowFixture, config: &FlowConfig) -> UiNode {
-    let host = host_from_fixture(fixture, config);
+fn render_main_graph(fixture: &FlowFixture, config: &FlowConfig, session: &FlowEvalSession) -> UiNode {
+    let host = host_from_fixture(fixture, config, session);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
     let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
     let fixture_json = serde_json::to_string(fixture).ok();
     let selection = config.selected_node_ids.clone();
-    let driver = config.eval_driver();
-    let flow_extras = flow_backed_node_graph_extras(fixture, &config.lod_mode, config.proximity_distance, config.grid_visible, config.grid_snap_enabled, config.grid_factor, Some(&driver));
+    let flow_extras = flow_backed_node_graph_extras(fixture, &config.lod_mode, config.proximity_distance, config.grid_visible, config.grid_snap_enabled, config.grid_factor, Some(session));
     let preview_off_json = if config.preview_off_node_ids.is_empty() { None } else { serde_json::to_string(&config.preview_off_node_ids).ok() };
     build_node_graph_scene(
         FLOW_PLAY_SURFACE_MAIN,
@@ -767,7 +759,7 @@ fn render_main_graph(fixture: &FlowFixture, config: &FlowConfig) -> UiNode {
             lod_json: flow_extras.lod_json,
             fixture_json: flow_extras.fixture_json.or(fixture_json),
             eval_json: flow_extras.eval_json,
-            computing_json: flow_extras.computing_json,
+            status_json: flow_extras.status_json,
             selection,
             preview_off_json,
             ..NodeGraphScene::base(nodes, edges, viewport)
@@ -775,8 +767,8 @@ fn render_main_graph(fixture: &FlowFixture, config: &FlowConfig) -> UiNode {
     )
 }
 
-fn render_compiled_dag(fixture: &FlowFixture, config: &FlowConfig) -> UiNode {
-    let host = host_from_fixture(fixture, config);
+fn render_compiled_dag(fixture: &FlowFixture, config: &FlowConfig, session: &FlowEvalSession) -> UiNode {
+    let host = host_from_fixture(fixture, config, session);
     build_text_editor_scene(FLOW_PLAY_SURFACE_COMPILED, FLOW_PLAY_APP_ID, TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None))
 }
 
@@ -803,9 +795,12 @@ fn render_generate_preview(config: &FlowConfig) -> UiNode {
 
 //#region 🔖️FlowPlayApp
 /// 🧪️ B1: unit struct — every former `FlowPlayRuntime` field now lives in `flow_engine::FlowConfig`
-/// (see `DocumentApp::Config`), written through `flow_op::FlowConfigOperation`s.
+/// (see `DocumentApp::Config`), written through `flow_op::FlowConfigOperation`s. Eval state lives in
+/// `eval_session`.
 #[derive(Default)]
-pub struct FlowPlayApp;
+pub struct FlowPlayApp {
+    eval_session: Mutex<FlowEvalSession>,
+}
 
 fn flow_internal_action(id: &str, label: LocalizedLabel, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
@@ -878,12 +873,14 @@ impl DocumentApp for FlowPlayApp {
             FlowCommand::UpdateGenerationValues { .. } => "updateGenerationValues",
             FlowCommand::SetLocale { .. } => "setLocale",
             FlowCommand::FlowEvalTick => "flowEvalTick",
+            FlowCommand::FlowEvalResolve { .. } => "flowEvalResolve",
         }
     }
 
     fn handle(&self, command: &FlowCommand, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
         let fixture = doc.projection;
         let config = cfg.projection;
+        let mut session = eval_session_lock(self);
         match command {
             // ✏️ Operations — run the stateful `FlowHost` mutation, diff into granular operations.
             FlowCommand::AddWidget { kind, neuron_kind, x, y } => {
@@ -894,7 +891,7 @@ impl DocumentApp for FlowPlayApp {
                 let x = x.unwrap_or(120.0);
                 let y = y.unwrap_or(120.0);
                 let mut new_id = None;
-                let operations = host_operations(fixture, config, |host| match host.add_widget(&descriptor, x, y) {
+                let operations = host_operations(fixture, config, &session, |host| match host.add_widget(&descriptor, x, y) {
                     Ok(id) => {
                         new_id = Some(id);
                         true
@@ -902,14 +899,18 @@ impl DocumentApp for FlowPlayApp {
                     Err(_) => false,
                 });
                 match new_id {
-                    Some(id) => Ok(Emit { document_operations: operations, config_operations: vec![FlowConfigOperation::SetSelection { node_ids: vec![id], edge_ids: Vec::new(), handle_ids: Vec::new() }], ..Default::default() },
-                    None => Ok(Emit::operations(operations),
+                    Some(id) => Ok(Emit {
+                        document_operations: operations,
+                        config_operations: vec![FlowConfigOperation::SetSelection { node_ids: vec![id], edge_ids: Vec::new(), handle_ids: Vec::new() }],
+                        ..Default::default()
+                    }),
+                    None => Ok(Emit::operations(operations)),
                 }
             }
             FlowCommand::RemoveWidget { widget_id: target_id } => {
-                let operations = host_operations(fixture, config, |host| host.remove_widget(target_id).is_ok());
+                let operations = host_operations(fixture, config, &session, |host| host.remove_widget(target_id).is_ok());
                 if operations.is_empty() {
-                    Ok(Emit::default()
+                    Ok(Emit::default())
                 } else {
                     let remaining: Vec<String> = config.selected_node_ids.iter().filter(|id| *id != target_id).cloned().collect();
                     Ok(Emit {
@@ -923,7 +924,7 @@ impl DocumentApp for FlowPlayApp {
                 let nodes = config.selected_node_ids.clone();
                 let edges = config.selected_edge_ids.clone();
                 let handles = config.selected_handle_ids.clone();
-                let operations = host_operations(fixture, config, |host| {
+                let operations = host_operations(fixture, config, &session, |host| {
                     sync_host_selection_domains(host, &nodes, &edges, &handles);
                     if !host.has_selection() {
                         return false;
@@ -931,34 +932,41 @@ impl DocumentApp for FlowPlayApp {
                     host.delete_selection().is_ok()
                 });
                 if operations.is_empty() {
-                    Ok(Emit::default()
+                    Ok(Emit::default())
                 } else {
-                    Emit { document_operations: operations, config_operations: vec![FlowConfigOperation::SetSelection { node_ids: Vec::new(), edge_ids: Vec::new(), handle_ids: Vec::new() }], ..Default::default() }
+                    Ok(Emit {
+                        document_operations: operations,
+                        config_operations: vec![FlowConfigOperation::SetSelection { node_ids: Vec::new(), edge_ids: Vec::new(), handle_ids: Vec::new() }],
+                        ..Default::default()
+                    })
                 }
             }
-            FlowCommand::Disconnect { synapse_id } => Ok(Emit::operations(host_operations(fixture, config, |host| host.disconnect(synapse_id).is_ok())),
-            FlowCommand::ConnectMediaPorts { source_node_id, source_port_id, target_node_id, target_port_id } => {
-                Ok(Emit::operations(host_operations(fixture, config, |host| host.connect_ports(source_node_id, source_port_id, target_node_id, target_port_id).is_ok()))
-            }
+            FlowCommand::Disconnect { synapse_id } => Ok(Emit::operations(host_operations(fixture, config, &session, |host| host.disconnect(synapse_id).is_ok()))),
+            FlowCommand::ConnectMediaPorts { source_node_id, source_port_id, target_node_id, target_port_id } => Ok(Emit::operations(host_operations(
+                fixture,
+                config,
+                &session,
+                |host| host.connect_ports(source_node_id, source_port_id, target_node_id, target_port_id).is_ok(),
+            ))),
             FlowCommand::MoveMediaNode { node_id, x, y } => {
-                let operations = host_operations(fixture, config, |host| {
+                let operations = host_operations(fixture, config, &session, |host| {
                     host.begin_change();
                     host.move_widget(node_id, *x, *y).is_ok()
                 });
                 if operations.is_empty() {
-                    Ok(Emit::default()
+                    Ok(Emit::default())
                 } else {
-                    Ok(Emit::amend(operations, format!("move-{node_id}"))
+                    Ok(Emit::amend(operations, format!("move-{node_id}")))
                 }
             }
-            FlowCommand::Reorganize => Ok(Emit::operations(host_operations(fixture, config, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
+            FlowCommand::Reorganize => Ok(Emit::operations(host_operations(fixture, config, &session, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok()))),
             FlowCommand::PatchFlowWidgets { widget_ids, field, value } => {
                 let next = patched_widgets_fixture(fixture, widget_ids, field, value);
                 let operations = flow_fixture_operations(fixture, &next);
                 if operations.is_empty() {
-                    Ok(Emit::default()
+                    Ok(Emit::default())
                 } else {
-                    Ok(Emit::amend(operations, format!("patch-{field}-{}", widget_ids.join(",")))
+                    Ok(Emit::amend(operations, format!("patch-{field}-{}", widget_ids.join(","))))
                 }
             }
             FlowCommand::RenameFlowWidget { old_id, value } => match renamed_fixture(fixture, old_id, value) {
@@ -966,34 +974,34 @@ impl DocumentApp for FlowPlayApp {
                     document_operations: flow_fixture_operations(fixture, &next),
                     config_operations: vec![FlowConfigOperation::SetSelection { node_ids: vec![value.trim().to_string()], edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }],
                     ..Default::default()
-                },
+                }),
                 None => Ok(Emit::default()),
             },
-            FlowCommand::NodeGraphEdit { operations } => node_graph_edit_result(fixture, config, operations),
-            FlowCommand::SpotlightCommit { operations } => node_graph_edit_result(fixture, config, operations),
+            FlowCommand::NodeGraphEdit { operations } => Ok(node_graph_edit_result(fixture, config, &session, operations)),
+            FlowCommand::SpotlightCommit { operations } => Ok(node_graph_edit_result(fixture, config, &session, operations)),
             FlowCommand::RunExtensionAction { action_id } => {
                 let entry = FLOW_EXTENSIONS.iter().find(|(_, _, entry_action_id, ..)| entry_action_id == action_id);
                 let Some((id, _, _, _, effect)) = entry else {
-                    return Ok(Emit::default();
+                    return Ok(Emit::default());
                 };
                 if !config.extension_enabled().get(*id).copied().unwrap_or(false) {
-                    return Ok(Emit::default();
+                    return Ok(Emit::default());
                 }
                 match *effect {
-                    "reorganize" => Ok(Emit::operations(host_operations(fixture, config, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
-                    "evaluate" => evaluate_result(fixture, config),
+                    "reorganize" => Ok(Emit::operations(host_operations(fixture, config, &session, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok()))),
+                    "evaluate" => Ok(evaluate_result(fixture, config, &mut session)),
                     _ => Ok(Emit::default()),
                 }
             }
 
             // 👁️ Config-only (was ephemeral `FlowPlayRuntime` state) — emit `config_operations`, never
             // document operations.
-            FlowCommand::Evaluate => evaluate_result(fixture, config),
+            FlowCommand::Evaluate => Ok(evaluate_result(fixture, config, &mut session)),
             FlowCommand::SelectAll => {
                 let ids: Vec<String> = fixture.widgets.iter().map(widget_id).map(str::to_string).collect();
-                Ok(Emit::config(vec![FlowConfigOperation::SetSelection { node_ids: ids, edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }])
+                Ok(Emit::config(vec![FlowConfigOperation::SetSelection { node_ids: ids, edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }]))
             }
-            FlowCommand::FocusSelection => match focus_selection_camera(fixture, config) {
+            FlowCommand::FocusSelection => match focus_selection_camera(fixture, config, &session) {
                 Some(camera) => Ok(Emit::config(vec![FlowConfigOperation::SetCamera { camera }])),
                 None => Ok(Emit::default()),
             },
@@ -1005,9 +1013,9 @@ impl DocumentApp for FlowPlayApp {
             FlowCommand::NodeGraphViewport { camera } => Ok(Emit::config(vec![FlowConfigOperation::SetCamera { camera: camera.clone() }])),
             FlowCommand::SetLodMode { value } => {
                 if value == FLOW_LOD_MODE_AUTOMATIC || DagDrawLod::from_id(value).is_some() {
-                    Ok(Emit::config(vec![FlowConfigOperation::SetLodMode { value: value.clone() }])
+                    Ok(Emit::config(vec![FlowConfigOperation::SetLodMode { value: value.clone() }]))
                 } else {
-                    Ok(Emit::default()
+                    Ok(Emit::default())
                 }
             }
             FlowCommand::SetProximityDistance { value } => Ok(Emit::config(vec![FlowConfigOperation::SetProximityDistance { value: value.max(0.0) }])),
@@ -1017,9 +1025,9 @@ impl DocumentApp for FlowPlayApp {
             FlowCommand::ClearSelection => Ok(Emit::config(vec![FlowConfigOperation::SetSelection { node_ids: Vec::new(), edge_ids: Vec::new(), handle_ids: Vec::new() }])),
             FlowCommand::ContextMenuAt { id } => {
                 if id.is_empty() {
-                    Ok(Emit::default()
+                    Ok(Emit::default())
                 } else {
-                    Ok(Emit::config(vec![FlowConfigOperation::SetSelection { node_ids: vec![id.clone()], edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }])
+                    Ok(Emit::config(vec![FlowConfigOperation::SetSelection { node_ids: vec![id.clone()], edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }]))
                 }
             }
             FlowCommand::SetPreviewOff { ids, value } => {
@@ -1033,7 +1041,7 @@ impl DocumentApp for FlowPlayApp {
                 } else {
                     next.retain(|id| !ids.contains(id));
                 }
-                Ok(Emit::config(vec![FlowConfigOperation::SetPreviewOff { node_ids: next }])
+                Ok(Emit::config(vec![FlowConfigOperation::SetPreviewOff { node_ids: next }]))
             }
             FlowCommand::OpenSpotlight => Ok(Emit::default()),
             FlowCommand::ReplaceImage { .. } => Ok(Emit::default()),
@@ -1041,15 +1049,15 @@ impl DocumentApp for FlowPlayApp {
             FlowCommand::ToggleExtension { id, enabled } => {
                 let mut map = config.extension_enabled();
                 map.insert(id.clone(), *enabled);
-                Ok(Emit::config(vec![FlowConfigOperation::SetExtensionEnabled { json: serde_json::to_string(&map).unwrap_or_default() }])
+                Ok(Emit::config(vec![FlowConfigOperation::SetExtensionEnabled { json: serde_json::to_string(&map).unwrap_or_default() }]))
             }
-            FlowCommand::AddGeneration => Ok(handle_generation("addGeneration", None, fixture, config),
-            FlowCommand::RemoveGeneration { id } => Ok(handle_generation("removeGeneration", Some(&json!({ "id": id })), fixture, config),
-            FlowCommand::SelectGeneration { id } => Ok(handle_generation("selectGeneration", Some(&json!({ "id": id })), fixture, config),
-            FlowCommand::RenameGeneration { id, name } => Ok(handle_generation("renameGeneration", Some(&json!({ "id": id, "name": name })), fixture, config),
+            FlowCommand::AddGeneration => Ok(handle_generation("addGeneration", None, fixture, config, &mut session)),
+            FlowCommand::RemoveGeneration { id } => Ok(handle_generation("removeGeneration", Some(&json!({ "id": id })), fixture, config, &mut session)),
+            FlowCommand::SelectGeneration { id } => Ok(handle_generation("selectGeneration", Some(&json!({ "id": id })), fixture, config, &mut session)),
+            FlowCommand::RenameGeneration { id, name } => Ok(handle_generation("renameGeneration", Some(&json!({ "id": id, "name": name })), fixture, config, &mut session)),
             FlowCommand::UpdateGenerationValues { generation_id, question_id, value } => {
                 let value_json: Value = dsl::from_dsl_value(value.clone()).unwrap_or(Value::Null);
-                handle_generation("updateGenerationValues", Some(&json!({ "generationId": generation_id, "questionId": question_id, "value": value_json })), fixture, config)
+                Ok(handle_generation("updateGenerationValues", Some(&json!({ "generationId": generation_id, "questionId": question_id, "value": value_json })), fixture, config, &mut session))
             }
             FlowCommand::SetLocale { value } => Ok(Emit::config(vec![FlowConfigOperation::SetLocale { value: value.clone() }])),
             // 🧵️ One budgeted evaluation step (see `flow_core::FlowEvalDriver::tick`), off the main
@@ -1057,14 +1065,30 @@ impl DocumentApp for FlowPlayApp {
             // empty; persists the driver's new baseline/eval json via `SetEvalDriver` so the next
             // render/`pending_effects` call sees the converged state.
             FlowCommand::FlowEvalTick => {
-                let mut driver = config.eval_driver();
-                let mut host = host_from_fixture(fixture, config);
-                let more = driver.tick(&mut host);
-                Ok(Emit {
-                    config_operations: vec![FlowConfigOperation::SetEvalDriver { json: serde_json::to_string(&driver).unwrap_or_default() }],
-                    effects: if more { vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() },
-                    ..Default::default()
-                })
+                let mut host = host_from_fixture(fixture, config, &session);
+                let more = session.tick(&mut host);
+                let mut effects = if more { vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
+                if let Some(pending) = host.take_pending_extension_eval() {
+                    if let Some(plugin_id) = flow_core::flow_extension_plugin_id(&pending.extension_id) {
+                        let request_json = serde_json::json!({
+                            "operatorId": pending.operator_id,
+                            "inputJson": pending.input_json,
+                            "nodeHash": pending.node_hash,
+                        })
+                        .to_string();
+                        effects.push(HostEffect::RequestPluginExchange {
+                            plugin_id,
+                            app_id: "flow-extension-eval".into(),
+                            request_json,
+                            response_action: "flowEvalResolve".into(),
+                        });
+                    }
+                }
+                Ok(Emit { effects, ..Default::default() })
+            }
+            FlowCommand::FlowEvalResolve { node_hash, output_json } => {
+                let _ = session.seed_node_cache(*node_hash, output_json);
+                Ok(Emit { effects: vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }], ..Default::default() })
             }
         }
     }
@@ -1074,9 +1098,9 @@ impl DocumentApp for FlowPlayApp {
     /// Pure: recomputes the "is anything pending" probe fresh from the fixture and the driver's
     /// persisted baseline each call, never mutates anything durably.
     fn pending_effects(&self, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> Vec<HostEffect> {
-        let mut driver = cfg.projection.eval_driver();
-        let host = host_from_fixture(doc.projection, cfg.projection);
-        if driver.sync(&host) {
+        let mut session = eval_session_lock(self);
+        let host = host_from_fixture(doc.projection, cfg.projection, &session);
+        if session.sync(&host) {
             vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
         } else {
             Vec::new()
@@ -1087,14 +1111,15 @@ impl DocumentApp for FlowPlayApp {
         let fixture = doc.projection;
         let config = cfg.projection;
         let labels = flow_play_labels(config);
+        let session = eval_session_lock(self);
         match body_key {
-            FLOW_PLAY_BODY_MAIN => render_main_graph(fixture, config),
-            FLOW_PLAY_BODY_COMPILED => render_compiled_dag(fixture, config),
+            FLOW_PLAY_BODY_MAIN => render_main_graph(fixture, config, &session),
+            FLOW_PLAY_BODY_COMPILED => render_compiled_dag(fixture, config, &session),
             FLOW_PLAY_BODY_GENERATIONS => render_generate_generations(config, semio_framework_plugin::locale_from_str(&config.locale), Terminology::Native),
             FLOW_PLAY_BODY_GENERATE_FORM => render_generate_form(fixture, config),
             FLOW_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(config),
             FLOW_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &config.selected_node_ids, labels),
-            FLOW_PLAY_BODY_CATALOGUE => build_catalogue_tree(fixture, config, labels),
+            FLOW_PLAY_BODY_CATALOGUE => build_catalogue_tree(fixture, config, &session, labels),
             FLOW_PLAY_BODY_INSPECTOR => build_inspector_tree(fixture, &config.selected_node_ids, labels),
             _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
@@ -1560,7 +1585,8 @@ mod tests {
     fn host_from_fixture_deletes_edge_selected_by_synapse_domain() {
         let config = FlowConfig::default();
         let fixture = FlowFixture::default();
-        let mut host = host_from_fixture(&fixture, &config);
+        let session = FlowEvalSession::new();
+        let mut host = host_from_fixture(&fixture, &config, &session);
         sync_host_selection_domains(&mut host, &[], &["s1".into()], &[]);
         eprintln!("[DEBUG] host_from_fixture edge selection: has={} edge_ids={:?}", host.has_selection(), host.dag.selected_edge_ids());
         assert!(host.has_selection(), "s1 must resolve through host_from_fixture edge map");

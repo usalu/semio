@@ -2,7 +2,7 @@
 
 use flow_core::dag::DagFixture;
 use flow_core::forms_bridge::apply_generation_values_to_fixture;
-use flow_core::{CameraJson, FlowEvalDriver, FlowFixture, FlowHost, Widget};
+use flow_core::{flow_host_with_session, CameraJson, FlowEvalSession, FlowFixture, FlowHost, Widget};
 use flow_extension_brep::tessellate_geometry;
 use playbook::{selected_generation, GenerationPlayState};
 use procedural_3d::{widget_id, Procedural3dDocument};
@@ -53,24 +53,6 @@ pub fn sync_flow_extension_contributions(contributions_json: &str) {
     *last = contributions_json.to_string();
 }
 //#endregion 🔖️ExtensionContributions
-
-//#region 🔖️EvalCache
-/// 🧠️ Process-wide [`flow_core::neural::NeuralCache`] shared across `FlowHost` reconstructions.
-///
-/// `Procedural3dPlayApp` is a stateless unit struct rebuilt from `document_json`/config on every
-/// plugin dispatch, so a fresh `FlowHost::from_fixture` would otherwise discard per-node
-/// memoization (and the geometry handle stability that lets `flow_extension_brep`'s mesh cache
-/// hit) on every single edit. Mirrors `flow_extension_brep`'s single-instance `KERNEL`/`MESH_CACHE`
-/// `OnceLock` pattern — one shared cache per WASM instance, which matches one editor session.
-static PROCEDURAL_NEURAL_CACHE: std::sync::OnceLock<std::sync::Arc<flow_core::neural::NeuralCache>> = std::sync::OnceLock::new();
-
-pub fn procedural_neural_cache() -> std::sync::Arc<flow_core::neural::NeuralCache> {
-    PROCEDURAL_NEURAL_CACHE.get_or_init(|| std::sync::Arc::new(flow_core::neural::NeuralCache::new())).clone()
-}
-pub fn resolve_flow_eval_node(node_hash: u64, output_json: &str) -> Result<(), flow_core::FlowCoreError> {
-    flow_core::seed_flow_eval_node_cache(&procedural_neural_cache(), node_hash, output_json)
-}
-//#endregion 🔖️EvalCache
 
 //#region 🔖️Types
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -165,11 +147,6 @@ pub struct Procedural3dConfig {
     /// 🧬️ The evaluated preview text for the selected generation — was
     /// `Procedural3dRuntime::generation_preview_text`.
     pub generation_preview_text: Option<String>,
-    /// 🧵️ JSON-encoded `flow_core::FlowEvalDriver` (off-main-thread evaluation state) — was
-    /// `Procedural3dRuntime::eval_driver` (not `dsl::DslRecord`-derivable); see
-    /// `eval_driver`/`Procedural3dConfigOperation::SetEvalDriver`.
-    #[serde(default)]
-    pub eval_driver_json: String,
     /// 🧰️ The active transform-gumball utility for the preview window — was read off the deleted
     /// `ViewState::active_utility_id` (host-pushed `ViewState`, deleted by the pure-trait migration).
     pub active_utility_id: String,
@@ -197,7 +174,6 @@ impl Default for Procedural3dConfig {
             sun_json: default_sun_json(),
             selected_generation_id: None,
             generation_preview_text: None,
-            eval_driver_json: String::new(),
             active_utility_id: "move".into(),
             locale: "en-US".into(),
             contributions_json: default_contributions_json(),
@@ -209,11 +185,6 @@ impl Procedural3dConfig {
     /// 🌞️ Parses `sun_json` — falls back to `WorldSunConfig::default()` on any malformed/legacy value.
     pub fn sun(&self) -> semio_framework_plugin::WorldSunConfig {
         serde_json::from_str(&self.sun_json).unwrap_or_default()
-    }
-
-    /// 🧵️ Parses `eval_driver_json` — falls back to `FlowEvalDriver::default()` on any malformed/empty value.
-    pub fn eval_driver(&self) -> FlowEvalDriver {
-        serde_json::from_str(&self.eval_driver_json).unwrap_or_default()
     }
 }
 
@@ -366,24 +337,20 @@ fn merge_status_json(computing: Option<String>, preview_status: Option<String>) 
     }
 }
 
-/// 👁️ Merges the driver's live "still computing" flag with a fresh `preview_status_json` result —
-/// called fresh on every render (no cache) since `eval_driver.pending()` is a cheap boolean read.
-pub fn preview_scene_status_json(eval_driver: &FlowEvalDriver, preview_status: Option<String>) -> Option<String> {
-    let computing = eval_driver.pending().then(|| r#"{"computing":true}"#.to_string());
+/// 👁️ Merges the session's live "still computing" flag with a fresh `preview_status_json` result.
+pub fn preview_scene_status_json(session: &FlowEvalSession, preview_status: Option<String>) -> Option<String> {
+    let computing = session.pending().then(|| r#"{"computing":true}"#.to_string());
     merge_status_json(computing, preview_status)
 }
 
 pub fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
-    host_from_fixture_with_driver(fixture, None)
+    let mut host = FlowHost::from_fixture(fixture.clone());
+    host.set_neuron_kind_infos_json(&flow_core::flow_neuron_kind_infos_json());
+    host
 }
 
-pub fn host_from_fixture_with_driver(fixture: &FlowFixture, driver: Option<&FlowEvalDriver>) -> FlowHost {
-    let mut host = FlowHost::from_fixture_with_cache(fixture.clone(), procedural_neural_cache());
-    host.set_neuron_kind_infos_json(&flow_core::flow_neuron_kind_infos_json());
-    if let Some(driver) = driver {
-        driver.install_baseline_into(&mut host);
-    }
-    host
+pub fn host_from_fixture_with_session(fixture: &FlowFixture, session: &FlowEvalSession) -> FlowHost {
+    flow_host_with_session(fixture, session)
 }
 
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
@@ -576,7 +543,7 @@ pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::M
     let fixture_json = serde_json::to_string(fixture).unwrap_or_default();
     let patched = apply_generation_values_to_fixture(&fixture_json, values);
     let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());
-    let mut host = FlowHost::from_fixture_with_cache(patched_fixture, procedural_neural_cache());
+    let mut host = FlowHost::from_fixture(patched_fixture);
     host.set_neuron_kind_infos_json(&flow_core::flow_neuron_kind_infos_json());
     host.evaluate().unwrap_or_default()
 }
@@ -839,7 +806,6 @@ mod tests {
         assert_eq!(config.active_utility_id, "move");
         assert_eq!(config.locale, "en-US");
         assert_eq!(config.sun(), semio_framework_plugin::WorldSunConfig::default());
-        assert_eq!(config.eval_driver(), FlowEvalDriver::default());
     }
 
     #[test]

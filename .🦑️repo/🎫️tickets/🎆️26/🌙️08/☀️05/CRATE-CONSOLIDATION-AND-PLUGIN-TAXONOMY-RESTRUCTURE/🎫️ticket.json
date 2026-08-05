@@ -1,0 +1,13 @@
+{
+  "title": "Crate Consolidation And Plugin Taxonomy Restructure",
+  "emoji": "🧬️",
+  "status": "open",
+  "description": "Master tracking ticket for the repo-wide consolidation of 622 Rust crates down to ~52 (one crate per plugin/framework-module-family/product) plus a new domain taxonomy tree inside each plugin (artifacts/{diff,dsl,pack,op,spr,engine}, apps/modes/windows/{panes,widgets,utilities,actions,options}, commands, tools, panels). Full design lives in /Users/ueli/.claude/plans/the-codebase-has-currently-declarative-ritchie.md (approved plan). This ticket holds the discovery contract spec, the per-plugin merge template (written by the W1 pilot), the plugin-ownership schedule for concurrent human devs, and the Single-File-Repo hazard ruling. Never close this ticket from a subagent — only the orchestrating session closes it, at the very end of the whole restructure.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2439"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪8e4cf815c10f48f981a32699eaa78658"
+  ]
+}

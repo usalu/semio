@@ -1420,13 +1420,12 @@ export const UI_INSPECTOR_MIXED_PLACEHOLDER = shellLabel("ui.common.mixedValues"
 /** 🎭️ Renderer-side view state passed to program wasm calls — structurally mirrors `@semio-tech/framework-core`'s {@link PluginViewState}, kept as a distinct local alias since `ViewState` is the established name used throughout this file. */
 export type ViewState = PluginViewState;
 
-/** ⚠️ Not folded into `@semio-tech/framework-core`'s `PluginManifest`: this shell-local shape types `apps`/`workflows` richly (`AppDefinition[]`, `document` on workflows) where core intentionally keeps the wasm-boundary shape loose (`Record<string, unknown>[]`) for other consumers (e.g. compose, coda). Left for a human to decide whether to widen core's `PluginManifest` itself. */
+/** ⚠️ Not folded into `@semio-tech/framework-core`'s `PluginManifest`: this shell-local shape types `apps` richly (`AppDefinition[]`) where core intentionally keeps the wasm-boundary shape loose (`Record<string, unknown>[]`) for other consumers (e.g. compose, coda). Left for a human to decide whether to widen core's `PluginManifest` itself. */
 export type PluginManifest = {
   readonly pluginId: string;
   readonly label: string;
   readonly version: string;
   readonly apps: readonly AppDefinition[];
-  readonly workflows: readonly { readonly workflowStepId: string; readonly appId: string; readonly label: string; readonly document: readonly string[]; readonly yields: string }[];
   readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string; readonly appId: string }[];
   readonly contributions?: readonly {
     readonly kind: "playbookBlockKind";
@@ -2994,19 +2993,6 @@ export function parseSpaceShellPath(path: string): SpaceShellPath | null {
   const route = parseShellRoute(path);
   if (route.kind !== "space") return null;
   return { spaceId: route.spaceId, instanceId: route.instanceId };
-}
-
-function buildSpacePrograms(loaded: readonly LoadedProgramState[]): readonly SpaceProgramEntry[] {
-  return loaded.flatMap((entry) =>
-    (entry.manifest.workflows ?? []).map((workflow) => ({
-      pluginId: entry.handle.pluginId,
-      workflowStepId: workflow.workflowStepId,
-      appId: workflow.appId,
-      label: workflow.label,
-      document: workflow.document,
-      yields: workflow.yields,
-    })),
-  );
 }
 
 export function appDocumentLabel(document: readonly string[]): string {
@@ -6044,8 +6030,11 @@ function FrameworkOsShellInner({
       if (hostConfig) {
         const sApp = manifest.apps.find((app) => app.id === hostConfig.landingAppId) ?? manifest.apps[0];
         if (!sApp) throw new Error("host program missing landing app");
-        const programs = buildSpacePrograms(loadedPluginsRef.current);
-        const panelState = buildSpacePanelState(programs, []);
+        // 🪦️ `manifest.workflows` (the source `buildSpacePrograms` used to read) was deleted from the
+        // Rust `PluginManifest` — the studio catalogue is now registry-driven (see `SpaceCommand::SetAppRegistrations`),
+        // so `SpacePanelState.programs` is permanently empty; `spawnedApps`/`activePanelTab`/`activeSpawnedId` are
+        // still real, live state, so `SpacePanelState` itself stays.
+        const panelState = buildSpacePanelState([], []);
         const instanceId = await handle.createApp(sApp.id);
         const viewState: ViewState = { activeModeId: sApp.defaultModeId ?? sApp.modes[0]?.id, panelJson: panelJsonFromState(panelState) };
         // 🪟️ Seed default-layout panes (Top/Perspective) before any effect can fire actions — otherwise
@@ -6675,50 +6664,61 @@ function FrameworkOsShellInner({
         // ⏱️ See `DocumentApp::pending_effects` — e.g. resuming a `flowEvalTick` chain after this refresh.
         if (response.requestedEffects?.length) await applyHostEffects(response.requestedEffects, nextSession);
       }
-      if (contributionsJson && contributionsJson !== contributionsJsonRef.current) {
-        contributionsJsonRef.current = contributionsJson;
-        const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId);
-        // 🛡️ `setContributions` is an opt-in hint push — only `procedural3d`'s `Procedural3dCommand::SetContributions`
-        // (flow.extension hot-swap) and `forms`'s `FormsCommand::SetContributions` (playbook block-kind catalogue)
-        // actually implement it; it is deliberately NOT declared in either app's action catalog (same
-        // uncatalogued-bridge shape as `setLocale`), so catalog membership can't gate this call. Every other
-        // app's `DocumentApp::command_from_action` default rejects unknown ids — swallow that rejection here
-        // rather than gating by app id, so this stays correct if a future app adds its own `SetContributions`
-        // variant without this call site needing to know about it.
-        if (pluginEntry) {
-          try {
-            const wire = encodeActionWire({ controllerId: nextSession.app.controllerId, action: "setContributions", args: { json: contributionsJson } });
-            if (pluginEntry.handle.handleCommand) {
-              await pluginEntry.handle.handleCommand(nextSession.instanceId, wire, nextSession.viewState);
-            } else {
+      // 🎯 Both push guards below are keyed on `${nextSession.instanceId}::${json}`, NOT on the json
+      // content alone — the content is derived purely from `loadedPlugins`, which stabilizes right after
+      // boot, so a content-only key would only ever unlock ONE push for the process lifetime (the very
+      // first `refreshUi` call, which always targets whatever session exists at boot — usually `home`,
+      // which doesn't implement either action and rejects it). Folding `instanceId` into the key makes a
+      // session switch (new studio/space instance opened, same unchanged json) retrigger the push instead
+      // of being silently swallowed by a guard that already considered this content "delivered".
+      if (contributionsJson) {
+        const contributionsPushKey = `${nextSession.instanceId}::${contributionsJson}`;
+        if (contributionsPushKey !== contributionsJsonRef.current) {
+          contributionsJsonRef.current = contributionsPushKey;
+          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId);
+          // 🛡️ `setContributions` is an opt-in hint push — only `procedural3d`'s `Procedural3dCommand::SetContributions`
+          // (flow.extension hot-swap) and `forms`'s `FormsCommand::SetContributions` (playbook block-kind catalogue)
+          // actually implement it; it is deliberately NOT declared in either app's action catalog (same
+          // uncatalogued-bridge shape as `setLocale`), so catalog membership can't gate this call. Every other
+          // app's `DocumentApp::command_from_action` default rejects unknown ids — swallow that rejection here
+          // rather than gating by app id, so this stays correct if a future app adds its own `SetContributions`
+          // variant without this call site needing to know about it.
+          // 🧵️ B1: MUST go through `handleAction` (kind:"action" → `dispatch_action` → `command_from_action`
+          // → `dispatch_typed_command_inner`) — `handleCommand` (kind:"command") always hard-errors now, see
+          // `VcsDocumentApp::dispatch_command`'s doc; there are no framework-reserved COMMANDS, only actions.
+          if (pluginEntry) {
+            try {
+              const wire = encodeActionWire({ controllerId: nextSession.app.controllerId, action: "setContributions", args: { json: contributionsJson } });
               await pluginEntry.handle.handleAction(nextSession.instanceId, wire, nextSession.viewState);
+            } catch (error) {
+              console.warn("[DEBUG] setContributions push skipped", error instanceof Error ? error.message : String(error));
             }
-          } catch (error) {
-            console.warn("[DEBUG] setContributions push skipped", error instanceof Error ? error.message : String(error));
           }
         }
       }
-      if (appRegistrationsJson && appRegistrationsJson !== appRegistrationsJsonRef.current) {
-        appRegistrationsJsonRef.current = appRegistrationsJson;
-        const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId);
-        // 🪐️ `setAppRegistrations` mirrors `setContributions` immediately above exactly: an opt-in hint
-        // push, currently only implemented by the space app's `SpaceCommand::SetAppRegistrations`
-        // (populates its own linked-in copy of `semio_framework_os::APP_REGISTRATIONS` so
-        // `workflow_palette()`/`build_catalogue_tree` can list every loaded app). Not declared in any
-        // app's action catalog, so — same as `setContributions` — gate by swallowing the rejection every
-        // other app's `DocumentApp::command_from_action` default throws for an unknown id, rather than by
-        // app id, so this stays correct if a future app adds its own `SetAppRegistrations` variant
-        // without this call site needing to know about it.
-        if (pluginEntry) {
-          try {
-            const wire = encodeActionWire({ controllerId: nextSession.app.controllerId, action: "setAppRegistrations", args: { json: appRegistrationsJson } });
-            if (pluginEntry.handle.handleCommand) {
-              await pluginEntry.handle.handleCommand(nextSession.instanceId, wire, nextSession.viewState);
-            } else {
+      if (appRegistrationsJson) {
+        const appRegistrationsPushKey = `${nextSession.instanceId}::${appRegistrationsJson}`;
+        if (appRegistrationsPushKey !== appRegistrationsJsonRef.current) {
+          appRegistrationsJsonRef.current = appRegistrationsPushKey;
+          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId);
+          // 🪐️ `setAppRegistrations` mirrors `setContributions` immediately above exactly: an opt-in hint
+          // push, currently only implemented by the space app's `SpaceCommand::SetAppRegistrations`
+          // (populates its own linked-in copy of `semio_framework_os::APP_REGISTRATIONS` so
+          // `workflow_palette()`/`build_catalogue_tree` can list every loaded app). Not declared in any
+          // app's action catalog, so — same as `setContributions` — gate by swallowing the rejection every
+          // other app's `DocumentApp::command_from_action` default throws for an unknown id, rather than by
+          // app id, so this stays correct if a future app adds its own `SetAppRegistrations` variant
+          // without this call site needing to know about it.
+          // 🧵️ B1: MUST go through `handleAction` (kind:"action" → `dispatch_action` → `command_from_action`
+          // → `dispatch_typed_command_inner`) — `handleCommand` (kind:"command") always hard-errors now, see
+          // `VcsDocumentApp::dispatch_command`'s doc; there are no framework-reserved COMMANDS, only actions.
+          if (pluginEntry) {
+            try {
+              const wire = encodeActionWire({ controllerId: nextSession.app.controllerId, action: "setAppRegistrations", args: { json: appRegistrationsJson } });
               await pluginEntry.handle.handleAction(nextSession.instanceId, wire, nextSession.viewState);
+            } catch (error) {
+              console.warn("[DEBUG] setAppRegistrations push skipped", error instanceof Error ? error.message : String(error));
             }
-          } catch (error) {
-            console.warn("[DEBUG] setAppRegistrations push skipped", error instanceof Error ? error.message : String(error));
           }
         }
       }
@@ -6905,10 +6905,10 @@ function FrameworkOsShellInner({
         return nextSession;
       }
       const instanceId = await sPlugin.handle.createApp(app.id);
-      const programs = buildSpacePrograms(loadedPlugins);
+      // 🪦️ See `establishPrimarySession`'s comment above — `programs` is permanently empty now.
       const nextViewState: ViewState = viewState ?? {
         activeModeId: app.defaultModeId ?? app.modes[0]?.id,
-        panelJson: panelJsonFromState(buildSpacePanelState(programs, [])),
+        panelJson: panelJsonFromState(buildSpacePanelState([], [])),
       };
       const nextSession: ActiveSession = { pluginId: sPlugin.handle.pluginId, instanceId, app, viewState: nextViewState };
       dispatch({ type: "SET_SESSION", value: nextSession });
@@ -6942,7 +6942,7 @@ function FrameworkOsShellInner({
       const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === program.pluginId);
       if (!pluginEntry || !session) return null;
       const app = pluginEntry.manifest.apps.find((candidate) => candidate.id === program.appId);
-      const currentPanel = parsePanelState(sourceViewState ?? session.viewState) ?? buildSpacePanelState(buildSpacePrograms(loadedPlugins), []);
+      const currentPanel = parsePanelState(sourceViewState ?? session.viewState) ?? buildSpacePanelState([], []);
       const existing = osInstanceId ? currentPanel.spawnedApps.find((entry) => entry.id === osInstanceId) : currentPanel.spawnedApps.find((entry) => entry.appId === program.appId && entry.pluginId === program.pluginId);
       if (existing) {
         if (documentJson && app) {
@@ -7172,8 +7172,9 @@ function FrameworkOsShellInner({
         }
         if ("spawnPluginInstance" in effect) {
           const { pluginId, appId, osInstanceId, label, documentJson } = effect.spawnPluginInstance;
-          const currentPanel = parsePanelState(nextViewState) ?? buildSpacePanelState(buildSpacePrograms(loadedPlugins), []);
-          const catalog = currentPanel.programs.length > 0 ? currentPanel.programs : buildSpacePrograms(loadedPlugins);
+          const currentPanel = parsePanelState(nextViewState) ?? buildSpacePanelState([], []);
+          // 🪦️ See `establishPrimarySession`'s comment above — the `manifest.workflows` fallback source is dead; `catalog` is `currentPanel.programs` or empty.
+          const catalog = currentPanel.programs.length > 0 ? currentPanel.programs : [];
           const program = catalog.find((entry) => entry.pluginId === pluginId && entry.appId === appId) ?? catalog.find((entry) => entry.pluginId === pluginId);
           if (program) {
             // 🪟️ Fold spawn into `nextViewState` — a separate SET_SESSION would be clobbered by the
@@ -7185,8 +7186,9 @@ function FrameworkOsShellInner({
         }
         if ("openPluginInstance" in effect) {
           const { pluginId, appId, osInstanceId } = effect.openPluginInstance;
-          const currentPanel = parsePanelState(nextViewState) ?? buildSpacePanelState(buildSpacePrograms(loadedPlugins), []);
-          const catalog = currentPanel.programs.length > 0 ? currentPanel.programs : buildSpacePrograms(loadedPlugins);
+          const currentPanel = parsePanelState(nextViewState) ?? buildSpacePanelState([], []);
+          // 🪦️ See `establishPrimarySession`'s comment above — the `manifest.workflows` fallback source is dead; `catalog` is `currentPanel.programs` or empty.
+          const catalog = currentPanel.programs.length > 0 ? currentPanel.programs : [];
           const program = catalog.find((entry) => entry.pluginId === pluginId && entry.appId === appId) ?? catalog.find((entry) => entry.pluginId === pluginId);
           if (program) {
             // 🪟️ Fold focus into `nextViewState` so the final SET_SESSION keeps `activeSpawnedId`
@@ -7282,7 +7284,7 @@ function FrameworkOsShellInner({
         await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope));
       } else {
         const response = await sPlugin.handleAction(studioSession.instanceId, encodeActionWire({ controllerId: studioControllerId, action: "closeFocusedInstance" }), studioSession.viewState);
-        const currentPanel = parsePanelState(studioSession.viewState) ?? buildSpacePanelState(buildSpacePrograms(loadedPlugins), []);
+        const currentPanel = parsePanelState(studioSession.viewState) ?? buildSpacePanelState([], []);
         updateSpacePanel(buildSpacePanelState(currentPanel.programs, currentPanel.spawnedApps, currentPanel.activePanelTab, undefined));
         await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope));
       }
@@ -7398,7 +7400,7 @@ function FrameworkOsShellInner({
       const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === program.pluginId);
       if (!pluginEntry || !session) return;
       const instanceId = await pluginEntry.handle.createApp(program.appId);
-      const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState(buildSpacePrograms(loadedPlugins), []);
+      const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState([], []);
       const spawnedId = `${program.pluginId}-${instanceId}`;
       updateSpacePanel(
         studioPanelFocusingSpawned(currentPanel, {
@@ -7610,7 +7612,7 @@ function FrameworkOsShellInner({
 
       if (studioMode && action.controllerId === hostControllerId && action.action === "setActivePanelTab") {
         const tabId = typeof action.args === "object" && action.args != null && "tabId" in action.args ? String((action.args as { tabId?: string }).tabId ?? hostCatalogueTabId ?? "") : (hostCatalogueTabId ?? "");
-        const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState(buildSpacePrograms(loadedPlugins), []);
+        const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState([], []);
         updateSpacePanel(buildSpacePanelState(currentPanel.programs, currentPanel.spawnedApps, tabId, currentPanel.activeSpawnedId));
         return;
       }
@@ -8827,18 +8829,7 @@ function FrameworkOsShellInner({
       if (!session) return;
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
       if (!plugin) return;
-      const dispatchViewState = injectActiveUtility(session.viewState);
-      const commandWire = encodeActionWire({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: exampleId || "" } });
-      if (plugin.handleCommand) {
-        void plugin
-          .handleCommand(session.instanceId, commandWire, dispatchViewState)
-          .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
-          .catch((commandError) => {
-            console.error("[DEBUG] setActiveExample command failed", commandError);
-          });
-      } else {
-        onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: exampleId || "" } });
-      }
+      onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: exampleId || "" } });
     },
     [applyHostEffects, injectActiveUtility, loadedPlugins, onAction, session],
   );
@@ -10421,7 +10412,7 @@ async function performRefreshUi(client: AppChannelClient, request: PluginUiRefre
   }
   if (sections.length !== probes.length) {
     const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-    throw new Error(errorFrame ? `[DEBUG] refreshUi failed (${errorFrame.Error.code}): ${errorFrame.Error.message}` : `[DEBUG] refreshUi: expected ${probes.length} UiSection frames, got ${sections.length}`);
+    throw new Error(errorFrame ? `[DEBUG] refreshUi failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}` : `[DEBUG] refreshUi: expected ${probes.length} UiSection frames, got ${sections.length}`);
   }
 
   const windows: PluginUiRefreshSectionResponse[] = [];
@@ -10505,24 +10496,24 @@ export async function adaptPluginHandle(pluginId: string, lease: PluginModuleLea
       const envelopes = decodeOperationEnvelopesPack(operationsPack);
       const frames = await requireChannel(instanceId).applyEnvelopes(envelopes);
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-      if (errorFrame) throw new Error(`[DEBUG] applyOperations failed (${errorFrame.Error.code}): ${errorFrame.Error.message}`);
+      if (errorFrame) throw new Error(`[DEBUG] applyOperations failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
     },
     readAppDocument: undefined,
     loadAppDocument: undefined,
     loadAppDocumentPack: async (instanceId, pack, spr) => {
       const frames = await requireChannel(instanceId).loadDocument(pack, spr);
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-      if (errorFrame) throw new Error(`[DEBUG] loadAppDocumentPack failed (${errorFrame.Error.code}): ${errorFrame.Error.message}`);
+      if (errorFrame) throw new Error(`[DEBUG] loadAppDocumentPack failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
     },
     attachBackbone: async (instanceId, uri) => {
       const frames = await requireChannel(instanceId).attachBackbone(uri);
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-      if (errorFrame) console.error(`[DEBUG] program ${pluginId}: attachBackbone failed (${errorFrame.Error.code}): ${errorFrame.Error.message}`);
+      if (errorFrame) console.error(`[DEBUG] program ${pluginId}: attachBackbone failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
     },
     detachBackbone: async (instanceId) => {
       const frames = await requireChannel(instanceId).detachBackbone();
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-      if (errorFrame) console.error(`[DEBUG] program ${pluginId}: detachBackbone failed (${errorFrame.Error.code}): ${errorFrame.Error.message}`);
+      if (errorFrame) console.error(`[DEBUG] program ${pluginId}: detachBackbone failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
     },
     dispose: () => lease.release(),
   };
@@ -10646,6 +10637,7 @@ export type FlowWasmSession = GraphWasmSession & {
   catalogueJson(): string;
   setNeuronKindInfosJson(json: string): void;
   setComputingProgress(json: string): void;
+  setNodeStatuses?(json: string): void;
   setAutomaticLod(enabled: boolean): void;
   setForcedDrawLodLabel(label: string): void;
   setCanvasThemeJson(json: string): void;
@@ -19447,7 +19439,7 @@ function DiagramGraphFallback({
         if (!rect) return;
         const x = (event.clientX - rect.left - viewport.x) / viewport.zoom;
         const y = (event.clientY - rect.top - viewport.y) / viewport.zoom;
-        dispatch("spawnApp", { pluginId: payload.pluginId, appId: payload.appId, position: { x, y } });
+        dispatch("spawnApp", { pluginId: payload.pluginId, appId: payload.appId, x, y });
       }}
       onContextMenu={(event) => {
         if (!editable || !requestContextMenu) return;
@@ -19606,7 +19598,13 @@ export function NodeGraphHost({ node, onAction, requestContextMenu }: ComponentS
   const useFlowEngine = isFlowGraphScene(scene.capabilitiesJson) || Boolean(scene.fixtureJson);
 
   return (
-    <div className="semio-node-graph-host relative h-full min-h-[24rem] w-full" data-surface-id={node.surfaceId} tabIndex={editable ? 0 : undefined} onKeyDown={(event) => handleGraphKeyboard(event, editable, parsedNodes, dispatch)}>
+    <div
+      className="semio-node-graph-host relative h-full min-h-[24rem] w-full"
+      data-surface-id={node.surfaceId}
+      data-status-json={scene.statusJson ?? undefined}
+      tabIndex={editable ? 0 : undefined}
+      onKeyDown={(event) => handleGraphKeyboard(event, editable, parsedNodes, dispatch)}
+    >
       {isClient ? (
         useFlowEngine ? (
           <FlowGraphCanvasHost scene={scene} surfaceId={node.surfaceId} controllerId={node.controllerId} editable={editable} requestContextMenu={requestContextMenu} onAction={onAction} />
@@ -20184,7 +20182,8 @@ function applyNodeGraphHoverFromScene(session: FlowWasmSession, hover: NodeGraph
 
 function syncFlowSessionEvalFromScene(session: FlowWasmSession, scene: NodeGraphScene): void {
   if (scene.evalJson) session.applyEvalOutputsJson(scene.evalJson);
-  if (scene.computingJson) session.setComputingProgress(scene.computingJson);
+  if (scene.statusJson) session.setNodeStatuses?.(scene.statusJson);
+  else if (scene.computingJson) session.setComputingProgress(scene.computingJson);
 }
 
 function syncFlowSessionStructureFromScene(session: FlowWasmSession, scene: NodeGraphScene, applyCamera: boolean): void {
@@ -20681,7 +20680,7 @@ export function FlowGraphCanvasHost({
       }
       const catalogueApp = parseCatalogueAppDragPayload(raw);
       if (catalogueApp) {
-        dispatch("spawnApp", { pluginId: catalogueApp.pluginId, appId: catalogueApp.appId, position: { x: world.x, y: world.y } });
+        dispatch("spawnApp", { pluginId: catalogueApp.pluginId, appId: catalogueApp.appId, x: world.x, y: world.y });
         return;
       }
       try {

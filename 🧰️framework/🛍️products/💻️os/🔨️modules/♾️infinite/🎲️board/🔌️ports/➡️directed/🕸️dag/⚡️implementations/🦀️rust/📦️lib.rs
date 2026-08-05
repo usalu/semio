@@ -276,6 +276,8 @@ pub struct IoPortSpec {
     pub shape: PortShape,
     #[serde(default = "default_port_visible")]
     pub visible: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resolved: Option<bool>,
 }
 
 fn default_port_visible() -> bool {
@@ -302,6 +304,7 @@ impl Default for IoPortSpec {
             cardinality: default_port_cardinality(),
             shape: PortShape::default(),
             visible: true,
+            resolved: None,
         }
     }
 }
@@ -329,11 +332,15 @@ impl IoPortSpec {
     }
 
     pub fn label_with_cardinality(&self, lod: DagDrawLod) -> String {
+        let cardinality = match self.resolved {
+            Some(false) => "?",
+            _ => self.cardinality.as_str(),
+        };
         let label = self.display_label(lod).trim();
         if label.is_empty() {
-            return self.cardinality.clone();
+            return cardinality.to_string();
         }
-        format!("{} {}", self.cardinality, label)
+        format!("{cardinality} {label}")
     }
 }
 
@@ -1771,12 +1778,24 @@ pub struct DagHost {
     computing_stale: HashSet<NodeId>,
     computing_active_anim_phase: Cell<f64>,
     computing_stale_anim_phase: Cell<f64>,
+    node_eval_status: HashMap<NodeId, DagNodeEvalStatusKind>,
+    unresolved_input_ports: HashSet<(NodeId, String)>,
     editing_note: Option<NoteEditState>,
     caret_visible: bool,
     pan_anchor: Option<(f64, f64, f64, f64)>,
     minimap_widget_visible: bool,
     minimap_widget_hovered: bool,
     minimap_widget_drag: Option<(f64, f64)>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DagNodeEvalStatusKind {
+    Ok,
+    Stale,
+    Queued,
+    Computing,
+    Error,
+    Blocked,
 }
 
 struct MinimapWidgetLayout {
@@ -1823,15 +1842,14 @@ struct DagNodePaintChrome {
     is_selected: bool,
     is_highlighted: bool,
     is_hovered: bool,
-    is_computing: bool,
-    is_stale: bool,
+    eval_status: DagNodeEvalStatusKind,
     body_fill_alpha: u8,
     ghost_tint: bool,
 }
 
 impl DagNodePaintChrome {
     fn ghost_preview() -> Self {
-        Self { is_dimmed: false, is_selected: false, is_highlighted: false, is_hovered: false, is_computing: false, is_stale: false, body_fill_alpha: 255, ghost_tint: true }
+        Self { is_dimmed: false, is_selected: false, is_highlighted: false, is_hovered: false, eval_status: DagNodeEvalStatusKind::Ok, body_fill_alpha: 255, ghost_tint: true }
     }
 
     fn tint_highlighted(self) -> bool {
@@ -1992,6 +2010,8 @@ impl DagHost {
             computing_stale: HashSet::new(),
             computing_active_anim_phase: Cell::new(0.0),
             computing_stale_anim_phase: Cell::new(0.0),
+            node_eval_status: HashMap::new(),
+            unresolved_input_ports: HashSet::new(),
             editing_note: None,
             caret_visible: true,
             pan_anchor: None,
@@ -2834,6 +2854,56 @@ impl DagHost {
     pub fn clear_computing(&mut self) {
         self.computing_active = None;
         self.computing_stale.clear();
+        self.node_eval_status.clear();
+        self.unresolved_input_ports.clear();
+    }
+
+    /// 🚦 Applies per-widget eval status from flow `statusJson` (widget id → `{ status, … }`).
+    pub fn set_node_statuses_from_json(&mut self, json: &str) {
+        self.computing_active = None;
+        self.computing_stale.clear();
+        self.node_eval_status.clear();
+        self.unresolved_input_ports.clear();
+        let Ok(value) = serde_json::from_str::<serde_json::Value>(json) else {
+            return;
+        };
+        let Some(map) = value.as_object() else {
+            return;
+        };
+        for (widget_id, entry) in map {
+            let Some(nid) = self.node_id_for_widget_id(widget_id) else {
+                continue;
+            };
+            let status = entry.get("status").and_then(|value| value.as_str()).unwrap_or("ok");
+            match status {
+                "computing" => {
+                    self.computing_active = Some(nid);
+                    self.node_eval_status.insert(nid, DagNodeEvalStatusKind::Computing);
+                }
+                "queued" => {
+                    self.computing_stale.insert(nid);
+                    self.node_eval_status.insert(nid, DagNodeEvalStatusKind::Queued);
+                }
+                "stale" => {
+                    self.computing_stale.insert(nid);
+                    self.node_eval_status.insert(nid, DagNodeEvalStatusKind::Stale);
+                }
+                "error" => {
+                    self.node_eval_status.insert(nid, DagNodeEvalStatusKind::Error);
+                }
+                "blocked" => {
+                    self.node_eval_status.insert(nid, DagNodeEvalStatusKind::Blocked);
+                    if let Some(ports) = entry.get("ports").and_then(|value| value.as_array()) {
+                        for port in ports.iter().filter_map(|value| value.as_str()) {
+                            self.unresolved_input_ports.insert((nid, port.to_string()));
+                        }
+                    }
+                }
+                _ => {
+                    self.node_eval_status.insert(nid, DagNodeEvalStatusKind::Ok);
+                }
+            }
+        }
     }
 
     fn tick_computing_animation(&self) {
@@ -4084,10 +4154,19 @@ impl DagHost {
         let lod = self.draw_lod_for_frame();
         let zoom = self.fixture.camera.zoom;
         let lod_index = dag_lod_index(zoom);
-        Self::label_overlay_rows_for_node(node, lod, zoom, lod_index, ghost)
+        let engine_nid = self.node_id_for_widget_id(&node.id);
+        Self::label_overlay_rows_for_node(node, lod, zoom, lod_index, ghost, engine_nid, &self.unresolved_input_ports)
     }
 
-    fn label_overlay_rows_for_node(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize, ghost: bool) -> Vec<Value> {
+    fn label_overlay_rows_for_node(
+        node: &DagNodeSpec,
+        lod: DagDrawLod,
+        zoom: f64,
+        lod_index: usize,
+        ghost: bool,
+        engine_nid: Option<NodeId>,
+        unresolved_input_ports: &HashSet<(NodeId, String)>,
+    ) -> Vec<Value> {
         let paint_px = dag_label_paint_px(zoom, lod_index);
         let mut labels = Vec::new();
         if let Some(text) = Self::node_label_text(node, lod).map(str::to_string) {
@@ -4113,7 +4192,7 @@ impl DagHost {
             }));
         }
         if lod.shows_port_labels() && !matches!(node.kind, DagNodeKind::Preview { .. } | DagNodeKind::Note { .. }) {
-            for mut row in Self::port_label_overlay_rows(node, lod, zoom, lod_index) {
+            for mut row in Self::port_label_overlay_rows(node, lod, zoom, lod_index, engine_nid, unresolved_input_ports) {
                 if let Some(obj) = row.as_object_mut() {
                     obj.insert("ghost".into(), Value::Bool(ghost));
                 }
@@ -4123,7 +4202,14 @@ impl DagHost {
         labels
     }
 
-    fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize) -> Vec<Value> {
+    fn port_label_overlay_rows(
+        node: &DagNodeSpec,
+        lod: DagDrawLod,
+        zoom: f64,
+        lod_index: usize,
+        engine_nid: Option<NodeId>,
+        unresolved_input_ports: &HashSet<(NodeId, String)>,
+    ) -> Vec<Value> {
         use canvas::text::label_extent;
         let hw = node.width * 0.5;
         let handle_inset = 8.0 / zoom.max(0.05);
@@ -4134,11 +4220,20 @@ impl DagHost {
         let mut rows = Vec::new();
         let input_column_w = if computation { io_port_column_width(inputs, port_layout_px) } else { (hw - handle_inset).max(8.0) };
         let output_column_w = if computation { io_port_column_width(outputs, port_layout_px) } else { (hw - handle_inset).max(8.0) };
+        let input_port_label = |port: &IoPortSpec| -> String {
+            let mut port = port.clone();
+            if let Some(nid) = engine_nid {
+                if unresolved_input_ports.contains(&(nid, port.id.clone())) {
+                    port.resolved = Some(false);
+                }
+            }
+            port.label_with_cardinality(lod)
+        };
         for (i, port) in inputs.iter().enumerate() {
             if port.shape == PortShape::Triangle || !port.visible {
                 continue;
             }
-            let label = port.label_with_cardinality(lod);
+            let label = input_port_label(port);
             if label.trim().is_empty() {
                 continue;
             }
@@ -4230,10 +4325,11 @@ impl DagHost {
         let mut labels = Vec::new();
         for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
             let node = self.node_spec_for_paint(idx, fixture_node);
-            labels.extend(Self::label_overlay_rows_for_node(node.as_ref(), lod, cam.zoom, lod_index, false));
+            let engine_nid = self.engine_node_id_for_index(idx);
+            labels.extend(Self::label_overlay_rows_for_node(node.as_ref(), lod, cam.zoom, lod_index, false, engine_nid, &self.unresolved_input_ports));
         }
         if let Some(ghost) = self.ghost_node.as_ref() {
-            labels.extend(Self::label_overlay_rows_for_node(ghost, lod, cam.zoom, lod_index, true));
+            labels.extend(Self::label_overlay_rows_for_node(ghost, lod, cam.zoom, lod_index, true, None, &self.unresolved_input_ports));
         }
         let minimap_widget = self.minimap_widget_json();
         serde_json::to_string(&serde_json::json!({
@@ -4564,13 +4660,16 @@ impl DagHost {
         scene.stroke(&stroke, *aff, color, None, &path);
     }
 
-    fn paint_computing_active_border(&self, scene: &mut canvas::Scene, aff: &canvas::Affine, rect: &canvas::Rect, cam_zoom: f64, theme: &CanvasPalette) {
-        self.paint_computing_border_arc(scene, aff, rect, cam_zoom, theme.node_stroke_selected, self.computing_active_anim_phase.get(), false);
+    fn paint_computing_active_border(&self, scene: &mut canvas::Scene, aff: &canvas::Affine, rect: &canvas::Rect, cam_zoom: f64, color: canvas::Color) {
+        self.paint_computing_border_arc(scene, aff, rect, cam_zoom, color, self.computing_active_anim_phase.get(), false);
     }
 
-    fn paint_computing_stale_border(&self, scene: &mut canvas::Scene, aff: &canvas::Affine, rect: &canvas::Rect, cam_zoom: f64, theme: &CanvasPalette) {
-        let highlight = canvas_color_with_alpha(theme.node_stroke_selected, 220);
-        self.paint_computing_border_arc(scene, aff, rect, cam_zoom, highlight, self.computing_stale_anim_phase.get(), true);
+    fn paint_computing_stale_border(&self, scene: &mut canvas::Scene, aff: &canvas::Affine, rect: &canvas::Rect, cam_zoom: f64, color: canvas::Color) {
+        self.paint_computing_border_arc(scene, aff, rect, cam_zoom, color, self.computing_stale_anim_phase.get(), true);
+    }
+
+    fn paint_eval_status_border(&self, scene: &mut canvas::Scene, aff: &canvas::Affine, rect: &canvas::Rect, cam_zoom: f64, color: canvas::Color, dashed: bool) {
+        self.paint_computing_border_arc(scene, aff, rect, cam_zoom, color, 0.0, dashed);
     }
 
     fn rect_perimeter_point(rect: &canvas::Rect, t: f64) -> canvas::Point {
@@ -4634,10 +4733,12 @@ impl DagHost {
         if !chrome.is_selected {
             scene.stroke(&Stroke::new(dag_world_stroke(stroke_screen_px, cam.zoom)), *aff, stroke, None, &rect);
         }
-        if chrome.is_computing {
-            self.paint_computing_active_border(scene, aff, &rect, cam.zoom, theme);
-        } else if chrome.is_stale {
-            self.paint_computing_stale_border(scene, aff, &rect, cam.zoom, theme);
+        match chrome.eval_status {
+            DagNodeEvalStatusKind::Computing => self.paint_computing_active_border(scene, aff, &rect, cam.zoom, theme.node_stroke_computing),
+            DagNodeEvalStatusKind::Stale | DagNodeEvalStatusKind::Queued => self.paint_computing_stale_border(scene, aff, &rect, cam.zoom, theme.node_stroke_stale),
+            DagNodeEvalStatusKind::Error => self.paint_eval_status_border(scene, aff, &rect, cam.zoom, theme.node_stroke_error, false),
+            DagNodeEvalStatusKind::Blocked => self.paint_eval_status_border(scene, aff, &rect, cam.zoom, theme.node_stroke_blocked, true),
+            DagNodeEvalStatusKind::Ok => {}
         }
         let layout_px = dag_label_layout_px();
         let paint_px = dag_label_paint_px(cam.zoom, lod_index);
@@ -4942,9 +5043,8 @@ impl DagHost {
                 let engine_nid = self.engine_node_id_for_index(idx);
                 let is_dimmed = engine_nid.is_some_and(|nid| self.dimmed.contains(&nid));
                 let (is_selected, is_highlighted, is_hovered) = engine_nid.map(|nid| self.node_interaction_chrome(nid)).unwrap_or((false, false, false));
-                let is_computing = engine_nid.is_some_and(|nid| self.computing_active == Some(nid));
-                let is_stale = engine_nid.is_some_and(|nid| self.computing_stale.contains(&nid));
-                self.paint_node_visual(scene, &aff, &cam, &viewport, lod, lod_index, node, DagNodePaintChrome { is_dimmed, is_selected, is_highlighted, is_hovered, is_computing, is_stale, body_fill_alpha: 255, ghost_tint: false });
+                let eval_status = engine_nid.and_then(|nid| self.node_eval_status.get(&nid).copied()).unwrap_or(DagNodeEvalStatusKind::Ok);
+                self.paint_node_visual(scene, &aff, &cam, &viewport, lod, lod_index, node, DagNodePaintChrome { is_dimmed, is_selected, is_highlighted, is_hovered, eval_status, body_fill_alpha: 255, ghost_tint: false });
             }
         }
         if let Some(ghost) = self.ghost_node.as_ref() {
@@ -5750,6 +5850,14 @@ mod tests {
         let mut port = IoPortSpec::named("S", "Sld", "solid", "ExtrudedSolid");
         port.cardinality = "*".into();
         assert_eq!(port.label_with_cardinality(DagDrawLod::Normal), "* Sld");
+    }
+
+    #[test]
+    fn io_port_label_with_cardinality_marks_unresolved_blocked_inputs() {
+        let mut port = IoPortSpec::named("R", "Rad", "radius", "Radius");
+        port.resolved = Some(false);
+        assert_eq!(port.label_with_cardinality(DagDrawLod::Normal), "? Rad");
+        assert_eq!(port.label_with_cardinality(DagDrawLod::Detail), "? radius");
     }
 
     #[test]

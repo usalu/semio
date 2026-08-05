@@ -4,9 +4,8 @@ import type { CapabilityRequirement } from "./CapabilityRequirement";
 import type { CommandDefinition } from "./CommandDefinition";
 import type { Contribution } from "./Contribution";
 import type { ExampleDefinition } from "./ExampleDefinition";
-import type { WorkflowDefinition } from "./WorkflowDefinition";
 
-export type PluginManifest = { pluginId: string, label: string, version: string, apps: Array<AppDefinition>, workflows: Array<WorkflowDefinition>, examples: Array<ExampleDefinition>, capabilities: Array<CapabilityRequirement>, contributions: Array<Contribution>, 
+export type PluginManifest = { pluginId: string, label: string, version: string, apps: Array<AppDefinition>, examples: Array<ExampleDefinition>, capabilities: Array<CapabilityRequirement>, contributions: Array<Contribution>,
 /**
  * 🎛️ Plugin-scope commands this program exposes — apply whenever any of its apps is focused.
  */

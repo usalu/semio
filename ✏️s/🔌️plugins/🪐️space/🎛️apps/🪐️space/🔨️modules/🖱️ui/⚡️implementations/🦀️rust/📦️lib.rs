@@ -18,8 +18,8 @@ use protocol::Operation;
 use semio_framework_os::host::{export_os_space_dsl, export_os_space_pack, import_os_space_from_pack};
 use semio_framework_os::{
     apply_flow_fixture_to_os_workflow, build_os_workflow_operator_infos, create_backbone_document, create_os_id, empty_workflow_document, materialize_os_app_instance_document_json, os_app_primary_output_kind,
-    os_app_registration, os_parameter_types_compatible, os_parameter_value, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, workflow_palette, MediaContract, WorkflowOperation, WorkflowParameter, WorkflowParameterBinding,
-    WorkflowParameterType, WorkflowDocument, OsWorkflowCamera, WorkflowEdge, WorkflowNode, OS_SPACE_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, S_SPACE_SCHEMA, S_WORKFLOW_SCHEMA,
+    os_app_registration, os_parameter_types_compatible, os_parameter_value, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, register_app_io, workflow_palette, AppDefinition, MediaContract, WorkflowOperation, WorkflowParameter,
+    WorkflowParameterBinding, WorkflowParameterType, WorkflowDocument, OsWorkflowCamera, WorkflowEdge, WorkflowNode, OS_SPACE_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, S_SPACE_SCHEMA, S_WORKFLOW_SCHEMA,
 };
 use semio_framework_plugin::optional_json_to_dsl;
 use semio_framework_plugin::{
@@ -29,7 +29,7 @@ use semio_framework_plugin::{
     UiSectionNode, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemNode, VirtualFileSystemScene, WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowEngagementStatus, WindowLayout, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use space::{
     S_PLAY_APP_ID, S_PLAY_BODY_COMPILED_DAG, S_PLAY_BODY_MEDIA_VFS, S_PLAY_BODY_WORKFLOW, S_PLAY_CATALOGUE_BODY_KEY, S_PLAY_CATALOGUE_DRAG_MIME, S_PLAY_CATALOGUE_TAB_ID, S_PLAY_CONTROLLER_ID, S_PLAY_INSPECTOR_BODY_KEY, S_PLAY_INSPECTOR_TAB_ID,
@@ -38,7 +38,7 @@ use space::{
 use space_engine::{add_parameter_operation, add_workflow_node_operation, compiled_dag_wire_literal, flatten_media_vfs_rows, negotiate_media_connect, parameter_entity_id, patch_parameter_operation, OsParameterId, SpaceConfig};
 use space_op::SpaceConfigOperation;
 use space_protocol::SpaceCommand;
-use space_shared::{demo_space_projection, ensure_space_fixtures_registered, parse_demo_space_document};
+use space_shared::{demo_space_projection, ensure_space_fixtures_registered, parse_demo_space_document, DEMO_STUDIO_NAME};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::{LazyLock, Mutex};
 
@@ -217,6 +217,28 @@ fn publish_presence(config: &SpaceConfig) {
 fn primary_selected_node_id(config: &SpaceConfig) -> Option<String> {
     config.selected_node_ids.first().cloned().or_else(|| config.active_node_id.clone())
 }
+
+/// 🪐️ One `appRegistrationsJson` entry — the wire shape `os-shell.tsx`'s `SetAppRegistrations` push
+/// builds from `loadedPlugins.flatMap(entry => entry.manifest.apps.map(app => ({pluginId, app})))`.
+/// `app` deserializes straight off `AppDefinition`'s own `Deserialize` impl since it's the literal
+/// manifest-JSON `AppDefinition` object, unmodified across the wasm boundary.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AppRegistrationWireEntry {
+    plugin_id: String,
+    app: AppDefinition,
+}
+
+/// 🪐️ Registers every `{pluginId, app}` entry `json` carries into this wasm instance's OWN
+/// `semio_framework_os::APP_REGISTRATIONS` copy (see `SpaceCommand::SetAppRegistrations`'s doc comment
+/// for why that's necessary at all). Malformed/empty `json` degrades to a silent no-op — this is a
+/// best-effort host hint push, not a user-facing operation with error surfacing.
+fn apply_app_registrations(json: &str) {
+    let Ok(entries) = serde_json::from_str::<Vec<AppRegistrationWireEntry>>(json) else { return };
+    for entry in entries {
+        register_app_io(&entry.plugin_id, &entry.app);
+    }
+}
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Terminology
@@ -345,7 +367,17 @@ fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale) -> UiNode {
         let label = entry.label.resolve(Terminology::Native, locale).to_string();
         node.app = Some(CatalogueAppEntry { plugin_id: entry.plugin_id, app_id: entry.app_id, label, yields });
     }
-    let items = document.children.into_iter().map(|(segment, node)| app_catalogue_item(&[segment.clone()], &segment, node)).collect();
+    let mut items: Vec<UiTreeItemNode> = document.children.into_iter().map(|(segment, node)| app_catalogue_item(&[segment.clone()], &segment, node)).collect();
+    // 🪹️ An app with an empty `document` breadcrumb (`registration.document == []`) has nowhere to
+    // descend to in the loop above, so its `.app` lands on the ROOT `document` node itself rather than
+    // inside `.children` — without this, it's silently dropped from the catalogue entirely (never
+    // reachable via `document.children`). Surface it as its own top-level leaf, keyed by `app_id`
+    // (there's no document segment to key off) with its own registry label as the display text.
+    if let Some(app) = document.app {
+        let id = app.app_id.clone();
+        let label = app.label.clone();
+        items.push(app_catalogue_item(&[id], &label, AppCatalogueNode { children: BTreeMap::new(), app: Some(app) }));
+    }
     PanelTreeBuilder::new(S_PLAY_CATALOGUE_TAB_ID).section(S_PLAY_CATALOGUE_TAB_ID, Some(labels.apps_section.into()), true, items).build()
 }
 
@@ -984,6 +1016,7 @@ impl DocumentApp for SpaceApp {
             SpaceCommand::CloseFocusedInstance => "closeFocusedInstance",
             SpaceCommand::GoHome => "goHome",
             SpaceCommand::NavigateVirtualFileSystemNode { .. } => "navigateVirtualFileSystemNode",
+            SpaceCommand::SetAppRegistrations { .. } => "setAppRegistrations",
         }
     }
 
@@ -1144,6 +1177,7 @@ impl DocumentApp for SpaceApp {
                     .or_else(|| str_field("node_id"))
                     .unwrap_or_default(),
             }),
+            "setAppRegistrations" => Ok(SpaceCommand::SetAppRegistrations { json: json_field("json").unwrap_or_else(|| "[]".into()) }),
             other => Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.unhandled-action"), format!("space: unhandled action id {other}"))),
         }
     }
@@ -1508,21 +1542,36 @@ impl DocumentApp for SpaceApp {
                     SpaceConfigOperation::SetSelection { node_ids: Vec::new() },
                     SpaceConfigOperation::SetClipboard { node_ids: Vec::new() },
                 ];
-                match home_ui::space_document_envelope_pack(&document) {
+                // 🕸️ `document` is a `space::SpaceProjection`-backed manifest (the dissolved
+                // `OsProjection`'s space-catalog half, see `## The inversion`) — it carries no workflow
+                // graph of its own anymore; the graph lives on a separate `s.workflow` artifact document
+                // within one of this space's collections. Resolve, in order: (1) a real workflow artifact
+                // already registered in one of `document`'s collections, (2) the bundled demo fixture's
+                // real content for the demo space (either the Example dropdown's `space_id == "demo"` or
+                // the Home launcher's boot-seeded "Demo Studio" row, whose id is `"default"` but whose
+                // name matches the fixture's), (3) a freshly-minted, valid, empty `WorkflowDocument` for
+                // any other space that has none yet — never the space manifest's own bytes (that was the
+                // bug: loading an `s.space` pack where the studio editor's `WorkflowDocument` was
+                // expected, which decodes as literal text and fails to parse).
+                let is_demo_space = space_id == "demo" || document.name == DEMO_STUDIO_NAME;
+                let workflow_document = home_ui::resolve_workflow_artifact_document(space_id, &document)
+                    .or_else(|| is_demo_space.then(parse_demo_space_document))
+                    .unwrap_or_else(|| home_ui::empty_workflow_artifact_document(space_id, &document.name));
+                let active_node_id = workflow_document.vcs.initial_projection.graph.nodes.first().map(|node| node.id.clone());
+                config_operations.push(SpaceConfigOperation::SetActiveNode { node_id: active_node_id });
+                match home_ui::workflow_artifact_envelope_pack(&workflow_document) {
                     Some(files) => {
-                        // 🚧️ `document` is now a `space::SpaceProjection`-backed manifest (the dissolved
-                        // `OsProjection`'s space-catalog half, see `## The inversion`) — it carries no
-                        // workflow graph of its own to derive an "active node" from anymore (that lives
-                        // on a separate `s.workflow` artifact document within one of this space's
-                        // collections). Real "space session -> active workflow artifact" wiring is W4/W5
-                        // scope; until then this always clears the active node.
-                        config_operations.push(SpaceConfigOperation::SetActiveNode { node_id: None });
-                        eprintln!("[DEBUG] openSpace id={} collections={} backbone={:?}", space_id, document.vcs.initial_projection.collections.len(), document.backbone.as_ref().map(|row| row.uri.clone()));
+                        eprintln!(
+                            "[DEBUG] openSpace id={} workflow_id={} nodes={} collections={}",
+                            space_id,
+                            workflow_document.id,
+                            workflow_document.vcs.initial_projection.graph.nodes.len(),
+                            document.vcs.initial_projection.collections.len()
+                        );
                         Ok(Emit { config_operations, effects: vec![HostEffect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() })
                     }
                     None => {
-                        eprintln!("[DEBUG] openSpace missing envelope id={space_id}");
-                        config_operations.push(SpaceConfigOperation::SetActiveNode { node_id: None });
+                        eprintln!("[DEBUG] openSpace workflow pack export failed id={space_id}");
                         Ok(Emit::config(config_operations))
                     }
                 }
@@ -1545,6 +1594,14 @@ impl DocumentApp for SpaceApp {
             SpaceCommand::CloseFocusedInstance => Ok(Emit::config(vec![SpaceConfigOperation::SetFocusedNode { node_id: None }])),
             SpaceCommand::GoHome => Ok(Emit::effect(HostEffect::Navigate { uri: "/".into() })),
             SpaceCommand::NavigateVirtualFileSystemNode { space_id } => Ok(Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{space_id}") })),
+            // 🪐️ Pure host-hint side effect — populates this wasm instance's own `APP_REGISTRATIONS`
+            // copy (see `SpaceCommand::SetAppRegistrations`'s doc comment); no document/config mutation,
+            // so the default full-refresh `Emit` is enough to pick up the newly-registered apps on the
+            // next `build_catalogue_tree` render.
+            SpaceCommand::SetAppRegistrations { json } => {
+                apply_app_registrations(json);
+                Ok(Emit::default())
+            }
         }
     }    fn render(&self, body_key: &str, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> UiNode {
         let projection = doc.projection;
@@ -1956,7 +2013,7 @@ mod tests {
     fn open_studio_unknown_id_returns_not_found() {
         let empty = empty_workflow_document();
         let config = SpaceConfig::default();
-        let err = studio_emit(&empty, &config, SpaceCommand::OpenSpace { space_id: "unknown-studio-id".into() }).expect_err("not found");
+        let err = studio_emit(&empty, &config, SpaceCommand::OpenSpace { space_id: "unknown-studio-id".into() }).err().expect("not found");
         assert_eq!(err.code.0, "s.space.not-found");
     }
 
@@ -1978,7 +2035,7 @@ mod tests {
         let doc = DocumentView { projection: &home_projection, history: &history };
         let home_config = home_engine::HomeConfig::default();
         let home_cfg = ConfigView { projection: &home_config };
-        let create = home.handle(&home_protocol::HomeCommand::CreateStudio { name: "Ephemeral Open".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg);
+        let create = home.handle(&home_protocol::HomeCommand::CreateStudio { name: "Ephemeral Open".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg).expect("handle");
         let space_id = create
             .effects
             .iter()
@@ -2100,7 +2157,8 @@ mod tests {
             &projection,
             &config,
             SpaceCommand::ConnectMediaPorts { source_node_id: "contract-src".into(), source_port_id: "contract-src:out:out".into(), target_node_id: "contract-dst".into(), target_port_id: "contract-dst:in:in".into() },
-        );
+        )
+        .expect("handle");
         assert!(emit.document_operations.is_empty(), "an incompatible connect must not push WorkflowOperation::ConnectPorts");
         assert!(matches!(emit.effects.first(), Some(HostEffect::Notify { .. })), "an incompatible connect must surface a Notify effect instead");
     }
@@ -2141,7 +2199,8 @@ mod tests {
             &projection,
             &config,
             SpaceCommand::ConnectMediaPorts { source_node_id: "contract-src-2".into(), source_port_id: "contract-src-2:out:out".into(), target_node_id: "contract-dst-2".into(), target_port_id: "contract-dst-2:in:in".into() },
-        );
+        )
+        .expect("handle");
         let edge = emit
             .document_operations
             .iter()
@@ -2283,6 +2342,47 @@ mod tests {
         assert!(json.contains("s-play-catalogue.document.semio.puzzle.2d"));
         assert!(json.contains("s-play-catalogue.document.semio.puzzle.3d"));
         assert_eq!(json.matches("\"label\":\"puzzle\"").count(), 1);
+    }
+
+    /// 🪐️ End-to-end proof of the catalogue-empty bugfix: the wasm space app is its own linear-memory
+    /// instance, so its copy of `semio_framework_os::APP_REGISTRATIONS` starts empty regardless of what
+    /// native/test hosts seed — `SpaceCommand::SetAppRegistrations` is how the React shell's
+    /// `os-shell.tsx` populates it in a real browser/wasm host (see that command's doc comment for the
+    /// wire shape: a JSON array of `{pluginId, app}`, `app` a raw `AppDefinition`). Registers an app with
+    /// an EMPTY `document` breadcrumb (`build_catalogue_tree`'s empty-breadcrumb fix target — before that
+    /// fix, such an app's `.app` landed on `AppCatalogueNode`'s ROOT and was silently dropped) purely
+    /// through that command, then asserts the registry, `workflow_palette()`, and `build_catalogue_tree`
+    /// all pick it up.
+    #[test]
+    fn set_app_registrations_command_registers_app_and_surfaces_empty_document_apps_in_catalogue() {
+        // 🌉️ `AppBuilder::build_definition` itself hard-asserts a non-empty `document` (every app built
+        // through THIS crate's SDK declares one) — so the empty-breadcrumb case can only ever reach
+        // `register_app_io` via a wire-decoded `AppDefinition` that bypassed the builder entirely (a
+        // hand-authored/differently-built plugin manifest, exactly what `SetAppRegistrations`'
+        // `serde_json::from_str` deserialization path allows). Simulate that faithfully: build a normal,
+        // valid definition, then blank `document` out at the JSON level before it's pushed — never
+        // construct an `AppDefinition` with an empty `document` through the builder itself.
+        let definition = App::builder("root-tool", LocalizedLabel::data("Root Tool"))
+            .document(["root-tool".to_string()])
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
+            .window_kind("main", LocalizedLabel::native("Main", "Hauptansicht"), "root-tool.main", SurfaceKind::Canvas2d, "square-pen")
+            .io(AppIo::from_document(
+                "root-tool.document",
+                MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                ArtifactPresentation { id: "root-tool".into(), name: "Root Tool".into(), dimension: String::new(), component_kind: "root-tool".into() },
+            ))
+            .build_definition();
+        let mut app_json = serde_json::to_value(&definition).expect("serialize AppDefinition");
+        app_json["document"] = json!([]);
+        let wire = json!([{ "pluginId": "root", "app": app_json }]).to_string();
+        let projection = empty_workflow_document();
+        let config = SpaceConfig::default();
+        studio_emit(&projection, &config, SpaceCommand::SetAppRegistrations { json: wire }).expect("handle");
+        assert!(os_app_registration("root", "root-tool").is_some(), "SetAppRegistrations must populate this wasm instance's own registry");
+        assert!(workflow_palette().iter().any(|entry| entry.plugin_id == "root" && entry.app_id == "root-tool"), "workflow_palette must surface the pushed app");
+        let tree = build_catalogue_tree(semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale), semio_framework_plugin::locale_from_str(&config.locale));
+        let json_tree = serde_json::to_string(&tree).unwrap();
+        assert!(json_tree.contains("s-play-catalogue.document.root-tool"), "an empty-document app must still surface as a top-level catalogue leaf, json={json_tree}");
     }
 
     #[test]
@@ -2516,7 +2616,7 @@ mod tests {
         let doc = DocumentView { projection: &home_projection, history: &history };
         let home_config = home_engine::HomeConfig::default();
         let home_cfg = ConfigView { projection: &home_config };
-        let emit = home.handle(&home_protocol::HomeCommand::CreateStudio { name: "Fresh Studio".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg);
+        let emit = home.handle(&home_protocol::HomeCommand::CreateStudio { name: "Fresh Studio".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg).expect("handle");
         assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })), "create must not download a file");
         let uri = emit
             .effects
@@ -2539,7 +2639,7 @@ mod tests {
         let studio_config = SpaceConfig::default();
         let studio_cfg = ConfigView { projection: &studio_config };
         let studio = SpaceApp;
-        let open = studio.handle(&SpaceCommand::OpenSpace { space_id: space_id.to_string() }, &studio_doc, &studio_cfg);
+        let open = studio.handle(&SpaceCommand::OpenSpace { space_id: space_id.to_string() }, &studio_doc, &studio_cfg).expect("handle");
         assert!(open.effects.iter().any(|effect| matches!(effect, HostEffect::LoadDocument { .. })), "openSpace must load the created studio");
         assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
         assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })));

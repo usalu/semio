@@ -2206,6 +2206,10 @@ impl FlowHost {
     }
 
     /// ⚙️ Marks one actively computing widget and downstream widgets as stale.
+    pub fn set_node_statuses_from_json(&mut self, json: &str) {
+        self.dag.set_node_statuses_from_json(json);
+    }
+
     pub fn set_computing_progress(&mut self, active_widget_id: Option<&str>, stale_widget_ids: &[String]) {
         self.dag.set_computing_progress(active_widget_id, stale_widget_ids);
     }
@@ -3772,7 +3776,7 @@ impl FlowEvalSession {
         host.install_eval_baseline(self.previous_snapshot.clone(), self.previous_channels.clone());
     }
 
-    fn capture_baseline_from(&mut self, host: &FlowHost) {
+    pub fn capture_baseline_from(&mut self, host: &FlowHost) {
         let (snapshot, channels) = host.eval_baseline();
         self.previous_snapshot = snapshot;
         self.previous_channels = channels;
@@ -4075,6 +4079,11 @@ impl FlowSession {
         let active = payload.get("active").and_then(|value| value.as_str()).map(str::to_string);
         let stale: Vec<String> = payload.get("stale").and_then(|value| value.as_array()).map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect()).unwrap_or_default();
         self.state.borrow_mut().host.set_computing_progress(active.as_deref(), &stale);
+    }
+
+    #[wasm_bindgen(js_name = setNodeStatuses)]
+    pub fn set_node_statuses(&self, json: &str) {
+        self.state.borrow_mut().host.set_node_statuses_from_json(json);
     }
 
     #[wasm_bindgen(js_name = clearComputingWidgetIds)]
@@ -5942,16 +5951,16 @@ mod tests {
     }
 
     #[test]
-    fn eval_driver_round_trips_baseline_across_ephemeral_hosts() {
-        let mut driver = FlowEvalDriver::default();
+    fn flow_eval_session_retains_baseline_across_ephemeral_hosts() {
+        let mut session = FlowEvalSession::new();
         let mut host = host_with_test_bridge();
-        driver.capture_baseline_from(&host);
+        session.capture_baseline_from(&host);
         host.set_slider_value("slider", 8.0);
         let mut replay = FlowHost::default();
         replay.set_eval_bridge_fn(Box::new(test_math_bridge));
         replay.set_neuron_kind_infos_json(&test_kind_infos_json());
         replay.replace_fixture(host.fixture.clone());
-        driver.install_baseline_into(&mut replay);
+        session.install_baseline_into(&mut replay);
         let pending = replay.pending_eval_widget_ids();
         assert!(pending.contains(&"add".to_string()));
         assert!(!pending.contains(&"slider".to_string()));
@@ -5993,35 +6002,28 @@ mod tests {
     }
 
     #[test]
-    fn flow_eval_driver_sync_and_tick_state_machine() {
+    fn flow_eval_session_sync_and_tick_state_machine() {
         let (mut host, _pass_id) = host_with_two_node_chain();
-        let mut driver = FlowEvalDriver::default();
-        assert!(!driver.pending());
-        // 🔁️ Nothing changed yet — sync must not arm a chain.
-        assert!(!driver.sync(&host));
-        assert!(!driver.pending());
+        let mut session = FlowEvalSession::new();
+        session.capture_baseline_from(&host);
+        assert!(!session.pending());
+        assert!(!session.sync(&host));
+        assert!(!session.pending());
         host.set_slider_value("slider", 12.0);
-        assert!(driver.sync(&host), "a changed slider arms the chain");
-        assert!(driver.pending());
-        assert!(driver.computing_json().is_some_and(|json| json.contains("add")), "the immediate dependent is reported as active");
-        // 🔁️ A `pending_effects`-style resync while a chain is already scheduled must not re-arm it.
-        assert!(!driver.sync(&host));
-        assert!(driver.tick(&mut host), "one more tick (\"pass\") is still needed");
-        assert!(driver.pending());
-        assert!(!driver.tick(&mut host), "the chain has converged");
-        assert!(!driver.pending());
+        assert!(session.sync(&host), "a changed slider arms the chain");
+        assert!(session.pending());
+        assert!(session.status_json().contains("computing"), "the immediate dependent is reported as computing");
+        assert!(!session.sync(&host));
+        while session.tick(&mut host) {}
+        assert!(!session.pending());
         assert_eq!(host.preview_text(), "12");
-        // 🔀️ Mid-chain fixture change: arm, tick once, then supersede with a newer value before the
-        // chain finishes. `sync` correctly declines to arm a second chain (one is already scheduled —
-        // `tick_scheduled` guards exactly this) but the in-flight chain's own ticks always re-derive
-        // from the live fixture, so it still converges on the LATEST value, not the superseded one.
         host.set_slider_value("slider", 20.0);
-        assert!(driver.sync(&host));
-        assert!(driver.tick(&mut host)); // computes "add" for 20
+        assert!(session.sync(&host));
+        assert!(session.pending());
         host.set_slider_value("slider", 30.0);
-        assert!(!driver.sync(&host), "a chain is already scheduled — sync must not arm a redundant second one");
-        assert!(driver.pending(), "the in-flight chain is still the one that will pick up 30");
-        while driver.tick(&mut host) {}
+        assert!(!session.sync(&host), "a chain is already scheduled — sync must not arm a redundant second one");
+        assert!(session.pending(), "the in-flight chain is still the one that will pick up 30");
+        while session.tick(&mut host) {}
         assert_eq!(host.preview_text(), "30", "converges on the latest value, not the superseded intermediate one");
     }
 

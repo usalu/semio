@@ -2150,13 +2150,6 @@ export type PluginManifest = {
   readonly label: string;
   readonly version: string;
   readonly apps: readonly Record<string, unknown>[];
-  readonly workflows: readonly {
-    readonly workflowStepId: string;
-    readonly appId: string;
-    readonly label: string;
-    readonly document?: readonly string[];
-    readonly yields: string;
-  }[];
   readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string; readonly appId: string }[];
   readonly contributions?: readonly PluginContribution[];
   /** 🎛️ Plugin-scope commands this plugin exposes — apply whenever any of its apps is focused. */

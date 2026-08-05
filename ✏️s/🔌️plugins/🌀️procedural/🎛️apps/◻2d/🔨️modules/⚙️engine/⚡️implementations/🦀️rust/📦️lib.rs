@@ -2,7 +2,7 @@
 
 use flow_core::dag::DagFixture;
 use flow_core::forms_bridge::apply_generation_values_to_fixture;
-use flow_core::{flow_neuron_kind_infos_json, CameraJson, FlowEvalDriver, FlowFixture, FlowHost};
+use flow_core::{flow_host_with_session, flow_neuron_kind_infos_json, CameraJson, FlowEvalSession, FlowFixture, FlowHost};
 use flow_extension_draw::render_scene_json;
 use playbook::{selected_generation, GenerationPlayState};
 use procedural_2d::Procedural2dDocument;
@@ -30,11 +30,6 @@ pub struct Procedural2dConfig {
     pub camera: CameraJson,
     /// 👁️ Display mode (`"preview"`/`"generate"`/`"wire"`) — was `Procedural2dPlayRuntime::show_mode`.
     pub show_mode: String,
-    /// 🧵️ `FlowEvalDriver` doesn't derive `dsl::DslRecord` (framework flow-core type, out of this
-    /// plugin's scope to extend) — carried as its own JSON serialization instead; see `eval_driver`/
-    /// `eval_driver_json_for`.
-    #[serde(default)]
-    pub eval_driver_json: String,
     /// 👁️ Active generation selection — was `Procedural2dPlayRuntime::selected_generation_id`.
     pub selected_generation_id: Option<String>,
     /// 👁️ Derived generation preview text — was `Procedural2dPlayRuntime::generation_preview_text`.
@@ -45,29 +40,11 @@ pub struct Procedural2dConfig {
 
 impl Default for Procedural2dConfig {
     fn default() -> Self {
-        Self { selected_ids: Vec::new(), camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, show_mode: default_show_mode(), eval_driver_json: String::new(), selected_generation_id: None, generation_preview_text: None, locale: "en-US".into() }
+        Self { selected_ids: Vec::new(), camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, show_mode: default_show_mode(), selected_generation_id: None, generation_preview_text: None, locale: "en-US".into() }
     }
 }
 
 store::impl_whole_record_config!(Procedural2dConfig);
-
-
-impl Procedural2dConfig {
-    /// 🧵️ Decodes `eval_driver_json` back into a live `FlowEvalDriver` — empty/malformed decodes to
-    /// the default (never-ticked) driver.
-    pub fn eval_driver(&self) -> FlowEvalDriver {
-        if self.eval_driver_json.is_empty() {
-            return FlowEvalDriver::default();
-        }
-        serde_json::from_str(&self.eval_driver_json).unwrap_or_default()
-    }
-}
-
-/// 🧵️ Encodes a `FlowEvalDriver` for `Procedural2dConfig::eval_driver_json` — the write-side
-/// counterpart of `Procedural2dConfig::eval_driver`.
-pub fn eval_driver_json_for(driver: &FlowEvalDriver) -> String {
-    serde_json::to_string(driver).unwrap_or_default()
-}
 
 pub fn default_show_mode() -> String {
     "preview".into()
@@ -109,29 +86,15 @@ pub fn procedural2d_io() -> semio_framework_plugin::AppIo {
 }
 //#endregion 🔖️Io
 
-//#region 🔖️EvalCache
-/// 🧠️ Process-wide [`flow_core::neural::NeuralCache`] shared across `FlowHost` reconstructions —
-/// lets a `flowEvalTick` chain's per-tick host rebuild pick up earlier ticks' cached node outputs
-/// instead of recomputing the whole graph from scratch every tick.
-static PROCEDURAL2D_NEURAL_CACHE: std::sync::OnceLock<std::sync::Arc<flow_core::neural::NeuralCache>> = std::sync::OnceLock::new();
-
-pub fn procedural2d_neural_cache() -> std::sync::Arc<flow_core::neural::NeuralCache> {
-    PROCEDURAL2D_NEURAL_CACHE.get_or_init(|| std::sync::Arc::new(flow_core::neural::NeuralCache::new())).clone()
-}
-//#endregion 🔖️EvalCache
-
 //#region 🔖️DocumentHelpers
 pub fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
-    host_from_fixture_with_driver(fixture, None)
+    let mut host = FlowHost::from_fixture(fixture.clone());
+    host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
+    host
 }
 
-pub fn host_from_fixture_with_driver(fixture: &FlowFixture, driver: Option<&FlowEvalDriver>) -> FlowHost {
-    let mut host = FlowHost::from_fixture_with_cache(fixture.clone(), procedural2d_neural_cache());
-    host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
-    if let Some(driver) = driver {
-        driver.install_baseline_into(&mut host);
-    }
-    host
+pub fn host_from_fixture_with_session(fixture: &FlowFixture, session: &FlowEvalSession) -> FlowHost {
+    flow_host_with_session(fixture, session)
 }
 
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
@@ -278,10 +241,7 @@ pub fn refresh_generation_preview(config: &mut Procedural2dConfig, fixture: &Flo
         return;
     };
     let preview = evaluate_generation_preview(fixture, &selected.values);
-    config.generation_preview_text = Some(preview.clone());
-    let mut driver = config.eval_driver();
-    driver.set_eval_json(preview);
-    config.eval_driver_json = eval_driver_json_for(&driver);
+    config.generation_preview_text = Some(preview);
 }
 
 /// 📄️ The `procedural2d-play` "default" document — parsed from the bundled `.procedural2d` example

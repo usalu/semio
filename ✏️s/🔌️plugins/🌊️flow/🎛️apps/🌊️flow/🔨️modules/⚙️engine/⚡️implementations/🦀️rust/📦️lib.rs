@@ -6,7 +6,7 @@
 //! runtime (`host_from_fixture`, `host_operations`, `apply_canvas_options`, the context-menu builder)
 //! stays in `ui`.
 
-use flow_core::{dag::DagFixture, neural::NeuralCache, CameraJson, FlowEvalDriver, FlowHost, Widget, FLOW_LOD_MODE_AUTOMATIC};
+use flow_core::{dag::DagFixture, neural::NeuralCache, CameraJson, FlowHost, Widget, FLOW_LOD_MODE_AUTOMATIC};
 use playbook::GenerationPlayState;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -29,11 +29,12 @@ pub const FLOW_DEFAULT_GRID_FACTOR: f64 = 10.0;
 /// state now round-trips through the config `DocumentStore` exactly like document content, with a real
 /// `backwards` per `flow_op::FlowConfigOperation` instead of never being VCS'd at all.
 ///
-/// `eval_driver_json`/`extension_enabled_json`/`generation_json` hold JSON-encoded
-/// `flow_core::FlowEvalDriver`/`HashMap<String, bool>`/`playbook::GenerationPlayState` payloads rather
-/// than nested `#[dsl(block)]`/`#[dsl(table)]` fields: none of those three types derive
+/// `extension_enabled_json`/`generation_json` hold JSON-encoded
+/// `HashMap<String, bool>`/`playbook::GenerationPlayState` payloads rather
+/// than nested `#[dsl(block)]`/`#[dsl(table)]` fields: none of those types derive
 /// `dsl::DslRecord`, mirroring `procedural_3d_engine::Procedural3dConfig`'s identical
-/// `eval_driver_json`/`sun_json` escape hatch for the same reason. `generation_json` stays
+/// `sun_json` escape hatch for the same reason. Off-main-thread eval state lives in
+/// `flow_ui::FlowPlayApp::eval_session` (`FlowEvalSession`), not in config. `generation_json` stays
 /// config-tracked rather than becoming a document operation (unlike the sibling `procedural_3d`/
 /// `procedural_2d` apps' `GenerationOperation`-backed generations): flow's document model
 /// (`flow_core::FlowOperation`) is a shared kernel crate out of scope for this conversion.
@@ -55,9 +56,6 @@ pub struct FlowConfig {
     /// 🎥️ The node-graph viewport camera — was `FlowPlayRuntime::camera`.
     #[dsl(block)]
     pub camera: CameraJson,
-    /// 🧵️ JSON-encoded `flow_core::FlowEvalDriver` (off-main-thread evaluation state) — was
-    /// `FlowPlayRuntime::eval_driver`; see `eval_driver`/`flow_op::FlowConfigOperation::SetEvalDriver`.
-    pub eval_driver_json: String,
     /// 🎚️ LOD mode id (or `flow_core::FLOW_LOD_MODE_AUTOMATIC`) — was `FlowPlayRuntime::lod_mode`.
     pub lod_mode: String,
     /// 🖱️ Proximity-select distance — was `FlowPlayRuntime::proximity_distance`.
@@ -87,7 +85,6 @@ impl Default for FlowConfig {
             selected_handle_ids: Vec::new(),
             preview_off_node_ids: Vec::new(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
-            eval_driver_json: String::new(),
             lod_mode: FLOW_LOD_MODE_AUTOMATIC.into(),
             proximity_distance: FLOW_DEFAULT_PROXIMITY_DISTANCE,
             grid_visible: true,
@@ -102,11 +99,6 @@ impl Default for FlowConfig {
 }
 
 impl FlowConfig {
-    /// 🧵️ Parses `eval_driver_json` — falls back to `FlowEvalDriver::default()` on any malformed/empty value.
-    pub fn eval_driver(&self) -> FlowEvalDriver {
-        serde_json::from_str(&self.eval_driver_json).unwrap_or_default()
-    }
-
     /// 🧩️ Parses `extension_enabled_json` — falls back to an empty map.
     pub fn extension_enabled(&self) -> HashMap<String, bool> {
         serde_json::from_str(&self.extension_enabled_json).unwrap_or_default()
@@ -279,7 +271,6 @@ mod tests {
         assert_eq!(config.grid_factor, FLOW_DEFAULT_GRID_FACTOR);
         assert_eq!(config.catalogue_sections_json, "[]");
         assert_eq!(config.locale, "en-US");
-        assert_eq!(config.eval_driver(), FlowEvalDriver::default());
         assert_eq!(config.extension_enabled(), HashMap::new());
         assert_eq!(config.generation(), GenerationPlayState::default());
     }
@@ -293,7 +284,6 @@ mod tests {
             selected_handle_ids: vec!["h1".into()],
             preview_off_node_ids: vec!["n2".into()],
             camera: CameraJson { x: 12.5, y: -3.0, zoom: 2.25 },
-            eval_driver_json: serde_json::to_string(&FlowEvalDriver::default()).unwrap_or_default(),
             lod_mode: "micro".into(),
             proximity_distance: 96.0,
             grid_visible: false,

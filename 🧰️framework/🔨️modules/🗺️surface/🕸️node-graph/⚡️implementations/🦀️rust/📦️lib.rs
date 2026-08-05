@@ -186,6 +186,7 @@ pub struct NodeGraphScenePayload {
     pub controls_json: Option<String>,
     pub clusters_json: Option<String>,
     pub computing_json: Option<String>,
+    pub status_json: Option<String>,
     pub capabilities_json: Option<String>,
     pub fixture_json: Option<String>,
 }
@@ -204,6 +205,9 @@ fn expand_payload_pack_fields(payload: &mut NodeGraphScenePayload) -> Result<(),
         *json = store::pack_rt::scene_field_json_text(json)?;
     }
     if let Some(json) = payload.clusters_json.as_mut() {
+        *json = store::pack_rt::scene_field_json_text(json)?;
+    }
+    if let Some(json) = payload.status_json.as_mut() {
         *json = store::pack_rt::scene_field_json_text(json)?;
     }
     if let Some(json) = payload.computing_json.as_mut() {
@@ -232,6 +236,7 @@ impl NodeGraphScenePayload {
             controls_json: value.get("controlsJson").and_then(|v| v.as_str()).map(str::to_string),
             clusters_json: value.get("clustersJson").and_then(|v| v.as_str()).map(str::to_string),
             computing_json: value.get("computingJson").and_then(|v| v.as_str()).map(str::to_string),
+            status_json: value.get("statusJson").and_then(|v| v.as_str()).map(str::to_string),
             capabilities_json: value.get("capabilitiesJson").and_then(|v| v.as_str()).map(str::to_string),
             fixture_json: value.get("fixtureJson").and_then(|v| v.as_str()).map(str::to_string),
         }
@@ -272,6 +277,7 @@ impl GraphHost {
         payload.preview_off_json.hash(&mut hasher);
         payload.lod_json.hash(&mut hasher);
         payload.computing_json.hash(&mut hasher);
+        payload.status_json.hash(&mut hasher);
         hasher.finish()
     }
 
@@ -314,7 +320,9 @@ impl GraphHost {
                 }
             }
         }
-        if let Some(computing_json) = &payload.computing_json {
+        if let Some(status_json) = &payload.status_json {
+            self.dag.set_node_statuses_from_json(status_json);
+        } else if let Some(computing_json) = &payload.computing_json {
             if let Ok(value) = serde_json::from_str::<Value>(computing_json) {
                 let active = value.get("active").and_then(|v| v.as_str()).map(str::to_string);
                 let stale: Vec<String> = value.get("stale").and_then(|v| v.as_array()).map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect()).unwrap_or_default();

@@ -388,8 +388,6 @@ pub enum Procedural3dConfigOperation {
     SetSun { json: String },
     #[dsl(key = "generation")]
     SetGeneration { selected_generation_id: Option<String>, generation_preview_text: Option<String> },
-    #[dsl(key = "eval-driver")]
-    SetEvalDriver { json: String },
     #[dsl(key = "active-utility")]
     SetActiveUtility { utility_id: String },
     #[dsl(key = "locale")]
@@ -417,7 +415,6 @@ impl Operation<Procedural3dConfig> for Procedural3dConfigOperation {
                 next.selected_generation_id = selected_generation_id.clone();
                 next.generation_preview_text = generation_preview_text.clone();
             }
-            Procedural3dConfigOperation::SetEvalDriver { json } => next.eval_driver_json = json.clone(),
             Procedural3dConfigOperation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
             Procedural3dConfigOperation::SetLocale { value } => next.locale = value.clone(),
             Procedural3dConfigOperation::SetContributions { json } => {
@@ -741,12 +738,10 @@ mod tests {
     }
 
     #[test]
-    fn config_set_sun_and_eval_driver_round_trip_as_raw_json() {
+    fn config_set_sun_round_trip_as_raw_json() {
         let base = Procedural3dConfig::default();
         let next = config_round_trip(&base, &Procedural3dConfigOperation::SetSun { json: "{\"enabled\":true}".into() });
         assert_eq!(next.sun_json, "{\"enabled\":true}");
-        let next2 = config_round_trip(&next, &Procedural3dConfigOperation::SetEvalDriver { json: "{\"evalJson\":\"{}\"}".into() });
-        assert_eq!(next2.eval_driver_json, "{\"evalJson\":\"{}\"}");
     }
 
     #[test]
@@ -777,7 +772,6 @@ mod tests {
         test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetPreviewCamera { camera: procedural_3d_engine::Procedural3dPreviewCamera { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], fov: 45.0 } });
         test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetSun { json: "{}".into() });
         test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetGeneration { selected_generation_id: Some("g1".into()), generation_preview_text: None });
-        test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetEvalDriver { json: "{}".into() });
         test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetActiveUtility { utility_id: "scale".into() });
         test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetLocale { value: "de-DE".into() });
         test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::Snapshot { config: Procedural3dConfig::default() });

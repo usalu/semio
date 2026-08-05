@@ -365,6 +365,122 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+The codebase has currently a lot of godfiles and too many packages (e.g. too many crates). Introduce the crates where they are needed and make sense (e.g. each plugin is installable on its own hence needs its own crate but all the components of a plugin shouldnt be different crates because they a plugin without the componentn wouldnt work.)
+```
+plugin
+  packages #
+    rust
+      Cargo.toml
+      package.json
+      project.json
+      …
+    typescript
+      package.json
+      project.json
+      …
+    python
+      pyproject.toml
+      package.json
+      project.json
+      …
+    …
+	<plugin>
+    artifacts
+      <artifact>
+        diff
+          component.rs
+          component.ts
+          …
+        dsl
+          component.rs
+          component.ts
+          …
+        pack
+          component.rs
+          component.ts
+          …
+        op
+          component.rs
+          component.ts
+          …
+        spr
+          component.rs
+          component.ts
+          …
+        …
+		apps
+			<app>
+        component.rs
+        component.ts
+        …
+        commands # app level commands
+          <command>
+            component.rs
+            component.ts
+            …
+          …
+        tools # app level tools
+          <tool>
+            component.rs
+            component.ts
+            …
+          …
+				modes
+					<mode>
+            component.rs
+            component.ts
+            …
+            commands # mode level commands
+              <command>
+                component.rs
+                component.ts
+                …
+              …
+            tools # mode level tools
+              <tool>
+                component.rs
+                component.ts
+                …
+              …
+            windows
+              <window>
+                component.rs
+                component.ts
+                …
+                panes
+                  <pane>
+                    component.rs
+                    component.ts
+                    …
+                widgets
+                  <widget> # e.g. gizmo, minimap, …
+                    component.rs
+                    component.ts
+                    …
+                utilities
+                  <utility>
+                    component.rs
+                    component.ts
+                    …
+                actions
+                  <action>
+                    component.rs
+                    component.ts
+                    …
+                options
+                  <option>
+                    component.rs
+                    component.ts
+                    …
+            panels
+              <panel>
+                component.rs
+                component.ts
+                …
+```
+
+---
+
 Every artifact must define diff, sqlite, 
 <artifact>
   diff

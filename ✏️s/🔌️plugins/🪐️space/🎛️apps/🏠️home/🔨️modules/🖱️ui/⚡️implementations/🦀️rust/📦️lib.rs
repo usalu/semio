@@ -6,9 +6,10 @@ use home_engine::HomeConfig;
 use home_op::{HomeConfigOperation, SHomeOperation};
 use home_protocol::HomeCommand;
 use semio_framework_os::{
-    create_backbone_document, create_os_space, decode_backbone_payload, delete_os_space, document_backbone_ref, draft_catalog_for, draft_uri, empty_space_projection, encode_backbone_payload, export_os_space_pack, import_os_space_from_dsl,
-    list_os_space_catalog_entries, load_os_space_document, seed_os_space_catalog_if_empty, DraftCatalog, MemoryBackbonePort, OsBackbonePort, OsSpaceDocument, SpaceBackbonePort, SpaceKind, SpaceOperation, SpaceProjection, SpaceRole, SpaceUser,
-    SpaceVisibility, VcsError, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX, S_SPACE_SCHEMA,
+    artifact_backbone_uri, collection_backbone_uri, create_backbone_document, create_os_space, decode_backbone_payload, delete_os_space, document_backbone_ref, draft_catalog_for, draft_uri, empty_space_projection, empty_workflow_document,
+    encode_backbone_payload, export_backbone_pack, export_os_space_pack, import_os_space_from_dsl, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_projection, seed_os_space_catalog_if_empty, ArtifactBody,
+    CollectionOperation, CollectionProjection, DraftCatalog, MemoryBackbonePort, OsBackbonePort, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort, SpaceKind, SpaceOperation, SpaceProjection, SpaceRole, SpaceUser, SpaceVisibility, VcsError,
+    WorkflowDocument, WorkflowOperation, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX, S_COLLECTION_SCHEMA, S_SPACE_SCHEMA, S_WORKFLOW_SCHEMA,
 };
 use semio_framework_plugin::{
         app_labels, build_virtual_file_system_scene, create_tab_stack_layout, App, AppLabels, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultOrigin, HostEffect, Label, Locale, LocalizedLabel, SurfaceKind, Terminology, UiNode, VirtualFileSystemScene,
@@ -159,6 +160,80 @@ pub fn resolve_studio_document(space_id: &str) -> Option<OsSpaceDocument> {
 pub fn space_document_envelope_pack(document: &OsSpaceDocument) -> Option<store::DocumentPackFiles> {
     export_os_space_pack(document).ok()
 }
+
+//#region 🔖️WorkflowArtifactResolution
+/// 🕸️ "Space session -> active workflow artifact" resolution — the real fix for the gap W3 left
+/// (`app_space`'s `openSpace` doc comment): a space manifest carries no graph of its own anymore, the
+/// graph lives in a separate `s.workflow` artifact document addressed via a `CollectionEntry` inside
+/// one of the space's collections (see `## Addressing` in the plan). Searches every collection the
+/// resolved space manifest references, through the SAME port search order `resolve_studio_document`
+/// uses, for the first `CollectionEntry` whose body is an `s.workflow` document.
+fn resolve_backbone_bytes(uri: &str) -> Option<Vec<u8>> {
+    let draft_port = draft_backbone_port();
+    if let Ok(payload) = SpaceBackbonePort::read(draft_port.as_ref(), uri) {
+        if !payload.is_empty() {
+            return Some(payload);
+        }
+    }
+    if let Ok(guard) = STUDIO_PORTS.lock() {
+        for port in guard.values() {
+            if let Ok(payload) = port.read(uri) {
+                if !payload.is_empty() {
+                    return Some(payload);
+                }
+            }
+        }
+    }
+    for port in [temp_catalog_port(), catalog_port()] {
+        if let Ok(payload) = port.read(uri) {
+            if !payload.is_empty() {
+                return Some(payload);
+            }
+        }
+    }
+    None
+}
+
+pub fn resolve_workflow_artifact_document(space_id: &str, space_document: &OsSpaceDocument) -> Option<OsWorkflowArtifactDocument> {
+    let projection = materialize_backbone_projection(space_document, &space_document.applied_edit_ids).ok()?;
+    for collection_ref in &projection.collections {
+        let collection_uri = collection_backbone_uri(space_id, &collection_ref.id);
+        let Some(collection_payload) = resolve_backbone_bytes(&collection_uri) else { continue };
+        let Ok(collection_document) = decode_backbone_payload::<CollectionProjection, CollectionOperation>(&collection_payload, S_COLLECTION_SCHEMA) else { continue };
+        let Ok(collection_projection) = materialize_backbone_projection(&collection_document, &collection_document.applied_edit_ids) else { continue };
+        for entry in &collection_projection.entries {
+            let ArtifactBody::Document { schema, document_id } = entry.body.as_ref() else { continue };
+            if schema != S_WORKFLOW_SCHEMA {
+                continue;
+            }
+            let artifact_uri = artifact_backbone_uri(space_id, document_id);
+            let Some(artifact_payload) = resolve_backbone_bytes(&artifact_uri) else { continue };
+            if let Ok(workflow_document) = decode_backbone_payload::<WorkflowDocument, WorkflowOperation>(&artifact_payload, S_WORKFLOW_SCHEMA) {
+                return Some(workflow_document);
+            }
+        }
+    }
+    None
+}
+
+/// 🆕️ Mints a fresh, valid, empty `s.workflow` artifact document for a space that has none registered
+/// yet — the "genuinely new/default space" leg of `resolve_workflow_artifact_document`'s three-way
+/// fallback (existing registered artifact / demo fixture / fresh empty document). Not persisted as a
+/// `CollectionEntry` (real artifact-registration UI is W7 scope, see `app_space`'s `openSpace` doc
+/// comment) — the studio editor still gets a real, decodable `WorkflowDocument` pack instead of a
+/// broken placeholder, it just starts from a blank canvas each time until W7 wires persistence.
+pub fn empty_workflow_artifact_document(space_id: &str, space_name: &str) -> OsWorkflowArtifactDocument {
+    create_backbone_document(S_WORKFLOW_SCHEMA, space_id, space_name, empty_workflow_document())
+}
+
+/// @emoji 📦️ `s.workflow` counterpart of `space_document_envelope_pack` — pack+spr bytes for
+/// `HostEffect::LoadDocument` / host `loadAppDocumentPack`, sized to what `app_space`'s
+/// `DocumentApp::Projection` (`WorkflowDocument`) actually decodes, unlike the space-manifest pack the
+/// studio editor used to be fed by mistake.
+pub fn workflow_artifact_envelope_pack(document: &OsWorkflowArtifactDocument) -> Option<store::DocumentPackFiles> {
+    export_backbone_pack(document).ok()
+}
+//#endregion 🔖️WorkflowArtifactResolution
 
 /// 🌉️ `pub` (not `pub(crate)`, and not `#[cfg(test)]`): `app_space`'s own tests (a sibling crate) seed a
 /// studio through this hook — a `#[cfg(test)]` gate here would vanish when this crate is pulled in as
@@ -561,7 +636,7 @@ mod tests {
         let doc = DocumentView { projection: &projection, history: &history };
         let config = HomeConfig::default();
         let cfg = ConfigView { projection: &config };
-        let emit = home.handle(&HomeCommand::CreateStudio { name: "Temp Studio".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg);
+        let emit = home.handle(&HomeCommand::CreateStudio { name: "Temp Studio".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg).expect("handle");
         assert!(emit.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
         assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })), "ephemeral create must not download");
         let persistent = list_os_space_catalog_entries(catalog_port()).expect("list");
@@ -585,10 +660,14 @@ mod tests {
 
     #[test]
     fn space_document_persists_through_backbone_port() {
+        // 🕳️ Was built off `parse_demo_space_document()` before `## The inversion`'s dissolve — that
+        // helper now yields a `workflow::WorkflowDocument` (the demo fixture's own artifact content, see
+        // `resolve_workflow_artifact_document`'s doc), not a `space::SpaceProjection`-backed catalog
+        // entry `seed_os_space_catalog_if_empty` expects. This test exercises the space-manifest
+        // persistence path specifically, so it mints its own manifest instead.
         let port: Arc<dyn OsBackbonePort> = Arc::new(LocalStorageBackbonePort::new());
-        let mut demo = parse_demo_space_document();
-        demo.id = "persist-test".into();
-        demo.name = "Persist Test".into();
+        let projection = empty_space_projection("Persist Test", SpaceKind::Atelier, SpaceVisibility::Private);
+        let demo: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, "persist-test", "Persist Test", projection);
         let _ = seed_os_space_catalog_if_empty(demo.clone(), port.clone()).expect("seed");
         let loaded = load_os_space_document("persist-test", port.clone()).expect("load");
         assert_eq!(loaded.id, "persist-test");
@@ -627,7 +706,7 @@ mod tests {
         let doc = DocumentView { projection: &projection, history: &history };
         let config = HomeConfig::default();
         let cfg = ConfigView { projection: &config };
-        let emit = home.handle(&HomeCommand::SetActivePanelTab { tab_id: "tab-1".into() }, &doc, &cfg);
+        let emit = home.handle(&HomeCommand::SetActivePanelTab { tab_id: "tab-1".into() }, &doc, &cfg).expect("handle");
         assert_eq!(emit.config_operations, vec![HomeConfigOperation::SetActivePanelTab { tab_id: "tab-1".into() }]);
         assert!(emit.document_operations.is_empty());
     }

@@ -3246,6 +3246,8 @@ pub mod component {
             #[serde(skip_serializing_if = "Option::is_none")]
             pub computing_json: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            pub status_json: Option<String>,
+            #[serde(skip_serializing_if = "Option::is_none")]
             pub capabilities_json: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub fixture_json: Option<String>,
@@ -3864,6 +3866,7 @@ pub mod component {
                     fixture_json: None,
                     presence_peers_json: None,
                     eval_json: None,
+                    status_json: None,
                 }
             }
         }

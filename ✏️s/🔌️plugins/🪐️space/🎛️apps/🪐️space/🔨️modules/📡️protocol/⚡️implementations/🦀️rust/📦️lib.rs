@@ -129,6 +129,18 @@ pub enum SpaceCommand {
     GoHome,
     #[dsl(key = "navigate-vfs-node")]
     NavigateVirtualFileSystemNode { space_id: String },
+
+    /// 🪐️ Host->app registry push, mirroring `procedural3d`'s/`forms`' `SetContributions` shape
+    /// exactly: the React shell's `os-shell.tsx` sends this whenever any loaded plugin's declared apps
+    /// change, carrying a JSON array of `{pluginId, app}` entries (`app` a raw `AppDefinition` object —
+    /// see `semio_framework_core::AppDefinition`). Not declared in `create_space_app`'s action catalog
+    /// (same uncatalogued-bridge shape as `setContributions`/`setLocale`). Its handler calls
+    /// `semio_framework_os::register_app_io` for every entry — the space app is its own wasm component,
+    /// so its statically-linked copy of os-core's `APP_REGISTRATIONS` never sees what native/test hosts
+    /// populate via `PluginHost::load_plugin`/`hot_swap_plugin`; this is how it gets populated in a real
+    /// browser/wasm host instead.
+    #[dsl(key = "set-app-registrations")]
+    SetAppRegistrations { json: String },
 }
 //#endregion 🔖️SpaceCommand
 
@@ -193,6 +205,7 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&SpaceCommand::CloseFocusedInstance);
         store::test_support::assert_op_line_round_trip(&SpaceCommand::GoHome);
         store::test_support::assert_op_line_round_trip(&SpaceCommand::NavigateVirtualFileSystemNode { space_id: "demo".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::SetAppRegistrations { json: "[]".into() });
     }
 }
 //#endregion 🧪️Tests

@@ -2476,6 +2476,20 @@ mod tests {
     }
 
     #[test]
+    fn neural_cache_get_and_contains_refresh_epoch_before_sweep() {
+        let cache = NeuralCache::new();
+        cache.begin_epoch();
+        cache.get_or_insert_with(42, || Ok(Dictionary::new())).expect("seed cache");
+        cache.begin_epoch();
+        assert!(cache.contains(42), "contains must refresh the entry epoch on a hit");
+        cache.sweep();
+        assert!(cache.contains(42), "swept cache must retain entries touched by contains/get in the new epoch");
+        cache.get(42);
+        cache.sweep();
+        assert_eq!(cache.len(), 1, "get must also refresh epoch so a completing eval does not evict its own hits");
+    }
+
+    #[test]
     fn cardinality_symbol_round_trips_json() {
         let channel = ChannelSpec::list("items", &["list.pack"]).with_cardinality(Cardinality::OneOrMore);
         let json = serde_json::to_string(&channel).unwrap();

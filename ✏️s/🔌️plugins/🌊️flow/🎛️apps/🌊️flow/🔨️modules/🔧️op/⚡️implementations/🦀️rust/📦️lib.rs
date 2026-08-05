@@ -58,8 +58,6 @@ pub enum FlowConfigOperation {
     SetExtensionEnabled { json: String },
     #[dsl(key = "generation")]
     SetGeneration { json: String },
-    #[dsl(key = "eval-driver")]
-    SetEvalDriver { json: String },
     #[dsl(key = "locale")]
     SetLocale { value: String },
 }
@@ -86,7 +84,6 @@ impl Operation<flow_engine::FlowConfig> for FlowConfigOperation {
             FlowConfigOperation::SetCatalogueSections { sections_json } => next.catalogue_sections_json = sections_json.clone(),
             FlowConfigOperation::SetExtensionEnabled { json } => next.extension_enabled_json = json.clone(),
             FlowConfigOperation::SetGeneration { json } => next.generation_json = json.clone(),
-            FlowConfigOperation::SetEvalDriver { json } => next.eval_driver_json = json.clone(),
             FlowConfigOperation::SetLocale { value } => next.locale = value.clone(),
         }
         next
@@ -119,7 +116,6 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&FlowConfigOperation::SetCatalogueSections { sections_json: "[]".into() });
         store::test_support::assert_op_line_round_trip(&FlowConfigOperation::SetExtensionEnabled { json: "{\"auto-layout\":true}".into() });
         store::test_support::assert_op_line_round_trip(&FlowConfigOperation::SetGeneration { json: "{\"generations\":[]}".into() });
-        store::test_support::assert_op_line_round_trip(&FlowConfigOperation::SetEvalDriver { json: "{}".into() });
         store::test_support::assert_op_line_round_trip(&FlowConfigOperation::SetLocale { value: "de-DE".into() });
     }
 

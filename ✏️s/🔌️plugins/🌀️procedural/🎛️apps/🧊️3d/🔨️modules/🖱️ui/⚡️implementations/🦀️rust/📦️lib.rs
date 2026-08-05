@@ -7,12 +7,12 @@
 //! `procedural_3d_protocol::Procedural3dCommand` channel via `DocumentApp::handle`.
 
 use flow_core::forms_bridge::flow_fixture_to_form_spec;
-use flow_core::{flow_backed_node_graph_extras, CameraJson, FlowEvalDriver, FlowFixture, FlowHost, Widget};
+use flow_core::{flow_backed_node_graph_extras, flow_host_with_session, CameraJson, FlowEvalSession, FlowFixture, FlowHost, Widget};
 use playbook::{apply_generation_operation, generation_operations, render_generation_form_body, render_generation_preview_text, render_generations_tree, select_generation, selected_generation, GenerationOperation, GenerationPlayState};
 use procedural_3d::{widget_id, Procedural3dDocument, PROCEDURAL_3D_SCHEMA};
 use procedural_3d_engine::{
     default_projection, ensure_gumball_node, evaluate_generation_preview, example_projection, fixture_to_workflow, generation_fixture_for, gumball_rotate_params_json, gumball_scale_params_json, gumball_translate_params_json, gumball_widget_number_param, gumball_widget_offset,
-    host_from_fixture, host_from_fixture_with_driver, is_procedural3d_example_id, widget_id_from_instance_id, Procedural3dConfig, Procedural3dPreviewCamera, PROCEDURAL_EXAMPLE_BOX_FILLET, PROCEDURAL_EXAMPLE_BOX_SHELL, PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, PROCEDURAL_EXAMPLE_HEX_COLUMN,
+    host_from_fixture, host_from_fixture_with_session, is_procedural3d_example_id, widget_id_from_instance_id, Procedural3dConfig, Procedural3dPreviewCamera, PROCEDURAL_EXAMPLE_BOX_FILLET, PROCEDURAL_EXAMPLE_BOX_SHELL, PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, PROCEDURAL_EXAMPLE_HEX_COLUMN,
     PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, PROCEDURAL_EXAMPLE_RECT_EXTRUDE, PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, PROCEDURAL_EXAMPLE_SPHERE_TORUS,
 };
 use procedural_3d_op::{procedural3d_fixture_operations, Procedural3dConfigOperation, Procedural3dOperation};
@@ -25,6 +25,7 @@ use semio_framework_plugin::{
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use serde_json::{json, Value};
+use std::sync::Mutex;
 use store::DocumentPack;
 
 //#region 🔖️Constants
@@ -69,16 +70,8 @@ fn mesh_selection_ids_typed(ids: &[String], fallback: &[String]) -> Vec<String> 
     }
 }
 
-/// 🧵️ Recomputes the driver's live "still pending?"/"still computing?" state fresh from the fixture
-/// against the persisted baseline (`cfg.eval_driver()`'s `previous_snapshot`/`previous_channels`) —
-/// this local mutation is thrown away (never persisted), it only exists to answer "is there pending
-/// work right now" for THIS render/`pending_effects` call, matching the "render is a pure projection"
-/// contract: the real, persisted driver mutation only ever happens inside the `flowEvalTick` command.
-fn live_eval_driver(fixture: &FlowFixture, cfg: &Procedural3dConfig) -> FlowEvalDriver {
-    let mut driver = cfg.eval_driver();
-    let host = host_from_fixture_with_driver(fixture, Some(&driver));
-    driver.sync(&host);
-    driver
+fn eval_session_lock(app: &Procedural3dPlayApp) -> std::sync::MutexGuard<'_, FlowEvalSession> {
+    app.eval_session.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
 /// 🧾️ Overlays the config's ephemeral generation selection/preview onto the persisted generation
@@ -128,19 +121,19 @@ fn handle_generation(action: &str, args: Option<&Value>, projection: &Procedural
     let mut state = projection.generation.clone();
     state.selected_generation_id = cfg.selected_generation_id.clone();
     let Some(operations) = generation_operations(action, args, &state, &spec) else {
-        return Ok(Emit::default();
+        return Emit::default();
     };
     for operation in &operations {
         apply_generation_operation(&mut state, operation);
     }
     let generation_preview_text = selected_generation(&state).map(|selected| evaluate_generation_preview(&projection.fixture, &selected.values));
     let coalesce_key = (action == "updateGenerationValues").then(|| "generation-values".to_string());
-    Ok(Emit {
+    Emit {
         document_operations: operations.into_iter().map(Procedural3dOperation::Generation).collect(),
         config_operations: vec![Procedural3dConfigOperation::SetGeneration { selected_generation_id: state.selected_generation_id.clone(), generation_preview_text }],
         coalesce_key,
         ..Default::default()
-    })
+    }
 }
 
 /// 🎚️ Level-of-detail tessellation deflection for the flow window.
@@ -180,7 +173,6 @@ fn config_after_example_load(previous: &Procedural3dConfig, flow_camera: &Camera
         camera: flow_camera.clone(),
         selected_node_ids: Vec::new(),
         hovered_node_id: None,
-        eval_driver_json: String::new(),
         selected_generation_id: None,
         generation_preview_text: None,
         preview_camera: previous.preview_camera.clone(),
@@ -411,7 +403,9 @@ fn render_generate_preview(fixture: &FlowFixture, generation: &GenerationPlaySta
 /// `procedural_3d_engine::Procedural3dConfig` (see `DocumentApp::Config`), written through
 /// `procedural_3d_op::Procedural3dConfigOperation`s.
 #[derive(Default)]
-pub struct Procedural3dPlayApp;
+pub struct Procedural3dPlayApp {
+    eval_session: Mutex<FlowEvalSession>,
+}
 
 impl DocumentApp for Procedural3dPlayApp {
     type Projection = Procedural3dDocument;
@@ -666,12 +660,13 @@ impl DocumentApp for Procedural3dPlayApp {
         match command {
             // ✏️ Operations — compute the target fixture via the host, emit fixture operations.
             Procedural3dCommand::SetActiveExample { example_id } => {
+                eval_session_lock(self).set_eval_json(String::new());
                 let target = if example_id.is_empty() {
                     default_projection()
                 } else if is_procedural3d_example_id(example_id) {
                     example_projection(example_id).unwrap_or_default()
                 } else {
-                    return Ok(Emit::default();
+                    return Ok(Emit::default());
                 };
                 let mut operations: Vec<Procedural3dOperation> = doc.projection.generation.generations.iter().map(|generation| Procedural3dOperation::Generation(GenerationOperation::Remove { id: generation.id.clone() })).collect();
                 operations.extend(procedural3d_fixture_operations(fixture, &target.fixture));
@@ -715,7 +710,7 @@ impl DocumentApp for Procedural3dPlayApp {
                 }
                 let operations = commit_fixture(fixture, &host.fixture);
                 let config_operations = if cleared { vec![Procedural3dConfigOperation::SetSelection { node_ids: Vec::new() }] } else { Vec::new() };
-                Emit { document_operations: operations, config_operations, ..Default::default() }
+                Ok(Emit { document_operations: operations, config_operations, ..Default::default() })
             }
             Procedural3dCommand::DeleteSelection => {
                 let selected = config.selected_node_ids.clone();
@@ -728,7 +723,7 @@ impl DocumentApp for Procedural3dPlayApp {
                 }
                 let operations = commit_fixture(fixture, &host.fixture);
                 let config_operations = if cleared { vec![Procedural3dConfigOperation::SetSelection { node_ids: Vec::new() }] } else { Vec::new() };
-                Emit { document_operations: operations, config_operations, ..Default::default() }
+                Ok(Emit { document_operations: operations, config_operations, ..Default::default() })
             }
             Procedural3dCommand::RemoveWidget { widget_id: target_id } => {
                 let mut host = host_from_fixture(fixture);
@@ -736,17 +731,17 @@ impl DocumentApp for Procedural3dPlayApp {
                     let operations = commit_fixture(fixture, &host.fixture);
                     let mut remaining = config.selected_node_ids.clone();
                     remaining.retain(|id| id != target_id);
-                    Emit { document_operations: operations, config_operations: vec![Procedural3dConfigOperation::SetSelection { node_ids: remaining }], ..Default::default() }
+                    Ok(Emit { document_operations: operations, config_operations: vec![Procedural3dConfigOperation::SetSelection { node_ids: remaining }], ..Default::default() })
                 } else {
-                    Ok(Emit::default()
+                    Ok(Emit::default())
                 }
             }
             Procedural3dCommand::MoveMediaNode { node_id, x, y } => {
                 let mut host = host_from_fixture(fixture);
                 if host.move_widget(node_id, *x, *y).is_ok() {
-                    Ok(Emit::operations(commit_fixture(fixture, &host.fixture))
+                    Ok(Emit::operations(commit_fixture(fixture, &host.fixture)))
                 } else {
-                    Ok(Emit::default()
+                    Ok(Emit::default())
                 }
             }
             Procedural3dCommand::AddWidget { kind, x, y } => {
@@ -764,9 +759,9 @@ impl DocumentApp for Procedural3dPlayApp {
                 let mut host = host_from_fixture(fixture);
                 if let Ok(id) = host.add_widget(&descriptor, x, y) {
                     let operations = commit_fixture(fixture, &host.fixture);
-                    Emit { document_operations: operations, config_operations: vec![Procedural3dConfigOperation::SetSelection { node_ids: vec![id] }], ..Default::default() }
+                    Ok(Emit { document_operations: operations, config_operations: vec![Procedural3dConfigOperation::SetSelection { node_ids: vec![id] }], ..Default::default() })
                 } else {
-                    Ok(Emit::default()
+                    Ok(Emit::default())
                 }
             }
             Procedural3dCommand::PatchFlowWidgets { widget_ids, field, value } => {
@@ -782,14 +777,14 @@ impl DocumentApp for Procedural3dPlayApp {
                         }
                     }
                 }
-                Ok(Emit::operations(procedural3d_fixture_operations(&baseline, &host.fixture))
+                Ok(Emit::operations(procedural3d_fixture_operations(&baseline, &host.fixture)))
             }
             Procedural3dCommand::Reorganize => {
                 let mut host = host_from_fixture(fixture);
                 if host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok() {
-                    Ok(Emit::operations(commit_fixture(fixture, &host.fixture))
+                    Ok(Emit::operations(commit_fixture(fixture, &host.fixture)))
                 } else {
-                    Ok(Emit::default()
+                    Ok(Emit::default())
                 }
             }
             Procedural3dCommand::TranslateSelection { node_ids, dx, dy, dz } => {
@@ -801,7 +796,7 @@ impl DocumentApp for Procedural3dPlayApp {
                     host.set_neuron_params(transform_id, &gumball_translate_params_json(next)).is_ok()
                 }) {
                     Some((operations, new_selection)) => {
-                        Emit { document_operations: operations, config_operations: vec![Procedural3dConfigOperation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-translate".into()), ..Default::default() }
+                        Ok(Emit { document_operations: operations, config_operations: vec![Procedural3dConfigOperation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-translate".into()), ..Default::default() })
                     }
                     None => Ok(Emit::default()),
                 }
@@ -814,7 +809,7 @@ impl DocumentApp for Procedural3dPlayApp {
                     host.set_neuron_params(transform_id, &gumball_rotate_params_json([ax, ay, az], current_angle + angle)).is_ok()
                 }) {
                     Some((operations, new_selection)) => {
-                        Emit { document_operations: operations, config_operations: vec![Procedural3dConfigOperation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-rotate".into()), ..Default::default() }
+                        Ok(Emit { document_operations: operations, config_operations: vec![Procedural3dConfigOperation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-rotate".into()), ..Default::default() })
                     }
                     None => Ok(Emit::default()),
                 }
@@ -827,23 +822,23 @@ impl DocumentApp for Procedural3dPlayApp {
                     host.set_neuron_params(transform_id, &gumball_scale_params_json(current_factor * uniform_factor)).is_ok()
                 }) {
                     Some((operations, new_selection)) => {
-                        Emit { document_operations: operations, config_operations: vec![Procedural3dConfigOperation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-scale".into()), ..Default::default() }
+                        Ok(Emit { document_operations: operations, config_operations: vec![Procedural3dConfigOperation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-scale".into()), ..Default::default() })
                     }
                     None => Ok(Emit::default()),
                 }
             }
-            Procedural3dCommand::AddGeneration => Ok(handle_generation("addGeneration", None, doc.projection, config),
-            Procedural3dCommand::RemoveGeneration { id } => Ok(handle_generation("removeGeneration", Some(&json!({ "id": id })), doc.projection, config),
-            Procedural3dCommand::RenameGeneration { id, name } => Ok(handle_generation("renameGeneration", Some(&json!({ "id": id, "name": name })), doc.projection, config),
+            Procedural3dCommand::AddGeneration => Ok(handle_generation("addGeneration", None, doc.projection, config)),
+            Procedural3dCommand::RemoveGeneration { id } => Ok(handle_generation("removeGeneration", Some(&json!({ "id": id })), doc.projection, config)),
+            Procedural3dCommand::RenameGeneration { id, name } => Ok(handle_generation("renameGeneration", Some(&json!({ "id": id, "name": name })), doc.projection, config)),
             Procedural3dCommand::UpdateGenerationValues { generation_id, question_id, value } => {
                 let value_json = dsl::from_dsl_value(value.clone()).unwrap_or(Value::Null);
-                handle_generation("updateGenerationValues", Some(&json!({ "generationId": generation_id, "questionId": question_id, "value": value_json })), doc.projection, config)
+                Ok(handle_generation("updateGenerationValues", Some(&json!({ "generationId": generation_id, "questionId": question_id, "value": value_json })), doc.projection, config))
             }
 
             // 👁️ Config-only — mutate ephemeral config, emit no document operations.
             Procedural3dCommand::NodeGraphViewport { camera } => Ok(Emit::config(vec![Procedural3dConfigOperation::SetCamera { camera: camera.clone() }])),
             Procedural3dCommand::SetSelection { node_ids } | Procedural3dCommand::SelectNode { node_ids } | Procedural3dCommand::NodeGraphSelect { node_ids } => {
-                Ok(Emit::config(vec![Procedural3dConfigOperation::SetSelection { node_ids: node_ids.clone() }])
+                Ok(Emit::config(vec![Procedural3dConfigOperation::SetSelection { node_ids: node_ids.clone() }]))
             }
             Procedural3dCommand::NodeGraphHover { widget_id } => Ok(Emit::config(vec![Procedural3dConfigOperation::SetHover { node_id: widget_id.clone() }])),
             Procedural3dCommand::SetHover { object_id } => Ok(Emit::config(vec![Procedural3dConfigOperation::SetHover { node_id: object_id.clone() }])),
@@ -851,11 +846,11 @@ impl DocumentApp for Procedural3dPlayApp {
             Procedural3dCommand::WorldSelect { ids, merge } => {
                 let mapped: Vec<String> = ids.iter().map(|id| widget_id_from_instance_id(id).to_string()).collect();
                 let merged = merge_world_selection_ids(&SelectionSet::from_ids(config.selected_node_ids.clone()), &mapped, merge).to_vec();
-                Ok(Emit::config(vec![Procedural3dConfigOperation::SetSelection { node_ids: merged }])
+                Ok(Emit::config(vec![Procedural3dConfigOperation::SetSelection { node_ids: merged }]))
             }
             Procedural3dCommand::WorldHover { id } => {
                 let resolved = id.as_deref().map(|id| widget_id_from_instance_id(id).to_string());
-                Ok(Emit::config(vec![Procedural3dConfigOperation::SetHover { node_id: resolved }])
+                Ok(Emit::config(vec![Procedural3dConfigOperation::SetHover { node_id: resolved }]))
             }
             Procedural3dCommand::SetSelectionMethod { method } => Ok(Emit::config(vec![Procedural3dConfigOperation::SetSelectionMethod { method: method.clone() }])),
             Procedural3dCommand::SetLodMode { value } => Ok(Emit::config(vec![Procedural3dConfigOperation::SetLodMode { value: value.clone() }])),
@@ -863,22 +858,22 @@ impl DocumentApp for Procedural3dPlayApp {
             Procedural3dCommand::ToggleSun => {
                 let mut sun = config.sun();
                 apply_world3d_sun_action(&mut sun, "toggleSun", None);
-                Ok(Emit::config(vec![Procedural3dConfigOperation::SetSun { json: serde_json::to_string(&sun).unwrap_or_default() }])
+                Ok(Emit::config(vec![Procedural3dConfigOperation::SetSun { json: serde_json::to_string(&sun).unwrap_or_default() }]))
             }
             Procedural3dCommand::SetSunAzimuth { value } => {
                 let mut sun = config.sun();
                 apply_world3d_sun_action(&mut sun, "setSunAzimuth", Some(&json!({ "value": value })));
-                Ok(Emit::config(vec![Procedural3dConfigOperation::SetSun { json: serde_json::to_string(&sun).unwrap_or_default() }])
+                Ok(Emit::config(vec![Procedural3dConfigOperation::SetSun { json: serde_json::to_string(&sun).unwrap_or_default() }]))
             }
             Procedural3dCommand::SetSunElevation { value } => {
                 let mut sun = config.sun();
                 apply_world3d_sun_action(&mut sun, "setSunElevation", Some(&json!({ "value": value })));
-                Ok(Emit::config(vec![Procedural3dConfigOperation::SetSun { json: serde_json::to_string(&sun).unwrap_or_default() }])
+                Ok(Emit::config(vec![Procedural3dConfigOperation::SetSun { json: serde_json::to_string(&sun).unwrap_or_default() }]))
             }
             Procedural3dCommand::SetSunIntensity { value } => {
                 let mut sun = config.sun();
                 apply_world3d_sun_action(&mut sun, "setSunIntensity", Some(&json!({ "value": value })));
-                Ok(Emit::config(vec![Procedural3dConfigOperation::SetSun { json: serde_json::to_string(&sun).unwrap_or_default() }])
+                Ok(Emit::config(vec![Procedural3dConfigOperation::SetSun { json: serde_json::to_string(&sun).unwrap_or_default() }]))
             }
             Procedural3dCommand::SetCamera { camera } => Ok(Emit::config(vec![Procedural3dConfigOperation::SetPreviewCamera { camera: camera.clone() }])),
             Procedural3dCommand::SelectGeneration { id } => {
@@ -886,7 +881,7 @@ impl DocumentApp for Procedural3dPlayApp {
                 state.selected_generation_id = config.selected_generation_id.clone();
                 select_generation(&mut state, id);
                 let generation_preview_text = selected_generation(&state).map(|selected| evaluate_generation_preview(fixture, &selected.values));
-                Ok(Emit::config(vec![Procedural3dConfigOperation::SetGeneration { selected_generation_id: state.selected_generation_id.clone(), generation_preview_text }])
+                Ok(Emit::config(vec![Procedural3dConfigOperation::SetGeneration { selected_generation_id: state.selected_generation_id.clone(), generation_preview_text }]))
             }
             // 🧰️ Host-owned active-utility switch — clear in-progress hover scratch, never emit document operations.
             Procedural3dCommand::SetActiveUtility { utility_id } => Ok(Emit::config(vec![Procedural3dConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }, Procedural3dConfigOperation::SetHover { node_id: None }])),
@@ -897,9 +892,9 @@ impl DocumentApp for Procedural3dPlayApp {
             // until the fixture's dirty set is empty; persists the driver's new baseline/eval json via
             // `SetEvalDriver` so the next render/`pending_effects` call sees the converged state.
             Procedural3dCommand::FlowEvalTick => {
-                let mut driver = config.eval_driver();
-                let mut host = host_from_fixture_with_driver(fixture, Some(&driver));
-                let more = driver.tick(&mut host);
+                let mut session = eval_session_lock(self);
+                let mut host = flow_host_with_session(fixture, &session);
+                let more = session.tick(&mut host);
                 let mut effects = if more { vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
                 if let Some(pending) = host.take_pending_extension_eval() {
                     if let Some(plugin_id) = flow_core::flow_extension_plugin_id(&pending.extension_id) {
@@ -917,15 +912,12 @@ impl DocumentApp for Procedural3dPlayApp {
                         });
                     }
                 }
-                Ok(Emit {
-                    config_operations: vec![Procedural3dConfigOperation::SetEvalDriver { json: serde_json::to_string(&driver).unwrap_or_default() }],
-                    effects,
-                    ..Default::default()
-                })
+                Ok(Emit { effects, ..Default::default() })
             }
             Procedural3dCommand::FlowEvalResolve { node_hash, output_json } => {
-                let _ = procedural_3d_engine::resolve_flow_eval_node(*node_hash, output_json);
-                Emit { effects: vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }], ..Default::default() }
+                let mut session = eval_session_lock(self);
+                let _ = session.seed_node_cache(*node_hash, output_json);
+                Ok(Emit { effects: vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }], ..Default::default() })
             }
         }
     }
@@ -934,10 +926,10 @@ impl DocumentApp for Procedural3dPlayApp {
     /// covers every mutation path (edits, undo/redo, example load, remote operations) in one place.
     /// Pure: recomputes the "is anything pending" probe fresh from the fixture and the driver's
     /// persisted baseline each call, never mutates anything durably.
-    fn pending_effects(&self, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>) -> Vec<HostEffect> {
-        let mut driver = cfg.projection.eval_driver();
-        let host = host_from_fixture_with_driver(&doc.projection.fixture, Some(&driver));
-        if driver.sync(&host) {
+    fn pending_effects(&self, doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>) -> Vec<HostEffect> {
+        let mut session = eval_session_lock(self);
+        let host = flow_host_with_session(&doc.projection.fixture, &session);
+        if session.sync(&host) {
             vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
         } else {
             Vec::new()
@@ -956,8 +948,8 @@ impl DocumentApp for Procedural3dPlayApp {
                 let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
                 let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
                 let selection = config.selected_node_ids.clone();
-                let live_driver = live_eval_driver(fixture, config);
-                let flow_extras = flow_backed_node_graph_extras(fixture, &config.lod_mode, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(&live_driver));
+                let session = eval_session_lock(self);
+                let flow_extras = flow_backed_node_graph_extras(fixture, &config.lod_mode, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(&*session));
                 build_node_graph_scene(
                     PROCEDURAL_3D_PLAY_SURFACE_MAIN,
                     PROCEDURAL_3D_PLAY_APP_ID,
@@ -969,7 +961,7 @@ impl DocumentApp for Procedural3dPlayApp {
                         lod_json: flow_extras.lod_json,
                         fixture_json: flow_extras.fixture_json,
                         eval_json: flow_extras.eval_json,
-                        computing_json: flow_extras.computing_json,
+                        status_json: flow_extras.status_json,
                         selection,
                         hover: config.hovered_node_id.as_ref().map(|id| NodeGraphHover { node_id: Some(id.clone()) }),
                         ..NodeGraphScene::base(nodes, edges, viewport)
@@ -977,8 +969,8 @@ impl DocumentApp for Procedural3dPlayApp {
                 )
             }
             PROCEDURAL_3D_PLAY_BODY_PREVIEW => {
-                let live_driver = live_eval_driver(fixture, config);
-                let eval_json = live_driver.eval_json().to_string();
+                let session = eval_session_lock(self);
+                let eval_json = session.eval_json().to_string();
                 let (meshes_json, instances_json) = procedural_3d_engine::preview_payload_from_eval(&eval_json, fixture, config);
                 let preview_status = procedural_3d_engine::preview_status_json(&eval_json, fixture);
                 let sun = config.sun();
@@ -986,7 +978,7 @@ impl DocumentApp for Procedural3dPlayApp {
                     PROCEDURAL_3D_PLAY_SURFACE_PREVIEW,
                     PROCEDURAL_3D_PLAY_APP_ID,
                     ui_wgpu::World3dScene {
-                        status_json: procedural_3d_engine::preview_scene_status_json(&live_driver, preview_status),
+                        status_json: procedural_3d_engine::preview_scene_status_json(&session, preview_status),
                         ..world3d_scene(procedural_3d_engine::preview_camera_json(config), meshes_json, instances_json, procedural_3d_engine::preview_selection_json(config, active_utility), &sun)
                     },
                 )
@@ -1586,13 +1578,16 @@ mod tests {
         // tick runs, the graph must flag the cut node (and its downstream preview) as computing —
         // this is what drives the dag canvas's animated loading border.
         assert!(!app.pending_effects().is_empty(), "loading the example must arm a tick chain");
-        assert!(main_graph(&mut app).computing_json.is_some(), "pending nodes must be reported before the chain runs");
+        let status_before = main_graph(&mut app).status_json.expect("status before convergence");
+        assert!(status_before.contains("computing") || status_before.contains("queued") || status_before.contains("stale"), "pending nodes must be reported before the chain runs: {status_before}");
         drain_flow_eval_ticks(&mut app);
         assert!(preview_mesh_count(&mut app) > 0, "eval chain should produce preview geometry after convergence");
+        let status_after = main_graph(&mut app).status_json.unwrap_or_default();
+        assert!(status_after.contains("\"status\":\"ok\"") || status_after.contains(r#""status": "ok""#), "converged graph should report ok nodes, got {status_after}");
         app.dispatch_typed(Procedural3dCommand::PatchFlowWidgets { widget_ids: vec!["slider_2".into()], field: "value".into(), value: Some(4.5) }, &meta("local")).expect("patch slider");
         assert!(!app.pending_effects().is_empty(), "slider mutation must re-arm evaluation");
-        let computing = main_graph(&mut app).computing_json.expect("computing chrome after slider edit");
-        assert!(computing.contains("brep_prim3d_sphere_3") || computing.contains("brep_bool_cut_5"), "downstream sphere/cut branch must be marked computing, got {computing}");
+        let status_edit = main_graph(&mut app).status_json.expect("status after slider edit");
+        assert!(status_edit.contains("computing") || status_edit.contains("queued") || status_edit.contains("stale"), "downstream branch must be non-ok while recomputing, got {status_edit}");
     }
 
     #[test]

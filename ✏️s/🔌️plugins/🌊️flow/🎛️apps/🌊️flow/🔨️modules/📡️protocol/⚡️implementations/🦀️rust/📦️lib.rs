@@ -148,6 +148,8 @@ pub enum FlowCommand {
     /// link, never user-facing.
     #[dsl(key = "flow-eval-tick")]
     FlowEvalTick,
+    #[dsl(key = "flow-eval-resolve")]
+    FlowEvalResolve { node_hash: u64, output_json: String },
 }
 //#endregion 🔖️FlowCommand
 

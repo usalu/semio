@@ -372,8 +372,6 @@ pub enum Procedural2dConfigOperation {
     },
     #[dsl(key = "show-mode")]
     SetShowMode { value: String },
-    #[dsl(key = "eval-driver")]
-    SetEvalDriver { json: String },
     #[dsl(key = "generation")]
     SetGeneration { selected_generation_id: Option<String>, generation_preview_text: Option<String> },
     #[dsl(key = "locale")]
@@ -390,7 +388,6 @@ impl Operation<procedural_2d_engine::Procedural2dConfig> for Procedural2dConfigO
             Procedural2dConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
             Procedural2dConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
             Procedural2dConfigOperation::SetShowMode { value } => next.show_mode = value.clone(),
-            Procedural2dConfigOperation::SetEvalDriver { json } => next.eval_driver_json = json.clone(),
             Procedural2dConfigOperation::SetGeneration { selected_generation_id, generation_preview_text } => {
                 next.selected_generation_id = selected_generation_id.clone();
                 next.generation_preview_text = generation_preview_text.clone();
@@ -753,7 +750,7 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetSelection { ids: vec!["a".into(), "b".into()] });
         store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
         store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetShowMode { value: "generate".into() });
-        store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetEvalDriver { json: "{}".into() });
+        store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetGeneration { selected_generation_id: None, generation_preview_text: None });
         store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetGeneration { selected_generation_id: Some("g1".into()), generation_preview_text: None });
         store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetLocale { value: "en-US".into() });
     }

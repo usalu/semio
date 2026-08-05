@@ -1,11 +1,11 @@
 //! 🎲️ Procedural 2D app — DocumentApp impl, render, manifest (constitutional: ui).
 
 use flow_core::forms_bridge::flow_fixture_to_form_spec;
-use flow_core::{flow_backed_node_graph_extras, CameraJson, FlowFixture, FlowHost, Widget};
+use flow_core::{flow_backed_node_graph_extras, flow_host_with_session, CameraJson, FlowEvalSession, FlowFixture, FlowHost, Widget};
 use playbook::{apply_generation_operation, generation_operations, render_generation_form_body, render_generation_preview_text, render_generations_tree, select_generation, selected_generation, GenerationPlayState};
 use procedural_2d::{widget_id, Procedural2dDocument, PROCEDURAL_2D_SCHEMA};
 use procedural_2d_engine::{
-    collect_drawing_handles_from_eval, default_projection, eval_driver_json_for, evaluate_generation_preview, fixture_to_workflow, generation_preview_layers, host_from_fixture, host_from_fixture_with_driver, procedural2d_io,
+    collect_drawing_handles_from_eval, default_projection, evaluate_generation_preview, fixture_to_workflow, generation_preview_layers, host_from_fixture, host_from_fixture_with_session, procedural2d_io,
     refresh_generation_preview, scene_layers_from_drawing_handle, Procedural2dConfig,
 };
 use procedural_2d_op::{procedural2d_fixture_operations, Procedural2dConfigOperation, Procedural2dOperation};
@@ -18,6 +18,7 @@ use semio_framework_plugin::{
 };
 
 use serde_json::{json, Value};
+use std::sync::Mutex;
 
 //#region 🔖️Constants
 const PROCEDURAL2D_PLAY_APP_ID: &str = "procedural2d-play";
@@ -65,12 +66,12 @@ fn procedural2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(PROCEDURAL2D_PLAY_APP_ID).action(action, args)
 }
 
-fn eval_preview_layers(play: &Procedural2dPlayView, preview: bool) -> String {
-    // 🧵️ Never evaluates: reads whatever the off-main-thread `flowEvalTick` chain (or an explicit
-    // generation-preview/`setEvalOutputs` push) has cached so far — stale/empty is fine, the next
-    // tick's scene refresh fills it in.
-    let driver = play.config.eval_driver();
-    let eval_json = driver.eval_json();
+fn eval_session_lock(app: &Procedural2dPlayApp) -> std::sync::MutexGuard<'_, FlowEvalSession> {
+    app.eval_session.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
+fn eval_preview_layers(play: &Procedural2dPlayView, session: &FlowEvalSession, preview: bool) -> String {
+    let eval_json = session.eval_json();
     let prefix = if preview { "procedural2d-preview" } else { "procedural2d-main" };
     let mut layers = Vec::new();
     if let Ok(outputs) = serde_json::from_str::<Value>(eval_json) {
@@ -224,13 +225,12 @@ fn build_inspector_tree(play: &Procedural2dPlayView, labels: &Procedural2dLabels
 //#endregion 🔖️Panels
 
 //#region 🔖️Render
-fn render_main_graph(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -> UiNode {
+fn render_main_graph(play: &Procedural2dPlayView, session: &FlowEvalSession, labels: &Procedural2dLabels) -> UiNode {
     let host = host_from_fixture(&play.fixture);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
     let viewport = NodeGraphViewport { x: play.config.camera.x, y: play.config.camera.y, zoom: play.config.camera.zoom };
     let selection = play.config.selected_ids.clone();
-    let driver = play.config.eval_driver();
-    let flow_extras = flow_backed_node_graph_extras(&play.fixture, "", 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(&driver));
+    let flow_extras = flow_backed_node_graph_extras(&play.fixture, "", 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     build_node_graph_scene(
         PROCEDURAL2D_PLAY_SURFACE_MAIN,
         PROCEDURAL2D_PLAY_APP_ID,
@@ -241,14 +241,16 @@ fn render_main_graph(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -
             capabilities_json: flow_extras.capabilities_json,
             lod_json: flow_extras.lod_json,
             fixture_json: flow_extras.fixture_json,
+            eval_json: flow_extras.eval_json,
+            status_json: flow_extras.status_json,
             selection,
             ..NodeGraphScene::base(nodes, edges, viewport)
         },
     )
 }
 
-fn render_preview_canvas(play: &Procedural2dPlayView) -> UiNode {
-    build_canvas_2d_scene(PROCEDURAL2D_PLAY_SURFACE_PREVIEW, PROCEDURAL2D_PLAY_APP_ID, Canvas2dScene { camera_x: play.config.camera.x, camera_y: play.config.camera.y, zoom: play.config.camera.zoom, layers_json: eval_preview_layers(play, true) })
+fn render_preview_canvas(play: &Procedural2dPlayView, session: &FlowEvalSession) -> UiNode {
+    build_canvas_2d_scene(PROCEDURAL2D_PLAY_SURFACE_PREVIEW, PROCEDURAL2D_PLAY_APP_ID, Canvas2dScene { camera_x: play.config.camera.x, camera_y: play.config.camera.y, zoom: play.config.camera.zoom, layers_json: eval_preview_layers(play, session, true) })
 }
 
 fn render_generate_generations(play: &Procedural2dPlayView, locale: Locale, terminology: Terminology) -> UiNode {
@@ -281,7 +283,9 @@ fn render_generate_preview(play: &Procedural2dPlayView, labels: &Procedural2dLab
 /// `procedural_2d_engine::Procedural2dConfig` (see `DocumentApp::Config`), written through
 /// `procedural_2d_op::Procedural2dConfigOperation`s.
 #[derive(Default)]
-pub struct Procedural2dPlayApp;
+pub struct Procedural2dPlayApp {
+    eval_session: Mutex<FlowEvalSession>,
+}
 
 impl Procedural2dPlayApp {
     /// 🔀️ Runs a host mutation seeded from the projection fixture and diffs the result into operations.
@@ -298,7 +302,7 @@ impl Procedural2dPlayApp {
     /// 🧬️ Emits generation operations for the generate-mode commands, updating the config's ephemeral
     /// selection and preview from the post-operation state via a whole-config `Snapshot`.
     /// `selectGeneration` is config-only (no document operations).
-    fn handle_generation(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>) -> Emit<Procedural2dOperation, Procedural2dConfigOperation> {
+    fn handle_generation(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Emit<Procedural2dOperation, Procedural2dConfigOperation> {
         let projection = doc.projection;
         let spec = flow_fixture_to_form_spec(&projection.fixture);
         let mut state = projection.generation.clone();
@@ -310,16 +314,22 @@ impl Procedural2dPlayApp {
             }
             next_config.selected_generation_id = state.selected_generation_id.clone();
             refresh_generation_preview(&mut next_config, &projection.fixture, &state);
-            return Ok(Emit::config(vec![Procedural2dConfigOperation::Snapshot { config: next_config }]);
+            if let Some(preview) = next_config.generation_preview_text.clone() {
+                session.set_eval_json(preview);
+            }
+            return Emit::config(vec![Procedural2dConfigOperation::Snapshot { config: next_config }]);
         }
         let Some(operations) = generation_operations(action, args, &state, &spec) else {
-            return Ok(Emit::default();
+            return Emit::default();
         };
         for operation in &operations {
             apply_generation_operation(&mut state, operation);
         }
         next_config.selected_generation_id = state.selected_generation_id.clone();
         refresh_generation_preview(&mut next_config, &projection.fixture, &state);
+        if let Some(preview) = next_config.generation_preview_text.clone() {
+            session.set_eval_json(preview);
+        }
         let coalesce_key = (action == "updateGenerationValues").then(|| "generation-values".to_string());
         Emit { document_operations: operations.into_iter().map(Procedural2dOperation::Generation).collect(), config_operations: vec![Procedural2dConfigOperation::Snapshot { config: next_config }], coalesce_key, ..Default::default() }
     }
@@ -443,16 +453,17 @@ impl DocumentApp for Procedural2dPlayApp {
             "selectGeneration" => Ok(Procedural2dCommand::SelectGeneration { id: str_arg(&["id"]) }),
             "flowEvalTick" => Ok(Procedural2dCommand::FlowEvalTick),
             "setLocale" => Ok(Procedural2dCommand::SetLocale { value: str_arg(&["value", "locale"]).unwrap_or_default() }),
-            other => Err(format!(
+            other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
-            )),
+            ))),
         }
     }
 
     fn handle(&self, command: &Procedural2dCommand, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
         let fixture = &doc.projection.fixture;
         let config = cfg.projection;
+        let mut session = eval_session_lock(self);
         match command {
             // 👁️ Config-only — ephemeral selection/hover/show-mode/eval-scratch, never document operations.
             Procedural2dCommand::SetSelection { ids } | Procedural2dCommand::SelectNode { ids } | Procedural2dCommand::NodeGraphSelect { ids } => Ok(Emit::config(vec![Procedural2dConfigOperation::SetSelection { ids: ids.clone() }])),
@@ -460,19 +471,30 @@ impl DocumentApp for Procedural2dPlayApp {
             Procedural2dCommand::SetShowMode { value } => Ok(Emit::config(vec![Procedural2dConfigOperation::SetShowMode { value: value.clone() }])),
             Procedural2dCommand::Generate => Ok(Emit::config(vec![Procedural2dConfigOperation::SetShowMode { value: "generate".into() }])),
             Procedural2dCommand::SetEvalOutputs { outputs_json } => {
-                let mut driver = config.eval_driver();
-                driver.set_eval_json(outputs_json.clone());
-                Ok(Emit::config(vec![Procedural2dConfigOperation::SetEvalDriver { json: eval_driver_json_for(&driver) }])
+                session.set_eval_json(outputs_json.clone());
+                Ok(Emit::default())
             }
             Procedural2dCommand::FlowEvalTick => {
-                let mut driver = config.eval_driver();
-                let mut host = host_from_fixture_with_driver(fixture, Some(&driver));
-                let more = driver.tick(&mut host);
-                Ok(Emit {
-                    config_operations: vec![Procedural2dConfigOperation::SetEvalDriver { json: eval_driver_json_for(&driver) }],
-                    effects: if more { vec![semio_framework_core::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() },
-                    ..Default::default()
-                })
+                let mut host = host_from_fixture_with_session(fixture, &session);
+                let more = session.tick(&mut host);
+                let mut effects = if more { vec![semio_framework_core::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
+                if let Some(pending) = host.take_pending_extension_eval() {
+                    if let Some(plugin_id) = flow_core::flow_extension_plugin_id(&pending.extension_id) {
+                        let request_json = serde_json::json!({
+                            "operatorId": pending.operator_id,
+                            "inputJson": pending.input_json,
+                            "nodeHash": pending.node_hash,
+                        })
+                        .to_string();
+                        effects.push(semio_framework_core::kernel::HostEffect::RequestPluginExchange {
+                            plugin_id,
+                            app_id: "flow-extension-eval".into(),
+                            request_json,
+                            response_action: "flowEvalResolve".into(),
+                        });
+                    }
+                }
+                Ok(Emit { effects, ..Default::default() })
             }
             Procedural2dCommand::CanvasPointerDown | Procedural2dCommand::CanvasPointerMove | Procedural2dCommand::CanvasPointerUp | Procedural2dCommand::CanvasWheel => Ok(Emit::default()),
             // 📷️ Graph camera — config-only (never a document operation), same model as flow-play.
@@ -514,11 +536,11 @@ impl DocumentApp for Procedural2dPlayApp {
                     }
                 });
                 let config_operations = if cleared { vec![Procedural2dConfigOperation::SetSelection { ids: Vec::new() }] } else { Vec::new() };
-                Emit { document_operations: operations, config_operations, ..Default::default() }
+                Ok(Emit { document_operations: operations, config_operations, ..Default::default() })
             }
             Procedural2dCommand::MoveMediaNode { node_id, x, y } => Ok(Emit::operations(self.ops_from_host_mutation(fixture, |host| {
                 let _ = host.move_widget(node_id, *x, *y);
-            })),
+            }))),
             Procedural2dCommand::AddWidget { kind, neuron_kind, x, y } => {
                 let descriptor = match kind.as_str() {
                     "neuron" => json!({ "kind": "neuron", "neuronKind": neuron_kind.clone().unwrap_or_else(|| "math.add".into()) }).to_string(),
@@ -527,34 +549,34 @@ impl DocumentApp for Procedural2dPlayApp {
                 let mut host = host_from_fixture(fixture);
                 let baseline = host.fixture.clone();
                 if let Ok(id) = host.add_widget(&descriptor, x.unwrap_or(120.0), y.unwrap_or(120.0)) {
-                    return Emit { document_operations: procedural2d_fixture_operations(&baseline, &host.fixture), config_operations: vec![Procedural2dConfigOperation::SetSelection { ids: vec![id] }], ..Default::default() };
+                    return Ok(Emit { document_operations: procedural2d_fixture_operations(&baseline, &host.fixture), config_operations: vec![Procedural2dConfigOperation::SetSelection { ids: vec![id] }], ..Default::default() });
                 }
-                Ok(Emit::default()
+                Ok(Emit::default())
             }
             Procedural2dCommand::RemoveWidget { widget_id } => {
                 let operations = self.ops_from_host_mutation(fixture, |host| {
                     let _ = host.remove_widget(widget_id);
                 });
                 if operations.is_empty() {
-                    return Ok(Emit::default();
+                    return Ok(Emit::default());
                 }
                 let remaining: Vec<String> = config.selected_ids.iter().filter(|id| *id != widget_id).cloned().collect();
-                Emit { document_operations: operations, config_operations: vec![Procedural2dConfigOperation::SetSelection { ids: remaining }], ..Default::default() }
+                Ok(Emit { document_operations: operations, config_operations: vec![Procedural2dConfigOperation::SetSelection { ids: remaining }], ..Default::default() })
             }
             Procedural2dCommand::ConnectMediaPorts { source_node_id, source_port_id, target_node_id, target_port_id } => Ok(Emit::operations(self.ops_from_host_mutation(fixture, |host| {
                 let _ = host.connect_ports(source_node_id, source_port_id, target_node_id, target_port_id);
-            })),
+            }))),
             Procedural2dCommand::Reorganize => Ok(Emit::operations(self.ops_from_host_mutation(fixture, |host| {
                 let _ = host.reorganize(r#"{"orientation":"leftRight"}"#);
-            })),
-            Procedural2dCommand::AddGeneration => self.handle_generation("addGeneration", None, doc, cfg),
-            Procedural2dCommand::RemoveGeneration { id } => self.handle_generation("removeGeneration", Some(&json!({ "id": id })), doc, cfg),
-            Procedural2dCommand::RenameGeneration { id, name } => self.handle_generation("renameGeneration", Some(&json!({ "id": id, "name": name })), doc, cfg),
+            }))),
+            Procedural2dCommand::AddGeneration => Ok(self.handle_generation("addGeneration", None, doc, cfg, &mut session)),
+            Procedural2dCommand::RemoveGeneration { id } => Ok(self.handle_generation("removeGeneration", Some(&json!({ "id": id })), doc, cfg, &mut session)),
+            Procedural2dCommand::RenameGeneration { id, name } => Ok(self.handle_generation("renameGeneration", Some(&json!({ "id": id, "name": name })), doc, cfg, &mut session)),
             Procedural2dCommand::UpdateGenerationValues { generation_id, question_id, value } => {
                 let value_json = dsl::from_dsl_value(value.clone()).unwrap_or(Value::Null);
-                self.handle_generation("updateGenerationValues", Some(&json!({ "generationId": generation_id, "questionId": question_id, "value": value_json })), doc, cfg)
+                Ok(self.handle_generation("updateGenerationValues", Some(&json!({ "generationId": generation_id, "questionId": question_id, "value": value_json })), doc, cfg, &mut session))
             }
-            Procedural2dCommand::SelectGeneration { id } => self.handle_generation("selectGeneration", Some(&json!({ "id": id })), doc, cfg),
+            Procedural2dCommand::SelectGeneration { id } => Ok(self.handle_generation("selectGeneration", Some(&json!({ "id": id })), doc, cfg, &mut session)),
             Procedural2dCommand::SetLocale { value } => Ok(Emit::config(vec![Procedural2dConfigOperation::SetLocale { value: value.clone() }])),
         }
     }
@@ -563,9 +585,9 @@ impl DocumentApp for Procedural2dPlayApp {
     /// covers every mutation path (edits, undo/redo, remote operations) in one place instead of each
     /// action re-checking. `FlowEvalDriver::sync` is cheap when nothing changed.
     fn pending_effects(&self, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>) -> Vec<semio_framework_core::kernel::HostEffect> {
-        let mut driver = cfg.projection.eval_driver();
-        let host = host_from_fixture_with_driver(&doc.projection.fixture, Some(&driver));
-        if driver.sync(&host) {
+        let mut session = eval_session_lock(self);
+        let host = host_from_fixture_with_session(&doc.projection.fixture, &session);
+        if session.sync(&host) {
             vec![semio_framework_core::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
         } else {
             Vec::new()
@@ -575,9 +597,10 @@ impl DocumentApp for Procedural2dPlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>) -> UiNode {
         let play = play_view(doc.projection, cfg.projection);
         let labels = procedural2d_labels(cfg.projection);
+        let session = eval_session_lock(self);
         match body_key {
-            PROCEDURAL2D_PLAY_BODY_MAIN => render_main_graph(&play, labels),
-            PROCEDURAL2D_PLAY_BODY_PREVIEW => render_preview_canvas(&play),
+            PROCEDURAL2D_PLAY_BODY_MAIN => render_main_graph(&play, &session, labels),
+            PROCEDURAL2D_PLAY_BODY_PREVIEW => render_preview_canvas(&play, &session),
             PROCEDURAL2D_PLAY_BODY_GENERATIONS => render_generate_generations(&play, semio_framework_plugin::locale_from_str(&cfg.projection.locale), Terminology::Native),
             PROCEDURAL2D_PLAY_BODY_GENERATE_FORM => render_generate_form(&play, labels),
             PROCEDURAL2D_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&play, labels),

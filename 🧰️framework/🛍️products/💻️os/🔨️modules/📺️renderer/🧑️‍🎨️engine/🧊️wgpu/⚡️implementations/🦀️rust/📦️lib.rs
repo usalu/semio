@@ -2008,6 +2008,7 @@ pub mod engine_canvas {
         catalogue_json: Option<String>,
         operators: Option<Vec<ui_wgpu::NodeGraphOperatorRecord>>,
         computing_json: Option<String>,
+        status_json: Option<String>,
         eval_json: Option<String>,
         lod_json: Option<String>,
         viewport: Option<ui_wgpu::NodeGraphViewport>,
@@ -2211,7 +2212,12 @@ pub mod engine_canvas {
                 host.set_preview_off_json(&json);
             }
         }
-        if let Some(json) = &graph.computing_json {
+        if let Some(json) = &graph.status_json {
+            let json = effective_json_field(json);
+            if sync_field(&mut cache.status_json, &json) {
+                host.set_node_statuses_from_json(&json);
+            }
+        } else if let Some(json) = &graph.computing_json {
             let json = effective_json_field(json);
             if sync_field(&mut cache.computing_json, &json) {
                 if let Ok(value) = serde_json::from_str::<Value>(&json) {
