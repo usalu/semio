@@ -1141,7 +1141,14 @@ impl NeuralCache {
     /// 🔎️ Whether `key` has a cached entry (from any epoch) — a hit here means
     /// [`NeuralCache::get_or_insert_with`] would return without calling `compute`.
     pub fn contains(&self, key: u64) -> bool {
-        self.entries.lock().is_ok_and(|entries| entries.contains_key(&key))
+        let epoch = self.epoch.load(Ordering::Relaxed);
+        if let Ok(mut entries) = self.entries.lock() {
+            if let Some(entry) = entries.get_mut(&key) {
+                entry.0 = epoch;
+                return true;
+            }
+        }
+        false
     }
 
     /// 🌱️ Pre-seeds a node output (host-mediated extension eval) so the next budgeted pass hits the cache.
@@ -1153,7 +1160,14 @@ impl NeuralCache {
     }
 
     pub fn get(&self, key: u64) -> Option<Dictionary> {
-        self.entries.lock().ok().and_then(|entries| entries.get(&key).map(|(_, dict)| dict.clone()))
+        let epoch = self.epoch.load(Ordering::Relaxed);
+        if let Ok(mut entries) = self.entries.lock() {
+            if let Some(entry) = entries.get_mut(&key) {
+                entry.0 = epoch;
+                return Some(entry.1.clone());
+            }
+        }
+        None
     }
 
     pub fn get_or_insert_with<F>(&self, key: u64, compute: F) -> Result<Dictionary, EvalError>

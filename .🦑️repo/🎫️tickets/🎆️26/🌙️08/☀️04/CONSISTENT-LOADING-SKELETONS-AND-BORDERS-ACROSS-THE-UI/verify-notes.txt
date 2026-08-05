@@ -1,0 +1,7 @@
+[DEBUG] verify-loading-chrome
+
+- `cargo check -p semio-framework-ui-wgpu --features engine --lib` — OK (paint_node busy-shell early return for Loading/Waiting).
+- `bun test` ui-styling — 25 pass.
+- Runtime probe: `probe-loading-chrome.mjs` (needs demonstrator dev server at DEMONSTRATOR_URL).
+
+WGPU OS dock marching-dash silhouette + full canvas boot overlay: follow-up (React path is complete).

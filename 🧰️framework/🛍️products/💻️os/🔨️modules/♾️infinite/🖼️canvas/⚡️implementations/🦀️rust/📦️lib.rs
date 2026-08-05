@@ -352,57 +352,6 @@ pub mod theme {
     // #endregion theme
 }
 
-// #region 🪶️GuestSlimHostAsset
-#[cfg(not(feature = "render"))]
-pub mod host_asset {
-    //! 🪶️ GUESTSLIM: registration point for fetching host-embedded static assets (currently just the
-    //! typst default font set) from a wasm32-wasip2 guest, when this crate is built with `render`
-    //! off. Callers wire this to the component `read-asset` WIT import (see
-    //! `semio_framework_plugin::host_read_asset`) once at plugin init, mirroring `store`'s
-    //! `set_host_backbone_channel` registration idiom.
-    use std::sync::OnceLock;
-
-    /// @emoji 📦️ Asset id for the typst default font set (see `Cargo.toml`'s `render` feature doc).
-    pub const TYPST_DEFAULT_FONTS_ASSET_HANDLE: u64 = 1;
-
-    pub type AssetReader = fn(u64) -> Result<Vec<u8>, String>;
-
-    static READER: OnceLock<AssetReader> = OnceLock::new();
-
-    /// @emoji 🔌️ Installs the host asset reader; call once at plugin init before any icon/font resolution.
-    pub fn register_asset_reader(reader: AssetReader) {
-        let _ = READER.set(reader);
-    }
-
-    pub(crate) fn read(handle: u64) -> Result<Vec<u8>, String> {
-        READER.get().ok_or_else(|| "infinite_canvas: no host asset reader registered (call host_asset::register_asset_reader)".to_string())?(handle)
-    }
-
-    /// @emoji ✂️ Splits a `[u32le count][u32le len, bytes]*` multi-blob asset (the wire format the host
-    /// packs multiple font files into for one `read-asset` handle) into its component byte buffers.
-    pub(crate) fn split_blobs(bytes: &[u8]) -> Vec<Vec<u8>> {
-        let mut out = Vec::new();
-        let Some(count) = bytes.get(0..4).map(|s| u32::from_le_bytes(s.try_into().expect("4-byte slice"))) else {
-            return out;
-        };
-        let mut i = 4usize;
-        for _ in 0..count {
-            let Some(len) = bytes.get(i..i + 4).map(|s| u32::from_le_bytes(s.try_into().expect("4-byte slice"))) else {
-                break;
-            };
-            i += 4;
-            let len = len as usize;
-            let Some(chunk) = bytes.get(i..i + len) else {
-                break;
-            };
-            out.push(chunk.to_vec());
-            i += len;
-        }
-        out
-    }
-}
-// #endregion 🪶️GuestSlimHostAsset
-
 // #region 🏷️IconAssets
 
 pub mod icon_assets {
@@ -1274,23 +1223,13 @@ pub use metabolism_icon_name_gen::MetabolismIconName;
 
 pub mod icon_codec {
     // #region icon_codec
-    //! 🖼️ Generic icon encoding resolver for board nodes (url, shortcode, typst, emoji, raster, inline SVG, catalog, themed, text).
+    //! 🖼️ Generic icon encoding resolver for board nodes (url, shortcode, math, emoji, raster, inline SVG, catalog, themed, text).
 
     pub use super::{IconName, MetabolismIconName};
 
     use base64::Engine as _;
     use serde::{Deserialize, Serialize};
-    use std::path::PathBuf;
-    use std::sync::{Arc, OnceLock};
-
-    use typst::foundations::{Bytes, Datetime};
-    use typst::layout::{Abs, PagedDocument};
-    use typst::syntax::{FileId, Source, VirtualPath};
-    use typst::text::Font;
-    use typst::utils::LazyHash;
-    use typst::Library;
-    use typst::LibraryExt;
-    use typst::World;
+    use std::sync::Arc;
 
     mod icon_shortcodes {
         include!(concat!(env!("OUT_DIR"), "/icon_shortcode_match.rs"));
@@ -1309,7 +1248,7 @@ pub mod icon_codec {
         Shortcode { code: String },
         Data { data: String },
         Emoji { emoji: String },
-        Typst { src: String },
+        Math { src: String },
         Text { text: String },
         Svg { svg: String },
         Catalog { key: IconName },
@@ -1387,12 +1326,17 @@ pub mod icon_codec {
         if let Some(code) = shortcode_inner(t) {
             return Some(Icon::Shortcode { code: code.to_string() });
         }
-        if let Some(src) = t.strip_prefix("typst:") {
+        if let Some(src) = t.strip_prefix("math:") {
             let src = src.trim();
-            return (!src.is_empty()).then(|| Icon::Typst { src: src.to_string() });
+            return (!src.is_empty()).then(|| Icon::Math { src: src.to_string() });
         }
-        if t.starts_with('$') {
-            return Some(Icon::Typst { src: t.to_string() });
+        // `$formula$` decode sugar — generic math-notation culture, not a Typst leftover (the icon
+        // selector's own placeholder already teaches it). Unlike Typst's own `$...$` inline-math
+        // marker, the compiler's grammar has no delimiter syntax of its own, so the `$`s must be
+        // STRIPPED here rather than passed through verbatim.
+        if t.len() >= 2 && t.starts_with('$') && t.ends_with('$') {
+            let inner = t[1..t.len() - 1].trim();
+            return (!inner.is_empty()).then(|| Icon::Math { src: inner.to_string() });
         }
         if let Some(em) = t.strip_prefix("emoji:") {
             let em = em.trim();
@@ -1433,14 +1377,9 @@ pub mod icon_codec {
             Icon::Shortcode { code } => format!(":{code}:"),
             Icon::Data { data } => data.trim().to_string(),
             Icon::Emoji { emoji } => format!("emoji:{}", emoji.trim()),
-            Icon::Typst { src } => {
-                let s = src.trim();
-                if s.starts_with('$') {
-                    s.to_string()
-                } else {
-                    format!("typst:{s}")
-                }
-            }
+            // Always canonical, even for a `src` that was decoded from `$…$` sugar — the `$`
+            // delimiters are input sugar only, never round-tripped back out.
+            Icon::Math { src } => format!("math:{}", src.trim()),
             Icon::Text { text } => format!("text:{}", text.trim()),
             Icon::Svg { svg } => svg.trim().to_string(),
             Icon::Catalog { key } => key.as_str().to_string(),
@@ -1524,172 +1463,40 @@ pub mod icon_codec {
         Some(RgbaImage { data: Arc::from(rgba.into_raw().into_boxed_slice()), w, h })
     }
 
-    #[cfg(feature = "render")]
-    fn typst_asset_font_list() -> Vec<Font> {
-        let mut out = Vec::new();
-        for bytes in typst_assets::fonts() {
-            let blob = Bytes::new(bytes);
-            let mut idx = 0u32;
-            while let Some(f) = Font::new(blob.clone(), idx) {
-                out.push(f);
-                idx = idx.saturating_add(1);
-            }
-        }
-        out
-    }
-
-    /// @emoji 🪶️ GUESTSLIM: fetches the same font set through the host `read-asset` import instead of
-    /// embedding `typst-assets`' font bytes in the guest binary; returns an empty list (typst
-    /// compilation then yields no glyphs, `board_typst_compile_markup_to_svg` returns `None`) if no
-    /// host asset reader is registered, so callers degrade to `BoardResolvedIcon::None` rather than panic.
-    #[cfg(not(feature = "render"))]
-    fn typst_asset_font_list() -> Vec<Font> {
-        let mut out = Vec::new();
-        let Ok(bytes) = super::host_asset::read(super::host_asset::TYPST_DEFAULT_FONTS_ASSET_HANDLE) else {
-            return out;
-        };
-        for font_bytes in super::host_asset::split_blobs(&bytes) {
-            let blob = Bytes::new(font_bytes);
-            let mut idx = 0u32;
-            while let Some(f) = Font::new(blob.clone(), idx) {
-                out.push(f);
-                idx = idx.saturating_add(1);
-            }
-        }
-        out
-    }
-
-    fn typst_asset_font_list_plus_noto_color_emoji() -> Vec<Font> {
-        let mut out = typst_asset_font_list();
-        let emoji_blob = Bytes::new(crate::icon_assets::NOTO_COLOR_EMOJI_SUBSET_TTF);
-        let mut idx = 0u32;
-        while let Some(f) = Font::new(emoji_blob.clone(), idx) {
-            out.push(f);
-            idx = idx.saturating_add(1);
-        }
-        out
-    }
-
-    fn board_typst_compile_markup_to_svg(markup: &str, fonts: &'static [Font], book: &'static LazyHash<typst::text::FontBook>) -> Option<String> {
-        static LIB: OnceLock<LazyHash<Library>> = OnceLock::new();
-        static MAIN: OnceLock<FileId> = OnceLock::new();
-        let library = LIB.get_or_init(|| LazyHash::new(Library::default()));
-        let main = *MAIN.get_or_init(|| FileId::new(None, VirtualPath::new("/board.typ")));
-        let source = Source::new(main, markup.to_string());
-        struct BoardTypstWorld<'a> {
-            library: &'static LazyHash<Library>,
-            book: &'static LazyHash<typst::text::FontBook>,
-            main: FileId,
-            source: Source,
-            fonts: &'a [Font],
-        }
-        impl World for BoardTypstWorld<'_> {
-            fn library(&self) -> &LazyHash<Library> {
-                self.library
-            }
-            fn book(&self) -> &LazyHash<typst::text::FontBook> {
-                self.book
-            }
-            fn main(&self) -> FileId {
-                self.main
-            }
-            fn source(&self, id: FileId) -> typst::diag::FileResult<Source> {
-                if id == self.main {
-                    Ok(self.source.clone())
-                } else {
-                    Err(typst::diag::FileError::NotFound(PathBuf::from("board.typ")))
-                }
-            }
-            fn file(&self, _id: FileId) -> typst::diag::FileResult<Bytes> {
-                Err(typst::diag::FileError::NotFound(PathBuf::from("board.bin")))
-            }
-            fn font(&self, index: usize) -> Option<Font> {
-                self.fonts.get(index).cloned()
-            }
-            fn today(&self, _offset: Option<i64>) -> Option<Datetime> {
-                None
-            }
-        }
-        let w = BoardTypstWorld { library, book, main, source, fonts };
-        let warned = typst::compile::<PagedDocument>(&w);
-        let doc = warned.output.ok()?;
-        if doc.pages.is_empty() {
-            return None;
-        }
-        Some(typst_svg::svg_merged(&doc, Abs::pt(ui_styling::metrics::typst::SVG_MARGIN_PT)))
-    }
-
-    static TYPST_ASSET_FONTS: OnceLock<Vec<Font>> = OnceLock::new();
-    static TYPST_ASSET_BOOK: OnceLock<LazyHash<typst::text::FontBook>> = OnceLock::new();
-    static TYPST_ICON_EMOJI_FONTS: OnceLock<Vec<Font>> = OnceLock::new();
-    static TYPST_ICON_EMOJI_BOOK: OnceLock<LazyHash<typst::text::FontBook>> = OnceLock::new();
-
-    pub fn board_typst_markup_to_svg(markup: &str) -> Option<String> {
-        let fonts = TYPST_ASSET_FONTS.get_or_init(typst_asset_font_list);
-        let book = TYPST_ASSET_BOOK.get_or_init(|| LazyHash::new(typst::text::FontBook::from_fonts(fonts.iter())));
-        board_typst_compile_markup_to_svg(markup, fonts.as_slice(), book)
-    }
-
-    fn board_typst_markup_to_svg_for_icon_emoji(markup: &str) -> Option<String> {
-        let fonts = TYPST_ICON_EMOJI_FONTS.get_or_init(typst_asset_font_list_plus_noto_color_emoji);
-        let book = TYPST_ICON_EMOJI_BOOK.get_or_init(|| LazyHash::new(typst::text::FontBook::from_fonts(fonts.iter())));
-        board_typst_compile_markup_to_svg(markup, fonts.as_slice(), book)
-    }
-
-    fn board_typst_markup_to_svg_for_icon_text(markup: &str) -> Option<String> {
-        let fonts = TYPST_ASSET_FONTS.get_or_init(typst_asset_font_list);
-        let book = TYPST_ASSET_BOOK.get_or_init(|| LazyHash::new(typst::text::FontBook::from_fonts(fonts.iter())));
-        board_typst_compile_markup_to_svg(markup, fonts.as_slice(), book)
-    }
-
-    fn resolve_typst_src(src: &str) -> BoardResolvedIcon {
+    /// @emoji 🧮️ Compiles a semio math notation snippet ([`compiler::syntax::parse_formula`]) to SVG
+    /// via the `compiler` module — replaces the former Typst-markup icon path. `None` on invalid
+    /// notation syntax (graceful degradation, matching the old malformed-typst-markup behavior).
+    fn resolve_math_src(src: &str) -> BoardResolvedIcon {
         let src = src.trim();
         if src.is_empty() {
             return BoardResolvedIcon::None;
         }
-        let wrapped = format!("#set page(width: {}pt, height: {}pt, margin: {}pt, fill: none)\n{src}", ui_styling::metrics::typst::ICON_PAGE_PT, ui_styling::metrics::typst::ICON_PAGE_PT, ui_styling::metrics::typst::ICON_MARGIN_PT);
-        match board_typst_markup_to_svg(&wrapped) {
-            Some(s) => BoardResolvedIcon::SvgPlain(s),
-            None => BoardResolvedIcon::None,
+        let options = compiler::SnippetOptions { font_size_pt: ui_styling::metrics::math::ICON_FONT_SIZE_PT as f32, margin_pt: ui_styling::metrics::math::ICON_MARGIN_PT as f32 };
+        match compiler::compile_snippet_to_svg(src, options) {
+            Ok(snippet) => BoardResolvedIcon::SvgPlain(snippet.svg),
+            Err(_) => BoardResolvedIcon::None,
         }
     }
 
+    /// @emoji 😀️ Renders an arbitrary emoji string via `compiler::compile_emoji_to_svg` — infallible
+    /// (the compiler's fonts are always embedded, no host-fetch failure mode remains).
     fn resolve_emoji_body(em: &str) -> BoardResolvedIcon {
         let em = em.trim();
         if em.is_empty() {
             return BoardResolvedIcon::None;
         }
-        let wrapped = format!(
-            "#set page(width: {}pt, height: {}pt, margin: {}pt, fill: none)\n#set align(center + horizon)\n#set text(size: {}pt, font: \"{}\")\n{em}",
-            ui_styling::metrics::typst::EMOJI_PAGE_PT,
-            ui_styling::metrics::typst::EMOJI_PAGE_PT,
-            ui_styling::metrics::typst::EMOJI_MARGIN_PT,
-            ui_styling::metrics::typst::EMOJI_TEXT_PT,
-            ui_styling::canvas_fonts::NOTO_COLOR_EMOJI
-        );
-        match board_typst_markup_to_svg_for_icon_emoji(&wrapped) {
-            Some(s) => BoardResolvedIcon::SvgPlain(s),
-            None => BoardResolvedIcon::None,
-        }
+        let options = compiler::SnippetOptions { font_size_pt: ui_styling::metrics::math::EMOJI_FONT_SIZE_PT as f32, margin_pt: ui_styling::metrics::math::EMOJI_MARGIN_PT as f32 };
+        BoardResolvedIcon::SvgPlain(compiler::compile_emoji_to_svg(em, options).svg)
     }
 
+    /// @emoji 📝️ Renders arbitrary text via `compiler::compile_text_to_svg` — infallible.
     fn resolve_text_body(text: &str) -> BoardResolvedIcon {
         let text = text.trim();
         if text.is_empty() {
             return BoardResolvedIcon::None;
         }
-        let escaped = text.replace('\\', "\\\\").replace('"', "\\\"");
-        let wrapped = format!(
-            "#set page(width: {}pt, height: {}pt, margin: {}pt, fill: none)\n#set align(center + horizon)\n#set text(size: {}pt)\n\"{escaped}\"",
-            ui_styling::metrics::typst::ICON_PAGE_PT,
-            ui_styling::metrics::typst::ICON_PAGE_PT,
-            ui_styling::metrics::typst::ICON_MARGIN_PT,
-            ui_styling::metrics::typst::TEXT_ICON_PT
-        );
-        match board_typst_markup_to_svg_for_icon_text(&wrapped) {
-            Some(s) => BoardResolvedIcon::SvgPlain(s),
-            None => BoardResolvedIcon::None,
-        }
+        let options = compiler::SnippetOptions { font_size_pt: ui_styling::metrics::math::TEXT_FONT_SIZE_PT as f32, margin_pt: ui_styling::metrics::math::TEXT_MARGIN_PT as f32 };
+        BoardResolvedIcon::SvgPlain(compiler::compile_text_to_svg(text, options).svg)
     }
 
     fn resolve_icon_data(data: &str) -> BoardResolvedIcon {
@@ -1713,7 +1520,7 @@ pub mod icon_codec {
             },
             Icon::Data { data } => resolve_icon_data(data),
             Icon::Emoji { emoji } => resolve_emoji_body(emoji),
-            Icon::Typst { src } => resolve_typst_src(src),
+            Icon::Math { src } => resolve_math_src(src),
             Icon::Text { text } => resolve_text_body(text),
             Icon::Svg { svg } => {
                 if themed_lookup(svg).is_some() {
@@ -1759,10 +1566,16 @@ pub mod icon_codec {
             round_trip(":smile:");
             round_trip("data:image/png;base64,iVBORw0KGgo=");
             round_trip("emoji:☺️");
-            round_trip("typst:$x^2$");
+            round_trip("math:x^2");
             round_trip("text:Hi");
             round_trip(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10"/></svg>"#);
             round_trip("capsule_J");
+        }
+
+        #[test]
+        fn icon_codec_bare_dollar_sugar_decodes_as_math() {
+            // The `$…$` delimiters are input sugar only — stripped, not echoed into `src`.
+            assert_eq!(decode_icon("$x^2$"), Some(Icon::Math { src: "x^2".to_string() }));
         }
 
         #[test]
@@ -1823,7 +1636,7 @@ pub mod icon_codec {
     }
     // #endregion icon_codec
 }
-pub use icon_codec::{board_resolve_icon_kind, board_typst_markup_to_svg, decode_icon, encode_icon, BoardResolvedIcon, Icon, ThemedSvgLookup};
+pub use icon_codec::{board_resolve_icon_kind, decode_icon, encode_icon, BoardResolvedIcon, Icon, ThemedSvgLookup};
 // #endregion 🔖️IconCodec
 
 // #region 🔖️CanvasExtension

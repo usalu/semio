@@ -11400,6 +11400,11 @@ pub mod paint {
         let abs_x = origin_x + node.layout.x;
         let abs_y = origin_y + node.layout.y;
         let bounds = Rect::new(abs_x, abs_y, node.layout.width, node.layout.height);
+        if matches!(presence.status, UiStatus::Loading | UiStatus::Waiting) {
+            draw.push_solid([bounds.x + theme.padding_standard, bounds.y + theme.padding_standard, (bounds.w - theme.padding_standard * 2.0).max(0.0), (bounds.h - theme.padding_standard * 2.0).max(0.0)], theme.button_hover);
+            presence_overlay(draw, bounds, theme, presence);
+            return;
+        }
         // 🖱️ Authored `presence.hover` (default false) composes with live pointer hover: every variant's
         // own paint already reads `NodeFlags::HOVERED` for its hover-aware fill, so folding the authored
         // flag in here — suppressed while disabled, matching `events::EventRouter`'s own suppression —

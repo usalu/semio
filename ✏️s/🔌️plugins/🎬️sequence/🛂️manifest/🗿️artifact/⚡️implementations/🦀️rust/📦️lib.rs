@@ -357,9 +357,6 @@ mod wasm_session {
 //#endregion 🔖️WasmSession
 
 fn register_sequence_exports() {
-    // 🫁️ GUESTSLIM: wires infinite_canvas's host-fetched typst font path (this crate builds
-    // with `render` off) to the component `read-asset` import.
-    infinite_canvas::host_asset::register_asset_reader(semio_framework_plugin::host_read_asset);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<sequence_ui::SequencePlayApp>(sequence::SEQUENCE_FIXTURE_SCHEMA);
 }
 

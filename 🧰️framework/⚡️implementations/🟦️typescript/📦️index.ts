@@ -62,6 +62,47 @@ import type {
 } from "./generated/manifest.ts";
 // #endregion 🧬️GeneratedMirror
 
+//#region 🧭️UiPresence
+export type { UiPresence } from "../🦀️rust/bindings/UiPresence";
+export type { UiState } from "../🦀️rust/bindings/UiState";
+export type { UiStatus } from "../🦀️rust/bindings/UiStatus";
+import type { UiPresence } from "../🦀️rust/bindings/UiPresence";
+import type { UiStatus } from "../🦀️rust/bindings/UiStatus";
+
+const DEFAULT_UI_PRESENCE: UiPresence = { state: "normal", status: "idle", hover: false, selected: false };
+
+/** @emoji 🧭️ Resolves optional wire-format `presence` to the shared default inert model. */
+export function resolveUiPresence(presence?: UiPresence): UiPresence {
+  return presence ?? DEFAULT_UI_PRESENCE;
+}
+
+/** @emoji 🧭️ True when the element should show a skeleton instead of its content. */
+export function uiPresenceShowsSkeleton(presence?: UiPresence): boolean {
+  const status = resolveUiPresence(presence).status;
+  return status === "loading" || status === "waiting";
+}
+
+/** @emoji 🧭️ Maps measure chrome booleans to the shared status axis until generated `WindowMeasure` gains `presence`. */
+export function windowMeasureChromeStatus(measure: { readonly loading?: boolean; readonly waiting?: boolean }): UiStatus {
+  if (measure.loading) return "loading";
+  if (measure.waiting) return "waiting";
+  return "idle";
+}
+
+/** @emoji 🧭️ Shared presence stamp for shell surfaces waiting on `refreshUi`. */
+export const UI_PENDING_PRESENCE: UiPresence = { state: "normal", status: "loading", hover: false, selected: false };
+
+/** @emoji 🦴 Declarative placeholder node while a window body is still loading. */
+export function pendingWindowUiNode(): UiStackNode {
+  return { type: "stack", direction: "column", children: [], presence: UI_PENDING_PRESENCE };
+}
+
+/** @emoji 🦴 Declarative placeholder node while a panel tab body is still loading. */
+export function pendingPanelUiNode(): UiTreeNode {
+  return { type: "tree", sections: [], presence: UI_PENDING_PRESENCE };
+}
+//#endregion 🧭️UiPresence
+
 export const CANVAS_HOVER_SOURCE_CANVAS = "canvas";
 export const CANVAS_HOVER_SOURCE_PICK_MENU = "pick-menu";
 export const CANVAS_HOVER_SOURCE_CATALOG = "catalog";
@@ -265,8 +306,7 @@ export type UiSectionNode = {
   readonly id: string;
   readonly label?: string;
   readonly defaultOpen?: boolean;
-  readonly loading?: boolean;
-  readonly waiting?: boolean;
+  readonly presence?: UiPresence;
   readonly menu?: UiMenuRef;
   readonly children: readonly UiNode[];
 };
@@ -287,9 +327,7 @@ export type UiTreeItemNode = {
   readonly description?: string;
   readonly icon?: string;
   readonly iconId?: IconName;
-  readonly selected?: boolean;
-  readonly loading?: boolean;
-  readonly waiting?: boolean;
+  readonly presence?: UiPresence;
   readonly defaultOpen?: boolean;
   readonly action?: ActionDescriptor;
   readonly hoverAction?: ActionDescriptor;
@@ -299,7 +337,7 @@ export type UiTreeItemNode = {
   readonly dragData?: Readonly<Record<string, string>>;
   readonly items?: readonly UiTreeItemNode[];
   readonly control?: UiControlNode;
-  readonly isHidden?: boolean;
+  readonly dimmed?: boolean;
   /** 🖱️ Row-level context-menu address — most rows share one `menu.id` across a tree with the row
    * id carried in `args` (e.g. `{ id: row.id }`), rather than minting a unique menu id per row. */
   readonly menu?: UiMenuRef;
@@ -309,16 +347,14 @@ export type UiTreeSectionNode = {
   readonly id: string;
   readonly label?: string;
   readonly defaultOpen?: boolean;
-  readonly loading?: boolean;
-  readonly waiting?: boolean;
+  readonly presence?: UiPresence;
   readonly items: readonly UiTreeItemNode[];
 };
 
 export type UiTreeNode = {
   readonly type: "tree";
   readonly sections: readonly UiTreeSectionNode[];
-  readonly loading?: boolean;
-  readonly waiting?: boolean;
+  readonly presence?: UiPresence;
   readonly selectedIds?: readonly string[];
   readonly highlightedIds?: readonly string[];
   readonly selectionChange?: ActionDescriptor;
@@ -340,6 +376,7 @@ export type UiInputNode = {
   readonly step?: number;
   readonly accept?: string;
   readonly onChange: ActionDescriptor;
+  readonly presence?: UiPresence;
   readonly menu?: UiMenuRef;
 };
 
@@ -355,6 +392,7 @@ export type UiSelectNode = {
   readonly items: readonly UiSelectItem[];
   readonly placeholder?: string;
   readonly onChange: ActionDescriptor;
+  readonly presence?: UiPresence;
   readonly menu?: UiMenuRef;
 };
 
@@ -365,6 +403,7 @@ export type UiToggleNode = {
   readonly pressed: boolean;
   readonly text?: string;
   readonly onChange: ActionDescriptor;
+  readonly presence?: UiPresence;
   readonly menu?: UiMenuRef;
 };
 
@@ -379,6 +418,7 @@ export type UiGroupNode = {
   readonly id: string;
   readonly label: string;
   readonly defaultOpen?: boolean;
+  readonly presence?: UiPresence;
   readonly menu?: UiMenuRef;
   readonly children: readonly UiNode[];
 };
@@ -391,6 +431,7 @@ export type UiKeyValueEntry = {
 export type UiKeyValueNode = {
   readonly type: "keyValue";
   readonly entries: readonly UiKeyValueEntry[];
+  readonly presence?: UiPresence;
   readonly menu?: UiMenuRef;
 };
 
@@ -403,6 +444,7 @@ export type UiSliderNode = {
   readonly step: number;
   readonly unit?: string;
   readonly onChange: ActionDescriptor;
+  readonly presence?: UiPresence;
   readonly menu?: UiMenuRef;
 };
 
@@ -414,6 +456,7 @@ export type UiNumberStepperNode = {
   readonly uniform: boolean;
   readonly onAbsolute: ActionDescriptor;
   readonly onDelta: ActionDescriptor;
+  readonly presence?: UiPresence;
   readonly menu?: UiMenuRef;
 };
 
@@ -422,8 +465,8 @@ export type UiRingNode = {
   readonly id: string;
   readonly orbId: string;
   readonly t: number;
-  readonly disabled?: boolean;
   readonly onChange: ActionDescriptor;
+  readonly presence?: UiPresence;
   readonly menu?: UiMenuRef;
 };
 
@@ -434,6 +477,7 @@ export type UiIconSelectNode = {
   readonly uniform: boolean;
   readonly classifierKind: string;
   readonly onChange: ActionDescriptor;
+  readonly presence?: UiPresence;
   readonly menu?: UiMenuRef;
 };
 
@@ -445,6 +489,7 @@ export type UiFieldNode = {
   readonly required?: boolean;
   readonly error?: string;
   readonly child: UiNode;
+  readonly presence?: UiPresence;
   readonly menu?: UiMenuRef;
 };
 
@@ -462,9 +507,7 @@ export type UiButtonNode = {
   readonly label: string;
   readonly action: ActionDescriptor;
   readonly style?: StyleSpec;
-  readonly disabled?: boolean;
-  readonly loading?: boolean;
-  readonly waiting?: boolean;
+  readonly presence?: UiPresence;
   readonly menu?: UiMenuRef;
 };
 
@@ -473,6 +516,7 @@ export type UiTextNode = {
   readonly value: string;
   readonly emphasize?: boolean;
   readonly dataAttributes?: Readonly<Record<string, string>>;
+  readonly presence?: UiPresence;
   readonly menu?: UiMenuRef;
 };
 
@@ -482,9 +526,7 @@ export type UiStackNode = {
   readonly gap?: string;
   readonly padding?: string;
   readonly id?: string;
-  readonly selected?: boolean;
-  readonly loading?: boolean;
-  readonly waiting?: boolean;
+  readonly presence?: UiPresence;
   readonly activate?: ActionDescriptor;
   readonly dropAction?: ActionDescriptor;
   readonly dropOverlay?: UiDropOverlaySpec;
@@ -499,13 +541,14 @@ export type UiDropOverlaySpec = {
   readonly accept?: string;
 };
 
-export type UiSeparatorNode = { readonly type: "separator"; readonly menu?: UiMenuRef };
+export type UiSeparatorNode = { readonly type: "separator"; readonly presence?: UiPresence; readonly menu?: UiMenuRef };
 
 export type UiImageNode = {
   readonly type: "image";
   readonly id: string;
   readonly src: string;
   readonly alt?: string;
+  readonly presence?: UiPresence;
   readonly menu?: UiMenuRef;
 };
 
@@ -1123,6 +1166,7 @@ export type UiExternalSlotNode = {
   readonly appId: string;
   readonly bodyKey: string;
   readonly paramsJson: string;
+  readonly presence?: UiPresence;
   readonly menu?: UiMenuRef;
 };
 
@@ -1141,6 +1185,7 @@ export type UiComponentSceneNode = {
    * `"nodeGraph"`, `"tiledMap"`, ...) the host uses when resolving which surface answers a
    * right-click — set only when a plugin needs a menu id other than the surface-kind default. */
   readonly menu?: UiMenuRef;
+  readonly presence?: UiPresence;
   readonly canvas2d?: Canvas2dScene;
   readonly world3d?: World3dScene;
   readonly nodeGraph?: NodeGraphScene;

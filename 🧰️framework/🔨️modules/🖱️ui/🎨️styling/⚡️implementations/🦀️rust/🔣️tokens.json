@@ -226,14 +226,13 @@
       "fitInset": 0.76,
       "clipInset": 0.88
     },
-    "typst": {
-      "iconPagePt": 96.0,
+    "math": {
+      "iconFontSizePt": 28.0,
       "iconMarginPt": 3.0,
-      "emojiPagePt": 88.0,
+      "emojiFontSizePt": 44.0,
       "emojiMarginPt": 2.0,
-      "emojiTextPt": 44.0,
-      "textIconPt": 28.0,
-      "svgMarginPt": 3.0
+      "textFontSizePt": 28.0,
+      "textMarginPt": 3.0
     },
     "board": {
       "gridWorldLarge": 10.0,

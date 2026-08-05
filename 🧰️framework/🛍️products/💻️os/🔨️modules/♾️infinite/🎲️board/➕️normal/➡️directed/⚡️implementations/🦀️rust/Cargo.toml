@@ -13,4 +13,4 @@ crate-type = ["rlib"]
 path = "../../../../../🎲️board/➕️normal/➡️directed/⚡️implementations/🦀️rust/📦️lib.rs"
 
 [dependencies]
-infinite_board = { path = "../../../../../🎲️board/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board", default-features = false }
+infinite_board = { path = "../../../../../🎲️board/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board" }

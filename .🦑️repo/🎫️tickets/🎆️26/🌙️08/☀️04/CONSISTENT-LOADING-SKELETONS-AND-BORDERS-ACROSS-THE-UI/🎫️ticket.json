@@ -1,0 +1,8 @@
+{
+  "title": "Consistent Loading Skeletons and Borders Across the Ui",
+  "emoji": "🌀️",
+  "status": "closed",
+  "summary": "Unified loading UX on UiPresence/status: framework-core UiNode types use presence (helpers pendingWindowUiNode/pendingPanelUiNode), ui-react SkeletonBlock/elementSkeleton/CanvasSkeleton/WindowBodySkeleton/PanelTreeSkeleton, Layout canvasStatus ring, Window status axis, Panel borderKind, OS shell canvas/window chrome wiring, demonstrator pane skeleton. WGPU paint_node skips widget paint and draws muted fill + presence_overlay when status is Loading/Waiting.",
+  "description": "Wire UiPresence/status through TS mirror, ui-react skeletons and chrome loading rings, OS shell canvas/window/panel states, demonstrator parity, and WGPU skeleton plus marching-dash silhouettes. Builds on 26/07/14/SPINNING-LOADING-BORDER-FOR-LOADABLE-UI-ELEMENTS and 26/07/23/UNIFIED-COMPILE-TIME-ENFORCED-UI-ELEMENT-STATE-MODEL deferred items.",
+  "goal": "🎯️r2602"
+}

@@ -1380,7 +1380,7 @@ function pluginWatchRoot(target: PluginRegistryEntry): string {
   if (topLevel === "🧰️framework" || topLevel === "framework") return join(repoRoot, target.cratePath);
   // 🏛️ Post-restructure: sibling crate families live under `✏️s/🔌️plugins/<p>/...` (was `s/plugin/<p>/...`).
   // Widening to `✏️s/` would watch every plugin's tree on every crate's edit.
-  if ((topLevel === "✏️s" || topLevel === "s") && (segments[1] === "🔌️plugin" || segments[1] === "plugin")) {
+  if ((topLevel === "✏️s" || topLevel === "s") && (segments[1] === "🔌️plugins" || segments[1] === "plugins")) {
     return join(repoRoot, segments.slice(0, 3).join("/"));
   }
   return join(repoRoot, topLevel);

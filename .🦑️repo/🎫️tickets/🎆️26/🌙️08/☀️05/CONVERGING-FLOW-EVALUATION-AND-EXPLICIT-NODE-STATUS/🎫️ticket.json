@@ -1,0 +1,8 @@
+{
+  "title": "Converging Flow Evaluation and Explicit Node Status",
+  "emoji": "🌀",
+  "status": "open",
+  "description": "Replace FlowEvalDriver-in-config with per-instance FlowEvalSession, fix NeuralCache sweep epoch bug, explicit per-node eval status and DAG painting, time-budgeted eval ticks, scoped brep handle retention.",
+  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "sessions": []
+}

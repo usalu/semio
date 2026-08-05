@@ -9,8 +9,11 @@ import {
   ShellBrandLogo,
   UIIntroduction,
   bootstrapElementsSurfaceChromeDocument,
-  cn,
-  Icon,
+  CanvasSkeleton,
+  chromeStatusBorderClass,
+  loadingBorderClass,
+  WindowBodySkeleton,
+  elementSkeleton,
   initUiLocaleSync,
   readStoredUiChromeAppearance,
   readStoredUiChromeLayout,
@@ -405,9 +408,11 @@ function DemonstratorPane({
       ) : booted && suspended && posterDataUrl ? (
         <img src={posterDataUrl} alt="" className="h-full w-full object-cover" aria-hidden />
       ) : (
-        <div className="flex h-full w-full flex-col items-center justify-center gap-double bg-background">
+        <div className={cn("flex h-full w-full flex-col items-center justify-center gap-double bg-background", loadingBorderClass)} role="status" aria-busy="true">
           <div className="size-huge text-foreground opacity-40 [&_svg]:h-full [&_svg]:w-full" dangerouslySetInnerHTML={{ __html: ENTWERFEN_MIT_BESTAND_LOGO_SVG }} aria-hidden />
-          <span className="text-sm text-muted-foreground">{pane.label} wird vorbereitet …</span>
+          <div className="h-full min-h-0 w-full max-w-4xl flex-1 p-double">
+            <CanvasSkeleton label={`${pane.label} wird vorbereitet`} />
+          </div>
         </div>
       )}
     </div>

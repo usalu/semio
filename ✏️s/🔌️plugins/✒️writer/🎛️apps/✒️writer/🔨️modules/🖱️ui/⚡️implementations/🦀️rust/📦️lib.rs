@@ -7,7 +7,7 @@
 
 use semio_framework_plugin::{
         build_text_editor_scene, create_default_layout, engagement_token_matches, strip_engagement_prefix, tree_item, ui_declarative_sections_to_tree, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App,
-    AppActionRegistry, AppIo, AppLabels, ArtifactKindSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, DocumentApp, DocumentView, Emit, IconName, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError,
+    AppActionRegistry, AppIo, AppLabels, ArtifactKindSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, DocumentApp, DocumentView, Emit, Fault, IconName, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError,
     MediaForm, MediaPayload, MediaType, Menu, OsMediaCapability, PanelGroup, PanelTabSpec, PanelTreeBuilder, SurfaceKind, Terminology, TextEditorScene, UiNode, UiPresence, UiSectionNode, UiTreeItemNode, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -439,16 +439,16 @@ impl DocumentApp for WriterPlayApp {
                 // ⌨️ Keystroke-granular edits coalesce under a stable key so a typing burst amends into
                 // a few undo steps, not one-per-keystroke. Any interrupting command applies without this
                 // key and breaks the coalescing run.
-                Ok(Emit::amend(vec![WriterOperation::SetText { text: text.clone() }], "writer-text-edit")
+                Ok(Emit::amend(vec![WriterOperation::SetText { text: text.clone() }], "writer-text-edit"))
             }
             WriterCommand::SetText { text } => {
                 // 🪙️ A discrete document replacement (unlike `TextEdit`'s keystroke bursts) — each call
                 // is its own undo step, so it must NOT share `TextEdit`'s coalescing key.
-                Ok(Emit::operations(vec![WriterOperation::SetText { text: text.clone() }])
+                Ok(Emit::operations(vec![WriterOperation::SetText { text: text.clone() }]))
             }
-            WriterCommand::SetDocument { document } => Ok(Emit::operations(vec![WriterOperation::SetDocument { document: document.clone() }]),
+            WriterCommand::SetDocument { document } => Ok(Emit::operations(vec![WriterOperation::SetDocument { document: document.clone() }])),
             WriterCommand::SetDocumentJson { json } | WriterCommand::SetFixtureJson { json } => match serde_json::from_str::<WriterProjection>(json) {
-                Ok(document) => Ok(Emit::operations(vec![WriterOperation::SetDocument { document }]),
+                Ok(document) => Ok(Emit::operations(vec![WriterOperation::SetDocument { document }])),
                 Err(_) => Ok(Emit::default()),
             },
             WriterCommand::SetActiveExample { example_id } => {
@@ -457,15 +457,15 @@ impl DocumentApp for WriterPlayApp {
                     "dag.jack" => dag_jack_example_document(),
                     _ => empty_writer_projection(),
                 };
-                Ok(Emit::operations(vec![WriterOperation::SetDocument { document }])
+                Ok(Emit::operations(vec![WriterOperation::SetDocument { document }]))
             }
             WriterCommand::FormatDocument => {
                 let formatted = format_writer_text(&document.text, &document.language_id);
-                let mut emit = Ok(Emit::config(vec![WriterConfigOperation::SetFormatSignal { value: config.format_signal + 1 }]);
+                let mut emit = Emit::config(vec![WriterConfigOperation::SetFormatSignal { value: config.format_signal + 1 }]);
                 if formatted != document.text {
                     emit.document_operations = vec![WriterOperation::SetText { text: formatted }];
                 }
-                emit
+                Ok(emit)
             }
             WriterCommand::CommitRename { text } => {
                 let selection = config.editor_selection.clone().unwrap_or(WriterEditorSelection { start: 0, end: 0 });
@@ -473,16 +473,16 @@ impl DocumentApp for WriterPlayApp {
                     if let Some(symbol) = jack_symbol_at_offset(&document.text, selection.start) {
                         if symbol.kind == JackSymbolKind::Variable {
                             let renamed = apply_jack_rename(&document.text, &symbol.occurrences, text);
-                            return Ok(Emit::operations(vec![WriterOperation::SetText { text: renamed }]);
+                            return Ok(Emit::operations(vec![WriterOperation::SetText { text: renamed }]));
                         }
                     }
                 }
                 if selection.start <= selection.end && selection.end <= document.text.len() {
                     let mut updated = document.text.clone();
                     updated.replace_range(selection.start..selection.end, text);
-                    return Ok(Emit::operations(vec![WriterOperation::SetText { text: updated }]);
+                    return Ok(Emit::operations(vec![WriterOperation::SetText { text: updated }]));
                 }
-                Ok(Emit::default()
+                Ok(Emit::default())
             }
             // 🎥️ View command: the editor viewport never touches the document — config-only.
             WriterCommand::SetCamera { camera } => Ok(Emit::config(vec![WriterConfigOperation::SetCamera { camera: camera.clone() }])),
@@ -498,7 +498,7 @@ impl DocumentApp for WriterPlayApp {
                 };
                 ops.push(WriterConfigOperation::SetSelectedAstIds { ids });
                 ops.push(WriterConfigOperation::SetRevision { value: config.revision + 1 });
-                Ok(Emit::config(ops)
+                Ok(Emit::config(ops))
             }
             WriterCommand::SelectAstNode { id, start, end } => {
                 let ids = if id.is_empty() { Vec::new() } else { vec![id.clone()] };
@@ -506,7 +506,7 @@ impl DocumentApp for WriterPlayApp {
                     WriterConfigOperation::SetSelectedAstIds { ids },
                     WriterConfigOperation::SetEditorSelection { selection: Some(WriterEditorSelection { start: *start, end: *end }) },
                     WriterConfigOperation::SetRevision { value: config.revision + 1 },
-                ])
+                ]))
             }
             WriterCommand::SetAstSelection { ids } => {
                 let mut ops = vec![WriterConfigOperation::SetSelectedAstIds { ids: ids.clone() }];
@@ -519,13 +519,13 @@ impl DocumentApp for WriterPlayApp {
                     }
                 }
                 ops.push(WriterConfigOperation::SetRevision { value: config.revision + 1 });
-                Ok(Emit::config(ops)
+                Ok(Emit::config(ops))
             }
             WriterCommand::SetAstHover { id } => {
                 if *id != config.tree_hovered_ast_id {
-                    Ok(Emit::config(vec![WriterConfigOperation::SetTreeHoveredAstId { id: id.clone() }, WriterConfigOperation::SetRevision { value: config.revision + 1 }])
+                    Ok(Emit::config(vec![WriterConfigOperation::SetTreeHoveredAstId { id: id.clone() }, WriterConfigOperation::SetRevision { value: config.revision + 1 }]))
                 } else {
-                    Ok(Emit::default()
+                    Ok(Emit::default())
                 }
             }
             WriterCommand::TextHover { start, end } => {
@@ -534,42 +534,42 @@ impl DocumentApp for WriterPlayApp {
                     _ => None,
                 };
                 if offset != config.editor_hover_offset {
-                    Ok(Emit::config(vec![WriterConfigOperation::SetEditorHoverOffset { offset }, WriterConfigOperation::SetRevision { value: config.revision + 1 }])
+                    Ok(Emit::config(vec![WriterConfigOperation::SetEditorHoverOffset { offset }, WriterConfigOperation::SetRevision { value: config.revision + 1 }]))
                 } else {
-                    Ok(Emit::default()
+                    Ok(Emit::default())
                 }
             }
             WriterCommand::ToggleLineNumbers => {
                 let mut settings = config.editor_settings.clone();
                 settings.show_line_numbers = !settings.show_line_numbers;
-                Ok(Emit::config(vec![WriterConfigOperation::SetEditorSettings { settings }, WriterConfigOperation::SetRevision { value: config.revision + 1 }])
+                Ok(Emit::config(vec![WriterConfigOperation::SetEditorSettings { settings }, WriterConfigOperation::SetRevision { value: config.revision + 1 }]))
             }
             WriterCommand::SetFontPx { value } => {
                 let mut settings = config.editor_settings.clone();
                 settings.font_px = *value;
-                Ok(Emit::config(vec![WriterConfigOperation::SetEditorSettings { settings }, WriterConfigOperation::SetRevision { value: config.revision + 1 }])
+                Ok(Emit::config(vec![WriterConfigOperation::SetEditorSettings { settings }, WriterConfigOperation::SetRevision { value: config.revision + 1 }]))
             }
             WriterCommand::SetLineHeight { value } => {
                 let mut settings = config.editor_settings.clone();
                 settings.line_height = *value;
-                Ok(Emit::config(vec![WriterConfigOperation::SetEditorSettings { settings }, WriterConfigOperation::SetRevision { value: config.revision + 1 }])
+                Ok(Emit::config(vec![WriterConfigOperation::SetEditorSettings { settings }, WriterConfigOperation::SetRevision { value: config.revision + 1 }]))
             }
             WriterCommand::SetTabSize { value } => {
                 let mut settings = config.editor_settings.clone();
                 settings.tab_size = (*value).max(1);
-                Ok(Emit::config(vec![WriterConfigOperation::SetEditorSettings { settings }, WriterConfigOperation::SetRevision { value: config.revision + 1 }])
+                Ok(Emit::config(vec![WriterConfigOperation::SetEditorSettings { settings }, WriterConfigOperation::SetRevision { value: config.revision + 1 }]))
             }
             WriterCommand::EngagementInput { value } => {
                 if *value != config.engagement_input {
-                    Ok(Emit::config(vec![WriterConfigOperation::SetEngagementInput { value: value.clone() }, WriterConfigOperation::SetRevision { value: config.revision + 1 }])
+                    Ok(Emit::config(vec![WriterConfigOperation::SetEngagementInput { value: value.clone() }, WriterConfigOperation::SetRevision { value: config.revision + 1 }]))
                 } else {
-                    Ok(Emit::default()
+                    Ok(Emit::default())
                 }
             }
             WriterCommand::EngagementSubmit { value } => {
                 let value = value.clone().unwrap_or_else(|| config.engagement_input.clone());
                 let outcome = apply_engagement(config, &document.text, &document.language_id, &value);
-                Emit { document_operations: outcome.text.map(|text| vec![WriterOperation::SetText { text }]).unwrap_or_default(), config_operations: outcome.config_operations, ..Default::default() }
+                Ok(Emit { document_operations: outcome.text.map(|text| vec![WriterOperation::SetText { text }]).unwrap_or_default(), config_operations: outcome.config_operations, ..Default::default() })
             }
             WriterCommand::SetLocale { value } => Ok(Emit::config(vec![WriterConfigOperation::SetLocale { value: value.clone() }])),
         }

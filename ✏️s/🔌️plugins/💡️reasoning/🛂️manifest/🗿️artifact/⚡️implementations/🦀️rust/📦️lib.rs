@@ -5,9 +5,6 @@
 /// `FolderEndpoint::Pack` (and any other schema-string-keyed caller) can print/parse it without
 /// depending on this crate's concrete `Projection`/`Operation` types.
 fn register_reasoning_mindmap_exports() {
-    // 🫁️ GUESTSLIM: wires infinite_canvas's host-fetched typst font path (this crate builds
-    // with `render` off) to the component `read-asset` import.
-    infinite_canvas::host_asset::register_asset_reader(semio_framework_plugin::host_read_asset);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<reasoning_wires_ui::ReasoningWiresPlayApp>(reasoning_wires::MINDMAP_WIRES_SCHEMA);
 }
 

@@ -7,9 +7,6 @@ rust-version = "1.88"
 
 [lints]
 workspace = true
-[features]
-default = ["render"]
-render = ["infinite_board_port_directed/render", "infinite_board_normal_undirected/render", "infinite_canvas/render"]
 [lib]
 name = "infinite_board_port_directed_normal"
 crate-type = ["rlib"]
@@ -17,11 +14,11 @@ path = "../../../../../../🎲️board/🔌️ports/➡️directed/➕️normal/
 
 [dependencies]
 ui_styling = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust", package = "semio-framework-ui-styling" }
-infinite_board_port_directed = { path = "../../../../../../🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed", default-features = false }
-infinite_board_normal_undirected = { path = "../../../../../../🎲️board/➕️normal/↔undirected/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-normal-undirected", default-features = false }
+infinite_board_port_directed = { path = "../../../../../../🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed" }
+infinite_board_normal_undirected = { path = "../../../../../../🎲️board/➕️normal/↔undirected/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-normal-undirected" }
 mathematical_graph_manifest = { path = "../../../../../../../../../../🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph-manifest" }
 mathematical_graph_drawing = { path = "../../../../../../../../../../🔨️modules/🧮️math/🕸️graph/🖊️drawing/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph-drawing" }
-infinite_canvas = { path = "../../../../../../🖼️canvas/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas", default-features = false }
+infinite_canvas = { path = "../../../../../../🖼️canvas/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"

@@ -7,9 +7,6 @@ rust-version = "1.88"
 
 [lints]
 workspace = true
-[features]
-default = ["render"]
-render = ["infinite_board_port_directed_dag/render", "infinite_canvas/render"]
 
 [package.metadata.wasm-pack.profile.dev]
 wasm-opt = false
@@ -49,8 +46,8 @@ semio-framework-core = { path = "../../../../../../../../🧰️framework/⚡️
 neural_engine = { path = "../../../../🧠️neural/⚙️engine/⚡️implementations/🦀️rust", features = ["parallel"], package = "semio-framework-os-kernel-neural-engine" }
 neural_dag = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚡️implementations/🦀️rust/🕸️dag", package = "semio-framework-kernel-neural-dag" }
 mathematical_graph_manifest = { path = "../../../../../../../🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph-manifest" }
-infinite_board_port_directed_dag = { path = "../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-dag", default-features = false }
-infinite_canvas = { path = "../../../../♾️infinite/🖼️canvas/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas", default-features = false }
+infinite_board_port_directed_dag = { path = "../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-dag" }
+infinite_canvas = { path = "../../../../♾️infinite/🖼️canvas/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
 ui_styling = { path = "../../../../../../../🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust", package = "semio-framework-ui-styling" }
 ui_wgpu = { path = "../../../../../../../🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust", package = "semio-framework-ui-wgpu" }
 playbook = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-playbook" }

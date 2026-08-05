@@ -1216,6 +1216,7 @@ pub struct FlowBackedNodeGraphExtras {
     pub lod_json: Option<String>,
     pub eval_json: Option<String>,
     pub computing_json: Option<String>,
+    pub status_json: Option<String>,
 }
 
 /// 🌊️ Mirrors a neural engine `VariadicSpec` onto the `ui_wgpu` `NodeGraphScene` wire record.
@@ -1296,10 +1297,22 @@ fn node_graph_operator_record_to_operator_info(record: &ui_wgpu::NodeGraphOperat
     }
 }
 
-/// 🌊️ Builds shared NodeGraphScene fields for flow-backed plugins. `driver`, when set, contributes
-/// `eval_json`/`computing_json` from an off-main-thread `flowEvalTick` chain (see [`FlowEvalDriver`]).
-pub fn flow_backed_node_graph_extras(fixture: &FlowFixture, lod_mode: &str, proximity_distance: f64, grid_visible: bool, grid_snap_enabled: bool, grid_factor: f64, driver: Option<&FlowEvalDriver>) -> FlowBackedNodeGraphExtras {
+/// 🌊️ Builds shared NodeGraphScene fields for flow-backed plugins. `session`, when set, contributes
+/// `eval_json`/`status_json` from the in-process [`FlowEvalSession`] (never persisted in config).
+pub fn flow_backed_node_graph_extras(
+    fixture: &FlowFixture,
+    lod_mode: &str,
+    proximity_distance: f64,
+    grid_visible: bool,
+    grid_snap_enabled: bool,
+    grid_factor: f64,
+    session: Option<&FlowEvalSession>,
+) -> FlowBackedNodeGraphExtras {
     let automatic = lod_mode.is_empty() || lod_mode == FLOW_LOD_MODE_AUTOMATIC;
+    let status_json = session.map(|session| {
+        let host = flow_host_with_session(fixture, session);
+        session.status_json_for_host(&host)
+    });
     FlowBackedNodeGraphExtras {
         fixture_json: serde_json::to_string(fixture).ok(),
         operators: flow_operator_catalogue_records(),
@@ -1316,8 +1329,9 @@ pub fn flow_backed_node_graph_extras(fixture: &FlowFixture, lod_mode: &str, prox
             })
             .to_string(),
         ),
-        eval_json: driver.map(|driver| driver.eval_json().to_string()),
-        computing_json: driver.and_then(|driver| driver.computing_json().map(str::to_string)),
+        eval_json: session.map(|session| session.eval_json().to_string()),
+        computing_json: None,
+        status_json,
     }
 }
 // #endregion 🔖️Catalogue
@@ -2771,6 +2785,51 @@ impl FlowHost {
 
     /// 👀️ Probes which widget ids still need evaluation without computing anything (`budget = 0`) —
     /// used to decide whether a tick chain must be (re)armed and what to mark as computing/stale.
+    pub fn eval_baseline_snapshot(&self) -> Option<&TreeSnapshot> {
+        self.previous_snapshot.as_ref()
+    }
+
+    pub fn widget_blocked_ports(&self, widget_id: &str) -> Vec<String> {
+        let Some(operator_info) = self.fixture.widgets.iter().find(|widget| widget_id_for(widget) == widget_id).and_then(|widget| widget_operator_info(widget, &self.kind_infos)) else {
+            return Vec::new();
+        };
+        if operator_info.variadic_input.is_some() {
+            return Vec::new();
+        }
+        let tree = self.build_tree();
+        let mut outputs = self.build_seeds();
+        outputs.extend(self.outputs.clone());
+        let mut missing = Vec::new();
+        for channel in &operator_info.inputs {
+            if channel.name == "*" {
+                continue;
+            }
+            if channel.cardinality != neural::Cardinality::ExactlyOne {
+                continue;
+            }
+            if channel.default.is_some() {
+                continue;
+            }
+            let wired = tree.synapses.iter().any(|syn| syn.to == widget_id && syn.to_port == channel.name);
+            if !wired {
+                continue;
+            }
+            let source_ready = tree.synapses.iter().filter(|syn| syn.to == widget_id && syn.to_port == channel.name).all(|syn| outputs.contains_key(&syn.from));
+            if !source_ready {
+                missing.push(channel.name.clone());
+            }
+        }
+        missing
+    }
+
+    pub(crate) fn build_tree_for_status(&self) -> Tree {
+        self.build_tree()
+    }
+
+    pub(crate) fn build_seeds_for_status(&self) -> HashMap<String, Dictionary> {
+        self.build_seeds()
+    }
+
     pub fn pending_eval_widget_ids(&self) -> Vec<String> {
         let tree = self.build_tree();
         let seeds = self.build_seeds();
@@ -3634,57 +3693,104 @@ impl FlowHost {
     // #endregion History
 }
 
-// #region 🔖️EvalDriver
-/// 🧵️ Off-main-thread evaluation state a flow-backed plugin runtime embeds across its per-action
-/// `FlowHost` reconstructions (the [`NeuralCache`] persists via [`FlowHost::from_fixture_with_cache`]'s
-/// shared `Arc`, but everything else on `FlowHost` is rebuilt every call — this is the part that
-/// needs to survive between ticks). Drives a chain of single-node ticks via `HostEffect::DispatchAction`
-/// instead of one synchronous full evaluate: `sync` decides whether a tick chain must be (re)armed,
-/// `tick` performs one budgeted step.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FlowEvalDriver {
-    #[serde(default)]
-    eval_json: String,
-    #[serde(default)]
-    computing_json: Option<String>,
-    #[serde(skip)]
+// #region 🔖️EvalSession
+use std::sync::atomic::{AtomicU64, Ordering as AtomicOrdering};
+
+/// ⏱️ Max cache-missed neuron dispatches per `flowEvalTick` — keeps one dispatch from blocking the worker while still converging small graphs in a single tick.
+pub const FLOW_EVAL_TICK_STEP_BUDGET: usize = 512;
+
+static FLOW_SESSION_GEOMETRY: LazyLock<Mutex<HashMap<u64, std::collections::HashSet<String>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+static NEXT_FLOW_SESSION_ID: AtomicU64 = AtomicU64::new(1);
+
+fn sync_flow_geometry_retention() {
+    let merged: std::collections::HashSet<String> = FLOW_SESSION_GEOMETRY
+        .lock()
+        .map(|entries| entries.values().flat_map(|set| set.iter().cloned()).collect())
+        .unwrap_or_default();
+    let live: Vec<String> = merged.into_iter().collect();
+    flow_extension_brep::retain_geometry_handles(&live);
+}
+
+/// 🚦 Per-widget evaluation state for flow graph chrome (not persisted in config).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "status", rename_all = "camelCase")]
+pub enum NodeEvalStatus {
+    Ok,
+    Stale,
+    Queued,
+    Computing,
+    Error { message: String },
+    Blocked { ports: Vec<String> },
+}
+
+/// 🧵️ In-process evaluation session: neural cache, incremental baseline, eval output, and status — one per app instance, never serialized.
+pub struct FlowEvalSession {
+    session_id: u64,
+    neural_cache: Arc<NeuralCache>,
     previous_snapshot: Option<TreeSnapshot>,
-    #[serde(skip)]
     previous_channels: Option<EvalChannels>,
-    /// Guards against `sync` re-arming a chain that's already ticking — never persisted, an
-    /// in-progress chain doesn't survive a process restart anyway.
-    #[serde(skip)]
+    eval_json: String,
+    status_json: String,
     tick_scheduled: bool,
+    live_geometry_handles: std::collections::HashSet<String>,
 }
 
-fn flow_eval_computing_progress_json(remaining: &[String]) -> String {
-    serde_json::json!({ "active": remaining.first(), "stale": remaining.get(1..).unwrap_or(&[]) }).to_string()
+impl Default for FlowEvalSession {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
-impl FlowEvalDriver {
-    /// 🧵️ Restores the last converged eval baseline onto a freshly built ephemeral host.
+impl Drop for FlowEvalSession {
+    fn drop(&mut self) {
+        if let Ok(mut map) = FLOW_SESSION_GEOMETRY.lock() {
+            map.remove(&self.session_id);
+        }
+        sync_flow_geometry_retention();
+    }
+}
+
+impl FlowEvalSession {
+    pub fn new() -> Self {
+        Self {
+            session_id: NEXT_FLOW_SESSION_ID.fetch_add(1, AtomicOrdering::Relaxed),
+            neural_cache: Arc::new(NeuralCache::new()),
+            previous_snapshot: None,
+            previous_channels: None,
+            eval_json: String::new(),
+            status_json: "{}".into(),
+            tick_scheduled: false,
+            live_geometry_handles: std::collections::HashSet::new(),
+        }
+    }
+
+    pub fn neural_cache(&self) -> Arc<NeuralCache> {
+        self.neural_cache.clone()
+    }
+
     pub fn install_baseline_into(&self, host: &mut FlowHost) {
         host.install_eval_baseline(self.previous_snapshot.clone(), self.previous_channels.clone());
     }
 
-    /// 🧵️ Persists the eval baseline from a host after a tick or convergence.
-    pub fn capture_baseline_from(&mut self, host: &FlowHost) {
+    fn capture_baseline_from(&mut self, host: &FlowHost) {
         let (snapshot, channels) = host.eval_baseline();
         self.previous_snapshot = snapshot;
         self.previous_channels = channels;
+        if let Some(channels) = self.previous_channels.as_ref() {
+            self.live_geometry_handles = collect_live_geometry_handles_from_channels(channels).into_iter().collect();
+            if let Ok(mut map) = FLOW_SESSION_GEOMETRY.lock() {
+                map.insert(self.session_id, self.live_geometry_handles.clone());
+            }
+            sync_flow_geometry_retention();
+        }
     }
 
-    /// 🔁️ Probes `host` for pending work (cheap — reuses `FlowHost`'s own dirty-set diffing) and
-    /// reports whether a `flowEvalTick` chain needs to be (re)armed. Safe to call on every
-    /// mutation/refresh; a no-operation when nothing changed or a chain is already running.
     pub fn sync(&mut self, host: &FlowHost) -> bool {
         let remaining = host.pending_eval_widget_ids();
+        self.status_json = build_flow_status_json(host, &remaining);
         if remaining.is_empty() {
-            self.computing_json = None;
             return false;
         }
-        self.computing_json = Some(flow_eval_computing_progress_json(&remaining));
         if self.tick_scheduled {
             return false;
         }
@@ -3692,12 +3798,10 @@ impl FlowEvalDriver {
         true
     }
 
-    /// ⏱️ Runs one budgeted evaluation step on `host` and updates the driver's view of the result.
-    /// Returns whether another tick is still needed.
     pub fn tick(&mut self, host: &mut FlowHost) -> bool {
-        let remaining = host.evaluate_step(1);
+        let remaining = host.evaluate_step(FLOW_EVAL_TICK_STEP_BUDGET);
         self.eval_json = host.last_eval_json.clone();
-        self.computing_json = if remaining.is_empty() { None } else { Some(flow_eval_computing_progress_json(&remaining)) };
+        self.status_json = build_flow_status_json(host, &remaining);
         if remaining.is_empty() {
             self.capture_baseline_from(host);
         }
@@ -3709,27 +3813,87 @@ impl FlowEvalDriver {
         &self.eval_json
     }
 
-    /// ✍️ Overwrites the cached eval JSON directly — for callers that computed it out-of-band (a
-    /// synchronous generation-preview eval, or an explicit "push these outputs" action) rather than
-    /// via `tick`. Clears any in-progress chain since the picture it was converging toward is moot.
+    pub fn status_json(&self) -> &str {
+        &self.status_json
+    }
+
+    pub fn status_json_for_host(&self, host: &FlowHost) -> String {
+        let remaining = host.pending_eval_widget_ids();
+        build_flow_status_json(host, &remaining)
+    }
+
     pub fn set_eval_json(&mut self, eval_json: String) {
         self.eval_json = eval_json;
-        self.computing_json = None;
         self.tick_scheduled = false;
         self.previous_snapshot = None;
         self.previous_channels = None;
+        self.status_json = "{}".into();
+        self.live_geometry_handles.clear();
+        if let Ok(mut map) = FLOW_SESSION_GEOMETRY.lock() {
+            map.remove(&self.session_id);
+        }
+        sync_flow_geometry_retention();
     }
 
-    pub fn computing_json(&self) -> Option<&str> {
-        self.computing_json.as_deref()
-    }
-
-    /// ⏳️ Whether a tick chain is currently arming/running.
     pub fn pending(&self) -> bool {
         self.tick_scheduled
     }
+
+    pub fn seed_node_cache(&self, node_hash: u64, output_json: &str) -> Result<(), FlowCoreError> {
+        seed_flow_eval_node_cache(&self.neural_cache, node_hash, output_json)
+    }
 }
-// #endregion 🔖️EvalDriver
+
+/// 🏠 Builds a host wired to `session`'s shared cache and converged baseline.
+pub fn flow_host_with_session(fixture: &FlowFixture, session: &FlowEvalSession) -> FlowHost {
+    let mut host = FlowHost::from_fixture_with_cache(fixture.clone(), session.neural_cache());
+    host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
+    session.install_baseline_into(&mut host);
+    host
+}
+
+fn build_flow_status_json(host: &FlowHost, remaining: &[String]) -> String {
+    let eval: serde_json::Value = serde_json::from_str(&host.last_eval_json).unwrap_or(serde_json::json!({}));
+    let tree = host.build_tree_for_status();
+    let seeds = host.build_seeds_for_status();
+    let snapshot = TreeSnapshot::capture(&tree, &seeds);
+    let dirty = compute_dirty_set(host.eval_baseline_snapshot(), &snapshot);
+    let active = remaining.first().map(String::as_str);
+    let mut widgets = serde_json::Map::new();
+    for widget in &host.fixture.widgets {
+        let id = widget_id_for(widget);
+        if matches!(widget, Widget::InputSlider { .. } | Widget::InputNote { .. } | Widget::InputImage { .. } | Widget::OutputPreview { .. } | Widget::OutputAction { .. } | Widget::OutputExport { .. } | Widget::Cluster { .. }) {
+            widgets.insert(id.to_string(), serde_json::to_value(NodeEvalStatus::Ok).unwrap_or(serde_json::json!({"status":"ok"})));
+            continue;
+        }
+        if let Some(entry) = eval.get(id) {
+            if let Some(message) = entry.get("error").and_then(|v| v.as_str()) {
+                widgets.insert(id.to_string(), serde_json::to_value(NodeEvalStatus::Error { message: message.to_string() }).unwrap());
+                continue;
+            }
+        }
+        let blocked = host.widget_blocked_ports(id);
+        if !blocked.is_empty() {
+            widgets.insert(id.to_string(), serde_json::to_value(NodeEvalStatus::Blocked { ports: blocked }).unwrap());
+            continue;
+        }
+        if active == Some(id) {
+            widgets.insert(id.to_string(), serde_json::to_value(NodeEvalStatus::Computing).unwrap());
+            continue;
+        }
+        if remaining.iter().any(|entry| entry == id) {
+            widgets.insert(id.to_string(), serde_json::to_value(NodeEvalStatus::Queued).unwrap());
+            continue;
+        }
+        if dirty.contains(id) && !remaining.is_empty() {
+            widgets.insert(id.to_string(), serde_json::to_value(NodeEvalStatus::Stale).unwrap());
+            continue;
+        }
+        widgets.insert(id.to_string(), serde_json::to_value(NodeEvalStatus::Ok).unwrap());
+    }
+    serde_json::to_string(&widgets).unwrap_or_else(|_| "{}".into())
+}
+// #endregion 🔖️EvalSession
 
 fn dedupe_fixture_widgets(fixture: &mut FlowFixture) {
     let mut seen = BTreeSet::new();

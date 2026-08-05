@@ -196,7 +196,7 @@ function discoverExamplesForPlayground(repoRoot: string, cratePath: string, plug
   };
   const segments = cratePath.split("/");
   // 🏛️ Under `✏️s/🔌️plugins/<p>/...` the tech root is the plugin folder (3 segments), not `✏️s` itself.
-  const techRoot = segments[0] === "✏️s" && segments[1] === "🔌️plugin" ? segments.slice(0, 3).join("/") : segments[0];
+  const techRoot = segments[0] === "✏️s" && segments[1] === "🔌️plugins" ? segments.slice(0, 3).join("/") : segments[0];
   const rootDir = join(repoRoot, techRoot, "📚️examples");
   if (existsSync(rootDir)) return idsIn(rootDir);
   if (variant.startsWith(pluginId) && variant.length > pluginId.length) {

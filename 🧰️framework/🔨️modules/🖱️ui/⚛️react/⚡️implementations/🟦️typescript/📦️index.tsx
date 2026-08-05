@@ -1885,6 +1885,13 @@ export function waitingBorderStateClass(waiting: boolean, active = false): strin
   return waiting ? (active ? waitingBorderActiveClass : waitingBorderClass) : "";
 }
 
+/** @emoji 🌀️ Maps shell chrome {@link UiStatus} to the shared border ring utilities. */
+export function chromeStatusBorderClass(status: UiStatus | undefined, active = false): string {
+  if (status === "loading") return loadingBorderStateClass(true, active);
+  if (status === "waiting") return waitingBorderStateClass(true, active);
+  return "";
+}
+
 /** @emoji 🎨️ Active/on: primary fill + active border + emphasized content (never the transient hover fill). */
 export const interactiveOnClass = cn(
   "data-[state=on]:bg-active-base",
@@ -11741,11 +11748,15 @@ export interface LayoutProps {
   panels?: Partial<Record<Anchor, Omit<PanelProps, "anchor">>>;
   mobilePanel?: MobilePanelProps;
   canvas: React.ReactNode;
+  /** @emoji 🌀️ When set, paints a loading/waiting ring on the canvas viewport wrapper. */
+  canvasStatus?: UiStatus;
+  /** @emoji 🦴 Optional skeleton shown inside the canvas ring while `canvasStatus` is busy. */
+  canvasSkeleton?: React.ReactNode;
   mobile?: boolean;
   className?: string;
 }
 
-const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, panels, mobilePanel, canvas, mobile = false, className = "" }) => (
+const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, panels, mobilePanel, canvas, canvasStatus, canvasSkeleton, mobile = false, className = "" }) => (
   <UiMobileProvider mobile={mobile}>
     <GhostProvider>
       {/* 🎨️ One continuous base floor for navbar + canvas + footer — chrome rows stay transparent over this paint. */}
@@ -11758,7 +11769,9 @@ const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, panels, mobi
               {mobilePanel && mobilePanel.visible && <MobilePanel {...mobilePanel} />}
               {/* 📱️ The canvas stays mounted (never unmounted) while the mobile panel covers it, so the WASM/3D
                   world keeps its context instead of replugging on every toggle — it just stops being visible. */}
-              <div className={cn("flex-1 min-w-0 min-h-0 relative", mobilePanel?.visible && "hidden")}>{canvas}</div>
+              <div className={cn("flex-1 min-w-0 min-h-0 relative", mobilePanel?.visible && "hidden", chromeStatusBorderClass(canvasStatus))}>
+                {canvasStatus === "loading" || canvasStatus === "waiting" ? (canvasSkeleton ?? <CanvasSkeleton />) : canvas}
+              </div>
             </div>
           ) : (
             // Positioned within this region (relative, between navbar and footer), not the whole display — panels
@@ -11770,7 +11783,9 @@ const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, panels, mobi
                   fullscreen introduction veil if it participates in the root stacking context. */}
               <div className="flex flex-col flex-1 min-w-0 relative">
                 <div className="flex flex-1 min-h-0 relative">
-                  <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
+                  <div className={cn("flex-1 min-w-0 min-h-0 relative", chromeStatusBorderClass(canvasStatus))}>
+                    {canvasStatus === "loading" || canvasStatus === "waiting" ? (canvasSkeleton ?? <CanvasSkeleton />) : canvas}
+                  </div>
                 </div>
               </div>
               {ANCHORS.map((anchor) => {
@@ -12810,6 +12825,11 @@ export function ErrorView({ id, title, message, onRetry }: ErrorViewProps): Reac
 
 // #endregion 🚦️StatusSurface
 
+//#region 🧭️UiElementRegistry
+/** @emoji 🧭️ Compile-time checklist of chrome components that must accept the shared {@link UiElementStateProps} axes. */
+export const UI_ELEMENT_REGISTRY = ["Window", "Panel", "Canvas", "Button", "Slider", "TreeItem", "Action"] as const;
+//#endregion 🧭️UiElementRegistry
+
 // #region 🎺️LoadingRow
 // Skeleton loading row with pulsing icon and name.
 // Consumers MUST provide a name for the placeholder.
@@ -12838,6 +12858,131 @@ export const LoadingRow: React.FC<LoadingRowProps> = ({ name, icon, className = 
 };
 
 // #endregion 🎺️LoadingRow
+
+// #region 🦴Skeletons
+
+/** @emoji 🦴 Shared pulse fill for declarative and chrome skeleton placeholders. */
+export const skeletonPulseClass = "animate-pulse rounded bg-muted-foreground/20 motion-reduce:animate-none";
+
+/** @emoji 🦴 One rectangular skeleton block. */
+export const SkeletonBlock: React.FC<{ className?: string }> = ({ className = "" }) => <div className={cn(skeletonPulseClass, className)} aria-hidden />;
+
+export type ElementSkeletonKind =
+  | "text"
+  | "button"
+  | "separator"
+  | "image"
+  | "input"
+  | "select"
+  | "toggle"
+  | "keyValue"
+  | "slider"
+  | "numberStepper"
+  | "ring"
+  | "iconSelect"
+  | "field"
+  | "group"
+  | "section"
+  | "stack"
+  | "tree"
+  | "componentScene"
+  | "externalSlot";
+
+/** @emoji 🦴 Picks a skeleton placeholder for a declarative {@link UiNode} kind. */
+export function elementSkeleton(kind: ElementSkeletonKind): React.ReactElement {
+  switch (kind) {
+    case "text":
+      return <SkeletonBlock className="h-4 w-3/5 max-w-full" />;
+    case "button":
+      return <SkeletonBlock className="h-medium w-28" />;
+    case "separator":
+      return <SkeletonBlock className="h-px w-full" />;
+    case "image":
+      return <SkeletonBlock className="h-32 w-full max-w-sm" />;
+    case "input":
+    case "select":
+      return <SkeletonBlock className="h-medium w-full" />;
+    case "toggle":
+      return <SkeletonBlock className="h-medium w-24" />;
+    case "keyValue":
+      return (
+        <div className="flex flex-col gap-single w-full">
+          <SkeletonBlock className="h-4 w-full" />
+          <SkeletonBlock className="h-4 w-4/5" />
+        </div>
+      );
+    case "slider":
+      return <SkeletonBlock className="h-4 w-full" />;
+    case "numberStepper":
+      return <SkeletonBlock className="h-medium w-20" />;
+    case "ring":
+      return <SkeletonBlock className="size-large rounded-full" />;
+    case "iconSelect":
+      return <SkeletonBlock className="h-medium w-full" />;
+    case "field":
+      return (
+        <div className="flex flex-col gap-single w-full">
+          <SkeletonBlock className="h-3 w-24" />
+          <SkeletonBlock className="h-medium w-full" />
+        </div>
+      );
+    case "group":
+    case "section":
+      return (
+        <div className="flex flex-col gap-double w-full p-single">
+          <SkeletonBlock className="h-4 w-32" />
+          <SkeletonBlock className="h-medium w-full" />
+          <SkeletonBlock className="h-medium w-full" />
+        </div>
+      );
+    case "stack":
+      return (
+        <div className="flex flex-col gap-single w-full h-full min-h-0 p-single">
+          <SkeletonBlock className="h-4 w-40" />
+          <SkeletonBlock className="flex-1 min-h-24 w-full" />
+        </div>
+      );
+    case "tree":
+      return <PanelTreeSkeleton />;
+    case "componentScene":
+      return <SceneSkeleton />;
+    case "externalSlot":
+      return <SkeletonBlock className="h-full min-h-32 w-full" />;
+  }
+}
+
+/** @emoji 🦴 Mimics a mode-dock window body while plugin UI is still loading. */
+export const WindowBodySkeleton: React.FC<{ className?: string }> = ({ className = "" }) => (
+  <div className={cn("flex h-full min-h-0 w-full flex-col gap-double p-double", className)} role="status" aria-busy="true">
+    <SkeletonBlock className="h-4 w-48" />
+    <SkeletonBlock className="min-h-0 flex-1 w-full" />
+  </div>
+);
+
+/** @emoji 🦴 Panel tree placeholder while a tab body is refreshing. */
+export const PanelTreeSkeleton: React.FC<{ className?: string }> = ({ className = "" }) => (
+  <div className={cn("flex flex-col gap-single p-single w-full", className)} role="status" aria-busy="true">
+    <LoadingRow name="…" />
+    <LoadingRow name="…" />
+    <LoadingRow name="…" />
+  </div>
+);
+
+/** @emoji 🦴 Full canvas placeholder while the primary plugin session boots. */
+export const CanvasSkeleton: React.FC<{ className?: string; label?: string }> = ({ className = "", label }) => (
+  <div className={cn("relative flex h-full min-h-0 w-full flex-col overflow-hidden", className)} role="status" aria-busy="true" aria-label={label}>
+    <div className="flex h-medium w-full shrink-0 gap-single p-single">
+      <SkeletonBlock className="h-full w-28" />
+      <SkeletonBlock className="h-full flex-1" />
+      <SkeletonBlock className="h-full w-16" />
+    </div>
+    <div className="min-h-0 flex-1 p-double">
+      <SkeletonBlock className="h-full w-full" />
+    </div>
+  </div>
+);
+
+// #endregion 🦴Skeletons
 
 // #region 🔓️DiagramNode
 // Individual diagram node element with selection and hover states.
@@ -21544,6 +21689,8 @@ export interface PanelProps {
   maxSize?: number;
   zIndex?: 10 | 20 | 30 | 40;
   className?: string;
+  /** @emoji 🌀️ Drives the panel chrome silhouette while a tab body is still loading. */
+  status?: UiStatus;
   /**
    * @emoji 🎛️ Where this anchor's folded root tab row lives — `"panel"` (default) keeps the chip-only
    * folded bar on the floating panel; `"chrome"` parks the folded root row in a sibling
@@ -21719,6 +21866,7 @@ const Panel: React.FC<PanelProps> = ({
   zIndex,
   className = "",
   tabBarHost = "panel",
+  status,
 }) => {
   const dock = usePanelDockContext();
   const panelShellScope = useShellScopeOptional();
@@ -21817,6 +21965,7 @@ const Panel: React.FC<PanelProps> = ({
                 stackSlot="window-chrome-stack"
                 active={surfaceActive}
                 level="panel"
+                borderKind={status === "loading" ? "loading" : status === "waiting" ? "waiting" : undefined}
                 capDock={isBottom ? "bottom" : "top"}
                 capRowStyle={chromeHostedTrailingEndReserveStyle}
                 stackClassName="w-full flex-1 min-h-0 bg-transparent"
@@ -23298,8 +23447,7 @@ export interface WindowConfig {
   defaultSize?: number;
   onDoubleClick?: () => void;
   className?: string;
-  loading?: boolean;
-  waiting?: boolean;
+  status?: UiStatus;
   error?: Error | null;
   skeleton?: React.ReactNode;
   showControls?: boolean;
@@ -23393,8 +23541,7 @@ const Window: React.FC<WindowProps> = ({
   onDoubleClick,
   className = "",
   isVisible = true,
-  loading = false,
-  waiting = false,
+  status = "idle",
   error = null,
   skeleton,
   showControls = false,
@@ -23418,6 +23565,8 @@ const Window: React.FC<WindowProps> = ({
   onActivate,
   fill = false,
 }) => {
+  const loading = status === "loading";
+  const waiting = status === "waiting";
   const bgClass = surfaceClass;
   const newWindowLabel = useLabel("ui.common.newWindow");
   const closeLabel = useLabel("ui.common.close");
@@ -27843,13 +27992,14 @@ VirtualFileSystem.displayName = "VirtualFileSystem";
 /**
  * Container component for canvas window layout.
  **/
-export const Canvas: React.FC<{ children: React.ReactNode; id?: string }> = ({ children, id }) => {
+export const Canvas: React.FC<{ children: React.ReactNode; id?: string; status?: UiStatus }> = ({ children, id, status = "idle" }) => {
   const parent = useSurface();
   const bgClass = shellFloorFillClass(parent);
+  const busy = status === "loading" || status === "waiting";
   return (
     <LevelProvider level="base">
-      <div id={id} data-slot="canvas" data-level="base" className={cn("box-border h-full w-full p-single", bgClass)}>
-        {children}
+      <div id={id} data-slot="canvas" data-level="base" data-ui-status={busy ? status : undefined} className={cn("box-border h-full w-full p-single", bgClass, chromeStatusBorderClass(status))}>
+        {busy ? <CanvasSkeleton /> : children}
       </div>
     </LevelProvider>
   );
@@ -33988,6 +34138,18 @@ if (import.meta.vitest) {
       expect(windowSilhouettePath(metrics({ depth: 24, chips: [{ left: 0, right: 60 }] }), 0)).toBe("M0,0 H60 V24 H200 V100 H0 Z");
       expect(windowSilhouettePath(metrics({ depth: 0, chips: [] }), 0)).toBe("M0,0 H200 V100 H0 Z");
       expect(WINDOW_SILHOUETTE_PATH_INSET).toBeGreaterThanOrEqual(1);
+    });
+
+    it("UI_ELEMENT_REGISTRY lists chrome components with status axis coverage", () => {
+      expect(UI_ELEMENT_REGISTRY).toContain("Window");
+      expect(UI_ELEMENT_REGISTRY.length).toBeGreaterThan(4);
+    });
+
+    it("chromeStatusBorderClass maps loading and waiting to border utilities", () => {
+      expect(chromeStatusBorderClass("loading")).toContain("border-loading");
+      expect(chromeStatusBorderClass("waiting")).toContain("border-waiting");
+      expect(chromeStatusBorderClass("idle")).toBe("");
+      expect(chromeStatusBorderClass(undefined)).toBe("");
     });
 
     it("windowSilhouetteOutlineViolations stays empty across absent chip slots", () => {

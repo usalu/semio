@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-compiler-text"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "compiler's text engine: font loading, shaping, and glyph outline/raster extraction — wraps rustybuzz/ttf-parser behind an owned-type interface, never leaking their types in this crate's public API"
+
+
+[lints]
+workspace = true
+[lib]
+name = "compiler_text"
+path = "../../../../../../🧰️framework/🔨️modules/📚️compiler/🔤️text/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+rustybuzz = "0.20.1"
+
+[dev-dependencies]
+compiler_world = { package = "semio-framework-compiler-world", path = "../../../../../../🧰️framework/🔨️modules/📚️compiler/🌍️world/⚡️implementations/🦀️rust" }

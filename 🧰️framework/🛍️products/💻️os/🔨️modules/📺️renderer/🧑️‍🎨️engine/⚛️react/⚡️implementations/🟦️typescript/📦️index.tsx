@@ -70,6 +70,12 @@ import {
   uiI18n,
   useLabel,
   waitingBorderElementClass,
+  chromeStatusBorderClass,
+  CanvasSkeleton,
+  WindowBodySkeleton,
+  elementSkeleton,
+  type ElementSkeletonKind,
+  type UiStatus,
   type UiLabel,
   type TreeDataItem,
   type TreeDataSection,
@@ -482,6 +488,11 @@ import {
   type TutorialAssetSrc,
   SemioFaultError,
   type Fault,
+  resolveUiPresence,
+  uiPresenceShowsSkeleton,
+  pendingWindowUiNode,
+  pendingPanelUiNode,
+  windowMeasureChromeStatus,
 } from "@semio-tech/framework-core";
 import { createRoot } from "react-dom/client";
 import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from "@semio-tech/infinite-canvas-react-renderer";
@@ -846,10 +857,10 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
           onDelta={(delta) => dispatchUiAction(onAction, control.onDelta, { delta })}
         />
       );
-    case "ring":
-      // 🧭️ `Ring` has a closed prop type with no passthrough/`data-*` forwarding — `path` best-effort only,
-      // via a parent stack/section/group's wrapper.
-      return <Ring id={control.id} onOrbChange={(_orbId, _oldT, newT) => dispatchUiAction(onAction, control.onChange, { t: newT })} orbs={[{ disabled: control.disabled, id: control.orbId, selected: true, t: control.t }]} />;
+    case "ring": {
+      const presence = resolveUiPresence(control.presence);
+      return <Ring id={control.id} onOrbChange={(_orbId, _oldT, newT) => dispatchUiAction(onAction, control.onChange, { t: newT })} orbs={[{ disabled: presence.state === "disabled", id: control.orbId, selected: true, t: control.t }]} />;
+    }
     case "iconSelect":
       // 🧭️ `IconSelector` has a closed prop type with no passthrough/`data-*` forwarding — `path`
       // best-effort only, via a parent stack/section/group's wrapper.
@@ -862,62 +873,76 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
           value={control.value}
         />
       );
-    case "button":
+    case "button": {
+      const presence = resolveUiPresence(control.presence);
       return (
         <Button
           id={control.id}
           data-ui-path={path}
           text={control.label}
           icon={resolveDeclarativeControlIcon(control.iconId as IconName)}
-          disabled={control.disabled}
+          disabled={presence.state === "disabled"}
           onClick={() => onAction(control.action)}
-          className={control.loading ? loadingBorderElementClass : control.waiting ? waitingBorderElementClass : undefined}
-          aria-busy={control.loading || control.waiting || undefined}
+          className={presence.status === "loading" ? loadingBorderElementClass : presence.status === "waiting" ? waitingBorderElementClass : undefined}
+          aria-busy={presence.status === "loading" || presence.status === "waiting" || undefined}
         />
       );
+    }
   }
 }
 //#endregion RenderUiControl
 
+function declarativeSurfaceStatus(node: UiNode | undefined): UiStatus {
+  if (!node) return "loading";
+  if (uiPresenceShowsSkeleton(declarativeNodePresence(node))) return resolveUiPresence(declarativeNodePresence(node)).status;
+  return "idle";
+}
+
 //#region UiTreePanel
 function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], onAction: UiInterpreterContext["onAction"]): TreeDataItem[] {
-  return items.map((item) => ({
-    id: item.id,
-    label: item.label,
-    description: item.description,
-    icon: item.iconId ? renderControlIcon(item.iconId, 12) : undefined,
-    control: item.control ? renderUiControl(item.control, onAction) : undefined,
-    defaultOpen: item.defaultOpen,
-    isSelected: item.selected,
-    loading: item.loading,
-    waiting: item.waiting,
-    isHidden: item.isHidden,
-    draggable: item.draggable,
-    dragData: item.dragData,
-    items: item.items?.length ? uiTreeItemsToTreeData(item.items, onAction) : undefined,
-    onClick: item.action ? () => dispatchUiAction(onAction, item.action!, {}) : undefined,
-    onPointerEnter: item.hoverAction ? () => dispatchUiAction(onAction, item.hoverAction!, {}) : undefined,
-    onPointerLeave: item.unhoverAction ? () => dispatchUiAction(onAction, item.unhoverAction!, {}) : undefined,
-    actions: item.actions?.map((action) => ({
-      kind: "button" as const,
-      icon: renderControlIcon(action.iconId, 12),
-      title: action.label,
-      placement: action.placement ?? "row",
-      onClick: () => dispatchUiAction(onAction, action.action, {}),
-    })),
-  }));
+  return items.map((item) => {
+    const presence = resolveUiPresence(item.presence);
+    return {
+      id: item.id,
+      label: item.label,
+      description: item.description,
+      icon: item.iconId ? renderControlIcon(item.iconId, 12) : undefined,
+      control: item.control ? renderUiControl(item.control, onAction) : undefined,
+      defaultOpen: item.defaultOpen,
+      isSelected: presence.selected,
+      loading: presence.status === "loading",
+      waiting: presence.status === "waiting",
+      isHidden: item.dimmed,
+      draggable: item.draggable,
+      dragData: item.dragData,
+      items: item.items?.length ? uiTreeItemsToTreeData(item.items, onAction) : undefined,
+      onClick: item.action ? () => dispatchUiAction(onAction, item.action!, {}) : undefined,
+      onPointerEnter: item.hoverAction ? () => dispatchUiAction(onAction, item.hoverAction!, {}) : undefined,
+      onPointerLeave: item.unhoverAction ? () => dispatchUiAction(onAction, item.unhoverAction!, {}) : undefined,
+      actions: item.actions?.map((action) => ({
+        kind: "button" as const,
+        icon: renderControlIcon(action.iconId, 12),
+        title: action.label,
+        placement: action.placement ?? "row",
+        onClick: () => dispatchUiAction(onAction, action.action, {}),
+      })),
+    };
+  });
 }
 
 /** @emoji 🌲️ Maps a declarative {@link UiTreeNode} to a {@link TreePanelConfig}. */
 export function uiTreeNodeToTreePanelConfig(treeNode: UiTreeNode, onAction: UiInterpreterContext["onAction"]): TreePanelConfig {
-  const sections: TreeDataSection[] = treeNode.sections.map((section: UiTreeSectionNode) => ({
-    id: section.id,
-    label: section.label ?? "",
-    defaultOpen: section.defaultOpen,
-    loading: section.loading,
-    waiting: section.waiting,
-    items: uiTreeItemsToTreeData(section.items, onAction),
-  }));
+  const sections: TreeDataSection[] = treeNode.sections.map((section: UiTreeSectionNode) => {
+    const sectionPresence = resolveUiPresence(section.presence);
+    return {
+      id: section.id,
+      label: section.label ?? "",
+      defaultOpen: section.defaultOpen,
+      loading: sectionPresence.status === "loading",
+      waiting: sectionPresence.status === "waiting",
+      items: uiTreeItemsToTreeData(section.items, onAction),
+    };
+  });
   return {
     sections,
     selectedIds: treeNode.selectedIds as string[] | undefined,
@@ -969,14 +994,17 @@ export function declarativeTreeDragController(treeNode: UiTreeNode, onAction: Ui
 
 function DeclarativeTreePanel({ treeNode, onAction }: { readonly treeNode: UiTreeNode; readonly onAction: UiInterpreterContext["onAction"] }) {
   const sectionConfig = useMemo(() => {
-    const sections: TreeDataSection[] = treeNode.sections.map((section: UiTreeSectionNode) => ({
-      id: section.id,
-      label: section.label ?? "",
-      defaultOpen: section.defaultOpen,
-      loading: section.loading,
-      waiting: section.waiting,
-      items: uiTreeItemsToTreeData(section.items, onAction),
-    }));
+    const sections: TreeDataSection[] = treeNode.sections.map((section: UiTreeSectionNode) => {
+      const sectionPresence = resolveUiPresence(section.presence);
+      return {
+        id: section.id,
+        label: section.label ?? "",
+        defaultOpen: section.defaultOpen,
+        loading: sectionPresence.status === "loading",
+        waiting: sectionPresence.status === "waiting",
+        items: uiTreeItemsToTreeData(section.items, onAction),
+      };
+    });
     return { sections, sortableSections: Boolean(treeNode.dropAction) && sections.length > 1 };
   }, [onAction, treeNode.dropAction, treeNode.sections]);
   const config = useMemo(
@@ -1168,6 +1196,7 @@ function UiStackHost({ node, context, path }: { readonly node: UiStackNode; read
   const activate = node.activate;
   const dropAction = node.dropAction;
   const dropOverlay = node.dropOverlay;
+  const stackPresence = resolveUiPresence(node.presence);
   return (
     <div
       className={cn(
@@ -1177,7 +1206,7 @@ function UiStackHost({ node, context, path }: { readonly node: UiStackNode; read
         node.padding === "none" ? "p-0" : "p-double",
         `semio-ui-stack semio-ui-stack--${node.direction}`,
         activate && cn(borderElementClass, "border cursor-pointer rounded-md"),
-        node.selected && "ring-primary border-primary ring-1",
+        stackPresence.selected && "ring-primary border-primary ring-1",
       )}
       data-ui-path={path}
       role={activate ? "button" : undefined}
@@ -1244,10 +1273,26 @@ function UiStackHost({ node, context, path }: { readonly node: UiStackNode; read
   );
 }
 
+function declarativeNodePresence(node: UiNode): UiPresence | undefined {
+  return "presence" in node ? node.presence : undefined;
+}
+
+function interpretUiNodeBusyShell(node: UiNode, path: string): ReactNode | null {
+  if (!uiPresenceShowsSkeleton(declarativeNodePresence(node))) return null;
+  const status = resolveUiPresence(declarativeNodePresence(node)).status;
+  return (
+    <div data-ui-path={path} data-ui-status={status} className={cn("p-single w-full min-w-0", status === "waiting" ? waitingBorderElementClass : loadingBorderElementClass)} role="status" aria-busy="true">
+      {elementSkeleton(node.type as ElementSkeletonKind)}
+    </div>
+  );
+}
+
 /** @emoji 🌳️ Interprets a declarative {@link UiNode} tree into ui-react components. `path` is this node's
  * own full structural path (see {@link uiNodePathSegment}); defaults to a root segment at index 0 so
  * existing/test call sites that omit it still behave as the root of a window/panel body. */
 export function interpretUiNode(node: UiNode, context: UiInterpreterContext, path: string = uiNodePathSegment(node, 0)): ReactNode {
+  const busyShell = interpretUiNodeBusyShell(node, path);
+  if (busyShell) return busyShell;
   switch (node.type) {
     case "stack":
       return <UiStackHost node={node} context={context} path={path} />;
@@ -1257,8 +1302,21 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext, pat
           {node.value}
         </p>
       );
-    case "button":
-      return <Button id={node.id} text={node.label} icon={resolveDeclarativeControlIcon(node.iconId as IconName)} disabled={node.disabled} onClick={() => context.onAction(node.action)} data-ui-path={path} />;
+    case "button": {
+      const presence = resolveUiPresence(node.presence);
+      return (
+        <Button
+          id={node.id}
+          data-ui-path={path}
+          text={node.label}
+          icon={resolveDeclarativeControlIcon(node.iconId as IconName)}
+          disabled={presence.state === "disabled"}
+          className={presence.status === "loading" ? loadingBorderElementClass : presence.status === "waiting" ? waitingBorderElementClass : undefined}
+          aria-busy={presence.status === "loading" || presence.status === "waiting" || undefined}
+          onClick={() => context.onAction(node.action)}
+        />
+      );
+    }
     case "separator":
       return <hr className={cn("border-0", borderNormalTopClass)} data-ui-path={path} />;
     case "image":
@@ -3458,7 +3516,7 @@ export function panelTabDefinitionToNode(
     icon: panelTabIcon(tabId, group),
     name: label,
     order,
-    tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tabId] ?? { type: "text", value: shellLabel("ui.common.loading") }, onAction)),
+    tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tabId] ?? pendingPanelUiNode(), onAction)),
   });
 }
 
@@ -5829,6 +5887,7 @@ function FrameworkOsShellInner({
   const importSpaceInputRef = useRef<HTMLInputElement>(null);
   const refreshGenerationRef = useRef(0);
   const contributionsJsonRef = useRef<string | null>(null);
+  const appRegistrationsJsonRef = useRef<string | null>(null);
   const spawnedRefreshGenerationRef = useRef(0);
   const contributorInstancesRef = useRef<Map<string, number>>(new Map());
   const layoutSeedKeyRef = useRef<string | null>(null);
@@ -5965,6 +6024,13 @@ function FrameworkOsShellInner({
    * host plugin (`hostConfig.pluginId`) in studio mode, otherwise the resolved single-app variant.
    * Every other registry entry streams in independently and is never fatal to boot. */
   const primaryPluginId = useMemo(() => hostConfig?.pluginId ?? (pluginFilter ? resolvePluginRegistryId(pluginFilter) : undefined) ?? registry[0]?.pluginId, [hostConfig, pluginFilter, registry]);
+  const shellPluginCanvasStatus = useMemo((): UiStatus | undefined => {
+    if (!session) return "loading";
+    if (!primaryPluginId) return undefined;
+    const pluginStatus = pluginStatusById[primaryPluginId];
+    if (pluginStatus === "installing" || pluginStatus === "reloading") return "loading";
+    return undefined;
+  }, [session, primaryPluginId, pluginStatusById]);
   /** 🔌️ Dev-only today (`createDevPluginSource`) — a future hub-backed source implements the same
    * `PluginSource` contract and swaps in here with no other change to the runtime below. */
   const pluginSource: PluginSource = useMemo(() => createDevPluginSource(registry), [registry]);
@@ -6571,6 +6637,13 @@ function FrameworkOsShellInner({
       const extraInstancesForFetch = extraInstancesOverride ?? layoutSeed?.extraInstances ?? extraWindowInstancesRef.current;
       const windowInstances = sessionWindowInstances(nextSession.app, extraInstancesForFetch);
       const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
+      // 🪐️ Every loaded plugin's declared apps, flattened for the space app's catalogue — mirrors
+      // `contributionsJson` above exactly (same opt-in hint-push shape below), because the space app is
+      // its own wasm component: `semio_framework_os::APP_REGISTRATIONS` (populated at native/test
+      // `PluginHost::load_plugin`/`hot_swap_plugin` time) lives in a separate linear memory from the
+      // space app's own statically-linked copy of the same os-core crate, so nothing crosses the wasm
+      // boundary unless this shell pushes it explicitly.
+      const appRegistrationsJson = JSON.stringify(loadedPlugins.flatMap((entry) => (entry.manifest.apps ?? []).map((app) => ({ pluginId: entry.handle.pluginId, app }))));
       const viewState: ViewState = injectActiveTool({
         ...nextSession.viewState,
         contributionsJson,
@@ -6625,6 +6698,30 @@ function FrameworkOsShellInner({
           }
         }
       }
+      if (appRegistrationsJson && appRegistrationsJson !== appRegistrationsJsonRef.current) {
+        appRegistrationsJsonRef.current = appRegistrationsJson;
+        const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId);
+        // 🪐️ `setAppRegistrations` mirrors `setContributions` immediately above exactly: an opt-in hint
+        // push, currently only implemented by the space app's `SpaceCommand::SetAppRegistrations`
+        // (populates its own linked-in copy of `semio_framework_os::APP_REGISTRATIONS` so
+        // `workflow_palette()`/`build_catalogue_tree` can list every loaded app). Not declared in any
+        // app's action catalog, so — same as `setContributions` — gate by swallowing the rejection every
+        // other app's `DocumentApp::command_from_action` default throws for an unknown id, rather than by
+        // app id, so this stays correct if a future app adds its own `SetAppRegistrations` variant
+        // without this call site needing to know about it.
+        if (pluginEntry) {
+          try {
+            const wire = encodeActionWire({ controllerId: nextSession.app.controllerId, action: "setAppRegistrations", args: { json: appRegistrationsJson } });
+            if (pluginEntry.handle.handleCommand) {
+              await pluginEntry.handle.handleCommand(nextSession.instanceId, wire, nextSession.viewState);
+            } else {
+              await pluginEntry.handle.handleAction(nextSession.instanceId, wire, nextSession.viewState);
+            }
+          } catch (error) {
+            console.warn("[DEBUG] setAppRegistrations push skipped", error instanceof Error ? error.message : String(error));
+          }
+        }
+      }
       // 🐢️ Merge-with-identity-preservation: unrequested/unchanged sections keep exactly the object
       // reference already in `cache` (dispatched from a prior refresh), so `mergeRecordPreservingIdentity`
       // bails on them via reference equality — this is what lets `InterpretedUiNode`'s `React.memo` (and
@@ -6634,7 +6731,7 @@ function FrameworkOsShellInner({
         value: (current) =>
           mergeRecordPreservingIdentity(
             current,
-            windowInstances.map((instance) => [instance.id, (cache.get(`window:${instance.id}`)?.value as UiNode | undefined) ?? current[instance.id] ?? { type: "text", value: `${shellLabel("ui.common.loading")}: ${instance.id}` }] as const),
+            windowInstances.map((instance) => [instance.id, (cache.get(`window:${instance.id}`)?.value as UiNode | undefined) ?? current[instance.id] ?? pendingWindowUiNode()] as const),
           ),
       });
       const dynamicEngagements = (cache.get("engagements")?.value as Readonly<Record<string, WindowEngagement>> | undefined) ?? {};
@@ -6661,7 +6758,7 @@ function FrameworkOsShellInner({
             current,
             panelTabLeaves
               .filter((tab) => tab.bodyKey)
-              .map((tab) => [panelTabKindId(tab.kind), (cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as UiNode | undefined) ?? current[panelTabKindId(tab.kind)] ?? { type: "text", value: shellLabel("ui.common.loading") }] as const),
+              .map((tab) => [panelTabKindId(tab.kind), (cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as UiNode | undefined) ?? current[panelTabKindId(tab.kind)] ?? pendingPanelUiNode()] as const),
           ),
       });
       if (isSessionSwitch && layoutSeed) {
@@ -6739,7 +6836,7 @@ function FrameworkOsShellInner({
         if (generation !== spawnedRefreshGenerationRef.current) return;
         applyUiRefreshResponseToCache(cache, response);
       }
-      const ui = (cache.get(`window:${bodyKey}`)?.value as UiNode | undefined) ?? { type: "text", value: shellLabel("ui.common.loading") };
+      const ui = (cache.get(`window:${bodyKey}`)?.value as UiNode | undefined) ?? pendingWindowUiNode();
       const dynamicEngagements = (cache.get("engagements")?.value as Readonly<Record<string, WindowEngagement>> | undefined) ?? {};
       const dynamicMeasures = (cache.get("measures")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {};
       dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: (current: UiNode | null) => preserveJsonIdentity(current ?? undefined, ui) });
@@ -9586,11 +9683,13 @@ function FrameworkOsShellInner({
         actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale),
         actionsFolded: actionsFoldedFor(kind.id, kind.id),
         onActionsFoldedChange: onActionsFoldedFor(kind.id),
+        status: declarativeSurfaceStatus(windowUiByWindowId[kind.id]),
+        skeleton: <WindowBodySkeleton />,
         children: (
           <ChromeAwareWindowScrollSurface id={childElementId("framework.window", kind.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(session.app, kind.id)}>
             <WindowInstanceIdContext.Provider value={kind.id}>
               <ShellFaultBoundary boundaryId={`window-${kind.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-                <InterpretedUiNode node={windowUiByWindowId[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
+                <InterpretedUiNode node={windowUiByWindowId[kind.id] ?? pendingWindowUiNode()} onAction={onActionStable} />
               </ShellFaultBoundary>
             </WindowInstanceIdContext.Provider>
           </ChromeAwareWindowScrollSurface>
@@ -9624,6 +9723,8 @@ function FrameworkOsShellInner({
           actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale),
           actionsFolded: actionsFoldedFor(instance.id, instance.windowKindId),
           onActionsFoldedChange: onActionsFoldedFor(instance.id),
+          status: declarativeSurfaceStatus(windowUiByWindowId[instance.id]),
+          skeleton: <WindowBodySkeleton />,
           children: (
             <ChromeAwareWindowScrollSurface
               id={childElementId("framework.window", instance.id)}
@@ -9633,7 +9734,7 @@ function FrameworkOsShellInner({
             >
               <WindowInstanceIdContext.Provider value={instance.id}>
                 <ShellFaultBoundary boundaryId={`window-${instance.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-                  <InterpretedUiNode node={windowUiByWindowId[instance.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${instance.id}` }} onAction={onActionStable} />
+                  <InterpretedUiNode node={windowUiByWindowId[instance.id] ?? pendingWindowUiNode()} onAction={onActionStable} />
                 </ShellFaultBoundary>
               </WindowInstanceIdContext.Provider>
             </ChromeAwareWindowScrollSurface>
@@ -9746,7 +9847,7 @@ function FrameworkOsShellInner({
           {error}
         </p>
       );
-    if (!session) return <p className="p-double text-sm text-muted-foreground">{shellLabel("ui.common.loadingPlugins")}</p>;
+    if (!session) return <CanvasSkeleton label={shellLabel("ui.common.loadingPlugins")} className={cn(loadingBorderClass, "h-full w-full")} />;
     const modes = session.app.modes.length > 0 ? session.app.modes : [{ id: session.app.id, label: appDocumentLabel(resolveAppDocument(session.app, uiTerminology)) }];
     const studioHomeBar =
       studioMode && session.app.id === hostAppId && !panel?.activeSpawnedId ? (
@@ -10042,6 +10143,8 @@ function FrameworkOsShellInner({
               }
               footer={<Footer items={footerItems} />}
               panels={Object.fromEntries(ANCHORS.map((anchor) => [anchor, buildPanelProps(anchor)])) as Record<Anchor, ReturnType<typeof buildPanelProps>>}
+              canvasStatus={shellPluginCanvasStatus}
+              canvasSkeleton={<CanvasSkeleton label={shellLabel("ui.common.loadingPlugins")} />}
               canvas={
                 <ShellFaultBoundary boundaryId="route-canvas" fallbackLabel={shellLabel("ui.common.renderError")}>
                   {canvas}

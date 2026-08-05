@@ -15,7 +15,7 @@ reasoning_wires = { path = "../../../../../../../../../✏️s/🔌️plugins/�
 reasoning_wires_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-reasoning-wires-engine" }
 reasoning_wires_op = { path = "../../../../../../../../../✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🔨️modules/🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-reasoning-wires-op" }
 reasoning_wires_protocol = { path = "../../../../../../../../../✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-s-app-reasoning-wires-protocol" }
-infinite_board_port_directed = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed", default-features = false }
+infinite_board_port_directed = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", package = "semio-framework-plugin" }
 dsl = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 serde = { version = "1.0.219", features = ["derive"] }

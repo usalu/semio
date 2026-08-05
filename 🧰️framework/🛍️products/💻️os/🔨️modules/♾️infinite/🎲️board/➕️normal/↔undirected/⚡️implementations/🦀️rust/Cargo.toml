@@ -7,17 +7,14 @@ rust-version = "1.88"
 
 [lints]
 workspace = true
-[features]
-default = ["render"]
-render = ["infinite_board/render"]
 [lib]
 name = "infinite_board_normal_undirected"
 crate-type = ["rlib"]
 path = "../../../../../🎲️board/➕️normal/↔undirected/⚡️implementations/🦀️rust/📦️lib.rs"
 
 [dependencies]
-infinite_canvas = { path = "../../../../../🖼️canvas/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas", default-features = false }
-infinite_board = { path = "../../../../../🎲️board/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board", default-features = false }
+infinite_canvas = { path = "../../../../../🖼️canvas/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
+infinite_board = { path = "../../../../../🎲️board/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board" }
 mathematical_graph = { path = "../../../../../../../../../🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph" }
 mathematical_graph_drawing = { path = "../../../../../../../../../🔨️modules/🧮️math/🕸️graph/🖊️drawing/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph-drawing" }
 mathematical_geometry = { path = "../../../../../../../../../🔨️modules/🧮️math/📐️geometry/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-geometry" }

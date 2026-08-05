@@ -23,6 +23,3 @@ serde_json = "1.0.140"
 protocol = { path = "../../../../📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 thiserror = "2.0.12"
 dsl_core = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-core" }
-# 🪶️ GUESTSLIM: serves the typst default font set through `read-asset` (see
-# `infinite_canvas`'s `render` feature doc) so wasm32-wasip2 guests don't embed it themselves.
-typst-assets = { version = "0.14.2", features = ["fonts"] }

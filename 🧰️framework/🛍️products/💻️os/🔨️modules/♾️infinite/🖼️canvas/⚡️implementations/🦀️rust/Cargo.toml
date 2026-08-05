@@ -9,43 +9,26 @@ build = "build.rs"
 [lints]
 workspace = true
 [features]
-default = ["render"]
+default = []
 # 🧬️ Declared (never enabled here) so the shared `ui/asset/icon/generated/🦀️icon_name.rs` module's
 # `#[cfg_attr(feature = "typegen", ...)]` on `IconName` doesn't trip `unexpected_cfgs`; the TS
 # mirror for `IconName` is exported from `ui_wgpu`, not from here.
 typegen = []
-# 🪶️ GUESTSLIM: on by default (host/engine builds unaffected). Off for wasm32-wasip2 plugin guests
-# to drop `typst-assets`' embedded font data (~15MB+) from the guest binary — `icon_codec` falls
-# back to fetching the same fonts at runtime through the `host_asset` module's registered reader
-# (wired to `semio_framework_plugin::host_read_asset`, the component `read-asset` WIT import).
-# `typst`/`typst-svg` (the compiler + SVG emitter) stay guest-side always: guests still need to
-# render emoji/text/typst-markup icons themselves, only the embedded font *bytes* move host-side.
-render = ["dep:typst-assets"]
 [lib]
 name = "infinite_canvas"
 crate-type = ["rlib"]
 path = "../../../🖼️canvas/⚡️implementations/🦀️rust/📦️lib.rs"
 
-[[bin]]
-# 🪶️ GUESTSLIM: dumps the same `typst-assets::fonts()` blob (packed via `host_asset::split_blobs`'s
-# wire format) the native plugin host serves through `read-asset`, so the browser dev pipeline can
-# static-serve an identical file for the jco/worker path — see `📜️script.ts`'s `ensureGuestSlimTypstFontsAsset`.
-name = "dump-guestslim-typst-fonts"
-path = "../../../🖼️canvas/⚡️implementations/🦀️rust/🔨️bin/dump_guestslim_typst_fonts.rs"
-required-features = ["render"]
-
 [dependencies]
 mathematical_geometry = { path = "../../../../../../../🔨️modules/🧮️math/📐️geometry/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-geometry" }
 ui_styling = { path = "../../../../../../../🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust", package = "semio-framework-ui-styling" }
+compiler = { path = "../../../../../../../🔨️modules/📚️compiler/⚡️implementations/🦀️rust", package = "semio-framework-compiler" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 vello = { version = "0.7.0", features = ["wgpu", "wgpu_default"] }
 vello_encoding = "0.7.0"
 vello_svg = { version = "0.9.0", default-features = true, features = ["wgpu"] }
 fontdb = { version = "0.23.0", default-features = false }
-typst = "0.14.2"
-typst-svg = "0.14.2"
-typst-assets = { version = "0.14.2", features = ["fonts"], optional = true }
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
 base64 = "0.22.1"
 thiserror = "2.0.12"

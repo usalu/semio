@@ -1,0 +1,5 @@
+📋️Define plans for consistent loading skeletons and procedural 3D evaluation session
+🧱️Extract typst compiler into world, svg, text, and math modules with embedded fonts
+🔌️Update Rust Cargo manifests and workspace dependencies across all plugins
+🎨️Add storybook skeletons component stories and mit-bestand demonstrator UI exports
+🎫️Update ticket tracking files for compiler modules, flow evaluation, and loading chrome

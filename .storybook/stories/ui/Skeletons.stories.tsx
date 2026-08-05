@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { createIconComponent, DiagramSkeleton, LoadingRow, SceneSkeleton, TableSkeleton, type TableColumn } from "@semio-tech/ui-react";
+import { CanvasSkeleton, createIconComponent, DiagramSkeleton, elementSkeleton, LoadingRow, SceneSkeleton, TableSkeleton, WindowBodySkeleton, type TableColumn } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 // #endregion 🔌️Adapters
 
@@ -70,6 +70,37 @@ export const Scene: Story = {
   render: () => (
     <div className="h-64 w-full">
       <SceneSkeleton />
+    </div>
+  ),
+};
+
+export const Canvas: Story = {
+  name: "CanvasSkeleton",
+  render: () => (
+    <div className="h-64 w-full">
+      <CanvasSkeleton label="Loading plugins…" />
+    </div>
+  ),
+};
+
+export const WindowBody: Story = {
+  name: "WindowBodySkeleton",
+  render: () => (
+    <div className="h-64 w-full border border-normal">
+      <WindowBodySkeleton />
+    </div>
+  ),
+};
+
+export const ElementMatrix: Story = {
+  name: "ElementSkeletonKinds",
+  render: () => (
+    <div className="grid w-full max-w-md grid-cols-2 gap-double">
+      {(["text", "button", "input", "tree"] as const).map((kind) => (
+        <div key={kind} className="p-single border border-normal">
+          {elementSkeleton(kind)}
+        </div>
+      ))}
     </div>
   ),
 };
