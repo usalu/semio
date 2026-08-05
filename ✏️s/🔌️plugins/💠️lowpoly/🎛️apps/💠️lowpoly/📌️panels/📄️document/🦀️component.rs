@@ -39,9 +39,9 @@ pub fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabe
         .map(|(object_index, object)| {
             let object_id = object.id.clone();
             let mesh = doc.object_index(&object.id).ok().and_then(|index| doc.mesh_at(index));
-            let vertex_count = mesh.as_ref().map(|entry| entry.vertex_count()).unwrap_or(0);
-            let edge_count = mesh.as_ref().map(|entry| entry.edge_count()).unwrap_or(0);
-            let face_count = mesh.as_ref().map(|entry| entry.face_count()).unwrap_or(0);
+            let vertex_count = mesh.as_ref().map_or(0, |entry| entry.vertex_count());
+            let edge_count = mesh.as_ref().map_or(0, |entry| entry.edge_count());
+            let face_count = mesh.as_ref().map_or(0, |entry| entry.face_count());
             let component_group = |mode: &str, label: LabelText, icon: &str, count: usize| {
                 let leaves: Vec<UiTreeItemNode> = (0..count)
                     .map(|id| {
@@ -71,7 +71,7 @@ pub fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabe
                                     "merge": "invertive",
                                 })),
                             )),
-                            hover_action: Some(lowpoly_action("setHover", Some(hover_args.clone()))),
+                            hover_action: Some(lowpoly_action("setHover", Some(hover_args))),
                             unhover_action: Some(lowpoly_action("setHover", None)),
                             actions,
                             menu: None,

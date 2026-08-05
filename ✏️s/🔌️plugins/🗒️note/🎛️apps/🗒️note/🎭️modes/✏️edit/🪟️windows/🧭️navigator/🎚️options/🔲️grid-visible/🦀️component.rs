@@ -1,0 +1,19 @@
+//! 🔲️ Navigator-window option — the grid-visible toggle.
+//! Its command handler lives in `🎮️commands/🔲️grid::set_grid_visible`.
+
+use crate::apps::note::terminology::NotePlayLabels;
+use crate::artifacts::note::NoteDocument;
+use semio_framework_plugin::WindowMeasure;
+
+//#region 🔖️Measure
+pub fn measure(document: &NoteDocument, labels: &NotePlayLabels) -> WindowMeasure {
+    WindowMeasure::Toggle {
+        id: "note-navigator-measures.grid-visible".into(),
+        icon_id: "layout-grid".into(),
+        label: Some(labels.measure_show_grid.into()),
+        pressed: document.grid_visible.unwrap_or(true),
+        text: None,
+        on_change: crate::apps::note::note_action("setGridVisible", None),
+    }
+}
+//#endregion 🔖️Measure

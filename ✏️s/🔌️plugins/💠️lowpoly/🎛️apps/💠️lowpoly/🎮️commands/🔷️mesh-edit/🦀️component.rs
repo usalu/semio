@@ -158,15 +158,14 @@ pub mod mirror {
     pub fn handle(payload: &Mirror, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
         let (projection, config) = (doc.projection, cfg.projection);
         let params = utility_params_value(config);
-        let axis = payload
-            .axis
-            .as_deref()
-            .map(|value| match value {
+        let axis = payload.axis.as_deref().map_or_else(
+            || mirror_axis_from_param(&params),
+            |value| match value {
                 "y" => MirrorAxis::Y,
                 "z" => MirrorAxis::Z,
                 _ => MirrorAxis::X,
-            })
-            .unwrap_or_else(|| mirror_axis_from_param(&params));
+            },
+        );
         Ok(mesh_edit(projection, config, move |doc| {
             doc.active_mesh_mut().map_err(|e| e.to_string())?.mirror(axis, 0.001).map_err(map_kernel_err)?;
             doc.sync_meshes_to_projection().map_err(|e| e.to_string())

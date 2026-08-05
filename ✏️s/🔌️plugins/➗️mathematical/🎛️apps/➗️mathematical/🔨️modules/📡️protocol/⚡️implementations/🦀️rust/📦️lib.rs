@@ -110,3 +110,31 @@ mod tests {
     //#endregion MathCommand
 }
 //#endregion 🧪️Tests
+
+//#region 🧪️DEBUG_WireBaseline
+#[cfg(test)]
+mod wire_baseline_dump {
+    use super::*;
+    use mathematical::{MathCamera, MathGeometry, MathGraph};
+
+    fn dump(label: &str, command: &MathCommand) {
+        let text = protocol::OpText::print_op(command);
+        let bytes = protocol::OpBinary::encode_op(command).expect("encode");
+        let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+        println!("[DEBUG] {label} | text={text:?} | len={} | hex={hex}", bytes.len());
+    }
+
+    #[test]
+    fn dump_every_command_variant() {
+        dump("SetDocument", &MathCommand::SetDocument { graph: mathematical::math_graph_to_dsl(&MathGraph::default()), geometry: MathGeometry::default() });
+        dump("SetAlgorithm(topo,None)", &MathCommand::SetAlgorithm { algorithm: "topo".into(), seed: None });
+        dump("SetAlgorithm(bfs,Some(a))", &MathCommand::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) });
+        dump("SetDirected(true)", &MathCommand::SetDirected { directed: true });
+        dump("SetDirected(false)", &MathCommand::SetDirected { directed: false });
+        dump("NodeGraphEdit", &MathCommand::NodeGraphEdit { operations_json: r#"[{"operation":"addNode","x":12.0,"y":34.0}]"#.into() });
+        dump("NodeGraphViewport", &MathCommand::NodeGraphViewport { camera: MathCamera { x: 5.0, y: 6.0, zoom: 2.0 } });
+        dump("SetPoints", &MathCommand::SetPoints { geometry: MathGeometry::default() });
+        dump("SetLocale", &MathCommand::SetLocale { value: "de-DE".into() });
+    }
+}
+//#endregion 🧪️DEBUG_WireBaseline

@@ -40,7 +40,7 @@ pub mod add_step {
         if !failures.is_empty() {
             return Ok(Emit::default());
         }
-        let origin = StepOrigin { machine_id: machine.id.clone(), capability_id: capability.id.clone() };
+        let origin = StepOrigin { machine_id: machine.id, capability_id: capability.id.clone() };
         let step = ProcessStep { id: next_step_id(), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: measure_for_capability(&capability, payload.position) };
         let step_id = step.id.clone();
         Ok(Emit { document_operations: insert_step_operations(fixture, step), config_operations: vec![Process3dConfigOperation::SetSelectedId { value: Some(step_id) }], ..Default::default() })

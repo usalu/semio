@@ -9,12 +9,12 @@
 //! (mid-gesture) state in `🦀️session.rs`, shared read-view/selection helpers in `🦀️view.rs`.
 
 use crate::apps::lowpoly::commands::{add_primitive, camera, chrome, engagement, fixture, mesh_edit, patch_object, paint, selection, sun, transform, utility, uv, world};
-use crate::apps::lowpoly::config::{lowpoly_sun_config, LowpolyConfig, LowpolyConfigOperation};
+use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigOperation};
 use crate::apps::lowpoly::modes::{edit, paint as paint_mode};
 use crate::apps::lowpoly::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel, layers as layers_panel};
 use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::apps::lowpoly::terminology::LowpolyLabels;
-use crate::apps::lowpoly::view::{format_selection_targets_label, resolve_active_object_id, selection_targets_from_config, utility_param_f64, LowpolyView};
+use crate::apps::lowpoly::view::{format_selection_targets_label, selection_targets_from_config, utility_param_f64, LowpolyView};
 use crate::artifacts::lowpoly::op::LowpolyOperation;
 use crate::artifacts::lowpoly::{artifact_kind, mesh_artifact_kind, LowpolyProjection, LOWPOLY_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
@@ -59,6 +59,7 @@ pub fn lowpoly_window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -
 
 /// 🧮️ Shared leaf builder for one utility-param slider — used by the `🧲️snap` option and by
 /// `paint_utility_params_group` below.
+#[allow(clippy::too_many_arguments, reason = "one WindowMeasure::Slider literal per call site; a params struct would only move the same 8 fields around for this single builder")]
 pub fn utility_param_slider(id: &str, label: LabelText, key: &str, params: &Value, default: f64, min: f64, max: f64, step: f64) -> WindowMeasure {
     WindowMeasure::Slider { id: format!("lowpoly-measure-{id}"), label: Some(label.into()), value: utility_param_f64(params, key, default), min, max, step: Some(step), ready: None, loading: None, disabled: None, reveal: None, on_change: lowpoly_action("setUtilityParam", Some(json!({ "key": key }))), waiting: None }
 }
@@ -280,7 +281,7 @@ impl DocumentApp for LowpolyPlayApp {
                 Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "mesh.document".into(), json } })
             }
             "document:out" => {
-                let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh });
+                let media_type = self.io().map_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, |io| io.document_media_type);
                 let bytes = doc.projection.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }

@@ -4,7 +4,7 @@
 
 use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigOperation};
 use crate::apps::lowpoly::session::LowpolyScratch;
-use crate::apps::lowpoly::view::{apply_component_selection, enable_selection_target_kind, selection_keys_for, selection_targets_from_config};
+use crate::apps::lowpoly::view::{apply_component_selection, selection_keys_for, selection_targets_from_config};
 use crate::artifacts::lowpoly::engine::LowpolyDocument;
 use crate::artifacts::lowpoly::op::LowpolyOperation;
 use crate::artifacts::lowpoly::LowpolyProjection;

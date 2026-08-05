@@ -1,0 +1,13 @@
+{
+  "title": "Note Plugin Migration To Crate And Taxonomy Consolidation",
+  "emoji": "🗒️",
+  "status": "open",
+  "description": "Migrate the 🗒️note plugin from its old 8-crate constitutional layout (manifest/artifact, app facade, and 6 module crates: engine/dsl/op/pack/protocol/ui) to the new single-crate taxonomy layout at ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust, following the proven recipe in CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE/📋️TEMPLATE.md. Includes: package scaffolding, lib.rs with taxonomy #[path] wiring, Cargo.toml union with workspace=true adoption, code migration per TEMPLATE §4 mapping table, Command decomposition via app_commands!, manifest stitch, per-node tests + wire-format guards, wire-baseline capture/diff proof, and deletion of the 8 old crates once the new crate is green. Ends with a registrar handoff block (no self-application of registrar changes). Strictly scoped to ✏️s/🔌️plugins/🗒️note/** — no edits to root Cargo.toml, other plugins, or registry scripts.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2468"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪12e9ca2d844d4c7ca52b4ef5b9d7064d"
+  ]
+}

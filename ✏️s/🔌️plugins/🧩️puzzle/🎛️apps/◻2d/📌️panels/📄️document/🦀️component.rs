@@ -32,8 +32,8 @@ fn node_label(node: &Value) -> String {
 fn edge_label(edge: &Value, fixture: &Value) -> String {
     let source = edge.get("source").and_then(|value| value.as_str()).unwrap_or("?");
     let target = edge.get("target").and_then(|value| value.as_str()).unwrap_or("?");
-    let source_label = fixture_nodes(fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(source)).map(node_label).unwrap_or_else(|| source.into());
-    let target_label = fixture_nodes(fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(target)).map(node_label).unwrap_or_else(|| target.into());
+    let source_label = fixture_nodes(fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(source)).map_or_else(|| source.into(), node_label);
+    let target_label = fixture_nodes(fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(target)).map_or_else(|| target.into(), node_label);
     format!("{source_label} → {target_label}")
 }
 

@@ -87,6 +87,25 @@ impl Process3dConfig {
 }
 
 store::impl_whole_record_config!(Process3dConfig);
+
+/// 🪆️ `Box<Process3dConfig>` needs its own `dsl::DslField` binding for
+/// `Process3dConfigOperation::Snapshot` (boxed to fix clippy's `large_enum_variant` — the snapshot
+/// variant was ~5x every other row's size) — `Box` is `#[fundamental]` in `std`, so implementing a
+/// foreign trait (`dsl::DslField`) for `Box<Process3dConfig>` (a local type inside the foreign,
+/// fundamental `Box` wrapper) is permitted by the orphan rules; this delegates entirely to
+/// `Process3dConfig`'s own derive-generated `DslField` impl (from `DslDocument`), mirroring `cad`'s
+/// identical `Box<CadScene>` binding.
+impl dsl::DslField for Box<Process3dConfig> {
+    fn shape() -> dsl::Shape {
+        <Process3dConfig as dsl::DslField>::shape()
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        <Process3dConfig as dsl::DslField>::to_value(self)
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        <Process3dConfig as dsl::DslField>::from_value(value).map(Box::new)
+    }
+}
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
@@ -100,7 +119,7 @@ pub enum Process3dConfigOperation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
-        config: Process3dConfig,
+        config: Box<Process3dConfig>,
     },
     #[dsl(key = "selected-id")]
     SetSelectedId { value: Option<String> },
@@ -132,7 +151,7 @@ impl Operation<Process3dConfig> for Process3dConfigOperation {
     fn diff(&self, base: &Process3dConfig) -> Process3dConfig {
         let mut next = base.clone();
         match self {
-            Process3dConfigOperation::Snapshot { config } => return config.clone(),
+            Process3dConfigOperation::Snapshot { config } => return config.as_ref().clone(),
             Process3dConfigOperation::SetSelectedId { value } => next.selected_id = value.clone(),
             Process3dConfigOperation::SetHoveredId { value } => next.hovered_id = value.clone(),
             Process3dConfigOperation::SetSelectedFaceId { value } => next.selected_face_id = *value,
@@ -156,7 +175,7 @@ impl Operation<Process3dConfig> for Process3dConfigOperation {
     }
 
     fn backwards(&self, base: &Process3dConfig) -> Vec<Self> {
-        vec![Process3dConfigOperation::Snapshot { config: base.clone() }]
+        vec![Process3dConfigOperation::Snapshot { config: Box::new(base.clone()) }]
     }
 }
 //#endregion 🔖️ConfigOperations
@@ -180,7 +199,7 @@ mod tests {
         let base = Process3dConfig::default();
         let operation = Process3dConfigOperation::SetSelectedId { value: Some("step-0".into()) };
         let inverse = operation.backwards(&base);
-        assert_eq!(inverse, vec![Process3dConfigOperation::Snapshot { config: base }]);
+        assert_eq!(inverse, vec![Process3dConfigOperation::Snapshot { config: Box::new(base) }]);
     }
 
     #[test]
@@ -202,7 +221,7 @@ mod tests {
     #[test]
     fn process3d_config_op_text_round_trips_every_variant() {
         let config = Process3dConfig { selected_id: Some("stock".into()), hovered_id: Some("step-0".into()), selected_face_id: Some(2), active_utility_id: "cut".into(), ..Process3dConfig::default() };
-        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::Snapshot { config });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::Snapshot { config: Box::new(config) });
         store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetSelectedId { value: Some("stock".into()) });
         store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetSelectedId { value: None });
         store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetHoveredId { value: Some("step-0".into()) });

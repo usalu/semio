@@ -136,14 +136,14 @@ fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &st
     let fixture = &envelope.fixture;
     let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(fixture, &envelope.runtime, pane);
     let camera_json = json!({ "x": camera_x, "y": camera_y, "zoom": zoom }).to_string();
-    let glyph_catalogs_json = fixture.get("meta").and_then(|value| value.get("kindCatalogs")).map(|value| value.to_string()).unwrap_or_else(|| "{}".into());
+    let glyph_catalogs_json = fixture.get("meta").and_then(|value| value.get("kindCatalogs")).map_or_else(|| "{}".into(), |value| value.to_string());
     let selection_json = serde_json::to_string(&envelope.runtime.selected_ids).unwrap_or_else(|_| "[]".into());
     let brush_weights_json = serde_json::to_string(&json!({
         "nodeWeights": envelope.runtime.node_kind_weights,
         "handleWeights": envelope.runtime.handle_kind_weights,
     }))
     .unwrap_or_else(|_| "{}".into());
-    let placement_compatibility_json = fixture.get("meta").and_then(|value| value.get("kindCompatibility")).or_else(|| fixture.get("kindCompatibility")).map(|value| value.to_string()).unwrap_or_else(|| "[]".into());
+    let placement_compatibility_json = fixture.get("meta").and_then(|value| value.get("kindCompatibility")).or_else(|| fixture.get("kindCompatibility")).map_or_else(|| "[]".into(), |value| value.to_string());
     let lod_mode = envelope.runtime.lod_mode_by_pane.get(pane).cloned().unwrap_or_else(|| PUZZLE2D_LOD_MODE_AUTOMATIC.to_string());
     Board2dScene {
         fixture_json: cached_fixture_json(document_json, fixture),
@@ -173,7 +173,7 @@ pub fn render_canvas(document_json: &str, envelope: &Puzzle2dScene, pane: &str) 
 /// 🤝️ The engagement HUD for one pane: a text command line plus a node/edge/LOD status readout.
 pub fn puzzle2d_engagement(envelope: &Puzzle2dScene, host: &BoardHost, pane: &str, labels: &Puzzle2dLabels) -> WindowEngagement {
     let overlay: Value = serde_json::from_str(&host.overlay_paint_state_json()).unwrap_or(Value::Null);
-    let pane_lod_mode = envelope.runtime.lod_mode_by_pane.get(pane).map(String::as_str).unwrap_or(PUZZLE2D_LOD_MODE_AUTOMATIC);
+    let pane_lod_mode = envelope.runtime.lod_mode_by_pane.get(pane).map_or(PUZZLE2D_LOD_MODE_AUTOMATIC, String::as_str);
     let lod = overlay.get("lod").and_then(|value| value.as_str()).unwrap_or(if pane_lod_mode == PUZZLE2D_LOD_MODE_AUTOMATIC { "auto" } else { pane_lod_mode });
     let node_count = fixture_nodes(&envelope.fixture).len();
     let edge_count = fixture_edges(&envelope.fixture).len();

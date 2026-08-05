@@ -58,7 +58,7 @@ pub mod clear_seam {
     pub struct ClearSeam {}
 
     pub fn handle(_payload: &ClearSeam, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
-        super::mark_uv_seam::handle(&super::mark_uv_seam::MarkUvSeam { seam: Some(false), edge_ids: None }, doc, cfg, ctx)
+        mark_uv_seam::handle(&mark_uv_seam::MarkUvSeam { seam: Some(false), edge_ids: None }, doc, cfg, ctx)
     }
 }
 //#endregion 🔖️ClearSeam

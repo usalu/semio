@@ -3,15 +3,12 @@
 //! window since the paint utilities apply to both).
 
 use crate::apps::lowpoly::config::LowpolyConfig;
-use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::apps::lowpoly::terminology::LowpolyLabels;
 use crate::apps::lowpoly::view::{euler_degrees_to_quaternion, resolve_active_object_id, LowpolyView};
 use crate::apps::lowpoly::{lowpoly_window_engagement, lowpoly_window_measures};
 use crate::artifacts::lowpoly::engine::{mesh_data_from_transfer, LowpolyDocument};
-use crate::artifacts::lowpoly::LowpolyProjection;
-use kernel_3d_mesh::Vec3;
 use semio_framework_plugin::{
-    build_world_3d_scene, world3d_camera_json, world3d_scene, world3d_selection_json, ActionRef, SurfaceKind, UiNode, UtilityRef, WindowKindDefinition, WindowMeasure, WindowOptions, WindowEngagementSlot,
+    build_world_3d_scene, world3d_camera_json, world3d_scene, world3d_selection_json, ActionRef, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -36,7 +33,8 @@ pub const LOWPOLY_MAIN_ACTIONS: &[&str] = &[
 pub fn definition() -> WindowKindDefinition {
     let projection = crate::artifacts::lowpoly::engine::default_projection();
     let config = LowpolyConfig::default();
-    let engagement = lowpoly_window_engagement(LowpolyView { projection: &projection, config: &config }, LOWPOLY_TRANSFORM_UTILITY_DEFAULT, &LowpolyLabels::NATIVE_EN);
+    let labels = semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US");
+    let engagement = lowpoly_window_engagement(LowpolyView { projection: &projection, config: &config }, LOWPOLY_TRANSFORM_UTILITY_DEFAULT, labels);
     WindowKindDefinition {
         id: LOWPOLY_PLAY_WINDOW_MAIN.into(),
         label: semio_framework_plugin::LocalizedLabel::native("Model", "Modell"),

@@ -112,16 +112,16 @@ pub mod engagement_submit {
     pub fn handle(payload: &EngagementSubmit, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutOperation, LayoutConfigOperation>, Fault> {
         let typed = payload.value.trim();
         if engagement_token_matches(typed, "export png") || engagement_token_matches(typed, "png") {
-            return super::export_png::handle(&super::export_png::ExportPng { page_id: None }, doc, cfg);
+            return export_png::handle(&export_png::ExportPng { page_id: None }, doc, cfg);
         }
         if engagement_token_matches(typed, "export svg") || engagement_token_matches(typed, "svg") {
-            return super::export_svg::handle(&super::export_svg::ExportSvg { page_id: None }, doc, cfg);
+            return export_svg::handle(&export_svg::ExportSvg { page_id: None }, doc, cfg);
         }
         if engagement_token_matches(typed, "export pdf") || engagement_token_matches(typed, "pdf") {
-            return super::export_pdf::handle(&super::export_pdf::ExportPdf { page_id: None }, doc, cfg);
+            return export_pdf::handle(&export_pdf::ExportPdf { page_id: None }, doc, cfg);
         }
         if engagement_token_matches(typed, "export package") || engagement_token_matches(typed, "package") {
-            return super::export_package::handle(&super::export_package::ExportPackage {}, doc, cfg);
+            return export_package::handle(&export_package::ExportPackage {}, doc, cfg);
         }
         Ok(Emit::default())
     }

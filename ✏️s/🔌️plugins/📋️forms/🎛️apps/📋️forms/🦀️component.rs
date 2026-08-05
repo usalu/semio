@@ -199,14 +199,19 @@ semio_framework_plugin::app_commands! {
         "addQuestion" as "add-question" => add_question::AddQuestion,
         "removeQuestion" as "remove-question" => remove_question::RemoveQuestion,
         "patchQuestions" as "patch-questions" => patch_questions::PatchQuestions,
-        "moveQuestion" as "move-question" => move_question::MoveQuestion,
-        "dropQuestionKind" as "drop-question-kind" => drop_question_kind::DropQuestionKind,
+        // 🩹️ `patchQuestionOptions`..`removeVectorField` (rows 18-23) come BEFORE `moveQuestion`/
+        // `dropQuestionKind` (rows 24-25) here, even though all 5 live in the same `🎮️commands/*` files —
+        // this row order is the pre-migration `forms_protocol::FormsCommand`'s exact binary variant
+        // ordinal and must not be re-sorted by file grouping (see the doc comment above: reordering is a
+        // wire-format break no round-trip test catches, since every row still round-trips fine on its own).
         "patchQuestionOptions" as "patch-question-options" => patch_question_options::PatchQuestionOptions,
         "addQuestionOption" as "add-question-option" => add_question_option::AddQuestionOption,
         "removeQuestionOption" as "remove-question-option" => remove_question_option::RemoveQuestionOption,
         "patchVectorField" as "patch-vector-field" => patch_vector_field::PatchVectorField,
         "addVectorField" as "add-vector-field" => add_vector_field::AddVectorField,
         "removeVectorField" as "remove-vector-field" => remove_vector_field::RemoveVectorField,
+        "moveQuestion" as "move-question" => move_question::MoveQuestion,
+        "dropQuestionKind" as "drop-question-kind" => drop_question_kind::DropQuestionKind,
         "setSpecJson" as "spec-json" => set_spec_json::SetSpecJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "exportFixture" as "export-fixture" => export_fixture::ExportFixture,
@@ -526,14 +531,14 @@ mod tests {
             FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: Some("s1".into()) }),
             FormsCommand::RemoveQuestion(remove_question::RemoveQuestion { question_id: "q1".into() }),
             FormsCommand::PatchQuestions(patch_questions::PatchQuestions { question_ids: vec!["q1".into(), "q2".into()], field: "required".into(), value_json: "true".into(), param_key: None }),
-            FormsCommand::MoveQuestion(move_question::MoveQuestion { question_id: "q1".into(), to_step_id: "s2".into(), target_id: Some("q2".into()), position: "before".into(), index: Some(0) }),
-            FormsCommand::DropQuestionKind(drop_question_kind::DropQuestionKind { kind: "slider".into(), target_id: "step:s1".into(), drop_position: "inside".into() }),
             FormsCommand::PatchQuestionOptions(patch_question_options::PatchQuestionOptions { question_ids: vec!["q1".into()], option_value: "a".into(), field: "label".into(), value_json: "\"Option A\"".into() }),
             FormsCommand::AddQuestionOption(add_question_option::AddQuestionOption { question_id: "q1".into(), label: "New option".into() }),
             FormsCommand::RemoveQuestionOption(remove_question_option::RemoveQuestionOption { question_id: "q1".into(), option_value: "a".into() }),
             FormsCommand::PatchVectorField(patch_vector_field::PatchVectorField { question_id: "q1".into(), field_key: "x".into(), field: "value".into(), value_json: "1.0".into() }),
             FormsCommand::AddVectorField(add_vector_field::AddVectorField { question_id: "q1".into(), field_key: "w".into() }),
             FormsCommand::RemoveVectorField(remove_vector_field::RemoveVectorField { question_id: "q1".into(), field_key: "w".into() }),
+            FormsCommand::MoveQuestion(move_question::MoveQuestion { question_id: "q1".into(), to_step_id: "s2".into(), target_id: Some("q2".into()), position: "before".into(), index: Some(0) }),
+            FormsCommand::DropQuestionKind(drop_question_kind::DropQuestionKind { kind: "slider".into(), target_id: "step:s1".into(), drop_position: "inside".into() }),
             FormsCommand::SetSpecJson(set_spec_json::SetSpecJson { json: "{}".into() }),
             FormsCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() }),
             FormsCommand::ExportFixture(export_fixture::ExportFixture {}),

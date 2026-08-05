@@ -685,7 +685,7 @@ mod tests {
         let mesh = kernel_3d_engine::block_on(kernel.tessellate(&handle, 0.1)).expect("tessellate");
         let axis_bounds = |offset: usize| -> (f32, f32) {
             let values: Vec<f32> = mesh.position.iter().skip(offset).step_by(3).copied().collect();
-            (values.iter().cloned().fold(f32::INFINITY, f32::min), values.iter().cloned().fold(f32::NEG_INFINITY, f32::max))
+            (values.iter().copied().fold(f32::INFINITY, f32::min), values.iter().copied().fold(f32::NEG_INFINITY, f32::max))
         };
         let (min_x, max_x) = axis_bounds(0);
         let (min_y, max_y) = axis_bounds(1);

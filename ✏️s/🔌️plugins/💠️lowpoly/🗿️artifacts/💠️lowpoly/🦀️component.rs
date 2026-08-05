@@ -252,7 +252,7 @@ mod tests {
     #[test]
     fn object_patch_apply_mutates_and_inverse_restores_all_fields() {
         let mesh_json = "{}".to_string();
-        let mut object = LowpolyObject { id: "obj-1".into(), name: "Original".into(), transform: LowpolyTransform::default(), smooth_shading: false, mesh_json: mesh_json.clone(), paint_layers: vec![LowpolyPaintLayer::new("Base")] };
+        let mut object = LowpolyObject { id: "obj-1".into(), name: "Original".into(), transform: LowpolyTransform::default(), smooth_shading: false, mesh_json, paint_layers: vec![LowpolyPaintLayer::new("Base")] };
         let original = object.clone();
         let new_mesh = "{\"changed\":true}".to_string();
         let patch = LowpolyObjectPatch { name: Some("Renamed".into()), smooth_shading: Some(true), transform: Some(LowpolyTransform { position: [1.0, 2.0, 3.0], ..LowpolyTransform::default() }), mesh_json: Some(new_mesh.clone()) };

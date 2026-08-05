@@ -3,7 +3,7 @@
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
 use crate::apps::puzzle2d::config::Puzzle2dConfig;
-use semio_framework_plugin::{AppLabels, Locale, LocalizedLabel, Terminology};
+use semio_framework_plugin::{AppLabels, Locale, Terminology};
 
 //#region 🔖️Labels
 // 🗣️ Complete UI label set for the 2d app; one field per label makes every terminology×locale
@@ -53,18 +53,12 @@ semio_framework_plugin::app_labels! {
 /// 🗣️ Resolves the active label set from `Puzzle2dConfig`'s own persisted locale/terminology
 /// strings (B1: was `view_state.locale`/`view_state.terminology`) through the generated
 /// `Puzzle2dLabels::labels` (`AppLabels`) exhaustive resolver.
-fn puzzle2d_labels(config: &Puzzle2dConfig) -> &'static Puzzle2dLabels {
+pub fn puzzle2d_labels(config: &Puzzle2dConfig) -> &'static Puzzle2dLabels {
     let locale = if is_de_locale(config) { Locale::De } else { Locale::En };
     let terminology = if config.terminology.as_str() == "reuse" { Terminology::Reuse } else { Terminology::Native };
     Puzzle2dLabels::labels(locale, terminology)
 }
 
-/// 🗺️ Builds the full `LocalizedLabel` matrix for one `Puzzle2dLabels` field — for the static
-/// manifest (`create_puzzle2d_app`), which must carry every (terminology, locale) cell up front
-/// rather than a single resolved-at-render-time `LabelText` (see `puzzle2d_labels`).
-fn puzzle2d_localized(field: impl Fn(&Puzzle2dLabels) -> semio_framework_plugin::LabelText) -> LocalizedLabel {
-    LocalizedLabel::from_fn(|terminology, locale| field(Puzzle2dLabels::labels(locale, terminology)).as_str().to_string())
-}
 //#endregion 🔖️Labels
 
 //#region 🔖️Locale

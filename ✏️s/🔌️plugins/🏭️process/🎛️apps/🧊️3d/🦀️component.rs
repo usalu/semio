@@ -23,7 +23,7 @@ use crate::artifacts::process3d::Process3dDocument;
 use semio_framework_core::kernel::HostEffect;
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability,
-    OsMediaFormat, UiNode, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
+    OsMediaFormat, UiNode, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
 use serde_json::Value;
 use std::collections::HashMap;
@@ -177,7 +177,7 @@ impl DocumentApp for Process3dPlayApp {
                 None => Err(MediaError::Payload("brep:out".into(), "kernel replay failed".into())),
             },
             "document:out" => {
-                let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+                let media_type = self.io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.projection.encode_pack();
                 Ok(semio_framework_plugin::Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -380,7 +380,7 @@ pub fn create_process3d_app() -> App {
             .keybinding("escape", "engagementAbort")
             .keybinding("delete", "removeSelectedStep")
             .keybinding("backspace", "removeSelectedStep")
-            .config(Process3dPlayApp::default().config_spec())
+            .config(Process3dPlayApp.config_spec())
             .io(crate::artifacts::process3d::engine::process3d_io()),
     )
     .example(PROCESS3D_EXAMPLE_TIMBER, LocalizedLabel::native("Timber Beam Joinery", "Holzbalkenverbindung"), crate::artifacts::process3d::engine::TIMBER_EXAMPLE_DSL, "file-text")
@@ -429,7 +429,7 @@ pub(crate) mod testkit {
 mod tests {
     use super::*;
     use crate::apps::process3d::testkit::{app, app_with_registry, dispatch, main_window_measures, render as render_body};
-    use semio_framework_plugin::{testkit, HistoryView, PluginApp};
+    use semio_framework_plugin::{testkit, HistoryView, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
 
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
@@ -453,21 +453,56 @@ mod tests {
         }
     }
 
-    /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — the
-    /// kebab-cased command id, except for the one documented divergence (`setLocale` → `locale`).
+    /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — copied
+    /// verbatim from the pre-migration `Process3dCommand`/`command_id()` match (the two vocabularies
+    /// genuinely diverge for about a third of process3d's rows, unlike flow's single `setLocale`
+    /// exception, so this pins the full table rather than deriving it from a kebab-case guess).
     #[test]
     fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+        let expected_wire_key = |id: &str| -> &'static str {
+            match id {
+                "setDocument" => "document",
+                "setActiveExample" => "active-example",
+                "addStep" => "add-step",
+                "addWorkshopMachine" => "add-workshop-machine",
+                "removeWorkshopMachine" => "remove-workshop-machine",
+                "updateWorkshopMachine" => "update-workshop-machine",
+                "removeStep" => "remove-step",
+                "removeSelectedStep" => "remove-selected-step",
+                "moveStep" => "move-step",
+                "updateStep" => "update-step",
+                "setStepEnabled" => "set-step-enabled",
+                "setStock" => "stock",
+                "patchInspector" => "patch-inspector",
+                "setCursor" => "cursor",
+                "stepCursor" => "step-cursor",
+                "stepCursorBack" => "step-cursor-back",
+                "stepCursorForward" => "step-cursor-forward",
+                "engagementSubmit" => "engagement-submit",
+                "worldPointerDown" => "world-pointer-down",
+                "worldFaceDragEnd" => "world-face-drag-end",
+                "importModelFile" => "import-model-file",
+                "engagementInput" => "engagement-input",
+                "engagementAbort" => "engagement-abort",
+                "setSelection" => "set-selection",
+                "setHover" => "set-hover",
+                "setCamera" => "camera",
+                "worldPick" => "world-pick",
+                "toggleSun" => "toggle-sun",
+                "setSunAzimuth" => "sun-azimuth",
+                "setSunElevation" => "sun-elevation",
+                "setSunIntensity" => "sun-intensity",
+                "setLocale" => "locale",
+                "exportModel" => "export-model",
+                "loadModelRequest" => "load-model-request",
+                other if other == SET_ACTIVE_UTILITY_ACTION_ID => "active-utility",
+                other => panic!("no expected wire key recorded for command id {other} — add it to this table"),
+            }
+        };
         for command in every_command() {
             let id = command.command_id();
-            let expected = if id == "setLocale" {
-                "locale".to_string()
-            } else if id == SET_ACTIVE_UTILITY_ACTION_ID {
-                "active-utility".to_string()
-            } else {
-                id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect()
-            };
             let printed = protocol::OpText::print_op(&command);
-            assert_eq!(printed.split(' ').next().unwrap_or_default(), expected, "wire keyword drifted for command {id}: {printed:?}");
+            assert_eq!(printed.split(' ').next().unwrap_or_default(), expected_wire_key(id), "wire keyword drifted for command {id}: {printed:?}");
         }
     }
 

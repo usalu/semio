@@ -234,7 +234,7 @@ pub fn build_display_list_for_page(doc: &LayoutDocument, page: &Page, active_pag
             }
             Frame::Image { id, bounds, link_id, .. } => {
                 let link = doc.links.iter().find(|l| l.id == *link_id);
-                let placeholder = link.map(|l| l.state.as_deref() == Some("missing") || l.proxy_data_url.is_none()).unwrap_or(true);
+                let placeholder = link.is_none_or(|l| l.state.as_deref() == Some("missing") || l.proxy_data_url.is_none());
                 if chrome_blueprint {
                     rects.push(bounds_to_display_rect(id, bounds, item.inherited, selected, hovered, None, Some([0.85, 0.45, 0.2, 0.9])));
                 }
@@ -709,7 +709,7 @@ mod tests {
         let camera = Camera { x: 100.0, y: 50.0, zoom: 2.0 };
         let viewport = Viewport { width: 400, height: 300, dpr: 1.0 };
         let json = screen_to_world_json(&camera, &viewport, 210.0, 160.0);
-        let parsed: serde_json::Value = serde_json::from_str(&json).expect("valid json point");
+        let parsed: Value = serde_json::from_str(&json).expect("valid json point");
         assert!(parsed["x"].is_number());
         assert!(parsed["y"].is_number());
     }

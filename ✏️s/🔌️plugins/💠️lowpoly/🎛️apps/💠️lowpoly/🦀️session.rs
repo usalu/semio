@@ -9,7 +9,7 @@ use crate::apps::lowpoly::config::LowpolyConfig;
 use crate::apps::lowpoly::view::build_doc;
 use crate::artifacts::lowpoly::engine::{composite_layer_pixels, flood_fill, pixel_runs_from_diff, sample_pixel_from, stamp_brush, LowpolyDocument};
 use crate::artifacts::lowpoly::op::{LowpolyOperation, PixelRun};
-use crate::artifacts::lowpoly::{empty_paint_pixels, LowpolyObject, LowpolyObjectPatch, LowpolyPaintLayer, LowpolyProjection, LOWPOLY_PAINT_TEXTURE_SIZE};
+use crate::artifacts::lowpoly::{empty_paint_pixels, LowpolyObject, LowpolyObjectPatch, LowpolyProjection, LOWPOLY_PAINT_TEXTURE_SIZE};
 use base64::Engine;
 use kernel_3d_mesh::Vec3;
 use semio_framework_plugin::Emit;
@@ -46,12 +46,17 @@ pub struct PaintTextureCache {
 //#endregion 🔖️Sessions
 
 //#region 🔖️Transform
+#[derive(Clone, Copy)]
 pub enum Transform {
     Translate(Vec3),
     Rotate { axis: Vec3, angle: f32 },
     Scale(Vec3),
 }
 
+/// 🧯️ `clippy::needless_pass_by_value` — takes `MeshKernelError` by value (not `&MeshKernelError`) on
+/// purpose: every call site uses it directly as a `.map_err(map_kernel_err)` callback, and `map_err`'s
+/// closure signature is `FnOnce(E) -> F`, which always hands the error by value.
+#[allow(clippy::needless_pass_by_value)]
 pub fn map_kernel_err(error: kernel_3d_mesh::MeshKernelError) -> String {
     format!("{error:?}")
 }
@@ -128,13 +133,13 @@ fn encode_rgba_png(pixels: &[u8], width: u32, height: u32) -> Result<Vec<u8>, St
 }
 
 fn fnv1a_u64(mut hash: u64, bytes: &[u8]) -> u64 {
-    let mut chunks = bytes.chunks_exact(8);
-    for chunk in &mut chunks {
-        let word = u64::from_le_bytes(chunk.try_into().unwrap());
+    let (chunks, remainder) = bytes.as_chunks::<8>();
+    for chunk in chunks {
+        let word = u64::from_le_bytes(*chunk);
         hash ^= word;
         hash = hash.wrapping_mul(0x100000001b3);
     }
-    for &byte in chunks.remainder() {
+    for &byte in remainder {
         hash ^= byte as u64;
         hash = hash.wrapping_mul(0x100000001b3);
     }
@@ -299,7 +304,7 @@ impl LowpolyScratch {
     /// @emoji 🖌️ One mid-drag paint tick: brush/eraser/fill mutate the stroke scratch, eyedropper samples
     /// the paint color (as a `SetPaintColor` config op). Emits ZERO document operations — the stroke
     /// commits only on `paintStrokeEnd` (View-kind safe).
-    pub fn paint_tick(&mut self, projection: &LowpolyProjection, config: &LowpolyConfig, object_id: String, u: f32, v: f32) -> Emit<LowpolyOperation, crate::apps::lowpoly::config::LowpolyConfigOperation> {
+    pub fn paint_tick(&mut self, projection: &LowpolyProjection, config: &LowpolyConfig, object_id: &str, u: f32, v: f32) -> Emit<LowpolyOperation, crate::apps::lowpoly::config::LowpolyConfigOperation> {
         let utility = config.paint_utility.clone();
         if utility == "eyedropper" {
             let Some(object) = projection.objects.iter().find(|object| object.id == object_id) else {
@@ -315,8 +320,8 @@ impl LowpolyScratch {
             None => true,
         };
         if need_new {
-            let base = projection.objects.iter().find(|object| object.id == object_id).and_then(|object| object.paint_layers.get(layer_index)).map(|layer| layer.pixels.clone()).unwrap_or_else(empty_paint_pixels);
-            self.stroke = Some(PaintStrokeSession { object_id: object_id.clone(), layer_index, scratch: base.clone(), base });
+            let base = projection.objects.iter().find(|object| object.id == object_id).and_then(|object| object.paint_layers.get(layer_index)).map_or_else(empty_paint_pixels, |layer| layer.pixels.clone());
+            self.stroke = Some(PaintStrokeSession { object_id: object_id.to_string(), layer_index, scratch: base.clone(), base });
         }
         let color = [config.paint_color_r, config.paint_color_g, config.paint_color_b, config.paint_color_a];
         let params = crate::apps::lowpoly::view::utility_params_value(config);

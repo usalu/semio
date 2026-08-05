@@ -4,7 +4,7 @@
 
 use crate::artifacts::lowpoly::engine::{layer_pixels_at, object_mut};
 use crate::artifacts::lowpoly::{LowpolyObject, LowpolyObjectPatch, LowpolyPaintLayer, LowpolyProjection};
-use protocol::{apply_collection_operation, invert_collection_operation, CollectionOperation, Operation, OperationDiff};
+use protocol::{apply_collection_operation, invert_collection_operation, CollectionOperation, Operation};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Patches
@@ -364,7 +364,7 @@ mod tests {
     fn paint_stroke_op_backwards_restores_prior_pixels() {
         let projection = default_projection();
         let object_id = projection.objects[0].id.clone();
-        let operation = LowpolyOperation::PaintStroke { object_id: object_id.clone(), layer_index: 0, runs: vec![PixelRun { offset: 0, bytes: vec![1, 2, 3, 4] }] };
+        let operation = LowpolyOperation::PaintStroke { object_id, layer_index: 0, runs: vec![PixelRun { offset: 0, bytes: vec![1, 2, 3, 4] }] };
         let backwards = operation.backwards(&projection);
         let mut painted = projection.clone();
         apply_lowpoly_operation(&mut painted, &operation);
@@ -379,7 +379,7 @@ mod tests {
     fn objects_patch_op_backwards_restores_prior_mesh_and_name() {
         let projection = default_projection();
         let object_id = projection.objects[0].id.clone();
-        let operation = LowpolyOperation::ObjectsPatch { id: object_id.clone(), patch: LowpolyObjectPatch { name: Some("Renamed".into()), ..Default::default() } };
+        let operation = LowpolyOperation::ObjectsPatch { id: object_id, patch: LowpolyObjectPatch { name: Some("Renamed".into()), ..Default::default() } };
         let backwards = operation.backwards(&projection);
         let mut next = projection.clone();
         apply_lowpoly_operation(&mut next, &operation);

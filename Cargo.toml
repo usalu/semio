@@ -531,7 +531,7 @@ members = [
     "✏️s/🔌️plugins/📕️norm/🎛️apps/📔️vdi3805/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/📕️norm/🎛️apps/📔️vdi3805/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/📕️norm/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
+    "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🏛️architect/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🏛️architect/🔨️modules/🦴️spine/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/⚡️implementations/🦀️rust",

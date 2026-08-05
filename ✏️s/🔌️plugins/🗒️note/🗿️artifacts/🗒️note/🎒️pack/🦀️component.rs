@@ -1,0 +1,102 @@
+//! 📦️ Note artifact — binary document surface + laws (constitutional: pack).
+
+use crate::artifacts::note::NoteDocument;
+use store::PackError;
+
+/// 📦️ Encodes a `NoteDocument` to its binary pack form.
+pub fn encode(document: &NoteDocument) -> Vec<u8> {
+    store::DocumentPack::encode_pack(document)
+}
+
+/// 📖️ Decodes a `NoteDocument` from its binary pack form.
+pub fn decode(bytes: &[u8]) -> Result<NoteDocument, PackError> {
+    <NoteDocument as store::DocumentPack>::decode_pack(bytes)
+}
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
+    use std::collections::BTreeMap;
+
+    #[test]
+    fn pack_round_trips_and_agrees_with_dsl() {
+        let document = crate::artifacts::note::dsl::parse_dsl(crate::artifacts::note::dsl::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
+        store::test_support::assert_dsl_pack_equivalence(&document);
+        let bytes = encode(&document);
+        assert_eq!(decode(&bytes).expect("decode"), document);
+    }
+
+    #[test]
+    fn pack_round_trips_representative_document() {
+        let mut assets = BTreeMap::new();
+        assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into(), width: Some(10.0), height: Some(20.0) });
+        let document = NoteDocument {
+            schema: NOTE_DOCUMENT_SCHEMA.into(),
+            id: "doc-1".into(),
+            title: Some("Representative \"Doc\"".into()),
+            grid_visible: Some(true),
+            grid_spacing: Some(32.0),
+            grid_subdivisions: None,
+            grid_opacity: Some(0.35),
+            snap_enabled: None,
+            snap_grid_spacing: Some(8.0),
+            pencil_width: Some(3.0),
+            eraser_radius: None,
+            assets,
+            blocks: vec![
+                NoteBlockNode::Text {
+                    id: "text-1".into(),
+                    name: "Text".into(),
+                    x: 0.0,
+                    y: 0.0,
+                    width: 200.0,
+                    height: 80.0,
+                    rotation: 0.0,
+                    visible: true,
+                    locked: false,
+                    paragraphs: vec![NoteTextParagraph { runs: vec![NoteTextRun { text: "plain".into(), bold: None, italic: None, underline: None, link: None }] }],
+                    font_size: 16.0,
+                    font_weight: "bold".into(),
+                    align: "center".into(),
+                },
+                NoteBlockNode::Table {
+                    id: "table-1".into(),
+                    name: "Table".into(),
+                    x: 20.0,
+                    y: 20.0,
+                    width: 320.0,
+                    height: 120.0,
+                    rotation: 0.0,
+                    visible: true,
+                    locked: false,
+                    columns: vec!["A".into(), "B".into()],
+                    rows: vec![vec![NoteTableCell { content: "a1".into() }, NoteTableCell { content: "b1".into() }]],
+                },
+            ],
+        };
+        store::test_support::assert_dsl_pack_equivalence(&document);
+    }
+
+    //#region 🔖️CommandEnvelopeTests
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
+    /// `NoteOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this file's
+    /// existing pack round-trip laws (same pattern as `mathematical_pack`'s own
+    /// `command_envelope_round_trip_holds_for_an_applied_operation`).
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        use crate::artifacts::note::op::NoteOperation;
+        use protocol::{DocumentId, Edit, SchemaId};
+        use store::{create_document_envelope, DocumentCommand, DocumentStore};
+
+        let initial = crate::artifacts::note::dsl::parse_dsl(crate::artifacts::note::dsl::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
+        let envelope = create_document_envelope::<NoteDocument, NoteOperation>(NOTE_DOCUMENT_SCHEMA, "note-command-envelope-demo", initial, None);
+        let mut store = DocumentStore::new(envelope);
+        store.dispatch(DocumentCommand::Apply { operations: vec![NoteOperation::SetGridVisible { visible: Some(false) }], description: None }).expect("apply");
+        let edit: &Edit<NoteOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<NoteDocument, NoteOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+    }
+    //#endregion 🔖️CommandEnvelopeTests
+}
+//#endregion 🧪️Tests

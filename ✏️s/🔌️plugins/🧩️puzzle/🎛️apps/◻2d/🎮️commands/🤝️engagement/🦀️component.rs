@@ -20,7 +20,7 @@ pub fn engagement_input(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
 
 pub fn engagement_submit(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     let pane = args.and_then(|value| value.get("pane")).and_then(|value| value.as_str()).unwrap_or(overview::WINDOW_KIND_ID).to_string();
-    let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).map(str::trim).unwrap_or("").to_lowercase();
+    let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).map_or("", str::trim).to_lowercase();
     let applied = match value.as_str() {
         "select" | "brush" => {
             // 🧰️ Reconcile the engagement text-command utility switch through the host-owned active

@@ -389,6 +389,55 @@ mod tests {
         test_support::assert_op_text_binary_equivalence(&Process3dCommand::ExportModel { format: "step".into() });
         test_support::assert_op_text_binary_equivalence(&Process3dCommand::LoadModelRequest);
     }
+
+    /// 🧪️ [DEBUG] TEMPORARY wire baseline dump for PROCESS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION.
+    /// Run with `-- --nocapture dump_wire_baseline`, save the output, delete this test once the new
+    /// crate's equivalent dump diffs clean. Same representative value per variant as the round-trip
+    /// test above, in binary-ordinal (declaration) order.
+    #[test]
+    fn dump_wire_baseline() {
+        fn line(command: &Process3dCommand) {
+            let text = protocol::OpText::print_op(command);
+            let bytes = protocol::OpBinary::encode_op(command).expect("encode");
+            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+            println!("{text} | {} | {hex}", bytes.len());
+        }
+        line(&Process3dCommand::SetDocument { document: empty_process3d_projection() });
+        line(&Process3dCommand::SetActiveExample { example_id: "drilled-plate".into() });
+        line(&Process3dCommand::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: Some([1.0, 2.0, 3.0]) });
+        line(&Process3dCommand::AddWorkshopMachine { catalog_id: "wood".into(), machine_id: "circularSaw".into() });
+        line(&Process3dCommand::RemoveWorkshopMachine { id: "circularSaw".into() });
+        line(&Process3dCommand::UpdateWorkshopMachine { machine: WorkshopMachine { id: "circularSaw".into(), label: "Circular Saw".into(), icon_id: "scissors".into(), catalog_id: Some("wood".into()), capabilities: vec![] } });
+        line(&Process3dCommand::RemoveStep { id: "cut-1".into() });
+        line(&Process3dCommand::RemoveSelectedStep);
+        line(&Process3dCommand::MoveStep { id: "cut-1".into(), index: 2 });
+        line(&Process3dCommand::UpdateStep { step: cut_step("cut-1") });
+        line(&Process3dCommand::SetStepEnabled { id: "cut-1".into(), enabled: false });
+        line(&Process3dCommand::SetStock { kind: "cylinder".into() });
+        line(&Process3dCommand::PatchInspector { target: "beam".into(), field: "width".into(), number: Some(1.5), text: None });
+        line(&Process3dCommand::SetCursor { value: Some(3) });
+        line(&Process3dCommand::StepCursor { delta: -1 });
+        line(&Process3dCommand::StepCursorBack);
+        line(&Process3dCommand::StepCursorForward);
+        line(&Process3dCommand::EngagementSubmit);
+        line(&Process3dCommand::WorldPointerDown { position: [1.0, 2.0, 3.0] });
+        line(&Process3dCommand::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: Some([1.0, 1.0]) });
+        line(&Process3dCommand::ImportModelFile { name: "beam.step".into(), payload: "data:application/octet-stream;base64,AAAA".into() });
+        line(&Process3dCommand::SetActiveUtility { utility_id: "cut".into() });
+        line(&Process3dCommand::EngagementInput { value: "cut".into() });
+        line(&Process3dCommand::EngagementAbort);
+        line(&Process3dCommand::SetSelection { id: Some("stock".into()) });
+        line(&Process3dCommand::SetHover { id: Some("step-0".into()) });
+        line(&Process3dCommand::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 });
+        line(&Process3dCommand::WorldPick { granularity: "face".into(), id: Some(7) });
+        line(&Process3dCommand::ToggleSun);
+        line(&Process3dCommand::SetSunAzimuth { value: 90.0 });
+        line(&Process3dCommand::SetSunElevation { value: 45.0 });
+        line(&Process3dCommand::SetSunIntensity { value: 1.0 });
+        line(&Process3dCommand::SetLocale { value: "de-DE".into() });
+        line(&Process3dCommand::ExportModel { format: "step".into() });
+        line(&Process3dCommand::LoadModelRequest);
+    }
     //#endregion 🔖️Process3dCommandTests
 }
 //#endregion 🧪️Tests

@@ -2,8 +2,8 @@
 //! node reaches for. Deliberately ONE block for the whole app (never split per window/panel).
 
 //#region 🔖️Labels
-/// 🗣️ Complete UI label set for the 3D app; one field per label makes every locale combination compile-checked.
 semio_framework_plugin::app_labels! {
+    /// 🗣️ Complete UI label set for the 3D app; one field per label makes every locale combination compile-checked.
     pub struct Process3dLabels {
         stock: native_en "Stock", native_de "Rohteil", reuse_en "Stock", reuse_de "Rohteil";
         steps: native_en "Steps", native_de "Schritte", reuse_en "Steps", reuse_de "Schritte";

@@ -172,7 +172,7 @@ pub fn layout_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -
             let id = format!("page-{}", index + 1);
             let layer_id = format!("layer-{id}");
             Page {
-                id: id.clone(),
+                id,
                 name: format!("Page {}", index + 1),
                 spread_id: "spread-1".into(),
                 parent_page_id: None,

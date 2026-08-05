@@ -152,6 +152,7 @@ pub fn lowpoly_sun_config(config: &LowpolyConfig) -> WorldSunConfig {
 /// is always a plain `Apply` (never `AmendLast`), so "undo this tick" = "restore the whole-config
 /// snapshot from just before it", the simplest correct inverse.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[allow(clippy::large_enum_variant, reason = "Snapshot must carry the whole LowpolyConfig by value (not boxed) so its dsl(block)-derived wire encoding stays byte-identical to the pre-migration wire format; every variant is dispatched rarely (config-only ticks), never in a hot allocation path")]
 pub enum LowpolyConfigOperation {
     #[dsl(key = "snapshot")]
     Snapshot {

@@ -154,12 +154,12 @@ mod tests {
     use crate::artifacts::gismap::GIS_MAP_SCHEMA;
     use serde_json::json;
 
-    fn dsl_of(value: serde_json::Value) -> dsl::DslValue {
-        dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null)
+    fn dsl_of(value: &serde_json::Value) -> dsl::DslValue {
+        dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
     }
 
     fn sample_patch_feature() -> MapFeature {
-        MapFeature { id: "p1".into(), data: dsl_of(json!({ "id": "p1", "lon": 1.0, "lat": 2.0 })) }
+        MapFeature { id: "p1".into(), data: dsl_of(&json!({ "id": "p1", "lon": 1.0, "lat": 2.0 })) }
     }
 
     #[test]
@@ -175,7 +175,7 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Remove { id: "p1".into() }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Move { id: "p1".into(), to: 3 }));
-        store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(json!({ "label": "Home" }))) } }));
+        store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(&json!({ "label": "Home" }))) } }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: None } }));
     }
 
@@ -184,7 +184,7 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Remove { id: "p1".into() }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Move { id: "p1".into(), to: 1 }));
-        store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(json!({ "kind": "reuse" }))) } }));
+        store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(&json!({ "kind": "reuse" }))) } }));
     }
 
     #[test]
@@ -192,7 +192,7 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Remove { id: "p1".into() }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Move { id: "p1".into(), to: 2 }));
-        store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(json!({ "kind": "boundary" }))) } }));
+        store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(&json!({ "kind": "boundary" }))) } }));
     }
 
     #[test]
@@ -206,7 +206,7 @@ mod tests {
     /// `26/08/05/GIS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION`, `🧪️wire-baseline-2d-before.txt`).
     #[test]
     fn operation_rows_keep_their_pre_migration_bytes() {
-        let hex = |operation: &GisMapOperation| protocol::OpBinary::encode_op(operation).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
+        let hex = |operation: &GisMapOperation| OpBinary::encode_op(operation).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
         assert_eq!(hex(&GisMapOperation::Positions(CollectionOperation::Remove { id: "p1".into() })), "01010102703101000600");
         assert_eq!(hex(&GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: None } })), "01030102703102000600010e0d00");
         assert_eq!(hex(&GisMapOperation::Routes(CollectionOperation::Move { id: "p1".into(), to: 1 })), "01060102703102000600010401");

@@ -94,10 +94,11 @@ mod tests {
     use super::*;
     use crate::apps::lowpoly::testkit::{app, dispatch};
     use crate::apps::lowpoly::LowpolyCommand;
+    use semio_framework_plugin::PluginApp;
 
     #[test]
     fn select_window_options_mirror_puzzle3d_taxonomy() {
-        let measure = measure(&LowpolyConfig::default(), &LowpolyLabels::NATIVE_EN);
+        let measure = measure(&LowpolyConfig::default(), semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US"));
         let (active_utility_id, children) = match measure {
             WindowMeasure::Group { active_utility_id, children, .. } => (active_utility_id, children),
             other => panic!("expected Group, got {other:?}"),

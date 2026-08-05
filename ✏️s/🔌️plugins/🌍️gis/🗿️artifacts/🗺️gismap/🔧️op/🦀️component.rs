@@ -67,12 +67,12 @@ mod tests {
 
     /// 🧬️ `MapFeature::data`/`MapFeaturePatch::data` are `dsl::DslValue` (see `crate::artifacts::gismap`'s
     /// doc comment) — this bridges a `serde_json::json!` literal into one for test-fixture ergonomics.
-    fn dsl_of(value: serde_json::Value) -> dsl::DslValue {
-        dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null)
+    fn dsl_of(value: &serde_json::Value) -> dsl::DslValue {
+        dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
     }
 
     fn feature(id: &str) -> MapFeature {
-        MapFeature { id: id.into(), data: dsl_of(json!({ "id": id, "lon": 1.0, "lat": 2.0 })) }
+        MapFeature { id: id.into(), data: dsl_of(&json!({ "id": id, "lon": 1.0, "lat": 2.0 })) }
     }
 
     #[test]
@@ -80,7 +80,7 @@ mod tests {
         let document = GisMapDocument::default();
         let added = round_trip(&document, &GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: feature("p1"), at: 0 }));
         assert_eq!(added.positions.len(), 1);
-        let patched = round_trip(&added, &GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(json!({ "id": "p1", "label": "Home" }))) } }));
+        let patched = round_trip(&added, &GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(&json!({ "id": "p1", "label": "Home" }))) } }));
         assert_eq!(patched.positions[0].data.get("label").and_then(|value| value.as_str()), Some("Home"));
         let removed = round_trip(&patched, &GisMapOperation::Positions(CollectionOperation::Remove { id: "p1".into() }));
         assert!(removed.positions.is_empty());

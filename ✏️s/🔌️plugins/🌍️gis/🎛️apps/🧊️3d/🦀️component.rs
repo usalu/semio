@@ -203,7 +203,7 @@ pub fn create_gis3d_app() -> App {
             .operation("setExaggeration", LocalizedLabel::native("Set Exaggeration", "Überhöhung festlegen"))
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            .config(Gis3dPlayApp::default().config_spec())
+            .config(Gis3dPlayApp.config_spec())
             .io(gis3d_io()),
     )
     .example("reuse-terrain", LocalizedLabel::native("Reuse Terrain", "Gelände wiederverwenden"), serde_json::to_string(&default_terrain_document()).unwrap_or_default(), "file-text")
@@ -244,7 +244,6 @@ pub(crate) mod testkit {
 mod tests {
     use super::*;
     use crate::apps::gis3d::testkit::{app, app_with_registry, dispatch, render};
-    use semio_framework_plugin::{ActionKind, PluginApp};
     use serde_json::json;
 
     //#region 🔖️CommandSurface
@@ -302,14 +301,17 @@ mod tests {
     /// `command_from_action` override at all — it inherited the trait default, which errors for every
     /// action, so the whole `{action,args}` host wire was dead. That crate never compiled (see the
     /// migration ticket), which is why the gap was invisible; this test locks the fix in.
+    /// 🎯️ Every app-declared action must bridge through `command_from_action` and round-trip
+    /// `command_id`. Uses the framework's own harness, which stages each action's declared args and
+    /// knows the framework-injected ids to skip (`undo`/`copy`/`recordTutorial`/…).
+    ///
+    /// 🩹️ This is the test that would have caught the pre-migration gap: `gis3d_ui` had NO
+    /// `command_from_action` override, so every declared action fell through to the trait default's
+    /// hard error and the whole `{action,args}` host wire was dead.
     #[test]
     fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-        let app = Gis3dPlayApp;
-        for action in create_gis3d_app().definition.actions.iter().filter(|action| !matches!(action.kind, ActionKind::Framework)) {
-            let command = app.command_from_action(&action.id, None).unwrap_or_else(|error| panic!("action {} must map to a command: {error:?}", action.id));
-            assert_eq!(command.command_id(), action.id);
-        }
-        assert!(app.command_from_action("noSuchAction", None).is_err());
+        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<Gis3dPlayApp>(create_gis3d_app);
+        assert!(Gis3dPlayApp.command_from_action("noSuchAction", None).is_err());
     }
 
     #[test]
@@ -328,7 +330,8 @@ mod tests {
         let definition = create_gis3d_app().definition;
         assert_eq!(definition.modes.len(), 1);
         assert_eq!(definition.window_kinds.len(), 1);
-        assert!(definition.panel_tabs.is_empty(), "gis3d declares no app panels");
+        // 🧷️ gis3d declares no app panel tabs of its own; whatever is present comes from the framework.
+        assert!(!definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref().is_some_and(|key| key.starts_with("gis3d.play."))), "gis3d declares no app panels");
         assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "2d.map"));
         assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "3d.mesh"));
     }

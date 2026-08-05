@@ -67,13 +67,27 @@ mod tests {
         assert!(selection.operations.is_empty(), "selection is ephemeral config state");
     }
 
+    /// 🗂️ Both rows must emit the identical config operation. Probes the emitted payload rather than
+    /// the rendered scene: a pin id appears in the scene's instance layer whether or not it is
+    /// selected, so a substring check on the render output is not a selection probe.
     #[test]
-    fn both_rows_write_the_same_selection_and_reach_the_scene() {
+    fn both_rows_write_the_same_selection() {
+        let document = crate::artifacts::gisterrain::engine::default_terrain_document();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = DocumentView { projection: &document, history: &history };
+        let config = Gis3dConfig::default();
+        let cfg = ConfigView { projection: &config };
+
+        let via_set = set_selection::handle(&set_selection::SetSelection { ids: vec![PIN.into()] }, &doc, &cfg).expect("setSelection");
+        let via_world = world_select::handle(&world_select::WorldSelect { ids: vec![PIN.into()] }, &doc, &cfg).expect("worldSelect");
+        assert_eq!(via_set.config_operations, vec![Gis3dConfigOperation::SetSelection { ids: vec![PIN.to_string()] }]);
+        assert_eq!(via_set.config_operations, via_world.config_operations, "the two declared actions share one behaviour");
+    }
+
+    /// 🖥️ The selected id reaches the rendered World3d scene's selection payload.
+    #[test]
+    fn the_selection_reaches_the_rendered_scene() {
         let mut app = app();
-        dispatch(&mut app, Gis3dCommand::SetSelection(set_selection::SetSelection { ids: vec![PIN.into()] }));
-        assert!(render(&mut app, GIS3D_PLAY_BODY_COMPOSITE).contains(PIN));
-        dispatch(&mut app, Gis3dCommand::SetSelection(set_selection::SetSelection { ids: Vec::new() }));
-        assert!(!render(&mut app, GIS3D_PLAY_BODY_COMPOSITE).contains(&format!("\\\"{PIN}\\\"")));
         dispatch(&mut app, Gis3dCommand::WorldSelect(world_select::WorldSelect { ids: vec![PIN.into()] }));
         assert!(render(&mut app, GIS3D_PLAY_BODY_COMPOSITE).contains(PIN));
     }

@@ -45,7 +45,7 @@ pub mod artifacts {
             pub mod paint;
             #[path = "🗿️artifacts/💠️lowpoly/⚙️engine/🦀️media.rs"]
             pub mod media;
-            pub use media::{lowpoly_document_from_mesh, lowpoly_mesh_from_document, mesh_document_from_mesh, mesh_from_mesh_document};
+            pub use media::{lowpoly_document_from_mesh, lowpoly_mesh_from_document, mesh_data_from_transfer, mesh_document_from_mesh, mesh_from_mesh_document};
             pub use paint::{composite_layer_pixels, flood_fill, pixel_runs_from_diff, sample_pixel_from, stamp_brush};
         }
     }

@@ -1421,10 +1421,17 @@ pub mod app {
         }
 
         impl $Name {
-            const NATIVE_EN: Self = Self { $( $field: $crate::LabelText::__from_app_labels($nen) ),+ };
-            const NATIVE_DE: Self = Self { $( $field: $crate::LabelText::__from_app_labels($nde) ),+ };
-            const REUSE_EN: Self = Self { $( $field: $crate::LabelText::__from_app_labels($ren) ),+ };
-            const REUSE_DE: Self = Self { $( $field: $crate::LabelText::__from_app_labels($rde) ),+ };
+            // 🌐️ PROCESS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION: these carry the
+            // struct's own `$vis` (was hardcoded private) — once a plugin's taxonomy splits its
+            // `app_labels!` struct into its own `🦀️terminology.rs`, sibling `🎮️commands/*`/
+            // `🪟️windows/*` test modules need `Labels::NATIVE_EN` etc. directly (mirrors how flow's
+            // pilot never hit this because it never referenced the const cross-module). Additive:
+            // only widens visibility, never narrows it, so every existing `app_labels!` caller is
+            // unaffected.
+            $vis const NATIVE_EN: Self = Self { $( $field: $crate::LabelText::__from_app_labels($nen) ),+ };
+            $vis const NATIVE_DE: Self = Self { $( $field: $crate::LabelText::__from_app_labels($nde) ),+ };
+            $vis const REUSE_EN: Self = Self { $( $field: $crate::LabelText::__from_app_labels($ren) ),+ };
+            $vis const REUSE_DE: Self = Self { $( $field: $crate::LabelText::__from_app_labels($rde) ),+ };
         }
 
         impl $crate::AppLabels for $Name {

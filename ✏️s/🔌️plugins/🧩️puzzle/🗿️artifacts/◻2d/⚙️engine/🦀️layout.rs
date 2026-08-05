@@ -2,6 +2,8 @@
 //! path for mindmap/wires fixtures and the ported-redraw path for everything else, plus the
 //! force-graph / hierarchical-tree / edge-handle-snap laws every layout mode must satisfy.
 
+use crate::artifacts::puzzle2d::engine::{apply_normal_undirected_redraw_layout_to_fixture_v1_json, apply_ported_redraw_layout_to_fixture_v1_json};
+
 fn is_undirected_fixture_schema(schema: &str) -> bool {
     matches!(schema, "reasoning.mindmap.fixture" | "reasoning.wires.fixture")
 }
@@ -25,7 +27,7 @@ pub fn redraw_layout_fixture_json(fixture_json: &str, options_json: &str) -> Res
 mod tests {
     use crate::artifacts::puzzle2d::engine::graph;
     use crate::artifacts::puzzle2d::engine::{apply_force_graph_layout_to_fixture_v1_json, apply_normal_undirected_redraw_layout_to_fixture_v1_json};
-    use graph::apply_edge_handle_snap_to_fixture_v1_json;
+    
     use serde_json::json;
     use std::collections::HashMap;
 

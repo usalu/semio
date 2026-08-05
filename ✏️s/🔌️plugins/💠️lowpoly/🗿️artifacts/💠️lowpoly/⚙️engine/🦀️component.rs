@@ -389,7 +389,7 @@ mod tests {
     fn default_concrete_forest_mesh_has_no_spanning_support_gap_faces() {
         let projection = default_projection();
         let mesh = HalfedgeMesh::from_json(&projection.objects[0].mesh_json).expect("default mesh");
-        assert!((0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(FaceId(fi as u32)).map(|v| v.len()).unwrap_or(0) >= 8), "expected coplanar-merged plate-side n-gon with >= 8 corners");
+        assert!((0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(FaceId(fi as u32)).map_or(0, |v| v.len()) >= 8), "expected coplanar-merged plate-side n-gon with >= 8 corners");
         for fi in 0..mesh.face_count() {
             let verts = mesh.face_vertex_ids(FaceId(fi as u32)).expect("face verts");
             let mut min_x = f32::MAX;
@@ -435,7 +435,7 @@ mod tests {
         let mut doc = LowpolyDocument::new(default_projection()).unwrap();
         let _ = doc.add_primitive("box").unwrap();
         let json = doc.tessellate_all_json().unwrap();
-        let items: Vec<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        let items: Vec<Value> = serde_json::from_str(&json).unwrap();
         assert_eq!(items.len(), 2);
     }
 

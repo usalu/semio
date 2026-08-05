@@ -1,0 +1,37 @@
+[package]
+name = "semio-s-plugin-mathematical"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Mathematical plugin - one crate for the mathematical artifact (diff/op/dsl/pack/spr/engine) and the mathematical play app (commands/modes/windows)"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:mathematical"
+
+[package.metadata.semio]
+role = "plugin"
+
+[[package.metadata.semio.playground]]
+variant = "mathematical"
+app = "mathematical-play"
+aliases = ["mathematical", "math"]
+ports = { react = 6084, wgpu = 6184 }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../📦️lib.rs"
+
+[dependencies]
+dsl = { workspace = true, package = "semio-framework-os-kernel-dsl" }
+store = { workspace = true, package = "semio-framework-os-kernel-store" }
+protocol = { workspace = true, package = "semio-framework-os-kernel-protocol" }
+mathematical_graph = { workspace = true, package = "semio-framework-os-kernel-math-graph" }
+mathematical_geometry = { workspace = true, package = "semio-framework-os-kernel-math-geometry" }
+ui_wgpu = { workspace = true, package = "semio-framework-ui-wgpu" }
+semio-framework-core = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+serde = { workspace = true }
+serde_json = { workspace = true }

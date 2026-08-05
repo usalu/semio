@@ -51,9 +51,13 @@ mod tests {
     use fem2d::Fem2dDocument;
     use fem3d::Fem3dDocument;
     use flow_app::FlowFixture;
-    use forms::FormSpec;
-    use gis2d::GisMapDocument;
-    use gis3d::Gis3dTerrainDocument;
+    // 🌱️ 26/08/05/FORMS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION: the old `forms` app facade
+    // crate is gone (merged into `semio-s-plugin-forms`); `FormSpec` was always a bare `pub use` alias of
+    // `playbook::PlaybookSpec` (forms never overrode `#[dsl(extension = ...)]`) so this repoints straight
+    // at the real owner of the type — no `lib.rs` ripple beyond this import line (see TEMPLATE.md §8.2).
+    use playbook::PlaybookSpec as FormSpec;
+    use gis::artifacts::gismap::GisMapDocument;
+    use gis::artifacts::gisterrain::Gis3dTerrainDocument;
     use home::SHomeDocument;
     use imperative::ImperativeDocument;
     use iso16757::Document as Iso16757Document;
@@ -70,7 +74,7 @@ mod tests {
     use puzzle_3d::Puzzle3dProjection;
     use puzzle_5d::Puzzle5dProjection;
     use raster::RasterProjection;
-    use reasoning_wires::MindmapWiresDocument;
+    use reasoning_mindmap_plugin::artifacts::wires::MindmapWiresDocument;
     use remodel::RemodelScene;
     use rewrite::RewriteRuleState;
     use semio_framework_os::WorkflowDocument;

@@ -20,7 +20,7 @@ fn process3d_step_from_face_drag(normal: [f64; 3], point: [f64; 3], distance: f6
     if distance.abs() < 1e-6 {
         return None;
     }
-    let (width, depth) = face_extent.map(|[w, d]| (w.max(0.02), d.max(0.02))).unwrap_or((0.2, 0.2));
+    let (width, depth) = face_extent.map_or((0.2, 0.2), |[w, d]| (w.max(0.02), d.max(0.02)));
     let height = distance.abs();
     let (axis, angle) = axis_angle_from_up_to(normal);
     let offset = distance.min(0.0);
@@ -60,7 +60,7 @@ pub mod world_pointer_down {
             _ => MeasureKind::Cut,
         };
         let (machine, capability) = capability_for_measure_kind(&fixture.workshop, measure_kind);
-        let origin = StepOrigin { machine_id: machine.id.clone(), capability_id: capability.id.clone() };
+        let origin = StepOrigin { machine_id: machine.id, capability_id: capability.id.clone() };
         let step = ProcessStep {
             id: next_step_id(),
             label: capability.label.clone(),

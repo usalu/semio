@@ -68,8 +68,8 @@ mod tests {
     fn svg_icon_content_bounds_follows_nested_group_translate() {
         let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><g transform="translate(72 88)"><rect width="12" height="12" fill="rgb(8,8,8)"/></g></svg>"#;
         let (x, y, w, h) = canvas::svg_icon::svg_icon_content_bounds_from_str(svg).expect("parse");
-        assert!(x >= 70.0 && x <= 74.0, "expected translated art near x≈72, got {x}");
-        assert!(y >= 86.0 && y <= 90.0, "expected translated art near y≈88, got {y}");
+        assert!((70.0..=74.0).contains(&x), "expected translated art near x≈72, got {x}");
+        assert!((86.0..=90.0).contains(&y), "expected translated art near y≈88, got {y}");
         assert!(w > 10.0 && w < 14.0 && h > 10.0 && h < 14.0, "expected ~12×12 bbox, got {w}×{h}");
     }
 

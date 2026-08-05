@@ -85,6 +85,7 @@ pub mod set_sun_intensity {
 mod tests {
     use crate::apps::lowpoly::testkit::{app, dispatch};
     use crate::apps::lowpoly::LowpolyCommand;
+    use semio_framework_plugin::PluginApp;
 
     #[test]
     fn toggle_sun_flips_enabled() {

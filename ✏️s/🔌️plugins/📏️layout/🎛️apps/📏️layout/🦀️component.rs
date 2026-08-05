@@ -24,7 +24,7 @@ use crate::artifacts::layout::op::LayoutOperation;
 use crate::artifacts::layout::LayoutDocument;
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
-    OsMediaCapability, OsMediaFormat, SurfaceKind, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
+    OsMediaCapability, OsMediaFormat, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
 };
 use serde_json::Value;
 use std::collections::HashMap;
@@ -294,7 +294,7 @@ pub fn create_layout_app() -> App {
             ])
             // 🎯️ Typed channel surface (WORKFLOWS-END-TO-END-TYPED-PORTS) — `config_spec()`/`layout_io()`
             // are this same information's single source of truth, reused here rather than duplicated.
-            .config(LayoutPlayApp::default().config_spec())
+            .config(LayoutPlayApp.config_spec())
             .io(crate::artifacts::layout::engine::layout_io()),
     )
     .example("sample", LocalizedLabel::native("Sample", "Beispiel"), crate::artifacts::layout::engine::layout_sample_document_json(), "cylinder")

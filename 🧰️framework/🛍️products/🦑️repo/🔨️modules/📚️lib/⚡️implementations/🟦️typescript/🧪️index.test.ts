@@ -1098,7 +1098,7 @@ describe("resolveCargoPackageName", () => {
     const root = process.cwd();
     expect(resolveCargoPackageName("db_actor", join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/⚡️implementations/🦀️rust"))).toBe("semio-framework-os-kernel-db-actor");
     expect(resolveCargoPackageName("architect_spine", join(root, "✏️s/🔌️plugins/🏛️architect/🔨️modules/🦴️spine/⚡️implementations/🦀️rust"))).toBe("semio-s-plugin-architect-spine");
-    expect(resolveCargoPackageName("energy_engine", join(root, "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚙️engine/⚡️implementations/🦀️rust"))).toBe("semio-s-plugin-energy-engine");
+    expect(resolveCargoPackageName("semio-s-plugin-energy", join(root, "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust"))).toBe("semio-s-plugin-energy");
   });
 
   test("resolves empty package list to local Cargo.toml package name", () => {

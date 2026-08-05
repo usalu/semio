@@ -478,8 +478,8 @@ fn unique_edge_id(fixture: &Value, candidate: String) -> String {
 
 /// 🖌️ Splices one brush placement (a node, plus the edge back to its source handle) into the fixture.
 pub fn apply_brush_place_payload(fixture: &mut Value, payload: &Value) {
-    let node_id = unique_node_id(fixture, payload.get("nodeId").and_then(|value| value.as_str()).map(str::to_string).unwrap_or_else(|| new_node_id("node")));
-    let edge_id = unique_edge_id(fixture, payload.get("edgeId").and_then(|value| value.as_str()).map(str::to_string).unwrap_or_else(|| new_node_id("edge")));
+    let node_id = unique_node_id(fixture, payload.get("nodeId").and_then(|value| value.as_str()).map_or_else(|| new_node_id("node"), str::to_string));
+    let edge_id = unique_edge_id(fixture, payload.get("edgeId").and_then(|value| value.as_str()).map_or_else(|| new_node_id("edge"), str::to_string));
     let node_kind = payload.get("nodeKind").and_then(|value| value.as_str()).unwrap_or("node");
     let x = payload.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0);
     let y = payload.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0);
@@ -544,7 +544,7 @@ fn sync_host_runtime_state(host: &mut BoardHost, envelope: &Puzzle2dScene) {
     host.set_size(BOARD_DEFAULT_WIDTH, BOARD_DEFAULT_HEIGHT, 1.0);
     host.set_selection_ids(&envelope.runtime.selected_ids);
     host.set_active_utility(&envelope.active_utility);
-    let overview_lod_mode = envelope.runtime.lod_mode_by_pane.get(overview::WINDOW_KIND_ID).map(String::as_str).unwrap_or(PUZZLE2D_LOD_MODE_AUTOMATIC);
+    let overview_lod_mode = envelope.runtime.lod_mode_by_pane.get(overview::WINDOW_KIND_ID).map_or(PUZZLE2D_LOD_MODE_AUTOMATIC, String::as_str);
     if overview_lod_mode == PUZZLE2D_LOD_MODE_AUTOMATIC {
         host.set_automatic_lod(true);
     } else {
@@ -1275,7 +1275,7 @@ pub(crate) mod testkit {
 mod tests {
     use super::testkit::*;
     use super::*;
-    use semio_framework_plugin::{PluginApp, ViewState, FRAMEWORK_HISTORY_BODY_KEY};
+    use semio_framework_plugin::{PluginApp, FRAMEWORK_HISTORY_BODY_KEY};
     use store::{Backbone, BackboneMessage, MemoryBackbone};
 
     /// 🎥️ Recovers the rendered pane camera `(x, y, zoom)` from a rendered `UiNode`'s embedded
@@ -1623,7 +1623,7 @@ mod tests {
         let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": brush_utility::UTILITY_ID })), Some(overview::WINDOW_KIND_ID)).expect("switch utility");
         assert!(result.operations.is_empty(), "a utility switch must not produce document operations");
         let can_undo = dispatch(&mut app, "undo", None, None);
-        assert!(can_undo.map(|r| r.operations.is_empty()).unwrap_or(true), "a utility switch must not have created a document undo step");
+        assert!(can_undo.map_or(true, |r| r.operations.is_empty()), "a utility switch must not have created a document undo step");
     }
 
     /// 🧭️ Kind discipline: every View-declared runtime/host action must run through the registry
@@ -1634,7 +1634,7 @@ mod tests {
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None).expect("load example");
         let node_id = first_node_id(&app);
         let view_dispatches: Vec<(&str, Value)> = vec![
-            ("setSelection", json!({ "ids": [node_id.clone()] })),
+            ("setSelection", json!({ "ids": [node_id] })),
             ("setCamera", json!({ "camera": { "x": 7.0, "y": 8.0, "zoom": 1.5 } })),
             ("selectAll", Value::Null),
             ("selectSameKind", Value::Null),

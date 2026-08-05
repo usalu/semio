@@ -68,7 +68,7 @@ pub mod add_frame {
                 bounds: crate::artifacts::layout::LayoutBounds { x: payload.x.unwrap_or(48.0), y: payload.y.unwrap_or(120.0), width: 200.0, height: 120.0, rotation: 0.0 },
                 locked: None,
                 visible: None,
-                story_id: document.stories.first().map(|story| story.id.clone()).unwrap_or_else(|| "story-1".into()),
+                story_id: document.stories.first().map_or_else(|| "story-1".into(), |story| story.id.clone()),
                 thread_next: None,
                 columns: 1,
                 inset: crate::artifacts::layout::LayoutRect { x: 4.0, y: 4.0, width: 192.0, height: 112.0 },
@@ -80,7 +80,7 @@ pub mod add_frame {
                 bounds: crate::artifacts::layout::LayoutBounds { x: payload.x.unwrap_or(48.0), y: payload.y.unwrap_or(280.0), width: 160.0, height: 120.0, rotation: 0.0 },
                 locked: None,
                 visible: None,
-                link_id: document.links.first().map(|link| link.id.clone()).unwrap_or_else(|| "link-missing".into()),
+                link_id: document.links.first().map_or_else(|| "link-missing".into(), |link| link.id.clone()),
             },
             _ => Frame::Rect {
                 id: frame_id.clone(),
@@ -109,14 +109,10 @@ pub mod add_page {
         let document = doc.projection;
         let config = cfg.projection;
         let template = document.pages.iter().find(|page| page.id == config.active_page_id).or_else(|| document.pages.first());
-        let (width, height, spread_id, parent_page_id, margins, columns) = template.map(|page| (page.width, page.height, page.spread_id.clone(), page.parent_page_id.clone(), page.margins.clone(), page.columns.clone())).unwrap_or((
-            595.0,
-            842.0,
-            "spread-1".into(),
-            None,
-            PageMargins { top: 48.0, right: 36.0, bottom: 48.0, left: 36.0 },
-            PageColumns { count: 1, gutter: 0.0 },
-        ));
+        let (width, height, spread_id, parent_page_id, margins, columns) = template.map_or(
+            (595.0, 842.0, "spread-1".into(), None, PageMargins { top: 48.0, right: 36.0, bottom: 48.0, left: 36.0 }, PageColumns { count: 1, gutter: 0.0 }),
+            |page| (page.width, page.height, page.spread_id.clone(), page.parent_page_id.clone(), page.margins.clone(), page.columns.clone()),
+        );
         let page_id = format!("page-{}", document.pages.len() + 1);
         let layer_id = format!("layer-{page_id}");
         let page = crate::artifacts::layout::Page {

@@ -183,11 +183,11 @@ pub fn mirror_axis_from_param(params: &Value) -> kernel_3d_mesh::MirrorAxis {
 }
 
 pub fn utility_param_f32(params: &Value, key: &str, default: f32) -> f32 {
-    params.get(key).and_then(|value| value.as_f64()).map(|v| v as f32).unwrap_or(default)
+    params.get(key).and_then(|value| value.as_f64()).map_or(default, |v| v as f32)
 }
 
 pub fn utility_param_u32(params: &Value, key: &str, default: u32) -> u32 {
-    params.get(key).and_then(|value| value.as_u64()).map(|v| v as u32).unwrap_or(default)
+    params.get(key).and_then(|value| value.as_u64()).map_or(default, |v| v as u32)
 }
 
 pub fn utility_param_f64(params: &Value, key: &str, default: f64) -> f64 {

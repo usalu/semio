@@ -159,8 +159,7 @@ pub fn set_fill_count(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     let count = args
         .and_then(|value| value.get("count").or_else(|| value.get("value")))
         .and_then(|value| value.as_f64())
-        .map(|value| value.round().max(0.0) as u32)
-        .unwrap_or(0)
+        .map_or(0, |value| value.round().max(0.0) as u32)
         .min(fill::PUZZLE2D_FILL_COUNT_MAX);
     ctx.scene.runtime.fill_count = count;
     ctx.effects.push(HostEffect::SetActiveTool { tool_id: fill::TOOL_ID.into() });

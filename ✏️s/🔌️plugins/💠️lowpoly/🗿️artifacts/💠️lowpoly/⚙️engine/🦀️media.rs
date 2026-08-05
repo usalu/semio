@@ -54,7 +54,7 @@ pub fn mesh_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
 }
 
 pub fn mesh_from_mesh_document(doc: &Value) -> Result<MeshData, String> {
-    doc.get("mesh").and_then(|value| serde_json::from_value(value.clone()).ok()).filter(|mesh: &MeshData| !mesh.positions.is_empty() && !mesh.indices.is_empty()).map(Ok).unwrap_or_else(|| Ok(semio_framework_plugin::mesh_from_kind("box")))
+    doc.get("mesh").and_then(|value| serde_json::from_value(value.clone()).ok()).filter(|mesh: &MeshData| !mesh.positions.is_empty() && !mesh.indices.is_empty()).map_or_else(|| Ok(semio_framework_plugin::mesh_from_kind("box")), Ok)
 }
 //#endregion 🔖️MediaExportImport
 
@@ -141,7 +141,7 @@ mod export_concrete_forest_mesh_tests {
         eprintln!("[DEBUG] after coplanar merge: verts={} faces={} merges={} (was {}) open={}", mesh.vertex_count(), mesh.face_count(), merges, before_merge, open_boundary_count(&mesh));
         assert!(mesh.face_count() <= before_merge, "coplanar merge must not increase face count");
         assert!(merges > 0 || before_merge == mesh.face_count(), "expected coplanar merge to join adjacent CAD faces on the plate/supports");
-        assert!((0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(FaceId(fi as u32)).map(|v| v.len()).unwrap_or(0) > 3), "expected at least one non-triangle CAD face");
+        assert!((0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(FaceId(fi as u32)).map_or(0, |v| v.len()) > 3), "expected at least one non-triangle CAD face");
         assert_watertight(&mesh);
         assert_no_spanning_face_across_support_gap(&mesh);
         let mut min = MeshVec3::new(f32::MAX, f32::MAX, f32::MAX);

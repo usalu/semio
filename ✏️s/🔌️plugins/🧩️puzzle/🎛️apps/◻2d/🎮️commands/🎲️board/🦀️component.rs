@@ -165,7 +165,7 @@ pub fn apply_board_events(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>)
     let Some(events_json) = args.and_then(|value| value.get("eventsJson")).and_then(|value| value.as_str()) else {
         return;
     };
-    *ctx.ui_scope = serde_json::from_str::<Vec<Value>>(events_json).map(|events| puzzle2d_board_events_scope(&events)).unwrap_or(UiDirtyScope::Full);
+    *ctx.ui_scope = serde_json::from_str::<Vec<Value>>(events_json).map_or(UiDirtyScope::Full, |events| puzzle2d_board_events_scope(&events));
     apply_board_events_from_json(events_json, ctx.scene);
     // 🪞️ `apply_host_events` (in the epilogue) trusts `host.selection` as the post-action source of
     // truth and overwrites `runtime.selected_ids` with it — mirror the new selection into the host now

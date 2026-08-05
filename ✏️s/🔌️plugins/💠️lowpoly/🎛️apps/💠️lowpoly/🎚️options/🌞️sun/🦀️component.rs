@@ -19,7 +19,7 @@ mod tests {
     #[test]
     fn measure_builds_a_group() {
         let config = LowpolyConfig::default();
-        assert!(matches!(measure(&config, &LowpolyLabels::NATIVE_EN), WindowMeasure::Group { .. }));
+        assert!(matches!(measure(&config, semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US")), WindowMeasure::Group { .. }));
     }
 }
 //#endregion 🧪️Tests

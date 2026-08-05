@@ -25,7 +25,8 @@ pub const LOWPOLY_UV_ACTIONS: &[&str] = &["addPaintLayer", "paintStrokeEnd", "pa
 pub fn definition() -> WindowKindDefinition {
     let projection = crate::artifacts::lowpoly::engine::default_projection();
     let config = LowpolyConfig::default();
-    let engagement = lowpoly_window_engagement(LowpolyView { projection: &projection, config: &config }, LOWPOLY_TRANSFORM_UTILITY_DEFAULT, &LowpolyLabels::NATIVE_EN);
+    let labels = semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US");
+    let engagement = lowpoly_window_engagement(LowpolyView { projection: &projection, config: &config }, LOWPOLY_TRANSFORM_UTILITY_DEFAULT, labels);
     WindowKindDefinition {
         id: LOWPOLY_PLAY_WINDOW_UV.into(),
         label: semio_framework_plugin::LocalizedLabel::native("UV", "UV"),
@@ -73,7 +74,7 @@ fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, texture_c
             let edge_uvs: Vec<f32> = transfer.get("edgeUvs").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
             let edge_is_seam: Vec<u8> = transfer.get("edgeIsSeam").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
             let mut points = Vec::new();
-            for chunk in edge_uvs.chunks_exact(4) {
+            for chunk in edge_uvs.as_chunks::<4>().0 {
                 let u0 = chunk[0] as f64;
                 let v0 = (1.0 - chunk[1]) as f64;
                 let u1 = chunk[2] as f64;

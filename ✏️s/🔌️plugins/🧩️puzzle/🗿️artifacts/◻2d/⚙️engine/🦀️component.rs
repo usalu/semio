@@ -58,7 +58,7 @@ pub fn register() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use canvas::Point;
+    use crate::artifacts::puzzle2d::engine::canvas::Point;
 
     #[test]
     fn computes_handle_positions_and_edge_curves() {

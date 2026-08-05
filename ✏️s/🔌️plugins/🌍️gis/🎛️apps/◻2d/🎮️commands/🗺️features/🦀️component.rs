@@ -101,7 +101,6 @@ mod tests {
     use super::*;
     use crate::apps::gis2d::testkit::{app, dispatch};
     use crate::apps::gis2d::Gis2dCommand;
-    use semio_framework_plugin::PluginApp;
 
     const ROUTE_A: &str = "bg_holz_fassade_botanique:bw_institut_botanique_ulg:0";
     const ROUTE_B: &str = "bg_stahl_mehrere_lycee_profiles_canopy:bw_lycee_block_3000:0";
@@ -133,8 +132,10 @@ mod tests {
     #[test]
     fn patch_positions_diffs_the_incoming_array_into_granular_operations() {
         let mut app = app();
-        let result = dispatch(&mut app, Gis2dCommand::PatchPositions(patch_positions::PatchPositions { positions_json: r#"[{"id":"patched-1","lon":1.0,"lat":2.0}]"#.into() }));
-        assert!(result.operations.iter().any(|operation| matches!(operation, GisMapOperation::Positions(CollectionOperation::Add { id, .. }) if id == "patched-1")));
+        dispatch(&mut app, Gis2dCommand::PatchPositions(patch_positions::PatchPositions { positions_json: r#"[{"id":"patched-1","lon":1.0,"lat":2.0}]"#.into() }));
+        let document = app.projection().expect("projection");
+        assert!(document.positions.iter().any(|feature| feature.id == "patched-1"), "the incoming array is diffed into a granular add");
+        assert_eq!(document.positions.len(), 1, "features absent from the incoming array are removed");
     }
 
     /// 🤝️ Definitional merge proof: two instances on one backbone patch DIFFERENT routes; after

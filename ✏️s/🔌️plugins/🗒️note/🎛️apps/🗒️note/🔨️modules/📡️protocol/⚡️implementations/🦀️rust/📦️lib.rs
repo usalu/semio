@@ -120,6 +120,65 @@ pub enum NoteCommand {
 mod tests {
     use super::*;
 
+    /// [DEBUG] 🧪️ TEMPORARY wire-baseline dump (TEMPLATE.md §0.4) — one representative value per
+    /// `NoteCommand` variant, in declaration (= binary ordinal) order. Deleted once the post-migration
+    /// diff against `🧪️wire-baseline-after.txt` is clean. Run with `-- --nocapture`.
+    #[test]
+    fn debug_wire_baseline_dump() {
+        use note::NoteCamera;
+
+        let commands: Vec<NoteCommand> = vec![
+            NoteCommand::SetGridVisible { value: Some(true) },
+            NoteCommand::SetGridSpacing { value: 16.0 },
+            NoteCommand::SetGridSubdivisions { value: 8.0 },
+            NoteCommand::SetGridOpacity { value: 0.6 },
+            NoteCommand::SetSnapEnabled { value: Some(false) },
+            NoteCommand::SetSnapGridSpacing { value: 4.0 },
+            NoteCommand::SetPencilWidth { value: 5.0 },
+            NoteCommand::SetEraserRadius { value: 20.0 },
+            NoteCommand::AddBlock { kind: "text".into(), x: 10.0, y: 20.0 },
+            NoteCommand::MoveBlock { block_id: "b1".into(), target_row_id: "note-play-block:g1".into(), drop_position: "after".into() },
+            NoteCommand::DeleteBlock { block_id: "b1".into() },
+            NoteCommand::DeleteSelection,
+            NoteCommand::DuplicateBlock { block_id: "b1".into() },
+            NoteCommand::DuplicateSelection,
+            NoteCommand::PatchBlocks { block_ids: vec!["b1".into(), "b2".into()], field: "visible".into(), value: "true".into() },
+            NoteCommand::SetActiveExample { example_id: "semio".into() },
+            NoteCommand::SetFixtureJson { json: "{}".into() },
+            NoteCommand::InkApplyEvents { events_json: "[]".into(), phase: "begin".into(), select_ids: Some(vec!["b1".into()]) },
+            NoteCommand::EngagementSubmit { value: Some("Renamed".into()) },
+            NoteCommand::NudgeSelection { dx: 1.0, dy: -1.0 },
+            NoteCommand::NudgeSelectionUp,
+            NoteCommand::NudgeSelectionDown,
+            NoteCommand::NudgeSelectionLeft,
+            NoteCommand::NudgeSelectionRight,
+            NoteCommand::NudgeSelectionUpFast,
+            NoteCommand::NudgeSelectionDownFast,
+            NoteCommand::NudgeSelectionLeftFast,
+            NoteCommand::NudgeSelectionRightFast,
+            NoteCommand::SetCamera { camera: NoteCamera { x: 4.0, y: 5.0, zoom: 2.0 } },
+            NoteCommand::SetCameraZoom { value: 3.0 },
+            NoteCommand::SetActiveUtility { utility_id: "pencil".into() },
+            NoteCommand::SetLocale { value: "de-DE".into() },
+            NoteCommand::SelectAll,
+            NoteCommand::ClearSelection,
+            NoteCommand::SetSelection { ids: vec!["b1".into(), "b2".into()] },
+            NoteCommand::SetHover { block_id: Some("b1".into()) },
+            NoteCommand::SetHover { block_id: None },
+            NoteCommand::EngagementInput { value: "Renaming".into() },
+            NoteCommand::NavigatorEngagementInput,
+            NoteCommand::SaveDownload,
+            NoteCommand::LoadRequest,
+        ];
+
+        for (index, command) in commands.iter().enumerate() {
+            let text = protocol::OpText::print_op(command);
+            let bytes = protocol::OpBinary::encode_op(command).expect("encode");
+            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+            println!("{index:02} | {text} | {} | {hex}", bytes.len());
+        }
+    }
+
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let operation = NoteOperation::SetGridSpacing { spacing: Some(24.0) };

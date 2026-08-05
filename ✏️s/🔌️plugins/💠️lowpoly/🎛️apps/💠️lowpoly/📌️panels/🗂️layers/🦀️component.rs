@@ -20,7 +20,7 @@ pub fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 pub fn render(view: LowpolyView<'_>, labels: &LowpolyLabels) -> UiNode {
     let object = active_object(view);
-    let layers = object.map(|entry| entry.paint_layers.as_slice()).unwrap_or(&[]);
+    let layers = object.map_or(&[][..], |entry| entry.paint_layers.as_slice());
     let active_layer = view.config.active_paint_layer;
     let items: Vec<UiTreeItemNode> = layers
         .iter()

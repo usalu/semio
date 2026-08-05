@@ -1,3 +1,5 @@
+cargo-features = ["trim-paths"]
+
 [package]
 name = "semio-s-app-process-3d-protocol"
 version = "0.1.0"
@@ -32,3 +34,32 @@ vcs = { path = "../../../../../../../../../🧰️framework/🛍️products/💻
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.106"
+
+# 🚧️ TEMPORARY — this crate is slated for deletion at the end of the process-plugin migration
+# (26/08/05/PROCESS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION); this overlay only exists
+# to let `cargo test` resolve standalone while root Cargo.toml is mid-churn from a concurrent
+# session's unrelated migration (a workspace member currently 404s). Never intended to be committed
+# long-term — it dies with the rest of the file.
+[workspace]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[workspace.lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"

@@ -29,7 +29,7 @@ pub fn definition() -> PanelTabDefinition {
 /// id if the catalog that seeded a workshop machine was since uninstalled (never resolved back, per
 /// `WorkshopMachine::catalog_id`'s informational-only contract).
 fn catalog_label(catalog_id: &str) -> String {
-    installed_catalogs().into_iter().find(|catalog| catalog.catalog_id() == catalog_id).map(|catalog| catalog.label().to_string()).unwrap_or_else(|| catalog_id.to_string())
+    installed_catalogs().into_iter().find(|catalog| catalog.catalog_id() == catalog_id).map_or_else(|| catalog_id.to_string(), |catalog| catalog.label().to_string())
 }
 
 /// 🏭️ Builds one catalogue tree item per workshop machine capability, grouped by the machine's source
@@ -64,7 +64,7 @@ pub fn render(fixture: &Process3dDocument, labels: &Process3dLabels) -> UiNode {
             })
             .collect();
         let section_id = format!("process3d-play-catalogue.{}", catalog_id.unwrap_or("workshop"));
-        let section_label = catalog_id.map(|id| Label::data(catalog_label(id))).unwrap_or_else(|| labels.workshop.into());
+        let section_label = catalog_id.map_or_else(|| labels.workshop.into(), |id| Label::data(catalog_label(id)));
         builder = builder.section(section_id, Some(section_label), catalog_id.is_none(), items);
     }
     let stock_items = vec![

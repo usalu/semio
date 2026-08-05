@@ -228,15 +228,29 @@ mod tests {
         assert!(dispatch(&mut app, Gis2dCommand::SetFeatureSelection(set_feature_selection::SetFeatureSelection { positions: vec!["p1".into()], routes: Vec::new(), mode: "default".into() })).operations.is_empty());
     }
 
+    /// 🗂️ Probes the emitted `SetFeatureSelection` payload directly rather than the rendered scene:
+    /// a feature id appears in the scene descriptor whether or not it is selected, so a substring
+    /// check on the render output is not a selection probe.
     #[test]
     fn select_all_then_deselect_drops_just_that_feature() {
-        let mut app = app();
-        dispatch(&mut app, Gis2dCommand::SelectAll(select_all::SelectAll {}));
-        let selected = crate::apps::gis2d::testkit::render(&mut app, crate::apps::gis2d::modes::edit::windows::map::GIS2D_PLAY_BODY_COMPOSITE);
-        assert!(selected.contains("p_institut_de_botanique_ulg_liege"), "select-all writes every position id into the selection");
-        dispatch(&mut app, Gis2dCommand::Deselect(deselect::Deselect { feature_id: "p_institut_de_botanique_ulg_liege".into(), feature_kind: "position".into() }));
-        let after = crate::apps::gis2d::testkit::render(&mut app, crate::apps::gis2d::modes::edit::windows::map::GIS2D_PLAY_BODY_COMPOSITE);
-        assert!(!after.contains("p_institut_de_botanique_ulg_liege"), "the deselected feature is gone from the selection");
+        const PIN: &str = "p_institut_de_botanique_ulg_liege";
+        let document = crate::artifacts::gismap::engine::default_document();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = DocumentView { projection: &document, history: &history };
+
+        let base = Gis2dConfig::default();
+        let all = select_all::handle(&select_all::SelectAll {}, &doc, &ConfigView { projection: &base }).expect("selectAll");
+        let Some(Gis2dConfigOperation::SetFeatureSelection { value_json }) = all.config_operations.first().cloned() else {
+            panic!("selectAll emits one SetFeatureSelection");
+        };
+        assert!(value_json.contains(PIN), "select-all writes every position id into the selection");
+
+        let selected = Gis2dConfig { feature_selection_json: value_json, ..Gis2dConfig::default() };
+        let dropped = deselect::handle(&deselect::Deselect { feature_id: PIN.into(), feature_kind: "position".into() }, &doc, &ConfigView { projection: &selected }).expect("deselect");
+        let Some(Gis2dConfigOperation::SetFeatureSelection { value_json }) = dropped.config_operations.first().cloned() else {
+            panic!("deselect emits one SetFeatureSelection");
+        };
+        assert!(!value_json.contains(PIN), "the deselected feature is gone from the selection");
     }
 
     #[test]

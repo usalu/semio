@@ -7309,7 +7309,6 @@ dependencies = [
  "semio-s-app-draw",
  "semio-s-app-fem-2d",
  "semio-s-app-fem-3d",
- "semio-s-app-forms",
  "semio-s-app-gis-2d",
  "semio-s-app-gis-3d",
  "semio-s-app-imperative",
@@ -12556,12 +12555,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-plugin-energy-engine"
+name = "semio-s-plugin-energy"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-math-algebra",
  "serde",
- "serde_json",
 ]
 
 [[package]]

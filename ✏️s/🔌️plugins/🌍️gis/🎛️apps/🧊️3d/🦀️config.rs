@@ -95,8 +95,7 @@ mod tests {
     #[test]
     fn gis3d_config_dsl_round_trips_default_and_populated() {
         store::test_support::assert_dsl_round_trip(&Gis3dConfig::default());
-        let mut populated = Gis3dConfig::default();
-        populated.selected_ids = vec!["p_institut_de_botanique_ulg_liege".into()];
+        let populated = Gis3dConfig { selected_ids: vec!["p_institut_de_botanique_ulg_liege".into()], ..Gis3dConfig::default() };
         store::test_support::assert_dsl_round_trip(&populated);
         store::test_support::assert_dsl_pack_equivalence(&populated);
     }

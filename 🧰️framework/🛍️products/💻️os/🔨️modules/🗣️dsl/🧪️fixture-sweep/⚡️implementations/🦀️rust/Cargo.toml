@@ -31,8 +31,13 @@ procedural = { path = "../../../../../../../../✏️s/🔌️plugins/🌀️pro
 # deleted `semio-s-app-flow` facade only re-exported them (it was merged into `semio-s-plugin-flow` by
 # the W1 taxonomy pilot). Pointing at the real owner keeps this sweep independent of plugin packaging.
 flow_app = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-flow-core", default-features = false }
-gis2d = { path = "../../../../../../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/⚡️implementations/🦀️rust", package = "semio-s-app-gis-2d" }
-gis3d = { path = "../../../../../../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-gis-3d" }
+# 🌍️ `GisMapDocument`/`Gis3dTerrainDocument` are genuinely plugin-owned (no shared kernel crate the
+# way flow has), so they now live at `gis::artifacts::gismap::GisMapDocument`/
+# `gis::artifacts::gisterrain::Gis3dTerrainDocument` (see this crate's `📦️lib.rs`) — the deleted
+# `semio-s-app-gis-2d`/`semio-s-app-gis-3d` facade crates were merged into `semio-s-plugin-gis` by the
+# crate-consolidation taxonomy migration (ticket
+# 26/08/05/GIS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION).
+gis = { path = "../../../../../../../../✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust", package = "semio-s-plugin-gis" }
 # 🌿️ `VcsDemoProjection` is genuinely plugin-owned (no shared kernel crate the way flow has), so it
 # now lives at `vcs_app::artifacts::vcs::VcsDemoProjection` (see this crate's `📦️lib.rs`) — the deleted
 # `semio-s-app-vcs` facade crate was merged into `semio-s-plugin-vcs` by the crate-consolidation
@@ -59,8 +64,13 @@ fem2d = { path = "../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛
 fem3d = { path = "../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-fem-3d" }
 process_3d = { path = "../../../../../../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-process-3d" }
 lowpoly = { path = "../../../../../../../../✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/⚡️implementations/🦀️rust", package = "semio-s-app-lowpoly" }
-reasoning_wires = { path = "../../../../../../../../✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/⚡️implementations/🦀️rust", package = "semio-s-app-reasoning-wires" }
-forms = { path = "../../../../../../../../✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/⚡️implementations/🦀️rust", package = "semio-s-app-forms" }
+# 🧠️ `MindmapWiresDocument` merged into `semio-s-plugin-reasoning-mindmap` by the crate-consolidation
+# taxonomy migration (ticket 26/08/05/REASONING-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION) —
+# real owner is now `crate::artifacts::wires::MindmapWiresDocument` (see this crate's `📦️lib.rs`).
+reasoning_mindmap_plugin = { path = "../../../../../../../../✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust", package = "semio-s-plugin-reasoning-mindmap" }
+# 🌱️ `forms` dropped (26/08/05/FORMS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION) — `FormSpec`
+# repointed to `playbook::PlaybookSpec` directly in 📦️lib.rs, its real owner; `playbook` below already
+# covers it.
 layout = { path = "../../../../../../../../✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/⚡️implementations/🦀️rust", package = "semio-s-app-layout" }
 # 📐️ `CadScene` is genuinely plugin-owned (no shared kernel crate the way flow has), so it now lives at
 # `cad_document::artifacts::cad::CadScene` (see this crate's `📦️lib.rs`) — the deleted `semio-s-app-cad`

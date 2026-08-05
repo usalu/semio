@@ -247,33 +247,6 @@ mod tests {
         }
     }
 
-    /// 📜️ [DEBUG] TEMPLATE.md §0.4 post-migration wire dump — same 13 samples, same order, as the
-    /// pre-migration `🧪️wire-baseline-before.txt` capture. Delete once the diff against that file is
-    /// confirmed clean.
-    #[test]
-    fn debug_wire_after_dump() {
-        let samples: Vec<WiresCommand> = vec![
-            WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "metabolism".into() }),
-            WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }),
-            WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: "owns".into() }),
-            WiresCommand::DeleteSelection(delete_selection::DeleteSelection {}),
-            WiresCommand::ForceLayout(force_layout::ForceLayout {}),
-            WiresCommand::Reorganize(reorganize::Reorganize {}),
-            WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1.5, y: -2.5 }),
-            WiresCommand::SetSelection(set_selection::SetSelection { ids: vec!["node-1".into(), "edge-1".into()] }),
-            WiresCommand::DocumentSelect(document_select::DocumentSelect { ids: vec!["node-2".into()] }),
-            WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }),
-            WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { id: None, x: 0.0, y: 0.0 }),
-            WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}),
-            WiresCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
-        ];
-        for sample in &samples {
-            let bytes = protocol::OpBinary::encode_op(sample).expect("encode");
-            let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
-            println!("[DEBUG] {} | {} | {}", protocol::OpText::print_op(sample), bytes.len(), hex);
-        }
-    }
-
     /// ⚖️ The wire bytes/text pinned from the pre-merge 7-crate baseline (see the ticket's
     /// `🧪️wire-baseline-before.txt`) — a regression here is a real format break, not a fixture mismatch.
     #[test]

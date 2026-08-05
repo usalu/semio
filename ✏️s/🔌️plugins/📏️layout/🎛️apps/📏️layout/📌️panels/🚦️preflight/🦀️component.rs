@@ -50,7 +50,7 @@ fn resolve_link_state(link: &crate::artifacts::layout::ImageLink) -> &str {
 
 fn resolve_run_style(doc: &LayoutDocument, paragraph_style_id: Option<&str>, character_style_id: Option<&str>) -> (String, f64) {
     let paragraph = paragraph_style_id.and_then(|id| doc.paragraph_styles.iter().find(|style| style.id == id)).or_else(|| doc.paragraph_styles.first());
-    let (mut family, mut size) = paragraph.map(|style| (style.font_family.clone(), style.font_size)).unwrap_or_else(|| ("Layout Sans".into(), 12.0));
+    let (mut family, mut size) = paragraph.map_or_else(|| ("Layout Sans".into(), 12.0), |style| (style.font_family.clone(), style.font_size));
     if let Some(character_id) = character_style_id {
         if let Some(character) = doc.character_styles.iter().find(|style| style.id == character_id) {
             if let Some(font_family) = &character.font_family {
@@ -213,6 +213,7 @@ pub fn render(doc: &LayoutDocument, cfg: &crate::apps::layout::config::LayoutCon
 mod tests {
     use super::*;
     use crate::apps::layout::testkit::{layout_app, render as render_body};
+    use semio_framework_plugin::AppLabels;
 
     #[test]
     fn preflight_finds_missing_asset() {

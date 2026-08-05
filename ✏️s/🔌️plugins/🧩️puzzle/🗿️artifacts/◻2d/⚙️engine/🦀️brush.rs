@@ -5,7 +5,8 @@
 #[cfg(test)]
 mod tests {
     use crate::artifacts::puzzle2d::engine::board_host::testkit::*;
-    use crate::artifacts::puzzle2d::engine::{BoardHost, EdgeDescJson, HandleDescJson, NodeDescJson, SceneDescriptorJson};
+    use crate::artifacts::puzzle2d::engine::canvas::Point;
+    use crate::artifacts::puzzle2d::engine::{handle_position_on_circle, BoardHost, HandleDescJson, NodeDescJson, SceneDescriptorJson};
     use serde_json::json;
 
     #[test]
@@ -256,7 +257,7 @@ mod tests {
         assert!(placements.len() <= 3);
         let many = h.brush_fill_json(1000, 99);
         let many_v: serde_json::Value = serde_json::from_str(&many).unwrap();
-        let many_n = many_v.get("placements").and_then(|x| x.as_array()).map(|a| a.len()).unwrap_or(0);
+        let many_n = many_v.get("placements").and_then(|x| x.as_array()).map_or(0, |a| a.len());
         assert!(many_n < 1000, "collision should cap fill before 1000 on a tight scene");
     }
 
@@ -480,12 +481,12 @@ mod tests {
         let mut h = BoardHost::new();
         h.set_suggestion_offset(80.0);
         h.set_brush_node_size(40.0);
-        use store::DocumentDsl;
+        
         let fixture: serde_json::Value = serde_json::to_value(
             <crate::artifacts::puzzle2d::Puzzle2dProjection as store::DocumentDsl>::parse_dsl(include_str!("../../../🎛️apps/◻2d/📚️examples/🧩️nakagin-capsule-tower.puzzle2d")).unwrap(),
         )
         .unwrap();
-        let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map(|v| v.to_string()).unwrap_or_else(|| "[]".to_string());
+        let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
         h.set_board_kind_catalogs_from_json(&catalogs_json_from_manifest_id("nakagin")).unwrap();
         let desc = SceneDescriptorJson {
@@ -564,24 +565,22 @@ mod tests {
         h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
-        use store::DocumentDsl;
+        
         let fixture: serde_json::Value = serde_json::to_value(
             <crate::artifacts::puzzle2d::Puzzle2dProjection as store::DocumentDsl>::parse_dsl(include_str!("../../../🎛️apps/◻2d/📚️examples/🧩️nakagin-capsule-tower.puzzle2d")).unwrap(),
         )
         .unwrap();
-        let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map(|v| v.to_string()).unwrap_or_else(|| "[]".to_string());
+        let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
         let catalogs_str = fixture
             .get("meta")
-            .and_then(|m| m.get("kindCatalogs"))
-            .map(|kc| {
+            .and_then(|m| m.get("kindCatalogs")).map_or_else(|| "{}".to_string(), |kc| {
                 serde_json::json!({
                     "handleKinds": kc.get("handles"),
                     "nodeKinds": kc.get("nodes"),
                 })
                 .to_string()
-            })
-            .unwrap_or_else(|| "{}".to_string());
+            });
         h.set_board_kind_catalogs_from_json(&catalogs_str).unwrap();
         let desc = SceneDescriptorJson {
             nodes: vec![NodeDescJson {
@@ -707,6 +706,5 @@ mod tests {
         let ev = h.drain_events_json();
         assert!(ev.contains("brushPreview"), "expected brushPreview on indirect ring anchor, got: {ev}");
     }
-}
 }
 //#endregion 🧪️Tests

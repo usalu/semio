@@ -411,7 +411,7 @@ pub fn create_gis2d_app() -> App {
             ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            .config(Gis2dPlayApp::default().config_spec())
+            .config(Gis2dPlayApp.config_spec())
             .io(gis2d_io()),
     )
     .example("reuse-map", LocalizedLabel::native("Reuse Map", "Karte wiederverwenden"), serde_json::to_string(&crate::artifacts::gismap::engine::default_document()).unwrap_or_default(), "file-text")
@@ -559,14 +559,13 @@ mod tests {
         assert_eq!(hex(&Gis2dCommand::SetLayerStrokeScale(set_layer_stroke_scale::SetLayerStrokeScale { layer_id: "roads".into(), value: 1.5 })), "01130105726f616473020006000105000000000000f83f");
     }
 
+    /// 🎯️ Every app-declared action must bridge through `command_from_action` and round-trip
+    /// `command_id`. Uses the framework's own harness, which stages each action's declared args and
+    /// knows the framework-injected ids to skip (`undo`/`copy`/`recordTutorial`/…).
     #[test]
     fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-        let app = Gis2dPlayApp;
-        for action in create_gis2d_app().definition.actions.iter().filter(|action| !matches!(action.kind, ActionKind::Framework)) {
-            let command = app.command_from_action(&action.id, None).unwrap_or_else(|error| panic!("action {} must map to a command: {error:?}", action.id));
-            assert_eq!(command.command_id(), action.id);
-        }
-        assert!(app.command_from_action("noSuchAction", None).is_err());
+        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<Gis2dPlayApp>(create_gis2d_app);
+        assert!(Gis2dPlayApp.command_from_action("noSuchAction", None).is_err());
     }
     //#endregion 🔖️CommandSurface
 
@@ -576,7 +575,11 @@ mod tests {
         let definition = create_gis2d_app().definition;
         assert_eq!(definition.modes.len(), 1);
         assert_eq!(definition.window_kinds.len(), 1);
-        assert_eq!(definition.panel_tabs.len(), 3);
+        // 🧷️ The framework injects its own panel tabs on top of the app's three, so assert the app's
+        // own tabs are stitched in rather than pinning a total.
+        for body_key in [document_panel::GIS2D_PLAY_BODY_DOCUMENT, catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE, inspection_panel::GIS2D_PLAY_BODY_INSPECTION] {
+            assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
+        }
         assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "2d.map"));
     }
 
