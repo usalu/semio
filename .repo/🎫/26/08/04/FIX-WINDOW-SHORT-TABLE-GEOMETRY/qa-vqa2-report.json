@@ -1,0 +1,786 @@
+[
+  {
+    "id": "kopfbau",
+    "page": 24,
+    "dpi": 144,
+    "scale": 2,
+    "anchor": "Kopfbau Halle 118",
+    "anchorXY": [
+      199.5,
+      372.5
+    ],
+    "baseY": -1,
+    "bx": 187,
+    "yAfter": 0,
+    "hairPt": 0,
+    "hairCount": 0,
+    "double": false,
+    "creamGapPt": 0,
+    "notches": 0,
+    "joins": [],
+    "photoPad": null,
+    "canvasPadRows": 0,
+    "left": null,
+    "top": null,
+    "ink": null,
+    "weld": null,
+    "ruleClusters": [],
+    "creamJoins": 0,
+    "crops": {},
+    "ok": false,
+    "fail": [
+      "hairlines:0",
+      "photo-pad:missing"
+    ]
+  },
+  {
+    "id": "huerden",
+    "page": 76,
+    "dpi": 144,
+    "scale": 2,
+    "anchor": "Hürden der Wiederverwendung",
+    "anchorXY": [
+      198,
+      273.6
+    ],
+    "baseY": 285,
+    "bx": 187,
+    "yAfter": 286,
+    "hairPt": 0.5,
+    "hairCount": 1,
+    "double": false,
+    "creamGapPt": 0,
+    "notches": 0,
+    "joins": [
+      {
+        "y": 328,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 371,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 391,
+        "borderL": 138.3,
+        "kind": "RULE"
+      },
+      {
+        "y": 414,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 434,
+        "borderL": 138.3,
+        "kind": "RULE"
+      },
+      {
+        "y": 457,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 500,
+        "borderL": 137.3,
+        "kind": "RULE"
+      },
+      {
+        "y": 520,
+        "borderL": 138.3,
+        "kind": "RULE"
+      },
+      {
+        "y": 543,
+        "borderL": 137.3,
+        "kind": "RULE"
+      },
+      {
+        "y": 563,
+        "borderL": 138.3,
+        "kind": "RULE"
+      }
+    ],
+    "photoPad": null,
+    "canvasPadRows": 0,
+    "left": 6.5,
+    "top": 8,
+    "ink": {
+      "x": 201,
+      "y": 302
+    },
+    "weld": {
+      "pageN": 0,
+      "canvasN": 174,
+      "photoN": 0,
+      "borderL": 154.6,
+      "borderRule": true
+    },
+    "ruleClusters": [
+      {
+        "y0": 285,
+        "y1": 285
+      },
+      {
+        "y0": 328,
+        "y1": 328
+      },
+      {
+        "y0": 371,
+        "y1": 371
+      }
+    ],
+    "creamJoins": 0,
+    "crops": {
+      "seam": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-huerden-d144-seam.png",
+      "join": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-huerden-d144-join.png",
+      "cell": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-huerden-d144-cell.png",
+      "chip": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-huerden-d144-chip.png"
+    },
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "markt",
+    "page": 78,
+    "dpi": 144,
+    "scale": 2,
+    "anchor": "Marktplätze · Zugang und Kanäle",
+    "anchorXY": [
+      199.5,
+      165.4
+    ],
+    "baseY": 233,
+    "bx": 187,
+    "yAfter": 234,
+    "hairPt": 0.5,
+    "hairCount": 1,
+    "double": false,
+    "creamGapPt": 0,
+    "notches": 0,
+    "joins": [
+      {
+        "y": 291,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 467,
+        "borderL": 138.3,
+        "kind": "RULE"
+      },
+      {
+        "y": 506,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 578,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 650,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 684,
+        "borderL": 138.3,
+        "kind": "RULE"
+      },
+      {
+        "y": 793,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 828,
+        "borderL": 138.3,
+        "kind": "RULE"
+      },
+      {
+        "y": 865,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 899,
+        "borderL": 138.3,
+        "kind": "RULE"
+      }
+    ],
+    "photoPad": null,
+    "canvasPadRows": 0,
+    "left": null,
+    "top": null,
+    "ink": null,
+    "weld": {
+      "pageN": 0,
+      "canvasN": 0,
+      "photoN": 0,
+      "borderL": 131.2,
+      "borderRule": true
+    },
+    "ruleClusters": [
+      {
+        "y0": 233,
+        "y1": 233
+      },
+      {
+        "y0": 291,
+        "y1": 291
+      }
+    ],
+    "creamJoins": 0,
+    "crops": {
+      "seam": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-markt-d144-seam.png",
+      "join": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-markt-d144-join.png",
+      "cell": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-markt-d144-cell.png",
+      "chip": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-markt-d144-chip.png"
+    },
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "glossar",
+    "page": 121,
+    "dpi": 144,
+    "scale": 2,
+    "anchor": "Glossar",
+    "anchorXY": [
+      154.2,
+      165.4
+    ],
+    "baseY": 215,
+    "bx": 142,
+    "yAfter": 216,
+    "hairPt": 0.5,
+    "hairCount": 1,
+    "double": false,
+    "creamGapPt": 0,
+    "notches": 0,
+    "joins": [
+      {
+        "y": 287,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 321,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 393,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 430,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 502,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 574,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 601,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 631,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 689,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 716,
+        "borderL": 128.2,
+        "kind": "RULE"
+      }
+    ],
+    "photoPad": null,
+    "canvasPadRows": 0,
+    "left": null,
+    "top": null,
+    "ink": null,
+    "weld": {
+      "pageN": 0,
+      "canvasN": 175,
+      "photoN": 0,
+      "borderL": 128.2,
+      "borderRule": true
+    },
+    "ruleClusters": [
+      {
+        "y0": 215,
+        "y1": 215
+      },
+      {
+        "y0": 287,
+        "y1": 287
+      },
+      {
+        "y0": 321,
+        "y1": 321
+      }
+    ],
+    "creamJoins": 0,
+    "crops": {
+      "seam": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-glossar-d144-seam.png",
+      "join": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-glossar-d144-join.png",
+      "cell": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-glossar-d144-cell.png",
+      "chip": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-glossar-d144-chip.png"
+    },
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "kopfbau",
+    "page": 24,
+    "dpi": 432,
+    "scale": 6,
+    "anchor": "Kopfbau Halle 118",
+    "anchorXY": [
+      598.6,
+      1117.5
+    ],
+    "baseY": 1151,
+    "bx": 562,
+    "yAfter": 1153,
+    "hairPt": 0.33,
+    "hairCount": 1,
+    "double": false,
+    "creamGapPt": 0,
+    "notches": 0,
+    "joins": [
+      {
+        "y": 1303,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1340,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1459,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1526,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1563,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1918,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 2020,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 2091,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 2171,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 2214,
+        "borderL": 128.2,
+        "kind": "RULE"
+      }
+    ],
+    "photoPad": 5.5,
+    "canvasPadRows": 33,
+    "left": null,
+    "top": null,
+    "ink": null,
+    "weld": {
+      "pageN": 0,
+      "canvasN": 175,
+      "photoN": 0,
+      "borderL": 128.2,
+      "borderRule": true
+    },
+    "ruleClusters": [
+      {
+        "y0": 1151,
+        "y1": 1152
+      },
+      {
+        "y0": 1336,
+        "y1": 1342
+      },
+      {
+        "y0": 1358,
+        "y1": 1372
+      }
+    ],
+    "creamJoins": 0,
+    "crops": {
+      "seam": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-kopfbau-d432-seam.png",
+      "join": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-kopfbau-d432-join.png",
+      "cell": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-kopfbau-d432-cell.png",
+      "chip": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-kopfbau-d432-chip.png"
+    },
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "huerden",
+    "page": 76,
+    "dpi": 432,
+    "scale": 6,
+    "anchor": "Hürden der Wiederverwendung",
+    "anchorXY": [
+      594.1,
+      820.8
+    ],
+    "baseY": 854,
+    "bx": 562,
+    "yAfter": 858,
+    "hairPt": 0.67,
+    "hairCount": 1,
+    "double": false,
+    "creamGapPt": 0,
+    "notches": 0,
+    "joins": [
+      {
+        "y": 983,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1113,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1179,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1242,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1371,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1436,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1501,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1564,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1630,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1693,
+        "borderL": 128.2,
+        "kind": "RULE"
+      }
+    ],
+    "photoPad": null,
+    "canvasPadRows": 0,
+    "left": 6.33,
+    "top": 7.83,
+    "ink": {
+      "x": 601,
+      "y": 905
+    },
+    "weld": {
+      "pageN": 0,
+      "canvasN": 0,
+      "photoN": 0,
+      "borderL": 156.6,
+      "borderRule": false
+    },
+    "ruleClusters": [
+      {
+        "y0": 854,
+        "y1": 857
+      },
+      {
+        "y0": 983,
+        "y1": 986
+      },
+      {
+        "y0": 1113,
+        "y1": 1116
+      }
+    ],
+    "creamJoins": 0,
+    "crops": {
+      "seam": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-huerden-d432-seam.png",
+      "join": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-huerden-d432-join.png",
+      "cell": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-huerden-d432-cell.png",
+      "chip": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-huerden-d432-chip.png"
+    },
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "markt",
+    "page": 78,
+    "dpi": 432,
+    "scale": 6,
+    "anchor": "Marktplätze · Zugang und Kanäle",
+    "anchorXY": [
+      598.6,
+      496.1
+    ],
+    "baseY": 530,
+    "bx": 562,
+    "yAfter": 531,
+    "hairPt": 0.17,
+    "hairCount": 1,
+    "double": false,
+    "creamGapPt": 0,
+    "notches": 0,
+    "joins": [
+      {
+        "y": 700,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 772,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 872,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 970,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1087,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1207,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1303,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1376,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1430,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1518,
+        "borderL": 128.2,
+        "kind": "RULE"
+      }
+    ],
+    "photoPad": null,
+    "canvasPadRows": 0,
+    "left": 6.33,
+    "top": 11.5,
+    "ink": {
+      "x": 601,
+      "y": 600
+    },
+    "weld": {
+      "pageN": 0,
+      "canvasN": 0,
+      "photoN": 0,
+      "borderL": 128.2,
+      "borderRule": true
+    },
+    "ruleClusters": [
+      {
+        "y0": 530,
+        "y1": 530
+      },
+      {
+        "y0": 700,
+        "y1": 702
+      },
+      {
+        "y0": 872,
+        "y1": 875
+      }
+    ],
+    "creamJoins": 0,
+    "crops": {
+      "seam": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-markt-d432-seam.png",
+      "join": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-markt-d432-join.png",
+      "cell": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-markt-d432-cell.png",
+      "chip": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-markt-d432-chip.png"
+    },
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "glossar",
+    "page": 121,
+    "dpi": 432,
+    "scale": 6,
+    "anchor": "Glossar",
+    "anchorXY": [
+      462.6,
+      496.1
+    ],
+    "baseY": 517,
+    "bx": 425,
+    "yAfter": 519,
+    "hairPt": 0.33,
+    "hairCount": 1,
+    "double": false,
+    "creamGapPt": 0,
+    "notches": 0,
+    "joins": [
+      {
+        "y": 595,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 644,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 746,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 860,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 962,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1075,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1177,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1290,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1393,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1506,
+        "borderL": 128.2,
+        "kind": "RULE"
+      }
+    ],
+    "photoPad": null,
+    "canvasPadRows": 0,
+    "left": 6.5,
+    "top": 7.83,
+    "ink": {
+      "x": 465,
+      "y": 566
+    },
+    "weld": {
+      "pageN": 0,
+      "canvasN": 174,
+      "photoN": 0,
+      "borderL": 129.4,
+      "borderRule": true
+    },
+    "ruleClusters": [
+      {
+        "y0": 517,
+        "y1": 518
+      },
+      {
+        "y0": 644,
+        "y1": 647
+      },
+      {
+        "y0": 748,
+        "y1": 750
+      }
+    ],
+    "creamJoins": 0,
+    "crops": {
+      "seam": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-glossar-d432-seam.png",
+      "join": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-glossar-d432-join.png",
+      "cell": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-glossar-d432-cell.png",
+      "chip": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa2-glossar-d432-chip.png"
+    },
+    "ok": true,
+    "fail": []
+  }
+]

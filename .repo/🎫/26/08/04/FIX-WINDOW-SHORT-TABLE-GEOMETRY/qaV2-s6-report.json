@@ -1,0 +1,789 @@
+[
+  {
+    "id": "toc",
+    "page": 3,
+    "scale": 6,
+    "anchor": "Inhaltsverzeichnis",
+    "bodyAnchor": "Schlüssel",
+    "baselineY": 348,
+    "borderX": 255,
+    "tableBottomY": 2867,
+    "hairlinePt": 0.33,
+    "ruleBandsInSeam": 1,
+    "doubleHairline": false,
+    "secondHairGapPt": null,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "notchClusters": [],
+    "joinSamples": [
+      {
+        "y": 440,
+        "pageGap": false,
+        "Lmin": 130,
+        "Lmax": 132,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 535,
+        "pageGap": false,
+        "Lmin": 129,
+        "Lmax": 133,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 630,
+        "pageGap": false,
+        "Lmin": 130,
+        "Lmax": 132,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 725,
+        "pageGap": false,
+        "Lmin": 130,
+        "Lmax": 133,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 820,
+        "pageGap": false,
+        "Lmin": 130,
+        "Lmax": 132,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 915,
+        "pageGap": false,
+        "Lmin": 130,
+        "Lmax": 132,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 958,
+        "pageGap": false,
+        "Lmin": 142,
+        "Lmax": 142,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 977,
+        "pageGap": false,
+        "Lmin": 142,
+        "Lmax": 142,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 1010,
+        "pageGap": false,
+        "Lmin": 130,
+        "Lmax": 133,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 1104,
+        "pageGap": false,
+        "Lmin": 130,
+        "Lmax": 132,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      }
+    ],
+    "leftInsetPt": 5.83,
+    "topInsetPt": 3,
+    "seamLadder": [
+      {
+        "dyPt": -0.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": -0.33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": -0.17,
+        "kind": "OTHER",
+        "rgb": [
+          211,
+          210,
+          197
+        ]
+      },
+      {
+        "dyPt": 0,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.17,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 0.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 0.67,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 0.83,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.17,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.67,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.83,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2.17,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2.33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      }
+    ],
+    "crops": {
+      "seam": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s6-toc-seam.png",
+      "body": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s6-toc-body.png",
+      "Ljoin": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s6-toc-Ljoin.png",
+      "chip": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s6-toc-chip.png"
+    },
+    "ok": false,
+    "fail": [
+      "top-inset:3"
+    ]
+  },
+  {
+    "id": "meilensteine",
+    "page": 18,
+    "scale": 6,
+    "anchor": "Förderrechtliche Meilensteine",
+    "bodyAnchor": "Formales Kriterium",
+    "baselineY": 518,
+    "borderX": 561,
+    "tableBottomY": 2588,
+    "hairlinePt": 0.67,
+    "ruleBandsInSeam": 1,
+    "doubleHairline": false,
+    "secondHairGapPt": null,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "notchClusters": [],
+    "joinSamples": [
+      {
+        "y": 647,
+        "pageGap": false,
+        "Lmin": 158,
+        "Lmax": 158,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 707,
+        "pageGap": false,
+        "Lmin": 158,
+        "Lmax": 158,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 726,
+        "pageGap": false,
+        "Lmin": 158,
+        "Lmax": 158,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 749,
+        "pageGap": false,
+        "Lmin": 158,
+        "Lmax": 158,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 768,
+        "pageGap": false,
+        "Lmin": 158,
+        "Lmax": 158,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 793,
+        "pageGap": false,
+        "Lmin": 158,
+        "Lmax": 158,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 812,
+        "pageGap": false,
+        "Lmin": 158,
+        "Lmax": 158,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 906,
+        "pageGap": false,
+        "Lmin": 158,
+        "Lmax": 158,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 966,
+        "pageGap": false,
+        "Lmin": 158,
+        "Lmax": 158,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 985,
+        "pageGap": false,
+        "Lmin": 158,
+        "Lmax": 158,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      }
+    ],
+    "leftInsetPt": 6.5,
+    "topInsetPt": -4.33,
+    "seamLadder": [
+      {
+        "dyPt": -0.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": -0.33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": -0.17,
+        "kind": "OTHER",
+        "rgb": [
+          211,
+          210,
+          197
+        ]
+      },
+      {
+        "dyPt": 0,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.17,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.33,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.5,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.67,
+        "kind": "OTHER",
+        "rgb": [
+          234,
+          230,
+          216
+        ]
+      },
+      {
+        "dyPt": 0.83,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.17,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.67,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.83,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2.17,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2.33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      }
+    ],
+    "crops": {
+      "seam": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s6-meilensteine-seam.png",
+      "body": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s6-meilensteine-body.png",
+      "Ljoin": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s6-meilensteine-Ljoin.png",
+      "chip": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s6-meilensteine-chip.png"
+    },
+    "ok": false,
+    "fail": [
+      "top-inset:-4.33"
+    ]
+  },
+  {
+    "id": "risiken",
+    "page": 19,
+    "scale": 6,
+    "anchor": "Risiken und Maßnahmen",
+    "bodyAnchor": "Risiko",
+    "baselineY": 644,
+    "borderX": 425,
+    "tableBottomY": 1834,
+    "hairlinePt": 0.67,
+    "ruleBandsInSeam": 1,
+    "doubleHairline": false,
+    "secondHairGapPt": null,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "notchClusters": [],
+    "joinSamples": [
+      {
+        "y": 773,
+        "pageGap": false,
+        "Lmin": 150,
+        "Lmax": 150,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 921,
+        "pageGap": false,
+        "Lmin": 150,
+        "Lmax": 150,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 1118,
+        "pageGap": false,
+        "Lmin": 150,
+        "Lmax": 150,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 1427,
+        "pageGap": false,
+        "Lmin": 150,
+        "Lmax": 150,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      },
+      {
+        "y": 1624,
+        "pageGap": false,
+        "Lmin": 150,
+        "Lmax": 150,
+        "kinds": "-1.5:RULE -1.3:RULE -1.2:RULE -1.0:RULE -0.8:RULE -0.7:RULE -0.5:RULE -0.3:RULE -0.2:RULE 0.0:RULE 0.2:RULE 0.3:RULE 0.5:RULE 0.7:RULE 0.8:RULE 1.0:RULE 1.2:RULE 1.3:RULE 1.5:RULE"
+      }
+    ],
+    "leftInsetPt": 6.5,
+    "topInsetPt": -4.33,
+    "seamLadder": [
+      {
+        "dyPt": -0.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": -0.33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": -0.17,
+        "kind": "OTHER",
+        "rgb": [
+          211,
+          210,
+          197
+        ]
+      },
+      {
+        "dyPt": 0,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.17,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.33,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.5,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.67,
+        "kind": "OTHER",
+        "rgb": [
+          234,
+          230,
+          216
+        ]
+      },
+      {
+        "dyPt": 0.83,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.17,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.67,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.83,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2.17,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2.33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      }
+    ],
+    "crops": {
+      "seam": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s6-risiken-seam.png",
+      "body": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s6-risiken-body.png",
+      "Ljoin": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s6-risiken-Ljoin.png",
+      "chip": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s6-risiken-chip.png"
+    },
+    "ok": false,
+    "fail": [
+      "top-inset:-4.33"
+    ]
+  }
+]

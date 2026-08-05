@@ -1,0 +1,485 @@
+[
+  {
+    "id": "toc",
+    "kind": "toc",
+    "page": 3,
+    "scale": 2,
+    "anchor": "Inhaltsverzeichnis",
+    "baselineY": 116,
+    "hairlinePt": 0.5,
+    "doubleHairline": false,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "leftInsetPt": 6.5,
+    "topInsetPt": 5,
+    "photoPadPt": null,
+    "borderX": 85,
+    "ruleClustersUnderChip": [
+      {
+        "y0": 116,
+        "y1": 116
+      },
+      {
+        "y0": 147,
+        "y1": 147
+      },
+      {
+        "y0": 210,
+        "y1": 210
+      }
+    ],
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "toc",
+    "kind": "toc",
+    "page": 3,
+    "scale": 6,
+    "anchor": "Inhaltsverzeichnis",
+    "baselineY": 348,
+    "hairlinePt": 0.33,
+    "doubleHairline": false,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "leftInsetPt": 7.5,
+    "topInsetPt": 5,
+    "photoPadPt": null,
+    "borderX": 255,
+    "ruleClustersUnderChip": [
+      {
+        "y0": 348,
+        "y1": 349
+      },
+      {
+        "y0": 441,
+        "y1": 443
+      },
+      {
+        "y0": 535,
+        "y1": 538
+      }
+    ],
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "meilensteine",
+    "kind": "window-table",
+    "page": 17,
+    "scale": 2,
+    "anchor": "rechnung ist ausschließlich Meilenstein 1 fällig. Tabelle 2.1.a zeigt die Fristen und den",
+    "baselineY": -1,
+    "hairlinePt": 0,
+    "doubleHairline": false,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "borderX": 156,
+    "ruleClustersUnderChip": [],
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "meilensteine",
+    "kind": "window-table",
+    "page": 17,
+    "scale": 6,
+    "anchor": "rechnung ist ausschließlich Meilenstein 1 fällig. Tabelle 2.1.a zeigt die Fristen und den",
+    "baselineY": 900,
+    "hairlinePt": 1.17,
+    "doubleHairline": true,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "borderX": 453,
+    "ruleClustersUnderChip": [
+      {
+        "y0": 900,
+        "y1": 906
+      },
+      {
+        "y0": 913,
+        "y1": 918
+      },
+      {
+        "y0": 926,
+        "y1": 931
+      }
+    ],
+    "ok": false,
+    "fail": [
+      "double-hairline",
+      "hairline-thick:1.17"
+    ]
+  },
+  {
+    "id": "risiken",
+    "kind": "window-table",
+    "page": 19,
+    "scale": 2,
+    "anchor": "Risiken und Maßnahmen",
+    "baselineY": 215,
+    "hairlinePt": 0.5,
+    "doubleHairline": false,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "leftInsetPt": 6,
+    "topInsetPt": 8,
+    "photoPadPt": null,
+    "borderX": 142,
+    "ruleClustersUnderChip": [
+      {
+        "y0": 215,
+        "y1": 215
+      },
+      {
+        "y0": 258,
+        "y1": 258
+      },
+      {
+        "y0": 373,
+        "y1": 373
+      }
+    ],
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "risiken",
+    "kind": "window-table",
+    "page": 19,
+    "scale": 6,
+    "anchor": "Risiken und Maßnahmen",
+    "baselineY": 644,
+    "hairlinePt": 0.67,
+    "doubleHairline": false,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "leftInsetPt": 6,
+    "topInsetPt": 7.83,
+    "photoPadPt": null,
+    "borderX": 428,
+    "ruleClustersUnderChip": [
+      {
+        "y0": 644,
+        "y1": 647
+      },
+      {
+        "y0": 773,
+        "y1": 776
+      },
+      {
+        "y0": 922,
+        "y1": 922
+      }
+    ],
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "kopfbau",
+    "kind": "project",
+    "page": 24,
+    "scale": 2,
+    "anchor": "Kopfbau Halle 118",
+    "baselineY": -1,
+    "hairlinePt": 0,
+    "doubleHairline": false,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "borderX": 187,
+    "ruleClustersUnderChip": [],
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "kopfbau",
+    "kind": "project",
+    "page": 24,
+    "scale": 6,
+    "anchor": "Kopfbau Halle 118",
+    "baselineY": 1151,
+    "hairlinePt": 0.33,
+    "doubleHairline": false,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "leftInsetPt": 67.17,
+    "topInsetPt": 5.5,
+    "photoPadPt": 5.5,
+    "borderX": 562,
+    "ruleClustersUnderChip": [
+      {
+        "y0": 1151,
+        "y1": 1152
+      },
+      {
+        "y0": 1186,
+        "y1": 1493
+      },
+      {
+        "y0": 1498,
+        "y1": 1499
+      }
+    ],
+    "ok": false,
+    "fail": [
+      "left-inset:67.17"
+    ]
+  },
+  {
+    "id": "huerden",
+    "kind": "long-table",
+    "page": 76,
+    "scale": 2,
+    "anchor": "zierten Hürden in einer Arbeitsübersicht ohne Gewichtung.",
+    "baselineY": 285,
+    "hairlinePt": 0.5,
+    "doubleHairline": false,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "leftInsetPt": 6,
+    "topInsetPt": 8,
+    "photoPadPt": null,
+    "borderX": 187,
+    "ruleClustersUnderChip": [
+      {
+        "y0": 285,
+        "y1": 285
+      },
+      {
+        "y0": 328,
+        "y1": 328
+      },
+      {
+        "y0": 371,
+        "y1": 371
+      }
+    ],
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "huerden",
+    "kind": "long-table",
+    "page": 76,
+    "scale": 6,
+    "anchor": "zierten Hürden in einer Arbeitsübersicht ohne Gewichtung.",
+    "baselineY": 749,
+    "hairlinePt": 0.67,
+    "doubleHairline": false,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "leftInsetPt": 74.83,
+    "topInsetPt": 3.5,
+    "photoPadPt": null,
+    "borderX": 562,
+    "ruleClustersUnderChip": [
+      {
+        "y0": 749,
+        "y1": 752
+      },
+      {
+        "y0": 820,
+        "y1": 820
+      },
+      {
+        "y0": 854,
+        "y1": 857
+      }
+    ],
+    "ok": false,
+    "fail": [
+      "left-inset:74.83"
+    ]
+  },
+  {
+    "id": "ueberblick",
+    "kind": "long-table",
+    "page": 77,
+    "scale": 2,
+    "anchor": "Überblick",
+    "baselineY": 361,
+    "hairlinePt": 0.5,
+    "doubleHairline": false,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "leftInsetPt": 6,
+    "topInsetPt": 8,
+    "photoPadPt": 61.5,
+    "borderX": 142,
+    "ruleClustersUnderChip": [
+      {
+        "y0": 361,
+        "y1": 361
+      },
+      {
+        "y0": 404,
+        "y1": 404
+      }
+    ],
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "ueberblick",
+    "kind": "long-table",
+    "page": 77,
+    "scale": 6,
+    "anchor": "Überblick",
+    "baselineY": 1084,
+    "hairlinePt": 0.5,
+    "doubleHairline": false,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "leftInsetPt": 6.5,
+    "topInsetPt": 8,
+    "photoPadPt": 61.67,
+    "borderX": 425,
+    "ruleClustersUnderChip": [
+      {
+        "y0": 1084,
+        "y1": 1086
+      },
+      {
+        "y0": 1213,
+        "y1": 1216
+      },
+      {
+        "y0": 1342,
+        "y1": 1345
+      }
+    ],
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "markt",
+    "kind": "long-table",
+    "page": 78,
+    "scale": 2,
+    "anchor": "Marktplätze · Zugang und Kanäle",
+    "baselineY": 233,
+    "hairlinePt": 0.5,
+    "doubleHairline": false,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "borderX": 187,
+    "ruleClustersUnderChip": [
+      {
+        "y0": 233,
+        "y1": 233
+      },
+      {
+        "y0": 291,
+        "y1": 291
+      }
+    ],
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "markt",
+    "kind": "long-table",
+    "page": 78,
+    "scale": 6,
+    "anchor": "Marktplätze · Zugang und Kanäle",
+    "baselineY": 530,
+    "hairlinePt": 0.17,
+    "doubleHairline": false,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "leftInsetPt": 6.33,
+    "topInsetPt": 11.5,
+    "photoPadPt": null,
+    "borderX": 562,
+    "ruleClustersUnderChip": [
+      {
+        "y0": 530,
+        "y1": 530
+      },
+      {
+        "y0": 700,
+        "y1": 702
+      },
+      {
+        "y0": 872,
+        "y1": 875
+      }
+    ],
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "glossar",
+    "kind": "glossary",
+    "page": 121,
+    "scale": 2,
+    "anchor": "Glossar",
+    "baselineY": 215,
+    "hairlinePt": 0.5,
+    "doubleHairline": false,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "borderX": 142,
+    "ruleClustersUnderChip": [
+      {
+        "y0": 215,
+        "y1": 215
+      },
+      {
+        "y0": 287,
+        "y1": 287
+      }
+    ],
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "glossar",
+    "kind": "glossary",
+    "page": 121,
+    "scale": 6,
+    "anchor": "Glossar",
+    "baselineY": 517,
+    "hairlinePt": 0.33,
+    "doubleHairline": false,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "leftInsetPt": 22.5,
+    "topInsetPt": 7.67,
+    "photoPadPt": null,
+    "borderX": 425,
+    "ruleClustersUnderChip": [
+      {
+        "y0": 517,
+        "y1": 518
+      },
+      {
+        "y0": 644,
+        "y1": 647
+      },
+      {
+        "y0": 750,
+        "y1": 750
+      }
+    ],
+    "ok": false,
+    "fail": [
+      "left-inset:22.5"
+    ]
+  }
+]

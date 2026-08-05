@@ -1,0 +1,459 @@
+[
+  {
+    "id": "toc",
+    "page": 3,
+    "scale": 2,
+    "anchor": "Inhaltsverzeichnis",
+    "bodyAnchor": "Schlüssel",
+    "baselineY": 116,
+    "borderX": 85,
+    "tableBottomY": 955,
+    "hairlinePt": 0.5,
+    "ruleBandsInSeam": 1,
+    "doubleHairline": false,
+    "secondHairGapPt": null,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "notchClusters": [],
+    "joinSamples": [
+      {
+        "y": 147,
+        "pageGap": false,
+        "Lmin": 128,
+        "Lmax": 129,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 178,
+        "pageGap": false,
+        "Lmin": 128,
+        "Lmax": 129,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 210,
+        "pageGap": false,
+        "Lmin": 128,
+        "Lmax": 129,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 242,
+        "pageGap": false,
+        "Lmin": 128,
+        "Lmax": 130,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 273,
+        "pageGap": false,
+        "Lmin": 128,
+        "Lmax": 129,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 305,
+        "pageGap": false,
+        "Lmin": 128,
+        "Lmax": 129,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 320,
+        "pageGap": false,
+        "Lmin": 132,
+        "Lmax": 132,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 337,
+        "pageGap": false,
+        "Lmin": 128,
+        "Lmax": 130,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 368,
+        "pageGap": false,
+        "Lmin": 128,
+        "Lmax": 129,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 400,
+        "pageGap": false,
+        "Lmin": 128,
+        "Lmax": 129,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      }
+    ],
+    "leftInsetPt": 6,
+    "topInsetPt": -1.5,
+    "seamLadder": [
+      {
+        "dyPt": -0.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 0,
+        "kind": "RULE",
+        "rgb": [
+          152,
+          156,
+          149
+        ]
+      },
+      {
+        "dyPt": 0.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      }
+    ],
+    "crops": {
+      "seam": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s2-toc-seam.png",
+      "body": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s2-toc-body.png",
+      "Ljoin": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s2-toc-Ljoin.png",
+      "chip": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s2-toc-chip.png"
+    },
+    "ok": false,
+    "fail": [
+      "top-inset:-1.5"
+    ]
+  },
+  {
+    "id": "meilensteine",
+    "page": 18,
+    "scale": 2,
+    "anchor": "Förderrechtliche Meilensteine",
+    "bodyAnchor": "Formales Kriterium",
+    "baselineY": 173,
+    "borderX": 187,
+    "tableBottomY": 862,
+    "hairlinePt": 0.5,
+    "ruleBandsInSeam": 1,
+    "doubleHairline": false,
+    "secondHairGapPt": null,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "notchClusters": [],
+    "joinSamples": [
+      {
+        "y": 216,
+        "pageGap": false,
+        "Lmin": 136,
+        "Lmax": 138,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 236,
+        "pageGap": false,
+        "Lmin": 138,
+        "Lmax": 138,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 250,
+        "pageGap": false,
+        "Lmin": 138,
+        "Lmax": 138,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 264,
+        "pageGap": false,
+        "Lmin": 138,
+        "Lmax": 138,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 302,
+        "pageGap": false,
+        "Lmin": 136,
+        "Lmax": 138,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 322,
+        "pageGap": false,
+        "Lmin": 138,
+        "Lmax": 138,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 336,
+        "pageGap": false,
+        "Lmin": 138,
+        "Lmax": 138,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 351,
+        "pageGap": false,
+        "Lmin": 138,
+        "Lmax": 138,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 374,
+        "pageGap": false,
+        "Lmin": 136,
+        "Lmax": 138,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 401,
+        "pageGap": false,
+        "Lmin": 138,
+        "Lmax": 138,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      }
+    ],
+    "leftInsetPt": 35.5,
+    "topInsetPt": 1.5,
+    "seamLadder": [
+      {
+        "dyPt": -0.5,
+        "kind": "OTHER",
+        "rgb": [
+          183,
+          184,
+          174
+        ]
+      },
+      {
+        "dyPt": 0,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      }
+    ],
+    "crops": {
+      "seam": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s2-meilensteine-seam.png",
+      "body": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s2-meilensteine-body.png",
+      "Ljoin": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s2-meilensteine-Ljoin.png",
+      "chip": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s2-meilensteine-chip.png"
+    },
+    "ok": false,
+    "fail": [
+      "left-inset:35.5",
+      "top-inset:1.5"
+    ]
+  },
+  {
+    "id": "risiken",
+    "page": 19,
+    "scale": 2,
+    "anchor": "Risiken und Maßnahmen",
+    "bodyAnchor": "Risiko",
+    "baselineY": 215,
+    "borderX": 142,
+    "tableBottomY": 611,
+    "hairlinePt": 0.5,
+    "ruleBandsInSeam": 1,
+    "doubleHairline": false,
+    "secondHairGapPt": null,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "notchClusters": [],
+    "joinSamples": [
+      {
+        "y": 258,
+        "pageGap": false,
+        "Lmin": 128,
+        "Lmax": 128,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 373,
+        "pageGap": false,
+        "Lmin": 128,
+        "Lmax": 128,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 476,
+        "pageGap": false,
+        "Lmin": 128,
+        "Lmax": 128,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      },
+      {
+        "y": 542,
+        "pageGap": false,
+        "Lmin": 128,
+        "Lmax": 128,
+        "kinds": "-1.5:RULE -1.0:RULE -0.5:RULE 0.0:RULE 0.5:RULE 1.0:RULE 1.5:RULE"
+      }
+    ],
+    "leftInsetPt": 5,
+    "topInsetPt": 13,
+    "seamLadder": [
+      {
+        "dyPt": -0.5,
+        "kind": "OTHER",
+        "rgb": [
+          183,
+          184,
+          174
+        ]
+      },
+      {
+        "dyPt": 0,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      }
+    ],
+    "crops": {
+      "seam": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s2-risiken-seam.png",
+      "body": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s2-risiken-body.png",
+      "Ljoin": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s2-risiken-Ljoin.png",
+      "chip": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV2-s2-risiken-chip.png"
+    },
+    "ok": false,
+    "fail": [
+      "top-inset:13"
+    ]
+  }
+]

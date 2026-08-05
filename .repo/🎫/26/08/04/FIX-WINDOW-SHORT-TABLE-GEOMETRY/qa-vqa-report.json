@@ -1,0 +1,690 @@
+[
+  {
+    "id": "kopfbau",
+    "kind": "project",
+    "page": 24,
+    "dpi": 144,
+    "scale": 2,
+    "anchor": "Kopfbau Halle 118",
+    "baselineY": -1,
+    "borderX": 187,
+    "yAfter": 0,
+    "hairlinePt": 0,
+    "hairlineCount": 0,
+    "doubleHairline": false,
+    "creamGapPx": 0,
+    "creamGapPt": 0,
+    "weldOk": true,
+    "weldSample": null,
+    "joinNotches": 0,
+    "notchClusters": [],
+    "joinSamples": [],
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "firstInk": null,
+    "ruleClustersUnderChip": [],
+    "crops": {
+      "seam": null,
+      "join": null,
+      "cell": null,
+      "chip": null
+    },
+    "ok": false,
+    "fail": [
+      "hairlines:0",
+      "photo-pad:missing"
+    ]
+  },
+  {
+    "id": "huerden",
+    "kind": "long-table",
+    "page": 76,
+    "dpi": 144,
+    "scale": 2,
+    "anchor": "zierten Hürden in einer Arbeitsübersicht ohne Gewichtung.",
+    "baselineY": 250,
+    "borderX": 187,
+    "yAfter": 251,
+    "hairlinePt": 0.5,
+    "hairlineCount": 1,
+    "doubleHairline": false,
+    "creamGapPx": 0,
+    "creamGapPt": 0,
+    "weldOk": true,
+    "weldSample": "y251 page=0 canvas=192 photo=0 borderL=227",
+    "joinNotches": 0,
+    "notchClusters": [],
+    "joinSamples": [
+      {
+        "y": 271,
+        "borderL": 234.8,
+        "kind": "CREAM"
+      },
+      {
+        "y": 328,
+        "borderL": 136.3,
+        "kind": "RULE"
+      },
+      {
+        "y": 371,
+        "borderL": 136.3,
+        "kind": "RULE"
+      },
+      {
+        "y": 391,
+        "borderL": 138.3,
+        "kind": "RULE"
+      },
+      {
+        "y": 414,
+        "borderL": 136.3,
+        "kind": "RULE"
+      },
+      {
+        "y": 434,
+        "borderL": 138.3,
+        "kind": "RULE"
+      },
+      {
+        "y": 457,
+        "borderL": 136.3,
+        "kind": "RULE"
+      },
+      {
+        "y": 500,
+        "borderL": 137.3,
+        "kind": "RULE"
+      }
+    ],
+    "leftInsetPt": 14.5,
+    "topInsetPt": 4,
+    "photoPadPt": null,
+    "firstInk": {
+      "x": 217,
+      "y": 259
+    },
+    "ruleClustersUnderChip": [
+      {
+        "y0": 250,
+        "y1": 250
+      },
+      {
+        "y0": 285,
+        "y1": 285
+      },
+      {
+        "y0": 328,
+        "y1": 328
+      },
+      {
+        "y0": 371,
+        "y1": 371
+      }
+    ],
+    "crops": {
+      "seam": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-huerden-d144-seam.png",
+      "join": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-huerden-d144-join.png",
+      "cell": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-huerden-d144-cell.png",
+      "chip": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-huerden-d144-chip.png"
+    },
+    "ok": false,
+    "fail": [
+      "cream-joins:1",
+      "left-inset:14.5"
+    ]
+  },
+  {
+    "id": "markt",
+    "kind": "long-table",
+    "page": 78,
+    "dpi": 144,
+    "scale": 2,
+    "anchor": "Marktplätze · Zugang und Kanäle",
+    "baselineY": 233,
+    "borderX": 187,
+    "yAfter": 234,
+    "hairlinePt": 0.5,
+    "hairlineCount": 1,
+    "doubleHairline": false,
+    "creamGapPx": 0,
+    "creamGapPt": 0,
+    "weldOk": true,
+    "weldSample": "y234 page=0 canvas=0 photo=0 borderL=131",
+    "joinNotches": 0,
+    "notchClusters": [],
+    "joinSamples": [
+      {
+        "y": 291,
+        "borderL": 129.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 467,
+        "borderL": 138.3,
+        "kind": "RULE"
+      },
+      {
+        "y": 506,
+        "borderL": 129.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 578,
+        "borderL": 129.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 650,
+        "borderL": 129.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 684,
+        "borderL": 138.3,
+        "kind": "RULE"
+      },
+      {
+        "y": 793,
+        "borderL": 129.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 828,
+        "borderL": 138.3,
+        "kind": "RULE"
+      }
+    ],
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "firstInk": null,
+    "ruleClustersUnderChip": [
+      {
+        "y0": 233,
+        "y1": 233
+      },
+      {
+        "y0": 291,
+        "y1": 291
+      }
+    ],
+    "crops": {
+      "seam": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-markt-d144-seam.png",
+      "join": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-markt-d144-join.png",
+      "cell": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-markt-d144-cell.png",
+      "chip": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-markt-d144-chip.png"
+    },
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "glossar",
+    "kind": "glossary",
+    "page": 121,
+    "dpi": 144,
+    "scale": 2,
+    "anchor": "Glossar",
+    "baselineY": 215,
+    "borderX": 142,
+    "yAfter": 216,
+    "hairlinePt": 0.5,
+    "hairlineCount": 1,
+    "doubleHairline": false,
+    "creamGapPx": 0,
+    "creamGapPt": 0,
+    "weldOk": true,
+    "weldSample": "y216 page=0 canvas=191 photo=0 borderL=128",
+    "joinNotches": 0,
+    "notchClusters": [],
+    "joinSamples": [
+      {
+        "y": 287,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 321,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 393,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 430,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 502,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 574,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 601,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 631,
+        "borderL": 128.2,
+        "kind": "RULE"
+      }
+    ],
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "photoPadPt": null,
+    "firstInk": null,
+    "ruleClustersUnderChip": [
+      {
+        "y0": 215,
+        "y1": 215
+      },
+      {
+        "y0": 287,
+        "y1": 287
+      }
+    ],
+    "crops": {
+      "seam": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-glossar-d144-seam.png",
+      "join": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-glossar-d144-join.png",
+      "cell": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-glossar-d144-cell.png",
+      "chip": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-glossar-d144-chip.png"
+    },
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "kopfbau",
+    "kind": "project",
+    "page": 24,
+    "dpi": 432,
+    "scale": 6,
+    "anchor": "Kopfbau Halle 118",
+    "baselineY": 1151,
+    "borderX": 562,
+    "yAfter": 1153,
+    "hairlinePt": 0.33,
+    "hairlineCount": 1,
+    "doubleHairline": false,
+    "creamGapPx": 0,
+    "creamGapPt": 0,
+    "weldOk": true,
+    "weldSample": "y1153 page=0 canvas=191 photo=0 borderL=128",
+    "joinNotches": 0,
+    "notchClusters": [],
+    "joinSamples": [
+      {
+        "y": 1213,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1262,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1311,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1360,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1409,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1458,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1507,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1556,
+        "borderL": 128.2,
+        "kind": "RULE"
+      }
+    ],
+    "leftInsetPt": 69.67,
+    "topInsetPt": 5.5,
+    "photoPadPt": 5.5,
+    "firstInk": {
+      "x": 981,
+      "y": 1186
+    },
+    "ruleClustersUnderChip": [
+      {
+        "y0": 1151,
+        "y1": 1152
+      },
+      {
+        "y0": 1186,
+        "y1": 1493
+      },
+      {
+        "y0": 1573,
+        "y1": 1582
+      },
+      {
+        "y0": 1587,
+        "y1": 1594
+      }
+    ],
+    "crops": {
+      "seam": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-kopfbau-d432-seam.png",
+      "join": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-kopfbau-d432-join.png",
+      "cell": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-kopfbau-d432-cell.png",
+      "chip": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-kopfbau-d432-chip.png"
+    },
+    "ok": false,
+    "fail": [
+      "left-inset:69.67"
+    ]
+  },
+  {
+    "id": "huerden",
+    "kind": "long-table",
+    "page": 76,
+    "dpi": 432,
+    "scale": 6,
+    "anchor": "zierten Hürden in einer Arbeitsübersicht ohne Gewichtung.",
+    "baselineY": 749,
+    "borderX": 562,
+    "yAfter": 753,
+    "hairlinePt": 0.67,
+    "hairlineCount": 1,
+    "doubleHairline": false,
+    "creamGapPx": 0,
+    "creamGapPt": 0,
+    "weldOk": true,
+    "weldSample": "y753 page=0 canvas=0 photo=0 borderL=210",
+    "joinNotches": 0,
+    "notchClusters": [],
+    "joinSamples": [
+      {
+        "y": 820,
+        "borderL": 235.8,
+        "kind": "CREAM"
+      },
+      {
+        "y": 983,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1113,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1165,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1242,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1294,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1371,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1435,
+        "borderL": 128.2,
+        "kind": "RULE"
+      }
+    ],
+    "leftInsetPt": 74.5,
+    "topInsetPt": 3.67,
+    "photoPadPt": null,
+    "firstInk": {
+      "x": 1010,
+      "y": 775
+    },
+    "ruleClustersUnderChip": [
+      {
+        "y0": 749,
+        "y1": 752
+      },
+      {
+        "y0": 820,
+        "y1": 820
+      },
+      {
+        "y0": 854,
+        "y1": 857
+      },
+      {
+        "y0": 983,
+        "y1": 986
+      }
+    ],
+    "crops": {
+      "seam": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-huerden-d432-seam.png",
+      "join": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-huerden-d432-join.png",
+      "cell": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-huerden-d432-cell.png",
+      "chip": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-huerden-d432-chip.png"
+    },
+    "ok": false,
+    "fail": [
+      "cream-joins:1",
+      "left-inset:74.5"
+    ]
+  },
+  {
+    "id": "markt",
+    "kind": "long-table",
+    "page": 78,
+    "dpi": 432,
+    "scale": 6,
+    "anchor": "Marktplätze · Zugang und Kanäle",
+    "baselineY": 530,
+    "borderX": 562,
+    "yAfter": 531,
+    "hairlinePt": 0.17,
+    "hairlineCount": 1,
+    "doubleHairline": false,
+    "creamGapPx": 0,
+    "creamGapPt": 0,
+    "weldOk": true,
+    "weldSample": "y531 page=0 canvas=0 photo=0 borderL=128",
+    "joinNotches": 0,
+    "notchClusters": [],
+    "joinSamples": [
+      {
+        "y": 700,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 753,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 819,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 872,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 947,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1013,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1087,
+        "borderL": 128.2,
+        "kind": "RULE"
+      },
+      {
+        "y": 1162,
+        "borderL": 128.2,
+        "kind": "RULE"
+      }
+    ],
+    "leftInsetPt": 6.33,
+    "topInsetPt": 11.5,
+    "photoPadPt": null,
+    "firstInk": {
+      "x": 601,
+      "y": 600
+    },
+    "ruleClustersUnderChip": [
+      {
+        "y0": 530,
+        "y1": 530
+      },
+      {
+        "y0": 700,
+        "y1": 702
+      },
+      {
+        "y0": 872,
+        "y1": 875
+      },
+      {
+        "y0": 1087,
+        "y1": 1090
+      }
+    ],
+    "crops": {
+      "seam": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-markt-d432-seam.png",
+      "join": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-markt-d432-join.png",
+      "cell": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-markt-d432-cell.png",
+      "chip": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-markt-d432-chip.png"
+    },
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "glossar",
+    "kind": "glossary",
+    "page": 121,
+    "dpi": 432,
+    "scale": 6,
+    "anchor": "Glossar",
+    "baselineY": 517,
+    "borderX": 425,
+    "yAfter": 519,
+    "hairlinePt": 0.33,
+    "hairlineCount": 1,
+    "doubleHairline": false,
+    "creamGapPx": 0,
+    "creamGapPt": 0,
+    "weldOk": true,
+    "weldSample": "y519 page=0 canvas=191 photo=0 borderL=129",
+    "joinNotches": 0,
+    "notchClusters": [],
+    "joinSamples": [
+      {
+        "y": 595,
+        "borderL": 151.4,
+        "kind": "RULE"
+      },
+      {
+        "y": 644,
+        "borderL": 132.4,
+        "kind": "RULE"
+      },
+      {
+        "y": 746,
+        "borderL": 150.4,
+        "kind": "RULE"
+      },
+      {
+        "y": 860,
+        "borderL": 132.4,
+        "kind": "RULE"
+      },
+      {
+        "y": 962,
+        "borderL": 150.4,
+        "kind": "RULE"
+      },
+      {
+        "y": 1075,
+        "borderL": 132.4,
+        "kind": "RULE"
+      },
+      {
+        "y": 1177,
+        "borderL": 150.4,
+        "kind": "RULE"
+      },
+      {
+        "y": 1290,
+        "borderL": 132.4,
+        "kind": "RULE"
+      }
+    ],
+    "leftInsetPt": 6.5,
+    "topInsetPt": 7.83,
+    "photoPadPt": null,
+    "firstInk": {
+      "x": 465,
+      "y": 566
+    },
+    "ruleClustersUnderChip": [
+      {
+        "y0": 517,
+        "y1": 518
+      },
+      {
+        "y0": 644,
+        "y1": 647
+      },
+      {
+        "y0": 748,
+        "y1": 750
+      },
+      {
+        "y0": 764,
+        "y1": 764
+      }
+    ],
+    "crops": {
+      "seam": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-glossar-d432-seam.png",
+      "join": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-glossar-d432-join.png",
+      "cell": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-glossar-d432-cell.png",
+      "chip": "e:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/vqa-glossar-d432-chip.png"
+    },
+    "ok": true,
+    "fail": []
+  }
+]

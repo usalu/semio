@@ -1,0 +1,973 @@
+[
+  {
+    "id": "toc",
+    "page": 3,
+    "scale": 6,
+    "anchor": "Inhaltsverzeichnis",
+    "baselineY": 348,
+    "borderX": 255,
+    "hairlinePt": 0.33,
+    "ruleBandsInSeam": 1,
+    "doubleHairline": false,
+    "secondHairGapPt": null,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "notchClusters": [],
+    "joinSamples": [
+      {
+        "y": 440,
+        "borderKinds": "-12:RULE -11:RULE -10:RULE -9:RULE -8:RULE -7:RULE -6:RULE -5:RULE -4:RULE -3:RULE -2:RULE -1:RULE 0:RULE 1:RULE 2:RULE 3:RULE 4:RULE 5:RULE 6:RULE 7:RULE 8:RULE 9:RULE 10:RULE 11:RULE 12:RULE",
+        "pageGap": false,
+        "Lrange": "130-139"
+      },
+      {
+        "y": 535,
+        "borderKinds": "-12:RULE -11:RULE -10:RULE -9:RULE -8:RULE -7:RULE -6:RULE -5:RULE -4:RULE -3:RULE -2:RULE -1:RULE 0:RULE 1:RULE 2:RULE 3:RULE 4:RULE 5:RULE 6:RULE 7:RULE 8:RULE 9:RULE 10:RULE 11:RULE 12:RULE",
+        "pageGap": false,
+        "Lrange": "129-141"
+      },
+      {
+        "y": 630,
+        "borderKinds": "-12:RULE -11:RULE -10:RULE -9:RULE -8:RULE -7:RULE -6:RULE -5:RULE -4:RULE -3:RULE -2:RULE -1:RULE 0:RULE 1:RULE 2:RULE 3:RULE 4:RULE 5:RULE 6:RULE 7:RULE 8:RULE 9:RULE 10:RULE 11:RULE 12:RULE",
+        "pageGap": false,
+        "Lrange": "130-142"
+      },
+      {
+        "y": 725,
+        "borderKinds": "-12:RULE -11:RULE -10:RULE -9:RULE -8:RULE -7:RULE -6:RULE -5:RULE -4:RULE -3:RULE -2:RULE -1:RULE 0:RULE 1:RULE 2:RULE 3:RULE 4:RULE 5:RULE 6:RULE 7:RULE 8:RULE 9:RULE 10:RULE 11:RULE 12:RULE",
+        "pageGap": false,
+        "Lrange": "130-142"
+      },
+      {
+        "y": 820,
+        "borderKinds": "-12:RULE -11:RULE -10:RULE -9:RULE -8:RULE -7:RULE -6:RULE -5:RULE -4:RULE -3:RULE -2:RULE -1:RULE 0:RULE 1:RULE 2:RULE 3:RULE 4:RULE 5:RULE 6:RULE 7:RULE 8:RULE 9:RULE 10:RULE 11:RULE 12:RULE",
+        "pageGap": false,
+        "Lrange": "130-142"
+      },
+      {
+        "y": 915,
+        "borderKinds": "-12:RULE -11:RULE -10:RULE -9:RULE -8:RULE -7:RULE -6:RULE -5:RULE -4:RULE -3:RULE -2:RULE -1:RULE 0:RULE 1:RULE 2:RULE 3:RULE 4:RULE 5:RULE 6:RULE 7:RULE 8:RULE 9:RULE 10:RULE 11:RULE 12:RULE",
+        "pageGap": false,
+        "Lrange": "130-142"
+      },
+      {
+        "y": 959,
+        "borderKinds": "-12:RULE -11:RULE -10:RULE -9:RULE -8:RULE -7:RULE -6:RULE -5:RULE -4:RULE -3:RULE -2:RULE -1:RULE 0:RULE 1:RULE 2:RULE 3:RULE 4:RULE 5:RULE 6:RULE 7:RULE 8:RULE 9:RULE 10:RULE 11:RULE 12:RULE",
+        "pageGap": false,
+        "Lrange": "142-142"
+      },
+      {
+        "y": 1010,
+        "borderKinds": "-12:RULE -11:RULE -10:RULE -9:RULE -8:RULE -7:RULE -6:RULE -5:RULE -4:RULE -3:RULE -2:RULE -1:RULE 0:RULE 1:RULE 2:RULE 3:RULE 4:RULE 5:RULE 6:RULE 7:RULE 8:RULE 9:RULE 10:RULE 11:RULE 12:RULE",
+        "pageGap": false,
+        "Lrange": "130-142"
+      }
+    ],
+    "leftInsetPt": 71.67,
+    "topInsetPt": 5,
+    "inkX": 686,
+    "inkY": 380,
+    "seamLadder": [
+      {
+        "dy": -2,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": -1,
+        "kind": "OTHER",
+        "rgb": [
+          211,
+          210,
+          197
+        ],
+        "L": 209.3
+      },
+      {
+        "dy": 0,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ],
+        "L": 128.2
+      },
+      {
+        "dy": 1,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ],
+        "L": 128.2
+      },
+      {
+        "dy": 2,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 3,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 4,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 6,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 7,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 8,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 9,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 10,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 11,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 12,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 13,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 14,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 15,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 16,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 17,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 18,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 19,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 20,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 21,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 22,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 23,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 24,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 25,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 26,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 27,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 28,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 29,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 30,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 31,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 32,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 34,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 35,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 36,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      }
+    ],
+    "crops": {
+      "seam": "E:\\semio\\.repo\\🎫\\26\\08\\04\\FIX-WINDOW-SHORT-TABLE-GEOMETRY\\qaV-s6-toc-seam.png",
+      "body": "E:\\semio\\.repo\\🎫\\26\\08\\04\\FIX-WINDOW-SHORT-TABLE-GEOMETRY\\qaV-s6-toc-body.png",
+      "Ljoin": "E:\\semio\\.repo\\🎫\\26\\08\\04\\FIX-WINDOW-SHORT-TABLE-GEOMETRY\\qaV-s6-toc-Ljoin.png",
+      "chip": "E:\\semio\\.repo\\🎫\\26\\08\\04\\FIX-WINDOW-SHORT-TABLE-GEOMETRY\\qaV-s6-toc-chip.png"
+    },
+    "ok": false,
+    "fail": [
+      "left-inset:71.67"
+    ]
+  },
+  {
+    "id": "meilensteine",
+    "page": 17,
+    "scale": 6,
+    "anchor": "aktuellen Stand aller Meilensteine.",
+    "baselineY": -1,
+    "borderX": 439,
+    "hairlinePt": 0,
+    "ruleBandsInSeam": 0,
+    "doubleHairline": false,
+    "secondHairGapPt": null,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "notchClusters": [],
+    "joinSamples": [],
+    "leftInsetPt": null,
+    "topInsetPt": null,
+    "inkX": -1,
+    "inkY": -1,
+    "seamLadder": [],
+    "crops": {
+      "seam": null,
+      "body": null,
+      "Ljoin": null,
+      "chip": "E:\\semio\\.repo\\🎫\\26\\08\\04\\FIX-WINDOW-SHORT-TABLE-GEOMETRY\\qaV-s6-meilensteine-chip.png"
+    },
+    "ok": true,
+    "fail": []
+  },
+  {
+    "id": "risiken",
+    "page": 19,
+    "scale": 6,
+    "anchor": "Risiken und Maßnahmen",
+    "baselineY": 644,
+    "borderX": 428,
+    "hairlinePt": 0.67,
+    "ruleBandsInSeam": 1,
+    "doubleHairline": false,
+    "secondHairGapPt": null,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "notchClusters": [],
+    "joinSamples": [
+      {
+        "y": 773,
+        "borderKinds": "-12:RULE -11:RULE -10:RULE -9:RULE -8:RULE -7:RULE -6:RULE -5:RULE -4:RULE -3:RULE -2:RULE -1:RULE 0:RULE 1:RULE 2:RULE 3:RULE 4:RULE 5:RULE 6:RULE 7:RULE 8:RULE 9:RULE 10:RULE 11:RULE 12:RULE",
+        "pageGap": false,
+        "Lrange": "128-128"
+      },
+      {
+        "y": 1118,
+        "borderKinds": "-12:RULE -11:RULE -10:RULE -9:RULE -8:RULE -7:RULE -6:RULE -5:RULE -4:RULE -3:RULE -2:RULE -1:RULE 0:RULE 1:RULE 2:RULE 3:RULE 4:RULE 5:RULE 6:RULE 7:RULE 8:RULE 9:RULE 10:RULE 11:RULE 12:RULE",
+        "pageGap": false,
+        "Lrange": "128-128"
+      },
+      {
+        "y": 1427,
+        "borderKinds": "-12:RULE -11:RULE -10:RULE -9:RULE -8:RULE -7:RULE -6:RULE -5:RULE -4:RULE -3:RULE -2:RULE -1:RULE 0:RULE 1:RULE 2:RULE 3:RULE 4:RULE 5:RULE 6:RULE 7:RULE 8:RULE 9:RULE 10:RULE 11:RULE 12:RULE",
+        "pageGap": false,
+        "Lrange": "128-128"
+      },
+      {
+        "y": 1626,
+        "borderKinds": "-12:RULE -11:RULE -10:RULE -9:RULE -8:RULE -7:RULE -6:RULE -5:RULE -4:RULE -3:RULE -2:RULE -1:RULE 0:RULE 1:RULE 2:RULE 3:RULE 4:RULE 5:RULE 6:RULE 7:RULE 8:RULE 9:RULE 10:RULE 11:RULE 12:RULE",
+        "pageGap": false,
+        "Lrange": "128-128"
+      },
+      {
+        "y": 1831,
+        "borderKinds": "-12:RULE -11:RULE -10:RULE -9:RULE -8:RULE -7:RULE -6:RULE -5:RULE -4:RULE -3:RULE -2:RULE -1:RULE 0:RULE 1:RULE 2:RULE 3:RULE 4:OTHER 5:PAGE 6:PAGE 7:PAGE 8:PAGE 9:PAGE 10:PAGE 11:PAGE 12:PAGE",
+        "pageGap": true,
+        "Lrange": "128-243"
+      },
+      {
+        "y": 2096,
+        "borderKinds": "-12:PAGE -11:PAGE -10:PAGE -9:PAGE -8:PAGE -7:PAGE -6:PAGE -5:PAGE -4:PAGE -3:PAGE -2:PAGE -1:PAGE 0:PAGE 1:PAGE 2:PAGE 3:PAGE 4:PAGE 5:PAGE 6:PAGE 7:PAGE 8:PAGE 9:PAGE 10:PAGE 11:PAGE 12:PAGE",
+        "pageGap": true,
+        "Lrange": "243-243"
+      },
+      {
+        "y": 2122,
+        "borderKinds": "-12:PAGE -11:PAGE -10:PAGE -9:PAGE -8:PAGE -7:PAGE -6:PAGE -5:PAGE -4:PAGE -3:PAGE -2:PAGE -1:PAGE 0:PAGE 1:PAGE 2:PAGE 3:PAGE 4:PAGE 5:PAGE 6:PAGE 7:PAGE 8:PAGE 9:PAGE 10:PAGE 11:PAGE 12:PAGE",
+        "pageGap": true,
+        "Lrange": "243-243"
+      },
+      {
+        "y": 2177,
+        "borderKinds": "-12:PAGE -11:PAGE -10:PAGE -9:PAGE -8:PAGE -7:PAGE -6:PAGE -5:PAGE -4:PAGE -3:PAGE -2:PAGE -1:CANVAS 0:OTHER 1:OTHER 2:OTHER 3:OTHER 4:OTHER 5:OTHER 6:OTHER 7:PAGE 8:PAGE 9:PAGE 10:PAGE 11:PAGE 12:PAGE",
+        "pageGap": true,
+        "Lrange": "209-243"
+      }
+    ],
+    "leftInsetPt": 6,
+    "topInsetPt": 7.83,
+    "inkX": 465,
+    "inkY": 695,
+    "seamLadder": [
+      {
+        "dy": -2,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": -1,
+        "kind": "OTHER",
+        "rgb": [
+          211,
+          210,
+          197
+        ],
+        "L": 209.3
+      },
+      {
+        "dy": 0,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ],
+        "L": 128.2
+      },
+      {
+        "dy": 1,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ],
+        "L": 128.2
+      },
+      {
+        "dy": 2,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ],
+        "L": 128.2
+      },
+      {
+        "dy": 3,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ],
+        "L": 128.2
+      },
+      {
+        "dy": 4,
+        "kind": "OTHER",
+        "rgb": [
+          234,
+          230,
+          216
+        ],
+        "L": 229.8
+      },
+      {
+        "dy": 5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 6,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 7,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 8,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 9,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 10,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 11,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 12,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 13,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 14,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 15,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 16,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 17,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 18,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 19,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 20,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 21,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 22,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 23,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 24,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 25,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 26,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 27,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 28,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 29,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 30,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 31,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 32,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 34,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 35,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      },
+      {
+        "dy": 36,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ],
+        "L": 235.8
+      }
+    ],
+    "crops": {
+      "seam": "E:\\semio\\.repo\\🎫\\26\\08\\04\\FIX-WINDOW-SHORT-TABLE-GEOMETRY\\qaV-s6-risiken-seam.png",
+      "body": "E:\\semio\\.repo\\🎫\\26\\08\\04\\FIX-WINDOW-SHORT-TABLE-GEOMETRY\\qaV-s6-risiken-body.png",
+      "Ljoin": "E:\\semio\\.repo\\🎫\\26\\08\\04\\FIX-WINDOW-SHORT-TABLE-GEOMETRY\\qaV-s6-risiken-Ljoin.png",
+      "chip": "E:\\semio\\.repo\\🎫\\26\\08\\04\\FIX-WINDOW-SHORT-TABLE-GEOMETRY\\qaV-s6-risiken-chip.png"
+    },
+    "ok": false,
+    "fail": [
+      "join-page-gap"
+    ]
+  }
+]

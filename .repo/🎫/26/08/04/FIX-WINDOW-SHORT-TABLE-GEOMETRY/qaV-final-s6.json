@@ -1,0 +1,629 @@
+[
+  {
+    "id": "toc",
+    "page": 3,
+    "scale": 6,
+    "title": "Inhaltsverzeichnis",
+    "body": "2.2.3.2",
+    "hairlinePt": 0.33,
+    "bands": 1,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "joinSamples": [
+      {
+        "y": 440,
+        "L": 132,
+        "kind": "RULE"
+      },
+      {
+        "y": 483,
+        "L": 142,
+        "kind": "RULE"
+      },
+      {
+        "y": 535,
+        "L": 129,
+        "kind": "RULE"
+      },
+      {
+        "y": 578,
+        "L": 142,
+        "kind": "RULE"
+      },
+      {
+        "y": 630,
+        "L": 130,
+        "kind": "RULE"
+      },
+      {
+        "y": 673,
+        "L": 142,
+        "kind": "RULE"
+      },
+      {
+        "y": 725,
+        "L": 130,
+        "kind": "RULE"
+      },
+      {
+        "y": 768,
+        "L": 142,
+        "kind": "RULE"
+      }
+    ],
+    "leftInsetPt": null,
+    "bodyTopInsetPt": null,
+    "headerTopInsetPt": 5.17,
+    "ok": true,
+    "fail": [],
+    "ladder": [
+      {
+        "dyPt": -0.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": -0.33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": -0.17,
+        "kind": "OTHER",
+        "rgb": [
+          211,
+          210,
+          197
+        ]
+      },
+      {
+        "dyPt": 0,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.17,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 0.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 0.67,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 0.83,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.17,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.67,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.83,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      }
+    ],
+    "crops": {
+      "seam": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV-final-toc-seam.png",
+      "body": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV-final-toc-body.png",
+      "Ljoin": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV-final-toc-Ljoin.png"
+    }
+  },
+  {
+    "id": "meilensteine",
+    "page": 18,
+    "scale": 6,
+    "title": "Förderrechtliche Meilensteine",
+    "body": "1",
+    "hairlinePt": 0.67,
+    "bands": 1,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "joinSamples": [
+      {
+        "y": 577,
+        "L": 158,
+        "kind": "RULE"
+      },
+      {
+        "y": 647,
+        "L": 158,
+        "kind": "RULE"
+      },
+      {
+        "y": 698,
+        "L": 158,
+        "kind": "RULE"
+      },
+      {
+        "y": 723,
+        "L": 158,
+        "kind": "RULE"
+      },
+      {
+        "y": 748,
+        "L": 158,
+        "kind": "RULE"
+      },
+      {
+        "y": 784,
+        "L": 158,
+        "kind": "RULE"
+      },
+      {
+        "y": 809,
+        "L": 158,
+        "kind": "RULE"
+      },
+      {
+        "y": 836,
+        "L": 158,
+        "kind": "RULE"
+      }
+    ],
+    "leftInsetPt": null,
+    "bodyTopInsetPt": null,
+    "headerTopInsetPt": 7.83,
+    "ok": true,
+    "fail": [],
+    "ladder": [
+      {
+        "dyPt": -0.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": -0.33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": -0.17,
+        "kind": "OTHER",
+        "rgb": [
+          211,
+          210,
+          197
+        ]
+      },
+      {
+        "dyPt": 0,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.17,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.33,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.5,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.67,
+        "kind": "OTHER",
+        "rgb": [
+          234,
+          230,
+          216
+        ]
+      },
+      {
+        "dyPt": 0.83,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.17,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.67,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.83,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      }
+    ],
+    "crops": {
+      "seam": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV-final-meilensteine-seam.png",
+      "body": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV-final-meilensteine-body.png",
+      "Ljoin": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV-final-meilensteine-Ljoin.png"
+    }
+  },
+  {
+    "id": "risiken",
+    "page": 19,
+    "scale": 6,
+    "title": "Risiken und Maßnahmen",
+    "body": "Formale Fristen und",
+    "hairlinePt": 0.67,
+    "bands": 1,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "joinSamples": [
+      {
+        "y": 707,
+        "L": 150,
+        "kind": "RULE"
+      },
+      {
+        "y": 773,
+        "L": 150,
+        "kind": "RULE"
+      },
+      {
+        "y": 832,
+        "L": 150,
+        "kind": "RULE"
+      },
+      {
+        "y": 910,
+        "L": 150,
+        "kind": "RULE"
+      },
+      {
+        "y": 935,
+        "L": 150,
+        "kind": "RULE"
+      },
+      {
+        "y": 960,
+        "L": 150,
+        "kind": "RULE"
+      },
+      {
+        "y": 1005,
+        "L": 150,
+        "kind": "RULE"
+      },
+      {
+        "y": 1048,
+        "L": 150,
+        "kind": "RULE"
+      }
+    ],
+    "leftInsetPt": null,
+    "bodyTopInsetPt": null,
+    "headerTopInsetPt": 7.83,
+    "ok": true,
+    "fail": [],
+    "ladder": [
+      {
+        "dyPt": -0.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": -0.33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": -0.17,
+        "kind": "OTHER",
+        "rgb": [
+          211,
+          210,
+          197
+        ]
+      },
+      {
+        "dyPt": 0,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.17,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.33,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.5,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.67,
+        "kind": "OTHER",
+        "rgb": [
+          234,
+          230,
+          216
+        ]
+      },
+      {
+        "dyPt": 0.83,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.17,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.33,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.67,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.83,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      }
+    ],
+    "crops": {
+      "seam": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV-final-risiken-seam.png",
+      "body": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV-final-risiken-body.png",
+      "Ljoin": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV-final-risiken-Ljoin.png"
+    }
+  }
+]

@@ -1,0 +1,359 @@
+[
+  {
+    "id": "toc",
+    "page": 3,
+    "scale": 2,
+    "title": "Inhaltsverzeichnis",
+    "body": "2.2.3.2",
+    "hairlinePt": 0.5,
+    "bands": 1,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "joinSamples": [
+      {
+        "y": 147,
+        "L": 128,
+        "kind": "RULE"
+      },
+      {
+        "y": 161,
+        "L": 132,
+        "kind": "RULE"
+      },
+      {
+        "y": 178,
+        "L": 129,
+        "kind": "RULE"
+      },
+      {
+        "y": 193,
+        "L": 132,
+        "kind": "RULE"
+      },
+      {
+        "y": 210,
+        "L": 128,
+        "kind": "RULE"
+      },
+      {
+        "y": 224,
+        "L": 132,
+        "kind": "RULE"
+      },
+      {
+        "y": 242,
+        "L": 128,
+        "kind": "RULE"
+      },
+      {
+        "y": 256,
+        "L": 132,
+        "kind": "RULE"
+      }
+    ],
+    "leftInsetPt": null,
+    "bodyTopInsetPt": null,
+    "headerTopInsetPt": 5,
+    "ok": true,
+    "fail": [],
+    "ladder": [
+      {
+        "dyPt": -0.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 0,
+        "kind": "RULE",
+        "rgb": [
+          152,
+          156,
+          149
+        ]
+      },
+      {
+        "dyPt": 0.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      }
+    ],
+    "crops": {
+      "seam": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV-final-toc-seam.png",
+      "body": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV-final-toc-body.png",
+      "Ljoin": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV-final-toc-Ljoin.png"
+    }
+  },
+  {
+    "id": "meilensteine",
+    "page": 18,
+    "scale": 2,
+    "title": "Förderrechtliche Meilensteine",
+    "body": "1",
+    "hairlinePt": 0.5,
+    "bands": 1,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "joinSamples": [
+      {
+        "y": 192,
+        "L": 138,
+        "kind": "RULE"
+      },
+      {
+        "y": 216,
+        "L": 136,
+        "kind": "RULE"
+      },
+      {
+        "y": 236,
+        "L": 138,
+        "kind": "RULE"
+      },
+      {
+        "y": 250,
+        "L": 138,
+        "kind": "RULE"
+      },
+      {
+        "y": 264,
+        "L": 138,
+        "kind": "RULE"
+      },
+      {
+        "y": 279,
+        "L": 138,
+        "kind": "RULE"
+      },
+      {
+        "y": 302,
+        "L": 136,
+        "kind": "RULE"
+      },
+      {
+        "y": 322,
+        "L": 138,
+        "kind": "RULE"
+      }
+    ],
+    "leftInsetPt": null,
+    "bodyTopInsetPt": null,
+    "headerTopInsetPt": 8,
+    "ok": true,
+    "fail": [],
+    "ladder": [
+      {
+        "dyPt": -0.5,
+        "kind": "OTHER",
+        "rgb": [
+          183,
+          184,
+          174
+        ]
+      },
+      {
+        "dyPt": 0,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      }
+    ],
+    "crops": {
+      "seam": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV-final-meilensteine-seam.png",
+      "body": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV-final-meilensteine-body.png",
+      "Ljoin": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV-final-meilensteine-Ljoin.png"
+    }
+  },
+  {
+    "id": "risiken",
+    "page": 19,
+    "scale": 2,
+    "title": "Risiken und Maßnahmen",
+    "body": "Formale Fristen und",
+    "hairlinePt": 0.5,
+    "bands": 1,
+    "creamGapPt": 0,
+    "joinNotches": 0,
+    "joinSamples": [
+      {
+        "y": 234,
+        "L": 128,
+        "kind": "RULE"
+      },
+      {
+        "y": 258,
+        "L": 128,
+        "kind": "RULE"
+      },
+      {
+        "y": 278,
+        "L": 128,
+        "kind": "RULE"
+      },
+      {
+        "y": 306,
+        "L": 128,
+        "kind": "RULE"
+      },
+      {
+        "y": 319,
+        "L": 128,
+        "kind": "RULE"
+      },
+      {
+        "y": 335,
+        "L": 128,
+        "kind": "RULE"
+      },
+      {
+        "y": 350,
+        "L": 128,
+        "kind": "RULE"
+      },
+      {
+        "y": 373,
+        "L": 128,
+        "kind": "RULE"
+      }
+    ],
+    "leftInsetPt": null,
+    "bodyTopInsetPt": null,
+    "headerTopInsetPt": 8,
+    "ok": true,
+    "fail": [],
+    "ladder": [
+      {
+        "dyPt": -0.5,
+        "kind": "OTHER",
+        "rgb": [
+          183,
+          184,
+          174
+        ]
+      },
+      {
+        "dyPt": 0,
+        "kind": "RULE",
+        "rgb": [
+          123,
+          130,
+          125
+        ]
+      },
+      {
+        "dyPt": 0.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 1.5,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      },
+      {
+        "dyPt": 2,
+        "kind": "CANVAS",
+        "rgb": [
+          240,
+          236,
+          221
+        ]
+      }
+    ],
+    "crops": {
+      "seam": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV-final-risiken-seam.png",
+      "body": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV-final-risiken-body.png",
+      "Ljoin": "E:/semio/.repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/qaV-final-risiken-Ljoin.png"
+    }
+  }
+]
