@@ -369,45 +369,33 @@
 % extend through \noalign ? the join band must therefore carry border ink at
 % the L/R x-positions or cream shows through as a notch at every row.
 %
-% owns@sides: mid-rule paints ONLY the inner span (between the L/R border
-% slots) so the outer edge is never crossed by horizontal ink. Smashed L/R
-% pillars fill the join band and overlap 3pt into the adjacent rows, welding
-% the per-row side strokes into one continuous outer edge. Smash keeps band
-% advance = one hairline.
+% owns@sides: full-width \hrule covering the L/R border slots (ink-on-ink
+% T-join). Overlapping ±2pt pillars via negative \vskip were tried and rejected:
+% they destabilised \noalign band advance (multi-pt page gaps at joins). Side
+% continuity instead comes from ungrouped stretchable \semio@table@border@L/R
+% meeting this full-width rule.
 %
-% Windowed short tables: the tcolorbox leftrule/rightrule (plus TikZ side
-% overstroke) is the sole continuous outer edge. Mid-rules stay exactly
-% \linewidth so they meet the INNER face of that frame.
+% Windowed short tables: the tcolorbox leftrule/rightrule owns the sides; the
+% mid-rule overlaps half a hairline past each content edge so it welds into the
+% frame stroke without a notch or outer stub.
 \newcommand{\semio@table@rule}{%
   \noalign{%
     \begingroup
       \color{semio-chrome-border-normal}%
       \ifsemio@table@owns@sides
         \hbox to \linewidth{%
-          \kern\arrayrulewidth
-          \vrule height\arrayrulewidth depth\z@
-                 width\dimexpr\linewidth-2\arrayrulewidth\relax
-          \kern\arrayrulewidth
+          \vrule width\arrayrulewidth height\arrayrulewidth depth\z@
+          \vrule width\dimexpr\linewidth-2\arrayrulewidth\relax
+                 height\arrayrulewidth depth\z@
+          \vrule width\arrayrulewidth height\arrayrulewidth depth\z@
         }%
-        \vskip-\arrayrulewidth
-        \hbox to \linewidth{%
-          \smash{%
-            \raisebox{-3pt}{%
-              \vrule width\arrayrulewidth
-                     height\dimexpr\arrayrulewidth+6pt\relax depth\z@
-            }%
-          }%
-          \hss
-          \smash{%
-            \raisebox{-3pt}{%
-              \vrule width\arrayrulewidth
-                     height\dimexpr\arrayrulewidth+6pt\relax depth\z@
-            }%
-          }%
-        }%
-        \vskip\arrayrulewidth
       \else
-        \hrule height\arrayrulewidth width\linewidth
+        \hbox to \linewidth{%
+          \hskip-.5\arrayrulewidth
+          \vrule height\arrayrulewidth depth\z@
+                 width\dimexpr\linewidth+\arrayrulewidth\relax
+          \hss
+        }%
       \fi
     \endgroup
   }%

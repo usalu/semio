@@ -849,8 +849,6 @@
     % toprule=0: the shared top hairline is the inline chip baseline (page 1)
     % / the continuation chip baseline — not a skin toprule (that doubled).
     toprule=0pt,
-    % Continuous L/R: skin leftrule/rightrule are single strokes for the whole
-    % frame (not per-row segments). Flush chips sit on these same x-positions.
     leftrule=\semio@stroke@hairline,
     rightrule=\semio@stroke@hairline,
     bottomrule=\semio@stroke@hairline,
@@ -2182,13 +2180,8 @@
 % Continuation parts redraw the full chip row (no inline header on those pages).
 \newcommand{\semio@window@header@overlay@continuation}{%
   \edef\semio@window@header@part@num{\arabic{tcbbreakpart}}%
-  % south west @ frame.north west + flush chips: outer chip verticals sit on the
-  % continuous leftrule/rightrule (centered south @ frame.north + moveleft made
-  % a 1–2px jog / second edge).
-  \node[anchor=south west, inner sep=0pt, yshift=\semio@stroke@hairline] at (frame.north west) {%
-    \semio@window@header@flushtrue
+  \node[anchor=south, inner sep=0pt, yshift=\semio@stroke@hairline] at (frame.north) {%
     \semio@window@header@muted{\semio@window@header@number:\semio@window@header@part@num}{\semio@window@header@title}%
-    \semio@window@header@flushfalse
   };%
 }
 
@@ -3102,12 +3095,6 @@
 % calibrated for chips+baseline height).
 \newif\ifsemio@window@header@draw@baseline
 \semio@window@header@draw@baselinetrue
-% Flush: chip row / baseline span exactly \linewidth (no \moveleft overhang).
-% Required for tcolorbox windows so chip L/R sit on the continuous leftrule/
-% rightrule. Long-table chrome keeps the moveleft path (borders live outside a
-% shrunk \linewidth; overhang T-joins those \vrule slots).
-\newif\ifsemio@window@header@flush
-\semio@window@header@flushfalse
 
 \newcommand{\semio@window@header@muted}[2]{%
   \semio@window@header@draw@baselinetrue
@@ -3116,35 +3103,19 @@
 
 % tcolorbox page-1: open chips + inline baseline (sole top hairline; no overlay stroke).
 \newcommand{\semio@window@header@invoke@tcb}{%
-  \semio@window@header@flushtrue
   \semio@window@header@muted{\semio@window@header@number@page1}{\semio@window@header@title}%
-  \semio@window@header@flushfalse
-}
-
-\newcommand{\semio@window@header@muted@rowbox}[1]{%
-  \ifsemio@window@header@flush
-    \hbox to \linewidth{#1}%
-  \else
-    \moveleft\semio@stroke@hairline\hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{#1}%
-  \fi
 }
 
 \newcommand{\semio@window@header@muted@core}[2]{%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@muted@open{\textcolor{semio-chrome-foreground}{#2}}}%
   \edef\semio@window@header@numval{#1}%
   \if\relax\detokenize\expandafter{\semio@window@header@numval}\relax
-    \ifsemio@window@header@flush
-      \setlength{\semio@window@gap@w}{%
-        \dimexpr\linewidth-\wd\semio@window@tab@box\relax
-      }%
-    \else
-      \setlength{\semio@window@gap@w}{%
-        \dimexpr\linewidth+\semio@stroke@hairline-\wd\semio@window@tab@box\relax
-      }%
-    \fi
+    \setlength{\semio@window@gap@w}{%
+      \dimexpr\linewidth+\semio@stroke@hairline-\wd\semio@window@tab@box\relax
+    }%
     \semio@window@header@row@wrap{%
       \vbox{%
-        \semio@window@header@muted@rowbox{%
+        \moveleft\semio@stroke@hairline\hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
           \usebox{\semio@window@tab@box}%
           \semio@window@header@gap@open{semio-chrome-border-normal}%
         }%
@@ -3153,18 +3124,12 @@
     }%
   \else
     \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted@open{#1}}%
-    \ifsemio@window@header@flush
-      \setlength{\semio@window@gap@w}{%
-        \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box+\semio@stroke@hairline\relax
-      }%
-    \else
-      \setlength{\semio@window@gap@w}{%
-        \dimexpr\linewidth+\semio@stroke@hairline-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box+\semio@stroke@hairline\relax
-      }%
-    \fi
+    \setlength{\semio@window@gap@w}{%
+      \dimexpr\linewidth+\semio@stroke@hairline-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box+\semio@stroke@hairline\relax
+    }%
     \semio@window@header@row@wrap{%
       \vbox{%
-        \semio@window@header@muted@rowbox{%
+        \moveleft\semio@stroke@hairline\hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
           \usebox{\semio@window@tab@box}%
           \semio@window@header@gap@open{semio-chrome-border-normal}%
           \hskip-\semio@stroke@hairline\relax
@@ -3179,15 +3144,9 @@
 \newcommand{\semio@window@header@baseline@or@slot}{%
   \ifsemio@window@header@draw@baseline
     \ifvmode\nointerlineskip\fi
-    \ifsemio@window@header@flush
-      \hbox to \linewidth{%
-        \semio@window@stroke@h{semio-chrome-border-normal}{\linewidth}%
-      }%
-    \else
-      \moveleft\semio@stroke@hairline\hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
-        \semio@window@stroke@h{semio-chrome-border-normal}{\dimexpr\linewidth+\semio@stroke@hairline\relax}%
-      }%
-    \fi
+    \moveleft\semio@stroke@hairline\hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
+      \semio@window@stroke@h{semio-chrome-border-normal}{\dimexpr\linewidth+\semio@stroke@hairline\relax}%
+    }%
   \fi
 }
 %endregion WindowHeaderMuted
