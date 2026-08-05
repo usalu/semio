@@ -1,0 +1,29 @@
+[DEBUG] 00 | text-edit text=hello | len=13 | 0100010568656c6c6f01000600
+[DEBUG] 01 | set-text text="MATCH (a) RETURN a" | len=26 | 010101124d41544348202861292052455455524e206101000600
+[DEBUG] 02 | document document { schema=writer.document id=jack language-id=jack uri="writer://jack" text="MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name" } | len=144 | 010204554d415443482028613a5069656365292d5b723a436f6e6e656374696f6e5d2d3e28623a5069656365290a574845524520612e6e616d65203d2022636f7265220a52455455524e20612e6e616d652c20622e6e616d65046a61636b0f7772697465722e646f63756d656e740d7772697465723a2f2f6a61636b01000e0d05000602010601020601030603040600
+[DEBUG] 03 | document-json json="{}" | len=10 | 010301027b7d01000600
+[DEBUG] 04 | fixture-json json="{}" | len=10 | 010401027b7d01000600
+[DEBUG] 05 | active-example example-id=jack | len=12 | 010501046a61636b01000600
+[DEBUG] 06 | format-document | len=4 | 01060000
+[DEBUG] 07 | commit-rename text=piece | len=13 | 01070105706965636501000600
+[DEBUG] 08 | camera camera { x=1 y=2 zoom=1.5 } | len=38 | 01080001000e0d030005000000000000f03f010500000000000000400205000000000000f83f
+[DEBUG] 09 | request-completions | len=4 | 01090000
+[DEBUG] 10 | lint-document | len=4 | 010a0000
+[DEBUG] 11 | text-select start=3 end=7 | len=10 | 010b0002000403010407
+[DEBUG] 12 | editor-selection start=3 end=7 | len=10 | 010c0002000403010407
+[DEBUG] 13 | select-ast-node id=jack-ast-1 start=0 end=5 | len=24 | 010d010a6a61636b2d6173742d3103000600010400020405
+[DEBUG] 14 | ast-selection ids=[ a b ] | len=15 | 010e020161016201000c0206000601
+[DEBUG] 15 | ast-hover id=jack-ast-1 | len=18 | 010f010a6a61636b2d6173742d3101000600
+[DEBUG] 16 | text-hover start=3 | len=7 | 01100001000403
+[DEBUG] 17 | toggle-line-numbers | len=4 | 01110000
+[DEBUG] 18 | font-px value=16 | len=7 | 01120001000410
+[DEBUG] 19 | line-height value=24 | len=7 | 01130001000418
+[DEBUG] 20 | tab-size value=4 | len=7 | 01140001000404
+[DEBUG] 21 | engagement-input value=format | len=14 | 01150106666f726d617401000600
+[DEBUG] 22 | engagement-submit | len=4 | 01160000
+[DEBUG] 23 | locale value=de-DE | len=13 | 0117010564652d444501000600
+
+Captured from OLD semio-s-app-writer-protocol crate via a temporary [DEBUG] dump_wire_baseline test
+(added to that crate's 📦️lib.rs, run with `cargo test -p semio-s-app-writer-protocol dump_wire_baseline -- --nocapture`).
+Row order = WriterCommand's pre-migration declaration order = binary variant ordinal (0-23).
+Format per row: index | print_op text | byte length | hex bytes.

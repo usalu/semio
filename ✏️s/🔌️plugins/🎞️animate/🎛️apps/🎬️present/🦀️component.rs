@@ -1,0 +1,530 @@
+//! 🎞️ Animate present app — the `DocumentApp` impl (dispatch-only), the aggregated command enum and the
+//! manifest stitch. B1: the pure-trait pivot — `AnimatePresentPlayApp` is a unit struct; every former
+//! `AnimatePresentPlayRuntime` field (selection, engagement draft) now lives in
+//! `crate::apps::present::config::PresentConfig`, written via `PresentConfigOperation`s (real
+//! `backwards`, no ad hoc `InverseAction`); every action dispatches through the single typed
+//! `PresentCommand` channel via `DocumentApp::handle`.
+//!
+//! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the window render
+//! in `🎭️modes/🖊️main/🪟️windows/🖼️tile-editor`, panel trees in `📌️panels/*`, labels in
+//! `🦀️terminology.rs`, view state in `🦀️config.rs`, shared compute in the artifact's `⚙️engine`. This
+//! file is a routing table: `handle` → `PresentCommand::dispatch`, `render` → body-key → node, and a
+//! `🔖️Manifest` region that calls one `definition()` per node.
+
+use crate::apps::present::commands::{engagement, grid, shell, source, tile, view};
+use crate::apps::present::config::{PresentConfig, PresentConfigOperation};
+use crate::apps::present::modes::main;
+use crate::apps::present::modes::main::windows::tile_editor;
+use crate::apps::present::panels::{catalogue, document, inspection};
+use crate::apps::present::terminology::animate_present_labels;
+use crate::artifacts::present::engine::{build_tile_morph_prompt, next_frame_tile_crop, next_frame_tile_id};
+use crate::artifacts::present::op::PresentOperation;
+use crate::artifacts::present::{default_present_deck, FigureTileDraft, PresentDeck, PRESENT_DECK_SCHEMA};
+use protocol::CollectionOperation;
+use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
+use serde_json::Value;
+use std::collections::HashSet;
+use std::sync::atomic::{AtomicU32, Ordering};
+
+//#region 🔖️Constants
+pub const PRESENT_PLAY_APP_ID: &str = "animate-present-play";
+pub use catalogue::PRESENT_PLAY_BODY_CATALOGUE;
+pub use document::PRESENT_PLAY_BODY_DOCUMENT;
+pub use inspection::PRESENT_PLAY_BODY_DETAILS;
+pub use tile_editor::PRESENT_PLAY_BODY_MAIN;
+
+static TILE_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
+
+/// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
+/// (`📌️panels/*`) builds its `on_change`/item actions with.
+pub fn animate_present_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    semio_framework_plugin::ActionFactory::new(PRESENT_PLAY_APP_ID).action(action, args)
+}
+//#endregion 🔖️Constants
+
+//#region 🔖️Helpers
+/// 🔢️ Mints a fresh, process-unique tile id — shared by `🎮️commands/🀄️tile::add_tile` and
+/// `🎮️commands/⌨️engagement::engagement_submit`'s `"add"` keyword.
+pub(crate) fn new_tile_id(prefix: &str) -> String {
+    let serial = TILE_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
+    format!("{prefix}-{serial}")
+}
+
+/// 🧹️ Retains only the ids that reference an existing tile in `deck` — shared by every command that
+/// accepts a selection/target id list.
+pub(crate) fn valid_tile_ids(deck: &PresentDeck, ids: Vec<String>) -> Vec<String> {
+    let valid: HashSet<&str> = deck.tiles.iter().map(|tile| tile.id.as_str()).collect();
+    ids.into_iter().filter(|id| valid.contains(id.as_str())).collect()
+}
+
+/// 🎞️ `frames:in` display name (Wave-2 port recipe) — a `Structured` payload's `"name"`/`"src"` field
+/// (falling back to a generic label), a `Binary` payload's leading blob-hash characters.
+fn frame_media_name(port: &str, media: &Media) -> Result<String, MediaError> {
+    match &media.payload {
+        MediaPayload::Structured { json, .. } => {
+            let value: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            Ok(value.get("name").and_then(|v| v.as_str()).or_else(|| value.get("src").and_then(|v| v.as_str())).map(str::to_string).unwrap_or_else(|| "Imported frame".into()))
+        }
+        MediaPayload::Binary { blob_hash, .. } => Ok(format!("frame-{}", &blob_hash[..blob_hash.len().min(8)])),
+    }
+}
+
+/// 📋️ Host effect delivering the generated tile-morph prompt to the user as a downloadable markdown
+/// file — the genuine shell side-effect that replaces the retired ephemeral clipboard scratch (the
+/// landed `HostEffect` contract carries no clipboard variant, so the prompt is exported as media).
+/// Shared by `🎮️commands/🐚️shell::copy_prompt` and `🎮️commands/⌨️engagement::engagement_submit`'s
+/// `"copy"`/`"copy prompt"` keywords.
+pub(crate) fn tile_morph_prompt_effect(deck: &PresentDeck) -> HostEffect {
+    HostEffect::DownloadMediaExport { filename: "tile-morph-prompt.md".into(), mime_type: "text/markdown".into(), data: build_tile_morph_prompt(&deck.source, &deck.tiles), encoding: None }
+}
+//#endregion 🔖️Helpers
+
+//#region 🔖️Commands
+semio_framework_plugin::app_commands! {
+    /// 🎯️ `AnimatePresentPlayApp::Command` — the SOLE dispatch surface for animate present's own
+    /// behavior, assembled from the `🎮️commands/*` payload modules. Each row states BOTH the manifest
+    /// action id (`command_id()`, the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire
+    /// keyword (the kebab-case `#[dsl(key = ..)]` the codec uses) — genuinely different vocabularies:
+    /// `"animate.resetGrid" as "reset-grid"` is the row that proves it (mirrors the pre-B1
+    /// `handle_command`-only `"animate.resetGrid"` app-scope command). **Row order is the binary variant
+    /// ordinal: appending is safe, reordering is a wire-format break.**
+    pub enum PresentCommand for PresentDeck, PresentOperation, PresentConfig, PresentConfigOperation {
+        "seedGrid" as "seed-grid" => seed_grid::SeedGrid,
+        "addTile" as "add-tile" => add_tile::AddTile,
+        "deleteTile" as "delete-tile" => delete_tile::DeleteTile,
+        "deleteSelection" as "delete-selection" => delete_selection::DeleteSelection,
+        "renameTiles" as "rename-tiles" => rename_tiles::RenameTiles,
+        "patchTileCrops" as "patch-tile-crops" => patch_tile_crops::PatchTileCrops,
+        "setSource" as "set-source" => set_source::SetSource,
+        "setFrame" as "set-frame" => set_frame::SetFrame,
+        "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
+        "clearTiles" as "clear-tiles" => clear_tiles::ClearTiles,
+        "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
+        "animate.resetGrid" as "reset-grid" => reset_grid::ResetGrid,
+        "setSelectedIds" as "set-selected-ids" => set_selected_ids::SetSelectedIds,
+        "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
+        "canvasPointerDown" as "canvas-pointer-down" => canvas_pointer_down::CanvasPointerDown,
+        "setLocale" as "set-locale" => set_locale::SetLocale,
+        "noOperation" as "no-op" => no_operation::NoOperation,
+        "copyPrompt" as "copy-prompt" => copy_prompt::CopyPrompt,
+        "exportVideoFromDeck" as "export-video-from-deck" => export_video_from_deck::ExportVideoFromDeck,
+    }
+}
+
+// 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
+// payload module is imported here under its own flat name.
+use engagement::{engagement_input, engagement_submit};
+use grid::{clear_tiles, reset_grid, seed_grid};
+use shell::{copy_prompt, export_video_from_deck};
+use source::{set_active_example, set_frame, set_source};
+use tile::{add_tile, delete_selection, delete_tile, patch_tile_crops, rename_tiles};
+use view::{canvas_pointer_down, no_operation, set_locale, set_selected_ids};
+//#endregion 🔖️Commands
+
+//#region 🔖️AnimatePresentPlayApp
+/// 🧪️ B1: unit struct — every former `AnimatePresentPlayRuntime` field now lives in
+/// `crate::apps::present::config::PresentConfig` (see `DocumentApp::Config`), written through
+/// `PresentConfigOperation`s.
+#[derive(Default)]
+pub struct AnimatePresentPlayApp;
+
+impl DocumentApp for AnimatePresentPlayApp {
+    type Projection = PresentDeck;
+    type Operation = PresentOperation;
+    type Config = PresentConfig;
+    type ConfigOperation = PresentConfigOperation;
+    type Command = PresentCommand;
+
+    fn app_id(&self) -> &str {
+        PRESENT_PLAY_APP_ID
+    }
+
+    fn document_schema(&self) -> &str {
+        PRESENT_DECK_SCHEMA
+    }
+
+    fn initial_projection(&self) -> PresentDeck {
+        default_present_deck()
+    }
+
+    fn io(&self) -> Option<AppIo> {
+        Some(crate::artifacts::present::engine::present_io())
+    }
+
+    fn whole_document_operation(&self, projection: PresentDeck) -> Option<PresentOperation> {
+        Some(PresentOperation::SetDeck { deck: projection })
+    }
+
+    /// 🎞️ `frames:in` (Wave-2 port recipe): inserts an incoming raster frame as a new tile in a
+    /// deterministic contact-sheet grid (see `crate::artifacts::present::engine::next_frame_tile_crop`'s
+    /// doc comment for why this schema's single shared `source` means tiles, not `source`, are the
+    /// natural insertion point). Never mutates anything directly: the caller applies the returned
+    /// `Tiles(Add)` through the ordinary, undoable document store.
+    fn import_media(&self, port: &str, media: &Media, doc: &DocumentView<'_, PresentDeck>) -> Result<Emit<PresentOperation, PresentConfigOperation>, MediaError> {
+        if port != "frames:in" {
+            return Err(MediaError::NotImplemented);
+        }
+        let deck = doc.projection;
+        let count = deck.tiles.len();
+        let id = next_frame_tile_id(count);
+        let crop = next_frame_tile_crop(count);
+        let name = frame_media_name(port, media)?;
+        let tile = FigureTileDraft { id: id.clone(), name, crop };
+        Ok(Emit::operations(vec![PresentOperation::Tiles(CollectionOperation::Add { id, item: tile, at: count })]))
+    }
+
+    /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
+    /// `app_commands!`'s generated `command_id()`.
+    fn command_id(&self, command: &PresentCommand) -> &str {
+        command.command_id()
+    }
+
+    fn handle(&self, command: &PresentCommand, doc: &DocumentView<'_, PresentDeck>, cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
+        command.dispatch(doc, cfg)
+    }
+
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, PresentDeck>, cfg: &ConfigView<'_, PresentConfig>) -> UiNode {
+        let deck = doc.projection;
+        let config = cfg.projection;
+        let selected = &config.selected_ids;
+        let labels = animate_present_labels(config);
+        match body_key {
+            PRESENT_PLAY_BODY_MAIN => tile_editor::render(deck, selected),
+            PRESENT_PLAY_BODY_DOCUMENT => document::render(deck, selected, labels),
+            PRESENT_PLAY_BODY_CATALOGUE => catalogue::render(deck, labels),
+            PRESENT_PLAY_BODY_DETAILS => inspection::render(deck, selected, labels),
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+        }
+    }
+}
+//#endregion 🔖️AnimatePresentPlayApp
+
+//#region 🔖️Manifest
+/// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
+/// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
+/// out inline.
+pub fn create_animate_present_app() -> App {
+    App::from_builder(
+        App::builder(PRESENT_PLAY_APP_ID, LocalizedLabel::native("Animate Present", "Animate Present"))
+            .document(["semio", "animate"])
+            .artifact_kind(crate::artifacts::present::artifact_kind())
+            .icon_id("animate")
+            .mode_def(main::definition())
+            .default_mode_id(main::PRESENT_PLAY_MODE_MAIN)
+            .window_kind_def(tile_editor::definition())
+            .default_layout(main::layout())
+            .panel_tab_def(document::definition())
+            .panel_tab_def(catalogue::definition())
+            .panel_tab_def(inspection::definition())
+            // ✏️ Document-mutating: dispatched as VCS operations with a true inverse.
+            .operation("seedGrid", LocalizedLabel::native("Seed Grid", "Raster erzeugen"))
+            .operation("addTile", LocalizedLabel::native("Add Tile", "Kachel hinzufügen"))
+            .operation("deleteTile", LocalizedLabel::native("Delete Tile", "Kachel löschen"))
+            .operation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
+            .operation("renameTiles", LocalizedLabel::native("Rename Tiles", "Kacheln umbenennen"))
+            .operation("patchTileCrops", LocalizedLabel::native("Patch Tile Crops", "Kachelzuschnitte aktualisieren"))
+            .operation("setSource", LocalizedLabel::native("Set Source", "Quelle festlegen"))
+            .operation("setFrame", LocalizedLabel::native("Set Frame", "Rahmen festlegen"))
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .operation("clearTiles", LocalizedLabel::native("Clear Tiles", "Kacheln leeren"))
+            .operation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
+            // 🐚️ Host side-effect — exports the generated tile-morph prompt to the user (no document mutation).
+            .shell_action("copyPrompt", LocalizedLabel::native("Copy Prompt", "Prompt kopieren"))
+            .shell_action("exportVideoFromDeck", LocalizedLabel::native("Export Video From Deck", "Video aus Deck exportieren"))
+            // 👁️ Ephemeral view state — selection, engagement draft, locale.
+            .view_action("setSelectedIds", LocalizedLabel::native("Set Selected Ids", "Auswahl-IDs festlegen"))
+            .view_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"))
+            .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"))
+            .view_action("noOperation", LocalizedLabel::native("No Operation", "Keine Aktion"))
+            .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
+            // 🎛️ Declared arg schemas for palette-parametric actions (materialized before dispatch).
+            .action_args("seedGrid", vec![
+                ActionArgDef::number("rows", LocalizedLabel::native("Rows", "Zeilen")).required().default_value(2),
+                ActionArgDef::number("columns", LocalizedLabel::native("Columns", "Spalten")).required().default_value(2),
+            ])
+            .action_args("setSource", vec![ActionArgDef::text("src", LocalizedLabel::native("Source", "Quelle")).required()])
+            .action_args("setActiveExample", vec![
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new("demo", LocalizedLabel::native("Demo", "Demo"))])
+                    .required()
+                    .default_value("demo"),
+            ])
+            // 🎛️ App-scope command — see `🎮️commands/🌐️grid::reset_grid`'s doc comment for why this
+            // isn't `seedGrid`/`clearTiles`.
+            .app_command("animate.resetGrid", LocalizedLabel::native("Reset to Default Grid", "Auf Standardraster zurücksetzen"), "document")
+            .config(AnimatePresentPlayApp.config_spec())
+            .io(crate::artifacts::present::engine::present_io()),
+    )
+    .example("demo", LocalizedLabel::native("Demo", "Demo"), store::DocumentDsl::print_dsl(&default_present_deck()), "cylinder")
+    .workflow("animate", "Animate", "deck")
+}
+//#endregion 🔖️Manifest
+
+//#region 🧪️Testkit
+/// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
+/// able to drive the whole app without re-deriving the harness.
+#[cfg(test)]
+pub(crate) mod testkit {
+    use super::*;
+    use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+
+    pub type PresentApp = VcsDocumentApp<AnimatePresentPlayApp>;
+
+    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    pub fn present_app() -> PresentApp {
+        new_app::<AnimatePresentPlayApp>()
+    }
+
+    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
+    pub fn present_app_with_registry() -> PresentApp {
+        new_app_with_registry::<AnimatePresentPlayApp>(create_animate_present_app)
+    }
+
+    pub fn dispatch(app: &mut PresentApp, command: PresentCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    }
+
+    pub fn render(app: &mut PresentApp, body_key: &str) -> String {
+        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("render json")
+    }
+}
+//#endregion 🧪️Testkit
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::apps::present::testkit::present_app;
+    use protocol::OpText;
+    use semio_framework_plugin::testkit::meta;
+    use semio_framework_plugin::PluginApp;
+
+    #[test]
+    fn deck_schema_is_animate_present() {
+        assert_eq!(default_present_deck().schema, PRESENT_DECK_SCHEMA);
+    }
+
+    #[test]
+    fn undo_redo_round_trip_through_the_wrapper() {
+        let mut app = present_app();
+        app.dispatch_typed(PresentCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 }), &meta("local")).expect("seed grid");
+        assert_eq!(app.projection().expect("projection").tiles.len(), 4);
+        app.handle_action("undo", None, &meta("local")).expect("undo");
+        assert!(app.projection().expect("projection").tiles.is_empty());
+        app.handle_action("redo", None, &meta("local")).expect("redo");
+        assert_eq!(app.projection().expect("projection").tiles.len(), 4);
+    }
+
+    #[test]
+    fn render_unknown_body_key_reports_it_by_name() {
+        use semio_framework_plugin::ViewState;
+        let mut app = present_app();
+        let node = app.render("some.unknown.body", None, &ViewState::default()).expect("render unknown");
+        let json_str = serde_json::to_string(&node).unwrap();
+        assert!(json_str.contains("Unknown body: some.unknown.body"));
+    }
+
+    #[test]
+    fn app_manifest_declares_expected_operations_and_shell_actions() {
+        use semio_framework_plugin::ActionKind;
+        let definition = create_animate_present_app().definition;
+        let operation_ids: Vec<&str> = definition.actions.iter().filter(|action| matches!(action.kind, ActionKind::Operation)).map(|action| action.id.as_str()).collect();
+        for expected in ["seedGrid", "addTile", "deleteTile", "deleteSelection", "renameTiles", "patchTileCrops", "setSource", "setFrame", "setActiveExample", "clearTiles", "engagementSubmit"] {
+            assert!(operation_ids.contains(&expected), "missing declared operation {expected}");
+        }
+        assert!(definition.actions.iter().any(|action| action.id == "exportVideoFromDeck" && matches!(action.kind, ActionKind::Shell)));
+        assert!(definition.actions.iter().any(|action| action.id == "setSelectedIds" && matches!(action.kind, ActionKind::View)));
+    }
+
+    //#region 🔖️ManifestSanity
+    #[test]
+    fn the_manifest_stitches_every_taxonomy_node() {
+        let json = serde_json::to_string(&create_animate_present_app().definition).expect("app definition json");
+        assert!(json.contains(tile_editor::PRESENT_PLAY_WINDOW_MAIN), "window kind missing from the manifest: {json}");
+        assert!(json.contains(main::PRESENT_PLAY_MODE_MAIN), "mode missing from the manifest");
+        for body in [PRESENT_PLAY_BODY_DOCUMENT, PRESENT_PLAY_BODY_CATALOGUE, PRESENT_PLAY_BODY_DETAILS] {
+            assert!(json.contains(body), "panel body {body} missing from the manifest");
+        }
+        assert!(json.contains(PRESENT_DECK_SCHEMA), "artifact kind missing from the manifest");
+    }
+    //#endregion 🔖️ManifestSanity
+
+    /// 🧬️ Two independent instances start empty, apply DISJOINT edits (A adds a tile, B sets the
+    /// source), and exchanging operations over a `MemoryBackbone` converges both sides to contain BOTH
+    /// edits — impossible with whole-document snapshots, which would clobber one another.
+    #[test]
+    fn two_instances_converge_disjoint_edits_via_backbone() {
+        use store::MemoryBackbone;
+        let mut instance_a = present_app();
+        let mut instance_b = present_app();
+        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://animate-present-convergence", "mem://animate-present-convergence");
+        instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
+        instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+
+        instance_a.dispatch_typed(PresentCommand::AddTile(add_tile::AddTile { crop: Some(crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 0.3, height: 0.3 }) }), &meta("actor-a")).expect("a adds tile");
+        let mut source = instance_b.projection().expect("projection").source.clone();
+        source.kind = "video".into();
+        instance_b.dispatch_typed(PresentCommand::SetSource(set_source::SetSource { source }), &meta("actor-b")).expect("b sets source kind");
+
+        instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).expect("pump a");
+        instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).expect("pump b");
+
+        let projection_a = instance_a.projection().expect("projection");
+        let projection_b = instance_b.projection().expect("projection");
+        assert_eq!(projection_a.tiles.len(), 1, "instance A keeps its own tile");
+        assert_eq!(projection_b.tiles.len(), 1, "instance B converges on A's tile");
+        assert_eq!(projection_a.source.kind, "video", "instance A converges on B's source edit");
+        assert_eq!(projection_b.source.kind, "video", "instance B keeps its own source edit");
+    }
+
+    //#region 🔖️PortTests
+    #[test]
+    fn present_io_declares_frames_in_and_document_ports() {
+        let ports = AnimatePresentPlayApp.io().expect("io").all_ports();
+        assert!(ports.iter().any(|port| port.id == "document:in"));
+        assert!(ports.iter().any(|port| port.id == "document:out"));
+        assert!(ports.iter().any(|port| port.id == "frames:in"));
+    }
+
+    #[test]
+    fn import_media_frames_in_inserts_a_new_tile() {
+        use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
+        use serde_json::json;
+        let mut app = crate::apps::present::testkit::present_app_with_registry();
+        let before = app.projection().expect("projection").tiles.len();
+        let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: json!({ "name": "hero-frame", "src": "/frames/hero.png" }).to_string() } };
+        app.import_media("frames:in", &media, &meta("local")).expect("import frames:in");
+        let after = app.projection().expect("projection");
+        assert_eq!(after.tiles.len(), before + 1);
+        assert_eq!(after.tiles.last().expect("imported tile").name, "hero-frame");
+    }
+
+    #[test]
+    fn import_media_frames_in_places_repeated_imports_in_distinct_cells() {
+        use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
+        use serde_json::json;
+        let mut app = crate::apps::present::testkit::present_app_with_registry();
+        for _ in 0..2 {
+            let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: json!({ "name": "frame" }).to_string() } };
+            app.import_media("frames:in", &media, &meta("local")).expect("import frames:in");
+        }
+        let tiles = app.projection().expect("projection").tiles;
+        assert_eq!(tiles.len(), 2);
+        assert_ne!(tiles[0].crop, tiles[1].crop, "repeated imports land in distinct cells");
+    }
+
+    #[test]
+    fn import_media_rejects_unknown_port() {
+        use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
+        let mut app = crate::apps::present::testkit::present_app_with_registry();
+        let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: "{}".into() } };
+        assert!(app.import_media("not-a-port", &media, &meta("local")).is_err());
+    }
+
+    #[test]
+    fn empty_present_deck_has_no_tiles() {
+        assert!(crate::artifacts::present::engine::empty_present_deck().tiles.is_empty());
+    }
+    //#endregion 🔖️PortTests
+
+    //#region 🔖️CommandSurfaceTests
+    /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
+    /// row's wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to
+    /// hold.
+    #[test]
+    fn command_ids_are_unique() {
+        let commands = every_command();
+        let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
+        let mut sorted = ids.clone();
+        sorted.sort_unstable();
+        sorted.dedup();
+        assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
+        assert_eq!(ids.len(), 19, "every PresentCommand row must be covered by every_command()");
+    }
+
+    /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
+    #[test]
+    fn every_command_round_trips_through_text_and_binary() {
+        for command in every_command() {
+            store::test_support::assert_op_text_binary_equivalence(&command);
+        }
+    }
+
+    /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword. This is what
+    /// a missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the record prints with no
+    /// keyword at all and no longer parses).
+    #[test]
+    fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+        let expected_keywords: [(&str, &str); 19] = [
+            ("seedGrid", "seed-grid"),
+            ("addTile", "add-tile"),
+            ("deleteTile", "delete-tile"),
+            ("deleteSelection", "delete-selection"),
+            ("renameTiles", "rename-tiles"),
+            ("patchTileCrops", "patch-tile-crops"),
+            ("setSource", "set-source"),
+            ("setFrame", "set-frame"),
+            ("setActiveExample", "set-active-example"),
+            ("clearTiles", "clear-tiles"),
+            ("engagementSubmit", "engagement-submit"),
+            ("animate.resetGrid", "reset-grid"),
+            ("setSelectedIds", "set-selected-ids"),
+            ("engagementInput", "engagement-input"),
+            ("canvasPointerDown", "canvas-pointer-down"),
+            ("setLocale", "set-locale"),
+            ("noOperation", "no-op"),
+            ("copyPrompt", "copy-prompt"),
+            ("exportVideoFromDeck", "export-video-from-deck"),
+        ];
+        for (command, (id, keyword)) in every_command().into_iter().zip(expected_keywords) {
+            assert_eq!(command.command_id(), id);
+            let printed = OpText::print_op(&command);
+            assert_eq!(printed.split(' ').next().unwrap_or_default(), keyword, "wire keyword drifted for command {id}: {printed:?}");
+        }
+    }
+
+    /// ⚖️ The rows whose `Option` fields make `None`/`Some` distinct wire cases, pinned to the exact
+    /// bytes captured from the pre-merge `present_protocol` crate. A regression here is a real format
+    /// break, not a test-fixture mismatch.
+    #[test]
+    fn optional_field_rows_keep_their_pre_migration_bytes() {
+        let with_crop = PresentCommand::AddTile(add_tile::AddTile { crop: Some(crate::artifacts::present::FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 }) });
+        let without_crop = PresentCommand::AddTile(add_tile::AddTile { crop: None });
+        assert!(OpText::print_op(&with_crop).starts_with("add-tile"));
+        assert!(OpText::print_op(&without_crop).starts_with("add-tile"));
+        store::test_support::assert_op_text_binary_equivalence(&with_crop);
+        store::test_support::assert_op_text_binary_equivalence(&without_crop);
+
+        let with_layer = PresentCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { layer_id: Some("t1".into()) });
+        let without_layer = PresentCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { layer_id: None });
+        store::test_support::assert_op_text_binary_equivalence(&with_layer);
+        store::test_support::assert_op_text_binary_equivalence(&without_layer);
+    }
+
+    /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
+    pub(super) fn every_command() -> Vec<PresentCommand> {
+        vec![
+            PresentCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 3 }),
+            PresentCommand::AddTile(add_tile::AddTile { crop: Some(crate::artifacts::present::FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 }) }),
+            PresentCommand::DeleteTile(delete_tile::DeleteTile { id: "t1".into() }),
+            PresentCommand::DeleteSelection(delete_selection::DeleteSelection {}),
+            PresentCommand::RenameTiles(rename_tiles::RenameTiles { ids: vec!["t1".into(), "t2".into()], value: "Hero".into() }),
+            PresentCommand::PatchTileCrops(patch_tile_crops::PatchTileCrops { ids: vec!["t1".into()], field: "width".into(), value: 0.4 }),
+            PresentCommand::SetSource(set_source::SetSource { source: crate::artifacts::present::default_figure_tile_source() }),
+            PresentCommand::SetFrame(set_frame::SetFrame { frame: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } }),
+            PresentCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }),
+            PresentCommand::ClearTiles(clear_tiles::ClearTiles {}),
+            PresentCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "2x2".into() }),
+            PresentCommand::ResetGrid(reset_grid::ResetGrid {}),
+            PresentCommand::SetSelectedIds(set_selected_ids::SetSelectedIds { ids: vec!["t1".into()] }),
+            PresentCommand::EngagementInput(engagement_input::EngagementInput { value: "add".into() }),
+            PresentCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { layer_id: Some("t1".into()) }),
+            PresentCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
+            PresentCommand::NoOperation(no_operation::NoOperation {}),
+            PresentCommand::CopyPrompt(copy_prompt::CopyPrompt {}),
+            PresentCommand::ExportVideoFromDeck(export_video_from_deck::ExportVideoFromDeck { output_dir: "output/x".into(), scene_json: "{}".into() }),
+        ]
+    }
+    //#endregion 🔖️CommandSurfaceTests
+}
+//#endregion 🧪️Tests

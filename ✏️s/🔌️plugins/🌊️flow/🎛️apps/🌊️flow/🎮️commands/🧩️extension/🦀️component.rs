@@ -4,7 +4,7 @@
 //! panel renders it (`📌️panels/🛍️catalogue`) and `run_extension_action` resolves an incoming action id
 //! against it. An extension action only runs while its extension is enabled in the config.
 
-use crate::apps::flow::commands::{evaluate::evaluate_result, reorganize::reorganize_operations};
+use crate::apps::flow::commands::{eval::evaluate_result, layout::reorganize_operations};
 use crate::apps::flow::config::{FlowConfig, FlowConfigOperation};
 use crate::artifacts::flow::{op::FlowOperation, FlowFixture};
 use flow_core::FlowEvalSession;
@@ -22,6 +22,7 @@ pub mod toggle_extension {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "toggle-extension")]
     pub struct ToggleExtension {
         pub id: String,
         pub enabled: bool,
@@ -42,12 +43,13 @@ pub mod run_extension_action {
     /// 🧩️ Dynamic extension-provided action — `action_id` is resolved at runtime against
     /// [`super::FLOW_EXTENSIONS`]; declared `in_palette: false` in the manifest.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "run-extension-action")]
     pub struct RunExtensionAction {
         pub action_id: String,
     }
 
     pub fn handle(payload: &RunExtensionAction, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
-        let Some((id, _, _, _, effect)) = super::FLOW_EXTENSIONS.iter().find(|(_, _, entry_action_id, ..)| *entry_action_id == payload.action_id) else {
+        let Some((id, _, _, _, effect)) = FLOW_EXTENSIONS.iter().find(|(_, _, entry_action_id, ..)| *entry_action_id == payload.action_id) else {
             return Ok(Emit::default());
         };
         if !cfg.projection.extension_enabled().get(*id).copied().unwrap_or(false) {

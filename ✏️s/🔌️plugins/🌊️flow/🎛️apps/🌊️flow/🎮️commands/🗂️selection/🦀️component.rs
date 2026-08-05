@@ -16,6 +16,7 @@ pub mod delete_selection {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "delete-selection")]
     pub struct DeleteSelection {}
 
     pub fn handle(_payload: &DeleteSelection, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
@@ -44,6 +45,7 @@ pub mod select_all {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "select-all")]
     pub struct SelectAll {}
 
     pub fn handle(_payload: &SelectAll, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
@@ -59,6 +61,7 @@ pub mod focus_selection {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "focus-selection")]
     pub struct FocusSelection {}
 
     pub fn handle(_payload: &FocusSelection, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
@@ -75,6 +78,7 @@ pub mod set_selection {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "set-selection")]
     pub struct SetSelection {
         pub ids: Vec<String>,
         pub edge_ids: Vec<String>,
@@ -92,6 +96,7 @@ pub mod select_node {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "select-node")]
     pub struct SelectNode {
         pub node_id: String,
     }
@@ -107,6 +112,7 @@ pub mod node_graph_select {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "node-graph-select")]
     pub struct NodeGraphSelect {
         pub node_ids: Vec<String>,
     }
@@ -122,6 +128,7 @@ pub mod clear_selection {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "clear-selection")]
     pub struct ClearSelection {}
 
     pub fn handle(_payload: &ClearSelection, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
@@ -136,6 +143,7 @@ pub mod graph_pointer_down {
 
     /// 🖱️ A bare pointer-down on empty canvas — drops the NODE selection only.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "graph-pointer-down")]
     pub struct GraphPointerDown {}
 
     pub fn handle(_payload: &GraphPointerDown, _doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
@@ -150,6 +158,7 @@ pub mod context_menu_at {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "context-menu-at")]
     pub struct ContextMenuAt {
         pub id: String,
     }
@@ -184,7 +193,7 @@ mod tests {
         dispatch(&mut app, FlowCommand::SelectAll(select_all::SelectAll {}));
         let selected = render(&mut app, FLOW_PLAY_BODY_MAIN);
         assert!(selected.contains("slider"));
-        let before = selected.clone();
+        let before = selected;
         dispatch(&mut app, FlowCommand::FocusSelection(focus_selection::FocusSelection {}));
         let after = render(&mut app, FLOW_PLAY_BODY_MAIN);
         assert_ne!(before, after);
@@ -207,7 +216,7 @@ mod tests {
         let mut app = flow_app();
         let result = dispatch(&mut app, FlowCommand::ContextMenuAt(context_menu_at::ContextMenuAt { id: String::new() }));
         assert!(result.operations.is_empty());
-        assert!(render(&mut app, FLOW_PLAY_BODY_MAIN).contains(r#""selection":[]"#));
+        assert!(!render(&mut app, FLOW_PLAY_BODY_MAIN).contains(r#""selection":["#), "a blank id must leave the selection untouched (and empty)");
     }
 }
 //#endregion 🧪️Tests

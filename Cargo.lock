@@ -7299,6 +7299,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os",
  "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-flow-core",
  "semio-framework-os-kernel-space",
  "semio-framework-os-kernel-store",
  "semio-s-app-animate-present",
@@ -7310,7 +7311,6 @@ dependencies = [
  "semio-s-app-draw",
  "semio-s-app-fem-2d",
  "semio-s-app-fem-3d",
- "semio-s-app-flow",
  "semio-s-app-forms",
  "semio-s-app-gis-2d",
  "semio-s-app-gis-3d",
@@ -9628,89 +9628,6 @@ dependencies = [
  "semio-s-plugin-fem-shared",
  "serde_json",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "semio-s-app-flow"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-flow-core",
-]
-
-[[package]]
-name = "semio-s-app-flow-dsl"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-store",
- "semio-s-app-flow",
-]
-
-[[package]]
-name = "semio-s-app-flow-engine"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-flow-core",
- "semio-framework-os-kernel-playbook",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-ui-wgpu",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-app-flow-op"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-flow-core",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-flow-engine",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-app-flow-pack"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-store",
- "semio-s-app-flow",
- "semio-s-app-flow-dsl",
-]
-
-[[package]]
-name = "semio-s-app-flow-protocol"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-flow-core",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-s-app-flow",
- "semio-s-app-flow-op",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-app-flow-ui"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-flow-core",
- "semio-framework-os-kernel-playbook",
- "semio-framework-os-kernel-store",
- "semio-framework-plugin",
- "semio-s-app-flow",
- "semio-s-app-flow-engine",
- "semio-s-app-flow-op",
- "semio-s-app-flow-protocol",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -12447,7 +12364,6 @@ dependencies = [
 name = "semio-s-app-sequence-ui"
 version = "0.1.0"
 dependencies = [
- "js-sys",
  "semio-framework-os-kernel-infinite-board-port-directed-dag",
  "semio-framework-os-kernel-infinite-canvas",
  "semio-framework-plugin",
@@ -13555,17 +13471,23 @@ dependencies = [
 name = "semio-s-plugin-flow"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-flow-core",
  "semio-framework-os-kernel-infinite-canvas",
+ "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-playbook",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
  "semio-framework-plugin",
- "semio-s-app-flow",
- "semio-s-app-flow-ui",
+ "semio-framework-ui-wgpu",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
 name = "semio-s-plugin-flow-extension-bim"
 version = "0.1.0"
 dependencies = [
- "getrandom 0.3.4",
  "semio-framework-core",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",

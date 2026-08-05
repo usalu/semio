@@ -156,5 +156,43 @@ mod tests {
         store::test_support::assert_op_text_binary_equivalence(&command);
     }
     //#endregion 🔖️SequenceCommandTests
+
+    //#region [DEBUG] WireBaseline
+    #[test]
+    fn wire_baseline_dump() {
+        fn hex(bytes: &[u8]) -> String {
+            bytes.iter().map(|b| format!("{b:02x}")).collect()
+        }
+        fn dump(label: &str, command: &SequenceCommand) {
+            let text = protocol::OpText::print_op(command);
+            let bytes = protocol::OpBinary::encode_op(command).expect("encode");
+            println!("{label} | {text} | {} | {}", bytes.len(), hex(&bytes));
+        }
+        dump("AddStep", &SequenceCommand::AddStep { kind: "log.print".into(), x: 1.0, y: 2.0 });
+        dump("AddStepToSlot", &SequenceCommand::AddStepToSlot { kind: "log.print".into(), x: 1.0, y: 2.0, owner: "step-1".into(), slot_name: "then".into() });
+        dump("AddStepDropped(Some)", &SequenceCommand::AddStepDropped { kind: "log.print".into(), x: 1.0, y: 2.0, picked_step_id: Some("step-1".into()) });
+        dump("AddStepDropped(None)", &SequenceCommand::AddStepDropped { kind: "log.print".into(), x: 1.0, y: 2.0, picked_step_id: None });
+        dump("RemoveStep", &SequenceCommand::RemoveStep { id: "step-1".into() });
+        dump("DeleteSelection", &SequenceCommand::DeleteSelection);
+        dump("MoveStep", &SequenceCommand::MoveStep { node_id: "step-1".into(), x: 5.0, y: 6.0 });
+        dump("ConnectSteps", &SequenceCommand::ConnectSteps { source_node_id: "step-1".into(), target_node_id: "step-2".into() });
+        dump("DisconnectSteps", &SequenceCommand::DisconnectSteps { from_id: "step-1".into(), to_id: "step-2".into() });
+        dump("SetStepParams", &SequenceCommand::SetStepParams { id: "step-1".into(), params_json: "{\"a\":1}".into() });
+        dump("SetStepCollapsed", &SequenceCommand::SetStepCollapsed { id: "step-1".into() });
+        dump("Reorganize", &SequenceCommand::Reorganize);
+        dump("NodeGraphEdit", &SequenceCommand::NodeGraphEdit { operations_json: "[]".into() });
+        dump("SetSelection", &SequenceCommand::SetSelection { step_ids: vec!["step-1".into(), "step-2".into()] });
+        dump("SetOrientation", &SequenceCommand::SetOrientation { value: "topBottom".into() });
+        dump("Run", &SequenceCommand::Run);
+        dump("Stop", &SequenceCommand::Stop);
+        dump("SetViewport", &SequenceCommand::SetViewport { camera: SequenceCamera { x: 1.0, y: 2.0, zoom: 3.0 } });
+        dump("SetLocale", &SequenceCommand::SetLocale { value: "de-DE".into() });
+
+        let op = SequenceOperation::StepsAdd { index: 2, item: sequence::SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: sequence::StepParams::new(), x: 5.0, y: -6.5, slot: None, collapsed: false } };
+        let text = protocol::OpText::print_op(&op);
+        let bytes = protocol::OpBinary::encode_op(&op).expect("encode");
+        println!("StepsAdd | {text} | {} | {}", bytes.len(), hex(&bytes));
+    }
+    //#endregion [DEBUG] WireBaseline
 }
 //#endregion 🧪️Tests

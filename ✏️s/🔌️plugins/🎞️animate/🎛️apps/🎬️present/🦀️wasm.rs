@@ -1,0 +1,56 @@
+//! 🕸️ Animate present app — the WASM VCS bridge (constitutional: was part of `ui`/`protocol`). Only
+//! compiled under `target_arch = "wasm32"`; the native build never sees this module's contents.
+
+#![cfg(target_arch = "wasm32")]
+
+use crate::artifacts::present::spr::{create_present_envelope, materialize_present_projection_json, PresentEnvelope, PresentStore};
+use crate::artifacts::present::PRESENT_DECK_SCHEMA;
+use std::cell::RefCell;
+use store::create_document_envelope;
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+pub struct PresentDocumentVcs {
+    store: RefCell<PresentStore>,
+}
+
+#[wasm_bindgen(js_name = createPresentEnvelopeJson)]
+pub fn create_present_envelope_json(id: &str) -> Result<String, JsValue> {
+    serde_json::to_string(&create_present_envelope(id)).map_err(|error| JsValue::from_str(&error.to_string()))
+}
+
+#[wasm_bindgen(js_name = materializePresentProjectionJson)]
+pub fn materialize_present_projection_json_wasm(envelope_json: &str) -> Result<String, JsValue> {
+    let deck = materialize_present_projection_json(envelope_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
+    serde_json::to_string(&deck).map_err(|error| JsValue::from_str(&error.to_string()))
+}
+
+#[wasm_bindgen]
+impl PresentDocumentVcs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(envelope_json: Option<String>) -> Result<PresentDocumentVcs, JsValue> {
+        let store = match envelope_json {
+            Some(json) => {
+                let envelope: PresentEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                PresentStore::new(envelope)
+            }
+            None => PresentStore::new(create_document_envelope(PRESENT_DECK_SCHEMA, "animate-present", crate::artifacts::present::engine::empty_present_deck(), None)),
+        };
+        Ok(Self { store: RefCell::new(store) })
+    }
+
+    #[wasm_bindgen(js_name = dispatchText)]
+    pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+        self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    #[wasm_bindgen(js_name = dispatchBinary)]
+    pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+        self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    #[wasm_bindgen(js_name = projectionJson)]
+    pub fn projection_json(&self) -> Result<String, JsValue> {
+        self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+}

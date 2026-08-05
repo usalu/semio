@@ -16,6 +16,7 @@ pub mod set_locale {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "locale")]
     pub struct SetLocale {
         pub value: String,
     }

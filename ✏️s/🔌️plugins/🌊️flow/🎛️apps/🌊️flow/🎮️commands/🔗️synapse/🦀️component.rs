@@ -12,6 +12,7 @@ pub mod disconnect {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "disconnect")]
     pub struct Disconnect {
         pub synapse_id: String,
     }
@@ -27,6 +28,7 @@ pub mod connect_media_ports {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "connect-media-ports")]
     pub struct ConnectMediaPorts {
         pub source_node_id: String,
         pub source_port_id: String,

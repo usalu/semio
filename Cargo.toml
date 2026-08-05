@@ -260,15 +260,8 @@ members = [
     "✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌊️flow/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
+    "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
     "✏️s/🔨️modules/🧊️3d/📐️brep/⚡️implementations/🦀️rust",
     "✏️s/🔨️modules/🧊️3d/📐️brep/⚙️engine/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/⚡️implementations/🦀️rust",
@@ -702,7 +695,7 @@ semio-s-app-draw = { path = "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍
 semio-s-app-draw-engine = { path = "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/⚙️engine/⚡️implementations/🦀️rust" }  # 6 refs
 semio-s-app-fem-2d = { path = "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/⚡️implementations/🦀️rust" }  # 8 refs
 semio-s-app-fem-3d = { path = "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/⚡️implementations/🦀️rust" }  # 8 refs
-semio-s-app-flow = { path = "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/⚡️implementations/🦀️rust" }  # 6 refs
+semio-s-plugin-flow = { path = "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust" }
 semio-s-app-forms = { path = "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/⚡️implementations/🦀️rust" }  # 8 refs
 semio-s-app-gis-2d = { path = "✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/⚡️implementations/🦀️rust" }  # 9 refs
 semio-s-app-gis-3d = { path = "✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/⚡️implementations/🦀️rust" }  # 8 refs

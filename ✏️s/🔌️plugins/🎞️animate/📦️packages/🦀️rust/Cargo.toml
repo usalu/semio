@@ -1,0 +1,138 @@
+# 🩹️ TEMPORARY verification-only: `cargo-features` MUST be the manifest's first line. This whole
+# opt-in exists only because of the `[profile.wasm-release]`/`[profile.release]` `trim-paths` overlay
+# copied from root Cargo.toml at the bottom of this file for isolated verification — DELETE this line
+# together with the `[workspace]` overlay block before handoff to the registrar (root Cargo.toml already
+# carries its own copy of this line for the real workspace).
+cargo-features = ["trim-paths"]
+
+[package]
+name = "semio-s-plugin-animate"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Animate plugin - one crate for the present artifact (diff/op/dsl/pack/spr/engine, incl. the Manim-class animation core and headless video engine as engine topic files) and the present play app (commands/modes/windows/panels)"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:animate"
+
+[package.metadata.semio]
+role = "plugin"
+
+[[package.metadata.semio.playground]]
+variant = "animate"
+ports = { react = 6051, wgpu = 6151 }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../📦️lib.rs"
+
+[dependencies]
+dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+vcs = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
+semio-framework-core = { path = "../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
+semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+mathematical_geometry = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📐️geometry/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-geometry" }
+framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/#⃣hash/⚡️implementations/🦀️rust" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+# 🎬️ animate_core engine topic file
+kurbo = "0.13.1"
+usvg = "0.45.1"
+typst = "0.14.2"
+typst-svg = "0.14.2"
+typst-assets = { version = "0.14.2", features = ["fonts"] }
+base64 = "0.22.1"
+fontdb = { version = "0.23.0", default-features = false }
+ecow = "0.2.6"
+comemo = "0.5.1"
+
+# 🎥️ animate_video engine topic file
+vello = { version = "0.7.0", features = ["wgpu", "wgpu_default"] }
+wgpu = "27.0.1"
+pollster = "0.4.0"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+
+[features]
+default = []
+preview-window = ["winit"]
+
+[dependencies.winit]
+version = "0.30.12"
+default-features = false
+features = ["rwh_06"]
+optional = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen.workspace = true
+
+# 🩹️ TEMPORARY verification-only overlay — DELETE this whole `[workspace]` block (and the nested
+# target/+Cargo.lock it creates) before handoff to the registrar. The new crate is not yet a real
+# workspace member (see master ticket's Registrar Protocol); this lets `cargo check`/`test`/`clippy`
+# run in isolation via `--manifest-path` while the old bundle crate still holds the same package name.
+[workspace]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[workspace.dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+wasm-bindgen = "0.2.106"
+thiserror = "2.0.18"
+
+[workspace.lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"
+
+[profile.dev]
+debug = false
+incremental = true
+
+[profile.dev.build-override]
+opt-level = 3
+
+[profile.dev.package.semio-framework-os-kernel-store]
+codegen-units = 1
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"
+incremental = false
+trim-paths = "object"
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+incremental = false
+trim-paths = "object"
+
+[profile.wasm-release.package.semio-framework-os-kernel-store]
+codegen-units = 1

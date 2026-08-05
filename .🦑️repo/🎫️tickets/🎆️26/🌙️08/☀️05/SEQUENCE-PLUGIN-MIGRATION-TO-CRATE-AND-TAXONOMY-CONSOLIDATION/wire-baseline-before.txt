@@ -1,0 +1,261 @@
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust)
+   Compiling semio-s-app-sequence v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-infinite-board-port-directed-dag v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust)
+   Compiling semio-s-kernel-imperative v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust)
+   Compiling semio-s-app-sequence-dsl v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust)
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3266:68
+     |
+3266 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3266 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3266 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust/../../../../../../🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust/📦️lib.rs:2859:48
+     |
+2859 |         let Ok(value) = serde_json::from_str::<serde_json::Value>(json) else {
+     |                                                ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2859 -         let Ok(value) = serde_json::from_str::<serde_json::Value>(json) else {
+2859 +         let Ok(value) = serde_json::from_str::<Value>(json) else {
+     |
+
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+warning: `semio-framework-os-kernel-infinite-board-port-directed-dag` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os-kernel-infinite-board-port-directed-dag` to apply 1 suggestion)
+   Compiling semio-s-app-sequence-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/⚙️engine/⚡️implementations/🦀️rust)
+   Compiling semio-s-app-sequence-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/🔧️op/⚡️implementations/🦀️rust)
+   Compiling semio-s-app-sequence-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/📡️protocol/⚡️implementations/🦀️rust)
+   Compiling semio-s-app-sequence-pack v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/🎒️pack/⚡️implementations/🦀️rust)
+   Compiling semio-s-app-sequence-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/🖱️ui/⚡️implementations/🦀️rust)
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/../../../../../../../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs:168:25
+    |
+168 |             let bytes = protocol::OpBinary::encode_op(command).expect("encode");
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+168 -             let bytes = protocol::OpBinary::encode_op(command).expect("encode");
+168 +             let bytes = OpBinary::encode_op(command).expect("encode");
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/../../../../../../../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs:193:21
+    |
+193 |         let bytes = protocol::OpBinary::encode_op(&op).expect("encode");
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+193 -         let bytes = protocol::OpBinary::encode_op(&op).expect("encode");
+193 +         let bytes = OpBinary::encode_op(&op).expect("encode");
+    |
+
+warning: unused imports: `AppLabels`, `Locale`, and `Terminology`
+  --> ✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/../../../../../../../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs:11:101
+   |
+11 |     ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppIo, AppLabels, ArtifactKindSpec, Con...
+   |                                                                                                     ^^^^^^^^^
+12 |     DocumentView, DslValue, Emit, Fault, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, Medi...
+   |                                                 ^^^^^^
+13 |     PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, TextEditorScene, UiControlNode, UiInspectorFieldGroup, UiNode, UiPresenc...
+   |                                                ^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `AppLabels`
+  --> ✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/../../../../../../../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs:11:101
+   |
+11 |     ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppIo, AppLabels, ArtifactKindSpec, Con...
+   |                                                                                                     ^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-app-sequence-ui` (lib) generated 1 warning (run `cargo fix --lib -p semio-s-app-sequence-ui` to apply 1 suggestion)
+   Compiling semio-s-plugin-sequence v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust)
+warning: `semio-s-app-sequence-protocol` (lib test) generated 2 warnings (run `cargo fix --lib -p semio-s-app-sequence-protocol --tests` to apply 2 suggestions)
+warning: `semio-s-app-sequence-ui` (lib test) generated 1 warning (run `cargo fix --lib -p semio-s-app-sequence-ui --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized] target(s) in 9.38s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests ../../../../../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_sequence-19915f76a1c4066b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_sequence_dsl-35bf13ef260cd23b)
+
+running 3 tests
+test tests::dsl_round_trips_default_fixture ... ok
+test tests::default_sequence_example_dsl_round_trips ... ok
+test tests::dsl_round_trips_fixture_with_slots_and_nested_params ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/⚙️engine/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_sequence_engine-d2f864234bf1e5b9)
+
+running 49 tests
+test tests::build_path_returns_unordered_slot_body_when_multiple_heads ... ok
+test tests::add_step_dropped_falls_back_for_unknown_owner_id ... ok
+test tests::add_step_dropped_falls_back_when_owner_collapsed ... ok
+test tests::build_path_includes_control_bodies ... ok
+test tests::connect_steps_rejects_cycle ... ok
+test tests::add_step_dropped_targets_expanded_control_slot ... ok
+test tests::compile_text_renders_default_fixture_steps ... ok
+test tests::compiled_wire_literal_includes_step_ids ... ok
+test tests::add_step_dropped_falls_back_for_non_control_owner ... ok
+test tests::connect_steps_rejects_mismatched_slot_scope ... ok
+test tests::connect_steps_rejects_self_connect ... ok
+test tests::connect_steps_rejects_fan_out ... ok
+test tests::connect_steps_rejects_unknown_from_step ... ok
+test tests::disconnect_steps_returns_false_when_no_matching_edge ... ok
+test tests::connect_steps_rejects_unknown_to_step ... ok
+test tests::connect_steps_rewires_existing_incoming_edge ... ok
+test tests::disconnect_steps_removes_edge ... ok
+test tests::load_json_rejects_unsupported_schema ... ok
+test tests::execution_edges_use_sharp_sz_routing ... ok
+test tests::next_available_step_id_is_free_and_deterministic ... ok
+test tests::function_steps_use_data_ports_without_visible_execution_pins ... ok
+test tests::execution_ports_use_triangle_shape ... ok
+test tests::pick_step_id_at_screen_finds_step_under_cursor ... ok
+test tests::layout_expanded_slots_positions_slot_members_relative_to_owner ... ok
+test tests::load_json_parses_valid_fixture ... ok
+test tests::pick_step_id_at_screen_returns_none_when_missing_all_nodes ... ok
+test tests::rebuild_dag_preserves_selection ... ok
+test tests::remove_step_also_removes_slot_children ... ok
+test tests::remove_step_returns_false_for_unknown_id ... ok
+test tests::run_executes_default_fixture_and_records_scope ... ok
+test tests::replace_fixture_preserves_next_serial_and_selection ... ok
+test tests::sequence_config_default_matches_the_existing_runtime_defaults ... ok
+test tests::sequence_config_dsl_round_trips ... ok
+test tests::sequence_io_declares_the_steps_in_port ... ok
+test tests::repeated_drops_after_replace_fixture_use_distinct_ids ... ok
+test tests::reorganize_syncs_step_positions_from_dag_layout ... ok
+test tests::catalogue_json_reports_imperative_catalogue_schema ... ok
+test tests::set_step_collapsed_rejects_non_control_step ... ok
+test tests::set_ghost_step_and_clear_ghost_step_toggle_dag_ghost_node ... ok
+test tests::set_step_collapsed_rejects_unknown_id ... ok
+test tests::sequence_config_pack_round_trips ... ok
+test tests::set_step_params_json_rejects_invalid_json ... ok
+test tests::set_step_collapsed_toggles_control_step ... ok
+test tests::set_step_params_json_rejects_unknown_step ... ok
+test tests::sync_edges_from_dag_preserves_existing_edge_ids ... ok
+test tests::set_step_params_json_updates_step_params ... ok
+test tests::text_steps_use_data_ports_without_visible_execution_pins ... ok
+test tests::step_to_dag_node_shows_collapsed_indicator_for_collapsed_control_step ... ok
+test tests::sync_from_dag_copies_node_positions ... ok
+
+test result: ok. 49 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/🔧️op/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_sequence_op-95c5b48c2e72b23d)
+
+running 19 tests
+test tests::config_set_orientation_round_trips ... ok
+test tests::config_set_camera_round_trips ... ok
+test tests::config_set_locale_round_trips ... ok
+test tests::config_set_last_run_round_trips ... ok
+test tests::config_set_selection_round_trips ... ok
+test tests::add_remove_patch_steps_round_trip ... ok
+test tests::op_text_round_trips_edges_remove ... ok
+test tests::op_text_round_trips_steps_move ... ok
+test tests::op_text_round_trips_edges_move ... ok
+test tests::op_text_round_trips_edges_patch ... ok
+test tests::op_text_round_trips_edges_add ... ok
+test tests::op_text_round_trips_steps_add ... ok
+test tests::op_text_round_trips_steps_patch_with_no_fields ... ok
+test tests::op_text_round_trips_steps_remove ... ok
+test tests::op_text_round_trips_steps_add_with_slot ... ok
+test tests::op_text_round_trips_steps_patch ... ok
+test tests::config_op_text_round_trips_every_variant ... ok
+test tests::store_applies_and_undoes_step_add ... ok
+test tests::fixture_ops_capture_move_and_connect ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/🎒️pack/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_sequence_pack-aff3584e5da8e397)
+
+running 4 tests
+test tests::command_envelope_round_trip_holds_for_an_applied_operation ... ok
+test tests::default_sequence_example_pack_round_trips ... ok
+test tests::pack_round_trips_fixture_with_slots_and_nested_params ... ok
+test tests::pack_round_trips_default_fixture ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_sequence_protocol-4c8992e98d302d67)
+
+running 6 tests
+AddStep | add-step kind=log.print x=1 y=2 | 37 | 010001096c6f672e7072696e74030006000105000000000000f03f02050000000000000040
+test tests::sequence_command_binary_round_trips ... ok
+test tests::op_binary_round_trips_and_agrees_with_text ... ok
+AddStepToSlot | add-step-to-slot kind=log.print x=1 y=2 owner=step-1 slot-name=then | 55 | 010103096c6f672e7072696e7406737465702d31047468656e050006000105000000000000f03f02050000000000000040030601040602
+AddStepDropped(Some) | add-step-dropped kind=log.print x=1 y=2 picked-step-id=step-1 | 47 | 010202096c6f672e7072696e7406737465702d31040006000105000000000000f03f02050000000000000040030601
+test tests::command_envelope_round_trip_holds_for_an_applied_operation ... ok
+AddStepDropped(None) | add-step-dropped kind=log.print x=1 y=2 | 37 | 010201096c6f672e7072696e74030006000105000000000000f03f02050000000000000040
+RemoveStep | remove-step id=step-1 | 14 | 01030106737465702d3101000600
+DeleteSelection | delete-selection | 4 | 01040000
+MoveStep | move-step node-id=step-1 x=5 y=6 | 34 | 01050106737465702d31030006000105000000000000144002050000000000001840
+ConnectSteps | connect-steps source-node-id=step-1 target-node-id=step-2 | 24 | 01060206737465702d3106737465702d3202000600010601
+DisconnectSteps | disconnect-steps from-id=step-1 to-id=step-2 | 24 | 01070206737465702d3106737465702d3202000600010601
+SetStepParams | set-step-params id=step-1 params-json="{\"a\":1}" | 25 | 01080206737465702d31077b2261223a317d02000600010601
+SetStepCollapsed | set-step-collapsed id=step-1 | 14 | 01090106737465702d3101000600
+Reorganize | reorganize | 4 | 010a0000
+NodeGraphEdit | node-graph-edit operations-json="[]" | 10 | 010b01025b5d01000600
+test tests::sequence_command_text_round_trips_every_variant ... ok
+SetSelection | set-selection step-ids=[ step-1 step-2 ] | 25 | 010c0206737465702d3106737465702d3201000c0206000601
+SetOrientation | set-orientation value=topBottom | 17 | 010d0109746f70426f74746f6d01000600
+Run | run | 4 | 010e0000
+Stop | stop | 4 | 010f0000
+SetViewport | set-viewport camera { x=1 y=2 zoom=3 } | 38 | 01100001000e0d030005000000000000f03f0105000000000000004002050000000000000840
+SetLocale | set-locale value=de-DE | 13 | 0111010564652d444501000600
+StepsAdd | steps-add index=2 item { id=step-99 kind=log.print params="{}" x=5 y=-6.5 collapsed=false } | 63 | 010003096c6f672e7072696e7407737465702d3939027b7d02000402010e0d060006010106000206020305000000000000144004050000000000001ac00601
+test tests::wire_baseline_dump ... ok
+test tests::sequence_document_text_round_trips_store_with_applied_operation ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_sequence_ui-183917779179779b)
+
+running 19 tests
+test tests::default_fixture_has_steps ... ok
+test tests::renders_node_graph_scene ... ok
+test tests::import_media_rejects_unknown_port ... ok
+test tests::renders_script_editor ... ok
+test tests::context_menu_stays_within_nine_rows_and_ends_with_destructive_delete ... ok
+test tests::add_step_command_appends_step ... ok
+test tests::remove_step_command_deletes_step ... ok
+test tests::sequence_io_declares_steps_in_and_document_ports ... ok
+test tests::import_media_steps_in_inserts_a_new_step_from_an_object_payload ... ok
+test tests::import_media_steps_in_wraps_a_bare_scalar_payload ... ok
+test tests::run_stores_result_and_renders_in_script ... ok
+test tests::set_viewport_writes_config_not_operations ... ok
+test tests::stop_command_clears_last_run_result ... ok
+test tests::sequence_labels_render_german_locale ... ok
+test tests::reorganize_command_spreads_step_positions_apart ... ok
+test tests::sequence_labels_render_native_english_by_default ... ok
+test tests::undo_redo_round_trip_through_the_wrapper ... ok
+test tests::set_orientation_command_changes_reorganize_layout_axis ... ok
+test tests::two_instances_converge_disjoint_edits_via_backbone ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests ../../../../../../../✏️s/🔌️plugins/🎬️sequence/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_plugin_sequence-ee0dd29ab782aa4a)
+
+running 2 tests
+test __semio_plugin_sanity_constitutional_crates_present ... ok
+test __semio_plugin_sanity_declared_apps_appear_in_bundle_manifest ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

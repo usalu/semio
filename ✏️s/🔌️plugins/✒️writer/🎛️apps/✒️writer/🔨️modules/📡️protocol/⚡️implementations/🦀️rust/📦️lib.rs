@@ -141,5 +141,51 @@ mod tests {
         store::test_support::assert_op_text_binary_equivalence(&WriterCommand::ToggleLineNumbers);
     }
     //#endregion 🔖️CommandTests
+
+    //#region [DEBUG] WireBaseline
+    /// [DEBUG] Temporary wire-baseline dump for the taxonomy migration (ticket
+    /// 26/08/05/WRITER-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION) — captures print_op text
+    /// and hex bytes for one representative value per WriterCommand variant, in declaration order, so
+    /// the post-migration app_commands! decomposition can be diffed against it byte-for-byte. Delete
+    /// this test (and the [DEBUG] region) once the diff is clean.
+    #[test]
+    fn dump_wire_baseline() {
+        fn jack_projection() -> WriterProjection {
+            WriterProjection { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into() }
+        }
+        let commands: Vec<WriterCommand> = vec![
+            WriterCommand::TextEdit { text: "hello".into() },
+            WriterCommand::SetText { text: "MATCH (a) RETURN a".into() },
+            WriterCommand::SetDocument { document: jack_projection() },
+            WriterCommand::SetDocumentJson { json: "{}".into() },
+            WriterCommand::SetFixtureJson { json: "{}".into() },
+            WriterCommand::SetActiveExample { example_id: "jack".into() },
+            WriterCommand::FormatDocument,
+            WriterCommand::CommitRename { text: "piece".into() },
+            WriterCommand::SetCamera { camera: WriterCamera { x: 1.0, y: 2.0, zoom: 1.5 } },
+            WriterCommand::RequestCompletions,
+            WriterCommand::LintDocument,
+            WriterCommand::TextSelect { start: 3, end: 7 },
+            WriterCommand::SetEditorSelection { start: 3, end: 7 },
+            WriterCommand::SelectAstNode { id: "jack-ast-1".into(), start: 0, end: 5 },
+            WriterCommand::SetAstSelection { ids: vec!["a".into(), "b".into()] },
+            WriterCommand::SetAstHover { id: Some("jack-ast-1".into()) },
+            WriterCommand::TextHover { start: Some(3), end: None },
+            WriterCommand::ToggleLineNumbers,
+            WriterCommand::SetFontPx { value: 16 },
+            WriterCommand::SetLineHeight { value: 24 },
+            WriterCommand::SetTabSize { value: 4 },
+            WriterCommand::EngagementInput { value: "format".into() },
+            WriterCommand::EngagementSubmit { value: None },
+            WriterCommand::SetLocale { value: "de-DE".into() },
+        ];
+        for (i, command) in commands.iter().enumerate() {
+            let text = protocol::OpText::print_op(command);
+            let bytes = protocol::OpBinary::encode_op(command).expect("encode");
+            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+            println!("[DEBUG] {i:02} | {text} | len={} | {hex}", bytes.len());
+        }
+    }
+    //#endregion [DEBUG] WireBaseline
 }
 //#endregion 🧪️Tests

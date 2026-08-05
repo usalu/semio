@@ -1,0 +1,11 @@
+{
+  "schema": "manifest",
+  "id": "writer-languages",
+  "name": "Writer Languages",
+  "languageKinds": [
+    { "id": "jack", "name": "Jack", "properties": [{ "name": "grammarModule", "kind": "data", "valueType": "text" }] },
+    { "id": "wire", "name": "Wire", "properties": [{ "name": "grammarModule", "kind": "data", "valueType": "text" }] },
+    { "id": "plaintext", "name": "Plain Text" },
+    { "id": "markdown", "name": "Markdown" }
+  ]
+}

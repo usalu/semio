@@ -9,7 +9,7 @@ use protocol::CollectionOperation;
 use semio_framework_plugin::{
         app_labels, build_icon_render_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_readonly_field, ui_text, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels,
-    ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, DslValue, Emit, HostEffect, IconRenderExportItem, IconRenderScene, Label, Locale, LocalizedLabel, MeasureSelectItem, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
+    ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, DslValue, Emit, Fault, HostEffect, IconRenderExportItem, IconRenderScene, Label, Locale, LocalizedLabel, MeasureSelectItem, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UtilityDefinition, WindowEngagement, WindowEngagementInput,
     WindowEngagementPossible, WindowEngagementStatus, WindowMeasure, World3dScene, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
@@ -791,7 +791,7 @@ impl DocumentApp for ShootingPlayApp {
         let config = cfg.projection;
         match command {
             ShootingCommand::SetFixtureJson { json } => match serde_json::from_str::<ShootingFixture>(json) {
-                Ok(fixture) => Ok(Emit::operations(vec![ShootingOperation::SetFixture { fixture }]),
+                Ok(fixture) => Ok(Emit::operations(vec![ShootingOperation::SetFixture { fixture }])),
                 Err(_) => Ok(Emit::default()),
             },
             ShootingCommand::SetActiveExample { example_id } => {
@@ -803,17 +803,17 @@ impl DocumentApp for ShootingPlayApp {
                     None
                 };
                 match next {
-                    Some(fixture) => Ok(Emit::operations(vec![ShootingOperation::SetFixture { fixture }]),
+                    Some(fixture) => Ok(Emit::operations(vec![ShootingOperation::SetFixture { fixture }])),
                     None => Ok(Emit::default()),
                 }
             }
             ShootingCommand::SetActiveShot { shot_id } => match shot_id.as_deref().filter(|id| !id.is_empty()) {
-                Some(id) => Ok(Emit::operations(vec![ShootingOperation::SetActiveShot { shot_id: Some(id.into()) }]),
+                Some(id) => Ok(Emit::operations(vec![ShootingOperation::SetActiveShot { shot_id: Some(id.into()) }])),
                 None => Ok(Emit::default()),
             },
             ShootingCommand::SetActiveAsset { asset_id } => match asset_id.as_deref().filter(|id| !id.is_empty()) {
                 Some(id) => {
-                    Emit { document_operations: vec![ShootingOperation::SetActiveAsset { asset_id: Some(id.into()) }], config_operations: vec![ShootingConfigOperation::SetFitRevision { value: config.fit_revision + 1 }], ..Default::default() }
+                    Ok(Emit { document_operations: vec![ShootingOperation::SetActiveAsset { asset_id: Some(id.into()) }], config_operations: vec![ShootingConfigOperation::SetFitRevision { value: config.fit_revision + 1 }], ..Default::default() })
                 }
                 None => Ok(Emit::default()),
             },
@@ -823,7 +823,7 @@ impl DocumentApp for ShootingPlayApp {
                 // 🎥️ Deliberately overwrites shot_id's *saved* camera with the given pose — a real,
                 // undoable document edit. A no-op when that shot has no saved camera (the free/live
                 // camera is `SetCamera`'s job, above, and never reaches this operation).
-                Ok(Emit::operations(vec![ShootingOperation::SetShotCamera { shot_id: shot_id.clone(), camera: camera.clone() }])
+                Ok(Emit::operations(vec![ShootingOperation::SetShotCamera { shot_id: shot_id.clone(), camera: camera.clone() }]))
             }
             ShootingCommand::SaveCamera => {
                 let draft = config.camera_draft_label.trim().to_string();
@@ -850,36 +850,36 @@ impl DocumentApp for ShootingPlayApp {
                 if next && !config.center_model {
                     config_operations.push(ShootingConfigOperation::SetFitRevision { value: config.fit_revision + 1 });
                 }
-                Ok(Emit::config(config_operations)
+                Ok(Emit::config(config_operations))
             }
             ShootingCommand::SetActiveUtility { utility_id } => Ok(Emit::config(vec![ShootingConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }, ShootingConfigOperation::SetHoveredAsset { asset_id: None }])),
             ShootingCommand::SetLocale { value } => Ok(Emit::config(vec![ShootingConfigOperation::SetLocale { value: value.clone() }])),
-            ShootingCommand::SetSunAzimuth { value } => Ok(Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_azimuth: Some(*value), ..Default::default() } }]),
-            ShootingCommand::SetSunElevation { value } => Ok(Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_elevation: Some(*value), ..Default::default() } }]),
-            ShootingCommand::SetSunIntensity { value } => Ok(Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_intensity: Some(*value), ..Default::default() } }]),
-            ShootingCommand::SetAmbientIntensity { value } => Ok(Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { ambient_intensity: Some(*value), ..Default::default() } }]),
-            ShootingCommand::SetMaterialRoughness { value } => Ok(Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { material_roughness: Some(*value), ..Default::default() } }]),
-            ShootingCommand::SetShadowEnabled { value } => Ok(Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { shadow_enabled: Some(*value), ..Default::default() } }]),
-            ShootingCommand::ToggleSun { value } => Ok(Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_enabled: Some(*value), ..Default::default() } }]),
+            ShootingCommand::SetSunAzimuth { value } => Ok(Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_azimuth: Some(*value), ..Default::default() } }])),
+            ShootingCommand::SetSunElevation { value } => Ok(Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_elevation: Some(*value), ..Default::default() } }])),
+            ShootingCommand::SetSunIntensity { value } => Ok(Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_intensity: Some(*value), ..Default::default() } }])),
+            ShootingCommand::SetAmbientIntensity { value } => Ok(Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { ambient_intensity: Some(*value), ..Default::default() } }])),
+            ShootingCommand::SetMaterialRoughness { value } => Ok(Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { material_roughness: Some(*value), ..Default::default() } }])),
+            ShootingCommand::SetShadowEnabled { value } => Ok(Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { shadow_enabled: Some(*value), ..Default::default() } }])),
+            ShootingCommand::ToggleSun { value } => Ok(Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_enabled: Some(*value), ..Default::default() } }])),
             ShootingCommand::SetActiveShotLabel { value } => match active_shot(fixture).map(|shot| shot.id.clone()) {
-                Some(shot_id) => Ok(Emit::operations(vec![ShootingOperation::Shots(CollectionOperation::Patch { id: shot_id, patch: ShootingShotPatch { label: Some(value.clone()), ..Default::default() } })]),
+                Some(shot_id) => Ok(Emit::operations(vec![ShootingOperation::Shots(CollectionOperation::Patch { id: shot_id, patch: ShootingShotPatch { label: Some(value.clone()), ..Default::default() } })])),
                 None => Ok(Emit::default()),
             },
             ShootingCommand::SetActiveShotFormat { value } => match (active_shot(fixture).map(|shot| shot.id.clone()), shot_patch_for_field("format", &json!(value))) {
-                (Some(shot_id), Some(patch)) => Ok(Emit::operations(vec![ShootingOperation::Shots(CollectionOperation::Patch { id: shot_id, patch })]),
+                (Some(shot_id), Some(patch)) => Ok(Emit::operations(vec![ShootingOperation::Shots(CollectionOperation::Patch { id: shot_id, patch })])),
                 _ => Ok(Emit::default()),
             },
             ShootingCommand::SetActiveShotShape { value } => match (active_shot(fixture).map(|shot| shot.id.clone()), shot_patch_for_field("shape", &json!(value))) {
-                (Some(shot_id), Some(patch)) => Ok(Emit::operations(vec![ShootingOperation::Shots(CollectionOperation::Patch { id: shot_id, patch })]),
+                (Some(shot_id), Some(patch)) => Ok(Emit::operations(vec![ShootingOperation::Shots(CollectionOperation::Patch { id: shot_id, patch })])),
                 _ => Ok(Emit::default()),
             },
-            ShootingCommand::ResetFixture => Ok(Emit::operations(vec![ShootingOperation::SetFixture { fixture: default_fixture() }]),
+            ShootingCommand::ResetFixture => Ok(Emit::operations(vec![ShootingOperation::SetFixture { fixture: default_fixture() }])),
             ShootingCommand::SaveDownload => match serde_json::to_string_pretty(fixture) {
-                Ok(fixture_text) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: "shooting.fixture.ops".into(), mime_type: "text/plain".into(), data: fixture_text, encoding: None }),
+                Ok(fixture_text) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: "shooting.fixture.ops".into(), mime_type: "text/plain".into(), data: fixture_text, encoding: None })),
                 Err(_) => Ok(Emit::default()),
             },
-            ShootingCommand::LoadRequest => Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".ops,.dsl,.spk,application/octet-stream,text/plain".into(), read_as: None, import_action: "setFixtureJson".into(), multiple: false }),
-            ShootingCommand::ImportAssetRequest => Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".glb,model/gltf-binary".into(), read_as: Some("dataUrl".into()), import_action: "importAsset".into(), multiple: false }),
+            ShootingCommand::LoadRequest => Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".ops,.dsl,.spk,application/octet-stream,text/plain".into(), read_as: None, import_action: "setFixtureJson".into(), multiple: false })),
+            ShootingCommand::ImportAssetRequest => Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".glb,model/gltf-binary".into(), read_as: Some("dataUrl".into()), import_action: "importAsset".into(), multiple: false })),
             ShootingCommand::ImportAsset { payload, name } => {
                 let id = next_shooting_id("asset");
                 let resolved_name = name.as_deref().map(|name| name.trim_end_matches(".glb").to_string()).filter(|name| !name.is_empty()).unwrap_or_else(|| format!("Asset {}", fixture.assets.len() + 1));
@@ -901,41 +901,41 @@ impl DocumentApp for ShootingPlayApp {
                         })
                         .collect();
                     if !items.is_empty() {
-                        return Ok(Emit::effect(HostEffect::IconRenderExport { items });
+                        return Ok(Emit::effect(HostEffect::IconRenderExport { items }));
                     }
                 }
-                Ok(Emit::default()
+                Ok(Emit::default())
             }
             ShootingCommand::TranslateSelection { asset_ids, dx, dy, dz } => {
                 let ids = mesh_selection_ids_typed(asset_ids, &config.selected_asset_ids);
                 if ids.is_empty() {
-                    Ok(Emit::default()
+                    Ok(Emit::default())
                 } else {
-                    Ok(Emit::amend(vec![ShootingOperation::TranslateAssets { asset_ids: ids, dx: *dx, dy: *dy, dz: *dz }], "gumball-translate")
+                    Ok(Emit::amend(vec![ShootingOperation::TranslateAssets { asset_ids: ids, dx: *dx, dy: *dy, dz: *dz }], "gumball-translate"))
                 }
             }
             ShootingCommand::RotateSelection { asset_ids, ax, ay, az, angle } => {
                 let ids = mesh_selection_ids_typed(asset_ids, &config.selected_asset_ids);
                 if ids.is_empty() {
-                    Ok(Emit::default()
+                    Ok(Emit::default())
                 } else {
-                    Ok(Emit::amend(vec![ShootingOperation::RotateAssets { asset_ids: ids, ax: *ax, ay: *ay, az: *az, angle: *angle }], "gumball-rotate")
+                    Ok(Emit::amend(vec![ShootingOperation::RotateAssets { asset_ids: ids, ax: *ax, ay: *ay, az: *az, angle: *angle }], "gumball-rotate"))
                 }
             }
             ShootingCommand::ScaleSelection { asset_ids, sx, sy, sz } => {
                 let ids = mesh_selection_ids_typed(asset_ids, &config.selected_asset_ids);
                 if ids.is_empty() {
-                    Ok(Emit::default()
+                    Ok(Emit::default())
                 } else {
-                    Ok(Emit::amend(vec![ShootingOperation::ScaleAssets { asset_ids: ids, sx: *sx, sy: *sy, sz: *sz }], "gumball-scale")
+                    Ok(Emit::amend(vec![ShootingOperation::ScaleAssets { asset_ids: ids, sx: *sx, sy: *sy, sz: *sz }], "gumball-scale"))
                 }
             }
             ShootingCommand::PatchShots { shot_ids, field, value } => match shot_patch_for_field(field, &json!(value)) {
-                Some(patch) if !shot_ids.is_empty() => Ok(Emit::operations(shot_ids.iter().cloned().map(|id| ShootingOperation::Shots(CollectionOperation::Patch { id, patch: patch.clone() })).collect()),
+                Some(patch) if !shot_ids.is_empty() => Ok(Emit::operations(shot_ids.iter().cloned().map(|id| ShootingOperation::Shots(CollectionOperation::Patch { id, patch: patch.clone() })).collect())),
                 _ => Ok(Emit::default()),
             },
             ShootingCommand::PatchAssets { asset_ids, field, value } => match asset_patch_for_field(field, &json!(value)) {
-                Some(patch) if !asset_ids.is_empty() => Ok(Emit::operations(asset_ids.iter().cloned().map(|id| ShootingOperation::Assets(CollectionOperation::Patch { id, patch: patch.clone() })).collect()),
+                Some(patch) if !asset_ids.is_empty() => Ok(Emit::operations(asset_ids.iter().cloned().map(|id| ShootingOperation::Assets(CollectionOperation::Patch { id, patch: patch.clone() })).collect())),
                 _ => Ok(Emit::default()),
             },
             ShootingCommand::AddShot { format, shape } => {
@@ -968,7 +968,7 @@ impl DocumentApp for ShootingPlayApp {
             ShootingCommand::SetSelectionMethod { method } => Ok(Emit::config(vec![ShootingConfigOperation::SetSelectionMethod { method: method.clone() }])),
             ShootingCommand::WorldSelect { ids, merge } => {
                 let merged = merge_world_selection_ids(&semio_framework_plugin::SelectionSet::from_ids(config.selected_asset_ids.clone()), ids, merge).to_vec();
-                Ok(Emit::config(vec![ShootingConfigOperation::SetSelection { shot_ids: config.selected_shot_ids.clone(), asset_ids: merged }])
+                Ok(Emit::config(vec![ShootingConfigOperation::SetSelection { shot_ids: config.selected_shot_ids.clone(), asset_ids: merged }]))
             }
             ShootingCommand::SetHover { asset_id } => Ok(Emit::config(vec![ShootingConfigOperation::SetHoveredAsset { asset_id: asset_id.clone() }])),
             ShootingCommand::WorldPick { asset_id, asset_index, merge } => {
@@ -978,7 +978,7 @@ impl DocumentApp for ShootingPlayApp {
                     None => Ok(Emit::default()),
                     Some(id) => {
                         let merged = merge_world_selection_ids(&semio_framework_plugin::SelectionSet::from_ids(config.selected_asset_ids.clone()), &[id], merge).to_vec();
-                        Ok(Emit::config(vec![ShootingConfigOperation::SetSelection { shot_ids: config.selected_shot_ids.clone(), asset_ids: merged }])
+                        Ok(Emit::config(vec![ShootingConfigOperation::SetSelection { shot_ids: config.selected_shot_ids.clone(), asset_ids: merged }]))
                     }
                 }
             }

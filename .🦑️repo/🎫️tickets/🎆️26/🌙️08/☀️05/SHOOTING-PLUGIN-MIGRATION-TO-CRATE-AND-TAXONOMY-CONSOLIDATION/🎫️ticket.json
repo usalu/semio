@@ -1,0 +1,13 @@
+{
+  "title": "Shooting Plugin Migration To Crate And Taxonomy Consolidation",
+  "emoji": "🎥️",
+  "status": "open",
+  "description": "Migrate the 🎥️shooting plugin (single app, single artifact — icon-studio) from its 7-crate constitutional layout into ONE crate at ✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/ (crate name semio-s-plugin-shooting) with the full taxonomy source tree, following the W2 fan-out recipe in .🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE/📋️TEMPLATE.md (written from the 🌊️flow pilot). Exclusive ownership: everything under ✏️s/🔌️plugins/🎥️shooting/**. Old crates: 🛂️manifest/🗿️artifact (semio-s-plugin-shooting bundle), 🎛️apps/🎥️shooting (semio-s-app-shooting), and its 🔨️modules/{⚙️engine,🎒️pack,📡️protocol,🔧️op,🗣️dsl,🖱️ui} (semio-s-app-shooting-{engine,pack,protocol,op,dsl,ui}). NOTE: found the old ui crate's 📦️lib.rs handle() method already mid-refactored to the Result\u003cEmit,Fault\u003e trait shape with systematic broken syntax (missing closing parens on ~25 Ok(Emit::operations(...)) call sites, some Emit{...} literals not Ok-wrapped, missing Fault import) — forward-fixing this as part of the migration baseline per CLAUDE.md (fix bugs at the root, no reverts).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2453"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪2527c50162e240dda50676f991a5c918"
+  ]
+}

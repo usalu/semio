@@ -7,7 +7,7 @@
 //!
 //! 🚧️ W1 scope: proves the mechanism on two apps (writer, note) — their document schema AND their
 //! `"<doc-schema>#diff"` diff schema (the first two real `#[derive(dsl::DslDiff)]` types, see
-//! `writer_op::WriterDiff`/`note_op::NoteDiff`). Full fan-in across every real app schema (the
+//! `writer::artifacts::writer::diff::WriterDiff`/`note_op::NoteDiff`). Full fan-in across every real app schema (the
 //! `🧪️fixture-sweep` crate's dev-dependency list is the template for what that eventually looks
 //! like) is deferred to a later wave — tracked as the W8 "dsl_registry completeness assertion" item
 //! in `.claude/plans/the-final-goal-for-jolly-spindle.md`. Add one app's `🗣️dsl`/`🔧️op` pair to
@@ -42,8 +42,8 @@ impl SchemaResolver for FullResolver {
 /// resolves the diff's own grammar, not the document's.
 pub fn full_resolver() -> FullResolver {
     let mut schemas: HashMap<&'static str, fn() -> dsl_schema::RecordSpec> = HashMap::new();
-    schemas.insert(writer::WRITER_DOCUMENT_SCHEMA, writer::WriterProjection::__dsl_spec);
-    schemas.insert("writer.document#diff", writer_op::WriterDiff::__dsl_diff_spec);
+    schemas.insert(writer::artifacts::writer::WRITER_DOCUMENT_SCHEMA, writer::artifacts::writer::WriterProjection::__dsl_spec);
+    schemas.insert("writer.document#diff", writer::artifacts::writer::diff::WriterDiff::__dsl_diff_spec);
     schemas.insert(note::NOTE_DOCUMENT_SCHEMA, note::NoteDocument::__dsl_spec);
     schemas.insert("note.document#diff", note_op::NoteDiff::__dsl_diff_spec);
     FullResolver { schemas }
@@ -77,11 +77,11 @@ mod tests {
     fn resolved_writer_document_spec_matches_the_real_type() {
         let resolver = full_resolver();
         let spec = resolver.resolve("writer.document").expect("writer.document must resolve");
-        let document = writer::WriterProjection { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a) RETURN a".into() };
+        let document = writer::artifacts::writer::WriterProjection { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a) RETURN a".into() };
         let record = document.__dsl_to_record();
         let bytes = pack_cli_encode_for_test(&spec, &record);
         let (decoded_record, _report) = pack::decode_document(&bytes, &spec, &pack::DecodeOptions::default()).expect("decode against resolved spec");
-        let decoded = writer::WriterProjection::__dsl_from_record(&decoded_record).expect("__dsl_from_record");
+        let decoded = writer::artifacts::writer::WriterProjection::__dsl_from_record(&decoded_record).expect("__dsl_from_record");
         assert_eq!(decoded, document);
     }
 
@@ -90,10 +90,10 @@ mod tests {
         use protocol::DiffCodec;
         let resolver = full_resolver();
         let spec = resolver.resolve("writer.document#diff").expect("writer.document#diff must resolve");
-        let diff = writer_op::WriterDiff { text: Some("hi".into()), document: None };
-        assert_eq!(spec.keyword, writer_op::WriterDiff::__dsl_diff_spec().keyword, "resolved spec must be the real diff spec");
+        let diff = writer::artifacts::writer::diff::WriterDiff { text: Some("hi".into()), document: None };
+        assert_eq!(spec.keyword, writer::artifacts::writer::diff::WriterDiff::__dsl_diff_spec().keyword, "resolved spec must be the real diff spec");
         let bytes = diff.encode_diff().expect("encode_diff");
-        let decoded = writer_op::WriterDiff::decode_diff(&bytes).expect("decode_diff");
+        let decoded = writer::artifacts::writer::diff::WriterDiff::decode_diff(&bytes).expect("decode_diff");
         assert_eq!(decoded, diff);
     }
 

@@ -1,0 +1,13 @@
+{
+  "title": "Cad Plugin Migration To Crate And Taxonomy Consolidation",
+  "emoji": "📐️",
+  "status": "open",
+  "description": "W2 of the crate consolidation \u0026 plugin taxonomy restructure. Merge 📐️cad's 8 constitutional Rust crates (semio-s-plugin-cad bundle + semio-s-app-cad{,-engine,-op,-dsl,-pack,-protocol,-ui}) into ONE crate at ✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/ named semio-s-plugin-cad, with the full taxonomy source tree (🗿️artifacts/📐️cad/{🔺️diff,🗣️dsl,🎒️pack,🔧️op,📡️spr,⚙️engine}, 🎛️apps/📐️cad/{🎮️commands,🎭️modes,🪟️windows,📌️panels,…}) per the master ticket's discovery contract and 📋️TEMPLATE.md's recipe. Preserve all [package.metadata.*] verbatim (component package semio:cad, playground ports react 6020 / wgpu 6120, cad-fixture asset row). Verify cargo check (native + wasm32-wasip2), clippy -D warnings, cargo test with wire-format byte-diff proof, then delete old crate manifests. Registrar handles root Cargo.toml.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2448"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪419d879a47ff4027a64b699b312614e4"
+  ]
+}

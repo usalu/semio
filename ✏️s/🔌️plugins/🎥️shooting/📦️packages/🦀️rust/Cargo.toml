@@ -1,0 +1,105 @@
+[package]
+name = "semio-s-plugin-shooting"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Shooting plugin - one crate for the shooting artifact (diff/op/dsl/pack/spr/engine) and the shooting play app (commands/modes/windows/panels)"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:shooting"
+
+[package.metadata.semio]
+role = "plugin"
+
+[[package.metadata.semio.playground]]
+variant = "shooting"
+ports = { react = 6019, wgpu = 6119 }
+
+[[package.metadata.semio.assets]]
+kind = "mesh-collection"
+route = "/mesh"
+roots = ["🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🌱️metabolism/🎨️representation", "♻️mit-bestand/🖼️assets/🏚️abbau-aufbau"]
+placeholder = "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🥽️mesh/🧊️placeholder.glb"
+filter_from_examples = true
+
+# 📦️ Carried over verbatim from the old `📡️protocol` sub-crate — the `wasm_bridge` module in
+# `🦀️wasm.rs` still builds a wasm-bindgen surface distinct from the WASM Component Model plugin ABI,
+# and skipping wasm-opt keeps that dev-loop fast.
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../📦️lib.rs"
+
+[dependencies]
+semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-core = { path = "../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
+dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+serde.workspace = true
+serde_json.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.106"
+
+[dev-dependencies]
+vcs = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
+
+# ============================================================================================
+# 🚧️ TEMPORARY VERIFICATION-ONLY OVERLAY — DELETE AT HANDOFF (TEMPLATE.md §3 chicken-and-egg).
+# This crate is not yet a workspace member (the registrar hasn't pruned the old bundle crate's
+# member line yet), so it can't build inside the root workspace. This overlay makes it its own
+# temporary workspace root so `--manifest-path` verification can run standalone. Copied verbatim
+# from root Cargo.toml so artifact fingerprints match and the shared `target/` stays warm.
+# ============================================================================================
+[workspace]
+members = ["."]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[workspace.dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+wasm-bindgen = "0.2.106"
+
+[workspace.lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"
+
+[profile.dev]
+debug = false
+incremental = true
+
+[profile.dev.build-override]
+opt-level = 3
+
+[profile.dev.package.semio-framework-os-kernel-store]
+codegen-units = 1
+# ============================================================================================
+# 🚧️ END TEMPORARY OVERLAY
+# ============================================================================================

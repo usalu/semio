@@ -1,0 +1,11 @@
+[DEBUG] IncrementCounter(IncrementCounter) | text="increment-counter" | len=4 | hex=01000000
+[DEBUG] PatchProjection(PatchProjection { field: "title", value: "Renamed" }) | text="patch-projection field=title value=Renamed" | len=24 | hex=0101020752656e616d6564057469746c6502000601010600
+[DEBUG] TextEdit(TextEdit { text: "{}" }) | text="text-edit text=\"{}\"" | len=10 | hex=010201027b7d01000600
+[DEBUG] Edit(Edit { text: "{}" }) | text="edit text=\"{}\"" | len=10 | hex=010301027b7d01000600
+[DEBUG] SetSelection(SetSelection { ids: ["checkpoint-1", "checkpoint-2"] }) | text="set-selection ids=[ checkpoint-1 checkpoint-2 ]" | len=37 | hex=0104020c636865636b706f696e742d310c636865636b706f696e742d3201000c0206000601
+[DEBUG] SetLocale(SetLocale { value: "de-DE" }) | text="locale value=de-DE" | len=13 | hex=0105010564652d444501000600
+[DEBUG] NoOperation(NoOperation) | text="no-operation" | len=4 | hex=01060000
+[DEBUG] CanvasPointerDown(CanvasPointerDown) | text="canvas-pointer-down" | len=4 | hex=01070000
+[DEBUG] CanvasPointerMove(CanvasPointerMove) | text="canvas-pointer-move" | len=4 | hex=01080000
+[DEBUG] CanvasPointerUp(CanvasPointerUp) | text="canvas-pointer-up" | len=4 | hex=01090000
+[DEBUG] CanvasWheel(CanvasWheel) | text="canvas-wheel" | len=4 | hex=010a0000

@@ -1,0 +1,23 @@
+document-json json="{}" | 10 | 010001027b7d01000600
+active-example example-id=demo-stock | 18 | 0101010a64656d6f2d73746f636b01000600
+stock-from-catalogue | 4 | 01020000
+curate-add object-id=beam-glulam-gl24h | 25 | 010301116265616d2d676c756c616d2d676c32346801000600
+curate-set-count object-id=beam-glulam-gl24h delta=1 | 35 | 010401116265616d2d676c756c616d2d676c323468020006000105000000000000f03f
+curate-remove object-id=beam-glulam-gl24h | 25 | 010501116265616d2d676c756c616d2d676c32346801000600
+drop-on-pool object-id=beam-glulam-gl24h | 25 | 010601116265616d2d676c756c616d2d676c32346801000600
+drop-on-curated object-id=beam-glulam-gl24h | 25 | 010701116265616d2d676c756c616d2d676c32346801000600
+filter-query value=glulam | 14 | 01080106676c756c616d01000600
+filter-module module-id=beams enabled=true | 15 | 010901056265616d73020006000102
+filter-typology path=beams/steel | 19 | 010a010b6265616d732f737465656c01000600
+filter-min-availability delta=1 | 14 | 010b00010005000000000000f03f
+sort-table column-id=availability direction=desc | 28 | 010c020c617661696c6162696c697479046465736302000600010601
+select-row object-id=beam-glulam-gl24h | 25 | 010d01116265616d2d676c756c616d2d676c32346801000600
+world-select ids=[ beam-glulam-gl24h beam-kvh-c24 ] | 42 | 010e02116265616d2d676c756c616d2d676c3234680c6265616d2d6b76682d63323401000c0206000601
+locale value=de-DE | 13 | 010f010564652d444501000600
+
+Diff against wire-baseline-before.txt: all 16 overlapping rows byte-identical. The baseline's 3
+additional variant rows (curate-set-count value=4, filter-min-availability value=5, select-row with no
+object-id) are pinned exactly (bytes verified equal to wire-baseline-before.txt) by the permanent test
+`apps::curate::component::tests::optional_field_rows_keep_their_pre_migration_bytes` in
+✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🦀️component.rs, which stays in the crate (not deleted, unlike
+this dump).

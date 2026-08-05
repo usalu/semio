@@ -16932,7 +16932,8 @@ if (import.meta.vitest) {
     });
 
     it("emits relative fixtures flattened through puzzle 5d", async () => {
-      const { compose5d, prepareTopologyModel } = await import(/* @vite-ignore */ "@semio-tech/puzzle-5d-react");
+      const specifier = "@semio-tech/puzzle-5d-react";
+      const { compose5d, prepareTopologyModel } = await import(/* @vite-ignore */ specifier);
       const design = {
         id: "d",
         pieces: [

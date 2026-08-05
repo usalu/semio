@@ -98,6 +98,7 @@ const config: StorybookConfig = {
     const aliasRecord: Record<string, string> = {
       ...buildStorybookAliases(),
       "vite/internal": resolve(repoRootPath, "node_modules/vite/dist/node/index.js"),
+      "@compose/ui": resolve(repoRootPath, "🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx"),
       "@semio-tech/framework-platform-core": resolve(repoRootPath, "🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts"),
       "@semio-tech/framework-playground-core": resolve(repoRootPath, "🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts"),
       "@semio-tech/framework-platform-renderer-react": resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx"),

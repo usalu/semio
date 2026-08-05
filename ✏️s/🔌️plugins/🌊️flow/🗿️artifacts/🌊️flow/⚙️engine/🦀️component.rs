@@ -27,7 +27,7 @@ pub const FLOW_DEFAULT_PROXIMITY_DISTANCE: f64 = 48.0;
 /// 🔳️ Default canvas grid factor.
 pub const FLOW_DEFAULT_GRID_FACTOR: f64 = 10.0;
 /// 🧵️ The self-chaining action id of the off-main-thread evaluation loop — dispatched as a
-/// `HostEffect` by `🎮️commands/🧮️evaluate` and by `FlowPlayApp::pending_effects`.
+/// `HostEffect` by `🎮️commands/🧮️eval` and by `FlowPlayApp::pending_effects`.
 pub const FLOW_EVAL_TICK_ACTION: &str = "flowEvalTick";
 //#endregion 🔖️Constants
 
@@ -125,7 +125,7 @@ pub fn focus_selection_camera(fixture: &FlowFixture, config: &FlowConfig, sessio
 
 //#region 🔖️Widgets
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
-    endpoint.split_once('@').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), "out".into()))
+    endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
 pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {

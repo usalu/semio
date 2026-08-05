@@ -9,7 +9,7 @@
 use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{
         app_labels, build_table_scene, build_world_3d_scene, table_row_json, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App,
-    AppIo, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, TableCell, TableScene,
+    AppIo, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, TableCell, TableScene,
     Terminology, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
     WindowLayoutWindowNode, WorldSunConfig,
 };
@@ -379,12 +379,12 @@ impl DocumentApp for SourcingCurateApp {
         let config = cfg.projection;
         match command {
             SourcingCurateCommand::SetDocumentJson { json } => match serde_json::from_str::<CurateDocument>(json) {
-                Ok(document) => Ok(Emit::operations(vec![SourcingOperation::SetDocument { document }]),
+                Ok(document) => Ok(Emit::operations(vec![SourcingOperation::SetDocument { document }])),
                 Err(_) => Ok(Emit::default()),
             },
             SourcingCurateCommand::SetActiveExample { example_id } => {
                 let next = if example_id.is_empty() || example_id == EMPTY_EXAMPLE_ID { sourcing_engine::empty_document() } else { sourcing_engine::default_document() };
-                Ok(Emit::operations(vec![SourcingOperation::SetDocument { document: next }])
+                Ok(Emit::operations(vec![SourcingOperation::SetDocument { document: next }]))
             }
             SourcingCurateCommand::StockFromCatalogue => {
                 let mut document = doc.projection.clone();
@@ -396,12 +396,12 @@ impl DocumentApp for SourcingCurateApp {
                         }
                     }
                 }
-                Ok(Emit::operations(vec![SourcingOperation::SetDocument { document }])
+                Ok(Emit::operations(vec![SourcingOperation::SetDocument { document }]))
             }
             SourcingCurateCommand::CurateAdd { object_id } => {
                 let mut document = doc.projection.clone();
                 sourcing_engine::curate_delta(&mut document, object_id, 1);
-                Ok(Emit::operations(vec![SourcingOperation::SetDocument { document }])
+                Ok(Emit::operations(vec![SourcingOperation::SetDocument { document }]))
             }
             SourcingCurateCommand::CurateSetCount { object_id, delta, value } => {
                 let mut document = doc.projection.clone();
@@ -410,17 +410,17 @@ impl DocumentApp for SourcingCurateApp {
                 } else if let Some(value) = value {
                     sourcing_engine::curate_set(&mut document, object_id, value.max(0.0) as u32);
                 }
-                Ok(Emit::operations(vec![SourcingOperation::SetDocument { document }])
+                Ok(Emit::operations(vec![SourcingOperation::SetDocument { document }]))
             }
             SourcingCurateCommand::CurateRemove { object_id } | SourcingCurateCommand::DropOnPool { object_id } => {
                 let mut document = doc.projection.clone();
                 sourcing_engine::curate_set(&mut document, object_id, 0);
-                Ok(Emit::operations(vec![SourcingOperation::SetDocument { document }])
+                Ok(Emit::operations(vec![SourcingOperation::SetDocument { document }]))
             }
             SourcingCurateCommand::DropOnCurated { object_id } => {
                 let mut document = doc.projection.clone();
                 sourcing_engine::curate_delta(&mut document, object_id, 1);
-                Ok(Emit::operations(vec![SourcingOperation::SetDocument { document }])
+                Ok(Emit::operations(vec![SourcingOperation::SetDocument { document }]))
             }
             SourcingCurateCommand::SetFilterQuery { value } => Ok(Emit::config(vec![SourcingCurateConfigOperation::SetFilterQuery { value: value.clone() }])),
             SourcingCurateCommand::SetFilterModule { module_id, enabled } => {
@@ -432,20 +432,20 @@ impl DocumentApp for SourcingCurateApp {
                 } else {
                     module_ids.retain(|id| id != module_id);
                 }
-                Ok(Emit::config(vec![SourcingCurateConfigOperation::SetFilterModules { module_ids }])
+                Ok(Emit::config(vec![SourcingCurateConfigOperation::SetFilterModules { module_ids }]))
             }
             SourcingCurateCommand::SetFilterTypology { path } => {
                 let path = if path.is_empty() { Vec::new() } else { path.split('/').map(String::from).collect() };
-                Ok(Emit::config(vec![SourcingCurateConfigOperation::SetFilterTypology { path }])
+                Ok(Emit::config(vec![SourcingCurateConfigOperation::SetFilterTypology { path }]))
             }
             SourcingCurateCommand::SetFilterMinAvailability { delta, value } => {
                 let current = config.filters.min_availability as f64;
                 let next = delta.map(|d| current + d).or(*value).unwrap_or(current);
-                Ok(Emit::config(vec![SourcingCurateConfigOperation::SetFilterMinAvailability { value: next.max(0.0) as u32 }])
+                Ok(Emit::config(vec![SourcingCurateConfigOperation::SetFilterMinAvailability { value: next.max(0.0) as u32 }]))
             }
             SourcingCurateCommand::SortTable { column_id, direction } => {
                 let sort = TableSort { column_id: column_id.clone(), direction: if direction == "desc" { SortDirection::Desc } else { SortDirection::Asc } };
-                Ok(Emit::config(vec![SourcingCurateConfigOperation::SetSort { sort: Some(sort) }])
+                Ok(Emit::config(vec![SourcingCurateConfigOperation::SetSort { sort: Some(sort) }]))
             }
             SourcingCurateCommand::SelectRow { object_id } => Ok(Emit::config(vec![SourcingCurateConfigOperation::SetSelectedObject { object_id: object_id.clone() }])),
             SourcingCurateCommand::WorldSelect { ids } => match ids.last() {

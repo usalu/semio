@@ -1,0 +1,223 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-space v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-store-sync v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-workflow v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/⚡️implementations/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust)
+   Compiling semio-s-app-shooting v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/⚡️implementations/🦀️rust)
+   Compiling semio-s-app-shooting-dsl v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust)
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3266:68
+     |
+3266 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3266 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3266 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: unused import: `serde_json::Value`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:19:5
+   |
+19 | use serde_json::Value;
+   |     ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:481:16
+    |
+481 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+481 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+481 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:482:24
+    |
+482 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+482 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+482 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:492:16
+    |
+492 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+492 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+492 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:493:24
+    |
+493 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+493 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+493 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:553:41
+    |
+553 |     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+553 -     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+553 +     pub fn receive(&mut self, envelope: OperationEnvelope) -> Result<(), SyncError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:735:42
+    |
+735 |                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+735 -                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+735 +                         let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:739:38
+    |
+739 |                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+739 -                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+739 +                     let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:1208:37
+     |
+1208 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1208 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1208 +             let wire_envelopes: Vec<OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:1208:100
+     |
+1208 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1208 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1208 +             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:1275:37
+     |
+1275 |     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |                                     ^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1275 -     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+1275 +     fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |
+
+warning: structure field `pendingOperations` should have a snake case name
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:153:9
+    |
+153 |     pub pendingOperations: usize,
+    |         ^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `pending_operations`
+    |
+    = note: `#[warn(non_snake_case)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+warning: `semio-framework-os-kernel-store-sync` (lib) generated 12 warnings (run `cargo fix --lib -p semio-framework-os-kernel-store-sync` to apply 11 suggestions)
+   Compiling semio-framework-os v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust)
+   Compiling semio-s-app-shooting-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🔨️modules/⚙️engine/⚡️implementations/🦀️rust)
+   Compiling semio-s-app-shooting-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🔨️modules/🔧️op/⚡️implementations/🦀️rust)
+   Compiling semio-s-app-shooting-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🔨️modules/📡️protocol/⚡️implementations/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 8.95s
+     Running unittests ../../../../../../../../../✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_shooting_protocol-8ea2a979a0931f23)
+
+running 1 test
+[DEBUG] 00 | fixture-json json="{\"schema\":\"shooting.fixture\"}" | len=37 | 0100011d7b22736368656d61223a2273686f6f74696e672e66697874757265227d01000600
+[DEBUG] 01 | active-example example-id=base-icon | len=17 | 01010109626173652d69636f6e01000600
+[DEBUG] 02 | active-shot shot-id=s1 | len=10 | 01020102733101000600
+[DEBUG] 03 | active-shot | len=4 | 01020000
+[DEBUG] 04 | active-asset asset-id=a1 | len=10 | 01030102613101000600
+[DEBUG] 05 | active-asset | len=4 | 01030000
+[DEBUG] 06 | shot-camera shot-id=s1 camera { position=@1,2,3 target=@0,0,0 zoom=1 fov=50deg up=^0,0,1 projection=perspective } | len=130 | 0104020b706572737065637469766502733102000601010e0d06001503000000000000f03f000000000000004000000000000008400115030000000000000000000000000000000000000000000000000205000000000000f03f0305000000000000494004150300000000000000000000000000000000000000000000f03f050600
+[DEBUG] 07 | save-camera | len=4 | 01050000
+[DEBUG] 08 | sun-azimuth value=45 | len=14 | 0106000100050000000000804640
+[DEBUG] 09 | sun-elevation value=35 | len=14 | 0107000100050000000000804140
+[DEBUG] 10 | sun-intensity value=2.4 | len=14 | 0108000100053333333333330340
+[DEBUG] 11 | ambient-intensity value=1.15 | len=14 | 010900010005666666666666f23f
+[DEBUG] 12 | material-roughness value=0.5 | len=14 | 010a00010005000000000000e03f
+[DEBUG] 13 | shadow-enabled value=true | len=6 | 010b00010002
+[DEBUG] 14 | toggle-sun value=false | len=6 | 010c00010001
+[DEBUG] 15 | active-shot-label value=Overview | len=16 | 010d01084f7665727669657701000600
+[DEBUG] 16 | active-shot-format value=png | len=11 | 010e0103706e6701000600
+[DEBUG] 17 | active-shot-shape value=ellipse | len=15 | 010f0107656c6c6970736501000600
+[DEBUG] 18 | patch-shots field=label value=Hero shot-ids=[ s1 s2 ] | len=34 | 011004044865726f056c6162656c02733102733203000c0206020603010601020600
+[DEBUG] 19 | patch-assets field=name value=Renamed asset-ids=[ a1 ] | len=31 | 0111030752656e616d6564026131046e616d6503000c010601010602020600
+[DEBUG] 20 | add-shot format=svg shape=rectangle | len=24 | 0112020972656374616e676c650373766702000601010600
+[DEBUG] 21 | add-asset format=glb | len=11 | 01130103676c6201000600
+[DEBUG] 22 | import-asset payload="data:model/gltf-binary;base64,AAA=" name=Imported | len=54 | 01140208496d706f7274656422646174613a6d6f64656c2f676c74662d62696e6172793b6261736536342c4141413d02000601010600
+[DEBUG] 23 | import-asset payload="data:model/gltf-binary;base64,BBB=" | len=42 | 01140122646174613a6d6f64656c2f676c74662d62696e6172793b6261736536342c4242423d01000600
+[DEBUG] 24 | reset-fixture | len=4 | 01150000
+[DEBUG] 25 | translate-selection dx=1 dy=-2 dz=3.5 asset-ids=[ a1 a2 ] | len=47 | 01160202613102613204000c02060006010105000000000000f03f020500000000000000c003050000000000000c40
+[DEBUG] 26 | rotate-selection ax=0 ay=0 az=1 angle=1.5 asset-ids=[ a1 ] | len=52 | 01170102613105000c01060001050000000000000000020500000000000000000305000000000000f03f0405000000000000f83f
+[DEBUG] 27 | scale-selection sx=2 sy=2 sz=2 asset-ids=[ a1 ] | len=42 | 01180102613104000c010600010500000000000000400205000000000000004003050000000000000040
+[DEBUG] 28 | camera camera { position=@9,9,9 target=@0,0,40 zoom=1 fov=50deg } | len=82 | 01190001000e0d040015030000000000002240000000000000224000000000000022400115030000000000000000000000000000000000000000000044400205000000000000f03f03050000000000004940
+[DEBUG] 29 | load-saved-camera id=cam1 | len=12 | 011a010463616d3101000600
+[DEBUG] 30 | camera-draft-label value=Hero | len=12 | 011b01044865726f01000600
+[DEBUG] 31 | center-model pressed=true | len=6 | 011c00010002
+[DEBUG] 32 | center-model | len=4 | 011c0000
+[DEBUG] 33 | active-utility utility-id=rotate | len=14 | 011d0106726f7461746501000600
+[DEBUG] 34 | locale value=de-DE | len=13 | 011e010564652d444501000600
+[DEBUG] 35 | set-selection shot-ids=[ s1 ] asset-ids=[ a1 a2 ] | len=25 | 011f0302613102613202733102000c010602010c0206000601
+[DEBUG] 36 | selection-method method=rectangle | len=17 | 0120010972656374616e676c6501000600
+[DEBUG] 37 | world-select merge=replace ids=[ a1 ] | len=23 | 012102026131077265706c61636502000c010600010601
+[DEBUG] 38 | set-hover asset-id=a1 | len=10 | 01220102613101000600
+[DEBUG] 39 | set-hover | len=4 | 01220000
+[DEBUG] 40 | world-pick asset-id=a1 asset-index=2 merge=toggle | len=23 | 01230202613106746f67676c6503000600010402020601
+[DEBUG] 41 | world-pick merge=replace | len=15 | 012301077265706c61636501020600
+[DEBUG] 42 | world-pointer-down | len=4 | 01240000
+[DEBUG] 43 | world-pointer-move | len=4 | 01250000
+[DEBUG] 44 | save-download | len=4 | 01260000
+[DEBUG] 45 | load-request | len=4 | 01270000
+[DEBUG] 46 | import-asset-request | len=4 | 01280000
+[DEBUG] 47 | export-shots all=true | len=6 | 012900010002
+[DEBUG] 48 | export-shots all=false | len=6 | 012900010001
+test tests::debug_dump_shooting_command_wire_baseline ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+

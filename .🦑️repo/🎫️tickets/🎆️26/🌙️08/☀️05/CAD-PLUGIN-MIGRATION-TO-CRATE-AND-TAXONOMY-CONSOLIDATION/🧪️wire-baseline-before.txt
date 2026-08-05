@@ -1,0 +1,138 @@
+[DEBUG][WIRE] add-object typology=spatial.shape.primitive.box | 35 | 0100011b7370617469616c2e73686170652e7072696d69746976652e626f7801000600
+[DEBUG][JSON] {"AddObject":{"typology":"spatial.shape.primitive.box"}}
+[DEBUG][WIRE] add-object | 4 | 01000000
+[DEBUG][JSON] {"AddObject":{"typology":null}}
+[DEBUG][WIRE] patch-object object-id=object-1 field=origin.x value="1.5" delta=2.5 | 45 | 01010303312e35086f626a6563742d31086f726967696e2e780400060101060202060003050000000000000440
+[DEBUG][JSON] {"PatchObject":{"object_id":"object-1","field":"origin.x","value":"1.5","delta":2.5}}
+[DEBUG][WIRE] patch-object object-id=object-1 field=origin.x | 28 | 010102086f626a6563742d31086f726967696e2e7802000600010601
+[DEBUG][JSON] {"PatchObject":{"object_id":"object-1","field":"origin.x","value":null,"delta":null}}
+[DEBUG][WIRE] patch-selection field=label value=Renamed delta=0.25 object-ids=[ object-1 object-2 ] | 59 | 0102040752656e616d6564056c6162656c086f626a6563742d31086f626a6563742d3204000c02060206030106010206000305000000000000d03f
+[DEBUG][JSON] {"PatchSelection":{"object_ids":["object-1","object-2"],"field":"label","value":"Renamed","delta":0.25}}
+[DEBUG][WIRE] patch-selection field=label object-ids=[ ] | 16 | 010201056c6162656c02000c00010600
+[DEBUG][JSON] {"PatchSelection":{"object_ids":[],"field":"label","value":null,"delta":null}}
+[DEBUG][WIRE] delete-object object-id=object-1 | 16 | 010301086f626a6563742d3101000600
+[DEBUG][JSON] {"DeleteObject":{"object_id":"object-1"}}
+[DEBUG][WIRE] duplicate-object object-id=object-1 | 16 | 010401086f626a6563742d3101000600
+[DEBUG][JSON] {"DuplicateObject":{"object_id":"object-1"}}
+[DEBUG][WIRE] add-node kind=solid | 13 | 01050105736f6c696401000600
+[DEBUG][JSON] {"AddNode":{"kind":"solid"}}
+[DEBUG][WIRE] rename-node node-id=node-1 value=Renamed | 25 | 0106020752656e616d6564066e6f64652d3102000601010600
+[DEBUG][JSON] {"RenameNode":{"node_id":"node-1","value":"Renamed"}}
+[DEBUG][WIRE] translate-selection dx=1 dy=-2 dz=3.5 object-ids=[ object-1 ] | 48 | 010701086f626a6563742d3104000c0106000105000000000000f03f020500000000000000c003050000000000000c40
+[DEBUG][JSON] {"TranslateSelection":{"object_ids":["object-1"],"dx":1.0,"dy":-2.0,"dz":3.5}}
+[DEBUG][WIRE] rotate-selection ax=0 ay=0 az=1 angle=1.57 object-ids=[ object-1 ] | 58 | 010801086f626a6563742d3105000c01060001050000000000000000020500000000000000000305000000000000f03f04051f85eb51b81ef93f
+[DEBUG][JSON] {"RotateSelection":{"object_ids":["object-1"],"ax":0.0,"ay":0.0,"az":1.0,"angle":1.57}}
+[DEBUG][WIRE] scale-selection sx=2 sy=2 sz=2 object-ids=[ object-1 ] | 48 | 010901086f626a6563742d3104000c010600010500000000000000400205000000000000004003050000000000000040
+[DEBUG][JSON] {"ScaleSelection":{"object_ids":["object-1"],"sx":2.0,"sy":2.0,"sz":2.0}}
+[DEBUG][WIRE] apply-transformation qid=spatial.shape.from_geometry | 35 | 010a011b7370617469616c2e73686170652e66726f6d5f67656f6d6574727901000600
+[DEBUG][JSON] {"ApplyTransformation":{"qid":"spatial.shape.from_geometry"}}
+[DEBUG][WIRE] import-cad-file name=triangle.obj payload="data:model/obj;base64,AAAA" | 50 | 010b021a646174613a6d6f64656c2f6f626a3b6261736536342c414141410c747269616e676c652e6f626a02000601010600
+[DEBUG][JSON] {"ImportCadFile":{"name":"triangle.obj","payload":"data:model/obj;base64,AAAA"}}
+[DEBUG][WIRE] patch-cad-play-reference model-definition-id=spatial.shape reference-id=ref-1 field=widthWorld value="8" delta=0.5 | 59 | 010c040138057265662d310d7370617469616c2e73686170650a7769647468576f726c64050006020106010206030306000405000000000000e03f
+[DEBUG][JSON] {"PatchCadPlayReference":{"model_definition_id":"spatial.shape","reference_id":"ref-1","field":"widthWorld","value":"8","delta":0.5}}
+[DEBUG][WIRE] patch-cad-play-reference model-definition-id=spatial.shape reference-id=ref-1 field=hidden | 40 | 010c030668696464656e057265662d310d7370617469616c2e736861706503000602010601020600
+[DEBUG][JSON] {"PatchCadPlayReference":{"model_definition_id":"spatial.shape","reference_id":"ref-1","field":"hidden","value":null,"delta":null}}
+[DEBUG][WIRE] engagement-submit pane=shape | 13 | 010d0105736861706501000600
+[DEBUG][JSON] {"EngagementSubmit":{"pane":"shape"}}
+[DEBUG][WIRE] engagement-submit | 4 | 010d0000
+[DEBUG][JSON] {"EngagementSubmit":{"pane":null}}
+[DEBUG][WIRE] focus-model-definition model-definition-id=aec.building | 20 | 010e010c6165632e6275696c64696e6701000600
+[DEBUG][JSON] {"FocusModelDefinition":{"model_definition_id":"aec.building"}}
+[DEBUG][WIRE] set-active-example example-id=hexagonal-cut-concrete-forest-left | 42 | 010f012268657861676f6e616c2d6375742d636f6e63726574652d666f726573742d6c65667401000600
+[DEBUG][JSON] {"SetActiveExample":{"example_id":"hexagonal-cut-concrete-forest-left"}}
+[DEBUG][WIRE] world-pointer-down pane=shape surface-id=cad.play.scene3d/shape x=1 y=2 z=3 | 69 | 011002166361642e706c61792e7363656e6533642f7368617065057368617065050006010106000205000000000000f03f0305000000000000004004050000000000000840
+[DEBUG][JSON] {"WorldPointerDown":{"pane":"shape","surface_id":"cad.play.scene3d/shape","x":1.0,"y":2.0,"z":3.0}}
+[DEBUG][WIRE] world-pointer-down | 4 | 01100000
+[DEBUG][JSON] {"WorldPointerDown":{"pane":null,"surface_id":null,"x":null,"y":null,"z":null}}
+[DEBUG][WIRE] camera pane=cad.play.scene3d/building camera { position=@12,-12,8 target=@0,0,0 zoom=1 fov=50 projection { kind=threePoint orthographic-view=top axonometric-variant=isometric axonometric-angle-a=15 axonometric-angle-b=12 axonometric-quadrant=ne oblique-variant=cavalier oblique-angle=45 oblique-depth=1 one-point-axis=y fov=50 two-point-shift=0 curvilinear-fov=120 curvilinear-strength=1 curvilinear-mapping=fisheye } } | 263 | 011108196361642e706c61792e7363656e6533642f6275696c64696e6708636176616c69657207666973686579650969736f6d6574726963026e650a7468726565506f696e7403746f70017902000600010e0d05001503000000000000284000000000000028c000000000000020400115030000000000000000000000000000000000000000000000000205000000000000f03f03050000000000004940040e0d0f00060501060602060303050000000000002e4004050000000000002840050604060601070500000000008046400805000000000000f03f0906070a0500000000000049400b0500000000000000000c050000000000005e400d05000000000000f03f0e0602
+[DEBUG][JSON] {"SetCamera":{"pane":"cad.play.scene3d/building","camera":{"position":[12.0,-12.0,8.0],"target":[0.0,0.0,0.0],"zoom":1.0,"fov":50.0,"projection":{"kind":"threePoint","orthographicView":"top","axonometricVariant":"isometric","axonometricAngleA":15.0,"axonometricAngleB":12.0,"axonometricQuadrant":"ne","obliqueVariant":"cavalier","obliqueAngle":45.0,"obliqueDepth":1.0,"onePointAxis":"y","fov":50.0,"twoPointShift":0.0,"curvilinearFov":120.0,"curvilinearStrength":1.0,"curvilinearMapping":"fisheye"}}}}
+[DEBUG][WIRE] camera camera { position=@1,2,3 target=@4,5,6 zoom=2 fov=60 projection { kind=threePoint orthographic-view=top axonometric-variant=isometric axonometric-angle-a=15 axonometric-angle-b=12 axonometric-quadrant=ne oblique-variant=cavalier oblique-angle=45 oblique-depth=1 one-point-axis=y fov=50 two-point-shift=0 curvilinear-fov=120 curvilinear-strength=1 curvilinear-mapping=fisheye } } | 234 | 01110708636176616c69657207666973686579650969736f6d6574726963026e650a7468726565506f696e7403746f70017901010e0d05001503000000000000f03f000000000000004000000000000008400115030000000000001040000000000000144000000000000018400205000000000000004003050000000000004e40040e0d0f00060401060502060203050000000000002e4004050000000000002840050603060600070500000000008046400805000000000000f03f0906060a0500000000000049400b0500000000000000000c050000000000005e400d05000000000000f03f0e0601
+[DEBUG][JSON] {"SetCamera":{"pane":null,"camera":{"position":[1.0,2.0,3.0],"target":[4.0,5.0,6.0],"zoom":2.0,"fov":60.0,"projection":{"kind":"threePoint","orthographicView":"top","axonometricVariant":"isometric","axonometricAngleA":15.0,"axonometricAngleB":12.0,"axonometricQuadrant":"ne","obliqueVariant":"cavalier","obliqueAngle":45.0,"obliqueDepth":1.0,"onePointAxis":"y","fov":50.0,"twoPointShift":0.0,"curvilinearFov":120.0,"curvilinearStrength":1.0,"curvilinearMapping":"fisheye"}}}}
+[DEBUG][WIRE] projection pane=cad.play.scene3d/shape field=orthographicView value-str=top value-num=12.5 param=fov | 74 | 011204166361642e706c61792e7363656e6533642f736861706503666f76106f7274686f677261706869635669657703746f700500060001060202060303050000000000002940040601
+[DEBUG][JSON] {"SetProjection":{"pane":"cad.play.scene3d/shape","field":"orthographicView","value_str":"top","value_num":12.5,"param":"fov"}}
+[DEBUG][WIRE] projection | 4 | 01120000
+[DEBUG][JSON] {"SetProjection":{"pane":null,"field":null,"value_str":null,"value_num":null,"param":null}}
+[DEBUG][WIRE] projection-param pane=cad.play.scene3d/shape field=fov value-str=x value-num=45 param=fov | 55 | 011303166361642e706c61792e7363656e6533642f736861706503666f7601780500060001060102060203050000000000804640040601
+[DEBUG][JSON] {"SetProjectionParam":{"pane":"cad.play.scene3d/shape","field":"fov","value_str":"x","value_num":45.0,"param":"fov"}}
+[DEBUG][WIRE] projection-param | 4 | 01130000
+[DEBUG][JSON] {"SetProjectionParam":{"pane":null,"field":null,"value_str":null,"value_num":null,"param":null}}
+[DEBUG][WIRE] dislocate-option pane=building option=rotate pressed=false | 28 | 011402086275696c64696e6706726f74617465030006000106010201
+[DEBUG][JSON] {"SetDislocateOption":{"pane":"building","option":"rotate","pressed":false}}
+[DEBUG][WIRE] dislocate-option option=move | 12 | 011401046d6f766501010600
+[DEBUG][JSON] {"SetDislocateOption":{"pane":null,"option":"move","pressed":null}}
+[DEBUG][WIRE] set-selection mode=edge object-id=object-1 merge=replace ids=[ 3 9 ] | 40 | 0115030465646765086f626a6563742d31077265706c616365040006000116020612020601030602
+[DEBUG][JSON] {"SetSelection":{"mode":"edge","ids":[3,9],"object_id":"object-1","merge":"replace"}}
+[DEBUG][WIRE] set-selection mode=mesh merge=add ids=[ ] | 22 | 01150203616464046d65736803000601010c00030600
+[DEBUG][JSON] {"SetSelection":{"mode":"mesh","ids":[],"object_id":null,"merge":"add"}}
+[DEBUG][WIRE] set-node-selection node-ids=[ node-1 node-2 ] | 25 | 011602066e6f64652d31066e6f64652d3201000c0206000601
+[DEBUG][JSON] {"SetNodeSelection":{"node_ids":["node-1","node-2"]}}
+[DEBUG][WIRE] world-select merge=replace ids=[ object-1 object-2 ] | 40 | 011703086f626a6563742d31086f626a6563742d32077265706c61636502000c0206000601010602
+[DEBUG][JSON] {"WorldSelect":{"ids":["object-1","object-2"],"merge":"replace"}}
+[DEBUG][WIRE] world-hover object-id=object-1 | 16 | 011801086f626a6563742d3101000600
+[DEBUG][JSON] {"WorldHover":{"object_id":"object-1"}}
+[DEBUG][WIRE] world-hover | 4 | 01180000
+[DEBUG][JSON] {"WorldHover":{"object_id":null}}
+[DEBUG][WIRE] set-hover object-id=object-1 mode=edge id=3 | 27 | 0119020465646765086f626a6563742d3103000601010600020403
+[DEBUG][JSON] {"SetHover":{"object_id":"object-1","mode":"edge","id":3}}
+[DEBUG][WIRE] set-hover | 4 | 01190000
+[DEBUG][JSON] {"SetHover":{"object_id":null,"mode":null,"id":null}}
+[DEBUG][WIRE] world-pick id=7 merge=replace granularity=edge object-id=object-1 surface-id=cad.play.scene3d/building pane=building | 79 | 011a05086275696c64696e67196361642e706c61792e7363656e6533642f6275696c64696e670465646765086f626a6563742d31077265706c61636506000407010604020602030603040601050600
+[DEBUG][JSON] {"WorldPick":{"id":7,"merge":"replace","granularity":"edge","object_id":"object-1","surface_id":"cad.play.scene3d/building","pane":"building"}}
+[DEBUG][WIRE] world-pick merge=replace granularity=mesh | 23 | 011a02046d657368077265706c61636502010601020600
+[DEBUG][JSON] {"WorldPick":{"id":null,"merge":"replace","granularity":"mesh","object_id":null,"surface_id":null,"pane":null}}
+[DEBUG][WIRE] selection-method method=lasso | 13 | 011b01056c6173736f01000600
+[DEBUG][JSON] {"SetSelectionMethod":{"method":"lasso"}}
+[DEBUG][WIRE] reference-selection pane=shape model-definition-id=spatial.shape reference-id=ref-1 | 39 | 011c03057265662d310573686170650d7370617469616c2e736861706503000601010602020600
+[DEBUG][JSON] {"SetReferenceSelection":{"pane":"shape","model_definition_id":"spatial.shape","reference_id":"ref-1"}}
+[DEBUG][WIRE] reference-selection | 4 | 011c0000
+[DEBUG][JSON] {"SetReferenceSelection":{"pane":null,"model_definition_id":null,"reference_id":null}}
+[DEBUG][WIRE] reference-hover reference-id=ref-1 | 13 | 011d01057265662d3101000600
+[DEBUG][JSON] {"ReferenceHover":{"reference_id":"ref-1"}}
+[DEBUG][WIRE] reference-hover | 4 | 011d0000
+[DEBUG][JSON] {"ReferenceHover":{"reference_id":null}}
+[DEBUG][WIRE] engagement-input value=SetHeight2.5 pane=shape | 29 | 011e020c536574486569676874322e3505736861706502000600010601
+[DEBUG][JSON] {"EngagementInput":{"value":"SetHeight2.5","pane":"shape"}}
+[DEBUG][WIRE] engagement-input value="" | 8 | 011e010001000600
+[DEBUG][JSON] {"EngagementInput":{"value":"","pane":null}}
+[DEBUG][WIRE] engagement-possible-select pane=shape possible-id=primitive.box | 30 | 011f020d7072696d69746976652e626f7805736861706502000601010600
+[DEBUG][JSON] {"EngagementPossibleSelect":{"pane":"shape","possible_id":"primitive.box"}}
+[DEBUG][WIRE] engagement-possible-select possible-id=primitive.box | 21 | 011f010d7072696d69746976652e626f7801010600
+[DEBUG][JSON] {"EngagementPossibleSelect":{"pane":null,"possible_id":"primitive.box"}}
+[DEBUG][WIRE] engagement-repeat-last pane=shape | 13 | 01200105736861706501000600
+[DEBUG][JSON] {"EngagementRepeatLast":{"pane":"shape"}}
+[DEBUG][WIRE] engagement-repeat-last | 4 | 01200000
+[DEBUG][JSON] {"EngagementRepeatLast":{"pane":null}}
+[DEBUG][WIRE] engagement-abort | 4 | 01210000
+[DEBUG][JSON] "EngagementAbort"
+[DEBUG][WIRE] world-pointer-move x=3 y=4 z=0 | 34 | 01220003000500000000000008400105000000000000104002050000000000000000
+[DEBUG][JSON] {"WorldPointerMove":{"x":3.0,"y":4.0,"z":0.0}}
+[DEBUG][WIRE] world-pointer-move | 4 | 01220000
+[DEBUG][JSON] {"WorldPointerMove":{"x":null,"y":null,"z":null}}
+[DEBUG][WIRE] set-primitive-selection object-id=object-1 primitive-id=solid-1 kind=solid | 36 | 012303086f626a6563742d3105736f6c696407736f6c69642d3103000600010602020601
+[DEBUG][JSON] {"SetPrimitiveSelection":{"object_id":"object-1","primitive_id":"solid-1","kind":"solid"}}
+[DEBUG][WIRE] set-primitive-selection object-id=object-1 | 16 | 012301086f626a6563742d3101000600
+[DEBUG][JSON] {"SetPrimitiveSelection":{"object_id":"object-1","primitive_id":null,"kind":null}}
+[DEBUG][WIRE] toggle-sun | 4 | 01240000
+[DEBUG][JSON] "ToggleSun"
+[DEBUG][WIRE] sun-azimuth value=45 | 14 | 0125000100050000000000804640
+[DEBUG][JSON] {"SetSunAzimuth":{"value":45.0}}
+[DEBUG][WIRE] sun-elevation value=35 | 14 | 0126000100050000000000804140
+[DEBUG][JSON] {"SetSunElevation":{"value":35.0}}
+[DEBUG][WIRE] sun-intensity value=0.85 | 14 | 012700010005333333333333eb3f
+[DEBUG][JSON] {"SetSunIntensity":{"value":0.85}}
+[DEBUG][WIRE] active-utility utility-id=dislocate | 17 | 012801096469736c6f6361746501000600
+[DEBUG][JSON] {"SetActiveUtility":{"utility_id":"dislocate"}}
+[DEBUG][WIRE] locale value=de-DE | 13 | 0129010564652d444501000600
+[DEBUG][JSON] {"SetLocale":{"value":"de-DE"}}
+[DEBUG][WIRE] terminology value=reuse | 13 | 012a0105726575736501000600
+[DEBUG][JSON] {"SetTerminology":{"value":"reuse"}}
+[DEBUG][WIRE] save-selected | 4 | 012b0000
+[DEBUG][JSON] "SaveSelected"
+[DEBUG][WIRE] save-in-play | 4 | 012c0000
+[DEBUG][JSON] "SaveInPlay"
+[DEBUG][WIRE] save-current format=step | 12 | 012d01047374657001000600
+[DEBUG][JSON] {"SaveCurrent":{"format":"step"}}
+[DEBUG][WIRE] save-current | 4 | 012d0000
+[DEBUG][JSON] {"SaveCurrent":{"format":null}}
+[DEBUG][WIRE] load-raw-request | 4 | 012e0000
+[DEBUG][JSON] "LoadRawRequest"

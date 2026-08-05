@@ -73,6 +73,42 @@ mod tests {
     use super::*;
     use sourcing::CurateDocument;
 
+    /// 🧪️ [DEBUG] TICKET 26/08/05/SOURCING-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION wire
+    /// baseline dump — one value per `SourcingCurateCommand` variant, printed as
+    /// `print_op(&c) | bytes.len() | hex(bytes)`. Delete once the post-migration diff is clean.
+    #[test]
+    fn wire_baseline_dump() {
+        fn hex(bytes: &[u8]) -> String {
+            bytes.iter().map(|b| format!("{b:02x}")).collect()
+        }
+        let commands: Vec<SourcingCurateCommand> = vec![
+            SourcingCurateCommand::SetDocumentJson { json: "{}".into() },
+            SourcingCurateCommand::SetActiveExample { example_id: "demo-stock".into() },
+            SourcingCurateCommand::StockFromCatalogue,
+            SourcingCurateCommand::CurateAdd { object_id: "beam-glulam-gl24h".into() },
+            SourcingCurateCommand::CurateSetCount { object_id: "beam-glulam-gl24h".into(), delta: Some(1.0), value: None },
+            SourcingCurateCommand::CurateSetCount { object_id: "beam-glulam-gl24h".into(), delta: None, value: Some(4.0) },
+            SourcingCurateCommand::CurateRemove { object_id: "beam-glulam-gl24h".into() },
+            SourcingCurateCommand::DropOnPool { object_id: "beam-glulam-gl24h".into() },
+            SourcingCurateCommand::DropOnCurated { object_id: "beam-glulam-gl24h".into() },
+            SourcingCurateCommand::SetFilterQuery { value: "glulam".into() },
+            SourcingCurateCommand::SetFilterModule { module_id: "beams".into(), enabled: true },
+            SourcingCurateCommand::SetFilterTypology { path: "beams/steel".into() },
+            SourcingCurateCommand::SetFilterMinAvailability { delta: Some(1.0), value: None },
+            SourcingCurateCommand::SetFilterMinAvailability { delta: None, value: Some(5.0) },
+            SourcingCurateCommand::SortTable { column_id: "availability".into(), direction: "desc".into() },
+            SourcingCurateCommand::SelectRow { object_id: Some("beam-glulam-gl24h".into()) },
+            SourcingCurateCommand::SelectRow { object_id: None },
+            SourcingCurateCommand::WorldSelect { ids: vec!["beam-glulam-gl24h".into(), "beam-kvh-c24".into()] },
+            SourcingCurateCommand::SetLocale { value: "de-DE".into() },
+        ];
+        for command in &commands {
+            let text = protocol::OpText::print_op(command);
+            let bytes = protocol::OpBinary::encode_op(command).expect("encode");
+            println!("{text} | {} | {}", bytes.len(), hex(&bytes));
+        }
+    }
+
     /// 🌱️ Mirrors `sourcing_engine`'s private test-only helper (see that crate's tests for why this
     /// tiny fixture-assembly helper is duplicated rather than shared across crates).
     fn sample_document() -> CurateDocument {

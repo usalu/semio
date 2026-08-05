@@ -12,6 +12,7 @@ pub mod node_graph_viewport {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "node-graph-viewport")]
     pub struct NodeGraphViewport {
         #[dsl(block)]
         pub camera: CameraJson,
@@ -29,6 +30,7 @@ pub mod node_graph_hover {
 
     /// 🖱️ Hover is surface-local: the renderer owns the highlight, so the app emits nothing.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "node-graph-hover")]
     pub struct NodeGraphHover {}
 
     pub fn handle(_payload: &NodeGraphHover, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
@@ -43,6 +45,7 @@ pub mod open_spotlight {
 
     /// 🔦️ Opening the spotlight is renderer chrome; the commit comes back as `spotlightCommit`.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "open-spotlight")]
     pub struct OpenSpotlight {}
 
     pub fn handle(_payload: &OpenSpotlight, _doc: &DocumentView<'_, FlowFixture>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
@@ -57,6 +60,7 @@ pub mod replace_image {
 
     /// 🖼️ Opening the host file picker is renderer chrome; the picked media returns as a widget patch.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "replace-image")]
     pub struct ReplaceImage {
         pub id: String,
     }
@@ -72,6 +76,7 @@ pub mod set_preview_off {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "set-preview-off")]
     pub struct SetPreviewOff {
         pub ids: Vec<String>,
         pub value: bool,

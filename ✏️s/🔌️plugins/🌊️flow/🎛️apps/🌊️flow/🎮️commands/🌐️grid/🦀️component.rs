@@ -16,6 +16,7 @@ pub mod set_grid_visible {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "set-grid-visible")]
     pub struct SetGridVisible {
         pub pressed: Option<bool>,
     }
@@ -31,6 +32,7 @@ pub mod set_grid_snap_enabled {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "set-grid-snap-enabled")]
     pub struct SetGridSnapEnabled {
         pub pressed: Option<bool>,
     }
@@ -46,6 +48,7 @@ pub mod set_grid_factor {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "set-grid-factor")]
     pub struct SetGridFactor {
         pub value: f64,
     }

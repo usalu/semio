@@ -1,0 +1,51 @@
+//! 🗣️ Sequence play app commands — host-pushed locale.
+
+use crate::apps::sequence::config::{SequenceConfig, SequenceConfigOperation};
+use crate::artifacts::sequence::op::SequenceOperation;
+use crate::artifacts::sequence::SequenceFixture;
+use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️SetLocale
+pub mod set_locale {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "set-locale")]
+    pub struct SetLocale {
+        pub value: String,
+    }
+
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, SequenceFixture>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceOperation, SequenceConfigOperation>, Fault> {
+        Ok(Emit::config(vec![SequenceConfigOperation::SetLocale { value: payload.value.clone() }]))
+    }
+}
+//#endregion 🔖️SetLocale
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use crate::apps::sequence::testkit::{dispatch, new_app, render};
+    use crate::apps::sequence::SequenceCommand;
+
+    use super::set_locale::SetLocale;
+
+    #[test]
+    fn sequence_labels_render_native_english_by_default() {
+        let mut app = new_app();
+        let document_json = render(&mut app, crate::apps::sequence::panels::document::SEQUENCE_PLAY_BODY_DOCUMENT);
+        assert!(document_json.contains("\"Steps\""));
+        assert!(document_json.contains("\"Flow edges\""));
+    }
+
+    #[test]
+    fn sequence_labels_render_german_locale() {
+        let mut app = new_app();
+        dispatch(&mut app, SequenceCommand::SetLocale(SetLocale { value: "de".into() }));
+        let document_json = render(&mut app, crate::apps::sequence::panels::document::SEQUENCE_PLAY_BODY_DOCUMENT);
+        assert!(document_json.contains("Schritte"));
+        assert!(document_json.contains("Ablaufkanten"));
+        assert!(!document_json.contains("\"Steps\""));
+    }
+}
+//#endregion 🧪️Tests

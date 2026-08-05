@@ -1,0 +1,50 @@
+//! ⚖️ Shooting artifact — state-patch-representation wire codec + laws (was: constitutional `protocol`).
+//!
+//! `protocol::OpBinary for ShootingOperation` is implemented directly in `🔧️op/🦀️component.rs` (it needs
+//! the `ShootingOperationDsl` mirror that lives alongside the operation enum). This component only adds
+//! the thin artifact-facing `encode_op`/`decode_op` wrappers plus the op text↔binary equivalence law.
+//!
+//! The app's typed `ShootingCommand` enum — which used to share the old `📡️protocol` crate with this
+//! codec — is an APP concern, not an artifact one: it now lives in `🎛️apps/🎥️shooting/🦀️component.rs`,
+//! assembled from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
+
+use crate::artifacts::shooting::op::ShootingOperation;
+use protocol::OpBinary;
+
+/// 📦️ Encodes a `ShootingOperation` to its binary state-patch form.
+pub fn encode_op(operation: &ShootingOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+    operation.encode_op()
+}
+
+/// 📖️ Decodes a `ShootingOperation` from its binary state-patch form.
+pub fn decode_op(bytes: &[u8]) -> Result<ShootingOperation, protocol::ProtocolError> {
+    ShootingOperation::decode_op(bytes)
+}
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::artifacts::shooting::ShootingFixture;
+
+    #[test]
+    fn op_binary_round_trips_and_agrees_with_text() {
+        let operation = ShootingOperation::SetActiveShot { shot_id: Some("s1".into()) };
+        store::test_support::assert_op_text_binary_equivalence(&operation);
+        let bytes = encode_op(&operation).expect("encode");
+        assert_eq!(decode_op(&bytes).expect("decode"), operation);
+    }
+
+    #[test]
+    fn shooting_document_text_round_trips_store_with_applied_operation() {
+        use protocol::CollectionOperation;
+        use store::DocumentCommand;
+
+        let mut store = store::DocumentStore::<ShootingFixture, ShootingOperation>::new(store::create_document_envelope(crate::artifacts::shooting::SHOOTING_FIXTURE_SCHEMA, "shooting", crate::artifacts::shooting::empty_shooting_fixture(), None));
+        let asset = crate::artifacts::shooting::ShootingAsset { id: "a1".into(), name: "Asset".into(), url: "/mesh/a1.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None };
+        store.dispatch(DocumentCommand::Apply { operations: vec![ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: asset, at: 0 })], description: None }).expect("apply");
+        store::test_support::assert_document_text_round_trip(&store);
+        store::test_support::assert_document_pack_round_trip(&store);
+    }
+}
+//#endregion 🧪️Tests

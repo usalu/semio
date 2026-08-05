@@ -12,6 +12,7 @@ pub mod set_lod_mode {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "set-lod-mode")]
     pub struct SetLodMode {
         pub value: String,
     }
@@ -33,6 +34,7 @@ pub mod set_proximity_distance {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "set-proximity-distance")]
     pub struct SetProximityDistance {
         pub value: f64,
     }

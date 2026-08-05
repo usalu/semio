@@ -32,7 +32,7 @@ mod tests {
     use block_2d::Block2dDefinition;
     use block_3d::Block3dDefinition;
     use block_5d::Block5dDefinition;
-    use cad_document::CadScene;
+    use cad_document::artifacts::cad::CadScene;
     use dag_app::DagDocument;
     use din16798::Document as Din16798Document;
     use din18599::Document as Din18599Document;
@@ -62,7 +62,7 @@ mod tests {
     use mathematical::MathProjection;
     use note_app::NoteDocument;
     use playbook::PlaybookSpec;
-    use present::PresentDeck;
+    use present::artifacts::present::PresentDeck;
     use procedural_2d::Procedural2dDocument;
     use procedural_3d::Procedural3dDocument;
     use process_3d::Process3dDocument;
@@ -79,9 +79,9 @@ mod tests {
     use sourcing::CurateDocument;
     use space::{CollectionProjection, SpaceProjection};
     use trinity_ram::GraphFixture;
-    use vcs_app::VcsDemoProjection;
+    use vcs_app::artifacts::vcs::VcsDemoProjection;
     use vdi3805::Document as Vdi3805Document;
-    use writer::WriterProjection;
+    use writer::artifacts::writer::WriterProjection;
     //#endregion 🔖️AppTypes
 
     //#region 🔖️Registry

@@ -200,6 +200,73 @@ mod tests {
         ShootingAsset { id: id.into(), name: format!("Asset {id}"), url: format!("/mesh/{id}.glb"), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None }
     }
 
+    // [DEBUG] wire baseline dump — one value per ShootingCommand variant, in declaration order.
+    // TEMPLATE.md §0.4: prove the app_commands! decomposition does not silently rewrite the wire format.
+    fn every_shooting_command() -> Vec<ShootingCommand> {
+        vec![
+            ShootingCommand::SetFixtureJson { json: "{\"schema\":\"shooting.fixture\"}".into() },
+            ShootingCommand::SetActiveExample { example_id: "base-icon".into() },
+            ShootingCommand::SetActiveShot { shot_id: Some("s1".into()) },
+            ShootingCommand::SetActiveShot { shot_id: None },
+            ShootingCommand::SetActiveAsset { asset_id: Some("a1".into()) },
+            ShootingCommand::SetActiveAsset { asset_id: None },
+            ShootingCommand::SetShotCamera { shot_id: "s1".into(), camera: ShootingCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], zoom: 1.0, fov: 50.0, up: Some([0.0, 0.0, 1.0]), projection: Some("perspective".into()) } },
+            ShootingCommand::SaveCamera,
+            ShootingCommand::SetSunAzimuth { value: 45.0 },
+            ShootingCommand::SetSunElevation { value: 35.0 },
+            ShootingCommand::SetSunIntensity { value: 2.4 },
+            ShootingCommand::SetAmbientIntensity { value: 1.15 },
+            ShootingCommand::SetMaterialRoughness { value: 0.5 },
+            ShootingCommand::SetShadowEnabled { value: true },
+            ShootingCommand::ToggleSun { value: false },
+            ShootingCommand::SetActiveShotLabel { value: "Overview".into() },
+            ShootingCommand::SetActiveShotFormat { value: "png".into() },
+            ShootingCommand::SetActiveShotShape { value: "ellipse".into() },
+            ShootingCommand::PatchShots { shot_ids: vec!["s1".into(), "s2".into()], field: "label".into(), value: "Hero".into() },
+            ShootingCommand::PatchAssets { asset_ids: vec!["a1".into()], field: "name".into(), value: "Renamed".into() },
+            ShootingCommand::AddShot { format: "svg".into(), shape: "rectangle".into() },
+            ShootingCommand::AddAsset { format: "glb".into() },
+            ShootingCommand::ImportAsset { payload: "data:model/gltf-binary;base64,AAA=".into(), name: Some("Imported".into()) },
+            ShootingCommand::ImportAsset { payload: "data:model/gltf-binary;base64,BBB=".into(), name: None },
+            ShootingCommand::ResetFixture,
+            ShootingCommand::TranslateSelection { asset_ids: vec!["a1".into(), "a2".into()], dx: 1.0, dy: -2.0, dz: 3.5 },
+            ShootingCommand::RotateSelection { asset_ids: vec!["a1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 1.5 },
+            ShootingCommand::ScaleSelection { asset_ids: vec!["a1".into()], sx: 2.0, sy: 2.0, sz: 2.0 },
+            ShootingCommand::SetCamera { camera: ShootingCamera { position: [9.0, 9.0, 9.0], target: [0.0, 0.0, 40.0], zoom: 1.0, fov: 50.0, up: None, projection: None } },
+            ShootingCommand::LoadSavedCamera { id: "cam1".into() },
+            ShootingCommand::SetCameraDraftLabel { value: "Hero".into() },
+            ShootingCommand::SetCenterModel { pressed: Some(true) },
+            ShootingCommand::SetCenterModel { pressed: None },
+            ShootingCommand::SetActiveUtility { utility_id: "rotate".into() },
+            ShootingCommand::SetLocale { value: "de-DE".into() },
+            ShootingCommand::SetSelection { shot_ids: vec!["s1".into()], asset_ids: vec!["a1".into(), "a2".into()] },
+            ShootingCommand::SetSelectionMethod { method: "rectangle".into() },
+            ShootingCommand::WorldSelect { ids: vec!["a1".into()], merge: "replace".into() },
+            ShootingCommand::SetHover { asset_id: Some("a1".into()) },
+            ShootingCommand::SetHover { asset_id: None },
+            ShootingCommand::WorldPick { asset_id: Some("a1".into()), asset_index: Some(2), merge: "toggle".into() },
+            ShootingCommand::WorldPick { asset_id: None, asset_index: None, merge: "replace".into() },
+            ShootingCommand::WorldPointerDown,
+            ShootingCommand::WorldPointerMove,
+            ShootingCommand::SaveDownload,
+            ShootingCommand::LoadRequest,
+            ShootingCommand::ImportAssetRequest,
+            ShootingCommand::ExportShots { all: true },
+            ShootingCommand::ExportShots { all: false },
+        ]
+    }
+
+    #[test]
+    fn debug_dump_shooting_command_wire_baseline() {
+        use protocol::{OpBinary, OpText};
+        for (index, command) in every_shooting_command().into_iter().enumerate() {
+            let text = command.print_op();
+            let bytes = command.encode_op().expect("encode_op");
+            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+            println!("[DEBUG] {index:02} | {text} | len={} | {hex}", bytes.len());
+        }
+    }
+
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let operation = ShootingOperation::SetActiveShot { shot_id: Some("s1".into()) };

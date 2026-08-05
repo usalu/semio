@@ -1528,6 +1528,18 @@ pub mod app {
             let Some(app_root) = app_root else {
                 panic!("constitutional-crate gate: no `🎛️apps/` directory found next to {manifest_dir} (tried ../🎛️apps, ../../🎛️apps, ../../../🎛️apps, ../../../../🎛️apps)");
             };
+            // 🗿️ A plugin already migrated to the one-crate-per-plugin taxonomy (master ticket
+            // `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`) has no per-slot crates left
+            // to find — its slots are `🦀️component.rs` files under `🗿️artifacts/<a>/`. Detected by the same
+            // marker the registry's discovery contract uses (a plugin-root `📦️lib.rs` beside `🗿️artifacts/`)
+            // and checked against the taxonomy shape instead. Mirrors the registry's `LEGACY_LAYOUT_TOLERANT`
+            // flag: both shapes pass while the migration is in flight.
+            if let Some(plugin_root) = app_root.parent() {
+                if plugin_root.join("📦️lib.rs").is_file() && plugin_root.join("🗿️artifacts").is_dir() {
+                    assert_taxonomy_components(plugin_root, &app_root);
+                    return;
+                }
+            }
             let is_flat = app_root.join("⚡️implementations").join("🦀️rust").join("Cargo.toml").is_file();
             let app_dirs: Vec<std::path::PathBuf> = if is_flat {
                 vec![app_root.clone()]
@@ -1553,6 +1565,38 @@ pub mod app {
                     }
                 }
                 assert!(missing.is_empty(), "constitutional-crate gate: {} is missing slot(s): {}", app_dir.display(), missing.join(", "));
+            }
+        }
+
+        /// 🗿️ The taxonomy-shape half of [`assert_constitutional_crates`]: every `🗿️artifacts/<artifact>/`
+        /// carries all five component slots as `🦀️component.rs` leaves, and every `🎛️apps/<app>/` has its
+        /// own `🦀️component.rs`. The Rust-side twin of the registry script's `validateTaxonomyTree`, kept
+        /// here so a plugin's own `cargo test` catches a half-finished migration without waiting for the
+        /// TS gate.
+        fn assert_taxonomy_components(plugin_root: &std::path::Path, app_root: &std::path::Path) {
+            const ARTIFACT_COMPONENTS: [&str; 5] = ["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr"];
+            const LEAF: &str = "🦀️component.rs";
+            let subdirectories = |dir: &std::path::Path| -> Vec<std::path::PathBuf> {
+                std::fs::read_dir(dir)
+                    .unwrap_or_else(|error| panic!("taxonomy gate: cannot read {}: {error}", dir.display()))
+                    .filter_map(|entry| entry.ok())
+                    .map(|entry| entry.path())
+                    .filter(|path| path.is_dir())
+                    .collect()
+            };
+
+            let artifacts_root = plugin_root.join("🗿️artifacts");
+            let artifacts = subdirectories(&artifacts_root);
+            assert!(!artifacts.is_empty(), "taxonomy gate: {} declares no artifacts", artifacts_root.display());
+            for artifact in &artifacts {
+                let missing: Vec<&str> = ARTIFACT_COMPONENTS.into_iter().filter(|component| !artifact.join(component).join(LEAF).is_file()).collect();
+                assert!(missing.is_empty(), "taxonomy gate: artifact {} is missing component(s): {}", artifact.display(), missing.join(", "));
+            }
+
+            let apps = subdirectories(app_root);
+            assert!(!apps.is_empty(), "taxonomy gate: {} declares no apps", app_root.display());
+            for app in &apps {
+                assert!(app.join(LEAF).is_file(), "taxonomy gate: app {} is missing its {LEAF}", app.display());
             }
         }
 
@@ -2940,7 +2984,8 @@ pub mod app {
     /// The two are independent; combine them or use `ctx = ()` when only the keys differ.
     #[macro_export]
     macro_rules! app_commands {
-    ($vis:vis enum $Name:ident for $Projection:ty, $Operation:ty, $Config:ty, $ConfigOperation:ty, ctx = $Ctx:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
+    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Operation:ty, $Config:ty, $ConfigOperation:ty, ctx = $Ctx:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
+        $(#[$meta])*
         #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslOps)]
         $vis enum $Name {
             $(
@@ -2967,7 +3012,8 @@ pub mod app {
         }
     };
 
-    ($vis:vis enum $Name:ident for $Projection:ty, $Operation:ty, $Config:ty, $ConfigOperation:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
+    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Operation:ty, $Config:ty, $ConfigOperation:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
+        $(#[$meta])*
         #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslOps)]
         $vis enum $Name {
             $(
@@ -2993,7 +3039,8 @@ pub mod app {
         }
     };
 
-    ($vis:vis enum $Name:ident for $Projection:ty, $Operation:ty, $Config:ty, $ConfigOperation:ty { $($id:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
+    ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Projection:ty, $Operation:ty, $Config:ty, $ConfigOperation:ty { $($id:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
+        $(#[$meta])*
         #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslOps)]
         $vis enum $Name {
             $(

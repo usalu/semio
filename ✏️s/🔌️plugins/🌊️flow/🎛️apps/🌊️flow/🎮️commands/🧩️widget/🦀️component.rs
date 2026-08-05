@@ -18,6 +18,7 @@ pub mod add_widget {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "add-widget")]
     pub struct AddWidget {
         pub kind: String,
         pub neuron_kind: Option<String>,
@@ -53,6 +54,7 @@ pub mod remove_widget {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "remove-widget")]
     pub struct RemoveWidget {
         pub widget_id: String,
     }
@@ -79,6 +81,7 @@ pub mod rename_flow_widget {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "rename-flow-widget")]
     pub struct RenameFlowWidget {
         pub old_id: String,
         pub value: String,
@@ -141,6 +144,7 @@ pub mod patch_flow_widgets {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "patch-flow-widgets")]
     pub struct PatchFlowWidgets {
         pub widget_ids: Vec<String>,
         pub field: String,
@@ -188,6 +192,7 @@ pub mod move_media_node {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "move-media-node")]
     pub struct MoveMediaNode {
         pub node_id: String,
         pub x: f64,

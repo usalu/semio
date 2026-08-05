@@ -12,6 +12,7 @@ pub mod set_catalogue_sections {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "set-catalogue-sections")]
     pub struct SetCatalogueSections {
         pub sections_json: String,
     }

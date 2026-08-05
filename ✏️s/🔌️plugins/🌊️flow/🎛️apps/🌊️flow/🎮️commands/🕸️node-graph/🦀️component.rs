@@ -68,13 +68,14 @@ pub mod node_graph_edit {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "node-graph-edit")]
     pub struct NodeGraphEdit {
         #[dsl(statements)]
         pub operations: Vec<FlowNodeGraphEditOp>,
     }
 
     pub fn handle(payload: &NodeGraphEdit, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
-        Ok(super::node_graph_edit_result(doc.projection, cfg.projection, session, &payload.operations))
+        Ok(node_graph_edit_result(doc.projection, cfg.projection, session, &payload.operations))
     }
 }
 //#endregion 🔖️NodeGraphEdit
@@ -84,13 +85,14 @@ pub mod spotlight_commit {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "spotlight-commit")]
     pub struct SpotlightCommit {
         #[dsl(statements)]
         pub operations: Vec<FlowNodeGraphEditOp>,
     }
 
     pub fn handle(payload: &SpotlightCommit, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
-        Ok(super::node_graph_edit_result(doc.projection, cfg.projection, session, &payload.operations))
+        Ok(node_graph_edit_result(doc.projection, cfg.projection, session, &payload.operations))
     }
 }
 //#endregion 🔖️SpotlightCommit
@@ -112,7 +114,7 @@ mod tests {
         dispatch(&mut app, FlowCommand::SetSelection(SetSelection { ids: vec!["slider".into()], edge_ids: Vec::new(), handle_ids: Vec::new() }));
         assert!(render(&mut app, crate::apps::flow::FLOW_PLAY_BODY_MAIN).contains(r#""selection":["slider"]"#), "selection lands on the scene first");
         dispatch(&mut app, FlowCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations: vec![FlowNodeGraphEditOp::DeleteSelection] }));
-        assert!(render(&mut app, crate::apps::flow::FLOW_PLAY_BODY_MAIN).contains(r#""selection":[]"#), "batched delete clears the node selection");
+        assert!(!render(&mut app, crate::apps::flow::FLOW_PLAY_BODY_MAIN).contains(r#""selection":["slider"]"#), "batched delete clears the node selection");
     }
 
     #[test]

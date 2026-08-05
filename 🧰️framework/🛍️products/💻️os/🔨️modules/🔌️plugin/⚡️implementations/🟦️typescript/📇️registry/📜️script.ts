@@ -673,11 +673,15 @@ const CONSTITUTIONAL_SLOT_DIRNAME: Record<(typeof CONSTITUTIONAL_SLOTS)[number],
  * a future split can never silently regress to a partial 4-of-7 or 5-of-7 crate set. Plugins that
  * haven't reached `s/plugin/` yet (nothing under `app/`) are out of scope, not a violation — this gate
  * only enforces completeness for plugins that have already started the split. */
-function validateConstitutionalCrates(repoRoot: string): string[] {
+function validateConstitutionalCrates(repoRoot: string, migratedPluginIds: ReadonlySet<string> = new Set()): string[] {
   const errors: string[] = [];
   const pluginRoot = join(repoRoot, "✏️s", "🔌️plugins");
   if (!existsSync(pluginRoot)) return errors;
   for (const pluginName of readdirSync(pluginRoot).sort()) {
+    // 🚦️ A plugin already discovered under the new one-crate-per-plugin taxonomy contract
+    // (`findNewContractPluginRoots`) is validated by `validateTaxonomyTree` instead — it has
+    // deliberately shed the seven legacy per-app crate slots, that is not a regression.
+    if (migratedPluginIds.has(pluginName)) continue;
     const appRoot = join(pluginRoot, pluginName, APPS_DIRNAME);
     if (!existsSync(appRoot) || !statSync(appRoot).isDirectory()) continue;
     const isFlatSingleApp = existsSync(join(appRoot, "⚡️implementations", "🦀️rust", "Cargo.toml"));
@@ -890,7 +894,9 @@ class CheckScript extends BundleScript {
       console.error("run `bun nx run @semio-tech/plugin-registry:generate` to refresh.");
       process.exit(1);
     }
-    const violations = [...validatePlaygroundRegistry(playgrounds), ...validatePlaygroundSessions(repoRoot), ...validateConstitutionalCrates(repoRoot)];
+    const newContractPluginRoots = findNewContractPluginRoots(repoRoot);
+    const migratedPluginIds = new Set(newContractPluginRoots.map(({ pluginId }) => pluginId));
+    const violations = [...validatePlaygroundRegistry(playgrounds), ...validatePlaygroundSessions(repoRoot), ...validateConstitutionalCrates(repoRoot, migratedPluginIds)];
     if (violations.length > 0) {
       console.error("plugin registry catalog has playground validation errors:");
       for (const violation of violations) console.error(`  - ${violation}`);
@@ -900,7 +906,7 @@ class CheckScript extends BundleScript {
     // (see `findNewContractPluginRoots`). Warn-only during migration — promoted to a hard failure in
     // W4 finalization once every plugin has moved off the legacy 7-crate shape.
     if (LEGACY_LAYOUT_TOLERANT) {
-      const taxonomyFindings = findNewContractPluginRoots(repoRoot).flatMap(({ pluginId, pluginRoot }) => validateTaxonomyTree(pluginRoot, pluginId));
+      const taxonomyFindings = newContractPluginRoots.flatMap(({ pluginId, pluginRoot }) => validateTaxonomyTree(pluginRoot, pluginId));
       if (taxonomyFindings.length > 0) {
         console.warn("plugin taxonomy tree findings (in-flight plugins — not failing the gate yet):");
         for (const finding of taxonomyFindings) console.warn(`  - ${finding}`);
