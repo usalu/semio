@@ -1,0 +1,107 @@
+[package]
+name = "semio-s-plugin-space"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "S Studio plugin: OS host shell bundling the Home launcher and Studio apps"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:s"
+
+[package.metadata.semio]
+role = "plugin"
+capabilities = ["localBackboneStorage"]
+host = { landing = "home", studio = "studio" }
+
+[[package.metadata.semio.playground]]
+variant = "s"
+ports = { react = 6070, wgpu = 6066 }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../📦️lib.rs"
+
+[dependencies]
+dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+pack = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-pack" }
+infinite_board_port_directed_dag = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-dag" }
+semio-framework-os = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+semio-framework-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+base64 = "0.22"
+
+[dev-dependencies]
+vcs = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
+
+# ⚠️ TEMPORARY VERIFICATION OVERLAY — delete this entire `[workspace]` block (and the nested
+# `target/`/`Cargo.lock` it creates) before handoff. The new crate cannot be a workspace member while
+# the same-named old bundle crate is still one, so this makes it its own workspace root purely so
+# `cargo check`/`clippy`/`test`/`build` can run against it in isolation during migration. See
+# TEMPLATE.md §3 "The chicken-and-egg, and how to verify anyway".
+cargo-features = ["trim-paths"]
+
+[workspace]
+members = ["."]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[workspace.dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+
+[profile.dev]
+debug = false
+incremental = true
+
+[profile.dev.build-override]
+opt-level = 3
+
+[profile.dev.package.semio-framework-os-kernel-store]
+codegen-units = 1
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"
+incremental = false
+trim-paths = "object"
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+incremental = false
+trim-paths = "object"
+
+[profile.wasm-release.package.semio-framework-os-kernel-store]
+codegen-units = 1
+
+[workspace.lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"

@@ -190,9 +190,127 @@ pub mod apps {
         }
     }
 
-    // 🚧️ The 🧊️3d and 🖐️5d app regions land here, in the same shape as `puzzle2d` above; each adds its
-    // own `create_puzzle<n>d_app => Puzzle<n>dPlayApp` row to `semio_plugin!`'s `apps:` list below and
-    // its own `register_puzzle<n>d_exports()` call inside `artifacts::puzzle2d::engine::register`.
+    #[path = "."]
+    pub mod puzzle3d {
+        #[path = "🎛️apps/🧊️3d/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "🎛️apps/🧊️3d/🦀️config.rs"]
+        pub mod config;
+        #[path = "🎛️apps/🧊️3d/🦀️terminology.rs"]
+        pub mod terminology;
+        #[path = "🎛️apps/🧊️3d/🦀️wasm.rs"]
+        pub mod wasm;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "🎛️apps/🧊️3d/🎮️commands/🛍️example/🦀️component.rs"]
+            pub mod example;
+            #[path = "🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs"]
+            pub mod selection;
+            #[path = "🎛️apps/🧊️3d/🎮️commands/👆️hover/🦀️component.rs"]
+            pub mod hover;
+            #[path = "🎛️apps/🧊️3d/🎮️commands/🧊️object/🦀️component.rs"]
+            pub mod object;
+            #[path = "🎛️apps/🧊️3d/🎮️commands/🔗️attraction/🦀️component.rs"]
+            pub mod attraction;
+            #[path = "🎛️apps/🧊️3d/🎮️commands/🧊️volume/🦀️component.rs"]
+            pub mod volume;
+            #[path = "🎛️apps/🧊️3d/🎮️commands/🎥️camera/🦀️component.rs"]
+            pub mod camera;
+            #[path = "🎛️apps/🧊️3d/🎮️commands/☀️sun/🦀️component.rs"]
+            pub mod sun;
+            #[path = "🎛️apps/🧊️3d/🎮️commands/🔭️lod/🦀️component.rs"]
+            pub mod lod;
+            #[path = "🎛️apps/🧊️3d/🎮️commands/🌐️grid/🦀️component.rs"]
+            pub mod grid;
+            #[path = "🎛️apps/🧊️3d/🎮️commands/⚙️settings/🦀️component.rs"]
+            pub mod settings;
+            #[path = "🎛️apps/🧊️3d/🎮️commands/🔄️transform/🦀️component.rs"]
+            pub mod transform;
+            #[path = "🎛️apps/🧊️3d/🎮️commands/🖌️brush/🦀️component.rs"]
+            pub mod brush;
+            #[path = "🎛️apps/🧊️3d/🎮️commands/🪣️fill/🦀️component.rs"]
+            pub mod fill;
+            #[path = "🎛️apps/🧊️3d/🎮️commands/🤝️engagement/🦀️component.rs"]
+            pub mod engagement;
+            #[path = "🎛️apps/🧊️3d/🎮️commands/🧰️utility/🦀️component.rs"]
+            pub mod utility;
+            #[path = "🎛️apps/🧊️3d/🎮️commands/🗣️locale/🦀️component.rs"]
+            pub mod locale;
+        }
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "🎛️apps/🧊️3d/📌️panels/📄️document/🦀️component.rs"]
+            pub mod document;
+            #[path = "🎛️apps/🧊️3d/📌️panels/🛍️catalogue/🦀️component.rs"]
+            pub mod catalogue;
+            #[path = "🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs"]
+            pub mod inspection;
+            #[path = "🎛️apps/🧊️3d/📌️panels/⚙️settings/🦀️component.rs"]
+            pub mod settings;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🎛️apps/🧊️3d/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod options {
+                    #[path = "🎛️apps/🧊️3d/🎭️modes/✏️edit/🎚️options/🎥️projection/🦀️component.rs"]
+                    pub mod projection;
+                    #[path = "🎛️apps/🧊️3d/🎭️modes/✏️edit/🎚️options/🌀️vortex/🦀️component.rs"]
+                    pub mod vortex;
+                    #[path = "🎛️apps/🧊️3d/🎭️modes/✏️edit/🎚️options/🔭️lod/🦀️component.rs"]
+                    pub mod lod;
+                    #[path = "🎛️apps/🧊️3d/🎭️modes/✏️edit/🎚️options/🌐️grid/🦀️component.rs"]
+                    pub mod grid;
+                    #[path = "🎛️apps/🧊️3d/🎭️modes/✏️edit/🎚️options/🎯️select/🦀️component.rs"]
+                    pub mod select;
+                    #[path = "🎛️apps/🧊️3d/🎭️modes/✏️edit/🎚️options/☀️sun/🦀️component.rs"]
+                    pub mod sun;
+                }
+
+                #[path = "."]
+                pub mod tools {
+                    #[path = "🎛️apps/🧊️3d/🎭️modes/✏️edit/🛠️tools/🪣️fill/🦀️component.rs"]
+                    pub mod fill;
+                }
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+
+                        #[path = "."]
+                        pub mod utilities {
+                            #[path = "🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🧊️main/🪛️utilities/🔄️transform/🦀️component.rs"]
+                            pub mod transform;
+                            #[path = "🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🧊️main/🪛️utilities/🖌️brush/🦀️component.rs"]
+                            pub mod brush;
+                            #[path = "🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🧊️main/🪛️utilities/🧊️volume-brush/🦀️component.rs"]
+                            pub mod volume_brush;
+                            #[path = "🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🧊️main/🪛️utilities/🚚️world-relocate/🦀️component.rs"]
+                            pub mod world_relocate;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 🚧️ The 🖐️5d app region lands here, in the same shape as `puzzle2d`/`puzzle3d` above; it adds its
+    // own `create_puzzle5d_app => Puzzle5dPlayApp` row to `semio_plugin!`'s `apps:` list below and its
+    // own `register_puzzle5d_exports()` call inside `artifacts::puzzle2d::engine::register`.
 }
 //#endregion 🎛️Apps
 
@@ -200,6 +318,9 @@ pub mod apps {
 semio_framework_plugin::semio_plugin! {
     id: "puzzle", label: "Puzzle", version: "0.1.0",
     setup: artifacts::puzzle2d::engine::register,
-    apps: [ apps::puzzle2d::create_puzzle2d_app => apps::puzzle2d::Puzzle2dPlayApp ],
+    apps: [
+        apps::puzzle2d::create_puzzle2d_app => apps::puzzle2d::Puzzle2dPlayApp,
+        apps::puzzle3d::create_puzzle3d_app => apps::puzzle3d::Puzzle3dPlayApp,
+    ],
 }
 //#endregion 🔖️Plugin

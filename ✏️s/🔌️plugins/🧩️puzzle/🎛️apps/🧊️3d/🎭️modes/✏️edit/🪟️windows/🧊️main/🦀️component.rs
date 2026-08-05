@@ -12,9 +12,9 @@
 use crate::apps::puzzle3d::config::{Puzzle3dRuntime, Puzzle3dSelection};
 use crate::apps::puzzle3d::modes::edit::options;
 use crate::apps::puzzle3d::modes::edit::windows::main::utilities;
-use crate::apps::puzzle3d::terminology::Puzzle3dLabels;
+use crate::apps::puzzle3d::terminology::{puzzle3d_localized, Puzzle3dLabels};
 use crate::apps::puzzle3d::{
-    collect_mesh_urls, object_scale_json, puzzle3d_action, puzzle3d_brush_target_vortex, puzzle3d_localized, puzzle3d_vortex_full_id, quat_rotate_vector, resolve_object_mesh_url, target_volume_scale_json, Puzzle3dFixture,
+    collect_mesh_urls, object_scale_json, puzzle3d_action, puzzle3d_brush_target_vortex, puzzle3d_vortex_full_id, quat_rotate_vector, resolve_object_mesh_url, target_volume_scale_json, Puzzle3dFixture,
     Puzzle3dFixtureMeta, Puzzle3dObject, Puzzle3dScene, Puzzle3dVortex, PUZZLE3D_FALLBACK_MESH_KIND, PUZZLE3D_VORTEX_SHOW_ALWAYS,
 };
 use crate::artifacts::puzzle3d::engine::Puzzle3dPrecomputeSession;

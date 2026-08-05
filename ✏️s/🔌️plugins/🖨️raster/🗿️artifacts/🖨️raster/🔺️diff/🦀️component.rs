@@ -186,7 +186,7 @@ pub struct RasterDiff {
 
 impl OperationDiff<RasterProjection> for RasterDiff {
     fn apply(&self, projection: &RasterProjection) -> RasterProjection {
-        let mut next = self.replace.as_ref().map(|document| (**document).clone()).unwrap_or_else(|| projection.clone());
+        let mut next = self.replace.as_ref().map_or_else(|| projection.clone(), |document| (**document).clone());
         for step in &self.steps {
             apply_step(&mut next.layers, step);
         }

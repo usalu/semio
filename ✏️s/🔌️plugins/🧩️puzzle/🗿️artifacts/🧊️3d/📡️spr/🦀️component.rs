@@ -163,7 +163,7 @@ mod wire_baseline_dump {
         let target_volume: puzzle_3d::Puzzle3dTargetVolume = serde_json::from_value(json!({"id":"t1","origin":[0.0,1.0,2.0],"orientation":[0.0,0.0,0.0,1.0],"scale":5.0,"hidden":false,"locked":false})).unwrap();
         let reference: puzzle_3d::Puzzle3dReference = serde_json::from_value(json!({"id":"r1","source":{"url":"/u.png","mediaKind":"image"},"origin":[0.0,0.0,0.0],"widthWorld":4.0,"locked":false,"hidden":false})).unwrap();
         let meta: puzzle_3d::Puzzle3dMeta = serde_json::from_value(json!({"kindCompatibility":[{"source":"a","target":"b","bidirectional":true,"important":false,"specificity":"vortex"}]})).unwrap();
-        let document = puzzle_3d::Puzzle3dProjection::default();
+        let document = Puzzle3dProjection::default();
         vec![
             Puzzle3dOperation::SetObject { index: 0, object },
             Puzzle3dOperation::RemoveObject { id: "o1".into() },

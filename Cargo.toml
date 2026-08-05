@@ -122,14 +122,6 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📖️playbook/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
@@ -227,6 +219,7 @@ members = [
     "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/⚡️implementations/🦀️rust",
     "✏️s/🔨️modules/🧊️3d/📐️brep/⚡️implementations/🦀️rust",
@@ -575,7 +568,6 @@ semio-s-app-norm-en1998 = { path = "✏️s/🔌️plugins/📕️norm/🎛️ap
 semio-s-app-norm-en1999 = { path = "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1999/⚡️implementations/🦀️rust" }  # 8 refs
 semio-s-app-norm-iso16757 = { path = "✏️s/🔌️plugins/📕️norm/🎛️apps/📓️iso16757/⚡️implementations/🦀️rust" }  # 8 refs
 semio-s-app-norm-vdi3805 = { path = "✏️s/🔌️plugins/📕️norm/🎛️apps/📔️vdi3805/⚡️implementations/🦀️rust" }  # 8 refs
-semio-s-app-playbook = { path = "✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/⚡️implementations/🦀️rust" }  # 6 refs
 semio-s-plugin-procedural = { path = "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust" }
 semio-s-plugin-process = { path = "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust" }
 semio-s-app-puzzle-2d = { path = "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/⚡️implementations/🦀️rust" }  # 8 refs

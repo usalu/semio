@@ -1,0 +1,42 @@
+//! ⚖️ Block 5D artifact — state-patch-representation wire codec + laws (was: constitutional
+//! `protocol`; no `📡️protocol` path segment may survive under plugins).
+
+use crate::artifacts::block5d::op::Block5dOperation;
+use protocol::OpBinary;
+
+/// 📦️ Encodes a `Block5dOperation` to its binary command form.
+pub fn encode_op(operation: &Block5dOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+    operation.encode_op()
+}
+
+/// 📖️ Decodes a `Block5dOperation` from its binary command form.
+pub fn decode_op(bytes: &[u8]) -> Result<Block5dOperation, protocol::ProtocolError> {
+    Block5dOperation::decode_op(bytes)
+}
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::artifacts::block5d::{Block5dDefinition, BLOCK_5D_SCHEMA};
+    use crate::core::BlockKindIdentity;
+    use store::{create_document_envelope, DocumentCommand};
+
+    #[test]
+    fn block5d_document_vcs_replays_granular_operations() {
+        use crate::artifacts::block5d::op::Block5dStore;
+
+        let mut store = Block5dStore::new(create_document_envelope(BLOCK_5D_SCHEMA, "block5d", Block5dDefinition::default(), None));
+        store.dispatch(DocumentCommand::Apply { operations: vec![Block5dOperation::SetPartKind { part_kind: BlockKindIdentity { id: "p1".into(), name: "p1".into(), label: "P1".into(), ..Default::default() } }], description: None }).expect("apply");
+        let projection = store.projection().expect("projection");
+        assert_eq!(projection.part_kind.id, "p1");
+    }
+
+    #[test]
+    fn block5d_operation_binary_round_trips() {
+        let operation = Block5dOperation::RemoveGrip { id: "g0".into() };
+        let bytes = encode_op(&operation).expect("encode");
+        assert_eq!(decode_op(&bytes).expect("decode"), operation);
+    }
+}
+//#endregion 🧪️Tests

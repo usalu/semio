@@ -47,10 +47,10 @@ pub fn empty_puzzle2d_projection() -> Puzzle2dProjection {
 /// 🔌️ The plugin `setup:` hook (`semio_plugin!{ setup: ... }`): registers every puzzle app's host
 /// exports exactly once at plugin load.
 ///
-/// 🚧️ Only puzzle2d is migrated so far — the 🧊️3d and 🖐️5d ports add their own
-/// `crate::apps::puzzle3d::register_puzzle3d_exports()` / `…puzzle5d…` line right here.
+/// 🚧️ The 🖐️5d port adds its own `crate::apps::puzzle5d::register_puzzle5d_exports()` line right here.
 pub fn register() {
     crate::apps::puzzle2d::register_puzzle2d_exports();
+    crate::apps::puzzle3d::register_puzzle3d_exports();
 }
 //#endregion 🔖️Register
 

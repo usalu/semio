@@ -139,7 +139,7 @@ pub enum RasterLayerNode {
         #[dsl(key = "kind")]
         adjustment_kind: String,
         #[serde(default)]
-        params: std::collections::BTreeMap<String, dsl::DslValue>,
+        params: BTreeMap<String, dsl::DslValue>,
     },
 }
 

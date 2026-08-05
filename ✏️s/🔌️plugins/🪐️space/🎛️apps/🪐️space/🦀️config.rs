@@ -1,0 +1,291 @@
+//! ⚙️ S Studio app — `DocumentApp::Config` + its operation enum (constitutional: engine + op, merged
+//! at app level: `Config`/`ConfigOperation` are inherently app-scoped, and this app owns no
+//! document-side artifact — see `🦀️component.rs`'s module doc for why).
+
+use crate::apps::space::S_PLAY_CATALOGUE_TAB_ID;
+use semio_framework_os::OsWorkflowCamera;
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
+
+//#region 🔖️Types
+/// 🎥️ One window-instance's workflow-canvas camera — keyed by window id inside `SpaceConfig.camera`
+/// (a `BTreeMap<String, SpaceWindowCamera>`, per the Configured Node Apps recipe's "camera/selection/
+/// per-window options keyed by window-instance id" rule). Distinct from `semio_framework_os::OsWorkflowCamera`
+/// (a plain, non-`dsl`-field data type this crate can't blanket-impl `dsl::DslField` for under the
+/// orphan rule) — converts to/from it 1:1 at the render boundary.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct SpaceWindowCamera {
+    pub x: f64,
+    pub y: f64,
+    pub zoom: f64,
+}
+
+impl Default for SpaceWindowCamera {
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0, zoom: 1.0 }
+    }
+}
+
+impl From<OsWorkflowCamera> for SpaceWindowCamera {
+    fn from(camera: OsWorkflowCamera) -> Self {
+        Self { x: camera.x, y: camera.y, zoom: camera.zoom }
+    }
+}
+
+impl From<SpaceWindowCamera> for OsWorkflowCamera {
+    fn from(camera: SpaceWindowCamera) -> Self {
+        Self { x: camera.x, y: camera.y, zoom: camera.zoom }
+    }
+}
+//#endregion 🔖️Types
+
+//#region 🔖️Config
+/// 🧮️ Space's real `DocumentApp::Config` — the studio app's config artifact. A node IS the app
+/// instance now (see the kernel `🔁️workflow` crate's `🔖️InstanceIdentity` doc), so the old disjoint
+/// `selected_media_node_ids`/`selected_app_instance_ids`/`clipboard_instance_ids` pairs collapse into
+/// one `*_node_ids` field apiece. `camera`/per-window options are keyed by window id (`BTreeMap<String,
+/// _>`, per the Configured Node Apps recipe) — today that's always
+/// `crate::apps::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW`, since split-pane
+/// window *instances* aren't a thing anywhere in this codebase yet.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "spacecfg")]
+#[dsl(layout = "lines")]
+pub struct SpaceConfig {
+    /// 🎥️ Workflow-canvas camera, keyed by window id.
+    pub camera: BTreeMap<String, SpaceWindowCamera>,
+    /// 👁️ Selected workflow-node ids.
+    pub selected_node_ids: Vec<String>,
+    /// 👁️ Hovered workflow-node id.
+    pub hovered_node_id: Option<String>,
+    /// 🗂️ Collapsed workflow nodes — node-preview UI state, not yet driven by any command.
+    pub collapsed_node_ids: Vec<String>,
+    /// 🖼️ Workflow nodes with their live preview thumbnail turned off — node-preview UI state, not yet
+    /// driven by any command.
+    pub preview_off_node_ids: Vec<String>,
+    /// 👁️ The "active app" measure selection.
+    pub active_node_id: Option<String>,
+    /// 👁️ The node currently open in its own plugin window.
+    pub focused_node_id: Option<String>,
+    /// 📋️ Copied node ids, pasted by `duplicateAppInstance`/`pasteAppInstance`.
+    pub clipboard_node_ids: Vec<String>,
+    pub workflow_engagement_input: String,
+    pub compiled_dag_engagement_input: String,
+    /// 📥️ In-flight media-import target.
+    pub pending_import_node_id: Option<String>,
+    pub pending_import_format: Option<String>,
+    /// 👁️ Active studio panel tab.
+    pub active_panel_tab: String,
+    /// 🌱️ The currently open studio document's catalog id.
+    pub space_id: Option<String>,
+    /// 🫀️ This session's local presence identity.
+    pub client_id: Option<String>,
+    pub client_name: Option<String>,
+    /// 🗣️ BCP-47 locale tag.
+    pub locale: String,
+}
+
+impl Default for SpaceConfig {
+    fn default() -> Self {
+        Self {
+            camera: BTreeMap::new(),
+            selected_node_ids: Vec::new(),
+            hovered_node_id: None,
+            collapsed_node_ids: Vec::new(),
+            preview_off_node_ids: Vec::new(),
+            active_node_id: None,
+            focused_node_id: None,
+            clipboard_node_ids: Vec::new(),
+            workflow_engagement_input: String::new(),
+            compiled_dag_engagement_input: String::new(),
+            pending_import_node_id: None,
+            pending_import_format: None,
+            active_panel_tab: S_PLAY_CATALOGUE_TAB_ID.into(),
+            space_id: None,
+            client_id: None,
+            client_name: None,
+            locale: "en-US".into(),
+        }
+    }
+}
+
+store::impl_whole_record_config!(SpaceConfig);
+//#endregion 🔖️Config
+
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ `SpaceConfig`'s operation enum — one variant per settled interaction, plus a generic
+/// `Snapshot` every variant's `backwards()` returns: a config-only dispatch is a plain `Apply` (not an
+/// `AmendLast`), so each tick is its own distinct, real config edit and "undo this tick" is exactly
+/// "restore the whole-config snapshot from just before it". `Operation::Diff` is the WHOLE `SpaceConfig`,
+/// not a granular patch type.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum SpaceConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: SpaceConfig,
+    },
+    #[dsl(key = "selection")]
+    SetSelection { node_ids: Vec<String> },
+    #[dsl(key = "hover")]
+    SetHover { node_id: Option<String> },
+    #[dsl(key = "active-node")]
+    SetActiveNode { node_id: Option<String> },
+    #[dsl(key = "focused-node")]
+    SetFocusedNode { node_id: Option<String> },
+    #[dsl(key = "clipboard")]
+    SetClipboard { node_ids: Vec<String> },
+    #[dsl(key = "collapsed")]
+    SetCollapsed { node_ids: Vec<String> },
+    #[dsl(key = "preview-off")]
+    SetPreviewOff { node_ids: Vec<String> },
+    /// 🎥️ Sets one window's workflow camera — window-instance-keyed.
+    #[dsl(key = "camera")]
+    SetCamera {
+        window_id: String,
+        #[dsl(block)]
+        camera: SpaceWindowCamera,
+    },
+    #[dsl(key = "workflow-engagement-input")]
+    SetWorkflowEngagementInput { value: String },
+    #[dsl(key = "compiled-dag-engagement-input")]
+    SetCompiledDagEngagementInput { value: String },
+    #[dsl(key = "pending-import")]
+    SetPendingImport { node_id: Option<String>, format: Option<String> },
+    #[dsl(key = "space-id")]
+    SetSpaceId { space_id: Option<String> },
+    #[dsl(key = "client")]
+    SetClient { client_id: Option<String>, client_name: Option<String> },
+    #[dsl(key = "active-panel-tab")]
+    SetActivePanelTab { tab_id: String },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl protocol::Operation<SpaceConfig> for SpaceConfigOperation {
+    type Diff = SpaceConfig;
+
+    fn diff(&self, base: &SpaceConfig) -> SpaceConfig {
+        let mut next = base.clone();
+        match self {
+            SpaceConfigOperation::Snapshot { config } => return config.clone(),
+            SpaceConfigOperation::SetSelection { node_ids } => next.selected_node_ids = node_ids.clone(),
+            SpaceConfigOperation::SetHover { node_id } => next.hovered_node_id = node_id.clone(),
+            SpaceConfigOperation::SetActiveNode { node_id } => next.active_node_id = node_id.clone(),
+            SpaceConfigOperation::SetFocusedNode { node_id } => next.focused_node_id = node_id.clone(),
+            SpaceConfigOperation::SetClipboard { node_ids } => next.clipboard_node_ids = node_ids.clone(),
+            SpaceConfigOperation::SetCollapsed { node_ids } => next.collapsed_node_ids = node_ids.clone(),
+            SpaceConfigOperation::SetPreviewOff { node_ids } => next.preview_off_node_ids = node_ids.clone(),
+            SpaceConfigOperation::SetCamera { window_id, camera } => {
+                next.camera.insert(window_id.clone(), *camera);
+            }
+            SpaceConfigOperation::SetWorkflowEngagementInput { value } => next.workflow_engagement_input = value.clone(),
+            SpaceConfigOperation::SetCompiledDagEngagementInput { value } => next.compiled_dag_engagement_input = value.clone(),
+            SpaceConfigOperation::SetPendingImport { node_id, format } => {
+                next.pending_import_node_id = node_id.clone();
+                next.pending_import_format = format.clone();
+            }
+            SpaceConfigOperation::SetSpaceId { space_id } => next.space_id = space_id.clone(),
+            SpaceConfigOperation::SetClient { client_id, client_name } => {
+                next.client_id = client_id.clone();
+                next.client_name = client_name.clone();
+            }
+            SpaceConfigOperation::SetActivePanelTab { tab_id } => next.active_panel_tab = tab_id.clone(),
+            SpaceConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &SpaceConfig) -> Vec<Self> {
+        vec![SpaceConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::apps::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW;
+    use crate::apps::space::S_PLAY_PARAMETERS_TAB_ID;
+    use protocol::Operation;
+
+    fn round_trip(config: &SpaceConfig, operation: &SpaceConfigOperation) -> SpaceConfig {
+        let forward = vcs::apply_operation(config, operation);
+        let backwards = operation.backwards(config);
+        let mut restored = forward.clone();
+        for back in &backwards {
+            restored = vcs::apply_operation(&restored, back);
+        }
+        assert_eq!(&restored, config, "backwards() must exactly restore the pre-operation config");
+        forward
+    }
+
+    #[test]
+    fn space_config_default_matches_the_expected_sticky_defaults() {
+        let config = SpaceConfig::default();
+        assert_eq!(config.active_panel_tab, S_PLAY_CATALOGUE_TAB_ID);
+        assert_eq!(config.locale, "en-US");
+        assert!(config.camera.is_empty());
+        assert!(config.selected_node_ids.is_empty());
+    }
+
+    #[test]
+    fn space_config_dsl_text_round_trips() {
+        store::test_support::assert_dsl_round_trip(&SpaceConfig::default());
+    }
+
+    #[test]
+    fn set_selection_round_trips() {
+        let config = SpaceConfig::default();
+        let operation = SpaceConfigOperation::SetSelection { node_ids: vec!["node-1".into(), "node-2".into()] };
+        let next = round_trip(&config, &operation);
+        assert_eq!(next.selected_node_ids, vec!["node-1".to_string(), "node-2".to_string()]);
+    }
+
+    #[test]
+    fn set_camera_round_trips_and_keys_by_window_id() {
+        let config = SpaceConfig::default();
+        let camera = SpaceWindowCamera { x: 12.0, y: -4.0, zoom: 2.0 };
+        let operation = SpaceConfigOperation::SetCamera { window_id: S_PLAY_WINDOW_WORKFLOW.into(), camera };
+        let next = round_trip(&config, &operation);
+        assert_eq!(next.camera.get(S_PLAY_WINDOW_WORKFLOW), Some(&camera));
+    }
+
+    #[test]
+    fn set_active_panel_tab_round_trips() {
+        let config = SpaceConfig::default();
+        let operation = SpaceConfigOperation::SetActivePanelTab { tab_id: S_PLAY_PARAMETERS_TAB_ID.into() };
+        let next = round_trip(&config, &operation);
+        assert_eq!(next.active_panel_tab, S_PLAY_PARAMETERS_TAB_ID);
+    }
+
+    #[test]
+    fn space_config_op_text_round_trips_every_variant() {
+        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::Snapshot { config: SpaceConfig::default() });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetSelection { node_ids: vec!["a".into(), "b".into()] });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetHover { node_id: Some("a".into()) });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetHover { node_id: None });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetActiveNode { node_id: Some("a".into()) });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetFocusedNode { node_id: None });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetClipboard { node_ids: vec!["a".into()] });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetCollapsed { node_ids: vec!["a".into()] });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetPreviewOff { node_ids: vec!["a".into()] });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetCamera { window_id: "s-workflow".into(), camera: SpaceWindowCamera { x: 1.0, y: 2.0, zoom: 3.0 } });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetWorkflowEngagementInput { value: "draw draw".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetCompiledDagEngagementInput { value: "".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetPendingImport { node_id: Some("a".into()), format: Some("dwg".into()) });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetPendingImport { node_id: None, format: None });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetSpaceId { space_id: Some("demo".into()) });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetClient { client_id: Some("c1".into()), client_name: Some("Ada".into()) });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetActivePanelTab { tab_id: "s-play-catalogue".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceConfigOperation::SetLocale { value: "de".into() });
+    }
+
+    #[test]
+    fn space_config_dsl_pack_equivalence() {
+        store::test_support::assert_dsl_pack_equivalence(&SpaceConfig::default());
+    }
+}
+//#endregion 🧪️Tests

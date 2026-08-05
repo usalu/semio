@@ -1,0 +1,14 @@
+[DEBUG] AddStep(AddStep) | text=add-step | len=4 | hex=01000000
+[DEBUG] RemoveStep(RemoveStep { step_id: "s" }) | text=remove-step step-id=s | len=9 | hex=010101017301000600
+[DEBUG] MoveStep(MoveStep { step_id: "s", index: 2 }) | text=move-step step-id=s index=2 | len=12 | hex=010201017302000600010402
+[DEBUG] AddBlock(AddBlock { kind: "text", step_id: None }) | text=add-block kind=text | len=12 | hex=010301047465787401000600
+[DEBUG] RemoveBlock(RemoveBlock { step_id: "s", block_id: "b" }) | text=remove-block step-id=s block-id=b | len=14 | hex=0104020162017302000601010600
+[DEBUG] MoveBlock(MoveBlock { block_id: "b", from_step_id: "s1", to_step_id: "s2", index: 0 }) | text=move-block block-id=b from-step-id=s1 to-step-id=s2 index=0 | len=24 | hex=010503016202733102733204000600010601020602030400
+[DEBUG] UpdatePlaybook(UpdatePlaybook { value: "Recipe" }) | text=update-playbook value=Recipe | len=14 | hex=0106010652656369706501000600
+[DEBUG] SetSelection(SetSelection { ids: ["a", "b"] }) | text=set-selection ids=[ a b ] | len=15 | hex=0107020161016201000c0206000601
+[DEBUG] SetLocale(SetLocale { value: "de-DE" }) | text=locale value=de-DE | len=13 | hex=0108010564652d444501000600
+[DEBUG] op:RemoveStep { step_id: "s" } | text=remove-step step-id=s | len=9 | hex=010101017301000600
+[DEBUG] op:MoveStep { step_id: "s", index: 1 } | text=move-step step-id=s index=1 | len=12 | hex=010201017302000600010401
+[DEBUG] op:UpdatePlaybook { title: Some("Recipe") } | text=update-playbook title=Recipe | len=14 | hex=0108010652656369706501000600
+
+RESULT: byte-identical to 🧪️wire-baseline-before.txt for every row (AddStep/RemoveStep/MoveStep/AddBlock/RemoveBlock/MoveBlock/UpdatePlaybook/SetSelection/SetLocale commands, plus remove_step_operation/move_step_operation/update_playbook_title_operation). Wire format proof CONFIRMED.

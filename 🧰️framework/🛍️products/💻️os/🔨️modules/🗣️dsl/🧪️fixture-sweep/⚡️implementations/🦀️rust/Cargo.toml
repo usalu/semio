@@ -79,6 +79,12 @@ reasoning_mindmap_plugin = { path = "../../../../../../../../✏️s/🔌️plug
 # 🌱️ `forms` dropped (26/08/05/FORMS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION) — `FormSpec`
 # repointed to `playbook::PlaybookSpec` directly in 📦️lib.rs, its real owner; `playbook` below already
 # covers it.
+# 📖️ `playbook` (the "playbook" plugin's dev-dep alias below) used to point at the now-deleted
+# `semio-s-app-playbook` facade crate; `PlaybookSpec` was always a bare re-export of the shared
+# `playbook` kernel crate (`semio-framework-os-kernel-playbook` — same domain `forms` builds on, see
+# the comment above), so this repoints straight at the real owner — no `📦️lib.rs` ripple beyond this
+# path/package swap (26/08/05/PLAYBOOK-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION, TEMPLATE
+# §8.2).
 # 📏️ `LayoutDocument` and its `store::DocumentDsl` impl are genuinely plugin-owned (no shared kernel
 # crate the way flow has), so they now live at `layout::artifacts::layout::LayoutDocument` (see this
 # crate's `📦️lib.rs`) — the deleted `semio-s-app-layout` facade crate was merged into
@@ -105,7 +111,7 @@ en1997 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/�
 en1998 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1998/⚡️implementations/🦀️rust", package = "semio-s-app-norm-en1998" }
 en1999 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1999/⚡️implementations/🦀️rust", package = "semio-s-app-norm-en1999" }
 din18599 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📙️din18599/⚡️implementations/🦀️rust", package = "semio-s-app-norm-din18599" }
-playbook = { path = "../../../../../../../../✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/⚡️implementations/🦀️rust", package = "semio-s-app-playbook" }
+playbook = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-playbook" }
 imperative = { path = "../../../../../../../../✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/⚡️implementations/🦀️rust", package = "semio-s-app-imperative" }
 remodel = { path = "../../../../../../../../✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/⚡️implementations/🦀️rust", package = "semio-s-app-remodel" }
 rewrite = { path = "../../../../../../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/✏️rewrite/⚡️implementations/🦀️rust", package = "semio-s-app-trinity-rewrite" }
