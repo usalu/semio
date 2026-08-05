@@ -457,3 +457,30 @@ extend in the same style and record it here.
    TEMPLATE flagged this. Do the §0 step 5 dependent-search thoroughly (including `[dev-dependencies]`,
    not just `[dependencies]`) — a hit outside your plugin dir is still yours to report, even if it's just
    a test-only dependency that won't break the dependent's `lib` build, only its `cargo test`.
+
+---
+
+## 13. Scope-extension addendum (from the approved plan `the-codebase-still-has-spicy-umbrella.md`)
+
+The initiative's target has grown to *zero* `⚡️implementations` dirs anywhere in the repo, with an
+upcoming os-kernel merge (`store`/`protocol`→`spr`/`dsl`/`pack`/…) that has **313 dependents on `store`
+alone**. Two mandates every plugin agent from here on must follow so that merge stays cheap:
+
+1. **Adopt `{ workspace = true }` for every dependency already listed in root `[workspace.dependencies]`**,
+   not just the plugin's own name-key deps. When your new crate's `[dependencies]` table lists a framework
+   crate (`semio-framework-os-kernel-*`, `semio-framework-plugin`, `semio-framework-core`, …) by an
+   explicit `path = "…"`, check whether root `[workspace.dependencies]` already has an entry for it (or the
+   crate it's about to be renamed to) and use `dep = { workspace = true }` instead. This is opt-in per the
+   Registrar Protocol (requires your crate to already be a workspace member, so in practice happens in the
+   SAME registrar pass that adds your member line, or right after) — but **write your `Cargo.toml` in the
+   workspace-true form from the start** so the registrar's job is a rename, not a rewrite. The payoff: when
+   the kernel merge lands, its ~313 dependents become ~10 root-file edits instead of ~300 scattered
+   per-crate edits.
+2. **Single-crate plugins are a fast path, not a special case.** 🔋️energy is already one crate on disk —
+   its "migration" is a taxonomy-tree reshape (extract component files, write `📦️lib.rs` wiring, add the
+   `role = "plugin"` metadata key, move to `📦️packages/🦀️rust`) with no multi-crate union step. Don't
+   over-apply the 7-crate union recipe (§3) where there's nothing to union.
+3. **Shared-cache test-serialization lesson (from 🌀️procedural).** Running `cargo test` for your new crate
+   while other plugins' cargo processes are live can produce spurious incremental-compilation races on the
+   shared `target/` dir. If a test run fails with a linker or rmeta error that doesn't reproduce on retry,
+   re-run once before treating it as a real regression — it is very likely lock contention, not your code.

@@ -1941,7 +1941,7 @@ mod tests {
 
     #[test]
     fn world_volumes_contain_aabb_respects_oriented_box() {
-        let volumes = vec![WorldVolumeProps { id: "v1".to_string(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(serde_json::json!([4.0, 4.0, 4.0])) }];
+        let volumes = vec![WorldVolumeProps { id: "v1".to_string(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(dsl::DslValue::Array(vec![dsl::DslValue::Number(4.0), dsl::DslValue::Number(4.0), dsl::DslValue::Number(4.0)])) }];
         let min = Point3d::new(-1.0, -1.0, -1.0);
         let max = Point3d::new(1.0, 1.0, 1.0);
         assert!(world_volumes_contain_aabb(&volumes, min, max));
@@ -2519,9 +2519,9 @@ mod tests {
     #[test]
     fn vec3_scale_variants() {
         assert_eq!(vec3_scale([1.0, 2.0, 3.0], &None), [1.0, 2.0, 3.0]);
-        assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(serde_json::json!(2.0))), [2.0, 4.0, 6.0]);
-        assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(serde_json::json!([2.0, 3.0, 4.0]))), [2.0, 6.0, 12.0]);
-        assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(serde_json::json!("bogus"))), [1.0, 2.0, 3.0]);
+        assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(dsl::DslValue::Number(2.0))), [2.0, 4.0, 6.0]);
+        assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(dsl::DslValue::Array(vec![dsl::DslValue::Number(2.0), dsl::DslValue::Number(3.0), dsl::DslValue::Number(4.0)]))), [2.0, 6.0, 12.0]);
+        assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(dsl::DslValue::String("bogus".to_string()))), [1.0, 2.0, 3.0]);
     }
 
     #[test]
@@ -2595,7 +2595,7 @@ mod tests {
     #[test]
     fn world_volumes_contain_aabb_empty_and_multi_volume() {
         assert!(world_volumes_contain_aabb(&[], Point3d::new(-1.0, -1.0, -1.0), Point3d::new(1.0, 1.0, 1.0)), "no target volumes means unconstrained");
-        let volumes = vec![WorldVolumeProps { id: "far".into(), origin: [100.0, 0.0, 0.0], orientation: None, scale: None }, WorldVolumeProps { id: "near".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(serde_json::json!(4.0)) }];
+        let volumes = vec![WorldVolumeProps { id: "far".into(), origin: [100.0, 0.0, 0.0], orientation: None, scale: None }, WorldVolumeProps { id: "near".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(dsl::DslValue::Number(4.0)) }];
         assert!(world_volumes_contain_aabb(&volumes, Point3d::new(-1.0, -1.0, -1.0), Point3d::new(1.0, 1.0, 1.0)), "any single containing volume is enough");
     }
 

@@ -1,0 +1,145 @@
+[package]
+name = "semio-s-plugin-gis"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "GIS plugin - one crate for the gismap/gisterrain artifacts (diff/op/dsl/pack/spr/engine) and the 2d map / 3d terrain play apps (commands/modes/windows/panels/options)"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:gis"
+
+[package.metadata.semio]
+role = "plugin"
+
+[[package.metadata.semio.playground]]
+variant = "gis2d"
+aliases = ["gis 2d"]
+app = "gis2d-play"
+ports = { react = 6040, wgpu = 6140 }
+engines = ["./🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust"]
+
+[[package.metadata.semio.playground]]
+variant = "gis3d"
+aliases = ["gis 3d"]
+app = "gis3d-play"
+ports = { react = 6083, wgpu = 6183 }
+engines = ["./🧰️framework/🔨️modules/🗺️surface/🏔️terrain/⚡️implementations/🦀️rust"]
+
+# 🎪️ The `verfolgen` demonstrator row moved to
+# ✏️s/🔌️plugins/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
+# crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT). The `/osm`+`/vt` asset rows below
+# stay here too (copies also live on the bundle crate) since the standalone `gis2d` dev variant needs
+# them independently of the demonstrator.
+
+[[package.metadata.semio.assets]]
+kind = "tile-proxy"
+route = "/osm"
+app = "gis2d-play"
+upstream = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+cache = "osm-tiles"
+
+[[package.metadata.semio.assets]]
+kind = "tile-proxy"
+route = "/vt"
+app = "gis2d-play"
+upstream = "https://tiles.openfreemap.org/planet"
+cache = "openfreemap-vt"
+
+[[package.metadata.semio.assets]]
+kind = "tile-proxy"
+route = "/dem"
+app = "gis3d-play"
+upstream = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
+cache = "terrarium-dem"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../📦️lib.rs"
+
+[dependencies]
+dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+pack = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-pack" }
+protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+framework_surface_tiled_map = { path = "../../../../../🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-surface-tiled-map", default-features = false }
+framework_surface_terrain = { path = "../../../../../🧰️framework/🔨️modules/🗺️surface/🏔️terrain/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-surface-terrain" }
+semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+# 🔌️ `PortMultiplicity` isn't re-exported by `semio-framework-plugin` (WORKFLOWS-END-TO-END-TYPED-PORTS
+# port recipe) — a direct dependency on the core crate is the minimal fix, mirroring `shooting`.
+semio-framework-core = { path = "../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
+serde.workspace = true
+serde_json.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.106"
+
+[dev-dependencies]
+vcs = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
+
+# ⚠️ TEMPORARY VERIFICATION OVERLAY — crate-consolidation ticket
+# 26/08/05/GIS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION, TEMPLATE.md §3.
+# The old `semio-s-plugin-gis` bundle crate still occupies this package name in the root workspace,
+# so this manifest cannot be a member yet. Making it its own workspace root lets `--manifest-path`
+# verification run in isolation. DELETE THIS WHOLE BLOCK (and the nested target/ + Cargo.lock) at
+# registrar handoff. Values copied verbatim from root Cargo.toml so fingerprints match.
+[workspace]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[workspace.dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+
+[profile.dev]
+debug = false
+incremental = true
+
+[profile.dev.build-override]
+opt-level = 3
+
+[profile.dev.package.semio-framework-os-kernel-store]
+codegen-units = 1
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"
+incremental = false
+trim-paths = "object"
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+incremental = false
+trim-paths = "object"
+
+[profile.wasm-release.package.semio-framework-os-kernel-store]
+codegen-units = 1
+
+[workspace.lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"

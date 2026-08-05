@@ -1,0 +1,13 @@
+{
+  "title": "Lowpoly Plugin Migration To Crate And Taxonomy Consolidation",
+  "emoji": "💠️",
+  "status": "open",
+  "description": "Migrate the 💠️lowpoly plugin (W2 batch) from its old 7-crate constitutional layout (bundle/manifest crate + app facade crate + 6 module crates: engine, pack, protocol, op, ui, dsl — single app \"lowpoly\", single artifact) into ONE crate at ✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/ with the full taxonomy source tree per TEMPLATE.md (crate name preserved: semio-s-plugin-lowpoly). Follow the ordered recipe: inventory, baseline tests + wire format, taxonomy tree write, app_commands! decomposition, verification (cargo check native+wasm32-wasip2, clippy -D warnings, cargo test), delete old crates, registrar handoff report. Special note: engine crate's old Cargo.toml has a [dev-dependencies] entry on cad_plugin (already repointed to semio-s-plugin-cad by a prior batch-1 agent) used in a test module importing cad_plugin::artifacts::cad::engine::geometry_import::{objects_from_fixture_model, parse_geometry} — must carry this dev-dependency forward into the new merged crate's [dev-dependencies], same import path. Also check whether lowpoly is really 3 apps (2d/3d/5d) as initially assumed or a single app (verify on disk first).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2460"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪b6dc47edc1644716b3895c6bab7fb19f"
+  ]
+}

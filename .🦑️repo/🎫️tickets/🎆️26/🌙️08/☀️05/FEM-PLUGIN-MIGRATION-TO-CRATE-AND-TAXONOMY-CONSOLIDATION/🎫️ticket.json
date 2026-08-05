@@ -1,0 +1,13 @@
+{
+  "title": "Fem Plugin Migration To Crate And Taxonomy Consolidation",
+  "emoji": "🏗️",
+  "status": "open",
+  "description": "Migrate the 🏗️fem plugin (2 apps: ◻2d, 🧊️3d, each with 6 constitutional module crates + a shared bundle/manifest crate) from the old 7-crate-per-app constitutional layout into ONE crate at ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/ with the full taxonomy source tree, per the W1 pilot's TEMPLATE.md recipe (ticket 26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE). This is W2 batch work; exclusive ownership of everything under ✏️s/🔌️plugins/🏗️fem/**. Preserve old bundle crate's package name, [package.metadata.*] tables verbatim, wire format byte-identical, all tests ported. Do not touch root Cargo.toml/script.ts/registry/launch.json — report registrar handoff instead.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2458"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪81b5c8baca624325ac6b0aa1da0f1893"
+  ]
+}

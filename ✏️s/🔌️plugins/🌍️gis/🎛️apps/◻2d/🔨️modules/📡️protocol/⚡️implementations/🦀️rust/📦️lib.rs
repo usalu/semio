@@ -80,6 +80,76 @@ pub enum Gis2dCommand {
 }
 //#endregion 🔖️Gis2dCommand
 
+//#region 🧪️WireBaseline
+/// 🧪️ [DEBUG] Temporary pre-migration wire dump (crate-consolidation ticket
+/// `26/08/05/GIS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION`, TEMPLATE §0.4) — deleted with
+/// this crate.
+#[cfg(test)]
+mod wire_baseline {
+    use super::*;
+    use gis2d_op::GisMapOperation;
+    use protocol::{CollectionOperation, OpText};
+
+    fn dump(label: &str, command: &Gis2dCommand) {
+        let bytes = command.encode_op().expect("encode");
+        println!("{label} | {} | {} | {}", command.print_op(), bytes.len(), bytes.iter().map(|b| format!("{b:02x}")).collect::<String>());
+    }
+
+    fn dump_op(label: &str, operation: &GisMapOperation) {
+        let bytes = protocol::OpBinary::encode_op(operation).expect("encode");
+        println!("{label} | {} | {} | {}", operation.print_op(), bytes.len(), bytes.iter().map(|b| format!("{b:02x}")).collect::<String>());
+    }
+
+    fn feature() -> gis2d::MapFeature {
+        gis2d::MapFeature { id: "p1".into(), data: dsl::to_dsl_value(&serde_json::json!({ "id": "p1", "lon": 1.0, "lat": 2.0 })).unwrap_or(dsl::DslValue::Null) }
+    }
+
+    #[test]
+    fn gis2d_wire_baseline() {
+        dump("SetActiveExample", &Gis2dCommand::SetActiveExample { example_id: "reuse-map".into() });
+        dump("PatchPositions", &Gis2dCommand::PatchPositions { positions_json: r#"[{"id":"p1","lon":1.0,"lat":2.0}]"#.into() });
+        dump("PatchRoutes", &Gis2dCommand::PatchRoutes { route_ids: vec!["r1".into(), "r2".into()], field: "label".into(), value: "Home".into() });
+        dump("PatchRoutes.empty", &Gis2dCommand::PatchRoutes { route_ids: Vec::new(), field: "label".into(), value: String::new() });
+        dump("PatchRoute", &Gis2dCommand::PatchRoute { route_id: "r1".into(), field: "label".into(), value: "Home".into() });
+        dump("SetSelection", &Gis2dCommand::SetSelection { ids: vec!["roads".into()] });
+        dump("SetSelection.empty", &Gis2dCommand::SetSelection { ids: Vec::new() });
+        dump("ToggleLayerVisibility", &Gis2dCommand::ToggleLayerVisibility { layer_id: "water".into() });
+        dump("FitWorld", &Gis2dCommand::FitWorld);
+        dump("SetCamera", &Gis2dCommand::SetCamera { camera_json: r#"{"x":0,"y":0,"zoom":1}"#.into() });
+        dump("SetRenderMode", &Gis2dCommand::SetRenderMode { value: "vector".into() });
+        dump("SetVectorStyle", &Gis2dCommand::SetVectorStyle { value: "colored".into() });
+        dump("SetLodMode", &Gis2dCommand::SetLodMode { value: "automatic".into() });
+        dump("SetFeatureSelection", &Gis2dCommand::SetFeatureSelection { positions: vec!["p1".into()], routes: vec!["r1".into()], mode: "default".into() });
+        dump("SetFeatureSelection.empty", &Gis2dCommand::SetFeatureSelection { positions: Vec::new(), routes: Vec::new(), mode: "additive".into() });
+        dump("SetHover", &Gis2dCommand::SetHover { hover_json: "null".into() });
+        dump("SetSelectionMethod", &Gis2dCommand::SetSelectionMethod { value: "lasso".into() });
+        dump("SetSelectionMode", &Gis2dCommand::SetSelectionMode { value: "additive".into() });
+        dump("ClearSelection", &Gis2dCommand::ClearSelection);
+        dump("SelectAll", &Gis2dCommand::SelectAll);
+        dump("Deselect", &Gis2dCommand::Deselect { feature_id: "p1".into(), feature_kind: "position".into() });
+        dump("FocusFeature", &Gis2dCommand::FocusFeature { feature_id: "p1".into(), feature_kind: "position".into() });
+        dump("SetLayerStrokeScale", &Gis2dCommand::SetLayerStrokeScale { layer_id: "roads".into(), value: 1.5 });
+        dump("SetLocale", &Gis2dCommand::SetLocale { value: "de-DE".into() });
+        dump("OpenSource", &Gis2dCommand::OpenSource { feature_id: "p1".into() });
+
+        dump_op("Op.Positions.Add", &GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: feature(), at: 0 }));
+        dump_op("Op.Positions.Remove", &GisMapOperation::Positions(CollectionOperation::Remove { id: "p1".into() }));
+        dump_op("Op.Positions.Move", &GisMapOperation::Positions(CollectionOperation::Move { id: "p1".into(), to: 3 }));
+        dump_op("Op.Positions.Patch.Some", &GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: gis2d::MapFeaturePatch { data: Some(dsl::to_dsl_value(&serde_json::json!({ "label": "Home" })).unwrap_or(dsl::DslValue::Null)) } }));
+        dump_op("Op.Positions.Patch.None", &GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: gis2d::MapFeaturePatch { data: None } }));
+        dump_op("Op.Routes.Add", &GisMapOperation::Routes(CollectionOperation::Add { id: "p1".into(), item: feature(), at: 0 }));
+        dump_op("Op.Routes.Remove", &GisMapOperation::Routes(CollectionOperation::Remove { id: "p1".into() }));
+        dump_op("Op.Routes.Move", &GisMapOperation::Routes(CollectionOperation::Move { id: "p1".into(), to: 1 }));
+        dump_op("Op.Routes.Patch", &GisMapOperation::Routes(CollectionOperation::Patch { id: "p1".into(), patch: gis2d::MapFeaturePatch { data: Some(dsl::to_dsl_value(&serde_json::json!({ "kind": "reuse" })).unwrap_or(dsl::DslValue::Null)) } }));
+        dump_op("Op.Regions.Add", &GisMapOperation::Regions(CollectionOperation::Add { id: "p1".into(), item: feature(), at: 0 }));
+        dump_op("Op.Regions.Remove", &GisMapOperation::Regions(CollectionOperation::Remove { id: "p1".into() }));
+        dump_op("Op.Regions.Move", &GisMapOperation::Regions(CollectionOperation::Move { id: "p1".into(), to: 2 }));
+        dump_op("Op.Regions.Patch", &GisMapOperation::Regions(CollectionOperation::Patch { id: "p1".into(), patch: gis2d::MapFeaturePatch { data: Some(dsl::to_dsl_value(&serde_json::json!({ "kind": "boundary" })).unwrap_or(dsl::DslValue::Null)) } }));
+        dump_op("Op.SetDocument", &GisMapOperation::SetDocument { document: gis2d::GisMapDocument { positions: vec![feature()], routes: Vec::new(), regions: Vec::new() } });
+    }
+}
+//#endregion 🧪️WireBaseline
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

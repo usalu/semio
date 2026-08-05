@@ -19,7 +19,8 @@ fn main() {
             if path.extension().and_then(|x| x.to_str()) != Some("svg") {
                 continue;
             }
-            let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or_else(|| panic!("bad file name {:?}", path));
+            let file_stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or_else(|| panic!("bad file name {:?}", path));
+            let stem = file_stem.trim_start_matches(|c: char| !c.is_ascii_alphanumeric());
             let safe = stem.chars().map(|c| if c.is_ascii_alphanumeric() { c } else { '_' }).collect::<String>();
             let dest = out_dir.join(format!("icon_{safe}.svg"));
             std::fs::copy(&path, &dest).unwrap_or_else(|e| panic!("copy {:?} -> {:?}: {e}", path, dest));

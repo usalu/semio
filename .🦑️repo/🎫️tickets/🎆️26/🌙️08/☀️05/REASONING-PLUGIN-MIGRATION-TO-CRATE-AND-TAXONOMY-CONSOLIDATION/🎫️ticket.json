@@ -1,0 +1,13 @@
+{
+  "title": "Reasoning Plugin Migration To Crate And Taxonomy Consolidation",
+  "emoji": "🧠",
+  "status": "open",
+  "description": "W2 batch of the CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE master ticket (26/08/05). Merge the 💡️reasoning plugin's 7 Rust crates (bundle/manifest + app facade + engine/dsl/op/pack/protocol/ui modules for its one app, 🔌️wires) into ONE crate at ✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/ (crate name preserved from the old bundle crate: semio-s-plugin-reasoning-mindmap), with the full taxonomy source tree (🗿️artifacts/wires/{component,diff,op,dsl,pack,spr,engine}, 🎛️apps/wires/{component,config,terminology,commands,modes,panels}) wired from a plugin-root 📦️lib.rs via explicit #[path] mod declarations. Decompose WiresCommand with the app_commands! macro, stitch the manifest from per-node definition() fns, preserve wire format exactly, keep every existing test. Follow TEMPLATE.md precisely (already written by the W1 flow pilot). Fix the known systemic pre-existing broken-ui-crate bug (unclosed Ok(Emit::... parens + missing Fault import) documented in TEMPLATE.md §12.3 - present in this plugin's old ui crate too. Repoint the one external dependent found (framework os-dev's dsl fixture-sweep crate, which dev-depends on reasoning_wires for MindmapWiresDocument). Never touch root Cargo.toml / launch.json / registry script / other plugins - report the registrar handoff lines instead.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2462"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪1a5a4a14cf0446eea4457d13a1f51b8f"
+  ]
+}

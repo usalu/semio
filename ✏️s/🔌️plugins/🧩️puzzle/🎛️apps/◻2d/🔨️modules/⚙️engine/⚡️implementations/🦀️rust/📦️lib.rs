@@ -194,6 +194,32 @@ mod host_tests {
         h.set_camera(0.0, 0.0, 2.0);
     }
 
+    /// 🗂️ Board kind-catalog JSON for a compile-time manifest id — the catalogs live in the manifest
+    /// registry (`mathematical_graph_manifest`), not in fixture `meta.kindCatalogs`, so tests that
+    /// need real node/handle kinds read them from there. Each catalog row is the manifest row's
+    /// `id`/`name` merged with its flattened `presentation` object.
+    fn catalogs_json_from_manifest_id(manifest_id: &str) -> String {
+        let manifest = mathematical_graph_manifest::manifest_by_id(manifest_id).unwrap_or_else(|| panic!("unknown manifest id {manifest_id}"));
+        let rows = |kinds: &[mathematical_graph_manifest::KindDef]| -> Vec<serde_json::Value> {
+            kinds
+                .iter()
+                .map(|kind| {
+                    let mut row = serde_json::Map::new();
+                    row.insert("id".to_string(), json!(kind.id));
+                    row.insert("name".to_string(), json!(kind.name));
+                    if let Some(serde_json::Value::Object(presentation)) = kind.presentation.as_ref() {
+                        for (key, value) in presentation {
+                            row.insert(key.clone(), value.clone());
+                        }
+                    }
+                    serde_json::Value::Object(row)
+                })
+                .collect()
+        };
+        let visual_port_kinds: Vec<mathematical_graph_manifest::KindDef> = manifest.port_kinds.iter().filter(|kind| kind.presentation.as_ref().is_some_and(|p| p.get("color").is_some())).cloned().collect();
+        json!({ "handleKinds": rows(&visual_port_kinds), "nodeKinds": rows(&manifest.node_kinds) }).to_string()
+    }
+
     fn set_micro_lod(h: &mut BoardHost) {
         h.set_camera(0.0, 60.0, 4.5);
     }
@@ -2821,18 +2847,7 @@ mod host_tests {
         .unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map(|v| v.to_string()).unwrap_or_else(|| "[]".to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
-        let catalogs_str = fixture
-            .get("meta")
-            .and_then(|m| m.get("kindCatalogs"))
-            .map(|kc| {
-                serde_json::json!({
-                    "handleKinds": kc.get("handles"),
-                    "nodeKinds": kc.get("nodes"),
-                })
-                .to_string()
-            })
-            .unwrap_or_else(|| "{}".to_string());
-        h.set_board_kind_catalogs_from_json(&catalogs_str).unwrap();
+        h.set_board_kind_catalogs_from_json(&catalogs_json_from_manifest_id("nakagin")).unwrap();
         let desc = SceneDescriptorJson {
             nodes: vec![NodeDescJson {
                 id: "base".into(),

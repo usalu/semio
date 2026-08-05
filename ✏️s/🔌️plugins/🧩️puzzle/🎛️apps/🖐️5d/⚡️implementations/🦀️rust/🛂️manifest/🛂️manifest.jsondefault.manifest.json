@@ -4,7 +4,7 @@
   "name": "Puzzle 5D Default",
   "axes": { "portModel": "ported", "directedness": "directed" },
   "portKinds": [
-    { "id": "port", "name": "Port", "presentation": { "color": "var(--muted-foreground)", "defaultWireKind": "wire.link" } },
+    { "id": "port", "name": "Port", "presentation": { "color": "#7b827d", "defaultWireKind": "wire.link" } },
     { "id": "vortex", "name": "Vortex", "presentation": { "defaultWireKind": "cable.link" } }
   ],
   "wireKinds": [

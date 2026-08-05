@@ -1,0 +1,13 @@
+{
+  "title": "Layout Plugin Migration To Crate And Taxonomy Consolidation",
+  "emoji": "📏️",
+  "status": "open",
+  "description": "Migrate the 📏️layout plugin (single app \"layout\", single artifact \"layout\") from its old 7-crate constitutional layout into ONE crate at ✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/ with the full taxonomy source tree, per the master ticket 26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE's TEMPLATE.md recipe. This is W2 batch-2 work. Exclusive file ownership: everything under ✏️s/🔌️plugins/📏️layout/**. Preserve crate name semio-s-plugin-layout and all [package.metadata.*] verbatim. Old ui crate has the known systemic pre-existing broken-parens bug (Ok( without closing paren in handle() match arms) — fix as natural side effect of app_commands! decomposition. Verify with cargo check (native+wasm32-wasip2), clippy -D warnings, cargo test, wire-format diff proof, then report registrar handoff (do not edit root Cargo.toml/registry/launch.json myself).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2463"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪80b3b8e4a1134cc9bf03f2ac0a5f8928"
+  ]
+}

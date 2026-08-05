@@ -1,0 +1,24 @@
+Pre-migration cargo test --lib baseline (per old crate), captured after forward-fixing the
+systemic pre-existing broken-ui-crate bug (see TEMPLATE.md §12.3 — same pattern as cad/vcs/shooting/sourcing):
+
+  semio-s-app-reasoning-wires            0
+  semio-s-app-reasoning-wires-dsl        2
+  semio-s-app-reasoning-wires-engine     6
+  semio-s-app-reasoning-wires-op        12
+  semio-s-app-reasoning-wires-pack       3
+  semio-s-app-reasoning-wires-protocol   4
+  semio-s-app-reasoning-wires-ui        14
+  semio-s-plugin-reasoning-mindmap       2 (semio_plugin! generated sanity tests)
+  -------------------------------------------
+  TOTAL                                 43
+
+Bug fixed in the OLD ui crate lib.rs before this baseline could even compile
+(✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs):
+  - missing `Fault` import (semio_framework_plugin::Fault)
+  - `Ok(Emit::operations(operations)` missing closing paren (ForceLayout/Reorganize arm)
+  - `return Ok(Emit::default()` x2 missing closing paren (CanvasPointerMove arm's two `let...else`)
+  - AddNode/AddRelationship/DeleteSelection arms returned bare `Emit { .. }` instead of `Ok(Emit { .. })`
+    (3 additional missing-Ok bugs beyond the two patterns TEMPLATE.md §12.3 called out for cad/vcs/shooting)
+This is the same automated repo-wide corruption pattern TEMPLATE.md §12.3 documents for cad/vcs/shooting/
+sourcing's old ui crates — reasoning's old ui crate has it too, plus extra fallout (3 bare `Emit{}` arms
+that TEMPLATE's cad/vcs/shooting writeup didn't mention, so noting it here for future plugins).

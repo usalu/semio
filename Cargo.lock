@@ -11336,6 +11336,7 @@ name = "semio-s-app-puzzle-2d-engine"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-infinite-board-port-directed-normal",
+ "semio-framework-os-kernel-math-graph-manifest",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-puzzle-2d",

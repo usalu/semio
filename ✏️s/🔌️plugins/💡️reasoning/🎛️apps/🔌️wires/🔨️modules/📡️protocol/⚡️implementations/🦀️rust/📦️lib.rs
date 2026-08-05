@@ -64,6 +64,35 @@ mod tests {
     use reasoning_wires::MindmapWiresDocument;
     use serde_json::json;
 
+    /// 📜️ [DEBUG] TEMPLATE.md §0.4 wire baseline dump — one `WiresCommand` value per variant,
+    /// `print_op | bytes.len() | hex(bytes)`. Delete once the post-migration diff is clean.
+    #[test]
+    fn debug_wire_baseline_dump() {
+        use protocol::{OpBinary, OpText};
+        let node = dsl::to_dsl_value(&json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).unwrap();
+        let samples: Vec<WiresCommand> = vec![
+            WiresCommand::SetActiveExample { example_id: "metabolism".into() },
+            WiresCommand::AddNode { kind: "identity".into() },
+            WiresCommand::AddRelationship { kind: "owns".into() },
+            WiresCommand::DeleteSelection,
+            WiresCommand::ForceLayout,
+            WiresCommand::Reorganize,
+            WiresCommand::CanvasPointerMove { x: 1.5, y: -2.5 },
+            WiresCommand::SetSelection { ids: vec!["node-1".into(), "edge-1".into()] },
+            WiresCommand::DocumentSelect { ids: vec!["node-2".into()] },
+            WiresCommand::CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 },
+            WiresCommand::CanvasPointerDown { id: None, x: 0.0, y: 0.0 },
+            WiresCommand::CanvasPointerUp,
+            WiresCommand::SetLocale { value: "de-DE".into() },
+        ];
+        let _ = &node;
+        for sample in &samples {
+            let bytes = sample.encode_op().expect("encode");
+            let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
+            println!("[DEBUG] {} | {} | {}", sample.print_op(), bytes.len(), hex);
+        }
+    }
+
     /// 🗄️ Local envelope/store alias for the whole-store tests below — mirrors the `pub type
     /// MindmapWiresEnvelope`/`MindmapWiresStore` the pre-split `reasoning_mindmap` crate exported,
     /// scoped here since this is the only crate that still needs it after the constitutional split.

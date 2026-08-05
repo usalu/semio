@@ -1,0 +1,4 @@
+gisterrain exaggeration=1.5 imported-features-json=""
+origin lon=5.5818 lat=50.603
+position id=p_institut_de_botanique_ulg_liege lon=5.5818 lat=50.603 label="Institut de Botanique" icon=landmark
+position id=bw_institut_botanique_ulg lon=5.5755821 lat=50.5783177 label="Institut de Botanique (donor)" icon=box

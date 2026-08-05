@@ -106,7 +106,7 @@ fn register_demonstrator_exports() {
 fn bundle() -> semio_framework_plugin::PluginBundle {
     register_demonstrator_exports();
     semio_framework_plugin::PluginBundle::new("demonstrator", "Entwerfen mit Bestand", "0.1.0")
-        .register_document_app(procedural::apps::procedural3d::create_procedural3d_app(), || procedural::apps::procedural3d::Procedural3dPlayApp)
+        .register_document_app(procedural::apps::procedural3d::create_procedural3d_app(), || <procedural::apps::procedural3d::Procedural3dPlayApp as ::std::default::Default>::default())
         .register_document_app(cad::apps::cad::create_cad_app(), || <cad::apps::cad::CadPlayApp as ::std::default::Default>::default())
         .register_document_app(puzzle_3d_ui::create_puzzle3d_app(), || <puzzle_3d_ui::Puzzle3dPlayApp as ::std::default::Default>::default())
         .register_document_app(sourcing::apps::curate::create_sourcing_curate_app(), || sourcing::apps::curate::SourcingCurateApp)

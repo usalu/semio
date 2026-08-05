@@ -12,7 +12,7 @@ use reasoning_wires_op::{MindmapWiresOperation, WiresConfigOperation};
 use reasoning_wires_protocol::WiresCommand;
 use semio_framework_plugin::{
         app_labels, build_canvas_2d_scene, create_default_layout, tree_item_with_action, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App, AppLabels, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView,
-    Emit, Label, Locale, LocalizedLabel, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    Emit, Fault, Label, Locale, LocalizedLabel, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde_json::{json, Value};
@@ -391,7 +391,7 @@ impl DocumentApp for ReasoningWiresPlayApp {
                     "handles": []
                 }))
                 .expect("node serializes");
-                Emit { document_operations: vec![MindmapWiresOperation::AddNode { node }], config_operations: vec![WiresConfigOperation::SetSelection { ids: vec![id] }], ..Default::default() }
+                Ok(Emit { document_operations: vec![MindmapWiresOperation::AddNode { node }], config_operations: vec![WiresConfigOperation::SetSelection { ids: vec![id] }], ..Default::default() })
             }
             WiresCommand::AddRelationship { kind } => {
                 let kind = if kind.is_empty() { "owns" } else { kind.as_str() };
@@ -410,7 +410,7 @@ impl DocumentApp for ReasoningWiresPlayApp {
                     "targetIdentityId": 2
                 }))
                 .expect("relationship serializes");
-                Emit { document_operations: vec![MindmapWiresOperation::AddRelationship { edge, relationship }], config_operations: vec![WiresConfigOperation::SetSelection { ids: vec![edge_id] }], ..Default::default() }
+                Ok(Emit { document_operations: vec![MindmapWiresOperation::AddRelationship { edge, relationship }], config_operations: vec![WiresConfigOperation::SetSelection { ids: vec![edge_id] }], ..Default::default() })
             }
             WiresCommand::DeleteSelection => {
                 let mut operations = Vec::new();
@@ -422,7 +422,7 @@ impl DocumentApp for ReasoningWiresPlayApp {
                     }
                 }
                 let config_operations = if operations.is_empty() { Vec::new() } else { vec![WiresConfigOperation::SetSelection { ids: Vec::new() }] };
-                Emit { document_operations: operations, config_operations, ..Default::default() }
+                Ok(Emit { document_operations: operations, config_operations, ..Default::default() })
             }
             WiresCommand::ForceLayout | WiresCommand::Reorganize => {
                 let mut board = document.board_fixture.clone();
@@ -442,11 +442,11 @@ impl DocumentApp for ReasoningWiresPlayApp {
                         Some(MindmapWiresOperation::PatchNode { node_id: id.to_string(), patch })
                     })
                     .collect();
-                Ok(Emit::operations(operations)
+                Ok(Emit::operations(operations))
             }
             WiresCommand::CanvasPointerMove { x, y } => {
-                let Some(drag_node_id) = config.drag_node_id.clone() else { return Ok(Emit::default() };
-                let Some(node) = find_board_node(document, &drag_node_id) else { return Ok(Emit::default() };
+                let Some(drag_node_id) = config.drag_node_id.clone() else { return Ok(Emit::default()) };
+                let Some(node) = find_board_node(document, &drag_node_id) else { return Ok(Emit::default()) };
                 let zoom = fixture_camera(&document.board_fixture).2.max(1e-6);
                 let (cur_x, cur_y) = node_position(node);
                 let (dx, dy) = ((x - config.drag_last_x) / zoom, (y - config.drag_last_y) / zoom);

@@ -1,0 +1,39 @@
+SetActiveExample | active-example example-id=reuse-map | 17 | 0100010972657573652d6d617001000600
+PatchPositions | patch-positions positions-json="[{\"id\":\"p1\",\"lon\":1.0,\"lat\":2.0}]" | 41 | 010101215b7b226964223a227031222c226c6f6e223a312e302c226c6174223a322e307d5d01000600
+PatchRoutes | patch-routes field=label value=Home route-ids=[ r1 r2 ] | 34 | 01020404486f6d65056c6162656c02723102723203000c0206020603010601020600
+PatchRoutes.empty | patch-routes field=label value="" route-ids=[ ] | 20 | 01020200056c6162656c03000c00010601020600
+PatchRoute | patch-route route-id=r1 field=label value=Home | 27 | 01030304486f6d65056c6162656c02723103000602010601020600
+SetSelection | selection ids=[ roads ] | 15 | 01040105726f61647301000c010600
+SetSelection.empty | selection ids=[ ] | 7 | 01040001000c00
+ToggleLayerVisibility | toggle-layer-visibility layer-id=water | 13 | 01050105776174657201000600
+FitWorld | fit-world | 4 | 01060000
+SetCamera | camera camera-json="{\"x\":0,\"y\":0,\"zoom\":1}" | 30 | 010701167b2278223a302c2279223a302c227a6f6f6d223a317d01000600
+SetRenderMode | render-mode value=vector | 14 | 01080106766563746f7201000600
+SetVectorStyle | vector-style value=colored | 15 | 01090107636f6c6f72656401000600
+SetLodMode | lod-mode value=automatic | 17 | 010a01096175746f6d6174696301000600
+SetFeatureSelection | feature-selection mode=default positions=[ p1 ] routes=[ r1 ] | 31 | 010b030764656661756c7402703102723103000c010601010c010602020600
+SetFeatureSelection.empty | feature-selection mode=additive positions=[ ] routes=[ ] | 22 | 010b0108616464697469766503000c00010c00020600
+SetHover | hover hover-json="null" | 12 | 010c01046e756c6c01000600
+SetSelectionMethod | selection-method value=lasso | 13 | 010d01056c6173736f01000600
+SetSelectionMode | selection-mode value=additive | 16 | 010e0108616464697469766501000600
+ClearSelection | clear-selection | 4 | 010f0000
+SelectAll | select-all | 4 | 01100000
+Deselect | deselect feature-id=p1 feature-kind=position | 22 | 01110202703108706f736974696f6e02000600010601
+FocusFeature | focus-feature feature-id=p1 feature-kind=position | 22 | 01120202703108706f736974696f6e02000600010601
+SetLayerStrokeScale | layer-stroke-scale layer-id=roads value=1.5 | 23 | 01130105726f616473020006000105000000000000f83f
+SetLocale | locale value=de-DE | 13 | 0114010564652d444501000600
+OpenSource | open-source feature-id=p1 | 10 | 01150102703101000600
+Op.Positions.Add | add-position index=0 item { p1 data={ id="p1" lat=2 lon=1 } } | 55 | 01000102703102000400010e0d020006000111100307026964060007036c617405000000000000004007036c6f6e05000000000000f03f
+Op.Positions.Remove | remove-position id=p1 | 10 | 01010102703101000600
+Op.Positions.Move | move-position id=p1 to=3 | 13 | 01020102703102000600010403
+Op.Positions.Patch.Some | patch-position id=p1 patch { data={ label="Home" } } | 32 | 01030204486f6d6502703102000601010e0d010011100107056c6162656c0600
+Op.Positions.Patch.None | patch-position id=p1 patch { } | 14 | 01030102703102000600010e0d00
+Op.Routes.Add | add-route index=0 item { p1 data={ id="p1" lat=2 lon=1 } } | 55 | 01040102703102000400010e0d020006000111100307026964060007036c617405000000000000004007036c6f6e05000000000000f03f
+Op.Routes.Remove | remove-route id=p1 | 10 | 01050102703101000600
+Op.Routes.Move | move-route id=p1 to=1 | 13 | 01060102703102000600010401
+Op.Routes.Patch | patch-route id=p1 patch { data={ kind="reuse" } } | 32 | 01070202703105726575736502000600010e0d010011100107046b696e640601
+Op.Regions.Add | add-region index=0 item { p1 data={ id="p1" lat=2 lon=1 } } | 55 | 01080102703102000400010e0d020006000111100307026964060007036c617405000000000000004007036c6f6e05000000000000f03f
+Op.Regions.Remove | remove-region id=p1 | 10 | 01090102703101000600
+Op.Regions.Move | move-region id=p1 to=2 | 13 | 010a0102703102000600010402
+Op.Regions.Patch | patch-region id=p1 patch { data={ kind="boundary" } } | 35 | 010b0208626f756e6461727902703102000601010e0d010011100107046b696e640600
+Op.SetDocument | set-document document { positions [id:TEXT data:VAL] { p1 { id="p1" lat=2 lon=1 } } routes [id:TEXT data:VAL] { } regions [id:TEXT data:VAL] { } } | 79 | 010c0102703101000e0d03001401020000050001000011100307026964060007036c617405000000000000004007036c6f6e05000000000000f03f0114000200000501000002140002000005010000

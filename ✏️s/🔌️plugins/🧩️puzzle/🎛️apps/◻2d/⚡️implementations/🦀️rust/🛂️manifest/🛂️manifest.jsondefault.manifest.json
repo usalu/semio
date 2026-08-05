@@ -11,7 +11,7 @@
       "id": "port",
       "name": "Port",
       "presentation": {
-        "color": "var(--muted-foreground)",
+        "color": "#7b827d",
         "defaultWireKind": "wire.link"
       }
     }

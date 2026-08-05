@@ -1,0 +1,909 @@
+positions [id:TEXT data:VAL] {
+  p_institut_de_botanique_ulg_liege {
+    icon="landmark" id="p_institut_de_botanique_ulg_liege" kind="receiver" label="Institut de Botanique…" lat=50.603 lon=5.5818 name="Institut de Botanique…" sourceUrl="https://opalis.eu/fr/projets/institut-de-botanique-ulg-liege"
+  }
+  bw_institut_botanique_ulg {
+    icon="box" id="bw_institut_botanique_ulg" kind="donor" label="Institut de Botanique…" lat=50.5783177 lon=5.5755821 name="Institut de Botanique…" sourceUrl="https://opalis.eu/fr/projets/institut-de-botanique-ulg-liege"
+  }
+  p_lycee_michel_lucius_conversion_luxembourg {
+    icon="landmark" id="p_lycee_michel_lucius_conversion_luxembourg" kind="receiver" label="Lycée Michel Lucius…" lat=49.6094 lon=6.1267 name="Lycée Michel Lucius…" sourceUrl="https://opalis.eu/fr/projets/lycee-michel-lucius"
+  }
+  bw_lycee_block_3000 {
+    icon="box" id="bw_lycee_block_3000" kind="donor" label="Lycée Lucius B3000" lat=49.6249025 lon=6.1136808 name="Lycée Lucius B3000" sourceUrl="https://opalis.eu/fr/projets/lycee-michel-lucius"
+  }
+  p_plattenpalast_berlin {
+    icon="landmark" id="p_plattenpalast_berlin" kind="receiver" label="Plattenpalast Berlin" lat=52.5390524 lon=13.4018775 name="Plattenpalast Berlin"
+  }
+  bw_unbekannte_wbs70_plattenbauten {
+    icon="box" id="bw_unbekannte_wbs70_plattenbauten" kind="donor" label="rückgebaute WBS70-Platte…" lat=52.5173885 lon=13.3951309 name="rückgebaute WBS70-Platte…"
+  }
+  bw_peter_behrens_halle_berlin {
+    icon="box" id="bw_peter_behrens_halle_berlin" kind="donor" label="Peter-Behrens-Halle…" lat=52.5419669 lon=13.3834015 name="Peter-Behrens-Halle…" sourceUrl="https://www.plattenvereinigung.de/project/orte/"
+  }
+  p_maison_vignette_auderghem {
+    icon="landmark" id="p_maison_vignette_auderghem" kind="receiver" label="Maison Vignette" lat=50.815 lon=4.4214 name="Maison Vignette" sourceUrl="https://guidebatimentdurable.brussels/construction-dune-maison-unifamiliale-paille-projet-vignette"
+  }
+  p_circular_pavilion_paris {
+    icon="landmark" id="p_circular_pavilion_paris" kind="receiver" label="Circular Pavilion Paris" lat=48.8565 lon=2.3522 name="Circular Pavilion Paris" sourceUrl="https://www.batiactu.com/edito/un-pavillon-circulaire-illustrer-reemploi-materiaux-42547.php"
+  }
+  p_house_of_fraser_318_oxford_street_tbc_london_reuse_chain {
+    icon="landmark" id="p_house_of_fraser_318_oxford_street_tbc_london_reuse_chain" kind="receiver" label="House of Fraser" lat=51.5142 lon=-0.1427 name="House of Fraser" sourceUrl="https://www.stiffandtrevillion.com/projects/tower-bridge-road"
+  }
+  bw_318_oxford_street_house_of_fraser {
+    icon="box" id="bw_318_oxford_street_house_of_fraser" kind="donor" label="318 Oxford Street" lat=51.5152626 lon=-0.1463435 name="318 Oxford Street" sourceUrl="https://www.stiffandtrevillion.com/projects/tower-bridge-road"
+  }
+  p_juch_areal_recyclingzentrum_zuerich {
+    icon="landmark" id="p_juch_areal_recyclingzentrum_zuerich" kind="receiver" label="Juch-Areal Recyclingzent…" lat=47.393 lon=8.4885 name="Juch-Areal Recyclingzent…" sourceUrl="https://www.stadt-zuerich.ch/de/aktuell/medienmitteilungen/2025/07/neubau-recyclingzentrum-juch-areal.html"
+  }
+  bw_hagenholz_recyclinghalle {
+    icon="box" id="bw_hagenholz_recyclinghalle" kind="donor" label="Ehemalige Recyclinghalle…" lat=47.415759 lon=8.5636654 name="Ehemalige Recyclinghalle…"
+  }
+  p_elys_kultur_gewerbehaus_basel {
+    icon="landmark" id="p_elys_kultur_gewerbehaus_basel" kind="receiver" label="ELYS Kultur- und…" lat=47.5489 lon=7.6012 name="ELYS Kultur- und…"
+  }
+  p_mehrow_pilot_house {
+    icon="landmark" id="p_mehrow_pilot_house" kind="receiver" label="Mehrow Pilot House" lat=52.5724 lon=13.6177 name="Mehrow Pilot House" sourceUrl="https://www.tagesspiegel.de/potsdam/brandenburg/plattenbau-wird-familienhaus-8009110.html"
+  }
+  bw_marzahn_wbs70_eleven_storey_donor {
+    icon="box" id="bw_marzahn_wbs70_eleven_storey_donor" kind="donor" label="Abgerissener Marzahner…" lat=52.5511184 lon=13.676873 name="Abgerissener Marzahner…"
+  }
+  p_recrete_footbridge_reused_concrete_blocks {
+    icon="landmark" id="p_recrete_footbridge_reused_concrete_blocks" kind="receiver" label="Re:Crete footbridge" lat=46.2264 lon=7.3074 name="Re:Crete footbridge" sourceUrl="https://www.construction21.org/articles/h/recrete-footbridge.html"
+  }
+  p_lokomotion_technology_centre_mini_pilot_tampere {
+    icon="landmark" id="p_lokomotion_technology_centre_mini_pilot_tampere" kind="receiver" label="Lokomotion Technology…" lat=61.4588 lon=23.6324 name="Lokomotion Technology…" sourceUrl="https://www.lokomotion.fi/"
+  }
+  bw_tampere_1980s_office_donor {
+    icon="box" id="bw_tampere_1980s_office_donor" kind="donor" label="1980er Bürogebäude im…" lat=61.4977929 lon=23.7616372 name="1980er Bürogebäude im…"
+  }
+  p_europa_building_brussels {
+    icon="landmark" id="p_europa_building_brussels" kind="receiver" label="Europa Building Brussels" lat=50.8436 lon=4.3819 name="Europa Building Brussels"
+  }
+  p_melkinlaituri_primary_school_daycare_centre_helsinki {
+    icon="landmark" id="p_melkinlaituri_primary_school_daycare_centre_helsinki" kind="receiver" label="Melkinlaituri Primary…" lat=60.1559 lon=24.9195 name="Melkinlaituri Primary…" sourceUrl="https://verstasarkkitehdit.fi/projects/melkinlaituri-school-and-daycare-centre/"
+  }
+  bw_suutarila_community_centre_donor {
+    icon="box" id="bw_suutarila_community_centre_donor" kind="donor" label="Suutarila community…" lat=60.283019 lon=25.0064817 name="Suutarila community…"
+  }
+  p_boulder_fire_station_3 {
+    icon="landmark" id="p_boulder_fire_station_3" kind="receiver" label="Boulder FS-3" lat=40.0149856 lon=-105.270545 name="Boulder FS-3"
+  }
+  bw_boulder_community_hospital {
+    icon="box" id="bw_boulder_community_hospital" kind="donor" label="Boulder Community…" lat=40.0149856 lon=-105.270545 name="Boulder Community…"
+  }
+  p_biopartner_5_leiden_oegstgeest {
+    icon="landmark" id="p_biopartner_5_leiden_oegstgeest" kind="receiver" label="BioPartner 5" lat=52.1710283 lon=4.4502649 name="BioPartner 5"
+  }
+  bw_gorlaeus_hochhaus {
+    icon="box" id="bw_gorlaeus_hochhaus" kind="donor" label="Gorlaeus Hochhaus" lat=52.1677621 lon=4.4609833 name="Gorlaeus Hochhaus" sourceUrl="https://www.student.universiteitleiden.nl/en/locations/gorlaeus-building"
+  }
+  p_recyclinghaus_hannover {
+    icon="landmark" id="p_recyclinghaus_hannover" kind="receiver" label="Recyclinghaus Hannover" lat=52.3589 lon=9.8342 name="Recyclinghaus Hannover" sourceUrl="https://www.gundlach-bau.de/projekte/recyclinghaus-hannover"
+  }
+  p_kindergarten_moeoeslistrasse_manegg_zuerich {
+    icon="landmark" id="p_kindergarten_moeoeslistrasse_manegg_zuerich" kind="receiver" label="Kindergarten Mööslistras…" lat=47.3406 lon=8.5154 name="Kindergarten Mööslistras…" sourceUrl="https://www.stadt-zuerich.ch/"
+  }
+  p_kamikatsu_zero_waste_center_hotel_why {
+    icon="landmark" id="p_kamikatsu_zero_waste_center_hotel_why" kind="receiver" label="Kamikatsu Zero Waste…" lat=33.896 lon=134.2885 name="Kamikatsu Zero Waste…" sourceUrl="https://why-kamikatsu.jp/"
+  }
+  bw_kamikatsu_local_houses {
+    icon="box" id="bw_kamikatsu_local_houses" kind="donor" label="Lokale Häuser und…" lat=33.8889228 lon=134.4018864 name="Lokale Häuser und…" sourceUrl="https://why-kamikatsu.jp/"
+  }
+  bw_kamikatsu_old_town_hall {
+    icon="box" id="bw_kamikatsu_old_town_hall" kind="donor" label="Altes Rathaus Kamikatsu" lat=33.8889228 lon=134.4018864 name="Altes Rathaus Kamikatsu" sourceUrl="https://why-kamikatsu.jp/"
+  }
+  p_trae_high_rise_aarhus {
+    icon="landmark" id="p_trae_high_rise_aarhus" kind="receiver" label="TRÆ High-Rise" lat=56.1539 lon=10.2048 name="TRÆ High-Rise" sourceUrl="https://www.lendager.com/projects/trae"
+  }
+  bw_herlev_dach_industrie_und_farmdaecher_als_aluminium_donor {
+    icon="box" id="bw_herlev_dach_industrie_und_farmdaecher_als_aluminium_donor" kind="donor" label="Herlev Dach" lat=55.7337528 lon=12.4294486 name="Herlev Dach"
+  }
+  p_woongroep_boschgaard_den_bosch {
+    icon="landmark" id="p_woongroep_boschgaard_den_bosch" kind="receiver" label="Woongroep Boschgaard…" lat=51.6947 lon=5.3082 name="Woongroep Boschgaard…" sourceUrl="https://www.boschgaard.nl/"
+  }
+  bw_stadskantoor_roosendaal {
+    icon="box" id="bw_stadskantoor_roosendaal" kind="donor" label="Stadskantoor Roosendaal" lat=51.5331484 lon=4.4561276 name="Stadskantoor Roosendaal"
+  }
+  bw_elys_former_coop_distribution_center {
+    icon="box" id="bw_elys_former_coop_distribution_center" kind="donor" label="Ehemaliges Coop-Verteilz…" lat=47.573746 lon=7.5734396 name="Ehemaliges Coop-Verteilz…"
+  }
+  bw_ehemaliges_haus_der_jugend_hannover {
+    icon="box" id="bw_ehemaliges_haus_der_jugend_hannover" kind="donor" label="ehemaliges Haus der…" lat=52.3744779 lon=9.7385532 name="ehemaliges Haus der…"
+  }
+  p_jeugdkliniek_ithaka_emergis_kloetinge {
+    icon="landmark" id="p_jeugdkliniek_ithaka_emergis_kloetinge" kind="receiver" label="Jeugdkliniek Ithaka" lat=51.4479 lon=3.6645 name="Jeugdkliniek Ithaka" sourceUrl="https://www.emergis.nl/"
+  }
+  bw_rws_districtskantoor_terneuzen {
+    icon="box" id="bw_rws_districtskantoor_terneuzen" kind="donor" label="Ehemaliges Rijkswatersta…" lat=51.298843 lon=3.8422044 name="Ehemaliges Rijkswatersta…"
+  }
+  p_grande_halle_de_colombelles {
+    icon="landmark" id="p_grande_halle_de_colombelles" kind="receiver" label="Grande Halle de Colombel…" lat=49.1916221 lon=-0.3061681 name="Grande Halle de Colombel…"
+  }
+  bw_colombelles_regional_donor_sources {
+    icon="box" id="bw_colombelles_regional_donor_sources" kind="donor" label="Regionale Rückbau- und…" lat=49.1916221 lon=-0.3061681 name="Regionale Rückbau- und…" sourceUrl="https://opalis.eu/fr/projets/grande-halle-de-colombelles"
+  }
+  p_grubenstrasse_29_werkhof_29_zuerich {
+    icon="landmark" id="p_grubenstrasse_29_werkhof_29_zuerich" kind="receiver" label="Grubenstrasse 29" lat=47.3612682 lon=8.5142622 name="Grubenstrasse 29"
+  }
+  p_chiro_d_itterbeek_dilbeek {
+    icon="landmark" id="p_chiro_d_itterbeek_dilbeek" kind="receiver" label="Chiro d’Itterbeek" lat=50.8318626 lon=4.234055 name="Chiro d’Itterbeek"
+  }
+  p_resilience_la_ferme_des_possibles_stains {
+    icon="landmark" id="p_resilience_la_ferme_des_possibles_stains" kind="receiver" label="Résilience" lat=48.9500637 lon=2.3701218 name="Résilience"
+  }
+  p_bluecity_offices_rotterdam {
+    icon="landmark" id="p_bluecity_offices_rotterdam" kind="receiver" label="BlueCity Offices…" lat=51.9436 lon=4.5112 name="BlueCity Offices…" sourceUrl="https://www.bluecity.nl/"
+  }
+  p_villa_welpeloo_enschede {
+    icon="landmark" id="p_villa_welpeloo_enschede" kind="receiver" label="Villa Welpeloo Enschede" lat=52.2283 lon=6.8814 name="Villa Welpeloo Enschede" sourceUrl="https://www.superuse-studios.com/"
+  }
+  p_roots_in_the_sky_blackfriars_crown_court {
+    icon="landmark" id="p_roots_in_the_sky_blackfriars_crown_court" kind="receiver" label="Roots in the Sky" lat=51.5025 lon=-0.0999 name="Roots in the Sky" sourceUrl="https://en.wikipedia.org/wiki/Blackfriars_Crown_Court"
+  }
+  bw_blackfriars_crown_court_bestand {
+    icon="box" id="bw_blackfriars_crown_court_bestand" kind="donor" label="Blackfriars Crown Court…" lat=51.5024846 lon=-0.0999825 name="Blackfriars Crown Court…" sourceUrl="https://en.wikipedia.org/wiki/Blackfriars_Crown_Court"
+  }
+  p_svanen_kindergarten_gladsaxe {
+    icon="landmark" id="p_svanen_kindergarten_gladsaxe" kind="receiver" label="Svanen" lat=55.7346 lon=12.4033 name="Svanen" sourceUrl="https://www.gladsaxe.dk/"
+  }
+  bw_ehemalige_gladsaxe_school {
+    icon="box" id="bw_ehemalige_gladsaxe_school" kind="donor" label="Ehemalige Gladsaxe School" lat=55.74061 lon=12.481879 name="Ehemalige Gladsaxe School"
+  }
+  bw_schellinghalle_ruemlang {
+    icon="box" id="bw_schellinghalle_ruemlang" kind="donor" label="Schellinghalle Rümlang" lat=47.4507163 lon=8.5299122 name="Schellinghalle Rümlang"
+  }
+  p_brighton_waste_house_brighton {
+    icon="landmark" id="p_brighton_waste_house_brighton" kind="receiver" label="Brighton Waste House" lat=50.8247 lon=-0.1366 name="Brighton Waste House" sourceUrl="https://www.construction21.org/articles/h/the-brighton-waste-house.html"
+  }
+  bw_bluecity_tropicana_rotterdam {
+    icon="box" id="bw_bluecity_tropicana_rotterdam" kind="donor" label="Tropicana Rotterdam" lat=51.9196447 lon=4.5007164 name="Tropicana Rotterdam" sourceUrl="https://www.bluecity.nl/"
+  }
+  p_circular_centre_netherlands_prinsenhof_a_reuse_pilot {
+    icon="landmark" id="p_circular_centre_netherlands_prinsenhof_a_reuse_pilot" kind="receiver" label="Circular Centre Netherla…" lat=52.3917 lon=6.0286 name="Circular Centre Netherla…" sourceUrl="https://recreate-project.eu/"
+  }
+  bw_prinsenhof_a_arnhem_donor {
+    icon="box" id="bw_prinsenhof_a_arnhem_donor" kind="donor" label="Prinsenhof A, Arnhem" lat=51.9773561 lon=5.9114676 name="Prinsenhof A, Arnhem" sourceUrl="https://www.gelderland.nl/themas/duurzaamheid/circulaire-economie/prinsenhof"
+  }
+  p_bestandverplanzung_pavilion_muenchen {
+    icon="landmark" id="p_bestandverplanzung_pavilion_muenchen" kind="receiver" label="Bestandverplanzung…" lat=48.1734 lon=11.5532 name="Bestandverplanzung…" sourceUrl="https://www.studentenwerk.mhn.de/en/accommodation/halls-of-residence/munich/central-munich/student-district-olympisches-dorf/"
+  }
+  bw_olympisches_dorf_bungalows_muenchen {
+    icon="box" id="bw_olympisches_dorf_bungalows_muenchen" kind="donor" label="Bungalows des Olympische…" lat=48.1803734 lon=11.5477603 name="Bungalows des Olympische…" sourceUrl="https://www.plattenvereinigung.de/project/orte/"
+  }
+  p_multi_brussels_reuse_in_multi {
+    icon="landmark" id="p_multi_brussels_reuse_in_multi" kind="receiver" label="Multi Brussels" lat=50.8476 lon=4.3487 name="Multi Brussels" sourceUrl="https://www.multibrussels.eu/"
+  }
+  bw_multi_brouckere_tower {
+    icon="box" id="bw_multi_brouckere_tower" kind="donor" label="Ehemaliger Philips" lat=50.8507197 lon=4.351774 name="Ehemaliger Philips"
+  }
+  p_maison_des_canaux_paris {
+    icon="landmark" id="p_maison_des_canaux_paris" kind="receiver" label="Maison des Canaux, Paris" lat=48.8906 lon=2.3742 name="Maison des Canaux, Paris" sourceUrl="https://www.lescanaux.com/"
+  }
+  bw_schulhaus_lavater {
+    icon="box" id="bw_schulhaus_lavater" kind="donor" label="Schulhaus Lavater" lat=47.3610404 lon=8.5329258 name="Schulhaus Lavater"
+  }
+  p_recypark_demets_anderlecht {
+    icon="landmark" id="p_recypark_demets_anderlecht" kind="receiver" label="Recypark Demets" lat=50.8415883 lon=4.3206717 name="Recypark Demets"
+  }
+  bw_ehemalige_reithalle_bei_liege_bierset {
+    icon="box" id="bw_ehemalige_reithalle_bei_liege_bierset" kind="donor" label="Ehemalige Reithalle bei…" lat=50.6547149 lon=5.4512607 name="Ehemalige Reithalle bei…"
+  }
+  p_ka13_kristian_augusts_gate_13_oslo {
+    icon="landmark" id="p_ka13_kristian_augusts_gate_13_oslo" kind="receiver" label="KA13" lat=59.916806 lon=10.737562 name="KA13"
+  }
+  p_cascadeup_london_secondary_timber_glulam_demonstrator {
+    icon="landmark" id="p_cascadeup_london_secondary_timber_glulam_demonstrator" kind="receiver" label="CascadeUp" lat=51.5074456 lon=-0.1277653 name="CascadeUp"
+  }
+  p_holbein_gardens_london {
+    icon="landmark" id="p_holbein_gardens_london" kind="receiver" label="Holbein Gardens, London" lat=51.4947 lon=-0.1489 name="Holbein Gardens, London" sourceUrl="https://www.grosvenor.com/property/holbein-gardens"
+  }
+  p_awm_muenster_circular_office {
+    icon="landmark" id="p_awm_muenster_circular_office" kind="receiver" label="AWM Münster – zirkulärer…" lat=51.9359 lon=7.6356 name="AWM Münster – zirkulärer…" sourceUrl="https://awm.stadt-muenster.de/"
+  }
+  p_circl_abn_amro {
+    icon="landmark" id="p_circl_abn_amro" kind="receiver" label="Circl" lat=52.3371844 lon=4.8734146 name="Circl"
+  }
+  p_christ_pavilion_volkenroda {
+    icon="landmark" id="p_christ_pavilion_volkenroda" kind="receiver" label="Christus-Pavillon" lat=51.2067 lon=10.4567 name="Christus-Pavillon"
+  }
+  bw_christus_pavillon_expo_hannover {
+    icon="box" id="bw_christus_pavillon_expo_hannover" kind="donor" label="Christus-Pavillon EXPO…" lat=51.2502813 lon=10.5676346 name="Christus-Pavillon EXPO…"
+  }
+  p_plattenvereinigung_berlin {
+    icon="landmark" id="p_plattenvereinigung_berlin" kind="receiver" label="Plattenvereinigung Berlin" lat=52.5408 lon=13.3892 name="Plattenvereinigung Berlin" sourceUrl="https://www.plattenvereinigung.de/project/orte/"
+  }
+  bw_peter_behrens_halle_tu_berlin {
+    icon="box" id="bw_peter_behrens_halle_tu_berlin" kind="donor" label="Peter-Behrens-Halle TU…" lat=52.5419669 lon=13.3834015 name="Peter-Behrens-Halle TU…" sourceUrl="https://www.tu.berlin/bau/forschung/infrastruktur"
+  }
+  bw_olympisches_dorf_muenchen {
+    icon="box" id="bw_olympisches_dorf_muenchen" kind="donor" label="Olympisches Dorf München" lat=48.1803734 lon=11.5477603 name="Olympisches Dorf München" sourceUrl="https://www.plattenvereinigung.de/project/orte/"
+  }
+  bw_ph12_punkthochhaus_frankfurt_oder {
+    icon="box" id="bw_ph12_punkthochhaus_frankfurt_oder" kind="donor" label="PH12-Punkthochhaus…" lat=52.3294882 lon=14.534605 name="PH12-Punkthochhaus…" sourceUrl="https://www.plattenvereinigung.de/project/orte/"
+  }
+  p_timber_square_london {
+    icon="landmark" id="p_timber_square_london" kind="receiver" label="Timber Square London" lat=51.5050972 lon=-0.1000695 name="Timber Square London"
+  }
+  p_upcycle_studios_copenhagen {
+    icon="landmark" id="p_upcycle_studios_copenhagen" kind="receiver" label="Upcycle Studios Copenhag…" lat=55.6402 lon=12.5846 name="Upcycle Studios Copenhag…" sourceUrl="https://www.lendager.com/projects/upcycle-studios"
+  }
+  bw_engie_baustelle_saint_denis {
+    icon="box" id="bw_engie_baustelle_saint_denis" kind="donor" label="ENGIE-Baustelle Saint-De…" lat=48.9383732 lon=2.3627508 name="ENGIE-Baustelle Saint-De…"
+  }
+  p_superlocal_expogebouw_bleijerheide {
+    icon="landmark" id="p_superlocal_expogebouw_bleijerheide" kind="receiver" label="SUPERLOCAL Expogebouw" lat=50.8534 lon=6.0618 name="SUPERLOCAL Expogebouw" sourceUrl="https://www.kerkrade.nl/superlocal-bleijerheide"
+  }
+  bw_hochhausflat_ursulastraat {
+    icon="box" id="bw_hochhausflat_ursulastraat" kind="donor" label="Hochhausflat Ursulastraat" lat=50.8530372 lon=6.0666022 name="Hochhausflat Ursulastraat" sourceUrl="https://www.superlocal.eu/expogebouw"
+  }
+  p_association_house_groeditz {
+    icon="landmark" id="p_association_house_groeditz" kind="receiver" label="Vereinshaus Gröditz" lat=51.4142 lon=13.4351 name="Vereinshaus Gröditz" sourceUrl="https://www.researchgate.net/publication/365763750_Reuse_of_concrete_components_in_new_construction_projectscritical_review_of_77_circular_precedents"
+  }
+  bw_school_type_dresden_donor {
+    icon="box" id="bw_school_type_dresden_donor" kind="donor" label="School type Dresden…" lat=51.4232124 lon=13.3822343 name="School type Dresden…"
+  }
+  p_saxum_vineyard_equipment_barn_paso_robles {
+    icon="landmark" id="p_saxum_vineyard_equipment_barn_paso_robles" kind="receiver" label="Saxum Vineyard Equipment…" lat=35.6366 lon=-120.6869 name="Saxum Vineyard Equipment…" sourceUrl="https://www.saxumvineyards.com/"
+  }
+  p_elementa_walkeweg {
+    icon="landmark" id="p_elementa_walkeweg" kind="receiver" label="ELEMENTA Walkeweg" lat=47.5388275 lon=7.6125448 name="ELEMENTA Walkeweg"
+  }
+  bw_lysbueechel_garage_basel {
+    icon="box" id="bw_lysbueechel_garage_basel" kind="donor" label="Lysbüchel Parkgarage" lat=47.5726315 lon=7.5738216 name="Lysbüchel Parkgarage" sourceUrl="https://www.lagerplatz.ch/kopfbau-halle-118"
+  }
+  p_zinneke_feder_masui4ever_brussels {
+    icon="landmark" id="p_zinneke_feder_masui4ever_brussels" kind="receiver" label="Zinneke" lat=50.8647 lon=4.3592 name="Zinneke" sourceUrl="https://opalis.eu/fr/projets/zinneke-feder-masui4ever"
+  }
+  bw_wohngebaude_sanierung_epinay_sur_seine {
+    icon="box" id="bw_wohngebaude_sanierung_epinay_sur_seine" kind="donor" label="Wohngebäude-Sanierung…" lat=48.9525181 lon=2.3145039 name="Wohngebäude-Sanierung…"
+  }
+  p_k118_kopfbau_halle_118_winterthur {
+    icon="landmark" id="p_k118_kopfbau_halle_118_winterthur" kind="receiver" label="K.118 Winterthur" lat=47.4997 lon=8.7267 name="K.118 Winterthur" sourceUrl="https://www.lagerplatz.ch/"
+  }
+  bw_orion_zuerich_donor {
+    icon="box" id="bw_orion_zuerich_donor" kind="donor" label="Orion-Bürogebäude Zürich" lat=47.3917725 lon=8.5177021 name="Orion-Bürogebäude Zürich" sourceUrl="https://www.psp.info/medien/medienmitteilungen/alle-artikel/building-permit-obtained-for-project-orion-in-zurich-west"
+  }
+  p_thoravej_29_copenhagen {
+    icon="landmark" id="p_thoravej_29_copenhagen" kind="receiver" label="Thoravej 29 Copenhagen" lat=55.706084 lon=12.526846 name="Thoravej 29 Copenhagen"
+  }
+  bw_thoravej_29 {
+    icon="box" id="bw_thoravej_29" kind="donor" label="Thoravej 29 Bestandsgebä…" lat=55.706084 lon=12.526846 name="Thoravej 29 Bestandsgebä…"
+  }
+  p_lo_reninge_town_hall_facade {
+    icon="landmark" id="p_lo_reninge_town_hall_facade" kind="receiver" label="Lo-Reninge Town Hall…" lat=50.9805957 lon=2.7493019 name="Lo-Reninge Town Hall…"
+  }
+  p_musee_de_folklore_mouscron {
+    icon="landmark" id="p_musee_de_folklore_mouscron" kind="receiver" label="Musée de Folklore Vie…" lat=50.7419344 lon=3.2177912 name="Musée de Folklore Vie…"
+  }
+  p_brent_cross_town_primary_substation_london {
+    icon="landmark" id="p_brent_cross_town_primary_substation_london" kind="receiver" label="Brent Cross Town…" lat=51.5639 lon=-0.2267 name="Brent Cross Town…" sourceUrl="https://www.arup.com/projects/brent-cross-town"
+  }
+  bw_palast_der_republik_berlin {
+    icon="box" id="bw_palast_der_republik_berlin" kind="donor" label="Palast der Republik…" lat=52.5172152 lon=13.4007352 name="Palast der Republik…"
+  }
+  p_plp_london_hq_circular_studio_fitout {
+    icon="landmark" id="p_plp_london_hq_circular_studio_fitout" kind="receiver" label="PLP London HQ circular…" lat=51.514434 lon=-0.0729102 name="PLP London HQ circular…"
+  }
+  bw_white_chapel_building_london {
+    icon="box" id="bw_white_chapel_building_london" kind="donor" label="The White Chapel Building" lat=51.5145623 lon=-0.0729474 name="The White Chapel Building"
+  }
+  bw_plp_previous_studio_london {
+    icon="box" id="bw_plp_previous_studio_london" kind="donor" label="vorheriges PLP Studio" lat=51.5145623 lon=-0.0729474 name="vorheriges PLP Studio"
+  }
+  p_bedzed_london_hackbridge {
+    icon="landmark" id="p_bedzed_london_hackbridge" kind="receiver" label="BedZED" lat=51.3653 lon=-0.1494 name="BedZED" sourceUrl="https://www.bioregional.com/projects-and-services/case-studies/bedzed"
+  }
+  p_verbiest_karreveld_brussels {
+    icon="landmark" id="p_verbiest_karreveld_brussels" kind="receiver" label="Verbiest + Karreveld" lat=50.8503 lon=4.315 name="Verbiest + Karreveld" sourceUrl="https://opalis.eu/fr/projets/verbiest-karreveld"
+  }
+  bw_palais_des_expositions_charleroi {
+    icon="box" id="bw_palais_des_expositions_charleroi" kind="donor" label="Palais des Expositions…" lat=50.4116233 lon=4.444528 name="Palais des Expositions…"
+  }
+  p_gjg_house_gentbrugge {
+    icon="landmark" id="p_gjg_house_gentbrugge" kind="receiver" label="gjG House" lat=51.0405 lon=3.7412 name="gjG House" sourceUrl="https://architectuur.gent/project/6263c34eeb7f8/woning-gjg"
+  }
+  p_peoples_pavilion_eindhoven {
+    icon="landmark" id="p_peoples_pavilion_eindhoven" kind="receiver" label="People’s Pavilion…" lat=51.4483 lon=5.4959 name="People’s Pavilion…" sourceUrl="https://overtredersw.nl/projects/peoples-pavilion"
+  }
+  p_hastings_pier_visitor_centre {
+    icon="landmark" id="p_hastings_pier_visitor_centre" kind="receiver" label="Hastings Pier Visitor…" lat=50.8567 lon=0.5792 name="Hastings Pier Visitor…" sourceUrl="https://www.drmm.co.uk/project/hastings-pier/"
+  }
+  bw_hastings_pier_fire_damaged_deck {
+    icon="box" id="bw_hastings_pier_fire_damaged_deck" kind="donor" label="Brandschaden" lat=50.8521015 lon=0.5725697 name="Brandschaden" sourceUrl="https://www.drmm.co.uk/project/hastings-pier/"
+  }
+  bw_behrensbau_duesseldorf_donor {
+    icon="box" id="bw_behrensbau_duesseldorf_donor" kind="donor" label="Behrensbau Düsseldorf…" lat=51.2210197 lon=6.7680311 name="Behrensbau Düsseldorf…" sourceUrl="https://www.hdgnrw.de/ueber-uns/behrensbau"
+  }
+  p_ferme_du_rail_paris {
+    icon="landmark" id="p_ferme_du_rail_paris" kind="receiver" label="Ferme du Rail Paris" lat=48.8877647 lon=2.3851363 name="Ferme du Rail Paris"
+  }
+  bw_stadt_paris_pflasterbestand {
+    icon="box" id="bw_stadt_paris_pflasterbestand" kind="donor" label="Stadt Paris Pflasterbest…" lat=48.8588897 lon=2.320041 name="Stadt Paris Pflasterbest…"
+  }
+  bw_regjeringsbygg_r4 {
+    icon="box" id="bw_regjeringsbygg_r4" kind="donor" label="Regjeringsbygg R4" lat=59.9133301 lon=10.7389701 name="Regjeringsbygg R4"
+  }
+  p_harmalanranta_a_kruunu_recreate_mini_pilot_tampere {
+    icon="landmark" id="p_harmalanranta_a_kruunu_recreate_mini_pilot_tampere" kind="receiver" label="Härmälänranta" lat=61.4808 lon=23.7493 name="Härmälänranta" sourceUrl="https://www.a-kruunu.fi/"
+  }
+  p_crclr_house_impact_hub_berlin {
+    icon="landmark" id="p_crclr_house_impact_hub_berlin" kind="receiver" label="CRCLR House" lat=52.4764 lon=13.4357 name="CRCLR House"
+  }
+  bw_crclr_external_reuse_sources {
+    icon="box" id="bw_crclr_external_reuse_sources" kind="donor" label="Externe Reuse-Quellen…" lat=52.5173885 lon=13.3951309 name="Externe Reuse-Quellen…" sourceUrl="https://www.buildingsocialecology.org/projects/crclr-house-berlin/"
+  }
+  bw_bibliothek_de_brenthof_sint_michielsgestel {
+    icon="box" id="bw_bibliothek_de_brenthof_sint_michielsgestel" kind="donor" label="Bibliothek De Brenthof…" lat=51.6509141 lon=5.3652891 name="Bibliothek De Brenthof…"
+  }
+  bw_gellerupparken_rueckbau_wohnbloecke {
+    icon="box" id="bw_gellerupparken_rueckbau_wohnbloecke" kind="donor" label="Gellerupparken Rückbau-W…" lat=56.1582601 lon=10.1332512 name="Gellerupparken Rückbau-W…"
+  }
+  bw_twente_tkf_kabelfabrik_materialquelle {
+    icon="box" id="bw_twente_tkf_kabelfabrik_materialquelle" kind="donor" label="Twente" lat=52.3253541 lon=6.7933211 name="Twente"
+  }
+  p_impact_hub_berlin_crclr_fitout {
+    icon="landmark" id="p_impact_hub_berlin_crclr_fitout" kind="receiver" label="Impact Hub Berlin" lat=52.4764 lon=13.4357 name="Impact Hub Berlin" sourceUrl="https://www.buildingsocialecology.org/projects/crclr-house-berlin/"
+  }
+  bw_sportzentrum_sauna_hannover {
+    icon="box" id="bw_sportzentrum_sauna_hannover" kind="donor" label="Sportzentrum" lat=52.3744779 lon=9.7385532 name="Sportzentrum"
+  }
+  p_association_house_plauen {
+    icon="landmark" id="p_association_house_plauen" kind="receiver" label="Vereinshaus Plauen" lat=50.4876 lon=12.1247 name="Vereinshaus Plauen" sourceUrl="https://www.haube.de/"
+  }
+  bw_iw73_6_mass_housing_donor {
+    icon="box" id="bw_iw73_6_mass_housing_donor" kind="donor" label="IW73/6 mass-housing…" lat=50.4950632 lon=12.1346523 name="IW73/6 mass-housing…"
+  }
+  p_jugendtreff_ingersheim {
+    icon="landmark" id="p_jugendtreff_ingersheim" kind="receiver" label="Jugendtreff Ingersheim" lat=48.959324 lon=9.188568 name="Jugendtreff Ingersheim"
+  }
+  bw_stuttgart21_hauptbahnhof {
+    icon="box" id="bw_stuttgart21_hauptbahnhof" kind="donor" label="Stuttgart 21 Bhf" lat=48.7856099 lon=9.1833959 name="Stuttgart 21 Bhf"
+  }
+  p_maison_dna_asse {
+    icon="landmark" id="p_maison_dna_asse" kind="receiver" label="Maison DnA" lat=50.9078 lon=4.1986 name="Maison DnA" sourceUrl="https://opalis.eu/fr/projets/maison-dna"
+  }
+  p_big_dig_house_lexington_massachusetts {
+    icon="landmark" id="p_big_dig_house_lexington_massachusetts" kind="receiver" label="Big Dig House" lat=42.2586 lon=-71.2139 name="Big Dig House" sourceUrl="https://www.projectarchitects.com/projects/big-dig-house"
+  }
+  bw_boston_big_dig_i_93_infrastructure {
+    icon="box" id="bw_boston_big_dig_i_93_infrastructure" kind="donor" label="Big Dig (I-93)" lat=42.3882451 lon=-71.1191462 name="Big Dig (I-93)" sourceUrl="https://www.projectarchitects.com/projects/big-dig-house"
+  }
+  bw_karreveld_buerogebaeude_zu_schule_und_sportzentrum {
+    icon="box" id="bw_karreveld_buerogebaeude_zu_schule_und_sportzentrum" kind="donor" label="Karreveld Bürogebäude…" lat=50.8614034 lon=4.3155803 name="Karreveld Bürogebäude…"
+  }
+  p_lysp8_basel {
+    icon="landmark" id="p_lysp8_basel" kind="receiver" label="LYSP8 Basel" lat=47.5726315 lon=7.5738216 name="LYSP8 Basel"
+  }
+  p_meduni_campus_mariannengasse {
+    icon="landmark" id="p_meduni_campus_mariannengasse" kind="receiver" label="MedUni Campus Wien" lat=48.2161081 lon=16.3492133 name="MedUni Campus Wien"
+  }
+  bw_meduni_campus_mariannengasse {
+    icon="box" id="bw_meduni_campus_mariannengasse" kind="donor" label="MedUni Campus Wien" lat=48.2163314 lon=16.3460235 name="MedUni Campus Wien"
+  }
+  p_the_green_house_utrecht {
+    icon="landmark" id="p_the_green_house_utrecht" kind="receiver" label="The Green House Utrecht" lat=52.0867 lon=5.1172 name="The Green House Utrecht" sourceUrl="https://www.thegreenhouserestaurant.nl/"
+  }
+  p_broethen_twin_house_hoyerswerda {
+    icon="landmark" id="p_broethen_twin_house_hoyerswerda" kind="receiver" label="Broethen Twin-House" lat=51.407 lon=14.279 name="Broethen Twin-House" sourceUrl="https://recreate-project.eu/tag/german-cluster/"
+  }
+  bw_biopartner_gorlaeus_hochhaus {
+    icon="box" id="bw_biopartner_gorlaeus_hochhaus" kind="donor" label="Gorlaeus (Biopartner)" lat=52.1710283 lon=4.4502649 name="Gorlaeus (Biopartner)" sourceUrl="https://www.biopartnerleiden.nl/contact_en/"
+  }
+  bw_knoopkazerne_utrecht {
+    icon="box" id="bw_knoopkazerne_utrecht" kind="donor" label="Ehemalige Knoopkazerne" lat=52.0868182 lon=5.1079133 name="Ehemalige Knoopkazerne" sourceUrl="https://www.thegreenhouserestaurant.nl/"
+  }
+  bw_alte_lackiererei_hannover {
+    icon="box" id="bw_alte_lackiererei_hannover" kind="donor" label="alte/stillgelegte…" lat=52.3308126 lon=9.832174 name="alte/stillgelegte…" sourceUrl="https://www.gundlach-bau.de/projekte/recyclinghaus-hannover"
+  }
+  bw_werkhof_moeoeslistrasse {
+    icon="box" id="bw_werkhof_moeoeslistrasse" kind="donor" label="Werkhof Mööslistrasse" lat=47.3457808 lon=8.5284529 name="Werkhof Mööslistrasse"
+  }
+  bw_ka13_existing_building {
+    icon="box" id="bw_ka13_existing_building" kind="donor" label="KA13 Bestandsgebäude…" lat=59.916806 lon=10.737562 name="KA13 Bestandsgebäude…"
+  }
+  p_haus_hos_mehrfamilienhaus_muehlhausen {
+    icon="landmark" id="p_haus_hos_mehrfamilienhaus_muehlhausen" kind="receiver" label="Haus HOS" lat=51.2089 lon=10.4526 name="Haus HOS" sourceUrl="https://www.seidlarchitekten.de/haus-hos-muehlhausen/"
+  }
+  bw_leinefelde_plattenbau_donor {
+    icon="box" id="bw_leinefelde_plattenbau_donor" kind="donor" label="Rückbaustelle" lat=51.3878458 lon=10.3212678 name="Rückbaustelle"
+  }
+  bw_einkaufswagendepot_zuerich {
+    icon="box" id="bw_einkaufswagendepot_zuerich" kind="donor" label="Ehemaliges Einkaufswagen…" lat=47.3744489 lon=8.5410422 name="Ehemaliges Einkaufswagen…"
+  }
+  bw_1_broadgate_1_2_broadgate_donor_stahl {
+    icon="box" id="bw_1_broadgate_1_2_broadgate_donor_stahl" kind="donor" label="1 Broadgate" lat=51.5191859 lon=-0.0888924 name="1 Broadgate" sourceUrl="https://www.broadgate.co.uk/"
+  }
+  bw_timber_square_print_building {
+    icon="box" id="bw_timber_square_print_building" kind="donor" label="Timber Square Print…" lat=51.5050972 lon=-0.1000695 name="Timber Square Print…"
+  }
+  bw_paternoster_textilindustriemaschine_enschede {
+    icon="box" id="bw_paternoster_textilindustriemaschine_enschede" kind="donor" label="Paternoster-" lat=52.2233633 lon=6.8705957 name="Paternoster-"
+  }
+  bw_elys_basel_donor {
+    icon="box" id="bw_elys_basel_donor" kind="donor" label="ELYS-Projekt Basel" lat=47.573746 lon=7.5734396 name="ELYS-Projekt Basel"
+  }
+  p_55_great_suffolk_street_london {
+    icon="landmark" id="p_55_great_suffolk_street_london" kind="receiver" label="55 Great Suffolk Street" lat=51.5018 lon=-0.0789 name="55 Great Suffolk Street"
+  }
+  bw_1_broadgate_london {
+    icon="box" id="bw_1_broadgate_london" kind="donor" label="1 Broadgate, London" lat=51.5191859 lon=-0.0888924 name="1 Broadgate, London" sourceUrl="https://www.broadgate.co.uk/"
+  }
+  bw_brighton_railway_station_donor {
+    icon="box" id="bw_brighton_railway_station_donor" kind="donor" label="Brighton Railway…" lat=50.8288719 lon=-0.1411137 name="Brighton Railway…" sourceUrl="https://www.construction21.org/articles/h/the-brighton-waste-house.html"
+  }
+  p_umar_unit {
+    icon="landmark" id="p_umar_unit" kind="receiver" label="UMAR Unit" lat=47.4023749 lon=8.6114852 name="UMAR Unit"
+  }
+  bw_generale_de_banque_brussels {
+    icon="box" id="bw_generale_de_banque_brussels" kind="donor" label="Gén. de Banque BXL" lat=50.8455758 lon=4.3604784 name="Gén. de Banque BXL" sourceUrl="https://rotordc.com/blog/salvaging-by-rotordc-3/generale-banks-hq-brussels-72"
+  }
+  bw_altes_projekt_in_hanzinelle {
+    icon="box" id="bw_altes_projekt_in_hanzinelle" kind="donor" label="Altes Projekt in…" lat=50.2949873 lon=4.5607099 name="Altes Projekt in…"
+  }
+  p_resource_rows_copenhagen {
+    icon="landmark" id="p_resource_rows_copenhagen" kind="receiver" label="Resource Rows" lat=55.641 lon=12.5852 name="Resource Rows" sourceUrl="https://dac.dk/en/magazine/resource-rows"
+  }
+  p_berlin_schildow_pilot_house {
+    icon="landmark" id="p_berlin_schildow_pilot_house" kind="receiver" label="Berlin-Schildow Pilot" lat=52.6333 lon=13.3833 name="Berlin-Schildow Pilot" sourceUrl="https://www.kuladig.de/Objektansicht/BKM-31000252"
+  }
+  bw_berlin_marzahn_wbs70_plattenbau {
+    icon="box" id="bw_berlin_marzahn_wbs70_plattenbau" kind="donor" label="Berliner/Marzahner…" lat=52.5511184 lon=13.676873 name="Berliner/Marzahner…" sourceUrl="https://www.kuladig.de/Objektansicht/BKM-31000252"
+  }
+  p_liander_alliander_hq_duiven {
+    icon="landmark" id="p_liander_alliander_hq_duiven" kind="receiver" label="Liander" lat=51.9442 lon=6.0783 name="Liander" sourceUrl="https://www.alliander.com/"
+  }
+  p_schaerenmoosstrasse_zuerich {
+    icon="landmark" id="p_schaerenmoosstrasse_zuerich" kind="receiver" label="Schärenmoosstr. ZH" lat=47.4187214 lon=8.5578892 name="Schärenmoosstr. ZH"
+  }
+}
+routes [id:TEXT data:VAL] {
+  "bg_holz_fassade_botanique:bw_institut_botanique_ulg:0" {
+    id="bg_holz_fassade_botanique:bw_institut_botanique_ulg:0" kind="reuse" label="/ rückgewonnene Holzfass…" points=[ [ 5.5755821 50.5783177 ] [ 5.5818 50.603 ] ]
+  }
+  "bg_stahl_mehrere_lycee_profiles_canopy:bw_lycee_block_3000:0" {
+    id="bg_stahl_mehrere_lycee_profiles_canopy:bw_lycee_block_3000:0" kind="reuse" label="11,8 t Stahlprofile als…" points=[ [ 6.1136808 49.6249025 ] [ 6.1267 49.6094 ] ]
+  }
+  "bg_stahl_mehrere_lycee_metal_ceiling_panels:bw_lycee_block_3000:0" {
+    id="bg_stahl_mehrere_lycee_metal_ceiling_panels:bw_lycee_block_3000:0" kind="reuse" label="12 Metall-Deckenpaneele" points=[ [ 6.1136808 49.6249025 ] [ 6.1267 49.6094 ] ]
+  }
+  "bg_stahlbeton_mehrere_plattenpalast_wbs70_wand_deckenelemente:bw_unbekannte_wbs70_plattenbauten:0" {
+    id="bg_stahlbeton_mehrere_plattenpalast_wbs70_wand_deckenelemente:bw_unbekannte_wbs70_plattenbauten:0" kind="reuse" label="13 WBS70-Wand- und…" points=[ [ 13.3951309 52.5173885 ] [ 13.4018775 52.5390524 ] ]
+  }
+  "bg_stahlbeton_mehrere_plattenpalast_wbs70_wand_deckenelemente:bw_peter_behrens_halle_berlin:1" {
+    id="bg_stahlbeton_mehrere_plattenpalast_wbs70_wand_deckenelemente:bw_peter_behrens_halle_berlin:1" kind="reuse" label="13 WBS70-Wand- und…" points=[ [ 13.3834015 52.5419669 ] [ 13.4018775 52.5390524 ] ]
+  }
+  "bg_beton_boden_lycee_paving_slabs:bw_lycee_block_3000:0" {
+    id="bg_beton_boden_lycee_paving_slabs:bw_lycee_block_3000:0" kind="reuse" label="135 m² wiederverwendete…" points=[ [ 6.1136808 49.6249025 ] [ 6.1267 49.6094 ] ]
+  }
+  "bg_stahl_mehrere_hof_1930s_beams_to_tbc:bw_318_oxford_street_house_of_fraser:0" {
+    id="bg_stahl_mehrere_hof_1930s_beams_to_tbc:bw_318_oxford_street_house_of_fraser:0" kind="reuse" label="1930er Stahlträger vom…" points=[ [ -0.1463435 51.5152626 ] [ -0.1427 51.5142 ] ]
+  }
+  "bg_stahl_mehrere_juch_hagenholz_stahlstruktur:bw_hagenholz_recyclinghalle:0" {
+    id="bg_stahl_mehrere_juch_hagenholz_stahlstruktur:bw_hagenholz_recyclinghalle:0" kind="reuse" label="1:1 versetzte Stahlstruk…" points=[ [ 8.5636654 47.415759 ] [ 8.4885 47.393 ] ]
+  }
+  "bg_stahlbeton_wand_mehrow_wbs70_slabs:bw_marzahn_wbs70_eleven_storey_donor:0" {
+    id="bg_stahlbeton_wand_mehrow_wbs70_slabs:bw_marzahn_wbs70_eleven_storey_donor:0" kind="reuse" label="22 wiederverwendete…" points=[ [ 13.676873 52.5511184 ] [ 13.6177 52.5724 ] ]
+  }
+  "bg_stahlbeton_mehrere_mehrow_wbs70_floor_slabs:bw_marzahn_wbs70_eleven_storey_donor:0" {
+    id="bg_stahlbeton_mehrere_mehrow_wbs70_floor_slabs:bw_marzahn_wbs70_eleven_storey_donor:0" kind="reuse" label="27 wiederverwen… (Mehrow)" points=[ [ 13.676873 52.5511184 ] [ 13.6177 52.5724 ] ]
+  }
+  "bg_stahlbeton_mehrere_lokomotion_hollow_core_slabs:bw_tampere_1980s_office_donor:0" {
+    id="bg_stahlbeton_mehrere_lokomotion_hollow_core_slabs:bw_tampere_1980s_office_donor:0" kind="reuse" label="27 wiederve… (Lokomotion)" points=[ [ 23.7616372 61.4977929 ] [ 23.6324 61.4588 ] ]
+  }
+  "bg_beton_mehrere_lycee_precast_channels:bw_lycee_block_3000:0" {
+    id="bg_beton_mehrere_lycee_precast_channels:bw_lycee_block_3000:0" kind="reuse" label="38 Fertigbetonelemente…" points=[ [ 6.1136808 49.6249025 ] [ 6.1267 49.6094 ] ]
+  }
+  "bg_daemmstoff_mehrere_lycee_gypsum_acoustic_panels:bw_lycee_block_3000:0" {
+    id="bg_daemmstoff_mehrere_lycee_gypsum_acoustic_panels:bw_lycee_block_3000:0" kind="reuse" label="419 m² Gips-Akustikpanee…" points=[ [ 6.1136808 49.6249025 ] [ 6.1267 49.6094 ] ]
+  }
+  "bg_stahl_mehrere_lycee_floor_sheet_metal_facade:bw_lycee_block_3000:0" {
+    id="bg_stahl_mehrere_lycee_floor_sheet_metal_facade:bw_lycee_block_3000:0" kind="reuse" label="61 m² Bodenblech als…" points=[ [ 6.1136808 49.6249025 ] [ 6.1267 49.6094 ] ]
+  }
+  "bg_stahlbeton_mehrere_melkinlaituri_hollow_core_slabs:bw_suutarila_community_centre_donor:0" {
+    id="bg_stahlbeton_mehrere_melkinlaituri_hollow_core_slabs:bw_suutarila_community_centre_donor:0" kind="reuse" label="64 reused hollow-core…" points=[ [ 25.0064817 60.283019 ] [ 24.9195 60.1559 ] ]
+  }
+  "bg_stahl_mehrere_boulder_wide_flange_members:bw_boulder_community_hospital:0" {
+    id="bg_stahl_mehrere_boulder_wide_flange_members:bw_boulder_community_hospital:0" kind="reuse" label="89 salvaged wide-flange…" points=[ [ -105.270545 40.0149856 ] [ -105.270545 40.0149856 ] ]
+  }
+  "bg_ziegel_fassade_biopartner_5_abbruchschutt_gruene:bw_gorlaeus_hochhaus:0" {
+    id="bg_ziegel_fassade_biopartner_5_abbruchschutt_gruene:bw_gorlaeus_hochhaus:0" kind="reuse" label="Abbruchschutt" points=[ [ 4.4609833 52.1677621 ] [ 4.4502649 52.1710283 ] ]
+  }
+  "bg_keramik_mehrere_kamikatsu_old_tiles:bw_kamikatsu_local_houses:0" {
+    id="bg_keramik_mehrere_kamikatsu_old_tiles:bw_kamikatsu_local_houses:0" kind="reuse" label="Alte Fliesen als Mosaik-" points=[ [ 134.4018864 33.8889228 ] [ 134.2885 33.896 ] ]
+  }
+  "bg_mehrere_mehrere_kamikatsu_old_town_hall_wall_parts:bw_kamikatsu_old_town_hall:0" {
+    id="bg_mehrere_mehrere_kamikatsu_old_town_hall_wall_parts:bw_kamikatsu_old_town_hall:0" kind="reuse" label="Alte Rathauswandteile…" points=[ [ 134.4018864 33.8889228 ] [ 134.2885 33.896 ] ]
+  }
+  "bg_mehrere_mehrere_kamikatsu_shoji_glass_doors:bw_kamikatsu_local_houses:0" {
+    id="bg_mehrere_mehrere_kamikatsu_shoji_glass_doors:bw_kamikatsu_local_houses:0" kind="reuse" label="Alte Shoji-Schirme und…" points=[ [ 134.4018864 33.8889228 ] [ 134.2885 33.896 ] ]
+  }
+  "bg_aluminium_fassade_trae_high_rise_aarhus_fassadenplatten:bw_herlev_dach_industrie_und_farmdaecher_als_aluminium_donor:0" {
+    id="bg_aluminium_fassade_trae_high_rise_aarhus_fassadenplatten:bw_herlev_dach_industrie_und_farmdaecher_als_aluminium_donor:0" kind="reuse" label="Aluminium-Fassadenplatten" points=[ [ 12.4294486 55.7337528 ] [ 10.2048 56.1539 ] ]
+  }
+  "bg_mehrere_mehrere_boschgaard_alu_fassade:bw_stadskantoor_roosendaal:0" {
+    id="bg_mehrere_mehrere_boschgaard_alu_fassade:bw_stadskantoor_roosendaal:0" kind="reuse" label="Aluminium-Fassadensystem" points=[ [ 4.4561276 51.5331484 ] [ 5.3082 51.6947 ] ]
+  }
+  "bg_aluminium_fassade_elys_trapezoidal_sheet:bw_elys_former_coop_distribution_center:0" {
+    id="bg_aluminium_fassade_elys_trapezoidal_sheet:bw_elys_former_coop_distribution_center:0" kind="reuse" label="Aluminium-Trapezblech…" points=[ [ 7.5734396 47.573746 ] [ 7.6012 47.5489 ] ]
+  }
+  "bg_glas_mehrere_recyclinghaus_aluminiumfenster:bw_ehemaliges_haus_der_jugend_hannover:0" {
+    id="bg_glas_mehrere_recyclinghaus_aluminiumfenster:bw_ehemaliges_haus_der_jugend_hannover:0" kind="reuse" label="Aluminiumfenster mit…" points=[ [ 9.7385532 52.3744779 ] [ 9.8342 52.3589 ] ]
+  }
+  "bg_mehrere_mehrere_ithaka_kozijnen_fenster:bw_rws_districtskantoor_terneuzen:0" {
+    id="bg_mehrere_mehrere_ithaka_kozijnen_fenster:bw_rws_districtskantoor_terneuzen:0" kind="reuse" label="Außenkozijnen" points=[ [ 3.8422044 51.298843 ] [ 3.6645 51.4479 ] ]
+  }
+  "bg_mehrere_mehrere_grande_halle_external_window_joinery:bw_colombelles_regional_donor_sources:0" {
+    id="bg_mehrere_mehrere_grande_halle_external_window_joinery:bw_colombelles_regional_donor_sources:0" kind="reuse" label="Außenschreinerei" points=[ [ -0.3061681 49.1916221 ] [ -0.3061681 49.1916221 ] ]
+  }
+  "bg_holz_fassade_ithaka_azobe_shingles:bw_rws_districtskantoor_terneuzen:0" {
+    id="bg_holz_fassade_ithaka_azobe_shingles:bw_rws_districtskantoor_terneuzen:0" kind="reuse" label="Azobé-Hartholz-Shingles…" points=[ [ 3.8422044 51.298843 ] [ 3.6645 51.4479 ] ]
+  }
+  "bg_mehrere_mehrere_bestandsfundamente_und_erste_geschosse_blackfriars:bw_blackfriars_crown_court_bestand:0" {
+    id="bg_mehrere_mehrere_bestandsfundamente_und_erste_geschosse_blackfriars:bw_blackfriars_crown_court_bestand:0" kind="reuse" label="Bestandsfundamente und…" points=[ [ -0.0999825 51.5024846 ] [ -0.0999 51.5025 ] ]
+  }
+  "bg_mehrere_mehrere_svanen_beton_recycling_zuschlag:bw_ehemalige_gladsaxe_school:0" {
+    id="bg_mehrere_mehrere_svanen_beton_recycling_zuschlag:bw_ehemalige_gladsaxe_school:0" kind="reuse" label="Beton als Recycling-Zusc…" points=[ [ 12.481879 55.74061 ] [ 12.4033 55.7346 ] ]
+  }
+  "bg_stahlbeton_mehrere_juch_schellinghalle_pilzstuetzen:bw_schellinghalle_ruemlang:0" {
+    id="bg_stahlbeton_mehrere_juch_schellinghalle_pilzstuetzen:bw_schellinghalle_ruemlang:0" kind="reuse" label="Beton-Pilzstützen und…" points=[ [ 8.5299122 47.4507163 ] [ 8.4885 47.393 ] ]
+  }
+  "bg_beton_wand_bluecity_betonbloecke_trennwaende:bw_bluecity_tropicana_rotterdam:0" {
+    id="bg_beton_wand_bluecity_betonbloecke_trennwaende:bw_bluecity_tropicana_rotterdam:0" kind="reuse" label="Betonblöcke als Trennwän…" points=[ [ 4.5007164 51.9196447 ] [ 4.5112 51.9436 ] ]
+  }
+  "bg_beton_fassade_ccn_parapets:bw_prinsenhof_a_arnhem_donor:0" {
+    id="bg_beton_fassade_ccn_parapets:bw_prinsenhof_a_arnhem_donor:0" kind="reuse" label="Betonbruestungen" points=[ [ 5.9114676 51.9773561 ] [ 6.0286 52.3917 ] ]
+  }
+  "bg_beton_mehrere_bestandverplanzung_betonfertigteil_paneele:bw_olympisches_dorf_bungalows_muenchen:0" {
+    id="bg_beton_mehrere_bestandverplanzung_betonfertigteil_paneele:bw_olympisches_dorf_bungalows_muenchen:0" kind="reuse" label="Betonfertigteil-Paneele…" points=[ [ 11.5477603 48.1803734 ] [ 11.5532 48.1734 ] ]
+  }
+  "bg_naturstein_mehrere_multi_blaustein_facade_slabs:bw_multi_brouckere_tower:0" {
+    id="bg_naturstein_mehrere_multi_blaustein_facade_slabs:bw_multi_brouckere_tower:0" kind="reuse" label="Blaustein-Fassadenblöcke…" points=[ [ 4.351774 50.8507197 ] [ 4.3487 50.8476 ] ]
+  }
+  "bg_stahl_traeger_boulder_hospital_stockpile:bw_boulder_community_hospital:0" {
+    id="bg_stahl_traeger_boulder_hospital_stockpile:bw_boulder_community_hospital:0" kind="reuse" label="Boulder Community…" points=[ [ -105.270545 40.0149856 ] [ -105.270545 40.0149856 ] ]
+  }
+  "bg_mehrere_tuer_moeoeslistrasse_brandschutztueren_lavater:bw_schulhaus_lavater:0" {
+    id="bg_mehrere_tuer_moeoeslistrasse_brandschutztueren_lavater:bw_schulhaus_lavater:0" kind="reuse" label="Brandschutztüren aus…" points=[ [ 8.5329258 47.3610404 ] [ 8.5154 47.3406 ] ]
+  }
+  "bg_holz_mehrere_brettschichtholzbogen_recypark_demets:bw_ehemalige_reithalle_bei_liege_bierset:0" {
+    id="bg_holz_mehrere_brettschichtholzbogen_recypark_demets:bw_ehemalige_reithalle_bei_liege_bierset:0" kind="reuse" label="Brettschichtholzbögen…" points=[ [ 5.4512607 50.6547149 ] [ 4.3206717 50.8415883 ] ]
+  }
+  "bg_mehrere_mehrere_kamikatsu_donated_facade_windows:bw_kamikatsu_local_houses:0" {
+    id="bg_mehrere_mehrere_kamikatsu_donated_facade_windows:bw_kamikatsu_local_houses:0" kind="reuse" label="Ca. 700 gespendete…" points=[ [ 134.4018864 33.8889228 ] [ 134.2885 33.896 ] ]
+  }
+  "bg_stahl_mehrere_christ_pavilion_roof_structure:bw_christus_pavillon_expo_hannover:0" {
+    id="bg_stahl_mehrere_christ_pavilion_roof_structure:bw_christus_pavillon_expo_hannover:0" kind="reuse" label="Dachtragwerk Christusraum" points=[ [ 10.5676346 51.2502813 ] [ 10.4567 51.2067 ] ]
+  }
+  "bg_keramik_mehrere_svanen_dachziegel:bw_ehemalige_gladsaxe_school:0" {
+    id="bg_keramik_mehrere_svanen_dachziegel:bw_ehemalige_gladsaxe_school:0" kind="reuse" label="Dachziegel (Svanen)" points=[ [ 12.481879 55.74061 ] [ 12.4033 55.7346 ] ]
+  }
+  "bg_mehrere_decke_plattenvereinigung_deckenelemente:bw_peter_behrens_halle_tu_berlin:0" {
+    id="bg_mehrere_decke_plattenvereinigung_deckenelemente:bw_peter_behrens_halle_tu_berlin:0" kind="reuse" label="Deckenelemente" points=[ [ 13.3834015 52.5419669 ] [ 13.3892 52.5408 ] ]
+  }
+  "bg_mehrere_decke_plattenvereinigung_deckenelemente:bw_olympisches_dorf_muenchen:1" {
+    id="bg_mehrere_decke_plattenvereinigung_deckenelemente:bw_olympisches_dorf_muenchen:1" kind="reuse" label="Deckenelemente" points=[ [ 11.5477603 48.1803734 ] [ 13.3892 52.5408 ] ]
+  }
+  "bg_mehrere_decke_plattenvereinigung_deckenelemente:bw_ph12_punkthochhaus_frankfurt_oder:2" {
+    id="bg_mehrere_decke_plattenvereinigung_deckenelemente:bw_ph12_punkthochhaus_frankfurt_oder:2" kind="reuse" label="Deckenelemente" points=[ [ 14.534605 52.3294882 ] [ 13.3892 52.5408 ] ]
+  }
+  "bg_holz_fenster_doppeltverglaste_holzfenster_resilience:bw_engie_baustelle_saint_denis:0" {
+    id="bg_holz_fenster_doppeltverglaste_holzfenster_resilience:bw_engie_baustelle_saint_denis:0" kind="reuse" label="Doppeltverglaste…" points=[ [ 2.3627508 48.9383732 ] [ 2.3701218 48.9500637 ] ]
+  }
+  "bg_mehrere_mehrere_superlocal_beton_wohnungsteile:bw_hochhausflat_ursulastraat:0" {
+    id="bg_mehrere_mehrere_superlocal_beton_wohnungsteile:bw_hochhausflat_ursulastraat:0" kind="reuse" label="Drei Beton-Wohnungsteile" points=[ [ 6.0666022 50.8530372 ] [ 6.0618 50.8534 ] ]
+  }
+  "bg_stahlbeton_mehrere_groeditz_dresden_type_precast_components:bw_school_type_dresden_donor:0" {
+    id="bg_stahlbeton_mehrere_groeditz_dresden_type_precast_components:bw_school_type_dresden_donor:0" kind="reuse" label="Dresden-type precast…" points=[ [ 13.3822343 51.4232124 ] [ 13.4351 51.4142 ] ]
+  }
+  "bg_mineralisch_stuetze_elementa_baufeld_c:bw_lysbueechel_garage_basel:0" {
+    id="bg_mineralisch_stuetze_elementa_baufeld_c:bw_lysbueechel_garage_basel:0" kind="reuse" label="ELEMENTA Baufeld C" points=[ [ 7.5738216 47.5726315 ] [ 7.6125448 47.5388275 ] ]
+  }
+  "bg_mineralisch_wand_elementa_baufeld_d:bw_lysbueechel_garage_basel:0" {
+    id="bg_mineralisch_wand_elementa_baufeld_d:bw_lysbueechel_garage_basel:0" kind="reuse" label="ELEMENTA Baufeld D" points=[ [ 7.5738216 47.5726315 ] [ 7.6125448 47.5388275 ] ]
+  }
+  "bg_holz_mehrere_einfachverglaste_holzfenster_resilience:bw_wohngebaude_sanierung_epinay_sur_seine:0" {
+    id="bg_holz_mehrere_einfachverglaste_holzfenster_resilience:bw_wohngebaude_sanierung_epinay_sur_seine:0" kind="reuse" label="Einfachverglaste…" points=[ [ 2.3145039 48.9525181 ] [ 2.3701218 48.9500637 ] ]
+  }
+  "bg_stahl_mehrere_k118_external_stair:bw_orion_zuerich_donor:0" {
+    id="bg_stahl_mehrere_k118_external_stair:bw_orion_zuerich_donor:0" kind="reuse" label="Externe Stahltreppe" points=[ [ 8.5177021 47.3917725 ] [ 8.7267 47.4997 ] ]
+  }
+  "bg_faserzement_fassade_recyclinghaus_faserzement:bw_ehemaliges_haus_der_jugend_hannover:0" {
+    id="bg_faserzement_fassade_recyclinghaus_faserzement:bw_ehemaliges_haus_der_jugend_hannover:0" kind="reuse" label="Faserzement-/Eternitplat…" points=[ [ 9.7385532 52.3744779 ] [ 9.8342 52.3589 ] ]
+  }
+  "bg_ziegel_mehrere_thoravej_fassade_zu_boden:bw_thoravej_29:0" {
+    id="bg_ziegel_mehrere_thoravej_fassade_zu_boden:bw_thoravej_29:0" kind="reuse" label="Fassaden-/Ziegelüberschu…" points=[ [ 12.526846 55.706084 ] [ 12.526846 55.706084 ] ]
+  }
+  "bg_mehrere_mehrere_plattenpalast_palast_fenster:bw_palast_der_republik_berlin:0" {
+    id="bg_mehrere_mehrere_plattenpalast_palast_fenster:bw_palast_der_republik_berlin:0" kind="reuse" label="Fenster und Rahmen aus…" points=[ [ 13.4007352 52.5172152 ] [ 13.4018775 52.5390524 ] ]
+  }
+  "bg_mehrere_mehrere_superlocal_fenster_kozijnen:bw_hochhausflat_ursulastraat:0" {
+    id="bg_mehrere_mehrere_superlocal_fenster_kozijnen:bw_hochhausflat_ursulastraat:0" kind="reuse" label="Fensterrahm… (Superlocal)" points=[ [ 6.0666022 50.8530372 ] [ 6.0618 50.8534 ] ]
+  }
+  "bg_mehrere_mehrere_plp_feste_fitout_komponenten:bw_white_chapel_building_london:0" {
+    id="bg_mehrere_mehrere_plp_feste_fitout_komponenten:bw_white_chapel_building_london:0" kind="reuse" label="Feste Fit-out-Komponente…" points=[ [ -0.0729474 51.5145623 ] [ -0.0729102 51.514434 ] ]
+  }
+  "bg_mehrere_mehrere_plp_feste_fitout_komponenten:bw_plp_previous_studio_london:1" {
+    id="bg_mehrere_mehrere_plp_feste_fitout_komponenten:bw_plp_previous_studio_london:1" kind="reuse" label="Feste Fit-out-Komponente…" points=[ [ -0.0729474 51.5145623 ] [ -0.0729102 51.514434 ] ]
+  }
+  "bg_mehrere_mehrere_superlocal_feste_kueche_installationen:bw_hochhausflat_ursulastraat:0" {
+    id="bg_mehrere_mehrere_superlocal_feste_kueche_installationen:bw_hochhausflat_ursulastraat:0" kind="reuse" label="Feste Küche und Installa…" points=[ [ 6.0666022 50.8530372 ] [ 6.0618 50.8534 ] ]
+  }
+  "bg_keramik_boden_verbiest_charleroi:bw_palais_des_expositions_charleroi:0" {
+    id="bg_keramik_boden_verbiest_charleroi:bw_palais_des_expositions_charleroi:0" kind="reuse" label="Fliesen aus Charleroi" points=[ [ 4.444528 50.4116233 ] [ 4.315 50.8503 ] ]
+  }
+  "bg_stahl_gelaender_verbiest_charleroi:bw_palais_des_expositions_charleroi:0" {
+    id="bg_stahl_gelaender_verbiest_charleroi:bw_palais_des_expositions_charleroi:0" kind="reuse" label="Geländer aus Charleroi" points=[ [ 4.444528 50.4116233 ] [ 4.315 50.8503 ] ]
+  }
+  "bg_mehrere_mehrere_christ_pavilion_complete_ensemble:bw_christus_pavillon_expo_hannover:0" {
+    id="bg_mehrere_mehrere_christ_pavilion_complete_ensemble:bw_christus_pavillon_expo_hannover:0" kind="reuse" label="Gesamtes transloziertes…" points=[ [ 10.5676346 51.2502813 ] [ 10.4567 51.2067 ] ]
+  }
+  "bg_holz_fassade_hastings_outbuilding_cladding:bw_hastings_pier_fire_damaged_deck:0" {
+    id="bg_holz_fassade_hastings_outbuilding_cladding:bw_hastings_pier_fire_damaged_deck:0" kind="reuse" label="Gespaltene längere…" points=[ [ 0.5725697 50.8521015 ] [ 0.5792 50.8567 ] ]
+  }
+  "bg_stahl_mehrere_elys_gratings_and_garage_door:bw_elys_former_coop_distribution_center:0" {
+    id="bg_stahl_mehrere_elys_gratings_and_garage_door:bw_elys_former_coop_distribution_center:0" kind="reuse" label="Gitterroste" points=[ [ 7.5734396 47.573746 ] [ 7.6012 47.5489 ] ]
+  }
+  "bg_mehrere_boden_kamikatsu_glass_ceramic_terrazzo:bw_kamikatsu_local_houses:0" {
+    id="bg_mehrere_boden_kamikatsu_glass_ceramic_terrazzo:bw_kamikatsu_local_houses:0" kind="reuse" label="Glas- und Keramikscherbe…" points=[ [ 134.4018864 33.8889228 ] [ 134.2885 33.896 ] ]
+  }
+  "bg_glas_mehrere_awm_partitions_doors:bw_behrensbau_duesseldorf_donor:0" {
+    id="bg_glas_mehrere_awm_partitions_doors:bw_behrensbau_duesseldorf_donor:0" kind="reuse" label="Glass partitions and…" points=[ [ 6.7680311 51.2210197 ] [ 7.6356 51.9359 ] ]
+  }
+  "bg_naturstein_boden_granitpflaster_resilience:bw_stadt_paris_pflasterbestand:0" {
+    id="bg_naturstein_boden_granitpflaster_resilience:bw_stadt_paris_pflasterbestand:0" kind="reuse" label="Granitpflaster Résilience" points=[ [ 2.320041 48.8588897 ] [ 2.3701218 48.9500637 ] ]
+  }
+  "bg_mehrere_technik_superlocal_tga_heizkoerper_aluminiumrohre:bw_hochhausflat_ursulastraat:0" {
+    id="bg_mehrere_technik_superlocal_tga_heizkoerper_aluminiumrohre:bw_hochhausflat_ursulastraat:0" kind="reuse" label="Heizkörper und Aluminium…" points=[ [ 6.0666022 50.8530372 ] [ 6.0618 50.8534 ] ]
+  }
+  "bg_stahlbeton_decke_ccn_hollow_core_slabs:bw_prinsenhof_a_arnhem_donor:0" {
+    id="bg_stahlbeton_decke_ccn_hollow_core_slabs:bw_prinsenhof_a_arnhem_donor:0" kind="reuse" label="Hohlkoerperdecken" points=[ [ 5.9114676 51.9773561 ] [ 6.0286 52.3917 ] ]
+  }
+  "bg_stahlbeton_decke_ka13_hollow_core_slabs:bw_regjeringsbygg_r4:0" {
+    id="bg_stahlbeton_decke_ka13_hollow_core_slabs:bw_regjeringsbygg_r4:0" kind="reuse" label="Hohlkörperdecken aus…" points=[ [ 10.7389701 59.9133301 ] [ 10.737562 59.916806 ] ]
+  }
+  "bg_stahlbeton_decke_harmalanranta_hollow_core_slabs:bw_tampere_1980s_office_donor:0" {
+    id="bg_stahlbeton_decke_harmalanranta_hollow_core_slabs:bw_tampere_1980s_office_donor:0" kind="reuse" label="Hohlkörp… (Harmalanranta)" points=[ [ 23.7616372 61.4977929 ] [ 23.7493 61.4808 ] ]
+  }
+  "bg_mehrere_mehrere_crclr_wood_aluminium_windows:bw_crclr_external_reuse_sources:0" {
+    id="bg_mehrere_mehrere_crclr_wood_aluminium_windows:bw_crclr_external_reuse_sources:0" kind="reuse" label="Holz-Alu-Fenster" points=[ [ 13.3951309 52.5173885 ] [ 13.4357 52.4764 ] ]
+  }
+  "bg_holz_mehrere_svanen_dachbinder:bw_ehemalige_gladsaxe_school:0" {
+    id="bg_holz_mehrere_svanen_dachbinder:bw_ehemalige_gladsaxe_school:0" kind="reuse" label="Holz-Dachbinder" points=[ [ 12.481879 55.74061 ] [ 12.4033 55.7346 ] ]
+  }
+  "bg_holz_mehrere_boschgaard_dachspanten:bw_bibliothek_de_brenthof_sint_michielsgestel:0" {
+    id="bg_holz_mehrere_boschgaard_dachspanten:bw_bibliothek_de_brenthof_sint_michielsgestel:0" kind="reuse" label="Holz-Dachspanten" points=[ [ 5.3652891 51.6509141 ] [ 5.3082 51.6947 ] ]
+  }
+  "bg_holz_boden_trae_aarhus_holzboden_gellerup:bw_gellerupparken_rueckbau_wohnbloecke:0" {
+    id="bg_holz_boden_trae_aarhus_holzboden_gellerup:bw_gellerupparken_rueckbau_wohnbloecke:0" kind="reuse" label="Holzböden aus alten…" points=[ [ 10.1332512 56.1582601 ] [ 10.2048 56.1539 ] ]
+  }
+  "bg_holz_fassade_villa_welpeloo_enschede_holzfassade_aus_kabeltrommeln:bw_twente_tkf_kabelfabrik_materialquelle:0" {
+    id="bg_holz_fassade_villa_welpeloo_enschede_holzfassade_aus_kabeltrommeln:bw_twente_tkf_kabelfabrik_materialquelle:0" kind="reuse" label="Holzfassade aus Kabeltro…" points=[ [ 6.7933211 52.3253541 ] [ 6.8814 52.2283 ] ]
+  }
+  "bg_mehrere_boden_ithaka_holzfussboeden_klinker:bw_rws_districtskantoor_terneuzen:0" {
+    id="bg_mehrere_boden_ithaka_holzfussboeden_klinker:bw_rws_districtskantoor_terneuzen:0" kind="reuse" label="Holzfußböden und…" points=[ [ 3.8422044 51.298843 ] [ 3.6645 51.4479 ] ]
+  }
+  "bg_holz_mehrere_crclr_recycled_gallery_interior:bw_crclr_external_reuse_sources:0" {
+    id="bg_holz_mehrere_crclr_recycled_gallery_interior:bw_crclr_external_reuse_sources:0" kind="reuse" label="Holzgalerie (Crclr)" points=[ [ 13.3951309 52.5173885 ] [ 13.4357 52.4764 ] ]
+  }
+  "bg_holz_mehrere_recyclinghaus_saunabank_holzleisten:bw_sportzentrum_sauna_hannover:0" {
+    id="bg_holz_mehrere_recyclinghaus_saunabank_holzleisten:bw_sportzentrum_sauna_hannover:0" kind="reuse" label="Holzleisten aus alten…" points=[ [ 9.7385532 52.3744779 ] [ 9.8342 52.3589 ] ]
+  }
+  "bg_holz_mehrere_grande_halle_purlins_access_parts:bw_colombelles_regional_donor_sources:0" {
+    id="bg_holz_mehrere_grande_halle_purlins_access_parts:bw_colombelles_regional_donor_sources:0" kind="reuse" label="Holzpfetten" points=[ [ -0.3061681 49.1916221 ] [ -0.3061681 49.1916221 ] ]
+  }
+  "bg_holz_mehrere_svanen_sparren:bw_ehemalige_gladsaxe_school:0" {
+    id="bg_holz_mehrere_svanen_sparren:bw_ehemalige_gladsaxe_school:0" kind="reuse" label="Holzrafters" points=[ [ 12.481879 55.74061 ] [ 12.4033 55.7346 ] ]
+  }
+  "bg_holz_mehrere_ithaka_holztraeger_balken:bw_rws_districtskantoor_terneuzen:0" {
+    id="bg_holz_mehrere_ithaka_holztraeger_balken:bw_rws_districtskantoor_terneuzen:0" kind="reuse" label="Holzträger" points=[ [ 3.8422044 51.298843 ] [ 3.6645 51.4479 ] ]
+  }
+  "bg_stahlbeton_mehrere_plauen_iw73_6_precast_components:bw_iw73_6_mass_housing_donor:0" {
+    id="bg_stahlbeton_mehrere_plauen_iw73_6_precast_components:bw_iw73_6_mass_housing_donor:0" kind="reuse" label="IW73/6 precast concrete…" points=[ [ 12.1346523 50.4950632 ] [ 12.1247 50.4876 ] ]
+  }
+  "bg_holz_ausbau_ingersheim_clt_secondary:bw_stuttgart21_hauptbahnhof:0" {
+    id="bg_holz_ausbau_ingersheim_clt_secondary:bw_stuttgart21_hauptbahnhof:0" kind="reuse" label="Ingersheim CLT-Ausbau" points=[ [ 9.1833959 48.7856099 ] [ 9.188568 48.959324 ] ]
+  }
+  "bg_holz_mehrere_ingersheim_clt_structure:bw_stuttgart21_hauptbahnhof:0" {
+    id="bg_holz_mehrere_ingersheim_clt_structure:bw_stuttgart21_hauptbahnhof:0" kind="reuse" label="Ingersheim CLT-Bau" points=[ [ 9.1833959 48.7856099 ] [ 9.188568 48.959324 ] ]
+  }
+  "bg_mehrere_mehrere_ithaka_innentueren_beschlaege:bw_rws_districtskantoor_terneuzen:0" {
+    id="bg_mehrere_mehrere_ithaka_innentueren_beschlaege:bw_rws_districtskantoor_terneuzen:0" kind="reuse" label="Innentüren mit Hang-…" points=[ [ 3.8422044 51.298843 ] [ 3.6645 51.4479 ] ]
+  }
+  "bg_stahlbeton_mehrere_big_dig_house_inverset_panels:bw_boston_big_dig_i_93_infrastructure:0" {
+    id="bg_stahlbeton_mehrere_big_dig_house_inverset_panels:bw_boston_big_dig_i_93_infrastructure:0" kind="reuse" label="Inverset-Stahlbetonpanee…" points=[ [ -71.1191462 42.3882451 ] [ -71.2139 42.2586 ] ]
+  }
+  "bg_mehrere_mehrere_verbiest_karreveld_decken_leuchten:bw_karreveld_buerogebaeude_zu_schule_und_sportzentrum:0" {
+    id="bg_mehrere_mehrere_verbiest_karreveld_decken_leuchten:bw_karreveld_buerogebaeude_zu_schule_und_sportzentrum:0" kind="reuse" label="Karreveld abgehängte…" points=[ [ 4.3155803 50.8614034 ] [ 4.315 50.8503 ] ]
+  }
+  "bg_mehrere_mehrere_verbiest_karreveld_innenwand_modular:bw_karreveld_buerogebaeude_zu_schule_und_sportzentrum:0" {
+    id="bg_mehrere_mehrere_verbiest_karreveld_innenwand_modular:bw_karreveld_buerogebaeude_zu_schule_und_sportzentrum:0" kind="reuse" label="Karreveld modulares…" points=[ [ 4.3155803 50.8614034 ] [ 4.315 50.8503 ] ]
+  }
+  "bg_mehrere_mehrere_christ_pavilion_cloister_glass_facade:bw_christus_pavillon_expo_hannover:0" {
+    id="bg_mehrere_mehrere_christ_pavilion_cloister_glass_facade:bw_christus_pavillon_expo_hannover:0" kind="reuse" label="Kreuzgang" points=[ [ 10.5676346 51.2502813 ] [ 10.4567 51.2067 ] ]
+  }
+  "bg_mehrere_mehrere_thoravej_kunststofffenster_bestand:bw_thoravej_29:0" {
+    id="bg_mehrere_mehrere_thoravej_kunststofffenster_bestand:bw_thoravej_29:0" kind="reuse" label="Kunststofffenster im…" points=[ [ 12.526846 55.706084 ] [ 12.526846 55.706084 ] ]
+  }
+  "bg_mehrere_technik_leuchten_resilience:bw_engie_baustelle_saint_denis:0" {
+    id="bg_mehrere_technik_leuchten_resilience:bw_engie_baustelle_saint_denis:0" kind="reuse" label="Leuchten Résilience" points=[ [ 2.3627508 48.9383732 ] [ 2.3701218 48.9500637 ] ]
+  }
+  "bg_mehrere_mehrere_christ_pavilion_marble_glass_wall:bw_christus_pavillon_expo_hannover:0" {
+    id="bg_mehrere_mehrere_christ_pavilion_marble_glass_wall:bw_christus_pavillon_expo_hannover:0" kind="reuse" label="Marmor-Glas-Wand…" points=[ [ 10.5676346 51.2502813 ] [ 10.4567 51.2067 ] ]
+  }
+  "bg_mehrere_ausbau_plp_materialbibliothek_oberflaechen:bw_plp_previous_studio_london:0" {
+    id="bg_mehrere_ausbau_plp_materialbibliothek_oberflaechen:bw_plp_previous_studio_london:0" kind="reuse" label="Materialbibliothek-Oberf…" points=[ [ -0.0729474 51.5145623 ] [ -0.0729102 51.514434 ] ]
+  }
+  "bg_metall_ausbau_medunicampus_bike_workshop:bw_meduni_campus_mariannengasse:0" {
+    id="bg_metall_ausbau_medunicampus_bike_workshop:bw_meduni_campus_mariannengasse:0" kind="reuse" label="MedUni Fahrradwerkst." points=[ [ 16.3460235 48.2163314 ] [ 16.3492133 48.2161081 ] ]
+  }
+  "bg_mehrere_technik_medunicampus_paternoster:bw_meduni_campus_mariannengasse:0" {
+    id="bg_mehrere_technik_medunicampus_paternoster:bw_meduni_campus_mariannengasse:0" kind="reuse" label="MedUni Paternoster" points=[ [ 16.3460235 48.2163314 ] [ 16.3492133 48.2161081 ] ]
+  }
+  "bg_metall_ausbau_medunicampus_heavy_shelves:bw_meduni_campus_mariannengasse:0" {
+    id="bg_metall_ausbau_medunicampus_heavy_shelves:bw_meduni_campus_mariannengasse:0" kind="reuse" label="MedUni Schwerlastreg." points=[ [ 16.3460235 48.2163314 ] [ 16.3492133 48.2161081 ] ]
+  }
+  "bg_holz_wand_medunicampus_doors_as_cladding:bw_meduni_campus_mariannengasse:0" {
+    id="bg_holz_wand_medunicampus_doors_as_cladding:bw_meduni_campus_mariannengasse:0" kind="reuse" label="MedUni Türen→Wand" points=[ [ 16.3460235 48.2163314 ] [ 16.3492133 48.2161081 ] ]
+  }
+  "bg_stahl_traeger_grande_halle_metal:bw_colombelles_regional_donor_sources:0" {
+    id="bg_stahl_traeger_grande_halle_metal:bw_colombelles_regional_donor_sources:0" kind="reuse" label="Metallträger" points=[ [ -0.3061681 49.1916221 ] [ -0.3061681 49.1916221 ] ]
+  }
+  "bg_daemmstoff_daemmung_grande_halle_mineral_wool:bw_colombelles_regional_donor_sources:0" {
+    id="bg_daemmstoff_daemmung_grande_halle_mineral_wool:bw_colombelles_regional_donor_sources:0" kind="reuse" label="Mineralwolle-Dämmung" points=[ [ -0.3061681 49.1916221 ] [ -0.3061681 49.1916221 ] ]
+  }
+  "bg_stahl_stuetze_christ_pavilion_cross:bw_christus_pavillon_expo_hannover:0" {
+    id="bg_stahl_stuetze_christ_pavilion_cross:bw_christus_pavillon_expo_hannover:0" kind="reuse" label="Neun kreuzfoermige…" points=[ [ 10.5676346 51.2502813 ] [ 10.4567 51.2067 ] ]
+  }
+  "bg_beton_mehrere_plattenvereinigung_betonfertigteile:bw_peter_behrens_halle_tu_berlin:0" {
+    id="bg_beton_mehrere_plattenvereinigung_betonfertigteile:bw_peter_behrens_halle_tu_berlin:0" kind="reuse" label="Ost- und westdeutsche…" points=[ [ 13.3834015 52.5419669 ] [ 13.3892 52.5408 ] ]
+  }
+  "bg_beton_mehrere_plattenvereinigung_betonfertigteile:bw_olympisches_dorf_muenchen:1" {
+    id="bg_beton_mehrere_plattenvereinigung_betonfertigteile:bw_olympisches_dorf_muenchen:1" kind="reuse" label="Ost- und westdeutsche…" points=[ [ 11.5477603 48.1803734 ] [ 13.3892 52.5408 ] ]
+  }
+  "bg_beton_mehrere_plattenvereinigung_betonfertigteile:bw_ph12_punkthochhaus_frankfurt_oder:2" {
+    id="bg_beton_mehrere_plattenvereinigung_betonfertigteile:bw_ph12_punkthochhaus_frankfurt_oder:2" kind="reuse" label="Ost- und westdeutsche…" points=[ [ 14.534605 52.3294882 ] [ 13.3892 52.5408 ] ]
+  }
+  "bg_naturstein_boden_biopartner_5_pflaster_bodenmaterial:bw_biopartner_gorlaeus_hochhaus:0" {
+    id="bg_naturstein_boden_biopartner_5_pflaster_bodenmaterial:bw_biopartner_gorlaeus_hochhaus:0" kind="reuse" label="Pflaster-" points=[ [ 4.4502649 52.1710283 ] [ 4.4502649 52.1710283 ] ]
+  }
+  "bg_holz_mehrere_green_house_preused_holzdecke:bw_knoopkazerne_utrecht:0" {
+    id="bg_holz_mehrere_green_house_preused_holzdecke:bw_knoopkazerne_utrecht:0" kind="reuse" label="Pre-used wood Geschossde…" points=[ [ 5.1079133 52.0868182 ] [ 5.1172 52.0867 ] ]
+  }
+  "bg_stahlbeton_mehrere_ccn_prefab_facade_elements:bw_prinsenhof_a_arnhem_donor:0" {
+    id="bg_stahlbeton_mehrere_ccn_prefab_facade_elements:bw_prinsenhof_a_arnhem_donor:0" kind="reuse" label="Prefab-Fassadenelemente" points=[ [ 5.9114676 51.9773561 ] [ 6.0286 52.3917 ] ]
+  }
+  "bg_glas_mehrere_recyclinghaus_profilbauglas:bw_alte_lackiererei_hannover:0" {
+    id="bg_glas_mehrere_recyclinghaus_profilbauglas:bw_alte_lackiererei_hannover:0" kind="reuse" label="Profilbauglas aus alter…" points=[ [ 9.832174 52.3308126 ] [ 9.8342 52.3589 ] ]
+  }
+  "bg_mehrere_technik_grande_halle_radiators:bw_colombelles_regional_donor_sources:0" {
+    id="bg_mehrere_technik_grande_halle_radiators:bw_colombelles_regional_donor_sources:0" kind="reuse" label="Radiatoren (Grande Halle)" points=[ [ -0.3061681 49.1916221 ] [ -0.3061681 49.1916221 ] ]
+  }
+  "bg_mehrere_mehrere_big_dig_house_ramp_pier_roadway_components:bw_boston_big_dig_i_93_infrastructure:0" {
+    id="bg_mehrere_mehrere_big_dig_house_ramp_pier_roadway_components:bw_boston_big_dig_i_93_infrastructure:0" kind="reuse" label="Ramp-, Pier- und…" points=[ [ -71.1191462 42.3882451 ] [ -71.2139 42.2586 ] ]
+  }
+  "bg_glas_mehrere_green_house_rauchglas_fassade:bw_knoopkazerne_utrecht:0" {
+    id="bg_glas_mehrere_green_house_rauchglas_fassade:bw_knoopkazerne_utrecht:0" kind="reuse" label="Rauchglas-Fassadenpaneele" points=[ [ 5.1079133 52.0868182 ] [ 5.1172 52.0867 ] ]
+  }
+  "bg_stahl_mehrere_hof_self_columns:bw_318_oxford_street_house_of_fraser:0" {
+    id="bg_stahl_mehrere_hof_self_columns:bw_318_oxford_street_house_of_fraser:0" kind="reuse" label="Refabrizierte Stahlstütz…" points=[ [ -0.1463435 51.5152626 ] [ -0.1427 51.5142 ] ]
+  }
+  "bg_mehrere_mehrere_moeoeslistrasse_sanitaer_kueche:bw_werkhof_moeoeslistrasse:0" {
+    id="bg_mehrere_mehrere_moeoeslistrasse_sanitaer_kueche:bw_werkhof_moeoeslistrasse:0" kind="reuse" label="Sanitärapparate und…" points=[ [ 8.5284529 47.3457808 ] [ 8.5154 47.3406 ] ]
+  }
+  "bg_keramik_technik_crclr_sanitary_objects:bw_crclr_external_reuse_sources:0" {
+    id="bg_keramik_technik_crclr_sanitary_objects:bw_crclr_external_reuse_sources:0" kind="reuse" label="Sanitärobjekte (Crclr)" points=[ [ 13.3951309 52.5173885 ] [ 13.4357 52.4764 ] ]
+  }
+  "bg_mehrere_technik_grande_halle_sanitary_objects:bw_colombelles_regional_donor_sources:0" {
+    id="bg_mehrere_technik_grande_halle_sanitary_objects:bw_colombelles_regional_donor_sources:0" kind="reuse" label="Sanitärob… (Grande Halle)" points=[ [ -0.3061681 49.1916221 ] [ -0.3061681 49.1916221 ] ]
+  }
+  "bg_beton_mehrere_christ_pavilion_fair_faced_parts:bw_christus_pavillon_expo_hannover:0" {
+    id="bg_beton_mehrere_christ_pavilion_fair_faced_parts:bw_christus_pavillon_expo_hannover:0" kind="reuse" label="Sichtbetonteile des…" points=[ [ 10.5676346 51.2502813 ] [ 10.4567 51.2067 ] ]
+  }
+  "bg_stahl_mehrere_ka13:bw_ka13_existing_building:0" {
+    id="bg_stahl_mehrere_ka13:bw_ka13_existing_building:0" kind="reuse" label="Stahl in Bestand und…" points=[ [ 10.737562 59.916806 ] [ 10.737562 59.916806 ] ]
+  }
+  "bg_stahlbeton_mehrere_haus_hos_floor_elements:bw_leinefelde_plattenbau_donor:0" {
+    id="bg_stahlbeton_mehrere_haus_hos_floor_elements:bw_leinefelde_plattenbau_donor:0" kind="reuse" label="Stahlbeton-Deckenelemente" points=[ [ 10.3212678 51.3878458 ] [ 10.4526 51.2089 ] ]
+  }
+  "bg_stahlbeton_treppe_haus_hos:bw_leinefelde_plattenbau_donor:0" {
+    id="bg_stahlbeton_treppe_haus_hos:bw_leinefelde_plattenbau_donor:0" kind="reuse" label="Stahlbeton-Treppen" points=[ [ 10.3212678 51.3878458 ] [ 10.4526 51.2089 ] ]
+  }
+  "bg_stahlbeton_wand_haus_hos_elements:bw_leinefelde_plattenbau_donor:0" {
+    id="bg_stahlbeton_wand_haus_hos_elements:bw_leinefelde_plattenbau_donor:0" kind="reuse" label="Stahlbeton-Wandelemente" points=[ [ 10.3212678 51.3878458 ] [ 10.4526 51.2089 ] ]
+  }
+  "bg_stahl_fassade_svanen_stahlfassadenelemente:bw_ehemalige_gladsaxe_school:0" {
+    id="bg_stahl_fassade_svanen_stahlfassadenelemente:bw_ehemalige_gladsaxe_school:0" kind="reuse" label="Stahlfassadenelemente" points=[ [ 12.481879 55.74061 ] [ 12.4033 55.7346 ] ]
+  }
+  "bg_stahl_mehrere_lycee_facade_panels_railing:bw_lycee_block_3000:0" {
+    id="bg_stahl_mehrere_lycee_facade_panels_railing:bw_lycee_block_3000:0" kind="reuse" label="Stahlfassadenpaneele…" points=[ [ 6.1136808 49.6249025 ] [ 6.1267 49.6094 ] ]
+  }
+  "bg_mehrere_mehrere_moeoeslistrasse_stahlpergola_beschattung:bw_einkaufswagendepot_zuerich:0" {
+    id="bg_mehrere_mehrere_moeoeslistrasse_stahlpergola_beschattung:bw_einkaufswagendepot_zuerich:0" kind="reuse" label="Stahlpergola" points=[ [ 8.5410422 47.3744489 ] [ 8.5154 47.3406 ] ]
+  }
+  "bg_stahl_mehrere_biopartner_5_stuetzen_rahmen:bw_gorlaeus_hochhaus:0" {
+    id="bg_stahl_mehrere_biopartner_5_stuetzen_rahmen:bw_gorlaeus_hochhaus:0" kind="reuse" label="Stahlträger (Biopartner)" points=[ [ 4.4609833 52.1677621 ] [ 4.4502649 52.1710283 ] ]
+  }
+  "bg_stahl_mehrere_geplante_stahltrager_roots:bw_1_broadgate_1_2_broadgate_donor_stahl:0" {
+    id="bg_stahl_mehrere_geplante_stahltrager_roots:bw_1_broadgate_1_2_broadgate_donor_stahl:0" kind="reuse" label="Stahlträger (Geplante)" points=[ [ -0.0888924 51.5191859 ] [ -0.0999 51.5025 ] ]
+  }
+  "bg_stahl_mehrere_timber_square_reception_girder:bw_timber_square_print_building:0" {
+    id="bg_stahl_mehrere_timber_square_reception_girder:bw_timber_square_print_building:0" kind="reuse" label="Stahlträger als Empfangs…" points=[ [ -0.1000695 51.5050972 ] [ -0.1000695 51.5050972 ] ]
+  }
+  "bg_stahl_mehrere_welpeloo_paternoster_textilmaschine:bw_paternoster_textilindustriemaschine_enschede:0" {
+    id="bg_stahl_mehrere_welpeloo_paternoster_textilmaschine:bw_paternoster_textilindustriemaschine_enschede:0" kind="reuse" label="Stahlträger aus Paternos…" points=[ [ 6.8705957 52.2233633 ] [ 6.8814 52.2283 ] ]
+  }
+  "bg_stahl_mehrere_k118_structure:bw_elys_basel_donor:0" {
+    id="bg_stahl_mehrere_k118_structure:bw_elys_basel_donor:0" kind="reuse" label="Stahlträger und Stützen…" points=[ [ 7.5734396 47.573746 ] [ 8.7267 47.4997 ] ]
+  }
+  "bg_stahl_mehrere_big_dig_house:bw_boston_big_dig_i_93_infrastructure:0" {
+    id="bg_stahl_mehrere_big_dig_house:bw_boston_big_dig_i_93_infrastructure:0" kind="reuse" label="Stahlträger un… (Big Dig)" points=[ [ -71.1191462 42.3882451 ] [ -71.2139 42.2586 ] ]
+  }
+  "bg_stahl_mehrere_55gss_external_core:bw_1_broadgate_london:0" {
+    id="bg_stahl_mehrere_55gss_external_core:bw_1_broadgate_london:0" kind="reuse" label="Steel profiles for…" points=[ [ -0.0888924 51.5191859 ] [ -0.0789 51.5018 ] ]
+  }
+  "bg_naturstein_wand_verbiest_charleroi:bw_palais_des_expositions_charleroi:0" {
+    id="bg_naturstein_wand_verbiest_charleroi:bw_palais_des_expositions_charleroi:0" kind="reuse" label="Steine aus Charleroi" points=[ [ 4.444528 50.4116233 ] [ 4.315 50.8503 ] ]
+  }
+  "bg_stahl_mehrere_bedzed_structural:bw_brighton_railway_station_donor:0" {
+    id="bg_stahl_mehrere_bedzed_structural:bw_brighton_railway_station_donor:0" kind="reuse" label="Structural steel frame…" points=[ [ -0.1411137 50.8288719 ] [ -0.1494 51.3653 ] ]
+  }
+  "bg_mehrere_mehrere_thoravej_tt_decken_zu_treppen:bw_thoravej_29:0" {
+    id="bg_mehrere_mehrere_thoravej_tt_decken_zu_treppen:bw_thoravej_29:0" kind="reuse" label="TT-/Betondecken zu…" points=[ [ 12.526846 55.706084 ] [ 12.526846 55.706084 ] ]
+  }
+  "bg_mehrere_technik_ithaka_tga_beleuchtung_installationen:bw_rws_districtskantoor_terneuzen:0" {
+    id="bg_mehrere_technik_ithaka_tga_beleuchtung_installationen:bw_rws_districtskantoor_terneuzen:0" kind="reuse" label="Technische Bauteile" points=[ [ 3.8422044 51.298843 ] [ 3.6645 51.4479 ] ]
+  }
+  "bg_mehrere_mehrere_plp_terrazzo_arbeits_kuechenflaechen:bw_plp_previous_studio_london:0" {
+    id="bg_mehrere_mehrere_plp_terrazzo_arbeits_kuechenflaechen:bw_plp_previous_studio_london:0" kind="reuse" label="Terrazzo-/Spolia-Arbeits…" points=[ [ -0.0729474 51.5145623 ] [ -0.0729102 51.514434 ] ]
+  }
+  "bg_mehrere_treppe_plattenvereinigung_treppenelemente:bw_peter_behrens_halle_tu_berlin:0" {
+    id="bg_mehrere_treppe_plattenvereinigung_treppenelemente:bw_peter_behrens_halle_tu_berlin:0" kind="reuse" label="Treppenelemente" points=[ [ 13.3834015 52.5419669 ] [ 13.3892 52.5408 ] ]
+  }
+  "bg_mehrere_treppe_plattenvereinigung_treppenelemente:bw_olympisches_dorf_muenchen:1" {
+    id="bg_mehrere_treppe_plattenvereinigung_treppenelemente:bw_olympisches_dorf_muenchen:1" kind="reuse" label="Treppenelemente" points=[ [ 11.5477603 48.1803734 ] [ 13.3892 52.5408 ] ]
+  }
+  "bg_mehrere_treppe_plattenvereinigung_treppenelemente:bw_ph12_punkthochhaus_frankfurt_oder:2" {
+    id="bg_mehrere_treppe_plattenvereinigung_treppenelemente:bw_ph12_punkthochhaus_frankfurt_oder:2" kind="reuse" label="Treppenelemente" points=[ [ 14.534605 52.3294882 ] [ 13.3892 52.5408 ] ]
+  }
+  "bg_holz_fassade_hastings_hardwood_cladding:bw_hastings_pier_fire_damaged_deck:0" {
+    id="bg_holz_fassade_hastings_hardwood_cladding:bw_hastings_pier_fire_damaged_deck:0" kind="reuse" label="Tropische Hartholz-Deckb…" points=[ [ 0.5725697 50.8521015 ] [ 0.5792 50.8567 ] ]
+  }
+  "bg_holz_tuer_grande_halle_fire:bw_colombelles_regional_donor_sources:0" {
+    id="bg_holz_tuer_grande_halle_fire:bw_colombelles_regional_donor_sources:0" kind="reuse" label="Türen und Brandschutztür…" points=[ [ -0.3061681 49.1916221 ] [ -0.3061681 49.1916221 ] ]
+  }
+  "bg_holz_mehrere_thoravej_tueren_zu_tischplatten:bw_thoravej_29:0" {
+    id="bg_holz_mehrere_thoravej_tueren_zu_tischplatten:bw_thoravej_29:0" kind="reuse" label="Türen zu Tischplatten" points=[ [ 12.526846 55.706084 ] [ 12.526846 55.706084 ] ]
+  }
+  "bg_metall_tuer_umar_wabbes_handles:bw_generale_de_banque_brussels:0" {
+    id="bg_metall_tuer_umar_wabbes_handles:bw_generale_de_banque_brussels:0" kind="reuse" label="UMAR Wabbes Türgriffe" points=[ [ 4.3604784 50.8455758 ] [ 8.6114852 47.4023749 ] ]
+  }
+  "bg_keramik_mehrere_verbiest_hanzinelle_fliesen:bw_altes_projekt_in_hanzinelle:0" {
+    id="bg_keramik_mehrere_verbiest_hanzinelle_fliesen:bw_altes_projekt_in_hanzinelle:0" kind="reuse" label="Verbiest dekorative…" points=[ [ 4.5607099 50.2949873 ] [ 4.315 50.8503 ] ]
+  }
+  "bg_mehrere_fassade_crclr_curtain_wall_sheet_glass:bw_crclr_external_reuse_sources:0" {
+    id="bg_mehrere_fassade_crclr_curtain_wall_sheet_glass:bw_crclr_external_reuse_sources:0" kind="reuse" label="Vorhangfassadenelemente" points=[ [ 13.3951309 52.5173885 ] [ 13.4357 52.4764 ] ]
+  }
+  "bg_kunststoff_wand_awm_wc_partitions:bw_behrensbau_duesseldorf_donor:0" {
+    id="bg_kunststoff_wand_awm_wc_partitions:bw_behrensbau_duesseldorf_donor:0" kind="reuse" label="WC partitions" points=[ [ 6.7680311 51.2210197 ] [ 7.6356 51.9359 ] ]
+  }
+  "bg_beton_mehrere_plattenvereinigung_wand_fassadenelemente:bw_olympisches_dorf_muenchen:0" {
+    id="bg_beton_mehrere_plattenvereinigung_wand_fassadenelemente:bw_olympisches_dorf_muenchen:0" kind="reuse" label="Wand- und Fassadenelemen…" points=[ [ 11.5477603 48.1803734 ] [ 13.3892 52.5408 ] ]
+  }
+  "bg_beton_mehrere_plattenvereinigung_wand_fassadenelemente:bw_ph12_punkthochhaus_frankfurt_oder:1" {
+    id="bg_beton_mehrere_plattenvereinigung_wand_fassadenelemente:bw_ph12_punkthochhaus_frankfurt_oder:1" kind="reuse" label="Wand- und Fassadenelemen…" points=[ [ 14.534605 52.3294882 ] [ 13.3892 52.5408 ] ]
+  }
+  "bg_mehrere_mehrere_moeoeslistrasse_bestand_werkhof:bw_werkhof_moeoeslistrasse:0" {
+    id="bg_mehrere_mehrere_moeoeslistrasse_bestand_werkhof:bw_werkhof_moeoeslistrasse:0" kind="reuse" label="Werkhofstruktur und…" points=[ [ 8.5284529 47.3457808 ] [ 8.5154 47.3406 ] ]
+  }
+  "bg_stahl_technik_multi_reinstalled_elevator_motors:bw_multi_brouckere_tower:0" {
+    id="bg_stahl_technik_multi_reinstalled_elevator_motors:bw_multi_brouckere_tower:0" kind="reuse" label="Wieder eingebaute…" points=[ [ 4.351774 50.8507197 ] [ 4.3487 50.8476 ] ]
+  }
+  "bg_ziegel_mehrere_svanen:bw_ehemalige_gladsaxe_school:0" {
+    id="bg_ziegel_mehrere_svanen:bw_ehemalige_gladsaxe_school:0" kind="reuse" label="Ziegel" points=[ [ 12.481879 55.74061 ] [ 12.4033 55.7346 ] ]
+  }
+  "bg_stahlbeton_mehrere_schildow_zugeschnittene_wbs70_betonfertigteile:bw_berlin_marzahn_wbs70_plattenbau:0" {
+    id="bg_stahlbeton_mehrere_schildow_zugeschnittene_wbs70_betonfertigteile:bw_berlin_marzahn_wbs70_plattenbau:0" kind="reuse" label="Zugeschnittene WBS70-Sta…" points=[ [ 13.676873 52.5511184 ] [ 13.3833 52.6333 ] ]
+  }
+}
+regions [id:TEXT data:VAL] {
+}

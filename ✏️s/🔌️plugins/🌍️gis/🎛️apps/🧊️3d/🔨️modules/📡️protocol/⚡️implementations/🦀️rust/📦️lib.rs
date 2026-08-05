@@ -39,6 +39,41 @@ pub enum Gis3dCommand {
 }
 //#endregion 🔖️Gis3dCommand
 
+//#region 🧪️WireBaseline
+/// 🧪️ [DEBUG] Temporary pre-migration wire dump (crate-consolidation ticket
+/// `26/08/05/GIS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION`, TEMPLATE §0.4) — deleted with
+/// this crate.
+#[cfg(test)]
+mod wire_baseline {
+    use super::*;
+    use protocol::OpText;
+
+    fn dump(label: &str, command: &Gis3dCommand) {
+        let bytes = command.encode_op().expect("encode");
+        println!("{label} | {} | {} | {}", command.print_op(), bytes.len(), bytes.iter().map(|b| format!("{b:02x}")).collect::<String>());
+    }
+
+    fn dump_op(label: &str, operation: &Gis3dTerrainOperation) {
+        let bytes = encode_op(operation).expect("encode");
+        println!("{label} | {} | {} | {}", operation.print_op(), bytes.len(), bytes.iter().map(|b| format!("{b:02x}")).collect::<String>());
+    }
+
+    #[test]
+    fn gis3d_wire_baseline() {
+        dump("SetExaggeration", &Gis3dCommand::SetExaggeration { exaggeration: 2.5 });
+        dump("SetCamera", &Gis3dCommand::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() });
+        dump("SetSelection", &Gis3dCommand::SetSelection { ids: vec!["p1".into()] });
+        dump("SetSelection.empty", &Gis3dCommand::SetSelection { ids: Vec::new() });
+        dump("WorldSelect", &Gis3dCommand::WorldSelect { ids: vec!["p1".into()] });
+        dump("SetLocale", &Gis3dCommand::SetLocale { value: "de-DE".into() });
+
+        dump_op("Op.SetExaggeration", &Gis3dTerrainOperation::SetExaggeration { exaggeration: 3.0 });
+        dump_op("Op.SetImportedFeatures", &Gis3dTerrainOperation::SetImportedFeatures { features_json: r#"{"positions":[]}"#.into() });
+        dump_op("Op.SetDocument", &Gis3dTerrainOperation::SetDocument { document: gis3d::Gis3dTerrainDocument { exaggeration: 2.0, imported_features_json: "null".into() } });
+    }
+}
+//#endregion 🧪️WireBaseline
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

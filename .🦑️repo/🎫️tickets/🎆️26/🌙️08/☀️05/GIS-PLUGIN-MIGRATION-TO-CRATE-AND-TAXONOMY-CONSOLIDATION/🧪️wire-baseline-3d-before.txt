@@ -1,0 +1,9 @@
+SetExaggeration | exaggeration exaggeration=2.5 | 14 | 0100000100050000000000000440
+SetCamera | camera camera-json="{\"position\":[1.0,2.0,3.0]}" | 34 | 0101011a7b22706f736974696f6e223a5b312e302c322e302c332e305d7d01000600
+SetSelection | selection ids=[ p1 ] | 12 | 01020102703101000c010600
+SetSelection.empty | selection ids=[ ] | 7 | 01020001000c00
+WorldSelect | world-select ids=[ p1 ] | 12 | 01030102703101000c010600
+SetLocale | locale value=de-DE | 13 | 0104010564652d444501000600
+Op.SetExaggeration | set-exaggeration exaggeration=3 | 14 | 0100000100050000000000000840
+Op.SetImportedFeatures | set-imported-features features-json="{\"positions\":[]}" | 24 | 010101107b22706f736974696f6e73223a5b5d7d01000600
+Op.SetDocument | set-document document { gisterrain exaggeration=2 imported-features-json="null" } | 26 | 010201046e756c6c01000e0d0200050000000000000040010600
