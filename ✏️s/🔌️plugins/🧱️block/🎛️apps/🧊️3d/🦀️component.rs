@@ -6,9 +6,15 @@
 //! `🦀️terminology.rs`, view state in `🦀️config.rs`, world-scene compute needing both document+config in
 //! `🦀️world.rs`, and pure document-side compute in `crate::artifacts::block3d::engine`.
 
+use crate::apps::block3d::commands::brush::{hover_surface, leave_surface, place_vortex, set_brush_flip, set_brush_radius, set_brush_vortex_kind};
+use crate::apps::block3d::commands::camera::set_camera;
 use crate::apps::block3d::commands::example::{edit, set_active_example};
-use crate::apps::block3d::commands::{brush, camera, representation, selection, vortex, vortex_kind, window};
-use crate::apps::block3d::commands::kind;
+use crate::apps::block3d::commands::kind::patch_object_kind;
+use crate::apps::block3d::commands::representation::{add_representation, patch_representation, remove_representation};
+use crate::apps::block3d::commands::selection::{hover_vortex, select_vortex, set_selection};
+use crate::apps::block3d::commands::vortex::{add_vortex, remove_vortex};
+use crate::apps::block3d::commands::vortex_kind::{add_vortex_kind, remove_vortex_kind};
+use crate::apps::block3d::commands::window::{set_active_representation, set_active_utility, set_window_arrangement, set_window_representations, set_window_spacing, toggle_window_representation};
 use crate::apps::block3d::config::{Block3dConfig, Block3dConfigOperation};
 use crate::apps::block3d::modes::edit as edit_mode;
 use crate::apps::block3d::modes::edit::windows::world;
@@ -18,7 +24,7 @@ use crate::artifacts::block3d::op::Block3dOperation;
 use crate::artifacts::block3d::{artifact_kind, Block3dDefinition, BLOCK_3D_SCHEMA};
 use crate::core::BlockCamera3d;
 use semio_framework_plugin::{
-    ActionDescriptor, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultCode, FaultOrigin, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, PanelGroup, SurfaceKind,
+    ActionDescriptor, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultCode, FaultOrigin, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     UiNode, UtilityDefinition,
 };
 use serde_json::Value;
@@ -62,8 +68,7 @@ fn f64_vec3_field(args: Option<&Value>, key: &str) -> Option<[f64; 3]> {
 fn window_id_from_args(args: Option<&Value>) -> String {
     args.and_then(|value| value.get("windowId").or_else(|| value.get("pane")).or_else(|| value.get("surfaceId")))
         .and_then(Value::as_str)
-        .map(str::to_string)
-        .unwrap_or_else(|| BLOCK3D_DEFAULT_WINDOW_ID.into())
+        .map_or_else(|| BLOCK3D_DEFAULT_WINDOW_ID.into(), str::to_string)
 }
 //#endregion 🔖️Constants
 
@@ -75,32 +80,32 @@ semio_framework_plugin::app_commands! {
     /// `worldSurface*` rows (`HoverSurface`/`LeaveSurface`/`PlaceVortex`), whose manifest action id and
     /// `#[dsl(key)]` wire keyword genuinely diverge pre-migration — preserved verbatim.
     pub enum Block3dCommand for Block3dDefinition, Block3dOperation, Block3dConfig, Block3dConfigOperation {
-        "patchObjectKind" as "patchObjectKind" => kind::patch_object_kind::PatchObjectKind,
-        "addRepresentation" as "addRepresentation" => representation::add_representation::AddRepresentation,
-        "removeRepresentation" as "removeRepresentation" => representation::remove_representation::RemoveRepresentation,
-        "addVortexKind" as "addVortexKind" => vortex_kind::add_vortex_kind::AddVortexKind,
-        "removeVortexKind" as "removeVortexKind" => vortex_kind::remove_vortex_kind::RemoveVortexKind,
-        "addVortex" as "addVortex" => vortex::add_vortex::AddVortex,
-        "removeVortex" as "removeVortex" => vortex::remove_vortex::RemoveVortex,
+        "patchObjectKind" as "patchObjectKind" => patch_object_kind::PatchObjectKind,
+        "addRepresentation" as "addRepresentation" => add_representation::AddRepresentation,
+        "removeRepresentation" as "removeRepresentation" => remove_representation::RemoveRepresentation,
+        "addVortexKind" as "addVortexKind" => add_vortex_kind::AddVortexKind,
+        "removeVortexKind" as "removeVortexKind" => remove_vortex_kind::RemoveVortexKind,
+        "addVortex" as "addVortex" => add_vortex::AddVortex,
+        "removeVortex" as "removeVortex" => remove_vortex::RemoveVortex,
         "setActiveExample" as "setActiveExample" => set_active_example::SetActiveExample,
         "edit" as "edit" => edit::Edit,
-        "setSelection" as "setSelection" => selection::set_selection::SetSelection,
-        "setActiveRepresentation" as "setActiveRepresentation" => window::set_active_representation::SetActiveRepresentation,
-        "setWindowRepresentations" as "setWindowRepresentations" => window::set_window_representations::SetWindowRepresentations,
-        "toggleWindowRepresentation" as "toggleWindowRepresentation" => window::toggle_window_representation::ToggleWindowRepresentation,
-        "setWindowArrangement" as "setWindowArrangement" => window::set_window_arrangement::SetWindowArrangement,
-        "setWindowSpacing" as "setWindowSpacing" => window::set_window_spacing::SetWindowSpacing,
-        "setActiveUtility" as "setActiveUtility" => window::set_active_utility::SetActiveUtility,
-        "setBrushVortexKind" as "setBrushVortexKind" => brush::set_brush_vortex_kind::SetBrushVortexKind,
-        "setBrushRadius" as "setBrushRadius" => brush::set_brush_radius::SetBrushRadius,
-        "setBrushFlip" as "setBrushFlip" => brush::set_brush_flip::SetBrushFlip,
-        "worldSurfaceHover" as "hoverSurface" => brush::hover_surface::HoverSurface,
-        "worldSurfaceLeave" as "leaveSurface" => brush::leave_surface::LeaveSurface,
-        "worldSurfacePlace" as "placeVortex" => brush::place_vortex::PlaceVortex,
-        "setCamera" as "setCamera" => camera::set_camera::SetCamera,
-        "selectVortex" as "selectVortex" => selection::select_vortex::SelectVortex,
-        "hoverVortex" as "hoverVortex" => selection::hover_vortex::HoverVortex,
-        "patchRepresentation" as "patchRepresentation" => representation::patch_representation::PatchRepresentation,
+        "setSelection" as "setSelection" => set_selection::SetSelection,
+        "setActiveRepresentation" as "setActiveRepresentation" => set_active_representation::SetActiveRepresentation,
+        "setWindowRepresentations" as "setWindowRepresentations" => set_window_representations::SetWindowRepresentations,
+        "toggleWindowRepresentation" as "toggleWindowRepresentation" => toggle_window_representation::ToggleWindowRepresentation,
+        "setWindowArrangement" as "setWindowArrangement" => set_window_arrangement::SetWindowArrangement,
+        "setWindowSpacing" as "setWindowSpacing" => set_window_spacing::SetWindowSpacing,
+        "setActiveUtility" as "setActiveUtility" => set_active_utility::SetActiveUtility,
+        "setBrushVortexKind" as "setBrushVortexKind" => set_brush_vortex_kind::SetBrushVortexKind,
+        "setBrushRadius" as "setBrushRadius" => set_brush_radius::SetBrushRadius,
+        "setBrushFlip" as "setBrushFlip" => set_brush_flip::SetBrushFlip,
+        "worldSurfaceHover" as "hoverSurface" => hover_surface::HoverSurface,
+        "worldSurfaceLeave" as "leaveSurface" => leave_surface::LeaveSurface,
+        "worldSurfacePlace" as "placeVortex" => place_vortex::PlaceVortex,
+        "setCamera" as "setCamera" => set_camera::SetCamera,
+        "selectVortex" as "selectVortex" => select_vortex::SelectVortex,
+        "hoverVortex" as "hoverVortex" => hover_vortex::HoverVortex,
+        "patchRepresentation" as "patchRepresentation" => patch_representation::PatchRepresentation,
     }
 }
 //#endregion 🔖️Commands
@@ -150,62 +155,62 @@ impl DocumentApp for Block3dPlayApp {
                 .unwrap_or_default()
         };
         match action {
-            "patchObjectKind" => Ok(Block3dCommand::PatchObjectKind(kind::patch_object_kind::PatchObjectKind { field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() })),
-            "addRepresentation" => Ok(Block3dCommand::AddRepresentation(representation::add_representation::AddRepresentation {})),
-            "removeRepresentation" => Ok(Block3dCommand::RemoveRepresentation(representation::remove_representation::RemoveRepresentation { id: str_field("id").unwrap_or_default() })),
-            "addVortexKind" => Ok(Block3dCommand::AddVortexKind(vortex_kind::add_vortex_kind::AddVortexKind {})),
-            "removeVortexKind" => Ok(Block3dCommand::RemoveVortexKind(vortex_kind::remove_vortex_kind::RemoveVortexKind { id: str_field("id").unwrap_or_default() })),
-            "addVortex" => Ok(Block3dCommand::AddVortex(vortex::add_vortex::AddVortex {})),
-            "removeVortex" => Ok(Block3dCommand::RemoveVortex(vortex::remove_vortex::RemoveVortex { id: str_field("id").unwrap_or_default() })),
+            "patchObjectKind" => Ok(Block3dCommand::PatchObjectKind(patch_object_kind::PatchObjectKind { field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() })),
+            "addRepresentation" => Ok(Block3dCommand::AddRepresentation(add_representation::AddRepresentation {})),
+            "removeRepresentation" => Ok(Block3dCommand::RemoveRepresentation(remove_representation::RemoveRepresentation { id: str_field("id").unwrap_or_default() })),
+            "addVortexKind" => Ok(Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {})),
+            "removeVortexKind" => Ok(Block3dCommand::RemoveVortexKind(remove_vortex_kind::RemoveVortexKind { id: str_field("id").unwrap_or_default() })),
+            "addVortex" => Ok(Block3dCommand::AddVortex(add_vortex::AddVortex {})),
+            "removeVortex" => Ok(Block3dCommand::RemoveVortex(remove_vortex::RemoveVortex { id: str_field("id").unwrap_or_default() })),
             "setActiveExample" => Ok(Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: str_field("exampleId").or_else(|| str_field("id")).unwrap_or_default() })),
             "edit" => Ok(Block3dCommand::Edit(edit::Edit { text: str_field("text").unwrap_or_default() })),
-            "setSelection" => Ok(Block3dCommand::SetSelection(selection::set_selection::SetSelection { ids: str_vec_field("ids") })),
-            "setActiveRepresentation" => Ok(Block3dCommand::SetActiveRepresentation(window::set_active_representation::SetActiveRepresentation { representation_id: str_field("representationId").or_else(|| str_field("representation_id")) })),
+            "setSelection" => Ok(Block3dCommand::SetSelection(set_selection::SetSelection { ids: str_vec_field("ids") })),
+            "setActiveRepresentation" => Ok(Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: str_field("representationId").or_else(|| str_field("representation_id")) })),
             "setWindowRepresentations" => {
                 let rep = str_field("value").or_else(|| str_field("representationId"));
                 let representation_ids = rep.filter(|id| !id.is_empty()).map(|id| vec![id]).unwrap_or_default();
-                Ok(Block3dCommand::SetWindowRepresentations(window::set_window_representations::SetWindowRepresentations { window_id: window_id_from_args(args), representation_ids }))
+                Ok(Block3dCommand::SetWindowRepresentations(set_window_representations::SetWindowRepresentations { window_id: window_id_from_args(args), representation_ids }))
             }
-            "toggleWindowRepresentation" => Ok(Block3dCommand::ToggleWindowRepresentation(window::toggle_window_representation::ToggleWindowRepresentation {
+            "toggleWindowRepresentation" => Ok(Block3dCommand::ToggleWindowRepresentation(toggle_window_representation::ToggleWindowRepresentation {
                 window_id: window_id_from_args(args),
                 representation_id: str_field("representationId").unwrap_or_default(),
                 visible: args.and_then(|value| value.get("visible")).and_then(Value::as_bool).unwrap_or(true),
             })),
-            "setWindowArrangement" => Ok(Block3dCommand::SetWindowArrangement(window::set_window_arrangement::SetWindowArrangement { window_id: window_id_from_args(args), arrangement: str_field("value").unwrap_or_else(|| "overlap".into()) })),
-            "setWindowSpacing" => Ok(Block3dCommand::SetWindowSpacing(window::set_window_spacing::SetWindowSpacing {
+            "setWindowArrangement" => Ok(Block3dCommand::SetWindowArrangement(set_window_arrangement::SetWindowArrangement { window_id: window_id_from_args(args), arrangement: str_field("value").unwrap_or_else(|| "overlap".into()) })),
+            "setWindowSpacing" => Ok(Block3dCommand::SetWindowSpacing(set_window_spacing::SetWindowSpacing {
                 window_id: window_id_from_args(args),
                 spacing: args.and_then(|value| value.get("value")).and_then(Value::as_f64).unwrap_or(8.0),
             })),
-            "setActiveUtility" => Ok(Block3dCommand::SetActiveUtility(window::set_active_utility::SetActiveUtility {
+            "setActiveUtility" => Ok(Block3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility {
                 window_id: window_id_from_args(args),
                 utility_id: str_field("utilityId").unwrap_or_else(|| BLOCK3D_UTILITY_SELECT.into()),
             })),
-            "setBrushVortexKind" => Ok(Block3dCommand::SetBrushVortexKind(brush::set_brush_vortex_kind::SetBrushVortexKind { vortex_kind_id: str_field("value").or_else(|| str_field("vortexKindId")) })),
-            "setBrushRadius" => Ok(Block3dCommand::SetBrushRadius(brush::set_brush_radius::SetBrushRadius { radius: args.and_then(|value| value.get("value")).and_then(Value::as_f64).unwrap_or(0.3) })),
-            "setBrushFlip" => Ok(Block3dCommand::SetBrushFlip(brush::set_brush_flip::SetBrushFlip { flip: args.and_then(|value| value.get("flip")).and_then(Value::as_bool).unwrap_or(false) })),
-            "worldSurfaceHover" => Ok(Block3dCommand::HoverSurface(brush::hover_surface::HoverSurface {
+            "setBrushVortexKind" => Ok(Block3dCommand::SetBrushVortexKind(set_brush_vortex_kind::SetBrushVortexKind { vortex_kind_id: str_field("value").or_else(|| str_field("vortexKindId")) })),
+            "setBrushRadius" => Ok(Block3dCommand::SetBrushRadius(set_brush_radius::SetBrushRadius { radius: args.and_then(|value| value.get("value")).and_then(Value::as_f64).unwrap_or(0.3) })),
+            "setBrushFlip" => Ok(Block3dCommand::SetBrushFlip(set_brush_flip::SetBrushFlip { flip: args.and_then(|value| value.get("flip")).and_then(Value::as_bool).unwrap_or(false) })),
+            "worldSurfaceHover" => Ok(Block3dCommand::HoverSurface(hover_surface::HoverSurface {
                 window_id: window_id_from_args(args),
                 object_id: str_field("objectId").unwrap_or_default(),
                 position: f64_vec3_field(args, "position").unwrap_or([0.0, 0.0, 0.0]),
                 normal: f64_vec3_field(args, "normal").unwrap_or([0.0, 0.0, 1.0]),
             })),
-            "worldSurfaceLeave" => Ok(Block3dCommand::LeaveSurface(brush::leave_surface::LeaveSurface {})),
-            "worldSurfacePlace" => Ok(Block3dCommand::PlaceVortex(brush::place_vortex::PlaceVortex {
+            "worldSurfaceLeave" => Ok(Block3dCommand::LeaveSurface(leave_surface::LeaveSurface {})),
+            "worldSurfacePlace" => Ok(Block3dCommand::PlaceVortex(place_vortex::PlaceVortex {
                 window_id: window_id_from_args(args),
                 object_id: str_field("objectId").unwrap_or_default(),
                 position: f64_vec3_field(args, "position").unwrap_or([0.0, 0.0, 0.0]),
                 normal: f64_vec3_field(args, "normal").unwrap_or([0.0, 0.0, 1.0]),
             })),
-            "selectVortex" => Ok(Block3dCommand::SelectVortex(selection::select_vortex::SelectVortex { full_id: str_field("fullId").unwrap_or_default(), merge: args.and_then(|value| value.get("merge")).and_then(Value::as_bool).unwrap_or(false) })),
-            "hoverVortex" => Ok(Block3dCommand::HoverVortex(selection::hover_vortex::HoverVortex { full_id: str_field("fullId") })),
-            "patchRepresentation" => Ok(Block3dCommand::PatchRepresentation(representation::patch_representation::PatchRepresentation { id: str_field("id").unwrap_or_default(), field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() })),
+            "selectVortex" => Ok(Block3dCommand::SelectVortex(select_vortex::SelectVortex { full_id: str_field("fullId").unwrap_or_default(), merge: args.and_then(|value| value.get("merge")).and_then(Value::as_bool).unwrap_or(false) })),
+            "hoverVortex" => Ok(Block3dCommand::HoverVortex(hover_vortex::HoverVortex { full_id: str_field("fullId") })),
+            "patchRepresentation" => Ok(Block3dCommand::PatchRepresentation(patch_representation::PatchRepresentation { id: str_field("id").unwrap_or_default(), field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() })),
             // 🩹️ Forward-fix, not a preserved behavior: pre-migration `command_from_action` had NO arm
             // for the manifest-declared `setCamera` view action at all (fell through to the reserved-
             // action error) — a real gap, the `Block3dCommand::SetCamera` variant was only reachable via
             // direct `dispatch_typed`/binary `OpBinary`. `assert_declared_actions_bridge_to_commands`
             // (added by this migration) requires every declared action to bridge, so this parses the
             // camera pose from `{position,target,zoom}` args the same shape `BlockCamera3d` serializes to.
-            "setCamera" => Ok(Block3dCommand::SetCamera(camera::set_camera::SetCamera {
+            "setCamera" => Ok(Block3dCommand::SetCamera(set_camera::SetCamera {
                 camera: BlockCamera3d {
                     position: f64_vec3_field(args, "position").unwrap_or([0.0, 0.0, 0.0]),
                     target: f64_vec3_field(args, "target").unwrap_or([0.0, 0.0, 0.0]),
@@ -259,7 +264,7 @@ impl DocumentApp for Block3dPlayApp {
             if port != "document:out" {
                 return Err(MediaError::NotImplemented);
             }
-            let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type });
+            let media_type = self.io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.document_media_type);
             let bytes = store::DocumentPack::encode_pack(doc.projection);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
@@ -376,38 +381,39 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::block3d::testkit::{new_app, Block3dApp};
+    use testkit::{new_app, Block3dApp};
     use semio_framework_plugin::PluginApp;
+
 
     //#region 🔖️CommandSurface
     fn every_command() -> Vec<Block3dCommand> {
         vec![
-            Block3dCommand::PatchObjectKind(kind::patch_object_kind::PatchObjectKind { field: "name".into(), value: "x".into() }),
-            Block3dCommand::AddRepresentation(representation::add_representation::AddRepresentation {}),
-            Block3dCommand::RemoveRepresentation(representation::remove_representation::RemoveRepresentation { id: "r0".into() }),
-            Block3dCommand::AddVortexKind(vortex_kind::add_vortex_kind::AddVortexKind {}),
-            Block3dCommand::RemoveVortexKind(vortex_kind::remove_vortex_kind::RemoveVortexKind { id: "v0".into() }),
-            Block3dCommand::AddVortex(vortex::add_vortex::AddVortex {}),
-            Block3dCommand::RemoveVortex(vortex::remove_vortex::RemoveVortex { id: "v0".into() }),
+            Block3dCommand::PatchObjectKind(patch_object_kind::PatchObjectKind { field: "name".into(), value: "x".into() }),
+            Block3dCommand::AddRepresentation(add_representation::AddRepresentation {}),
+            Block3dCommand::RemoveRepresentation(remove_representation::RemoveRepresentation { id: "r0".into() }),
+            Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {}),
+            Block3dCommand::RemoveVortexKind(remove_vortex_kind::RemoveVortexKind { id: "v0".into() }),
+            Block3dCommand::AddVortex(add_vortex::AddVortex {}),
+            Block3dCommand::RemoveVortex(remove_vortex::RemoveVortex { id: "v0".into() }),
             Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: "capsule".into() }),
             Block3dCommand::Edit(edit::Edit { text: "{}".into() }),
-            Block3dCommand::SetSelection(selection::set_selection::SetSelection { ids: vec!["r0".into()] }),
-            Block3dCommand::SetActiveRepresentation(window::set_active_representation::SetActiveRepresentation { representation_id: Some("r0".into()) }),
-            Block3dCommand::SetWindowRepresentations(window::set_window_representations::SetWindowRepresentations { window_id: "w0".into(), representation_ids: vec!["r0".into()] }),
-            Block3dCommand::ToggleWindowRepresentation(window::toggle_window_representation::ToggleWindowRepresentation { window_id: "w0".into(), representation_id: "r0".into(), visible: true }),
-            Block3dCommand::SetWindowArrangement(window::set_window_arrangement::SetWindowArrangement { window_id: "w0".into(), arrangement: "x".into() }),
-            Block3dCommand::SetWindowSpacing(window::set_window_spacing::SetWindowSpacing { window_id: "w0".into(), spacing: 8.0 }),
-            Block3dCommand::SetActiveUtility(window::set_active_utility::SetActiveUtility { window_id: "w0".into(), utility_id: "select".into() }),
-            Block3dCommand::SetBrushVortexKind(brush::set_brush_vortex_kind::SetBrushVortexKind { vortex_kind_id: Some("v0".into()) }),
-            Block3dCommand::SetBrushRadius(brush::set_brush_radius::SetBrushRadius { radius: 0.3 }),
-            Block3dCommand::SetBrushFlip(brush::set_brush_flip::SetBrushFlip { flip: true }),
-            Block3dCommand::HoverSurface(brush::hover_surface::HoverSurface { window_id: "w0".into(), object_id: "r0".into(), position: [0.0, 0.0, 0.0], normal: [0.0, 1.0, 0.0] }),
-            Block3dCommand::LeaveSurface(brush::leave_surface::LeaveSurface {}),
-            Block3dCommand::PlaceVortex(brush::place_vortex::PlaceVortex { window_id: "w0".into(), object_id: "r0".into(), position: [0.0, 0.0, 0.0], normal: [0.0, 1.0, 0.0] }),
-            Block3dCommand::SetCamera(camera::set_camera::SetCamera { camera: BlockCamera3d::default() }),
-            Block3dCommand::SelectVortex(selection::select_vortex::SelectVortex { full_id: "r0:v0".into(), merge: true }),
-            Block3dCommand::HoverVortex(selection::hover_vortex::HoverVortex { full_id: Some("r0:v0".into()) }),
-            Block3dCommand::PatchRepresentation(representation::patch_representation::PatchRepresentation { id: "r0".into(), field: "name".into(), value: "x".into() }),
+            Block3dCommand::SetSelection(set_selection::SetSelection { ids: vec!["r0".into()] }),
+            Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some("r0".into()) }),
+            Block3dCommand::SetWindowRepresentations(set_window_representations::SetWindowRepresentations { window_id: "w0".into(), representation_ids: vec!["r0".into()] }),
+            Block3dCommand::ToggleWindowRepresentation(toggle_window_representation::ToggleWindowRepresentation { window_id: "w0".into(), representation_id: "r0".into(), visible: true }),
+            Block3dCommand::SetWindowArrangement(set_window_arrangement::SetWindowArrangement { window_id: "w0".into(), arrangement: "x".into() }),
+            Block3dCommand::SetWindowSpacing(set_window_spacing::SetWindowSpacing { window_id: "w0".into(), spacing: 8.0 }),
+            Block3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { window_id: "w0".into(), utility_id: "select".into() }),
+            Block3dCommand::SetBrushVortexKind(set_brush_vortex_kind::SetBrushVortexKind { vortex_kind_id: Some("v0".into()) }),
+            Block3dCommand::SetBrushRadius(set_brush_radius::SetBrushRadius { radius: 0.3 }),
+            Block3dCommand::SetBrushFlip(set_brush_flip::SetBrushFlip { flip: true }),
+            Block3dCommand::HoverSurface(hover_surface::HoverSurface { window_id: "w0".into(), object_id: "r0".into(), position: [0.0, 0.0, 0.0], normal: [0.0, 1.0, 0.0] }),
+            Block3dCommand::LeaveSurface(leave_surface::LeaveSurface {}),
+            Block3dCommand::PlaceVortex(place_vortex::PlaceVortex { window_id: "w0".into(), object_id: "r0".into(), position: [0.0, 0.0, 0.0], normal: [0.0, 1.0, 0.0] }),
+            Block3dCommand::SetCamera(set_camera::SetCamera { camera: BlockCamera3d::default() }),
+            Block3dCommand::SelectVortex(select_vortex::SelectVortex { full_id: "r0:v0".into(), merge: true }),
+            Block3dCommand::HoverVortex(hover_vortex::HoverVortex { full_id: Some("r0:v0".into()) }),
+            Block3dCommand::PatchRepresentation(patch_representation::PatchRepresentation { id: "r0".into(), field: "name".into(), value: "x".into() }),
         ]
     }
 
@@ -434,8 +440,8 @@ mod tests {
     #[test]
     fn divergent_key_rows_keep_their_pre_migration_bytes() {
         let hex = |command: &Block3dCommand| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
-        assert_eq!(protocol::OpText::print_op(&Block3dCommand::LeaveSurface(brush::leave_surface::LeaveSurface {})), "leaveSurface");
-        assert_eq!(hex(&Block3dCommand::LeaveSurface(brush::leave_surface::LeaveSurface {})), "01150000");
+        assert_eq!(protocol::OpText::print_op(&Block3dCommand::LeaveSurface(leave_surface::LeaveSurface {})), "leaveSurface");
+        assert_eq!(hex(&Block3dCommand::LeaveSurface(leave_surface::LeaveSurface {})), "01140000");
     }
 
     #[test]
@@ -460,9 +466,9 @@ mod tests {
     #[test]
     fn renders_document_tree_and_inspector() {
         let mut app: Block3dApp = new_app();
-        let json = crate::apps::block3d::testkit::render(&mut app, document_panel::BLOCK3D_BODY_DOCUMENT);
+        let json = testkit::render(&mut app, document_panel::BLOCK3D_BODY_DOCUMENT);
         assert!(json.contains("Representations"));
-        let inspector = crate::apps::block3d::testkit::render(&mut app, inspection_panel::BLOCK3D_BODY_INSPECTOR);
+        let inspector = testkit::render(&mut app, inspection_panel::BLOCK3D_BODY_INSPECTOR);
         assert!(inspector.contains("\"type\":\"tree\""));
         assert!(inspector.contains("Name"));
         assert!(inspector.contains("Vortices"));
@@ -473,29 +479,29 @@ mod tests {
     #[test]
     fn add_representation_then_set_active_then_render_world_shows_mesh() {
         let mut app: Block3dApp = new_app();
-        crate::apps::block3d::testkit::dispatch(&mut app, Block3dCommand::AddRepresentation(representation::add_representation::AddRepresentation {}));
+        testkit::dispatch(&mut app, Block3dCommand::AddRepresentation(add_representation::AddRepresentation {}));
         let representation_id = app.projection().expect("projection").representations[0].id.clone();
-        crate::apps::block3d::testkit::dispatch(&mut app, Block3dCommand::SetActiveRepresentation(window::set_active_representation::SetActiveRepresentation { representation_id: Some(representation_id) }));
-        let json = crate::apps::block3d::testkit::render(&mut app, world::BLOCK3D_BODY_WORLD);
+        testkit::dispatch(&mut app, Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some(representation_id) }));
+        let json = testkit::render(&mut app, world::BLOCK3D_BODY_WORLD);
         assert!(json.contains("\"type\":\"componentScene\""), "world body must render a 3d scene");
     }
 
     #[test]
     fn add_vortex_kind_then_add_vortex_then_remove_round_trips() {
         let mut app: Block3dApp = new_app();
-        crate::apps::block3d::testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(vortex_kind::add_vortex_kind::AddVortexKind {}));
-        crate::apps::block3d::testkit::dispatch(&mut app, Block3dCommand::AddVortex(vortex::add_vortex::AddVortex {}));
+        testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {}));
+        testkit::dispatch(&mut app, Block3dCommand::AddVortex(add_vortex::AddVortex {}));
         let projection = app.projection().expect("projection");
         assert_eq!(projection.vortices.len(), 1);
         let vortex_id = projection.vortices[0].id.clone();
-        crate::apps::block3d::testkit::dispatch(&mut app, Block3dCommand::RemoveVortex(vortex::remove_vortex::RemoveVortex { id: vortex_id }));
+        testkit::dispatch(&mut app, Block3dCommand::RemoveVortex(remove_vortex::RemoveVortex { id: vortex_id }));
         assert_eq!(app.projection().expect("projection").vortices.len(), 0);
     }
 
     #[test]
     fn set_active_example_loads_capsule_fixture() {
         let mut app: Block3dApp = new_app();
-        crate::apps::block3d::testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::apps::block3d::commands::example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
+        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::apps::block3d::commands::example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
         let projection = app.projection().expect("projection");
         assert_eq!(projection.object_kind.id, "Capsule J");
         assert_eq!(projection.representations.len(), 2);
@@ -504,7 +510,7 @@ mod tests {
     #[test]
     fn undo_redo_round_trips_through_the_wrapper() {
         let mut app: Block3dApp = new_app();
-        crate::apps::block3d::testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(vortex_kind::add_vortex_kind::AddVortexKind {}));
+        testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {}));
         assert_eq!(app.projection().expect("projection").vortex_kinds.len(), 1);
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
         assert_eq!(app.projection().expect("projection").vortex_kinds.len(), 0);
@@ -515,14 +521,14 @@ mod tests {
     #[test]
     fn set_selection_writes_config_not_document() {
         let mut app: Block3dApp = new_app();
-        let result = app.dispatch_typed(Block3dCommand::SetSelection(selection::set_selection::SetSelection { ids: vec!["representation:r0".into()] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
+        let result = app.dispatch_typed(Block3dCommand::SetSelection(set_selection::SetSelection { ids: vec!["representation:r0".into()] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
         assert!(result.operations.is_empty(), "setSelection is config-only and must emit no document operations");
     }
 
     #[test]
     fn export_media_catalog_out_wraps_the_puzzle3d_fragment() {
         let mut app: Block3dApp = new_app();
-        crate::apps::block3d::testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::apps::block3d::commands::example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
+        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::apps::block3d::commands::example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
         let media = app.export_media("catalog:out").expect("export catalog");
         assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
         match media.payload {
@@ -538,10 +544,10 @@ mod tests {
     #[test]
     fn place_vortex_on_surface_auto_creates_kind_and_vortex() {
         let mut app: Block3dApp = new_app();
-        crate::apps::block3d::testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::apps::block3d::commands::example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
-        crate::apps::block3d::testkit::dispatch(
+        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::apps::block3d::commands::example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
+        testkit::dispatch(
             &mut app,
-            Block3dCommand::PlaceVortex(brush::place_vortex::PlaceVortex { window_id: BLOCK3D_DEFAULT_WINDOW_ID.into(), object_id: "r0".into(), position: [0.5, 0.0, 1.0], normal: [0.0, 1.0, 0.0] }),
+            Block3dCommand::PlaceVortex(place_vortex::PlaceVortex { window_id: BLOCK3D_DEFAULT_WINDOW_ID.into(), object_id: "r0".into(), position: [0.5, 0.0, 1.0], normal: [0.0, 1.0, 0.0] }),
         );
         let projection = app.projection().expect("projection");
         assert!(!projection.vortex_kinds.is_empty());
@@ -554,5 +560,27 @@ mod tests {
         assert!(matches!(app.command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "capsule" }))), Ok(Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "capsule"));
     }
     //#endregion 🔖️Behavior
+
+    //#region 🔖️WindowMeasures
+    /// 🧬️ Kind-discipline wrapper: the real registry enforces View actions never emit document
+    /// operations. Exercising it here (rather than only the plain `new_app()`) is the reason
+    /// `testkit::app_with_registry` exists.
+    #[test]
+    fn view_actions_never_emit_document_operations_under_the_real_registry() {
+        let mut app = testkit::app_with_registry();
+        let result = testkit::dispatch(&mut app, Block3dCommand::SetSelection(set_selection::SetSelection { ids: vec!["r0".into()] }));
+        assert!(result.operations.is_empty(), "setSelection is a view action and must never reach document operations under kind discipline");
+    }
+
+    /// 🎚️ The world window collects its five option measures (representations/quick-pick/arrangement/
+    /// spacing/brush) fresh per frame — never frozen into the manifest.
+    #[test]
+    fn world_window_measures_collect_all_five_options() {
+        let mut app: Block3dApp = new_app();
+        testkit::dispatch(&mut app, Block3dCommand::AddRepresentation(add_representation::AddRepresentation {}));
+        let measures = testkit::main_window_measures(&mut app);
+        assert_eq!(measures.len(), 5, "world window must expose representations/quick-pick/arrangement/spacing/brush");
+    }
+    //#endregion 🔖️WindowMeasures
 }
 //#endregion 🧪️Tests

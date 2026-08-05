@@ -72,7 +72,8 @@ mod tests {
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&node_graph_edit::NodeGraphEdit { operations_json: "[]".into() });
+        use crate::apps::space::SpaceCommand;
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }));
     }
 
     #[test]
@@ -89,7 +90,7 @@ mod tests {
         let mut fixture = os_workflow_to_flow_fixture(&projection.graph, &camera);
         fixture["layout"][&node.id] = json!({ "x": 500.0 + node.width / 2.0, "y": 300.0 + node.height / 2.0 });
         let operations_json = json!({ "operations": [{ "operation": "setFixture", "fixtureJson": fixture.to_string() }] }).to_string();
-        let emit = studio_emit(&projection, &config, SpaceCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json })).expect("handle");
+        let emit = studio_emit(&projection, &config, &SpaceCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json })).expect("handle");
         let moved = apply_operations(&projection, &emit.document_operations).graph.nodes.into_iter().find(|row| row.id == node.id).expect("node");
         assert!((moved.x - 500.0).abs() < 0.01);
         assert!((moved.y - 300.0).abs() < 0.01);

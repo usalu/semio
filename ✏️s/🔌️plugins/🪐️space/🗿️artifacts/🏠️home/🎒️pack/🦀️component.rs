@@ -1,6 +1,5 @@
 //! 📦️ S Home launcher artifact — binary document surface + laws (constitutional: pack).
 
-use crate::apps::home::config::HomeConfig;
 use crate::artifacts::home::SHomeDocument;
 use store::PackError;
 

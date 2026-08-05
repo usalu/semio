@@ -268,7 +268,7 @@ pub(crate) fn brush_compatible_candidates(target: &AttractionVortexContext, cata
     let mut scored: Vec<(BrushCompatibleCandidate, i64)> = Vec::new();
     let mut seen = std::collections::HashSet::new();
     for kind in &catalogs.objects {
-        if kind.mesh_url.as_ref().map(|u| u.is_empty()).unwrap_or(true) || kind.vortices.is_empty() {
+        if kind.mesh_url.as_ref().is_none_or(|u| u.is_empty()) || kind.vortices.is_empty() {
             continue;
         }
         for (source_vortex_index, template) in kind.vortices.iter().enumerate() {
@@ -886,7 +886,7 @@ mod tests {
         let all_zero: Vec<i32> = weighted_sample_without_replacement(&items, |_| 0.0, &mut rng);
         assert!(all_zero.is_empty(), "all-zero weights leave nothing eligible");
         let sampled = weighted_sample_without_replacement(&items, |_| 1.0, &mut rng);
-        let mut sorted = sampled.clone();
+        let mut sorted = sampled;
         sorted.sort_unstable();
         assert_eq!(sorted, items, "every eligible item appears exactly once");
     }

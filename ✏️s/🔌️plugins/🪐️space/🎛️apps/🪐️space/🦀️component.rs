@@ -28,9 +28,9 @@ use crate::apps::space::commands::studio_io::{export_studio_dsl, export_studio_p
 use crate::apps::space::commands::viewport::{node_graph_hover, node_graph_viewport, text_hover};
 use crate::apps::space::config::SpaceConfig;
 use crate::apps::space::terminology::SStudioLabels;
-use crate::core::{demo_space_projection, parse_demo_space_document};
-use semio_framework_os::{create_os_id, empty_workflow_document, host_now_ms, MediaContract, WorkflowDocument, WorkflowEdge, WorkflowNode, WorkflowOperation};
-use semio_framework_plugin::{app_commands, create_default_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultOrigin, HostEffect, Label, LocalizedLabel, UiNode, WindowLayout};
+use crate::core::parse_demo_space_document;
+use semio_framework_os::{create_os_id, empty_workflow_document, MediaContract, WorkflowDocument, WorkflowEdge, WorkflowOperation};
+use semio_framework_plugin::{app_commands, create_default_layout, host_now_ms, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultOrigin, HostEffect, Label, LocalizedLabel, UiNode, WindowLayout};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
@@ -38,7 +38,6 @@ use std::sync::{LazyLock, Mutex};
 //#region 🔖️Constants
 pub const S_PLAY_APP_ID: &str = "studio";
 pub const S_PLAY_CONTROLLER_ID: &str = "s-play";
-pub const S_PLAY_SURFACE_MEDIA_VFS: &str = "s.play.media-vfs";
 pub const S_PLAY_CATALOGUE_TAB_ID: &str = "s-play-catalogue";
 pub const S_PLAY_PARAMETERS_TAB_ID: &str = "s-play-parameters";
 pub const S_PLAY_INSPECTOR_TAB_ID: &str = "s-play-inspector";
@@ -142,7 +141,7 @@ fn space_workflow_context_menu_items(
 ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     use semio_framework_plugin::{selection_count_phrase, selection_domains_from_surface, ContextMenuItemSpec, Menu};
 
-    let hits = surface.map(|target| target.hits.as_slice()).unwrap_or(&[]);
+    let hits = surface.map_or(&[], |target| target.hits.as_slice());
     let (nodes, _) = selection_domains_from_surface(surface, selected_node_ids, &[]);
     let hit_node = hits.iter().find(|hit| hit.domain == "node").map(|hit| hit.id.as_str());
     let mut menu = Menu::of(registry);
@@ -385,10 +384,10 @@ impl DocumentApp for SpaceApp {
         let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale);
         // 🪟 `VcsDocumentApp::render` appends `:{windowInstanceId}` when `view_state.window_id` is set —
         // strip it so Space body keys still match.
-        let base_body_key = body_key.split_once(':').map(|(base, _)| base).unwrap_or(body_key);
+        let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
         match base_body_key {
             crate::apps::space::modes::main::windows::workflow::S_PLAY_BODY_WORKFLOW => crate::apps::space::modes::main::windows::workflow::render(projection, config),
-            S_PLAY_SURFACE_MEDIA_VFS => crate::apps::space::modes::main::windows::media_vfs::render(projection, &config.locale),
+            crate::apps::space::modes::main::windows::media_vfs::S_PLAY_BODY_MEDIA_VFS => crate::apps::space::modes::main::windows::media_vfs::render(projection, &config.locale),
             crate::apps::space::modes::main::windows::compiled_dag::S_PLAY_BODY_COMPILED_DAG => crate::apps::space::modes::main::windows::compiled_dag::render(projection),
             S_PLAY_CATALOGUE_BODY_KEY => crate::apps::space::panels::catalogue::build_catalogue_tree(labels, semio_framework_plugin::locale_from_str(&config.locale)),
             S_PLAY_PARAMETERS_BODY_KEY => crate::apps::space::panels::parameters::render(projection, labels),
@@ -545,11 +544,11 @@ pub(crate) mod testkit {
     }
 
     /// 🎛️ Drives the typed `SpaceApp::handle` against a projection/config snapshot, returning its emit.
-    pub(crate) fn studio_emit(projection: &WorkflowDocument, config: &SpaceConfig, command: SpaceCommand) -> Result<Emit<WorkflowOperation, crate::apps::space::config::SpaceConfigOperation>, Fault> {
+    pub(crate) fn studio_emit(projection: &WorkflowDocument, config: &SpaceConfig, command: &SpaceCommand) -> Result<Emit<WorkflowOperation, crate::apps::space::config::SpaceConfigOperation>, Fault> {
         let history = empty_history();
         let doc = DocumentView { projection, history: &history };
         let cfg = ConfigView { projection: config };
-        SpaceApp.handle(&command, &doc, &cfg)
+        SpaceApp.handle(command, &doc, &cfg)
     }
 
     /// 📽️ Folds studio document operations onto a projection the way the store would (minus history).
@@ -608,7 +607,7 @@ mod tests {
     use super::*;
     use crate::apps::space::testkit::{empty_history, studio_emit};
     use semio_framework_plugin::testkit as plugin_testkit;
-    use semio_framework_plugin::VcsDocumentApp;
+    use semio_framework_plugin::{PluginApp, VcsDocumentApp};
 
     #[test]
     fn initial_projection_is_empty_not_demo() {
@@ -620,7 +619,7 @@ mod tests {
     fn demo_document_has_instances_and_edges() {
         let projection = demo_space_projection();
         assert!(projection.graph.nodes.len() >= 5);
-        assert!(projection.graph.edges.len() >= 1);
+        assert!(!projection.graph.edges.is_empty());
         assert!(semio_framework_os::validate_workflow(&projection.graph).ok);
     }
 
@@ -669,7 +668,7 @@ mod tests {
     fn checkout_checkpoint_restores_projection() {
         use crate::apps::space::commands::nodes::spawn_app;
         use serde_json::json;
-        crate::apps::space::testkit::seed_draw_plugin();
+        testkit::seed_draw_plugin();
         let mut app = VcsDocumentApp::new(SpaceApp);
         let before = app.projection().expect("projection").graph.nodes.len();
         app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).expect("spawn");
@@ -693,17 +692,17 @@ mod tests {
     #[test]
     fn two_instances_converge_on_disjoint_edits_via_backbone() {
         use crate::apps::space::commands::nodes::{patch_app_instances, spawn_app};
-        crate::apps::space::testkit::seed_draw_plugin();
+        testkit::seed_draw_plugin();
         let node_id = demo_space_projection().graph.nodes.first().expect("node").id.clone();
         let rename_id = node_id.clone();
         plugin_testkit::assert_two_instances_converge::<SpaceApp, (usize, bool)>(
             "mem://s-studio-convergence",
             SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }),
-            SpaceCommand::PatchAppInstances(patch_app_instances::PatchAppInstances { node_ids: vec![node_id.clone()], field: "label".into(), value: "Renamed".into() }),
+            SpaceCommand::PatchAppInstances(patch_app_instances::PatchAppInstances { node_ids: vec![node_id], field: "label".into(), value: "Renamed".into() }),
             move |app| {
                 let projection = app.projection().expect("projection");
                 let draw_count = projection.graph.nodes.iter().filter(|node| node.plugin_id == "draw").count();
-                let renamed = projection.graph.nodes.iter().find(|node| node.id == rename_id).map(|node| node.label == "Renamed").unwrap_or(false);
+                let renamed = projection.graph.nodes.iter().find(|node| node.id == rename_id).is_some_and(|node| node.label == "Renamed");
                 (draw_count, renamed)
             },
         );
@@ -773,7 +772,7 @@ mod tests {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
         let _ = empty_history();
-        let _ = studio_emit(&projection, &config, SpaceCommand::GoHome(crate::apps::space::commands::navigation::go_home::GoHome {})).expect("handle");
+        let _ = studio_emit(&projection, &config, &SpaceCommand::GoHome(go_home::GoHome {})).expect("handle");
     }
 }
 //#endregion 🧪️Tests

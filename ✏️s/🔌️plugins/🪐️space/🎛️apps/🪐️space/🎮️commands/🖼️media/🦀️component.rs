@@ -78,7 +78,7 @@ pub mod import_media_payload {
             config_operations.push(SpaceConfigOperation::SetPendingImport { node_id: None, format: None });
             if let Some(format) = OsMediaFormat::parse(&format_name) {
                 use base64::Engine;
-                let base64_part = payload.payload.split_once(',').map(|(_, data)| data).unwrap_or(&payload.payload);
+                let base64_part = payload.payload.split_once(',').map_or(payload.payload.as_str(), |(_, data)| data);
                 if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(base64_part) {
                     if let Some(node) = doc.projection.graph.nodes.iter().find(|row| row.id == node_id) {
                         // 📥️ Decoding/validation happens here; the decoded content is applied to the
@@ -105,9 +105,9 @@ mod tests {
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&export_media::ExportMedia { node_id: "n1".into(), format: "dwg".into() });
-        store::test_support::assert_op_line_round_trip(&import_media::ImportMedia { node_id: "n1".into(), format: "dwg".into() });
-        store::test_support::assert_op_line_round_trip(&import_media_payload::ImportMediaPayload { payload: "data:...".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportMedia(export_media::ExportMedia { node_id: "n1".into(), format: "dwg".into() }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportMedia(import_media::ImportMedia { node_id: "n1".into(), format: "dwg".into() }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportMediaPayload(import_media_payload::ImportMediaPayload { payload: "data:...".into() }));
     }
 
     #[test]
@@ -125,7 +125,7 @@ mod tests {
         let node = projection.graph.nodes.iter().find(|node| node.plugin_id == "draw").expect("draw node").clone();
         let config = SpaceConfig::default();
 
-        let export = studio_emit(&projection, &config, SpaceCommand::ExportMedia(export_media::ExportMedia { node_id: node.id.clone(), format: "dwg".into() })).expect("handle");
+        let export = studio_emit(&projection, &config, &SpaceCommand::ExportMedia(export_media::ExportMedia { node_id: node.id.clone(), format: "dwg".into() })).expect("handle");
         let (data, encoding) = export
             .effects
             .iter()
@@ -137,12 +137,12 @@ mod tests {
         assert!(!data.is_empty());
         assert_eq!(encoding.as_deref(), Some("base64"));
 
-        let import = studio_emit(&projection, &config, SpaceCommand::ImportMedia(import_media::ImportMedia { node_id: node.id.clone(), format: "dwg".into() })).expect("handle");
+        let import = studio_emit(&projection, &config, &SpaceCommand::ImportMedia(import_media::ImportMedia { node_id: node.id.clone(), format: "dwg".into() })).expect("handle");
         assert!(import.effects.iter().any(|effect| matches!(effect, HostEffect::RequestFileOpen { import_action, .. } if import_action == "importMediaPayload")));
-        assert_eq!(import.config_operations, vec![SpaceConfigOperation::SetPendingImport { node_id: Some(node.id.clone()), format: Some("dwg".into()) }]);
+        assert_eq!(import.config_operations, vec![SpaceConfigOperation::SetPendingImport { node_id: Some(node.id), format: Some("dwg".into()) }]);
 
         let pending_config = apply_config(&config, &import.config_operations);
-        let payload = studio_emit(&projection, &pending_config, SpaceCommand::ImportMediaPayload(import_media_payload::ImportMediaPayload { payload: format!("data:image/vnd.dwg;base64,{data}") })).expect("handle");
+        let payload = studio_emit(&projection, &pending_config, &SpaceCommand::ImportMediaPayload(import_media_payload::ImportMediaPayload { payload: format!("data:image/vnd.dwg;base64,{data}") })).expect("handle");
         assert!(payload.document_operations.is_empty());
     }
 }

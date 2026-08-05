@@ -76,9 +76,10 @@ mod tests {
 
     #[test]
     fn home_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&navigate_virtual_file_system_node::NavigateVirtualFileSystemNode { node_id: "studio:s1".into() });
-        store::test_support::assert_op_line_round_trip(&delete_virtual_file_system_node::DeleteVirtualFileSystemNode { node_id: "studio:s1".into() });
-        store::test_support::assert_op_line_round_trip(&go_home::GoHome {});
+        use crate::apps::home::HomeCommand;
+        store::test_support::assert_op_line_round_trip(&HomeCommand::NavigateVirtualFileSystemNode(navigate_virtual_file_system_node::NavigateVirtualFileSystemNode { node_id: "studio:s1".into() }));
+        store::test_support::assert_op_line_round_trip(&HomeCommand::DeleteVirtualFileSystemNode(delete_virtual_file_system_node::DeleteVirtualFileSystemNode { node_id: "studio:s1".into() }));
+        store::test_support::assert_op_line_round_trip(&HomeCommand::GoHome(go_home::GoHome {}));
     }
 }
 //#endregion 🧪️Tests

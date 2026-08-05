@@ -13,7 +13,7 @@ use crate::apps::home::terminology::SHomeLabels;
 use crate::artifacts::home::SHomeDocument;
 use crate::core::{ensure_space_fixtures_registered, parse_demo_space_document};
 use semio_framework_os::{
-    artifact_backbone_uri, collection_backbone_uri, create_backbone_document, create_os_space, decode_backbone_payload, document_backbone_ref, draft_catalog_for, draft_uri, empty_space_projection, empty_workflow_document, encode_backbone_payload,
+    artifact_backbone_uri, collection_backbone_uri, create_backbone_document, decode_backbone_payload, document_backbone_ref, draft_catalog_for, draft_uri, empty_space_projection, empty_workflow_document, encode_backbone_payload,
     export_backbone_pack, export_os_space_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_projection, seed_os_space_catalog_if_empty, ArtifactBody, CollectionOperation, CollectionProjection, DraftCatalog,
     MemoryBackbonePort, OsBackbonePort, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort, SpaceKind, SpaceOperation, SpaceProjection, SpaceRole, SpaceUser, SpaceVisibility, VcsError, WorkflowDocument, WorkflowOperation,
     S_COLLECTION_SCHEMA, S_SPACE_SCHEMA, S_WORKFLOW_SCHEMA,
@@ -42,7 +42,7 @@ static CATALOG_PORT_CONCRETE: LazyLock<Arc<LocalStorageBackbonePort>> = LazyLock
     ensure_space_fixtures_registered();
     let port = Arc::new(LocalStorageBackbonePort::new());
     let os_port: Arc<dyn OsBackbonePort> = port.clone();
-    if list_os_space_catalog_entries(os_port.clone()).map(|entries| entries.is_empty()).unwrap_or(true) {
+    if list_os_space_catalog_entries(os_port.clone()).map_or(true, |entries| entries.is_empty()) {
         // 🧬️ `parse_demo_space_document` yields a `workflow::WorkflowDocument` (the dissolved
         // `OsProjection`'s workflow-graph half) — the space CATALOG this boot seed populates needs a
         // `space::SpaceProjection` manifest instead. `demo_name` still comes from the bundled fixture's
@@ -369,7 +369,7 @@ impl DocumentApp for HomeApp {
         let labels = semio_framework_plugin::resolve_labels_for_locale::<SHomeLabels>(&cfg.projection.locale);
         // 🪟 `VcsDocumentApp::render` appends `:{windowInstanceId}` when `view_state.window_id` is set —
         // strip it so Home's single body key still matches.
-        let base_body_key = body_key.split_once(':').map(|(base, _)| base).unwrap_or(body_key);
+        let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
         match base_body_key {
             crate::apps::home::modes::explore::windows::main::S_HOME_BODY => crate::apps::home::modes::explore::windows::main::render(labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -435,7 +435,7 @@ mod tests {
         let port: Arc<dyn OsBackbonePort> = Arc::new(LocalStorageBackbonePort::new());
         let projection = empty_space_projection("Persist Test", SpaceKind::Atelier, SpaceVisibility::Private);
         let demo: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, "persist-test", "Persist Test", projection);
-        let _ = seed_os_space_catalog_if_empty(demo.clone(), port.clone()).expect("seed");
+        let _ = seed_os_space_catalog_if_empty(demo, port.clone()).expect("seed");
         let loaded = load_os_space_document("persist-test", port.clone()).expect("load");
         assert_eq!(loaded.id, "persist-test");
         assert_eq!(loaded.name, "Persist Test");

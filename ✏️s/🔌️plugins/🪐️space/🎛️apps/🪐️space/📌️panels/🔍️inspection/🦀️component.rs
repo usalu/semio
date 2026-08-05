@@ -176,7 +176,7 @@ pub fn render(projection: &WorkflowDocument, config: &SpaceConfig, term_labels: 
                             child: Box::new(UiNode::Select(UiSelectNode {
                                 presence: UiPresence::default(),
                                 id: format!("s-play-inspector.app-parameter.{}.select", field_spec.field_path),
-                                value: binding.map(|entry| entry.parameter_id.clone()).unwrap_or_else(|| "__direct__".into()),
+                                value: binding.map_or_else(|| "__direct__".into(), |entry| entry.parameter_id.clone()),
                                 items,
                                 placeholder: None,
                                 on_change: s_play_action("bindParameterField", Some(json!({ "nodeId": node.id, "fieldPath": field_spec.field_path }))),
@@ -188,7 +188,7 @@ pub fn render(projection: &WorkflowDocument, config: &SpaceConfig, term_labels: 
                             menu: None,
                         }));
                         if let Some(binding) = binding {
-                            if let Some(parameter) = projection.parameters.iter().find(|entry| entry.id() == binding.parameter_id) {
+                            if let Some(parameter) = projection.parameters.iter().find(|entry| parameter_entity_id(entry) == binding.parameter_id) {
                                 instance_fields.push(ui_text(Label::data(format!("{}: {}", term_labels.bound_value_prefix.as_str(), os_parameter_value(&workflow_parameter_to_os(parameter))))));
                             }
                         }

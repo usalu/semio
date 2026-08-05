@@ -71,9 +71,7 @@ pub mod hover_surface {
     pub struct HoverSurface {
         pub window_id: String,
         pub object_id: String,
-        #[dsl(coord)]
         pub position: [f64; 3],
-        #[dsl(dir)]
         pub normal: [f64; 3],
     }
 
@@ -113,9 +111,7 @@ pub mod place_vortex {
     pub struct PlaceVortex {
         pub window_id: String,
         pub object_id: String,
-        #[dsl(coord)]
         pub position: [f64; 3],
-        #[dsl(dir)]
         pub normal: [f64; 3],
     }
 

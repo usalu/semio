@@ -167,12 +167,13 @@ mod tests {
 
     #[test]
     fn home_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&create_studio::CreateStudio { name: "Untitled".into(), kind: "catalog".into(), folder_path: None });
-        store::test_support::assert_op_line_round_trip(&create_studio::CreateStudio { name: "Untitled".into(), kind: "folder".into(), folder_path: Some("/tmp/x".into()) });
-        store::test_support::assert_op_line_round_trip(&bind_space_file::BindSpaceFile { space_id: "s1".into(), file_path: "/tmp/x.os".into() });
-        store::test_support::assert_op_line_round_trip(&import_space::ImportSpace { dsl: Some("programs=[]".into()) });
-        store::test_support::assert_op_line_round_trip(&import_space::ImportSpace { dsl: None });
-        store::test_support::assert_op_line_round_trip(&open_space::OpenSpace { space_id: "s1".into() });
+        use crate::apps::home::HomeCommand;
+        store::test_support::assert_op_line_round_trip(&HomeCommand::CreateStudio(create_studio::CreateStudio { name: "Untitled".into(), kind: "catalog".into(), folder_path: None }));
+        store::test_support::assert_op_line_round_trip(&HomeCommand::CreateStudio(create_studio::CreateStudio { name: "Untitled".into(), kind: "folder".into(), folder_path: Some("/tmp/x".into()) }));
+        store::test_support::assert_op_line_round_trip(&HomeCommand::BindSpaceFile(bind_space_file::BindSpaceFile { space_id: "s1".into(), file_path: "/tmp/x.os".into() }));
+        store::test_support::assert_op_line_round_trip(&HomeCommand::ImportSpace(import_space::ImportSpace { dsl: Some("programs=[]".into()) }));
+        store::test_support::assert_op_line_round_trip(&HomeCommand::ImportSpace(import_space::ImportSpace { dsl: None }));
+        store::test_support::assert_op_line_round_trip(&HomeCommand::OpenSpace(open_space::OpenSpace { space_id: "s1".into() }));
     }
 
     #[test]

@@ -55,8 +55,8 @@ mod tests {
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&connect_media_ports::ConnectMediaPorts { source_node_id: "n1".into(), source_port_id: "n1:out:out".into(), target_node_id: "n2".into(), target_port_id: "n2:in:in".into() });
-        store::test_support::assert_op_line_round_trip(&disconnect_media_edge::DisconnectMediaEdge { edge_id: "e1".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: "n1".into(), source_port_id: "n1:out:out".into(), target_node_id: "n2".into(), target_port_id: "n2:in:in".into() }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::DisconnectMediaEdge(disconnect_media_edge::DisconnectMediaEdge { edge_id: "e1".into() }));
     }
 
     #[test]
@@ -94,7 +94,7 @@ mod tests {
         let emit = studio_emit(
             &projection,
             &config,
-            SpaceCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: "contract-src".into(), source_port_id: "contract-src:out:out".into(), target_node_id: "contract-dst".into(), target_port_id: "contract-dst:in:in".into() }),
+            &SpaceCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: "contract-src".into(), source_port_id: "contract-src:out:out".into(), target_node_id: "contract-dst".into(), target_port_id: "contract-dst:in:in".into() }),
         )
         .expect("handle");
         assert!(emit.document_operations.is_empty(), "an incompatible connect must not push WorkflowOperation::ConnectPorts");
@@ -136,7 +136,7 @@ mod tests {
         let emit = studio_emit(
             &projection,
             &config,
-            SpaceCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts {
+            &SpaceCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts {
                 source_node_id: "contract-src-2".into(),
                 source_port_id: "contract-src-2:out:out".into(),
                 target_node_id: "contract-dst-2".into(),

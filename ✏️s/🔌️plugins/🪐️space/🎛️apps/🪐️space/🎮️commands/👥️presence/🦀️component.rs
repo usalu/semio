@@ -34,7 +34,8 @@ mod tests {
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&presence_heartbeat::PresenceHeartbeat { client_id: "c1".into(), name: "Ada".into() });
+        use crate::apps::space::SpaceCommand;
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::PresenceHeartbeat(presence_heartbeat::PresenceHeartbeat { client_id: "c1".into(), name: "Ada".into() }));
     }
 
     #[test]
@@ -45,7 +46,7 @@ mod tests {
         use semio_framework_core::kernel::UiDirtyScope;
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&projection, &config, SpaceCommand::PresenceHeartbeat(presence_heartbeat::PresenceHeartbeat { client_id: "client-test-c".into(), name: "Cass".into() })).expect("handle");
+        let emit = studio_emit(&projection, &config, &SpaceCommand::PresenceHeartbeat(presence_heartbeat::PresenceHeartbeat { client_id: "client-test-c".into(), name: "Cass".into() })).expect("handle");
         assert!(matches!(emit.ui_scope, UiDirtyScope::None), "presenceHeartbeat must declare None, got {:?}", emit.ui_scope);
     }
 }

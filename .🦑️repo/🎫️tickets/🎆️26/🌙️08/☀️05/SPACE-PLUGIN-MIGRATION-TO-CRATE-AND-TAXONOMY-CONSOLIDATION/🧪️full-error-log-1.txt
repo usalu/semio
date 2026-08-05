@@ -1,0 +1,2509 @@
+warning: unused import: `serde_json::Value`
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:19:5
+   |
+19 | use serde_json::Value;
+   |     ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:481:16
+    |
+481 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+481 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+481 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:482:24
+    |
+482 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+482 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+482 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:492:16
+    |
+492 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+492 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+492 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:493:24
+    |
+493 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+493 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+493 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:553:41
+    |
+553 |     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+553 -     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+553 +     pub fn receive(&mut self, envelope: OperationEnvelope) -> Result<(), SyncError> {
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:735:42
+    |
+735 |                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+735 -                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+735 +                         let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:739:38
+    |
+739 |                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+739 -                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+739 +                     let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:1208:37
+     |
+1208 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1208 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1208 +             let wire_envelopes: Vec<OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:1208:100
+     |
+1208 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1208 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1208 +             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:1275:37
+     |
+1275 |     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |                                     ^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1275 -     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+1275 +     fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |
+
+warning: structure field `pendingOperations` should have a snake case name
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:153:9
+    |
+153 |     pub pendingOperations: usize,
+    |         ^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `pending_operations`
+    |
+    = note: `#[warn(non_snake_case)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3273:68
+     |
+3273 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3273 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3273 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: `semio-framework-os-kernel-store-sync` (lib) generated 12 warnings (run `cargo fix --lib -p semio-framework-os-kernel-store-sync` to apply 11 suggestions)
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust/../../../../../../🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust/📦️lib.rs:2859:48
+     |
+2859 |         let Ok(value) = serde_json::from_str::<serde_json::Value>(json) else {
+     |                                                ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2859 -         let Ok(value) = serde_json::from_str::<serde_json::Value>(json) else {
+2859 +         let Ok(value) = serde_json::from_str::<Value>(json) else {
+     |
+
+warning: `semio-framework-os-kernel-infinite-board-port-directed-dag` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os-kernel-infinite-board-port-directed-dag` to apply 1 suggestion)
+   Compiling semio-s-plugin-space v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust)
+error: couldn't read `../../././🗿️artifacts/🏠️home/🗣️dsl/../../../../../../../✏️s/🔌️plugins/🪐️space/📚️examples/🏠️home/🪐️default.shome`: No such file or directory (os error 2)
+ --> ../../././🗿️artifacts/🏠️home/🗣️dsl/🦀️component.rs:8:37
+  |
+8 | pub const HOME_EXAMPLE_TEXT: &str = include_str!("../../../../../../../✏️s/🔌️plugins/🪐️space/📚️examples/🏠️home/🪐️default.shome");
+  |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+help: there is a file with the same name in a different directory
+  |
+8 - pub const HOME_EXAMPLE_TEXT: &str = include_str!("../../../../../../../✏️s/🔌️plugins/🪐️space/📚️examples/🏠️home/🪐️default.shome");
+8 + pub const HOME_EXAMPLE_TEXT: &str = include_str!("../../../../../../✏\u{fe0f}s/🔌\u{fe0f}plugins/🪐\u{fe0f}space/📚\u{fe0f}examples/🏠\u{fe0f}home/🪐\u{fe0f}default.shome");
+  |
+
+error[E0432]: unresolved import `semio_framework_os::host_now_ms`
+  --> ../../././🎛️apps/🪐️space/🦀️component.rs:32:65
+   |
+32 | use semio_framework_os::{create_os_id, empty_workflow_document, host_now_ms, MediaContract, WorkflowDocument, WorkflowEdge, Workflow...
+   |                                                                 ^^^^^^^^^^^ no `host_now_ms` in the root
+
+error[E0603]: struct `SHomeLabels` is private
+  --> ../../././🎛️apps/🏠️home/🦀️component.rs:12:37
+   |
+12 | use crate::apps::home::terminology::SHomeLabels;
+   |                                     ^^^^^^^^^^^ private struct
+   |
+note: the struct `SHomeLabels` is defined here
+  --> ../../././🎛️apps/🏠️home/🦀️terminology.rs:6:1
+   |
+ 6 | / app_labels! {
+ 7 | |     /// 🗣️ Complete UI label set for the Home launcher; one field per label makes every locale×terminology combination compile-chec...
+ 8 | |     struct SHomeLabels {
+ 9 | |         vfs_empty_message: native_en "No studios yet. Create one from the navbar.", native_de "Noch keine Studios vorhanden. Erste...
+...  |
+13 | | }
+   | |_^
+   = note: this error originates in the macro `app_labels` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0603]: struct `SHomeLabels` is private
+  --> ../../././././././🎛️apps/🏠️home/🎭️modes/🔎️explore/🪟️windows/🏠️main/🦀️component.rs:3:37
+   |
+ 3 | use crate::apps::home::terminology::SHomeLabels;
+   |                                     ^^^^^^^^^^^ private struct
+   |
+note: the struct `SHomeLabels` is defined here
+  --> ../../././🎛️apps/🏠️home/🦀️terminology.rs:6:1
+   |
+ 6 | / app_labels! {
+ 7 | |     /// 🗣️ Complete UI label set for the Home launcher; one field per label makes every locale×terminology combination compile-chec...
+ 8 | |     struct SHomeLabels {
+ 9 | |         vfs_empty_message: native_en "No studios yet. Create one from the navbar.", native_de "Noch keine Studios vorhanden. Erste...
+...  |
+13 | | }
+   | |_^
+   = note: this error originates in the macro `app_labels` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0603]: struct `SStudioLabels` is private
+  --> ../../././🎛️apps/🪐️space/🦀️component.rs:30:38
+   |
+30 | use crate::apps::space::terminology::SStudioLabels;
+   |                                      ^^^^^^^^^^^^^ private struct
+   |
+note: the struct `SStudioLabels` is defined here
+  --> ../../././🎛️apps/🪐️space/🦀️terminology.rs:8:1
+   |
+ 8 | / app_labels! {
+ 9 | |     struct SStudioLabels {
+10 | |         apps_section: native_en "Apps", native_de "Apps", reuse_en "Apps", reuse_de "Apps";
+11 | |         media_vfs_empty_message: native_en "No app instances in the workflow.", native_de "Keine App-Instanzen im Workflows.", reu...
+...  |
+53 | | }
+   | |_^
+   = note: this error originates in the macro `app_labels` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0603]: struct `SStudioLabels` is private
+  --> ../../././././././🎛️apps/🪐️space/🎭️modes/🌐️main/🪟️windows/🕸️workflow/🦀️component.rs:5:38
+   |
+ 5 | use crate::apps::space::terminology::SStudioLabels;
+   |                                      ^^^^^^^^^^^^^ private struct
+   |
+note: the struct `SStudioLabels` is defined here
+  --> ../../././🎛️apps/🪐️space/🦀️terminology.rs:8:1
+   |
+ 8 | / app_labels! {
+ 9 | |     struct SStudioLabels {
+10 | |         apps_section: native_en "Apps", native_de "Apps", reuse_en "Apps", reuse_de "Apps";
+11 | |         media_vfs_empty_message: native_en "No app instances in the workflow.", native_de "Keine App-Instanzen im Workflows.", reu...
+...  |
+53 | | }
+   | |_^
+   = note: this error originates in the macro `app_labels` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0603]: struct `SStudioLabels` is private
+  --> ../.././././././././🎛️apps/🪐️space/🎭️modes/🌐️main/🪟️windows/🕸️workflow/🎚️options/🎯️active-instance/🦀️component.rs:4:38
+   |
+ 4 | use crate::apps::space::terminology::SStudioLabels;
+   |                                      ^^^^^^^^^^^^^ private struct
+   |
+note: the struct `SStudioLabels` is defined here
+  --> ../../././🎛️apps/🪐️space/🦀️terminology.rs:8:1
+   |
+ 8 | / app_labels! {
+ 9 | |     struct SStudioLabels {
+10 | |         apps_section: native_en "Apps", native_de "Apps", reuse_en "Apps", reuse_de "Apps";
+11 | |         media_vfs_empty_message: native_en "No app instances in the workflow.", native_de "Keine App-Instanzen im Workflows.", reu...
+...  |
+53 | | }
+   | |_^
+   = note: this error originates in the macro `app_labels` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0603]: struct `SStudioLabels` is private
+  --> ../../././././././🎛️apps/🪐️space/🎭️modes/🌐️main/🪟️windows/🗂️media-vfs/🦀️component.rs:4:38
+   |
+ 4 | use crate::apps::space::terminology::SStudioLabels;
+   |                                      ^^^^^^^^^^^^^ private struct
+   |
+note: the struct `SStudioLabels` is defined here
+  --> ../../././🎛️apps/🪐️space/🦀️terminology.rs:8:1
+   |
+ 8 | / app_labels! {
+ 9 | |     struct SStudioLabels {
+10 | |         apps_section: native_en "Apps", native_de "Apps", reuse_en "Apps", reuse_de "Apps";
+11 | |         media_vfs_empty_message: native_en "No app instances in the workflow.", native_de "Keine App-Instanzen im Workflows.", reu...
+...  |
+53 | | }
+   | |_^
+   = note: this error originates in the macro `app_labels` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0603]: struct `SStudioLabels` is private
+  --> ../.././././🎛️apps/🪐️space/📌️panels/🛍️catalogue/🦀️component.rs:4:38
+   |
+ 4 | use crate::apps::space::terminology::SStudioLabels;
+   |                                      ^^^^^^^^^^^^^ private struct
+   |
+note: the struct `SStudioLabels` is defined here
+  --> ../../././🎛️apps/🪐️space/🦀️terminology.rs:8:1
+   |
+ 8 | / app_labels! {
+ 9 | |     struct SStudioLabels {
+10 | |         apps_section: native_en "Apps", native_de "Apps", reuse_en "Apps", reuse_de "Apps";
+11 | |         media_vfs_empty_message: native_en "No app instances in the workflow.", native_de "Keine App-Instanzen im Workflows.", reu...
+...  |
+53 | | }
+   | |_^
+   = note: this error originates in the macro `app_labels` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0603]: struct `SStudioLabels` is private
+  --> ../.././././🎛️apps/🪐️space/📌️panels/🔢️parameters/🦀️component.rs:4:38
+   |
+ 4 | use crate::apps::space::terminology::SStudioLabels;
+   |                                      ^^^^^^^^^^^^^ private struct
+   |
+note: the struct `SStudioLabels` is defined here
+  --> ../../././🎛️apps/🪐️space/🦀️terminology.rs:8:1
+   |
+ 8 | / app_labels! {
+ 9 | |     struct SStudioLabels {
+10 | |         apps_section: native_en "Apps", native_de "Apps", reuse_en "Apps", reuse_de "Apps";
+11 | |         media_vfs_empty_message: native_en "No app instances in the workflow.", native_de "Keine App-Instanzen im Workflows.", reu...
+...  |
+53 | | }
+   | |_^
+   = note: this error originates in the macro `app_labels` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0603]: struct `SStudioLabels` is private
+  --> ../.././././🎛️apps/🪐️space/📌️panels/🔍️inspection/🦀️component.rs:6:38
+   |
+ 6 | use crate::apps::space::terminology::SStudioLabels;
+   |                                      ^^^^^^^^^^^^^ private struct
+   |
+note: the struct `SStudioLabels` is defined here
+  --> ../../././🎛️apps/🪐️space/🦀️terminology.rs:8:1
+   |
+ 8 | / app_labels! {
+ 9 | |     struct SStudioLabels {
+10 | |         apps_section: native_en "Apps", native_de "Apps", reuse_en "Apps", reuse_de "Apps";
+11 | |         media_vfs_empty_message: native_en "No app instances in the workflow.", native_de "Keine App-Instanzen im Workflows.", reu...
+...  |
+53 | | }
+   | |_^
+   = note: this error originates in the macro `app_labels` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0603]: struct `SStudioLabels` is private
+   --> ../.././././🎛️apps/🪐️space/🎮️commands/🧭️navigation/🦀️component.rs:142:107
+    |
+142 | ...els_for_locale::<crate::apps::space::terminology::SStudioLabels>(&config.locale);
+    |                                                      ^^^^^^^^^^^^^ private struct
+    |
+note: the struct `SStudioLabels` is defined here
+   --> ../../././🎛️apps/🪐️space/🦀️terminology.rs:8:1
+    |
+  8 | / app_labels! {
+  9 | |     struct SStudioLabels {
+ 10 | |         apps_section: native_en "Apps", native_de "Apps", reuse_en "Apps", reuse_de "Apps";
+ 11 | |         media_vfs_empty_message: native_en "No app instances in the workflow.", native_de "Keine App-Instanzen im Workflows.", re...
+...   |
+ 53 | | }
+    | |_^
+    = note: this error originates in the macro `app_labels` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unused import: `create_os_space`
+  --> ../../././🎛️apps/🏠️home/🦀️component.rs:16:79
+   |
+16 |     artifact_backbone_uri, collection_backbone_uri, create_backbone_document, create_os_space, decode_backbone_payload, document_bac...
+   |                                                                               ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+   --> ../../././🎛️apps/🪐️space/🦀️component.rs:671:9
+    |
+671 |         crate::apps::space::testkit::seed_draw_plugin();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+671 -         crate::apps::space::testkit::seed_draw_plugin();
+671 +         testkit::seed_draw_plugin();
+    |
+
+warning: unnecessary qualification
+   --> ../../././🎛️apps/🪐️space/🦀️component.rs:695:9
+    |
+695 |         crate::apps::space::testkit::seed_draw_plugin();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+695 -         crate::apps::space::testkit::seed_draw_plugin();
+695 +         testkit::seed_draw_plugin();
+    |
+
+warning: unnecessary qualification
+   --> ../../././🎛️apps/🪐️space/🦀️component.rs:775:72
+    |
+775 | ...   let _ = studio_emit(&projection, &config, SpaceCommand::GoHome(crate::apps::space::commands::navigation::go_home::GoHome {}))...
+    |                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+775 -         let _ = studio_emit(&projection, &config, SpaceCommand::GoHome(crate::apps::space::commands::navigation::go_home::GoHome {})).expect("handle");
+775 +         let _ = studio_emit(&projection, &config, SpaceCommand::GoHome(go_home::GoHome {})).expect("handle");
+    |
+
+warning: unnecessary qualification
+   --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:145:12
+    |
+145 |         Ok(super::duplicate_nodes(cfg.projection.selected_node_ids.clone(), doc.projection))
+    |            ^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+145 -         Ok(super::duplicate_nodes(cfg.projection.selected_node_ids.clone(), doc.projection))
+145 +         Ok(duplicate_nodes(cfg.projection.selected_node_ids.clone(), doc.projection))
+    |
+
+warning: unnecessary qualification
+   --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:158:12
+    |
+158 |         Ok(super::duplicate_nodes(cfg.projection.clipboard_node_ids.clone(), doc.projection))
+    |            ^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+158 -         Ok(super::duplicate_nodes(cfg.projection.clipboard_node_ids.clone(), doc.projection))
+158 +         Ok(duplicate_nodes(cfg.projection.clipboard_node_ids.clone(), doc.projection))
+    |
+
+warning: unnecessary qualification
+  --> ../.././././🎛️apps/🪐️space/🎮️commands/🗂️selection/🦀️component.rs:52:12
+   |
+52 |         Ok(super::select_nodes(payload.node_ids.clone(), payload.select_all, doc.projection, cfg.projection))
+   |            ^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+52 -         Ok(super::select_nodes(payload.node_ids.clone(), payload.select_all, doc.projection, cfg.projection))
+52 +         Ok(select_nodes(payload.node_ids.clone(), payload.select_all, doc.projection, cfg.projection))
+   |
+
+warning: unnecessary qualification
+  --> ../.././././🎛️apps/🪐️space/🎮️commands/🗂️selection/🦀️component.rs:68:12
+   |
+68 |         Ok(super::select_nodes(payload.node_ids.clone(), payload.select_all, doc.projection, cfg.projection))
+   |            ^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+68 -         Ok(super::select_nodes(payload.node_ids.clone(), payload.select_all, doc.projection, cfg.projection))
+68 +         Ok(select_nodes(payload.node_ids.clone(), payload.select_all, doc.projection, cfg.projection))
+   |
+
+warning: unnecessary qualification
+  --> ../.././././🎛️apps/🪐️space/🎮️commands/🖱️viewport/🦀️component.rs:26:25
+   |
+26 |         Ok(Emit::config(super::hover_operation(&payload.hover_json)))
+   |                         ^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+26 -         Ok(Emit::config(super::hover_operation(&payload.hover_json)))
+26 +         Ok(Emit::config(hover_operation(&payload.hover_json)))
+   |
+
+warning: unnecessary qualification
+  --> ../.././././🎛️apps/🪐️space/🎮️commands/🖱️viewport/🦀️component.rs:41:25
+   |
+41 |         Ok(Emit::config(super::hover_operation(&payload.hover_json)))
+   |                         ^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+41 -         Ok(Emit::config(super::hover_operation(&payload.hover_json)))
+41 +         Ok(Emit::config(hover_operation(&payload.hover_json)))
+   |
+
+warning: unnecessary qualification
+   --> ../.././././🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:319:35
+    |
+319 | ...   let open = studio.handle(&crate::apps::space::SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: space_id.to_string() ...
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+319 -         let open = studio.handle(&crate::apps::space::SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: space_id.to_string() }), &studio_doc, &studio_cfg).expect("handle");
+319 +         let open = studio.handle(&SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: space_id.to_string() }), &studio_doc, &studio_cfg).expect("handle");
+    |
+
+warning: unnecessary qualification
+  --> ../.././././🎛️apps/🪐️space/🎮️commands/🧭️navigation/🦀️component.rs:95:9
+   |
+95 |         super::apply_app_registrations(&payload.json);
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+95 -         super::apply_app_registrations(&payload.json);
+95 +         apply_app_registrations(&payload.json);
+   |
+
+error[E0277]: the trait bound `navigation::set_active_panel_tab::SetActivePanelTab: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧭️navigation/🦀️component.rs:108:56
+     |
+ 108 | ...   store::test_support::assert_op_line_round_trip(&set_active_panel_tab::SetActivePanelTab { tab_id: "s-play-catalogue".into() });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `navigation::set_active_panel_tab::SetActivePanelTab`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧭️navigation/🦀️component.rs:15:5
+     |
+  15 |     pub struct SetActivePanelTab {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `SetActiveExample: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:201:56
+     |
+ 201 |         store::test_support::assert_op_line_round_trip(&set_active_example::SetActiveExample { example_id: "demo".into() });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `SetActiveExample`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:15:5
+     |
+  15 |     pub struct SetActiveExample {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `OpenInstance: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🔍️instance-nav/🦀️component.rs:63:56
+     |
+  63 |         store::test_support::assert_op_line_round_trip(&open_instance::OpenInstance { node_id: Some("n1".into()) });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `OpenInstance`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🔍️instance-nav/🦀️component.rs:14:5
+     |
+  14 |     pub struct OpenInstance {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `navigation::go_home::GoHome: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧭️navigation/🦀️component.rs:109:56
+     |
+ 109 |         store::test_support::assert_op_line_round_trip(&go_home::GoHome {});
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `navigation::go_home::GoHome`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧭️navigation/🦀️component.rs:32:5
+     |
+  32 |     pub struct GoHome {}
+     |     ^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `navigation::navigate_virtual_file_system_node::NavigateVirtualFileSystemNode: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧭️navigation/🦀️component.rs:110:56
+     |
+ 110 | ...   store::test_support::assert_op_line_round_trip(&navigate_virtual_file_system_node::NavigateVirtualFileSystemNode { space_id: "demo".into() });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `navigation::navigate_virtual_file_system_node::NavigateVirtualFileSystemNode`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧭️navigation/🦀️component.rs:47:5
+     |
+  47 |     pub struct NavigateVirtualFileSystemNode {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `CloseFocusedInstance: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🔍️instance-nav/🦀️component.rs:64:56
+     |
+  64 |         store::test_support::assert_op_line_round_trip(&close_focused_instance::CloseFocusedInstance {});
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `CloseFocusedInstance`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🔍️instance-nav/🦀️component.rs:45:5
+     |
+  45 |     pub struct CloseFocusedInstance {}
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `ExportStudioPack: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:202:56
+     |
+ 202 |         store::test_support::assert_op_line_round_trip(&export_studio_pack::ExportStudioPack {});
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `ExportStudioPack`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:36:5
+     |
+  36 |     pub struct ExportStudioPack {}
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `SetAppRegistrations: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧭️navigation/🦀️component.rs:111:56
+     |
+ 111 |         store::test_support::assert_op_line_round_trip(&set_app_registrations::SetAppRegistrations { json: "[]".into() });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `SetAppRegistrations`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧭️navigation/🦀️component.rs:88:5
+     |
+  88 |     pub struct SetAppRegistrations {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `ExportStudioDsl: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:203:56
+     |
+ 203 |         store::test_support::assert_op_line_round_trip(&export_studio_dsl::ExportStudioDsl {});
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `ExportStudioDsl`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:67:5
+     |
+  67 |     pub struct ExportStudioDsl {}
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `ImportSpacePack: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:204:56
+     |
+ 204 |         store::test_support::assert_op_line_round_trip(&import_space_pack::ImportSpacePack {});
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `ImportSpacePack`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:89:5
+     |
+  89 |     pub struct ImportSpacePack {}
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `ImportSpacePackPayload: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:205:56
+     |
+ 205 | ...   store::test_support::assert_op_line_round_trip(&import_space_pack_payload::ImportSpacePackPayload { payload: "data:...".into() });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `ImportSpacePackPayload`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:104:5
+     |
+ 104 |     pub struct ImportSpacePackPayload {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `studio_io::open_space::OpenSpace: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:206:56
+     |
+ 206 |         store::test_support::assert_op_line_round_trip(&open_space::OpenSpace { space_id: "demo".into() });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `studio_io::open_space::OpenSpace`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:131:5
+     |
+ 131 |     pub struct OpenSpace {
+     |     ^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `ExportMedia: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🖼️media/🦀️component.rs:108:56
+     |
+ 108 |         store::test_support::assert_op_line_round_trip(&export_media::ExportMedia { node_id: "n1".into(), format: "dwg".into() });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `ExportMedia`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🖼️media/🦀️component.rs:16:5
+     |
+  16 |     pub struct ExportMedia {
+     |     ^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `ImportMedia: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🖼️media/🦀️component.rs:109:56
+     |
+ 109 |         store::test_support::assert_op_line_round_trip(&import_media::ImportMedia { node_id: "n1".into(), format: "dwg".into() });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `ImportMedia`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🖼️media/🦀️component.rs:48:5
+     |
+  48 |     pub struct ImportMedia {
+     |     ^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `ImportMediaPayload: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🖼️media/🦀️component.rs:110:56
+     |
+ 110 |         store::test_support::assert_op_line_round_trip(&import_media_payload::ImportMediaPayload { payload: "data:...".into() });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `ImportMediaPayload`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🖼️media/🦀️component.rs:70:5
+     |
+  70 |     pub struct ImportMediaPayload {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `PresenceHeartbeat: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/👥️presence/🦀️component.rs:37:56
+     |
+  37 | ...   store::test_support::assert_op_line_round_trip(&presence_heartbeat::PresenceHeartbeat { client_id: "c1".into(), name: "Ada".into() });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `PresenceHeartbeat`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/👥️presence/🦀️component.rs:14:5
+     |
+  14 |     pub struct PresenceHeartbeat {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `NodeGraphEdit: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/✏️graph-edit/🦀️component.rs:75:56
+     |
+  75 |         store::test_support::assert_op_line_round_trip(&node_graph_edit::NodeGraphEdit { operations_json: "[]".into() });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `NodeGraphEdit`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/✏️graph-edit/🦀️component.rs:19:5
+     |
+  19 |     pub struct NodeGraphEdit {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `WorkflowEngagementSubmit: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💬️engagement/🦀️component.rs:89:56
+     |
+  89 | ...   store::test_support::assert_op_line_round_trip(&workflow_engagement_submit::WorkflowEngagementSubmit { value: Some("draw draw".into()) });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `WorkflowEngagementSubmit`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💬️engagement/🦀️component.rs:15:5
+     |
+  15 |     pub struct WorkflowEngagementSubmit {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `CompiledDagEngagementSubmit: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💬️engagement/🦀️component.rs:90:56
+     |
+  90 |         store::test_support::assert_op_line_round_trip(&compiled_dag_engagement_submit::CompiledDagEngagementSubmit {});
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `CompiledDagEngagementSubmit`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💬️engagement/🦀️component.rs:40:5
+     |
+  40 |     pub struct CompiledDagEngagementSubmit {}
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `WorkflowEngagementInput: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💬️engagement/🦀️component.rs:91:56
+     |
+  91 | ...   store::test_support::assert_op_line_round_trip(&workflow_engagement_input::WorkflowEngagementInput { value: "draw draw".into() });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `WorkflowEngagementInput`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💬️engagement/🦀️component.rs:55:5
+     |
+  55 |     pub struct WorkflowEngagementInput {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `CompiledDagEngagementInput: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💬️engagement/🦀️component.rs:92:56
+     |
+  92 | ...   store::test_support::assert_op_line_round_trip(&compiled_dag_engagement_input::CompiledDagEngagementInput { value: "".into() });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `CompiledDagEngagementInput`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💬️engagement/🦀️component.rs:72:5
+     |
+  72 |     pub struct CompiledDagEngagementInput {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `viewport::node_graph_hover::NodeGraphHover: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🖱️viewport/🦀️component.rs:73:56
+     |
+  73 | ...   store::test_support::assert_op_line_round_trip(&node_graph_hover::NodeGraphHover { hover_json: Some("{\"nodeId\":\"n1\"}".into()) });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `viewport::node_graph_hover::NodeGraphHover`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🖱️viewport/🦀️component.rs:21:5
+     |
+  21 |     pub struct NodeGraphHover {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `TextHover: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🖱️viewport/🦀️component.rs:74:56
+     |
+  74 |         store::test_support::assert_op_line_round_trip(&text_hover::TextHover { hover_json: None });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `TextHover`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🖱️viewport/🦀️component.rs:36:5
+     |
+  36 |     pub struct TextHover {
+     |     ^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `viewport::node_graph_viewport::NodeGraphViewport: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🖱️viewport/🦀️component.rs:75:56
+     |
+  75 | ...   store::test_support::assert_op_line_round_trip(&node_graph_viewport::NodeGraphViewport { viewport_json: "{\"x\":0,\"y\":0,\"zoom\":1}".into() });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `viewport::node_graph_viewport::NodeGraphViewport`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🖱️viewport/🦀️component.rs:53:5
+     |
+  53 |     pub struct NodeGraphViewport {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `SelectInstance: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🗂️selection/🦀️component.rs:103:56
+     |
+ 103 |         store::test_support::assert_op_line_round_trip(&select_instance::SelectInstance { node_id: Some("n1".into()) });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `SelectInstance`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🗂️selection/🦀️component.rs:14:5
+     |
+  14 |     pub struct SelectInstance {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `NodeGraphSelect: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🗂️selection/🦀️component.rs:104:56
+     |
+ 104 | ...   store::test_support::assert_op_line_round_trip(&node_graph_select::NodeGraphSelect { node_ids: vec!["n1".into()], select_all: false });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `NodeGraphSelect`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🗂️selection/🦀️component.rs:46:5
+     |
+  46 |     pub struct NodeGraphSelect {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `SetMediaNodeSelection: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🗂️selection/🦀️component.rs:105:56
+     |
+ 105 | ...   store::test_support::assert_op_line_round_trip(&set_media_node_selection::SetMediaNodeSelection { node_ids: vec![], select_all: true });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `SetMediaNodeSelection`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🗂️selection/🦀️component.rs:62:5
+     |
+  62 |     pub struct SetMediaNodeSelection {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `SetAppInstanceSelection: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🗂️selection/🦀️component.rs:106:56
+     |
+ 106 | ...   store::test_support::assert_op_line_round_trip(&set_app_instance_selection::SetAppInstanceSelection { node_ids: vec!["n1".into()] });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `SetAppInstanceSelection`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🗂️selection/🦀️component.rs:80:5
+     |
+  80 |     pub struct SetAppInstanceSelection {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `ConnectMediaPorts: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🔗️connections/🦀️component.rs:58:56
+     |
+  58 | ...   store::test_support::assert_op_line_round_trip(&connect_media_ports::ConnectMediaPorts { source_node_id: "n1".into(), source_port_id: "n1:out:out".into(), target_node_id: "n2".into(), target_port_id: "n2:in:in".into() });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `ConnectMediaPorts`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🔗️connections/🦀️component.rs:14:5
+     |
+  14 |     pub struct ConnectMediaPorts {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `DisconnectMediaEdge: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🔗️connections/🦀️component.rs:59:56
+     |
+  59 |         store::test_support::assert_op_line_round_trip(&disconnect_media_edge::DisconnectMediaEdge { edge_id: "e1".into() });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `DisconnectMediaEdge`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🔗️connections/🦀️component.rs:37:5
+     |
+  37 |     pub struct DisconnectMediaEdge {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `SpawnApp: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:286:56
+     |
+ 286 | ...   store::test_support::assert_op_line_round_trip(&spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `SpawnApp`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:17:5
+     |
+  17 |     pub struct SpawnApp {
+     |     ^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `MoveMediaNode: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:287:56
+     |
+ 287 |         store::test_support::assert_op_line_round_trip(&move_media_node::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `MoveMediaNode`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:40:5
+     |
+  40 |     pub struct MoveMediaNode {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `RemoveAppInstance: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:288:56
+     |
+ 288 |         store::test_support::assert_op_line_round_trip(&remove_app_instance::RemoveAppInstance { node_id: Some("n1".into()) });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `RemoveAppInstance`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:59:5
+     |
+  59 |     pub struct RemoveAppInstance {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `RemoveAppInstance: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:289:56
+     |
+ 289 |         store::test_support::assert_op_line_round_trip(&remove_app_instance::RemoveAppInstance { node_id: None });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `RemoveAppInstance`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:59:5
+     |
+  59 |     pub struct RemoveAppInstance {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `DeleteSelection: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:290:56
+     |
+ 290 |         store::test_support::assert_op_line_round_trip(&delete_selection::DeleteSelection {});
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `DeleteSelection`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:89:5
+     |
+  89 |     pub struct DeleteSelection {}
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `CopyAppInstance: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:291:56
+     |
+ 291 |         store::test_support::assert_op_line_round_trip(&copy_app_instance::CopyAppInstance {});
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `CopyAppInstance`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:110:5
+     |
+ 110 |     pub struct CopyAppInstance {}
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `DuplicateAppInstance: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:292:56
+     |
+ 292 |         store::test_support::assert_op_line_round_trip(&duplicate_app_instance::DuplicateAppInstance {});
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `DuplicateAppInstance`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:142:5
+     |
+ 142 |     pub struct DuplicateAppInstance {}
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `PasteAppInstance: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:293:56
+     |
+ 293 |         store::test_support::assert_op_line_round_trip(&paste_app_instance::PasteAppInstance {});
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `PasteAppInstance`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:155:5
+     |
+ 155 |     pub struct PasteAppInstance {}
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `RenameAppInstance: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:294:56
+     |
+ 294 |         store::test_support::assert_op_line_round_trip(&rename_app_instance::RenameAppInstance { label: Some("Renamed".into()) });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `RenameAppInstance`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:170:5
+     |
+ 170 |     pub struct RenameAppInstance {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `PatchMediaNodes: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:295:56
+     |
+ 295 | ...   store::test_support::assert_op_line_round_trip(&patch_media_nodes::PatchMediaNodes { node_ids: vec!["n1".into()], field: "position".into(), axis: Some("x".into()), value: "120".into() });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `PatchMediaNodes`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:196:5
+     |
+ 196 |     pub struct PatchMediaNodes {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `PatchAppInstances: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:296:56
+     |
+ 296 | ...   store::test_support::assert_op_line_round_trip(&patch_app_instances::PatchAppInstances { node_ids: vec!["n1".into()], field: "label".into(), value: "Batch Label".into() });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `PatchAppInstances`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:233:5
+     |
+ 233 |     pub struct PatchAppInstances {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `ReorganizeWorkflow: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:297:56
+     |
+ 297 |         store::test_support::assert_op_line_round_trip(&reorganize_workflow::ReorganizeWorkflow {});
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `ReorganizeWorkflow`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🧩️nodes/🦀️component.rs:256:5
+     |
+ 256 |     pub struct ReorganizeWorkflow {}
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `space::commands::parameters::patch_parameter::PatchParameter: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🔢️parameters/🦀️component.rs:158:56
+     |
+ 158 | ...   store::test_support::assert_op_line_round_trip(&patch_parameter::PatchParameter { parameter_id: "p1".into(), field: "value".into(), value: "48".into() });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `space::commands::parameters::patch_parameter::PatchParameter`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🔢️parameters/🦀️component.rs:19:5
+     |
+  19 |     pub struct PatchParameter {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `space::commands::parameters::add_parameter::AddParameter: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🔢️parameters/🦀️component.rs:159:56
+     |
+ 159 | ...   store::test_support::assert_op_line_round_trip(&add_parameter::AddParameter { name: "Parameter".into(), kind: "numeric".into() });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `space::commands::parameters::add_parameter::AddParameter`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🔢️parameters/🦀️component.rs:70:5
+     |
+  70 |     pub struct AddParameter {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `space::commands::parameters::remove_parameter::RemoveParameter: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🔢️parameters/🦀️component.rs:160:56
+     |
+ 160 |         store::test_support::assert_op_line_round_trip(&remove_parameter::RemoveParameter { parameter_id: "p1".into() });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `space::commands::parameters::remove_parameter::RemoveParameter`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🔢️parameters/🦀️component.rs:94:5
+     |
+  94 |     pub struct RemoveParameter {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `space::commands::parameters::bind_parameter_field::BindParameterField: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🔢️parameters/🦀️component.rs:161:56
+     |
+ 161 | ...   store::test_support::assert_op_line_round_trip(&bind_parameter_field::BindParameterField { node_id: "n1".into(), field_path: "label".into(), parameter_id: "p1".into() });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `space::commands::parameters::bind_parameter_field::BindParameterField`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🔢️parameters/🦀️component.rs:111:5
+     |
+ 111 |     pub struct BindParameterField {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `space::commands::parameters::unbind_parameter_field::UnbindParameterField: OpText` is not satisfied
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🔢️parameters/🦀️component.rs:162:56
+     |
+ 162 | ...   store::test_support::assert_op_line_round_trip(&unbind_parameter_field::UnbindParameterField { node_id: "n1".into(), field_path: "label".into() });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `space::commands::parameters::unbind_parameter_field::UnbindParameterField`
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/🔢️parameters/🦀️component.rs:136:5
+     |
+ 136 |     pub struct UnbindParameterField {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `CreateStudio: OpText` is not satisfied
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs:170:56
+     |
+ 170 | ...   store::test_support::assert_op_line_round_trip(&create_studio::CreateStudio { name: "Untitled".into(), kind: "catalog".into(), folder_path: None });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `CreateStudio`
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs:19:5
+     |
+  19 |     pub struct CreateStudio {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `CreateStudio: OpText` is not satisfied
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs:171:56
+     |
+ 171 | ...   store::test_support::assert_op_line_round_trip(&create_studio::CreateStudio { name: "Untitled".into(), kind: "folder".into(), folder_path: Some("/tmp/x".into()) });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `CreateStudio`
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs:19:5
+     |
+  19 |     pub struct CreateStudio {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `BindSpaceFile: OpText` is not satisfied
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs:172:56
+     |
+ 172 | ...   store::test_support::assert_op_line_round_trip(&bind_space_file::BindSpaceFile { space_id: "s1".into(), file_path: "/tmp/x.os".into() });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `BindSpaceFile`
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs:78:5
+     |
+  78 |     pub struct BindSpaceFile {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `ImportSpace: OpText` is not satisfied
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs:173:56
+     |
+ 173 |         store::test_support::assert_op_line_round_trip(&import_space::ImportSpace { dsl: Some("programs=[]".into()) });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `ImportSpace`
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs:123:5
+     |
+ 123 |     pub struct ImportSpace {
+     |     ^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `ImportSpace: OpText` is not satisfied
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs:174:56
+     |
+ 174 |         store::test_support::assert_op_line_round_trip(&import_space::ImportSpace { dsl: None });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `ImportSpace`
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs:123:5
+     |
+ 123 |     pub struct ImportSpace {
+     |     ^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `studio::open_space::OpenSpace: OpText` is not satisfied
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs:175:56
+     |
+ 175 |         store::test_support::assert_op_line_round_trip(&open_space::OpenSpace { space_id: "s1".into() });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `studio::open_space::OpenSpace`
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/🏙️studio/🦀️component.rs:150:5
+     |
+ 150 |     pub struct OpenSpace {
+     |     ^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `vfs::navigate_virtual_file_system_node::NavigateVirtualFileSystemNode: OpText` is not satisfied
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/🗂️vfs/🦀️component.rs:79:56
+     |
+  79 | ...   store::test_support::assert_op_line_round_trip(&navigate_virtual_file_system_node::NavigateVirtualFileSystemNode { node_id: "studio:s1".into() });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `vfs::navigate_virtual_file_system_node::NavigateVirtualFileSystemNode`
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/🗂️vfs/🦀️component.rs:18:5
+     |
+  18 |     pub struct NavigateVirtualFileSystemNode {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `DeleteVirtualFileSystemNode: OpText` is not satisfied
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/🗂️vfs/🦀️component.rs:80:56
+     |
+  80 | ...   store::test_support::assert_op_line_round_trip(&delete_virtual_file_system_node::DeleteVirtualFileSystemNode { node_id: "studio:s1".into() });
+     |       ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `DeleteVirtualFileSystemNode`
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/🗂️vfs/🦀️component.rs:38:5
+     |
+  38 |     pub struct DeleteVirtualFileSystemNode {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `vfs::go_home::GoHome: OpText` is not satisfied
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/🗂️vfs/🦀️component.rs:81:56
+     |
+  81 |         store::test_support::assert_op_line_round_trip(&go_home::GoHome {});
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `vfs::go_home::GoHome`
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/🗂️vfs/🦀️component.rs:64:5
+     |
+  64 |     pub struct GoHome {}
+     |     ^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0277]: the trait bound `settings::set_active_panel_tab::SetActivePanelTab: OpText` is not satisfied
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/⚙️settings/🦀️component.rs:36:56
+     |
+  36 |         store::test_support::assert_op_line_round_trip(&set_active_panel_tab::SetActivePanelTab { tab_id: "tab-1".into() });
+     |         ---------------------------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |         |
+     |         required by a bound introduced by this call
+     |
+help: the trait `OpText` is not implemented for `settings::set_active_panel_tab::SetActivePanelTab`
+    --> ../.././././🎛️apps/🏠️home/🎮️commands/⚙️settings/🦀️component.rs:18:5
+     |
+  18 |     pub struct SetActivePanelTab {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `OpText`:
+               BackboneMessage
+               DagOperation
+               NoConfigOperation
+               SpaceHistoryOperation
+               SpaceOperation
+               apps::home::component::HomeCommand
+               apps::home::config::HomeConfigOperation
+               op::SHomeOperation
+             and 5 others
+note: required by a bound in `assert_op_line_round_trip`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3617:13
+     |
+3615 |     pub fn assert_op_line_round_trip<Op>(operation: &Op)
+     |            ------------------------- required by a bound in this function
+3616 |     where
+3617 |         Op: OpText + PartialEq + std::fmt::Debug,
+     |             ^^^^^^ required by this bound in `assert_op_line_round_trip`
+
+error[E0599]: no method named `initial_projection` found for struct `apps::home::component::HomeApp` in the current scope
+    --> ../.././././🎛️apps/🪐️space/🎮️commands/💾️studio-io/🦀️component.rs:263:36
+     |
+ 263 |         let home_projection = home.initial_projection();
+     |                                    ^^^^^^^^^^^^^^^^^^
+     |
+    ::: ../../././🎛️apps/🏠️home/🦀️component.rs:304:1
+     |
+ 304 | pub struct HomeApp;
+     | ------------------ method `initial_projection` not found for this struct
+     |
+    ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3249:12
+     |
+3249 |         fn initial_projection(&self) -> Self::Projection;
+     |            ------------------ the method is available for `apps::home::component::HomeApp` here
+     |
+     = help: items from traits can only be used if the trait is in scope
+help: trait `DocumentApp` which provides `initial_projection` is implemented but not in scope; perhaps you want to import it
+     |
+ 194 +     use semio_framework_plugin::DocumentApp;
+     |
+help: there is a method `initial_config` with a similar name
+     |
+ 263 -         let home_projection = home.initial_projection();
+ 263 +         let home_projection = home.initial_config();
+     |
+
+error[E0599]: no method named `render` found for struct `VcsDocumentApp<A>` in the current scope
+    --> ../../././././././🎛️apps/🪐️space/🎭️modes/🌐️main/🪟️windows/🕸️compiled-dag/🦀️component.rs:65:24
+     |
+  65 |         let node = app.render(S_PLAY_BODY_COMPILED_DAG, None, &ViewState::default()).expect("render");
+     |                        ^^^^^^ method not found in `VcsDocumentApp<space::component::SpaceApp>`
+     |
+    ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3519:12
+     |
+3519 | ...   fn render(&mut self, body_key: &str, projection_override_json: Option<&str>, view_state: &ViewState) -> Result<UiNode, Fault>;
+     |          ------ the method is available for `VcsDocumentApp<space::component::SpaceApp>` here
+     |
+     = help: items from traits can only be used if the trait is in scope
+help: trait `PluginApp` which provides `render` is implemented but not in scope; perhaps you want to import it
+     |
+  59 +     use semio_framework_plugin::PluginApp;
+     |
+
+error[E0599]: no method named `render` found for struct `VcsDocumentApp<A>` in the current scope
+    --> ../../././././././🎛️apps/🪐️space/🎭️modes/🌐️main/🪟️windows/🕸️workflow/🦀️component.rs:136:24
+     |
+ 136 |         let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewState::default()).expect("render");
+     |                        ^^^^^^ method not found in `VcsDocumentApp<space::component::SpaceApp>`
+     |
+    ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3519:12
+     |
+3519 | ...   fn render(&mut self, body_key: &str, projection_override_json: Option<&str>, view_state: &ViewState) -> Result<UiNode, Fault>;
+     |          ------ the method is available for `VcsDocumentApp<space::component::SpaceApp>` here
+     |
+     = help: items from traits can only be used if the trait is in scope
+help: trait `PluginApp` which provides `render` is implemented but not in scope; perhaps you want to import it
+     |
+ 130 +     use semio_framework_plugin::PluginApp;
+     |
+
+error[E0599]: no method named `id` found for reference `&&semio_framework_os::WorkflowParameter` in the current scope
+   --> ../.././././🎛️apps/🪐️space/🎮️commands/🔢️parameters/🦀️component.rs:175:57
+    |
+175 |         match next.parameters.iter().find(|entry| entry.id() == "param-brush-size").expect("parameter") {
+    |                                                         ^^ method not found in `&&semio_framework_os::WorkflowParameter`
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `OsParameterId` which provides `id` is implemented but not in scope; perhaps you want to import it
+    |
+150 +     use crate::apps::space::engine::OsParameterId;
+    |
+
+error[E0599]: no method named `id` found for reference `&&semio_framework_os::WorkflowParameter` in the current scope
+   --> ../.././././🎛️apps/🪐️space/📌️panels/🔍️inspection/🦀️component.rs:191:102
+    |
+191 | ...                   if let Some(parameter) = projection.parameters.iter().find(|entry| entry.id() == binding.parameter_id) {
+    |                                                                                                ^^ method not found in `&&semio_framework_os::WorkflowParameter`
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `OsParameterId` which provides `id` is implemented but not in scope; perhaps you want to import it
+    |
+  4 + use crate::apps::space::engine::OsParameterId;
+    |
+
+error[E0599]: no method named `handle_action` found for struct `VcsDocumentApp<A>` in the current scope
+    --> ../../././🎛️apps/🪐️space/🦀️component.rs:663:13
+     |
+ 663 | ...   app.handle_action("commitCheckpoint", Some(&json!({ "message": "snapshot" })), &plugin_testkit::meta("local")).expect("commi...
+     |           ^^^^^^^^^^^^^ method not found in `VcsDocumentApp<space::component::SpaceApp>`
+     |
+    ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3469:12
+     |
+3469 |         fn handle_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+     |            ------------- the method is available for `VcsDocumentApp<space::component::SpaceApp>` here
+     |
+     = help: items from traits can only be used if the trait is in scope
+help: trait `PluginApp` which provides `handle_action` is implemented but not in scope; perhaps you want to import it
+     |
+ 607 +     use semio_framework_plugin::PluginApp;
+     |
+
+error[E0599]: no method named `render` found for struct `VcsDocumentApp<A>` in the current scope
+    --> ../../././././././🎛️apps/🪐️space/🎭️modes/🌐️main/🪟️windows/🕸️workflow/🦀️component.rs:144:24
+     |
+ 144 |         let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewState::default()).expect("render");
+     |                        ^^^^^^ method not found in `VcsDocumentApp<space::component::SpaceApp>`
+     |
+    ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3519:12
+     |
+3519 | ...   fn render(&mut self, body_key: &str, projection_override_json: Option<&str>, view_state: &ViewState) -> Result<UiNode, Fault>;
+     |          ------ the method is available for `VcsDocumentApp<space::component::SpaceApp>` here
+     |
+     = help: items from traits can only be used if the trait is in scope
+help: trait `PluginApp` which provides `render` is implemented but not in scope; perhaps you want to import it
+     |
+ 130 +     use semio_framework_plugin::PluginApp;
+     |
+
+error[E0599]: no method named `handle_action` found for struct `VcsDocumentApp<A>` in the current scope
+    --> ../../././🎛️apps/🪐️space/🦀️component.rs:675:13
+     |
+ 675 | ...   app.handle_action("commitCheckpoint", Some(&json!({ "message": "after-first-spawn" })), &plugin_testkit::meta("local")).expe...
+     |           ^^^^^^^^^^^^^ method not found in `VcsDocumentApp<space::component::SpaceApp>`
+     |
+    ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3469:12
+     |
+3469 |         fn handle_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+     |            ------------- the method is available for `VcsDocumentApp<space::component::SpaceApp>` here
+     |
+     = help: items from traits can only be used if the trait is in scope
+help: trait `PluginApp` which provides `handle_action` is implemented but not in scope; perhaps you want to import it
+     |
+ 607 +     use semio_framework_plugin::PluginApp;
+     |
+
+error[E0599]: no method named `document_pack` found for struct `VcsDocumentApp<A>` in the current scope
+    --> ../../././🎛️apps/🪐️space/🦀️component.rs:678:25
+     |
+ 678 |         let files = app.document_pack().expect("document pack");
+     |                         ^^^^^^^^^^^^^
+     |
+    ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3511:12
+     |
+3511 |         fn document_pack(&self) -> Result<store::DocumentPackFiles, Fault>;
+     |            ------------- the method is available for `VcsDocumentApp<space::component::SpaceApp>` here
+     |
+     = help: items from traits can only be used if the trait is in scope
+help: there is a method `load_document_pack` with a similar name, but with different arguments
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3513:9
+     |
+3513 |         fn load_document_pack(&mut self, files: &store::DocumentPackFiles) -> Result<(), Fault>;
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: trait `PluginApp` which provides `document_pack` is implemented but not in scope; perhaps you want to import it
+     |
+ 607 +     use semio_framework_plugin::PluginApp;
+     |
+
+error[E0599]: no method named `handle_action` found for struct `VcsDocumentApp<A>` in the current scope
+    --> ../../././🎛️apps/🪐️space/🦀️component.rs:683:13
+     |
+ 683 | ...   app.handle_action("checkoutCheckpoint", Some(&json!({ "checkpointId": checkpoint_id })), &plugin_testkit::meta("local")).exp...
+     |           ^^^^^^^^^^^^^ method not found in `VcsDocumentApp<space::component::SpaceApp>`
+     |
+    ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3469:12
+     |
+3469 |         fn handle_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+     |            ------------- the method is available for `VcsDocumentApp<space::component::SpaceApp>` here
+     |
+     = help: items from traits can only be used if the trait is in scope
+help: trait `PluginApp` which provides `handle_action` is implemented but not in scope; perhaps you want to import it
+     |
+ 607 +     use semio_framework_plugin::PluginApp;
+     |
+
+Some errors have detailed explanations: E0277, E0432, E0599, E0603.
+For more information about an error, try `rustc --explain E0277`.
+warning: `semio-s-plugin-space` (lib test) generated 12 warnings
+error: could not compile `semio-s-plugin-space` (lib test) due to 79 previous errors; 12 warnings emitted

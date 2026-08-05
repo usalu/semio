@@ -88,7 +88,7 @@ pub fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale) -> UiNode {
         let label = entry.label.resolve(Terminology::Native, locale).to_string();
         node.app = Some(CatalogueAppEntry { plugin_id: entry.plugin_id, app_id: entry.app_id, label, yields });
     }
-    let mut items: Vec<UiTreeItemNode> = document.children.into_iter().map(|(segment, node)| app_catalogue_item(&[segment.clone()], &segment, node)).collect();
+    let mut items: Vec<UiTreeItemNode> = document.children.into_iter().map(|(segment, node)| app_catalogue_item(std::slice::from_ref(&segment), &segment, node)).collect();
     // 🪹️ An app with an empty `document` breadcrumb (`registration.document == []`) has nowhere to
     // descend to in the loop above, so its `.app` lands on the ROOT `document` node itself rather than
     // inside `.children` — without this, it's silently dropped from the catalogue entirely. Surface it

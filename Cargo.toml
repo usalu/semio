@@ -35,51 +35,8 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🔨️modules/🤝️shared/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
+    "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🫀️core/⚡️implementations/🦀️rust",
@@ -290,14 +247,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🗺️surface/🎨️paint/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🖨️raster/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
+    "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🖍️draw/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/⚡️implementations/🦀️rust",
@@ -540,9 +490,6 @@ semio-framework-ui-wgpu = { path = "🧰️framework/🔨️modules/🖱️ui/�
 semio-framework-os-kernel-3d-brep = { path = "✏️s/🔨️modules/🧊️3d/📐️brep/⚡️implementations/🦀️rust" }  # 8 refs
 semio-framework-os-kernel-3d-brep-engine = { path = "✏️s/🔨️modules/🧊️3d/📐️brep/⚙️engine/⚡️implementations/🦀️rust" }  # 10 refs
 semio-s-plugin-animate = { path = "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust" }
-semio-s-app-block-2d = { path = "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/⚡️implementations/🦀️rust" }  # 7 refs
-semio-s-app-block-3d = { path = "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/⚡️implementations/🦀️rust" }  # 7 refs
-semio-s-app-block-5d = { path = "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/⚡️implementations/🦀️rust" }  # 7 refs
 semio-s-plugin-cad = { path = "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust" }
 semio-s-app-draw = { path = "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/⚡️implementations/🦀️rust" }  # 8 refs
 semio-s-app-draw-engine = { path = "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/⚙️engine/⚡️implementations/🦀️rust" }  # 6 refs
@@ -570,10 +517,7 @@ semio-s-app-norm-iso16757 = { path = "✏️s/🔌️plugins/📕️norm/🎛️
 semio-s-app-norm-vdi3805 = { path = "✏️s/🔌️plugins/📕️norm/🎛️apps/📔️vdi3805/⚡️implementations/🦀️rust" }  # 8 refs
 semio-s-plugin-procedural = { path = "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust" }
 semio-s-plugin-process = { path = "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust" }
-semio-s-app-puzzle-2d = { path = "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/⚡️implementations/🦀️rust" }  # 8 refs
-semio-s-app-puzzle-3d = { path = "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/⚡️implementations/🦀️rust" }  # 9 refs
-semio-s-app-puzzle-5d = { path = "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/⚡️implementations/🦀️rust" }  # 7 refs
-semio-s-app-raster = { path = "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/⚡️implementations/🦀️rust" }  # 8 refs
+semio-s-plugin-puzzle = { path = "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust" }
 semio-s-app-remodel = { path = "✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/⚡️implementations/🦀️rust" }  # 8 refs
 semio-s-plugin-sequence = { path = "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust" }
 semio-s-plugin-shooting = { path = "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust" }
@@ -582,7 +526,6 @@ semio-s-app-space-home = { path = "✏️s/🔌️plugins/🪐️space/🎛️ap
 semio-s-app-trinity-rewrite = { path = "✏️s/🔌️plugins/🔱️trinity/🎛️apps/✏️rewrite/⚡️implementations/🦀️rust" }  # 8 refs
 semio-s-plugin-vcs = { path = "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust" }
 semio-s-plugin-writer = { path = "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust" }
-semio-s-plugin-block-shared = { path = "✏️s/🔌️plugins/🧱️block/🔨️modules/🤝️shared/⚡️implementations/🦀️rust" }  # 19 refs
 semio-s-plugin-fem-core = { path = "✏️s/🔌️plugins/🏗️fem/🔨️modules/🫀️core/⚡️implementations/🦀️rust" }  # 9 refs
 semio-s-plugin-norm-core = { path = "✏️s/🔌️plugins/📕️norm/🔨️modules/🫀️core/⚡️implementations/🦀️rust" }  # 52 refs
 semio-s-plugin-remodel-camera = { path = "✏️s/🔌️plugins/📸️remodel/🔨️modules/📷️camera/⚡️implementations/🦀️rust" }  # 7 refs

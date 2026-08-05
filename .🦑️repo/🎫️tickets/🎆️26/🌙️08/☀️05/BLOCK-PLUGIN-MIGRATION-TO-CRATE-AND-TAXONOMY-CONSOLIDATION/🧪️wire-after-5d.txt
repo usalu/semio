@@ -1,0 +1,30 @@
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3273:68
+     |
+3273 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3273 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3273 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+    Finished `test` profile [unoptimized] target(s) in 0.22s
+     Running unittests ../../📦️lib.rs (target/debug/deps/semio_s_plugin_block-a28a80cb65ff7ca3)
+
+running 1 test
+[DEBUG] PatchPartKind(PatchPartKind { field: "name", value: "x" }) | printed="patchPartKind field=name value=x" | len=17 | hex=010002046e616d65017802000600010601
+[DEBUG] AddGripKind(AddGripKind) | printed="addGripKind" | len=4 | hex=01010000
+[DEBUG] RemoveGripKind(RemoveGripKind { id: "g0" }) | printed="removeGripKind id=g0" | len=10 | hex=01020102673001000600
+[DEBUG] AddGrip(AddGrip) | printed="addGrip" | len=4 | hex=01030000
+[DEBUG] RemoveGrip(RemoveGrip { id: "g0" }) | printed="removeGrip id=g0" | len=10 | hex=01040102673001000600
+[DEBUG] SetActiveExample(SetActiveExample { id: "forest" }) | printed="setActiveExample id=forest" | len=14 | hex=01050106666f7265737401000600
+[DEBUG] Edit(Edit { text: "{}" }) | printed="edit text=\"{}\"" | len=10 | hex=010601027b7d01000600
+[DEBUG] SetSelection(SetSelection { ids: ["g0"] }) | printed="setSelection ids=[ g0 ]" | len=12 | hex=01070102673001000c010600
+test apps::block5d::component::tests::dump_wire_after_block5d ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 104 filtered out; finished in 0.01s
+

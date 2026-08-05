@@ -49,7 +49,7 @@ pub mod node_graph_select {
     }
 
     pub fn handle(payload: &NodeGraphSelect, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
-        Ok(super::select_nodes(payload.node_ids.clone(), payload.select_all, doc.projection, cfg.projection))
+        Ok(select_nodes(payload.node_ids.clone(), payload.select_all, doc.projection, cfg.projection))
     }
 }
 
@@ -65,7 +65,7 @@ pub mod set_media_node_selection {
     }
 
     pub fn handle(payload: &SetMediaNodeSelection, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
-        Ok(super::select_nodes(payload.node_ids.clone(), payload.select_all, doc.projection, cfg.projection))
+        Ok(select_nodes(payload.node_ids.clone(), payload.select_all, doc.projection, cfg.projection))
     }
 }
 //#endregion 🔖️GraphSelection
@@ -100,10 +100,11 @@ mod tests {
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&select_instance::SelectInstance { node_id: Some("n1".into()) });
-        store::test_support::assert_op_line_round_trip(&node_graph_select::NodeGraphSelect { node_ids: vec!["n1".into()], select_all: false });
-        store::test_support::assert_op_line_round_trip(&set_media_node_selection::SetMediaNodeSelection { node_ids: vec![], select_all: true });
-        store::test_support::assert_op_line_round_trip(&set_app_instance_selection::SetAppInstanceSelection { node_ids: vec!["n1".into()] });
+        use crate::apps::space::SpaceCommand;
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::SelectInstance(select_instance::SelectInstance { node_id: Some("n1".into()) }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { node_ids: vec!["n1".into()], select_all: false }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::SetMediaNodeSelection(set_media_node_selection::SetMediaNodeSelection { node_ids: vec![], select_all: true }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::SetAppInstanceSelection(set_app_instance_selection::SetAppInstanceSelection { node_ids: vec!["n1".into()] }));
     }
 
     #[test]
@@ -114,9 +115,9 @@ mod tests {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
         let first_node_id = projection.graph.nodes[0].id.clone();
-        let select_emit = studio_emit(&projection, &config, SpaceCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { node_ids: vec![first_node_id], select_all: false })).expect("handle");
+        let select_emit = studio_emit(&projection, &config, &SpaceCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { node_ids: vec![first_node_id], select_all: false })).expect("handle");
         let config_after_select = apply_config(&config, &select_emit.config_operations);
-        let _ = studio_emit(&projection, &config_after_select, SpaceCommand::PresenceHeartbeat(crate::apps::space::commands::presence::presence_heartbeat::PresenceHeartbeat { client_id: "client-test-a".into(), name: "Ada".into() }))
+        let _ = studio_emit(&projection, &config_after_select, &SpaceCommand::PresenceHeartbeat(crate::apps::space::commands::presence::presence_heartbeat::PresenceHeartbeat { client_id: "client-test-a".into(), name: "Ada".into() }))
             .expect("handle");
         let other_config = SpaceConfig { client_id: Some("client-test-b".into()), space_id: config_after_select.space_id.clone(), ..SpaceConfig::default() };
         let peers = crate::apps::space::presence_peers_json(&other_config);

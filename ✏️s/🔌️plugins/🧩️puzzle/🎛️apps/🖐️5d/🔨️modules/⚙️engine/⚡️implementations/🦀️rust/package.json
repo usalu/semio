@@ -1,8 +1,0 @@
-{
-  "name": "@semio-tech/puzzle-5d-rs",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./pkg/puzzle_5d.js"
-  }
-}

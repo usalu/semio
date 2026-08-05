@@ -1,0 +1,49 @@
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3273:68
+     |
+3273 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3273 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3273 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+   Compiling semio-s-plugin-block v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 3.87s
+     Running unittests ../../📦️lib.rs (target/debug/deps/semio_s_plugin_block-a28a80cb65ff7ca3)
+
+running 1 test
+[DEBUG] PatchObjectKind(PatchObjectKind { field: "name", value: "x" }) | printed="patchObjectKind field=name value=x" | len=17 | hex=010002046e616d65017802000600010601
+[DEBUG] AddRepresentation(AddRepresentation) | printed="addRepresentation" | len=4 | hex=01010000
+[DEBUG] RemoveRepresentation(RemoveRepresentation { id: "r0" }) | printed="removeRepresentation id=r0" | len=10 | hex=01020102723001000600
+[DEBUG] AddVortexKind(AddVortexKind) | printed="addVortexKind" | len=4 | hex=01030000
+[DEBUG] RemoveVortexKind(RemoveVortexKind { id: "v0" }) | printed="removeVortexKind id=v0" | len=10 | hex=01040102763001000600
+[DEBUG] AddVortex(AddVortex) | printed="addVortex" | len=4 | hex=01050000
+[DEBUG] RemoveVortex(RemoveVortex { id: "v0" }) | printed="removeVortex id=v0" | len=10 | hex=01060102763001000600
+[DEBUG] SetActiveExample(SetActiveExample { id: "capsule" }) | printed="setActiveExample id=capsule" | len=15 | hex=0107010763617073756c6501000600
+[DEBUG] Edit(Edit { text: "{}" }) | printed="edit text=\"{}\"" | len=10 | hex=010801027b7d01000600
+[DEBUG] SetSelection(SetSelection { ids: ["r0"] }) | printed="setSelection ids=[ r0 ]" | len=12 | hex=01090102723001000c010600
+[DEBUG] SetActiveRepresentation(SetActiveRepresentation { representation_id: Some("r0") }) | printed="setActiveRepresentation representation-id=r0" | len=10 | hex=010a0102723001000600
+[DEBUG] SetWindowRepresentations(SetWindowRepresentations { window_id: "w0", representation_ids: ["r0"] }) | printed="setWindowRepresentations window-id=w0 representation-ids=[ r0 ]" | len=18 | hex=010b0202723002773002000601010c010600
+[DEBUG] ToggleWindowRepresentation(ToggleWindowRepresentation { window_id: "w0", representation_id: "r0", visible: true }) | printed="toggleWindowRepresentation window-id=w0 representation-id=r0 visible=true" | len=18 | hex=010c02027230027730030006010106000202
+[DEBUG] SetWindowArrangement(SetWindowArrangement { window_id: "w0", arrangement: "x" }) | printed="setWindowArrangement window-id=w0 arrangement=x" | len=15 | hex=010d02027730017802000600010601
+[DEBUG] SetWindowSpacing(SetWindowSpacing { window_id: "w0", spacing: 8.0 }) | printed="setWindowSpacing window-id=w0 spacing=8" | len=20 | hex=010e010277300200060001050000000000002040
+[DEBUG] SetActiveUtility(SetActiveUtility { window_id: "w0", utility_id: "select" }) | printed="setActiveUtility window-id=w0 utility-id=select" | len=20 | hex=010f020673656c65637402773002000601010600
+[DEBUG] SetBrushVortexKind(SetBrushVortexKind { vortex_kind_id: Some("v0") }) | printed="setBrushVortexKind vortex-kind-id=v0" | len=10 | hex=01100102763001000600
+[DEBUG] SetBrushRadius(SetBrushRadius { radius: 0.3 }) | printed="setBrushRadius radius=0.3" | len=14 | hex=011100010005333333333333d33f
+[DEBUG] SetBrushFlip(SetBrushFlip { flip: true }) | printed="setBrushFlip flip=true" | len=6 | hex=011200010002
+[DEBUG] HoverSurface(HoverSurface { window_id: "w0", object_id: "r0", position: [0.0, 0.0, 0.0], normal: [0.0, 1.0, 0.0] }) | printed="hoverSurface window-id=w0 object-id=r0 position=0,0,0 normal=0,1,0" | len=70 | hex=011302027230027730040006010106000215030000000000000000000000000000000000000000000000000315030000000000000000000000000000f03f0000000000000000
+[DEBUG] LeaveSurface(LeaveSurface) | printed="leaveSurface" | len=4 | hex=01140000
+[DEBUG] PlaceVortex(PlaceVortex { window_id: "w0", object_id: "r0", position: [0.0, 0.0, 0.0], normal: [0.0, 1.0, 0.0] }) | printed="placeVortex window-id=w0 object-id=r0 position=0,0,0 normal=0,1,0" | len=70 | hex=011502027230027730040006010106000215030000000000000000000000000000000000000000000000000315030000000000000000000000000000f03f0000000000000000
+[DEBUG] SetCamera(SetCamera { camera: BlockCamera3d { position: [0.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], zoom: 1.0 } }) | printed="setCamera camera=position=@0,0,0 target=@0,0,0 zoom=1" | len=71 | hex=01160001000d030015030000000000000000000000000000000000000000000000000115030000000000000000000000000000000000000000000000000205000000000000f03f
+[DEBUG] SelectVortex(SelectVortex { full_id: "r0:v0", merge: true }) | printed="selectVortex full-id=\"r0:v0\" merge=true" | len=15 | hex=0117010572303a7630020006000102
+[DEBUG] HoverVortex(HoverVortex { full_id: Some("r0:v0") }) | printed="hoverVortex full-id=\"r0:v0\"" | len=13 | hex=0118010572303a763001000600
+[DEBUG] PatchRepresentation(PatchRepresentation { id: "r0", field: "name", value: "x" }) | printed="patchRepresentation id=r0 field=name value=x" | len=23 | hex=011903046e616d65027230017803000601010600020602
+test apps::block3d::component::tests::dump_wire_after_block3d ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 104 filtered out; finished in 0.00s
+

@@ -7,7 +7,6 @@
 //! `crate::apps::block3d::world`) — an artifact must never depend on an app.
 
 use crate::artifacts::block3d::{Block3dDefinition, BLOCK_3D_SCHEMA};
-use crate::core::BlockRepresentation;
 use serde_json::{json, Value};
 
 //#region 🔖️Register
@@ -103,7 +102,7 @@ pub fn block3d_io() -> semio_framework_plugin::AppIo {
 mod tests {
     use super::*;
     use crate::artifacts::block3d::{Block3dVortexTemplate, BLOCK_3D_SCHEMA};
-    use crate::core::BlockKindIdentity;
+    use crate::core::{BlockKindIdentity, BlockRepresentation};
 
     #[test]
     fn empty_definition_matches_default() {

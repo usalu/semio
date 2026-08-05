@@ -11,6 +11,11 @@ use serde::{Deserialize, Serialize};
 /// 🧮️ Block-5d operation: id-keyed table edits plus scalar part_kind/part_2d/part_3d/camera2d/
 /// camera3d/meta, each with a true inverse computed from the pre-operation projection, and a
 /// whole-document replace for example loads.
+// 🧯️ `large_enum_variant`: `SetDocument`'s whole-document payload makes it far larger than the other
+// scalar/id-keyed variants, but boxing it would require the `#[derive(dsl::DslOps)]` field-shape
+// machinery to see through `Box<T>`, which is unverified — same accepted tradeoff as gis's
+// `Gis2dConfigOperation`/💡️reasoning's `ReplaceDocument`.
+#[allow(clippy::large_enum_variant)]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Block5dOperation {

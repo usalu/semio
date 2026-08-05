@@ -29,9 +29,9 @@ mod tests {
     //#region 🔖️AppTypes
     // One `use` per registered app kind — aliased where the app's own type is plainly named
     // `Document` (every norm sub-app) to avoid a name collision in this one aggregating module.
-    use block_2d::Block2dDefinition;
-    use block_3d::Block3dDefinition;
-    use block_5d::Block5dDefinition;
+    use block::artifacts::block2d::Block2dDefinition;
+    use block::artifacts::block3d::Block3dDefinition;
+    use block::artifacts::block5d::Block5dDefinition;
     use cad_document::artifacts::cad::CadScene;
     use dag_app::DagDocument;
     use din16798::Document as Din16798Document;
@@ -73,7 +73,7 @@ mod tests {
     use puzzle_2d::Puzzle2dProjection;
     use puzzle_3d::Puzzle3dProjection;
     use puzzle_5d::Puzzle5dProjection;
-    use raster::RasterProjection;
+    use raster::artifacts::raster::RasterProjection;
     use reasoning_mindmap_plugin::artifacts::wires::MindmapWiresDocument;
     use remodel::RemodelScene;
     use rewrite::RewriteRuleState;

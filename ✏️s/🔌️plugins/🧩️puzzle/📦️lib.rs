@@ -88,7 +88,35 @@ pub mod artifacts {
         }
     }
 
-    // 🚧️ The 🖐️5d artifact region lands here, in the same shape as `puzzle2d`/`puzzle3d` above.
+    #[path = "."]
+    pub mod puzzle5d {
+        #[path = "🗿️artifacts/🖐️5d/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "🗿️artifacts/🖐️5d/🔺️diff/🦀️component.rs"]
+        pub mod diff;
+        #[path = "🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs"]
+        pub mod op;
+        #[path = "🗿️artifacts/🖐️5d/🗣️dsl/🦀️component.rs"]
+        pub mod dsl;
+        #[path = "🗿️artifacts/🖐️5d/🎒️pack/🦀️component.rs"]
+        pub mod pack;
+        #[path = "🗿️artifacts/🖐️5d/📡️spr/🦀️component.rs"]
+        pub mod spr;
+
+        #[path = "."]
+        pub mod engine {
+            #[path = "🗿️artifacts/🖐️5d/⚙️engine/🦀️component.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "🗿️artifacts/🖐️5d/⚙️engine/🦀️transfer.rs"]
+            pub mod transfer;
+            #[path = "🗿️artifacts/🖐️5d/⚙️engine/🦀️compose.rs"]
+            pub mod compose;
+        }
+    }
 }
 //#endregion 🗿️Artifacts
 
@@ -308,9 +336,134 @@ pub mod apps {
         }
     }
 
-    // 🚧️ The 🖐️5d app region lands here, in the same shape as `puzzle2d`/`puzzle3d` above; it adds its
-    // own `create_puzzle5d_app => Puzzle5dPlayApp` row to `semio_plugin!`'s `apps:` list below and its
-    // own `register_puzzle5d_exports()` call inside `artifacts::puzzle2d::engine::register`.
+    #[path = "."]
+    pub mod puzzle5d {
+        #[path = "🎛️apps/🖐️5d/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "🎛️apps/🖐️5d/🦀️config.rs"]
+        pub mod config;
+        #[path = "🎛️apps/🖐️5d/🦀️terminology.rs"]
+        pub mod terminology;
+        #[path = "🎛️apps/🖐️5d/🦀️wasm.rs"]
+        pub mod wasm;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "🎛️apps/🖐️5d/🎮️commands/🛍️example/🦀️component.rs"]
+            pub mod example;
+            #[path = "🎛️apps/🖐️5d/🎮️commands/🗂️selection/🦀️component.rs"]
+            pub mod selection;
+            #[path = "🎛️apps/🖐️5d/🎮️commands/🧩️part/🦀️component.rs"]
+            pub mod part;
+            #[path = "🎛️apps/🖐️5d/🎮️commands/✏️patch/🦀️component.rs"]
+            pub mod patch;
+            #[path = "🎛️apps/🖐️5d/🎮️commands/👆️hover/🦀️component.rs"]
+            pub mod hover;
+            #[path = "🎛️apps/🖐️5d/🎮️commands/🎥️camera/🦀️component.rs"]
+            pub mod camera;
+            #[path = "🎛️apps/🖐️5d/🎮️commands/☀️sun/🦀️component.rs"]
+            pub mod sun;
+            #[path = "🎛️apps/🖐️5d/🎮️commands/🔭️lod/🦀️component.rs"]
+            pub mod lod;
+            #[path = "🎛️apps/🖐️5d/🎮️commands/🌐️grid/🦀️component.rs"]
+            pub mod grid;
+            #[path = "🎛️apps/🖐️5d/🎮️commands/🖌️brush/🦀️component.rs"]
+            pub mod brush;
+            #[path = "🎛️apps/🖐️5d/🎮️commands/🪣️fill/🦀️component.rs"]
+            pub mod fill;
+            #[path = "🎛️apps/🖐️5d/🎮️commands/🤝️engagement/🦀️component.rs"]
+            pub mod engagement;
+            #[path = "🎛️apps/🖐️5d/🎮️commands/🧰️utility/🦀️component.rs"]
+            pub mod utility;
+            #[path = "🎛️apps/🖐️5d/🎮️commands/🔄️transform/🦀️component.rs"]
+            pub mod transform;
+            #[path = "🎛️apps/🖐️5d/🎮️commands/🎲️board/🦀️component.rs"]
+            pub mod board;
+        }
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "🎛️apps/🖐️5d/📌️panels/📄️document/🦀️component.rs"]
+            pub mod document;
+            #[path = "🎛️apps/🖐️5d/📌️panels/🛍️catalogue/🦀️component.rs"]
+            pub mod catalogue;
+            #[path = "🎛️apps/🖐️5d/📌️panels/🔍️inspection/🦀️component.rs"]
+            pub mod inspection;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🎛️apps/🖐️5d/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod options {
+                    #[path = "🎛️apps/🖐️5d/🎭️modes/✏️edit/🎚️options/🖌️brush/🦀️component.rs"]
+                    pub mod brush;
+                    #[path = "🎛️apps/🖐️5d/🎭️modes/✏️edit/🎚️options/🪣️fill/🦀️component.rs"]
+                    pub mod fill;
+                }
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod board2d {
+                        #[path = "🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/◻2d/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+
+                        #[path = "🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/◻2d/🎬️actions/🦀️component.rs"]
+                        pub mod actions;
+
+                        #[path = "."]
+                        pub mod options {
+                            #[path = "🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/◻2d/🎚️options/🔭️lod/🦀️component.rs"]
+                            pub mod lod;
+                        }
+
+                        #[path = "."]
+                        pub mod utilities {
+                            #[path = "🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/◻2d/🪛️utilities/🖱️select/🦀️component.rs"]
+                            pub mod select;
+                            #[path = "🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/◻2d/🪛️utilities/🖌️brush/🦀️component.rs"]
+                            pub mod brush;
+                            #[path = "🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/◻2d/🪛️utilities/🪣️fill/🦀️component.rs"]
+                            pub mod fill;
+                        }
+                    }
+
+                    #[path = "."]
+                    pub mod world3d {
+                        #[path = "🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/🧊️3d/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+
+                        #[path = "🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/🧊️3d/🎬️actions/🦀️component.rs"]
+                        pub mod actions;
+
+                        #[path = "."]
+                        pub mod options {
+                            #[path = "🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/🧊️3d/🎚️options/☀️sun/🦀️component.rs"]
+                            pub mod sun;
+                        }
+
+                        #[path = "."]
+                        pub mod utilities {
+                            #[path = "🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/🧊️3d/🪛️utilities/🔄️transform/🦀️component.rs"]
+                            pub mod transform;
+                            #[path = "🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/🧊️3d/🪛️utilities/🚚️world-relocate/🦀️component.rs"]
+                            pub mod world_relocate;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 //#endregion 🎛️Apps
 
@@ -321,6 +474,7 @@ semio_framework_plugin::semio_plugin! {
     apps: [
         apps::puzzle2d::create_puzzle2d_app => apps::puzzle2d::Puzzle2dPlayApp,
         apps::puzzle3d::create_puzzle3d_app => apps::puzzle3d::Puzzle3dPlayApp,
+        apps::puzzle5d::create_puzzle5d_app => apps::puzzle5d::Puzzle5dPlayApp,
     ],
 }
 //#endregion 🔖️Plugin

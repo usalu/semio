@@ -149,9 +149,12 @@ mod tests {
 }
 //#endregion 🧪️Tests
 
-//#region 🧪️WireBaselineDump
+//#region 🔒️WireFormatGuard
 #[cfg(test)]
-mod wire_baseline_dump {
+mod wire_format_guard {
+    //! 🔒️ The permanent byte-level regression guard for this artifact's spr codec, frozen from the
+    //! pre-consolidation `📡️protocol` crate (master ticket
+    //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, TEMPLATE.md §0.4/§7).
     use super::*;
     use crate::artifacts::puzzle3d as puzzle_3d;
     use protocol::OpText;
@@ -178,29 +181,67 @@ mod wire_baseline_dump {
         ]
     }
 
-    #[test]
-    fn debug_wire_dump() {
-        for operation in ops() {
-            let text = operation.print_op();
-            let bytes = encode_op(&operation).expect("encode");
-            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-            println!("[WIRE] {text} | {} | {hex}", bytes.len());
-            assert_eq!(decode_op(&bytes).expect("decode"), operation);
-        }
+    fn engine_commands() -> Vec<Puzzle3dEngineCommand> {
         let mut object_weights = std::collections::BTreeMap::new();
         object_weights.insert("Host".to_string(), 0.5);
-        for command in [
+        vec![
             Puzzle3dEngineCommand::ApplyFillCount { count: 7 },
             Puzzle3dEngineCommand::ComposeFillDisplay { count: 9 },
             Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights: std::collections::BTreeMap::new() },
             Puzzle3dEngineCommand::BrushPreview { vortex_full_id: "host:v0".to_string(), candidate_index: 2 },
-        ] {
-            let text = command.print_op();
-            let bytes = encode_engine_command(&command).expect("encode");
-            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-            println!("[WIRE-ENGINE] {text} | {} | {hex}", bytes.len());
-            assert_eq!(decode_engine_command(&bytes).expect("decode"), command);
+        ]
+    }
+
+    /// 🔒️ The exact `print_op | byte-length | hex` of every operation row, captured from the
+    /// pre-consolidation `📡️protocol` crate BEFORE this plugin was merged into one crate. A
+    /// round-trip law is self-consistent and would happily pass on a silently changed format;
+    /// only these frozen bytes prove the wire did not move.
+    const PRE_MIGRATION_OPERATION_WIRE: &[&str] = &[
+        "setObject index=0 object { id=o1 label=L object-kind=Capsule origin=@1,2,3 orientation=0,0,0,1 mesh-url=\"/m.glb\" hidden=false locked=true scale=[ 2 3 4 ] vortices=[ id=v0 vortex-kind=k position=@0,0,0 direction=^0,0,1 radius=3 hidden=false locked=false ] } | 220 | 010006062f6d2e676c620743617073756c65014c016b026f3102763002000400010e0d0a000604010602020601031503000000000000f03f00000000000000400000000000000840041504000000000000000000000000000000000000000000000000000000000000f03f051503000000000000004000000000000008400000000000001040060600070c010d0700060501060303150300000000000000000000000000000000000000000000000004150300000000000000000000000000000000000000000000f03f050500000000000008400601070108010902",
+        "removeObject id=o1 | 10 | 010101026f3101000600",
+        "setAttraction index=1 attraction { id=a1 attracting=\"o1:v0\" attracted=\"o2:v0\" gap=1 shift=2 rise=3 rotation=4 turn=5 tilt=6 } | 95 | 010203026131056f313a7630056f323a763002000401010e0d090006000106010206020305000000000000f03f0405000000000000004005050000000000000840060500000000000010400705000000000000144008050000000000001840",
+        "removeAttraction id=a1 | 10 | 01030102613101000600",
+        "setTargetVolume index=2 target-volume { id=t1 origin=@0,1,2 orientation=0,0,0,1 hidden=false locked=false scale=[ 5 ] } | 94 | 01040102743102000402010e0d060006000115030000000000000000000000000000f03f0000000000000040021504000000000000000000000000000000000000000000000000000000000000f03f031501000000000000144004010501",
+        "removeTargetVolume id=t1 | 10 | 01050102743101000600",
+        "setReference index=3 reference { id=r1 origin=@0,0,0 width-world=4m locked=false hidden=false source=url=\"/u.png\" media-kind=image } | 80 | 010603062f752e706e6705696d61676502723102000403010e0d06000602010d020006000106010215030000000000000000000000000000000000000000000000000305000000000000104004010501",
+        "removeReference id=r1 | 10 | 01070102723101000600",
+        "setMeta meta { kind-compatibility [source:REF target:REF bidirectional:BOOL important:BOOL specificity:TEXT] { a b true false vortex } } | 43 | 0108030161016206766f7274657801000e0d01011401050000050001000501020001010300010004000502",
+        "setDocument document { schema=puzzle.3d domain=architecture meta { kind-compatibility [source:REF target:REF bidirectional:BOOL important:BOOL specificity:TEXT] { } } objects [id:TEXT label:TEXT object-kind:REF origin:CRD orientation:TUPLE scale:LIST mesh-url:TEXT vortices:LIST hidden:BOOL locked:BOOL] { } attractions [id:TEXT attracting:TEXT attracted:TEXT gap:NUM shift:NUM rise:NUM rotation:NUM turn:NUM tilt:NUM] { } target-volumes [id:TEXT origin:CRD orientation:TUPLE scale:LIST hidden:BOOL locked:BOOL] { } references [id:TEXT source:REC origin:CRD width-world:QTY locked:BOOL hidden:BOOL] { } } | 169 | 0109020c6172636869746563747572650970757a7a6c652e336401000e0d07000601010600020e0d01011400050000050100050200010300010400050314000a000005010005020005030000040000050000060005070000080001090001041400090000050100050200050300040400040500040600040700040800040514000600000501000002000003000004000105000106140006000005010000020000030004040001050001",
+    ];
+
+    /// 🔒️ Same frozen capture for the headless engine-command codec.
+    const PRE_MIGRATION_ENGINE_COMMAND_WIRE: &[&str] = &[
+        "apply-fill-count count=7 | 7 | 01020001000407",
+        "compose-fill-display count=9 | 7 | 01030001000409",
+        "update-kind-weights object-weights={ Host=0.5 } vortex-weights={ } | 26 | 01040104486f737402001001060005000000000000e03f011000",
+        "brush-preview vortex-full-id=\"host:v0\" candidate-index=2 | 18 | 01050107686f73743a763002000600010402",
+    ];
+
+    /// ⚖️ Every operation row still prints and encodes to its pre-migration bytes, and still
+    /// decodes back to the same value.
+    #[test]
+    fn operation_rows_keep_their_pre_migration_wire_bytes() {
+        let operations = ops();
+        assert_eq!(operations.len(), PRE_MIGRATION_OPERATION_WIRE.len(), "every operation variant must be covered by the frozen wire table");
+        for (operation, expected) in operations.iter().zip(PRE_MIGRATION_OPERATION_WIRE) {
+            let bytes = encode_op(operation).expect("encode");
+            let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
+            assert_eq!(&format!("{} | {} | {hex}", operation.print_op(), bytes.len()), expected);
+            assert_eq!(&decode_op(&bytes).expect("decode"), operation);
+        }
+    }
+
+    /// ⚖️ Same law for the engine-command codec.
+    #[test]
+    fn engine_command_rows_keep_their_pre_migration_wire_bytes() {
+        let commands = engine_commands();
+        assert_eq!(commands.len(), PRE_MIGRATION_ENGINE_COMMAND_WIRE.len(), "every engine-command variant covered here must be in the frozen wire table");
+        for (command, expected) in commands.iter().zip(PRE_MIGRATION_ENGINE_COMMAND_WIRE) {
+            let bytes = encode_engine_command(command).expect("encode");
+            let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
+            assert_eq!(&format!("{} | {} | {hex}", command.print_op(), bytes.len()), expected);
+            assert_eq!(&decode_engine_command(&bytes).expect("decode"), command);
         }
     }
 }
-//#endregion 🧪️WireBaselineDump
+//#endregion 🔒️WireFormatGuard

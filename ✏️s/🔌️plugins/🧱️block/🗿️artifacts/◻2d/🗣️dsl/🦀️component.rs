@@ -27,6 +27,10 @@ mod tests {
 
     /// 🌱️ Builds the `Hexagonal Cut Concrete Forest Left` node kind — the representative fixture also
     /// used to (re)generate the handcrafted example file via `print_dsl`.
+    // 🧯️ `approx_constant`: the first angle is genuinely `-π/2` to enough digits that clippy flags it
+    // against `f64::consts::FRAC_PI_2` — these are handcrafted fixture values copied verbatim from the
+    // real puzzle example file, not meant to reference the named constant.
+    #[allow(clippy::approx_constant)]
     pub fn hexagonal_cut_concrete_forest_left() -> Block2dDefinition {
         let mut definition = Block2dDefinition {
             node_kind: BlockKindIdentity { id: "Hexagonal Cut Concrete Forest Left".into(), name: "Hexagonal Cut Concrete Forest Left".into(), label: "Hexagonal Cut Concrete Forest Left".into(), ..Default::default() },

@@ -29,7 +29,7 @@ pub fn arrangement_offset(arrangement: &str, index: usize, spacing: f64) -> [f64
 
 pub fn instance_offset_for_representation(definition: &Block3dDefinition, view: &Block3dWindowView, representation_id: &str) -> [f64; 3] {
     let visible = visible_representations(definition, view);
-    visible.iter().position(|representation| representation.id == representation_id).map(|index| arrangement_offset(&view.arrangement, index, view.spacing)).unwrap_or([0.0, 0.0, 0.0])
+    visible.iter().position(|representation| representation.id == representation_id).map_or([0.0, 0.0, 0.0], |index| arrangement_offset(&view.arrangement, index, view.spacing))
 }
 //#endregion 🔖️Visibility
 
@@ -39,7 +39,7 @@ pub fn effective_camera<'a>(definition: &'a Block3dDefinition, config: &'a Block
 }
 
 pub fn representation_mesh_id(representation: &BlockRepresentation) -> String {
-    representation.mesh_url.as_deref().map(world3d_mesh_id_from_url).unwrap_or_else(|| format!("block3d-rep-{}", representation.id))
+    representation.mesh_url.as_deref().map_or_else(|| format!("block3d-rep-{}", representation.id), world3d_mesh_id_from_url)
 }
 
 pub fn world_meshes_json(_definition: &Block3dDefinition, visible: &[&BlockRepresentation]) -> String {
@@ -76,7 +76,7 @@ pub fn world_instances_json(definition: &Block3dDefinition, visible: &[&BlockRep
 }
 
 fn vortex_kind_color(definition: &Block3dDefinition, vortex_kind_id: &str) -> String {
-    definition.vortex_kinds.iter().find(|kind| kind.id == vortex_kind_id).map(|kind| kind.color.clone()).unwrap_or_else(|| "#888888".into())
+    definition.vortex_kinds.iter().find(|kind| kind.id == vortex_kind_id).map_or_else(|| "#888888".into(), |kind| kind.color.clone())
 }
 
 pub fn block3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
@@ -104,7 +104,7 @@ pub fn world_vortices_json(definition: &Block3dDefinition, config: &Block3dConfi
         let direction = if config.brush_flip { [-preview.direction[0], -preview.direction[1], -preview.direction[2]] } else { preview.direction };
         records.push(json!({
             "fullId": "__brush_preview__",
-            "objectId": visible.first().map(|r| r.id.as_str()).unwrap_or(crate::apps::block3d::BLOCK3D_WORLD_OBJECT_ID),
+            "objectId": visible.first().map_or(crate::apps::block3d::BLOCK3D_WORLD_OBJECT_ID, |r| r.id.as_str()),
             "vortexKind": config.brush_vortex_kind_id.clone().unwrap_or_else(|| "brush".into()),
             "position": preview.position,
             "direction": direction,

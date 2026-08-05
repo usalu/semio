@@ -1,0 +1,85 @@
+SPACE PLUGIN MIGRATION — VERIFICATION ATTEMPT LOG
+===================================================
+
+New crate: ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust (semio-s-plugin-space)
+
+WHAT WAS VERIFIED
+------------------
+1. `cargo metadata --manifest-path ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/Cargo.toml`
+   → SUCCEEDED (exit 0). Confirms: every path dependency in the new Cargo.toml resolves to a real
+   crate with the expected package name; the full transitive dependency graph resolves without
+   version conflicts; the temporary `[workspace]` overlay + `cargo-features = ["trim-paths"]`
+   placement is syntactically valid TOML/Cargo manifest.
+
+2. Manual cross-reference of every `pub mod` declaration in every new command-group file against
+   every `use crate::apps::...::{...}` import site in the two app `🦀️component.rs` dispatch files —
+   all 12 space command-group files' and 3 home command-group files' submodule names match exactly
+   what's imported and referenced in the `app_commands!` invocations and `command_from_action`
+   bridges. (See the grep transcript in this session — omitted here for brevity, but every
+   `pub mod <name> { ... }` in `🎮️commands/*/🦀️component.rs` has a corresponding `use
+   crate::apps::<app>::commands::<group>::<name>` in the app's own `🦀️component.rs`.)
+
+3. Manual cross-reference of all 38 new `.rs` files against `📦️lib.rs`'s `#[path]` tree — every file
+   on disk has exactly one matching `#[path = "…"]` declaration and vice versa (no dangling
+   declarations, no orphaned files).
+
+4. Grepped the entire new tree for leftover references to the OLD crate names
+   (`home_ui::`/`home_op::`/`home_protocol::`/`home_engine::`/`space_engine::`/`space_op::`/
+   `space_protocol::`/`space_shared::`) — zero hits. All cross-references now use `crate::apps::…`/
+   `crate::artifacts::…`/`crate::core::…`.
+
+5. Found and fixed one real bug during this manual pass: `apps::space::🦀️component.rs`'s `render()`
+   dispatch matched the Media VFS body key against a locally-duplicated `S_PLAY_SURFACE_MEDIA_VFS`
+   constant instead of the window module's own `S_PLAY_BODY_MEDIA_VFS` — harmless only because both
+   constants happened to hold the identical string value pre-migration ("s.play.media-vfs"); fixed to
+   reference `windows::media_vfs::S_PLAY_BODY_MEDIA_VFS` directly and removed the redundant constant.
+
+WHAT COULD NOT BE VERIFIED, AND WHY
+-------------------------------------
+`cargo check` / `cargo clippy` / `cargo test` / `cargo build --target wasm32-wasip2` could NOT be run
+to completion in this sandbox. Root cause, confirmed NOT specific to this crate or this migration:
+
+    error: linking with `cc` failed: exit status: 69
+    note: You have not agreed to the Xcode license agreements. Please run
+    'sudo xcodebuild -license' from within a Terminal window to review and agree to the
+    Xcode and Apple SDKs license.
+
+This blocks the native `cc` linker for ANY fresh link on this machine. Confirmed via a completely
+unrelated control: `cargo new hello_test && cargo build` on a brand-new empty binary crate in the
+ticket scratchpad fails with the IDENTICAL error. This is a pre-existing, machine-wide toolchain
+gate — not something introduced by this migration, and not something fixable from within this
+session (accepting an Xcode EULA requires interactive `sudo` I must not attempt).
+
+Mitigations attempted, all still blocked by the same wall:
+  - Isolated overlay's own fresh target/ dir → blocked.
+  - `CARGO_TARGET_DIR` pointed at the shared root `target/` (to reuse already-linked artifacts) →
+    got much further (reused hundreds of already-compiled crates, including real framework crates
+    like `semio-framework-plugin`/`semio-framework-os-kernel-store-sync`) but still hit a handful of
+    proc-macro/build-script crates (`bytemuck_derive`, `zerocopy-derive`,
+    `semio-framework-os-kernel-infinite-canvas`'s build script) that had never been linked before in
+    this exact profile/target combination.
+  - Copied root's `Cargo.lock` into the overlay first (to force identical dependency versions, hoping
+    for fingerprint-matched cache reuse) → same result, got further but not all the way through.
+  - `--target wasm32-wasip2`, `--profile wasm-release` (the real plugin build pipeline's own
+    settings) → same wall (build scripts still run on the HOST during cross-compilation, so they
+    still need the native `cc` linker).
+  - `SDKROOT` pointed explicitly at the on-disk `MacOSX.sdk` (bypassing the `xcrun` lookup) → no
+    effect, `cc` itself still refuses until the license is accepted.
+
+CONSEQUENCE FOR THIS TICKET
+-----------------------------
+Per TEMPLATE.md §8 ("Order matters... only after [green]"), the old 16 crates were NOT deleted. This
+migration's new crate is complete and, to the best of thorough manual review, believed correct, but
+it has NOT been proven to compile in this session. The very next thing any session with a working
+native Rust toolchain must do is:
+
+    cargo check   --manifest-path ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/Cargo.toml
+    cargo check   --manifest-path … --target wasm32-wasip2
+    cargo clippy  --manifest-path … --all-targets -- -D warnings
+    cargo test    --manifest-path …
+
+fix whatever the compiler finds (expected: routine issues like missing/extra `use` imports, the odd
+type mismatch — the kind of thing only a real compiler catches), THEN do the wire-format diff proof
+against the pre-migration behavior described in the ticket summary, THEN delete the 16 old crates,
+THEN remove this temporary `[workspace]` overlay block from the new Cargo.toml, THEN hand off to the
+registrar.

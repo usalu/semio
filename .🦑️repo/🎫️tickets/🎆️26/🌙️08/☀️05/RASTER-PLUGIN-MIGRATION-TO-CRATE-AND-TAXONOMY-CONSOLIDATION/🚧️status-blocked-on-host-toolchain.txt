@@ -1,0 +1,80 @@
+RASTER PLUGIN MIGRATION — STATUS AS OF THIS SESSION'S END
+============================================================
+
+DONE (verified):
+- New crate semio-s-plugin-raster written in full at ✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust
+  (Cargo.toml with temporary [workspace] verification overlay, 📋️project.json, 📜️script.ts,
+  plugin-root 📦️lib.rs, full 🗿️artifacts/🖨️raster taxonomy tree, full 🎛️apps/🖨️raster taxonomy tree).
+- `cargo check --manifest-path .../Cargo.toml` — GREEN, zero warnings for semio-s-plugin-raster.
+- `cargo clippy --manifest-path .../Cargo.toml --all-targets -- -D warnings` — GREEN, zero
+  warnings/errors for semio-s-plugin-raster (this compiles ALL test code too, just doesn't link/run it).
+- Taxonomy audit (🔍️taxonomy-audit.ts, copied from the mathematical migration's ticket) — clean except
+  for the still-present old "📡️protocol" dir, which is expected since the old crates have NOT been
+  deleted yet (see below).
+- Wire-format baseline captured from the OLD raster_protocol crate (RasterCommand, 23 dumps covering
+  all 21 variants + 2 Option-field cases) — saved to 🧪️wire-baseline-before.txt. A permanent
+  `optional_field_rows_keep_their_pre_migration_bytes` test pinning 2 of these rows' exact hex was
+  written into the NEW crate's apps::raster tests module (SetLayerVisible/None, SetHover/None).
+- Cross-cutting dependent search (§0.5): NO Cargo.toml references outside ✏️s/🔌️plugins/🖨️raster/**.
+  ONE real `use`-import dependent found: 🧰️framework/…/🗣️dsl/🧪️fixture-sweep/⚡️implementations/🦀️rust
+  depends on the OLD `raster` alias (package semio-s-app-raster) for `RasterProjection` (Cargo.toml
+  line ~121, `use raster::RasterProjection;` at lib.rs:76, referenced at lib.rs:138). NOT fixed by this
+  session (see BLOCKED below) — flagged in the registrar handoff.
+
+BLOCKED (host-level, NOT caused by this migration, NOT fixable by this agent):
+- Sometime mid-session, the host's Xcode license state broke: `xcrun --sdk macosx --show-sdk-path`
+  and even a bare `clang -c /dev/null` now fail with "You have not agreed to the Xcode license
+  agreements. Please run 'sudo xcodebuild -license'". This blocks the linker for ANY dylib/test-binary
+  build (`cargo test`) and any wasm32-wasip2 cross-compile (build scripts still link on the host first).
+  `cargo check`/`cargo clippy` still work because they don't need a full link.
+- CONFIRMED this is a pre-existing, repo-wide regression, not something this migration introduced:
+  re-ran `cargo test -p semio-s-app-raster-op --lib` (an UNTOUCHED old crate that had passed cleanly
+  earlier this same session, 7/7 tests) and it now fails with the identical linker error trying to
+  build the shared `store` dylib.
+  - Waited ~60s and retried `xcrun`/`clang` directly — still failing, not transient.
+  - Tried `SDKROOT` override to the Command Line Tools SDK (which normally bypasses a bare Xcode.app
+    license gate) — `clang` itself still refuses to run under the license gate.
+  - Fixing this requires `sudo xcodebuild -license` (interactive, requires sudo) — out of scope for an
+    agent to run (modifying system/security settings), and the safety rules governing this session
+    explicitly prohibit it.
+- CONSEQUENCE: could not run `cargo test` for the new crate (no runtime pass/fail count available),
+  could not run `cargo check --target wasm32-wasip2` or `cargo build --target wasm32-wasip2`, could not
+  complete the wire-format "after" dump / diff against 🧪️wire-baseline-before.txt.
+- Per TEMPLATE.md §8 ("Delete the old crates ONLY after the new crate is fully green" — i.e. steps 1-4
+  of §9, which includes `cargo test`), the OLD 8 crates were deliberately left in place. Do NOT delete
+  them until a session with a working toolchain re-runs `cargo test --manifest-path
+  ✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/Cargo.toml` and confirms ≥ baseline (24 known-good tests
+  from the 6 compiling old crates + however many of the old ui crate's ~22 tests the new crate's
+  equivalents cover — the old ui crate did NOT compile at HEAD, see below) green.
+
+UNRELATED PRE-EXISTING FINDINGS (not touched, not this migration's to fix):
+- The old `semio-s-app-raster-ui` crate does NOT compile at HEAD — same "unbalanced Ok( wraps / missing
+  Fault import" corruption pattern documented in TEMPLATE.md §12.3 (found in cad/vcs/shooting/sourcing/
+  animate's old ui crates too). Confirmed via `cargo check -p semio-s-app-raster-ui` before touching
+  anything: 14 "mismatched closing delimiter" errors in the old `handle()` match arms. This migration's
+  new `🎮️commands/*` handlers were written correctly from scratch (matching the surrounding code's clear
+  intent), which is the natural forward-fix TEMPLATE.md §12.3 describes — not a revert.
+- `✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/📜️script.ts` (already-shipped, registrar-processed) has the
+  IDENTICAL relative-import bug as the raster copy of the same 13-line template snippet: `bun
+  ./📜️script.ts test` run directly in the package dir fails with "Cannot find module" — the 6x "../"
+  relative path in the template actually resolves one level too high (verified with `node -e
+  path.resolve(...)`, landing at .../Documents/ instead of .../Documents/semio/). Reproduced identically
+  on writer's own already-shipped script, so this is a pre-existing bug in the TEMPLATE.md boilerplate
+  itself, not something this session introduced. Not fixed (out of scope, affects every migrated
+  plugin's script.ts identically, needs a TEMPLATE.md-level fix + fleet-wide correction, not a
+  single-plugin patch). The raster crate's own 📜️script.ts is a byte-identical copy of the template
+  snippet, same as every other plugin's.
+
+NEXT STEPS FOR WHOEVER CONTINUES THIS TICKET:
+1. Once `xcrun --sdk macosx --show-sdk-path` works again (host Xcode license fixed), run:
+   `cargo test --manifest-path ✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/Cargo.toml`
+   and confirm the full pass count.
+2. Add a `debug_wire_baseline_dump`-style test to the NEW crate (mirror the one still sitting in the
+   OLD ✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs,
+   tagged //#region 🔖️WireBaseline) against `crate::apps::raster::RasterCommand`, diff its output
+   against 🧪️wire-baseline-before.txt, then delete both temp dump tests.
+3. Only once (1) is green: delete the old 8 crates (see TEMPLATE.md §8.1 for the exact dirs), delete
+   this crate's temporary `[workspace]` overlay + nested target/Cargo.lock, then hand off to the
+   registrar per the block already written in this session's final report.
+4. Fix the 🧪️fixture-sweep cross-cutting dependent (see DONE section above for the exact lines) as part
+   of the same pass that deletes the old crates.

@@ -186,8 +186,8 @@ impl Puzzle3dEngine {
         Ok(())
     }
 
-    fn install_collision_mesh(&mut self, url: String, positions: Vec<f32>, indices: Vec<u32>, is_fallback: bool) {
-        let Some(body) = collision_body_from_buffers(&positions, &indices) else {
+    fn install_collision_mesh(&mut self, url: String, positions: &[f32], indices: &[u32], is_fallback: bool) {
+        let Some(body) = collision_body_from_buffers(positions, indices) else {
             return;
         };
         if !is_fallback && self.mesh_is_fallback.get(&url) == Some(&false) {
@@ -203,11 +203,11 @@ impl Puzzle3dEngine {
         self.re_enqueue_brush_targets();
     }
 
-    pub(crate) fn register_mesh_fallback(&mut self, url: String, positions: Vec<f32>, indices: Vec<u32>) {
+    pub(crate) fn register_mesh_fallback(&mut self, url: String, positions: &[f32], indices: &[u32]) {
         self.install_collision_mesh(url, positions, indices, true);
     }
 
-    pub(crate) fn register_mesh(&mut self, url: String, positions: Vec<f32>, indices: Vec<u32>) {
+    pub(crate) fn register_mesh(&mut self, url: String, positions: &[f32], indices: &[u32]) {
         self.install_collision_mesh(url, positions, indices, false);
     }
 
@@ -452,11 +452,11 @@ impl Puzzle3dEngine {
     }
 
     pub(crate) fn fill_progress_summary(&self) -> FillProgressSummary {
-        self.fill.as_ref().map(|fill| FillProgressSummary { count: fill.sequence.len(), applied_count: fill.applied_count, max_count: fill.max_count, done: fill.stalled || fill.sequence.len() >= fill.max_count }).unwrap_or(FillProgressSummary {
-            count: 0,
-            applied_count: 0,
-            max_count: FILL_COUNT_MAX,
-            done: true,
+        self.fill.as_ref().map_or(FillProgressSummary { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true }, |fill| FillProgressSummary {
+            count: fill.sequence.len(),
+            applied_count: fill.applied_count,
+            max_count: fill.max_count,
+            done: fill.stalled || fill.sequence.len() >= fill.max_count,
         })
     }
 
@@ -674,11 +674,11 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn register_mesh(&mut self, url: &str, positions: &[f32], indices: &[u32]) {
-        self.engine.register_mesh(url.to_string(), positions.to_vec(), indices.to_vec());
+        self.engine.register_mesh(url.to_string(), positions, indices);
     }
 
     pub fn register_mesh_fallback(&mut self, url: &str, positions: &[f32], indices: &[u32]) {
-        self.engine.register_mesh_fallback(url.to_string(), positions.to_vec(), indices.to_vec());
+        self.engine.register_mesh_fallback(url.to_string(), positions, indices);
     }
 
     pub fn has_mesh(&self, url: &str) -> bool {
@@ -716,7 +716,7 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn fill_progress(&self) -> FillBuildProgress {
-        self.engine.fill.as_ref().map(|f| f.progress()).unwrap_or(FillBuildProgress { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![] })
+        self.engine.fill.as_ref().map_or(FillBuildProgress { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![] }, |f| f.progress())
     }
 
     pub fn fill_progress_summary(&self) -> FillProgressSummary {
@@ -730,7 +730,7 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn fill_is_done(&self) -> bool {
-        self.engine.fill.as_ref().map_or(true, |fill| fill.stalled || fill.sequence.len() >= fill.max_count)
+        self.engine.fill.as_ref().is_none_or(|fill| fill.stalled || fill.sequence.len() >= fill.max_count)
     }
 
     /// 🪣️ Read-only prefix of the precomputed fill plan for live viewport show/hide — a query, so it
@@ -788,8 +788,8 @@ mod tests {
         let mut engine = Puzzle3dEngine::new();
         let positions: Vec<f32> = vec![-4.0, -4.0, -4.0, 4.0, -4.0, -4.0, 4.0, 4.0, -4.0, -4.0, 4.0, -4.0, -4.0, -4.0, 4.0, 4.0, -4.0, 4.0, 4.0, 4.0, 4.0, -4.0, 4.0, 4.0, 4.0];
         let indices: Vec<u32> = vec![0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2];
-        engine.register_mesh("/test/obstacle.glb".to_string(), positions.clone(), indices.clone());
-        engine.register_mesh("/test/preview.glb".to_string(), positions, indices);
+        engine.register_mesh("/test/obstacle.glb".to_string(), &positions, &indices);
+        engine.register_mesh("/test/preview.glb".to_string(), &positions, &indices);
         let scene = SceneConfig {
             fixture: Fixture {
                 attractions: vec![],
@@ -847,7 +847,7 @@ mod tests {
     fn compose_fill_display_is_read_only_and_matches_apply_prefix() {
         let base = Fixture { objects: vec![fill_plan_object("base")], attractions: vec![], target_volumes: vec![] };
         let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
-        let mut fill = FillBuilder::new(base.clone(), 7, &HashMap::new(), &catalogs);
+        let mut fill = FillBuilder::new(base, 7, &HashMap::new(), &catalogs);
         fill.applied_count = 2;
         fill.sequence = (0..5).map(fill_plan_payload).collect();
         fill.appended_objects = (0..5).map(|index| fill_plan_object(&format!("p{index}"))).collect();
@@ -879,7 +879,7 @@ mod tests {
         fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
 
         let mut engine = Puzzle3dEngine::new();
-        let base_scene = SceneConfig { fixture: base.clone(), kind_catalogs: Some(catalogs), kind_compatibility: vec![], overlap_budget: 0.0, seed: 7, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
+        let base_scene = SceneConfig { fixture: base, kind_catalogs: Some(catalogs), kind_compatibility: vec![], overlap_budget: 0.0, seed: 7, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
         engine.set_scene(&serde_json::to_string(&base_scene).unwrap()).expect("seed");
         engine.fill = Some(fill);
 
@@ -1003,7 +1003,7 @@ mod tests {
         // that used to force expensive replanning on every jittery drag dip.
         let base = Fixture { objects: vec![fill_plan_object("base")], attractions: vec![], target_volumes: vec![] };
         let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
-        let mut fill = FillBuilder::new(base.clone(), 7, &HashMap::new(), &catalogs);
+        let mut fill = FillBuilder::new(base, 7, &HashMap::new(), &catalogs);
         fill.applied_count = 3;
         fill.sequence = (0..3).map(fill_plan_payload).collect();
         fill.appended_objects = (0..3).map(|index| fill_plan_object(&format!("p{index}"))).collect();
@@ -1044,13 +1044,13 @@ mod tests {
         fill.stalled = true;
 
         let mut engine = Puzzle3dEngine::new();
-        let base_scene = SceneConfig { fixture: base.clone(), kind_catalogs: Some(catalogs), kind_compatibility: vec![], overlap_budget: 0.0, seed: 7, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
+        let base_scene = SceneConfig { fixture: base, kind_catalogs: Some(catalogs), kind_compatibility: vec![], overlap_budget: 0.0, seed: 7, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
         let base_json = serde_json::to_string(&base_scene).unwrap();
         engine.set_scene(&base_json).expect("seed base scene");
         // 🪣️ Replace the fresh FillBuilder from rebuild_queue with the already-applied session under test.
         engine.fill = Some(fill);
 
-        let mut applied_scene = base_scene.clone();
+        let mut applied_scene = base_scene;
         applied_scene.fixture.objects.extend((0..3).map(|index| fill_plan_object(&format!("p{index}"))));
         applied_scene.fixture.attractions.extend((0..3).map(fill_plan_attraction));
         // 🪪️ Pose drift on the base object (attraction rederive) must not count as a new scene.
@@ -1080,7 +1080,7 @@ mod tests {
         let applied_before = engine.fill.as_ref().map_or(0, |fill| fill.applied_count);
         let positions: Vec<f32> = vec![-1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0];
         let indices: Vec<u32> = vec![0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2];
-        engine.register_mesh("/test/host.glb".to_string(), positions, indices);
+        engine.register_mesh("/test/host.glb".to_string(), &positions, &indices);
         assert!(engine.brush_cache.is_empty(), "mesh registration must invalidate stale brush cache entries");
         assert_eq!(engine.fill.as_ref().map(|fill| fill.applied_count), Some(applied_before), "mesh registration must not reset applied fill count");
     }
@@ -1111,7 +1111,7 @@ mod tests {
         engine.set_scene(&single_object_scene_json()).expect("seed");
         assert!(!engine.has_mesh("/test/host.glb"));
         let (positions, indices) = unit_cube_mesh_buffers();
-        engine.register_mesh("/test/host.glb".to_string(), positions, indices);
+        engine.register_mesh("/test/host.glb".to_string(), &positions, &indices);
         assert!(engine.has_mesh("/test/host.glb"));
 
         engine.invalidate_brush_target("host:v0");

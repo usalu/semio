@@ -92,7 +92,7 @@ pub mod set_app_registrations {
     /// 🪐️ Pure host-hint side effect; no document/config mutation, so the default full-refresh `Emit`
     /// is enough to pick up the newly-registered apps on the next catalogue render.
     pub fn handle(payload: &SetAppRegistrations, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
-        super::apply_app_registrations(&payload.json);
+        apply_app_registrations(&payload.json);
         Ok(Emit::default())
     }
 }
@@ -105,10 +105,11 @@ mod tests {
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&set_active_panel_tab::SetActivePanelTab { tab_id: "s-play-catalogue".into() });
-        store::test_support::assert_op_line_round_trip(&go_home::GoHome {});
-        store::test_support::assert_op_line_round_trip(&navigate_virtual_file_system_node::NavigateVirtualFileSystemNode { space_id: "demo".into() });
-        store::test_support::assert_op_line_round_trip(&set_app_registrations::SetAppRegistrations { json: "[]".into() });
+        use crate::apps::space::SpaceCommand;
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::SetActivePanelTab(set_active_panel_tab::SetActivePanelTab { tab_id: "s-play-catalogue".into() }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::GoHome(go_home::GoHome {}));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::NavigateVirtualFileSystemNode(navigate_virtual_file_system_node::NavigateVirtualFileSystemNode { space_id: "demo".into() }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::SetAppRegistrations(set_app_registrations::SetAppRegistrations { json: "[]".into() }));
     }
 
     /// 🪐️ End-to-end proof of the catalogue-empty bugfix: registers an app with an EMPTY `document`
@@ -136,7 +137,7 @@ mod tests {
         let wire = json!([{ "pluginId": "root", "app": app_json }]).to_string();
         let projection = empty_workflow_document();
         let config = SpaceConfig::default();
-        studio_emit(&projection, &config, SpaceCommand::SetAppRegistrations(set_app_registrations::SetAppRegistrations { json: wire })).expect("handle");
+        studio_emit(&projection, &config, &SpaceCommand::SetAppRegistrations(set_app_registrations::SetAppRegistrations { json: wire })).expect("handle");
         assert!(os_app_registration("root", "root-tool").is_some(), "SetAppRegistrations must populate this wasm instance's own registry");
         assert!(workflow_palette().iter().any(|entry| entry.plugin_id == "root" && entry.app_id == "root-tool"), "workflow_palette must surface the pushed app");
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::apps::space::terminology::SStudioLabels>(&config.locale);

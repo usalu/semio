@@ -51,6 +51,7 @@ pub fn empty_puzzle2d_projection() -> Puzzle2dProjection {
 pub fn register() {
     crate::apps::puzzle2d::register_puzzle2d_exports();
     crate::apps::puzzle3d::register_puzzle3d_exports();
+    crate::apps::puzzle5d::register_puzzle5d_exports();
 }
 //#endregion 🔖️Register
 

@@ -34,7 +34,7 @@ pub mod select_vortex {
     }
 
     pub fn handle(payload: &SelectVortex, _doc: &DocumentView<'_, Block3dDefinition>, cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dOperation, Block3dConfigOperation>, Fault> {
-        let local = payload.full_id.split_once(':').map(|(_, tail)| tail).unwrap_or(payload.full_id.as_str());
+        let local = payload.full_id.split_once(':').map_or(payload.full_id.as_str(), |(_, tail)| tail);
         let id = format!("vortex:{local}");
         let mut ids = if payload.merge { cfg.projection.selected_ids.clone() } else { Vec::new() };
         if !ids.contains(&id) {

@@ -23,7 +23,7 @@ pub mod node_graph_hover {
     }
 
     pub fn handle(payload: &NodeGraphHover, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
-        Ok(Emit::config(super::hover_operation(&payload.hover_json)))
+        Ok(Emit::config(hover_operation(&payload.hover_json)))
     }
 }
 
@@ -38,7 +38,7 @@ pub mod text_hover {
     }
 
     pub fn handle(payload: &TextHover, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
-        Ok(Emit::config(super::hover_operation(&payload.hover_json)))
+        Ok(Emit::config(hover_operation(&payload.hover_json)))
     }
 }
 //#endregion 🔖️Hover
@@ -70,9 +70,10 @@ mod tests {
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&node_graph_hover::NodeGraphHover { hover_json: Some("{\"nodeId\":\"n1\"}".into()) });
-        store::test_support::assert_op_line_round_trip(&text_hover::TextHover { hover_json: None });
-        store::test_support::assert_op_line_round_trip(&node_graph_viewport::NodeGraphViewport { viewport_json: "{\"x\":0,\"y\":0,\"zoom\":1}".into() });
+        use crate::apps::space::SpaceCommand;
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::NodeGraphHover(node_graph_hover::NodeGraphHover { hover_json: Some("{\"nodeId\":\"n1\"}".into()) }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::TextHover(text_hover::TextHover { hover_json: None }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: "{\"x\":0,\"y\":0,\"zoom\":1}".into() }));
     }
 
     #[test]
@@ -82,7 +83,7 @@ mod tests {
         use crate::core::demo_space_projection;
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&projection, &config, SpaceCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: r#"{"x":7.0,"y":9.0,"zoom":0.5}"#.into() })).expect("handle");
+        let emit = studio_emit(&projection, &config, &SpaceCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: r#"{"x":7.0,"y":9.0,"zoom":0.5}"#.into() })).expect("handle");
         assert_eq!(
             emit.config_operations,
             vec![SpaceConfigOperation::SetCamera { window_id: crate::apps::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), camera: OsWorkflowCamera { x: 7.0, y: 9.0, zoom: 0.5 }.into() }]

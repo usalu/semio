@@ -11,7 +11,6 @@ pub mod set_camera {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "setCamera")]
     pub struct SetCamera {
-        #[dsl(block)]
         pub camera: BlockCamera3d,
     }
 

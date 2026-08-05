@@ -155,11 +155,12 @@ mod tests {
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&patch_parameter::PatchParameter { parameter_id: "p1".into(), field: "value".into(), value: "48".into() });
-        store::test_support::assert_op_line_round_trip(&add_parameter::AddParameter { name: "Parameter".into(), kind: "numeric".into() });
-        store::test_support::assert_op_line_round_trip(&remove_parameter::RemoveParameter { parameter_id: "p1".into() });
-        store::test_support::assert_op_line_round_trip(&bind_parameter_field::BindParameterField { node_id: "n1".into(), field_path: "label".into(), parameter_id: "p1".into() });
-        store::test_support::assert_op_line_round_trip(&unbind_parameter_field::UnbindParameterField { node_id: "n1".into(), field_path: "label".into() });
+        use crate::apps::space::SpaceCommand;
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchParameter(patch_parameter::PatchParameter { parameter_id: "p1".into(), field: "value".into(), value: "48".into() }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::AddParameter(add_parameter::AddParameter { name: "Parameter".into(), kind: "numeric".into() }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveParameter(remove_parameter::RemoveParameter { parameter_id: "p1".into() }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::BindParameterField(bind_parameter_field::BindParameterField { node_id: "n1".into(), field_path: "label".into(), parameter_id: "p1".into() }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::UnbindParameterField(unbind_parameter_field::UnbindParameterField { node_id: "n1".into(), field_path: "label".into() }));
     }
 
     #[test]
@@ -172,6 +173,7 @@ mod tests {
         let emit = patch_parameter::handle(&patch_parameter::PatchParameter { parameter_id: "param-brush-size".into(), field: "value".into(), value: "48".into() }, &doc, &cfg).expect("handle");
         assert_eq!(emit.document_operations.len(), 1);
         let next = apply_operations(&projection, &emit.document_operations);
+        use crate::apps::space::engine::OsParameterId;
         match next.parameters.iter().find(|entry| entry.id() == "param-brush-size").expect("parameter") {
             WorkflowParameter::Numeric { value, .. } => assert_eq!(*value, 48.0),
             _ => panic!("expected numeric"),
@@ -187,7 +189,7 @@ mod tests {
         let history = HistoryView::empty();
         let doc = DocumentView { projection: &projection, history: &history };
         let cfg = ConfigView { projection: &config };
-        let emit = bind_parameter_field::handle(&bind_parameter_field::BindParameterField { node_id: node.id.clone(), field_path: "label".into(), parameter_id: parameter_id.clone() }, &doc, &cfg).expect("handle");
+        let emit = bind_parameter_field::handle(&bind_parameter_field::BindParameterField { node_id: node.id.clone(), field_path: "label".into(), parameter_id }, &doc, &cfg).expect("handle");
         projection = apply_operations(&projection, &emit.document_operations);
         assert!(projection.parameter_bindings.iter().any(|row| row.node_id == node.id && row.field_path == "label"));
         let doc = DocumentView { projection: &projection, history: &history };

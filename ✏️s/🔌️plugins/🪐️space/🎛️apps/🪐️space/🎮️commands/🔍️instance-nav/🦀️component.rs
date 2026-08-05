@@ -60,8 +60,8 @@ mod tests {
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&open_instance::OpenInstance { node_id: Some("n1".into()) });
-        store::test_support::assert_op_line_round_trip(&close_focused_instance::CloseFocusedInstance {});
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::OpenInstance(open_instance::OpenInstance { node_id: Some("n1".into()) }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::CloseFocusedInstance(close_focused_instance::CloseFocusedInstance {}));
     }
 
     #[test]
@@ -70,7 +70,7 @@ mod tests {
         let projection = demo_space_projection();
         let node = projection.graph.nodes.iter().find(|node| node.plugin_id == "draw").expect("draw node").clone();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&projection, &config, SpaceCommand::OpenInstance(open_instance::OpenInstance { node_id: Some(node.id.clone()) })).expect("handle");
+        let emit = studio_emit(&projection, &config, &SpaceCommand::OpenInstance(open_instance::OpenInstance { node_id: Some(node.id.clone()) })).expect("handle");
         assert!(emit.document_operations.is_empty(), "opening an instance is a host effect, not a document operation");
         let opened = emit
             .effects
@@ -90,11 +90,11 @@ mod tests {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
         let node_id = projection.graph.nodes.first().expect("node").id.clone();
-        let open_emit = studio_emit(&projection, &config, SpaceCommand::OpenInstance(open_instance::OpenInstance { node_id: Some(node_id.clone()) })).expect("handle");
+        let open_emit = studio_emit(&projection, &config, &SpaceCommand::OpenInstance(open_instance::OpenInstance { node_id: Some(node_id.clone()) })).expect("handle");
         assert!(open_emit.config_operations.contains(&SpaceConfigOperation::SetFocusedNode { node_id: Some(node_id.clone()) }));
         let config_after_open = apply_config(&config, &open_emit.config_operations);
         assert_eq!(config_after_open.focused_node_id.as_deref(), Some(node_id.as_str()));
-        let close_emit = studio_emit(&projection, &config_after_open, SpaceCommand::CloseFocusedInstance(close_focused_instance::CloseFocusedInstance {})).expect("handle");
+        let close_emit = studio_emit(&projection, &config_after_open, &SpaceCommand::CloseFocusedInstance(close_focused_instance::CloseFocusedInstance {})).expect("handle");
         assert_eq!(close_emit.config_operations, vec![SpaceConfigOperation::SetFocusedNode { node_id: None }]);
     }
 }

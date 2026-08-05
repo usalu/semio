@@ -365,6 +365,51 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+The codebase is currently split up according language independent taxony-tree component structure where the different implementations sit right next to each other. (follwing the repo principle that when logic is duplicated it must be close to each other).
+
+```
+ui
+  packages
+    typescript
+      targets
+        react
+          component.tsx
+          package.json
+          project.json
+          …
+    rust
+      targets
+        wasm
+          component.rs
+          package.json
+          project.json
+          …
+        …
+  elements
+    <element>
+      component.tsx
+      component.rs
+      …
+
+```
+
+---
+
+apps
+			<app>
+        component.rs
+        component.ts
+        …
+        selection
+          component.rs
+          component.ts
+          …
+        hover
+          component.rs
+          component.ts
+          …
+---
+
 The codebase still has the pattern of
 
 ```

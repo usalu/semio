@@ -1,0 +1,57 @@
+# 🧊️3d verification (subagent, 2026-08-05T19:33:55Z)
+
+NOTE: every cargo invocation needs DEVELOPER_DIR=/Library/Developer/CommandLineTools —
+the machine's active Xcode toolchain refuses to link ("You have not agreed to the Xcode
+license agreements"), which blocks cargo test/clippy but not cargo check.
+
+## 1 cargo check (native)
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+
+## 2 cargo check --target wasm32-wasip2
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+    Finished `dev` profile [unoptimized] target(s) in 0.40s
+
+## 3 cargo clippy --all-targets -- -D warnings
+exit=0
+
+## 4 cargo test --lib
+    __semio_plugin_sanity_constitutional_crates_present
+test result: FAILED. 320 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.53s
+
+## 5 wire baseline diff (3d)
+byte-identical (14 lines: 10 [WIRE] + 4 [WIRE-ENGINE])
+
+## per-module test counts
+   1 apps::puzzle2d::commands::brush::tests
+  24 apps::puzzle2d::component::tests
+   1 apps::puzzle2d::modes::edit::options::brush::tests
+   1 apps::puzzle2d::modes::edit::tools::fill::tests
+   1 apps::puzzle2d::modes::edit::windows::overview::component::tests
+   2 apps::puzzle2d::panels::document::tests
+  83 apps::puzzle3d::component::tests
+   1 apps::puzzle3d::modes::edit::component::tests
+   1 apps::puzzle3d::panels::catalogue::tests
+   3 artifacts::puzzle2d::dsl::tests
+  35 artifacts::puzzle2d::engine::board_host::tests
+  15 artifacts::puzzle2d::engine::brush::tests
+   5 artifacts::puzzle2d::engine::component::tests
+   6 artifacts::puzzle2d::engine::icons::tests
+  22 artifacts::puzzle2d::engine::layout::tests
+  34 artifacts::puzzle2d::engine::linking::tests
+   1 artifacts::puzzle2d::op::tests
+   2 artifacts::puzzle2d::pack::tests
+   1 artifacts::puzzle2d::spr::tests
+   1 artifacts::puzzle2d::spr::wire_baseline_dump
+   3 artifacts::puzzle3d::dsl::tests
+  25 artifacts::puzzle3d::engine::brush::tests
+   4 artifacts::puzzle3d::engine::component::tests
+  19 artifacts::puzzle3d::engine::geometry::tests
+  17 artifacts::puzzle3d::engine::session::tests
+   2 artifacts::puzzle3d::op::tests
+   2 artifacts::puzzle3d::pack::tests
+   6 artifacts::puzzle3d::spr::tests
+   1 artifacts::puzzle3d::spr::wire_baseline_dump
+   1 test __semio_plugin_sanity_constitutional_crates_present ... FAILED
+   1 test __semio_plugin_sanity_declared_apps_appear_in_bundle_manifest ... ok
+   1 test result: FAILED. 320 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.48s

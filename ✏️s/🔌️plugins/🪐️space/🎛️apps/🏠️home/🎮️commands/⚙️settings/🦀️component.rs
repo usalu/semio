@@ -33,7 +33,8 @@ mod tests {
 
     #[test]
     fn home_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&set_active_panel_tab::SetActivePanelTab { tab_id: "tab-1".into() });
+        use crate::apps::home::HomeCommand;
+        store::test_support::assert_op_line_round_trip(&HomeCommand::SetActivePanelTab(set_active_panel_tab::SetActivePanelTab { tab_id: "tab-1".into() }));
     }
 
     #[test]

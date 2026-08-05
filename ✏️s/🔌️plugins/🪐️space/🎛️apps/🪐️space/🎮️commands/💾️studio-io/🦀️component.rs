@@ -107,7 +107,7 @@ pub mod import_space_pack_payload {
 
     pub fn handle(payload: &ImportSpacePackPayload, _doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
         use base64::Engine;
-        let base64_part = payload.payload.split_once(',').map(|(_, data)| data).unwrap_or(&payload.payload);
+        let base64_part = payload.payload.split_once(',').map_or(payload.payload.as_str(), |(_, data)| data);
         if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(base64_part) {
             // 🌱️ A single `.pack` file carries no separate `.spr` sidecar (unlike `exportStudioPack`'s
             // two-file output) — `store::empty_document_spr` builds a bare, edit-free op log so the
@@ -198,12 +198,12 @@ mod tests {
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&set_active_example::SetActiveExample { example_id: "demo".into() });
-        store::test_support::assert_op_line_round_trip(&export_studio_pack::ExportStudioPack {});
-        store::test_support::assert_op_line_round_trip(&export_studio_dsl::ExportStudioDsl {});
-        store::test_support::assert_op_line_round_trip(&import_space_pack::ImportSpacePack {});
-        store::test_support::assert_op_line_round_trip(&import_space_pack_payload::ImportSpacePackPayload { payload: "data:...".into() });
-        store::test_support::assert_op_line_round_trip(&open_space::OpenSpace { space_id: "demo".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioPack(export_studio_pack::ExportStudioPack {}));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioDsl(export_studio_dsl::ExportStudioDsl {}));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportSpacePack(import_space_pack::ImportSpacePack {}));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportSpacePackPayload(import_space_pack_payload::ImportSpacePackPayload { payload: "data:...".into() }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: "demo".into() }));
     }
 
     #[test]
@@ -216,8 +216,8 @@ mod tests {
         crate::apps::home::register_studio_port_for_test(&entry.id, port);
         let empty = empty_workflow_document();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&empty, &config, SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: entry.id.clone() })).expect("handle");
-        assert!(emit.config_operations.contains(&SpaceConfigOperation::SetSpaceId { space_id: Some(entry.id.clone()) }));
+        let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: entry.id.clone() })).expect("handle");
+        assert!(emit.config_operations.contains(&SpaceConfigOperation::SetSpaceId { space_id: Some(entry.id) }));
         assert!(emit.config_operations.contains(&SpaceConfigOperation::SetActiveNode { node_id: None }));
         assert!(emit.effects.iter().any(|effect| matches!(effect, HostEffect::LoadDocument { .. })));
         assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
@@ -227,7 +227,7 @@ mod tests {
     fn open_studio_unknown_id_returns_not_found() {
         let empty = empty_workflow_document();
         let config = SpaceConfig::default();
-        let err = studio_emit(&empty, &config, SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: "unknown-studio-id".into() })).err().expect("not found");
+        let err = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: "unknown-studio-id".into() })).err().expect("not found");
         assert_eq!(err.code.0, "s.space.not-found");
     }
 
@@ -249,7 +249,7 @@ mod tests {
     fn open_studio_demo_explicit_loads_demo_fixture() {
         let empty = empty_workflow_document();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&empty, &config, SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: "demo".into() })).expect("handle");
+        let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: "demo".into() })).expect("handle");
         let (projection, id) = load_document_projection(&emit);
         assert!(id.contains("demo-studio"));
         assert!(!projection.graph.nodes.is_empty());
@@ -258,7 +258,7 @@ mod tests {
     #[test]
     fn open_studio_loads_ephemeral_created_studio() {
         use crate::apps::home::commands::studio::create_studio;
-        use semio_framework_plugin::{ConfigView, DocumentView, HistoryView};
+        use semio_framework_plugin::{ConfigView, DocumentApp, DocumentView, HistoryView};
         let home = crate::apps::home::HomeApp;
         let home_projection = home.initial_projection();
         let history = HistoryView::empty();
@@ -276,7 +276,7 @@ mod tests {
             .expect("navigate");
         let empty = empty_workflow_document();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&empty, &config, SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: space_id.clone() })).expect("handle");
+        let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: space_id.clone() })).expect("handle");
         let (projection, id) = load_document_projection(&emit);
         assert_eq!(id, space_id);
         assert!(projection.graph.nodes.is_empty());
@@ -316,7 +316,7 @@ mod tests {
         let studio_config = SpaceConfig::default();
         let studio_cfg = ConfigView { projection: &studio_config };
         let studio = crate::apps::space::SpaceApp;
-        let open = studio.handle(&crate::apps::space::SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: space_id.to_string() }), &studio_doc, &studio_cfg).expect("handle");
+        let open = studio.handle(&SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: space_id.to_string() }), &studio_doc, &studio_cfg).expect("handle");
         assert!(open.effects.iter().any(|effect| matches!(effect, HostEffect::LoadDocument { .. })), "openSpace must load the created studio");
         assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
         assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })));

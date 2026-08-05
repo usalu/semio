@@ -137,6 +137,12 @@ pub fn upsert_window_view_index(windows: &mut Vec<Block3dWindowView>, window_id:
 /// 🧮️ `Block3dConfig`'s operation enum — one variant per settled interaction (mirrors the pre-B1
 /// `Block3dPlayApp` `RefCell` field writes), plus a generic `Snapshot` every variant's `backwards()`
 /// returns.
+// 🧯️ `large_enum_variant`: `Snapshot` deliberately carries the WHOLE `Block3dConfig` while every other
+// row carries one or two scalars — that whole-config snapshot IS the inverse mechanism every variant's
+// `backwards()` returns. Boxing it would change the derived `dsl::DslOps` wire encoding, which this
+// migration must preserve byte-for-byte, so the size skew is accepted by design (same tradeoff as gis's
+// `Gis2dConfigOperation`).
+#[allow(clippy::large_enum_variant)]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum Block3dConfigOperation {
     #[dsl(key = "snapshot")]

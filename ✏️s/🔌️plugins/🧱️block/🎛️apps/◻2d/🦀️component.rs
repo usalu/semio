@@ -5,8 +5,13 @@
 //! in `🎭️modes/✏️edit/🪟️windows/📋️board`, panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`,
 //! view state in `🦀️config.rs`, and document-side compute in `crate::artifacts::block2d::engine`.
 
+use crate::apps::block2d::commands::compatibility::{add_compatibility_rule, remove_compatibility_rule};
+use crate::apps::block2d::commands::example;
 use crate::apps::block2d::commands::example::{edit, set_active_example};
-use crate::apps::block2d::commands::{compatibility, example, handle, handle_kind, kind, selection};
+use crate::apps::block2d::commands::handle::{add_handle, remove_handle};
+use crate::apps::block2d::commands::handle_kind::{add_handle_kind, remove_handle_kind};
+use crate::apps::block2d::commands::kind::patch_node_kind;
+use crate::apps::block2d::commands::selection::set_selection;
 use crate::apps::block2d::config::{Block2dConfig, Block2dConfigOperation};
 use crate::apps::block2d::modes::edit as edit_mode;
 use crate::apps::block2d::modes::edit::windows::board;
@@ -15,7 +20,7 @@ use crate::apps::block2d::terminology::block2d_labels;
 use crate::artifacts::block2d::op::Block2dOperation;
 use crate::artifacts::block2d::{artifact_kind, Block2dDefinition, BLOCK_2D_SCHEMA};
 use semio_framework_plugin::{
-    ActionDescriptor, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, PanelGroup, SurfaceKind, UiNode,
+    ActionDescriptor, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
 use serde_json::Value;
 
@@ -40,16 +45,16 @@ semio_framework_plugin::app_commands! {
     /// `#[dsl(key)]` already used the camelCase action id, not kebab-case) — preserved verbatim, not
     /// "fixed" to kebab, so the wire format stays byte-identical.
     pub enum Block2dCommand for Block2dDefinition, Block2dOperation, Block2dConfig, Block2dConfigOperation {
-        "patchNodeKind" as "patchNodeKind" => kind::patch_node_kind::PatchNodeKind,
-        "addHandleKind" as "addHandleKind" => handle_kind::add_handle_kind::AddHandleKind,
-        "removeHandleKind" as "removeHandleKind" => handle_kind::remove_handle_kind::RemoveHandleKind,
-        "addHandle" as "addHandle" => handle::add_handle::AddHandle,
-        "removeHandle" as "removeHandle" => handle::remove_handle::RemoveHandle,
-        "addCompatibilityRule" as "addCompatibilityRule" => compatibility::add_compatibility_rule::AddCompatibilityRule,
-        "removeCompatibilityRule" as "removeCompatibilityRule" => compatibility::remove_compatibility_rule::RemoveCompatibilityRule,
+        "patchNodeKind" as "patchNodeKind" => patch_node_kind::PatchNodeKind,
+        "addHandleKind" as "addHandleKind" => add_handle_kind::AddHandleKind,
+        "removeHandleKind" as "removeHandleKind" => remove_handle_kind::RemoveHandleKind,
+        "addHandle" as "addHandle" => add_handle::AddHandle,
+        "removeHandle" as "removeHandle" => remove_handle::RemoveHandle,
+        "addCompatibilityRule" as "addCompatibilityRule" => add_compatibility_rule::AddCompatibilityRule,
+        "removeCompatibilityRule" as "removeCompatibilityRule" => remove_compatibility_rule::RemoveCompatibilityRule,
         "setActiveExample" as "setActiveExample" => set_active_example::SetActiveExample,
         "edit" as "edit" => edit::Edit,
-        "setSelection" as "setSelection" => selection::set_selection::SetSelection,
+        "setSelection" as "setSelection" => set_selection::SetSelection,
     }
 }
 //#endregion 🔖️Commands
@@ -99,16 +104,16 @@ impl DocumentApp for Block2dPlayApp {
                 .unwrap_or_default()
         };
         match action {
-            "patchNodeKind" => Ok(Block2dCommand::PatchNodeKind(kind::patch_node_kind::PatchNodeKind { field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() })),
-            "addHandleKind" => Ok(Block2dCommand::AddHandleKind(handle_kind::add_handle_kind::AddHandleKind {})),
-            "removeHandleKind" => Ok(Block2dCommand::RemoveHandleKind(handle_kind::remove_handle_kind::RemoveHandleKind { id: str_field("id").unwrap_or_default() })),
-            "addHandle" => Ok(Block2dCommand::AddHandle(handle::add_handle::AddHandle {})),
-            "removeHandle" => Ok(Block2dCommand::RemoveHandle(handle::remove_handle::RemoveHandle { id: str_field("id").unwrap_or_default() })),
-            "addCompatibilityRule" => Ok(Block2dCommand::AddCompatibilityRule(compatibility::add_compatibility_rule::AddCompatibilityRule { source: str_field("source").unwrap_or_default(), target: str_field("target").unwrap_or_default() })),
-            "removeCompatibilityRule" => Ok(Block2dCommand::RemoveCompatibilityRule(compatibility::remove_compatibility_rule::RemoveCompatibilityRule { id: str_field("id").unwrap_or_default() })),
+            "patchNodeKind" => Ok(Block2dCommand::PatchNodeKind(patch_node_kind::PatchNodeKind { field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() })),
+            "addHandleKind" => Ok(Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})),
+            "removeHandleKind" => Ok(Block2dCommand::RemoveHandleKind(remove_handle_kind::RemoveHandleKind { id: str_field("id").unwrap_or_default() })),
+            "addHandle" => Ok(Block2dCommand::AddHandle(add_handle::AddHandle {})),
+            "removeHandle" => Ok(Block2dCommand::RemoveHandle(remove_handle::RemoveHandle { id: str_field("id").unwrap_or_default() })),
+            "addCompatibilityRule" => Ok(Block2dCommand::AddCompatibilityRule(add_compatibility_rule::AddCompatibilityRule { source: str_field("source").unwrap_or_default(), target: str_field("target").unwrap_or_default() })),
+            "removeCompatibilityRule" => Ok(Block2dCommand::RemoveCompatibilityRule(remove_compatibility_rule::RemoveCompatibilityRule { id: str_field("id").unwrap_or_default() })),
             "setActiveExample" => Ok(Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: str_field("exampleId").or_else(|| str_field("id")).unwrap_or_default() })),
             "edit" => Ok(Block2dCommand::Edit(edit::Edit { text: str_field("text").unwrap_or_default() })),
-            "setSelection" => Ok(Block2dCommand::SetSelection(selection::set_selection::SetSelection { ids: str_vec_field("ids") })),
+            "setSelection" => Ok(Block2dCommand::SetSelection(set_selection::SetSelection { ids: str_vec_field("ids") })),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
@@ -144,7 +149,7 @@ impl DocumentApp for Block2dPlayApp {
             if port != "document:out" {
                 return Err(MediaError::NotImplemented);
             }
-            let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type });
+            let media_type = self.io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.document_media_type);
             let bytes = store::DocumentPack::encode_pack(doc.projection);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
@@ -247,16 +252,16 @@ mod tests {
     //#region 🔖️CommandSurface
     fn every_command() -> Vec<Block2dCommand> {
         vec![
-            Block2dCommand::PatchNodeKind(kind::patch_node_kind::PatchNodeKind { field: "name".into(), value: "x".into() }),
-            Block2dCommand::AddHandleKind(handle_kind::add_handle_kind::AddHandleKind {}),
-            Block2dCommand::RemoveHandleKind(handle_kind::remove_handle_kind::RemoveHandleKind { id: "h0".into() }),
-            Block2dCommand::AddHandle(handle::add_handle::AddHandle {}),
-            Block2dCommand::RemoveHandle(handle::remove_handle::RemoveHandle { id: "h0".into() }),
-            Block2dCommand::AddCompatibilityRule(compatibility::add_compatibility_rule::AddCompatibilityRule { source: "a".into(), target: "b".into() }),
-            Block2dCommand::RemoveCompatibilityRule(compatibility::remove_compatibility_rule::RemoveCompatibilityRule { id: "c0".into() }),
+            Block2dCommand::PatchNodeKind(patch_node_kind::PatchNodeKind { field: "name".into(), value: "x".into() }),
+            Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {}),
+            Block2dCommand::RemoveHandleKind(remove_handle_kind::RemoveHandleKind { id: "h0".into() }),
+            Block2dCommand::AddHandle(add_handle::AddHandle {}),
+            Block2dCommand::RemoveHandle(remove_handle::RemoveHandle { id: "h0".into() }),
+            Block2dCommand::AddCompatibilityRule(add_compatibility_rule::AddCompatibilityRule { source: "a".into(), target: "b".into() }),
+            Block2dCommand::RemoveCompatibilityRule(remove_compatibility_rule::RemoveCompatibilityRule { id: "c0".into() }),
             Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: "left".into() }),
             Block2dCommand::Edit(edit::Edit { text: "{}".into() }),
-            Block2dCommand::SetSelection(selection::set_selection::SetSelection { ids: vec!["h0".into()] }),
+            Block2dCommand::SetSelection(set_selection::SetSelection { ids: vec!["h0".into()] }),
         ]
     }
 
@@ -285,10 +290,10 @@ mod tests {
     #[test]
     fn optional_field_rows_keep_their_pre_migration_bytes() {
         let hex = |command: &Block2dCommand| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
-        assert_eq!(hex(&Block2dCommand::AddHandleKind(handle_kind::add_handle_kind::AddHandleKind {})), "01010000");
-        assert_eq!(hex(&Block2dCommand::AddHandle(handle::add_handle::AddHandle {})), "01030000");
-        assert_eq!(hex(&Block2dCommand::SetSelection(selection::set_selection::SetSelection { ids: Vec::new() })), "01090001000c00");
-        assert_eq!(hex(&Block2dCommand::SetSelection(selection::set_selection::SetSelection { ids: vec!["h0".into()] })), "01090102683001000c010200");
+        assert_eq!(hex(&Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})), "01010000");
+        assert_eq!(hex(&Block2dCommand::AddHandle(add_handle::AddHandle {})), "01030000");
+        assert_eq!(hex(&Block2dCommand::SetSelection(set_selection::SetSelection { ids: Vec::new() })), "01090001000c00");
+        assert_eq!(hex(&Block2dCommand::SetSelection(set_selection::SetSelection { ids: vec!["h0".into()] })), "01090102683001000c010600");
     }
 
     /// 🎯️ Every app-declared action must bridge through `command_from_action` and round-trip
@@ -329,20 +334,20 @@ mod tests {
     #[test]
     fn add_handle_kind_then_add_handle_then_remove_round_trips() {
         let mut app: Block2dApp = new_app();
-        testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(handle_kind::add_handle_kind::AddHandleKind {}));
+        testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {}));
         assert_eq!(app.projection().expect("projection").handle_kinds.len(), 1);
-        testkit::dispatch(&mut app, Block2dCommand::AddHandle(handle::add_handle::AddHandle {}));
+        testkit::dispatch(&mut app, Block2dCommand::AddHandle(add_handle::AddHandle {}));
         let projection = app.projection().expect("projection");
         assert_eq!(projection.handles.len(), 1);
         let handle_id = projection.handles[0].id.clone();
-        testkit::dispatch(&mut app, Block2dCommand::RemoveHandle(handle::remove_handle::RemoveHandle { id: handle_id }));
+        testkit::dispatch(&mut app, Block2dCommand::RemoveHandle(remove_handle::RemoveHandle { id: handle_id }));
         assert_eq!(app.projection().expect("projection").handles.len(), 0);
     }
 
     #[test]
     fn patch_node_kind_updates_name() {
         let mut app = new_app();
-        testkit::dispatch(&mut app, Block2dCommand::PatchNodeKind(kind::patch_node_kind::PatchNodeKind { field: "name".into(), value: "Renamed".into() }));
+        testkit::dispatch(&mut app, Block2dCommand::PatchNodeKind(patch_node_kind::PatchNodeKind { field: "name".into(), value: "Renamed".into() }));
         assert_eq!(app.projection().expect("projection").node_kind.name, "Renamed");
     }
 
@@ -358,7 +363,7 @@ mod tests {
     #[test]
     fn undo_redo_round_trips_through_the_wrapper() {
         let mut app = new_app();
-        testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(handle_kind::add_handle_kind::AddHandleKind {}));
+        testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {}));
         assert_eq!(app.projection().expect("projection").handle_kinds.len(), 1);
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
         assert_eq!(app.projection().expect("projection").handle_kinds.len(), 0);
@@ -369,7 +374,7 @@ mod tests {
     #[test]
     fn set_selection_writes_config_not_document() {
         let mut app = new_app();
-        let result = app.dispatch_typed(Block2dCommand::SetSelection(selection::set_selection::SetSelection { ids: vec!["handle-kind:b-l".into()] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
+        let result = app.dispatch_typed(Block2dCommand::SetSelection(set_selection::SetSelection { ids: vec!["handle-kind:b-l".into()] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
         assert!(result.operations.is_empty(), "setSelection is config-only and must emit no document operations");
     }
 
@@ -394,6 +399,16 @@ mod tests {
     fn command_from_action_bridges_set_active_example() {
         let app = Block2dPlayApp;
         assert!(matches!(app.command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "left" }))), Ok(Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "left"));
+    }
+
+    /// 🧬️ Kind-discipline wrapper: the real registry enforces View actions never emit document
+    /// operations. Exercising it here (rather than only the plain `new_app()`) is the reason
+    /// `testkit::app_with_registry` exists.
+    #[test]
+    fn view_actions_never_emit_document_operations_under_the_real_registry() {
+        let mut app = testkit::app_with_registry();
+        let result = testkit::dispatch(&mut app, Block2dCommand::SetSelection(set_selection::SetSelection { ids: vec!["h0".into()] }));
+        assert!(result.operations.is_empty(), "setSelection is a view action and must never reach document operations under kind discipline");
     }
     //#endregion 🔖️Behavior
 }

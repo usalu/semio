@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Identity
 /// 🪪️ The single kind definition a block document edits — name/label/variant/description/icon/unit
 /// apply uniformly whether the document is a `NodeKind` (2d), `ObjectKind` (3d) or `PartKind` (5d).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct BlockKindIdentity {
     pub id: String,
@@ -23,12 +23,6 @@ pub struct BlockKindIdentity {
     pub icon: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub unit: Option<String>,
-}
-
-impl Default for BlockKindIdentity {
-    fn default() -> Self {
-        Self { id: String::new(), name: String::new(), label: String::new(), variant: None, description: String::new(), icon: None, unit: None }
-    }
 }
 //#endregion 🔖️Identity
 

@@ -119,6 +119,12 @@ store::impl_whole_record_config!(SpaceConfig);
 /// `AmendLast`), so each tick is its own distinct, real config edit and "undo this tick" is exactly
 /// "restore the whole-config snapshot from just before it". `Operation::Diff` is the WHOLE `SpaceConfig`,
 /// not a granular patch type.
+// 🧯️ `large_enum_variant`: `Snapshot` deliberately carries the WHOLE `SpaceConfig` while every other row
+// carries one or two scalars — that whole-config snapshot IS the inverse mechanism every variant's
+// `backwards()` returns. Boxing it would change the derived `dsl::DslOps` wire encoding, which this
+// migration must preserve byte-for-byte, so the size skew is accepted by design (same tradeoff as
+// block3d's `Block3dConfigOperation`/gis's `Gis2dConfigOperation`).
+#[allow(clippy::large_enum_variant)]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum SpaceConfigOperation {
     #[dsl(key = "snapshot")]

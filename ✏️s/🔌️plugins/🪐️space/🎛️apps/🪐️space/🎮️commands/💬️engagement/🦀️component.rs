@@ -86,10 +86,11 @@ mod tests {
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&workflow_engagement_submit::WorkflowEngagementSubmit { value: Some("draw draw".into()) });
-        store::test_support::assert_op_line_round_trip(&compiled_dag_engagement_submit::CompiledDagEngagementSubmit {});
-        store::test_support::assert_op_line_round_trip(&workflow_engagement_input::WorkflowEngagementInput { value: "draw draw".into() });
-        store::test_support::assert_op_line_round_trip(&compiled_dag_engagement_input::CompiledDagEngagementInput { value: "".into() });
+        use crate::apps::space::SpaceCommand;
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::WorkflowEngagementSubmit(workflow_engagement_submit::WorkflowEngagementSubmit { value: Some("draw draw".into()) }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::CompiledDagEngagementSubmit(compiled_dag_engagement_submit::CompiledDagEngagementSubmit {}));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::WorkflowEngagementInput(workflow_engagement_input::WorkflowEngagementInput { value: "draw draw".into() }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::CompiledDagEngagementInput(compiled_dag_engagement_input::CompiledDagEngagementInput { value: "".into() }));
     }
 }
 //#endregion 🧪️Tests

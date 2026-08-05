@@ -142,7 +142,7 @@ pub mod duplicate_app_instance {
     pub struct DuplicateAppInstance {}
 
     pub fn handle(_payload: &DuplicateAppInstance, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
-        Ok(super::duplicate_nodes(cfg.projection.selected_node_ids.clone(), doc.projection))
+        Ok(duplicate_nodes(cfg.projection.selected_node_ids.clone(), doc.projection))
     }
 }
 
@@ -155,7 +155,7 @@ pub mod paste_app_instance {
     pub struct PasteAppInstance {}
 
     pub fn handle(_payload: &PasteAppInstance, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
-        Ok(super::duplicate_nodes(cfg.projection.clipboard_node_ids.clone(), doc.projection))
+        Ok(duplicate_nodes(cfg.projection.clipboard_node_ids.clone(), doc.projection))
     }
 }
 //#endregion 🔖️DuplicateAndPaste
@@ -203,8 +203,8 @@ pub mod patch_media_nodes {
     pub fn handle(payload: &PatchMediaNodes, doc: &DocumentView<'_, WorkflowDocument>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
         let projection = doc.projection;
         let numeric = payload.value.parse::<f64>().ok();
-        if payload.field == "position" && numeric.is_some() {
-            let numeric = numeric.unwrap();
+        if payload.field == "position" {
+            let Some(numeric) = numeric else { return Ok(Emit::default()) };
             let document_operations = payload
                 .node_ids
                 .iter()
@@ -283,18 +283,18 @@ mod tests {
 
     #[test]
     fn space_command_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 });
-        store::test_support::assert_op_line_round_trip(&move_media_node::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 });
-        store::test_support::assert_op_line_round_trip(&remove_app_instance::RemoveAppInstance { node_id: Some("n1".into()) });
-        store::test_support::assert_op_line_round_trip(&remove_app_instance::RemoveAppInstance { node_id: None });
-        store::test_support::assert_op_line_round_trip(&delete_selection::DeleteSelection {});
-        store::test_support::assert_op_line_round_trip(&copy_app_instance::CopyAppInstance {});
-        store::test_support::assert_op_line_round_trip(&duplicate_app_instance::DuplicateAppInstance {});
-        store::test_support::assert_op_line_round_trip(&paste_app_instance::PasteAppInstance {});
-        store::test_support::assert_op_line_round_trip(&rename_app_instance::RenameAppInstance { label: Some("Renamed".into()) });
-        store::test_support::assert_op_line_round_trip(&patch_media_nodes::PatchMediaNodes { node_ids: vec!["n1".into()], field: "position".into(), axis: Some("x".into()), value: "120".into() });
-        store::test_support::assert_op_line_round_trip(&patch_app_instances::PatchAppInstances { node_ids: vec!["n1".into()], field: "label".into(), value: "Batch Label".into() });
-        store::test_support::assert_op_line_round_trip(&reorganize_workflow::ReorganizeWorkflow {});
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(remove_app_instance::RemoveAppInstance { node_id: Some("n1".into()) }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(remove_app_instance::RemoveAppInstance { node_id: None }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::DeleteSelection(delete_selection::DeleteSelection {}));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::CopyAppInstance(copy_app_instance::CopyAppInstance {}));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::DuplicateAppInstance(duplicate_app_instance::DuplicateAppInstance {}));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::PasteAppInstance(paste_app_instance::PasteAppInstance {}));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::RenameAppInstance(rename_app_instance::RenameAppInstance { label: Some("Renamed".into()) }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchMediaNodes(patch_media_nodes::PatchMediaNodes { node_ids: vec!["n1".into()], field: "position".into(), axis: Some("x".into()), value: "120".into() }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchAppInstances(patch_app_instances::PatchAppInstances { node_ids: vec!["n1".into()], field: "label".into(), value: "Batch Label".into() }));
+        store::test_support::assert_op_line_round_trip(&SpaceCommand::ReorganizeWorkflow(reorganize_workflow::ReorganizeWorkflow {}));
     }
 
     #[test]
@@ -302,7 +302,7 @@ mod tests {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
         let node_id = projection.graph.nodes.first().expect("node").id.clone();
-        let emit = studio_emit(&projection, &config, SpaceCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: node_id.clone(), x: 120.0, y: 160.0 })).expect("handle");
+        let emit = studio_emit(&projection, &config, &SpaceCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: node_id.clone(), x: 120.0, y: 160.0 })).expect("handle");
         assert_eq!(emit.coalesce_key.as_deref(), Some(format!("moveMediaNode:{node_id}").as_str()));
         let node = apply_operations(&projection, &emit.document_operations).graph.nodes.into_iter().find(|row| row.id == node_id).expect("node");
         assert!((node.x - 120.0).abs() < 0.01);
@@ -314,7 +314,7 @@ mod tests {
         seed_draw_plugin();
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&projection, &config, SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 })).expect("handle");
+        let emit = studio_emit(&projection, &config, &SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 })).expect("handle");
         assert!(!emit.document_operations.is_empty());
         let next = apply_operations(&projection, &emit.document_operations);
         assert_eq!(next.graph.nodes.len(), projection.graph.nodes.len() + 1);
@@ -328,7 +328,7 @@ mod tests {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
         let existing: HashSet<String> = projection.graph.nodes.iter().map(|node| node.id.clone()).collect();
-        let emit = studio_emit(&projection, &config, SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 321.0, y: 654.0 })).expect("handle");
+        let emit = studio_emit(&projection, &config, &SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 321.0, y: 654.0 })).expect("handle");
         let next = apply_operations(&projection, &emit.document_operations);
         let node = next.graph.nodes.iter().find(|node| node.plugin_id == "draw" && !existing.contains(&node.id)).expect("newly spawned draw node");
         assert!((node.x - 321.0).abs() < 0.01);
@@ -340,7 +340,7 @@ mod tests {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
         let ids: Vec<String> = projection.graph.nodes.iter().take(2).map(|node| node.id.clone()).collect();
-        let emit = studio_emit(&projection, &config, SpaceCommand::PatchAppInstances(patch_app_instances::PatchAppInstances { node_ids: ids.clone(), field: "label".into(), value: "Batch Label".into() })).expect("handle");
+        let emit = studio_emit(&projection, &config, &SpaceCommand::PatchAppInstances(patch_app_instances::PatchAppInstances { node_ids: ids.clone(), field: "label".into(), value: "Batch Label".into() })).expect("handle");
         let next = apply_operations(&projection, &emit.document_operations);
         let labels: Vec<String> = next.graph.nodes.iter().filter(|node| ids.contains(&node.id)).map(|node| node.label.clone()).collect();
         assert!(labels.iter().all(|label| label == "Batch Label"));
@@ -351,9 +351,9 @@ mod tests {
         seed_multi_port_plugins();
         let mut projection = demo_space_projection();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&projection, &config, SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "puzzle.5d".into(), app_id: "puzzle5d".into(), x: 200.0, y: 100.0 })).expect("handle");
+        let emit = studio_emit(&projection, &config, &SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "puzzle.5d".into(), app_id: "puzzle5d".into(), x: 200.0, y: 100.0 })).expect("handle");
         projection = apply_operations(&projection, &emit.document_operations);
-        let emit = studio_emit(&projection, &config, SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "shooting".into(), app_id: "shooting".into(), x: 300.0, y: 100.0 })).expect("handle");
+        let emit = studio_emit(&projection, &config, &SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "shooting".into(), app_id: "shooting".into(), x: 300.0, y: 100.0 })).expect("handle");
         projection = apply_operations(&projection, &emit.document_operations);
         let puzzle_node = projection.graph.nodes.iter().find(|node| node.plugin_id == "puzzle.5d").expect("puzzle node");
         let shooting_node = projection.graph.nodes.iter().find(|node| node.plugin_id == "shooting").expect("shooting node");

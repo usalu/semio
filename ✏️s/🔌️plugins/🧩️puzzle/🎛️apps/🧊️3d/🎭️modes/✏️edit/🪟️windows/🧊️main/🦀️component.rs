@@ -123,7 +123,7 @@ pub fn world_instances_geometry_json(fixture: &Puzzle3dFixture) -> String {
         .objects
         .iter()
         .map(|object| {
-            let mesh_id = resolve_object_mesh_url(object, &fixture.meta).map(|url| world3d_mesh_id_from_url(&url)).unwrap_or_else(|| PUZZLE3D_FALLBACK_MESH_KIND.into());
+            let mesh_id = resolve_object_mesh_url(object, &fixture.meta).map_or_else(|| PUZZLE3D_FALLBACK_MESH_KIND.into(), |url| world3d_mesh_id_from_url(&url));
             let scale = if object.hidden { json!([0.0, 0.0, 0.0]) } else { json!(object_scale_json(object)) };
             let mut instance = json!({
                 "id": object.id,
@@ -312,7 +312,7 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
     let runtime = &envelope.runtime;
     let suggestion_menu = runtime.suggestion_menu.as_ref().map(|menu| {
         let (pending, candidates) = puzzle3d_brush_target_vortex(envelope)
-            .map(|target| {
+            .map_or((false, Vec::new()), |target| {
                 let result = session.brush_candidates(&target);
                 let candidates: Vec<Value> = result
                     .free
@@ -334,8 +334,7 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
                     })
                     .collect();
                 (result.unknown_pending, candidates)
-            })
-            .unwrap_or((false, Vec::new()));
+            });
         json!({
             "open": true,
             "x": menu.x,

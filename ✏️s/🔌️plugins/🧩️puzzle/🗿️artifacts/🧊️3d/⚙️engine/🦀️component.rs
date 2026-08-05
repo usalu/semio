@@ -440,6 +440,31 @@ mod tests {
         assert_eq!(puzzle3d_vortex_full_id("host", "other:v0"), "other:v0");
     }
 
+    /// 🖐️ Compile-guard for the 🖐️5d app, which builds its own `Puzzle5dPrecomputeSession` on top of
+    /// this one: every item it names must stay publicly reachable under
+    /// `crate::artifacts::puzzle3d::…`. A rename or a visibility narrowing breaks this test long
+    /// before it breaks 5d.
+    #[test]
+    fn the_5d_facing_engine_surface_stays_public() {
+        use crate::artifacts::puzzle3d::engine::{BrushCollisionFreeResult, BrushPlacePayload, BrushPreviewState, FillBuildProgress, Fixture, PrecomputeLane, Puzzle3dEngineCommand, Puzzle3dEngineOutcome, Puzzle3dPrecomputeSession};
+        use crate::artifacts::puzzle3d::Puzzle3dError;
+
+        let mut session = Puzzle3dPrecomputeSession::new();
+        assert!(session.set_scene("{ not json").is_err(), "set_scene surfaces a Puzzle3dError");
+        session.register_mesh("/probe.glb", &[], &[]);
+        assert!(!session.has_mesh("/probe.glb"));
+        assert!(!session.precompute_step(1));
+        let _: BrushCollisionFreeResult = session.brush_candidates("probe:v0");
+        let _: Option<BrushPreviewState> = session.brush_preview("probe:v0", 0);
+        let _: FillBuildProgress = session.fill_progress();
+        assert!(session.precompute_step_lane(PrecomputeLane::Brush, 1) || true);
+        let payload = BrushPlacePayload { target_vortex_full_id: "probe:v0".into(), object_kind_id: "Kind".into(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
+        let rejected: Result<Puzzle3dEngineOutcome, Puzzle3dError> = session.dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload });
+        assert!(matches!(rejected, Err(Puzzle3dError::BrushPlacementRejected)));
+        assert!(session.dispatch(Puzzle3dEngineCommand::ApplyFillCount { count: 0 }).is_err());
+        let _: fn(&Fixture, &BrushPlacePayload, &KindCatalogBundle) -> Fixture = apply_brush_placement_to_fixture;
+    }
+
     #[test]
     fn brush_preview_state_converts_into_a_placement_payload() {
         let preview = BrushPreviewState {

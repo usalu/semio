@@ -10,7 +10,7 @@ pub fn measure(config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) 
     WindowMeasure::Select {
         id: "block3d-arrangement".into(),
         label: Some(labels.arrangement.as_str().to_string()),
-        value: view.arrangement.clone(),
+        value: view.arrangement,
         items: vec![
             MeasureSelectItem { id: "overlap".into(), value: "overlap".into(), label: "Overlap".into() },
             MeasureSelectItem { id: "x".into(), value: "x".into(), label: "X".into() },

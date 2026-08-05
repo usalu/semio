@@ -109,7 +109,7 @@ pub fn workflow_to_dag_fixture(projection: &WorkflowDocument) -> DagFixture {
         .iter()
         .map(|node| {
             let registration = os_app_registration(&node.plugin_id, &node.app_id);
-            let icon = format!("emoji:{}", registration.map(|row| row.component_kind.clone()).unwrap_or_else(|| "s".into()));
+            let icon = format!("emoji:{}", registration.map_or_else(|| "s".into(), |row| row.component_kind));
             DagNodeSpec {
                 id: node.id.clone(),
                 name: node.label.clone(),

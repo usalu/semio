@@ -167,7 +167,7 @@ fn apply_puzzle3d_operation_to_value(document: &mut serde_json::Value, operation
 }
 
 fn puzzle3d_value_collection<'a>(document: &'a serde_json::Value, collection: &str) -> &'a [serde_json::Value] {
-    document.get(collection).and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[])
+    document.get(collection).and_then(|value| value.as_array()).map_or(&[][..], |values| values.as_slice())
 }
 
 fn puzzle3d_value_item_index<T: serde::de::DeserializeOwned>(document: &serde_json::Value, collection: &str, id: &str) -> Option<(usize, T)> {
@@ -484,7 +484,7 @@ mod tests {
         assert!(upserted_ids.contains(&"updated"));
         assert!(upserted_ids.contains(&"added"));
         assert_eq!(removed_ids, vec!["removed"]);
-        let mut forward = before.clone();
+        let mut forward = before;
         for operation in &operations {
             forward = Operation::<serde_json::Value>::diff(operation, &forward).apply(&forward);
         }

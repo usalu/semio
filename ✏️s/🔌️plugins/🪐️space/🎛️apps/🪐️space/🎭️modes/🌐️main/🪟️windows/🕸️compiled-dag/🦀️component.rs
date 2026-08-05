@@ -60,7 +60,7 @@ mod tests {
 
     #[test]
     fn renders_compiled_dag_editor() {
-        use semio_framework_plugin::{ViewState, VcsDocumentApp};
+        use semio_framework_plugin::{PluginApp, ViewState, VcsDocumentApp};
         let mut app = VcsDocumentApp::new(crate::apps::space::SpaceApp);
         let node = app.render(S_PLAY_BODY_COMPILED_DAG, None, &ViewState::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("text-editor"));
