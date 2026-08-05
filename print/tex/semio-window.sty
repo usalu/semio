@@ -2480,17 +2480,16 @@
     \vbox to \semio@window@cap@titleh{%
       \nointerlineskip
       \hbox{%
-        \semio@window@stroke@h{#1}{\semio@window@cap@outer@w}%
-      }%
-      \nointerlineskip
-      \hbox{%
-        \semio@window@stroke@v@to{#1}{\semio@window@cap@body@h-\semio@stroke@hairline}%
-        \semio@window@cap@paint@nofill{\semio@window@cap@w}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}%
-        \semio@window@stroke@v@to{#1}{\semio@window@cap@body@h-\semio@stroke@hairline}%
-      }%
-      \nointerlineskip
-      \hbox{%
-        \semio@window@stroke@h{#1}{\semio@window@cap@outer@w}%
+        \semio@window@stroke@v@to{#1}{\semio@window@cap@titleh}%
+        \vbox{%
+          \nointerlineskip
+          \hbox{\semio@window@stroke@h{#1}{\semio@window@cap@w}}%
+          \nointerlineskip
+          \hbox{\semio@window@cap@paint@nofill{\semio@window@cap@w}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}}%
+          \nointerlineskip
+          \hbox{\semio@window@stroke@h{#1}{\semio@window@cap@w}}%
+        }%
+        \semio@window@stroke@v@to{#1}{\semio@window@cap@titleh}%
       }%
     }%
   \fi
@@ -2533,17 +2532,15 @@
     }%
   \else
     \semio@window@cap@raise@to{\semio@window@cap@titleh-\semio@stroke@hairline}{%
-      \vbox to \dimexpr\semio@window@cap@titleh-\semio@stroke@hairline\relax{%
-        \nointerlineskip
-        \hbox{%
-          \semio@window@stroke@h{#3}{\semio@window@cap@outer@w}%
+      \hbox{%
+        \semio@window@stroke@v@to{#3}{\semio@window@cap@titleh-\semio@stroke@hairline}%
+        \vbox{%
+          \nointerlineskip
+          \hbox{\semio@window@stroke@h{#3}{\semio@window@cap@w}}%
+          \nointerlineskip
+          \hbox{\semio@window@cap@paint@nofill{\semio@window@cap@w}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}}%
         }%
-        \nointerlineskip
-        \hbox{%
-          \semio@window@stroke@v@to{#3}{\semio@window@cap@body@h-\semio@stroke@hairline}%
-          \semio@window@cap@paint@nofill{\semio@window@cap@w}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}%
-          \semio@window@stroke@v@to{#3}{\semio@window@cap@body@h-\semio@stroke@hairline}%
-        }%
+        \semio@window@stroke@v@to{#3}{\semio@window@cap@titleh-\semio@stroke@hairline}%
       }%
     }%
   \fi
@@ -2600,18 +2597,19 @@
   \renewcommand{\semio@window@cap@vpad@budget}{%
     \semio@tab@inset@v+\semio@tab@inset@v+\semio@stroke@hairline}%
   \semio@window@cap@metrics@set
+  % Post-and-rail: L/R posts are full open height; top rail sits between them
+  % (cap@w, not outer@w). Stacking a full-width top \rule above separate
+  % verticals left a 1px cream butt-join notch at each outer top corner.
   \semio@window@cap@raise@to{\semio@window@cap@titleh-\semio@stroke@hairline}{%
-    \vbox to \dimexpr\semio@window@cap@titleh-\semio@stroke@hairline\relax{%
-      \nointerlineskip
-      \hbox{%
-        \semio@window@stroke@h{semio-chrome-border-normal}{\semio@window@cap@outer@w}%
+    \hbox{%
+      \semio@window@stroke@v@to{semio-chrome-border-normal}{\semio@window@cap@titleh-\semio@stroke@hairline}%
+      \vbox{%
+        \nointerlineskip
+        \hbox{\semio@window@stroke@h{semio-chrome-border-normal}{\semio@window@cap@w}}%
+        \nointerlineskip
+        \hbox{\semio@window@cap@paint{\semio@window@cap@w}{semio-chrome-canvas}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}}%
       }%
-      \nointerlineskip
-      \hbox{%
-        \semio@window@stroke@v@to{semio-chrome-border-normal}{\semio@window@cap@body@h-\semio@stroke@hairline}%
-        \semio@window@cap@paint{\semio@window@cap@w}{semio-chrome-canvas}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}%
-        \semio@window@stroke@v@to{semio-chrome-border-normal}{\semio@window@cap@body@h-\semio@stroke@hairline}%
-      }%
+      \semio@window@stroke@v@to{semio-chrome-border-normal}{\semio@window@cap@titleh-\semio@stroke@hairline}%
     }%
   }%
 }
@@ -3190,18 +3188,34 @@
   \fi
 }
 
+% 🩹 Corner stubs: overlap the shared baseline into body border@L/R below.
+% Plain \hrule/\rule abutting a row \vrule is a butt join — PDF rasterizers
+% leave a 1-device-pixel cream notch at the outer top-left/top-right corners
+% (TOC "Seite", long chrome). Stubs live inside the baseline \hbox (via
+% \rlap/\llap) so this stays legal in both vmode and hmode (cover pages).
+\newcommand{\semio@window@header@baseline@corner@stub}{%
+  \textcolor{semio-chrome-border-normal}{%
+    \vrule width\semio@stroke@hairline
+           height\semio@stroke@hairline
+           depth\dimexpr\semio@stroke@hairline+3pt\relax
+  }%
+}
 \newcommand{\semio@window@header@baseline@or@slot}{%
   \ifsemio@window@header@draw@baseline
     \ifvmode\nointerlineskip\fi
     \ifsemio@window@header@flush
       \hbox to \linewidth{%
+        \rlap{\smash{\semio@window@header@baseline@corner@stub}}%
         \semio@window@stroke@h{semio-chrome-border-normal}{\linewidth}%
+        \llap{\smash{\semio@window@header@baseline@corner@stub}}%
       }%
     \else
       \hbox{%
         \hspace*{-\semio@stroke@hairline}%
         \hbox to \dimexpr\linewidth+\semio@stroke@hairline+\semio@stroke@hairline\relax{%
+          \rlap{\smash{\semio@window@header@baseline@corner@stub}}%
           \semio@window@stroke@h{semio-chrome-border-normal}{\dimexpr\linewidth+\semio@stroke@hairline+\semio@stroke@hairline\relax}%
+          \llap{\smash{\semio@window@header@baseline@corner@stub}}%
         }%
       }%
     \fi

@@ -478,19 +478,15 @@
 \newcommand{\semio@table@long@title@chrome@prepare}{}
 
 \newcommand{\semio@table@long@title@chrome@row}[1]{%
-  % Side slots reserve border width, but chrome L/R phantoms carry no ink —
-  % the muted title/number chips paint those verticals so chip L coincides with
-  % body \semio@table@border@L (a live border@L behind the chip hid a sub-pt
-  % inset of the chip stroke and read as a tiny left gap).
-  %
-  % Shrink \linewidth to the span BETWEEN those slots; non-flush muted chrome
-  % pulls left by one hairline and spans inner+2·hairline so chip L/R sit on
-  % the outer faces.
-  \multicolumn{#1}{@{\semio@table@border@L@chrome}@{}l@{\semio@table@border@R@chrome}}{%
+  % 🩹 Chrome spans the full table width with flush muted chips (no side
+  % border slots, no shrink, no hairline pull). Body rows keep @{\border@L};
+  % chip L then shares that same outer x. Phantom-L + hspace* pull still left a
+  % ~0.5pt inset at the chip top-left (measured dark Zugang).
+  \multicolumn{#1}{@{}l@{}}{%
     \begingroup
-      \setlength{\linewidth}{\dimexpr\linewidth-2\arrayrulewidth\relax}%
-      \setlength{\hsize}{\linewidth}%
+      \semio@window@header@flushtrue
       \semio@window@header@invoke
+      \semio@window@header@flushfalse
     \endgroup
   }%
   \\%

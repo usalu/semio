@@ -1,0 +1,116 @@
+{
+  "outPng": ".repo/🎫/26/08/04/FIX-WINDOW-SHORT-TABLE-GEOMETRY/corner-seite-R.png",
+  "size": {
+    "width": 400,
+    "height": 305
+  },
+  "topY": 19,
+  "rightX": 253,
+  "cornerPixelInk": true,
+  "cornerLum": 144,
+  "notchGap": false,
+  "sample": [
+    {
+      "x": 253,
+      "y": 17,
+      "lum": 243,
+      "ink": false
+    },
+    {
+      "x": 253,
+      "y": 18,
+      "lum": 243,
+      "ink": false
+    },
+    {
+      "x": 247,
+      "y": 19,
+      "lum": 154,
+      "ink": true
+    },
+    {
+      "x": 248,
+      "y": 19,
+      "lum": 136,
+      "ink": true
+    },
+    {
+      "x": 249,
+      "y": 19,
+      "lum": 136,
+      "ink": true
+    },
+    {
+      "x": 250,
+      "y": 19,
+      "lum": 136,
+      "ink": true
+    },
+    {
+      "x": 251,
+      "y": 19,
+      "lum": 136,
+      "ink": true
+    },
+    {
+      "x": 252,
+      "y": 19,
+      "lum": 136,
+      "ink": true
+    },
+    {
+      "x": 253,
+      "y": 19,
+      "lum": 144,
+      "ink": true
+    },
+    {
+      "x": 254,
+      "y": 19,
+      "lum": 243,
+      "ink": false
+    },
+    {
+      "x": 255,
+      "y": 19,
+      "lum": 243,
+      "ink": false
+    },
+    {
+      "x": 253,
+      "y": 20,
+      "lum": 130,
+      "ink": true
+    },
+    {
+      "x": 253,
+      "y": 21,
+      "lum": 130,
+      "ink": true
+    },
+    {
+      "x": 253,
+      "y": 22,
+      "lum": 130,
+      "ink": true
+    },
+    {
+      "x": 253,
+      "y": 23,
+      "lum": 130,
+      "ink": true
+    },
+    {
+      "x": 253,
+      "y": 24,
+      "lum": 130,
+      "ink": true
+    },
+    {
+      "x": 253,
+      "y": 25,
+      "lum": 133,
+      "ink": true
+    }
+  ]
+}
