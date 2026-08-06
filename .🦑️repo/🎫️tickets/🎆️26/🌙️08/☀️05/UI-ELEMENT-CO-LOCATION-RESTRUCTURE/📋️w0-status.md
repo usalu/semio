@@ -323,6 +323,110 @@ like demo fixtures or `cva(...)` calls) — those need a direct core import from
 `🚧️W3-interim` barrel import, because the barrel↔leaf cycle makes the barrel copy's initialization order
 unreliable. A symbol read only inside hooks/render bodies is always safe via the barrel.
 
+## W4 renderer-engine-wgpu package move: COMPLETE (structurally AND content-clean — see update below)
+
+Moved `semio-framework-os-renderer-wgpu` (25,433-line `📦️lib.rs`) from
+`…📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementations/🦀️rust/` to
+`…📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/`, mirroring the W1 template exactly
+(delegated to a background agent with the W1 section as its explicit reference; independently
+re-verified afterward, not just trusting the report). This crate had NO downstream path-dependents
+(confirmed: only root `Cargo.toml`'s member list referenced it), so no cross-repo dependent rewrite was
+needed — simpler than the W1 moves. 17 dependency paths recomputed and `existsSync`-verified (not
+hand-counted); root `Cargo.toml` got exactly one line changed (member path) — confirmed via isolated
+`git diff` on just that line, the file's much larger overall diff is unrelated concurrent-session churn
+(a different plugin's entries being removed by another session, not touched by this move). Added
+`[package.metadata.semio] role = "framework"` marker matching the sibling crates. Also fixed extra
+files this crate has that `ui-wgpu` didn't: `project.json` (cwd/schema-depth/`namedInputs.default`),
+`script.ts`, `build.rs`, `package.json` (whose `$schema` path turned out to be **pre-existing broken**,
+pointing at a nonexistent location even before this move — fixed as a drive-by), a `🟦️typescript/`
+subdir's own import, plus two real in-`lib.rs` `#[path]`/`include_bytes!` depth bugs caught directly by
+cargo's own error output. Repo-wide swept and fixed real dependents: root `package.json` workspaces
+glob, `.storybook/scopes.ts`, `.vscode/launch.json` + `🧩️launch.seed.jsonc` (confirmed via
+`bun 🖥️launch.ts generate --check` → "is fresh", i.e. no-op regen as expected), `os/dev`'s
+`📜️script.ts`/`⚙️vite.config.ts`.
+
+**Verification, independently re-run myself** (not just the agent's self-report): old dir gone, new dir
+has all 14 expected files; root `Cargo.toml` member line correct; `cargo metadata --no-deps` for the
+whole workspace → exit 0. `cargo check -p semio-framework-os-renderer-wgpu` → **3 pre-existing content
+errors** (`E0425` cannot find type `HostEffect`, `E0433` cannot find module `dsl_core`, `E0308` argument
+mismatch on a `request_media_frames`-shaped call), confirmed identical (same codes, same call sites) both
+before and after the move by the agent, and I independently reran the check post-move myself and got the
+exact same 3 errors, nothing more, nothing new — genuinely a directory-structure-independent content bug
+deep in application logic (plausibly fallout from another session's in-flight `framework-core`/`dsl` API
+change, per this repo's known concurrent-churn pattern; `git status` shows no currently-uncommitted
+changes in those dirs, so if it's fallout it's from an already-landed change elsewhere). **Not fixed —
+genuinely out of this taxonomy-migration ticket's scope**, flagging for a separate ticket. Also confirmed
+`cargo check --features native-bin` (same 3 errors, lib fails before the bin target is even attempted)
+and `cargo check --target wasm32-unknown-unknown` (this crate's real wasm target, confirmed via its
+`web-sys`/`wasm-bindgen` cfg block — NOT `wasm32-wasip2` like `ui-wgpu`; 7 errors: the same 3 plus 4 more
+from `dsl`/`store` being used unconditionally in `lib.rs` despite being wasm32-gated out in `Cargo.toml`
+— same root cause, same out-of-scope call).
+
+**Update: fixed all 3, plus a 4th latent bug the fix exposed.** Re-examined instead of deferring, since
+leaving a crate in the taxonomy tree that doesn't compile blocks ever verifying its own widget
+extraction. All 3 were genuine, narrow, mechanical bugs, not deep design problems:
+1. `E0425 HostEffect` — the outer `program_bridge` mod's own `use` block (line 5909) was simply missing
+   `HostEffect`; the inner `wasm_program_exchange` sub-mod 20 lines below it already correctly imported
+   `semio_framework_core::kernel::HostEffect` — added the same import to the outer mod.
+2. `E0433 dsl_core` — a genuinely missing Cargo dependency, not a missing `use`: `dsl_core::decode_fault_bytes`
+   needs the separate `semio-framework-os-kernel-dsl-core` crate (`🗣️dsl/🫀️core/⚡️implementations/🦀️rust`),
+   which this crate's `Cargo.toml` never listed (only its sibling `dsl` = `semio-framework-os-kernel-dsl`
+   was present). Confirmed the exact dependency-declaration pattern from 7 other crates that already
+   depend on it (`dsl_core = { path = "...", package = "semio-framework-os-kernel-dsl-core" }`),
+   computed+verified the relative path from this crate's NEW location with `path.relative()`, added it
+   to `[target.'cfg(not(target_arch = "wasm32"))'.dependencies]` alongside `dsl`/`store`/`protocol`.
+3. `E0308 request_media_frames` — 4 destructured `String` fields (`accept`/`frame_action`/`done_action`/
+   `fallback_action`) passed by value where the callee wants `&str` — took references at the call site
+   (Deref coercion handles `&String` → `&str` automatically), zero behavior change.
+4. **Latent 4th bug, only surfaced once #1-3 stopped masking it**: `--features native-bin` failed with
+   `E0432 unresolved import semio_framework_renderer_wgpu` — `📦️bin.rs` used the WRONG crate name
+   (missing the `os_` segment the actual package name `semio-framework-os-renderer-wgpu` requires,
+   confirmed against `[package] name` and `run_native`'s real definition site in `lib.rs`). Fixed the
+   one-line import. This bug could never have been *seen* before, since `cargo check`'s default run
+   fails on the lib target first and never even attempts the bin target while errors #1-3 stood.
+
+Re-verified after all 4 fixes: `cargo check -p semio-framework-os-renderer-wgpu` → **0 errors** (138
+pre-existing warnings, unrelated dead-code/style lints, not this ticket's concern), confirmed via both
+grep-for-error-lines and exit code. **`--target wasm32-unknown-unknown` verification is currently
+blocked** by an unrelated, external, in-flight concurrent session: `cargo`'s workspace resolver reports
+"multiple workspace roots found" because another session has an uncommitted `[workspace]` table added to
+`✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/Cargo.toml` (confirmed via `git status` — modified +
+untracked `Cargo.lock`, someone else's in-progress edit, not touched by this ticket). This is a
+workspace-wide resolver error, not specific to this crate — it currently blocks `cargo metadata` for the
+ENTIRE repo, not just this check. Not something to fix myself (not this ticket's file, another session's
+active work) — backgrounded a Monitor watch waiting for it to clear and will complete the
+wasm32-unknown-unknown verification once it does, rather than block on it or claim false certainty.
+
+**wasm32-unknown-unknown target: still 5 errors, NOT fixed, judged genuinely out of scope.** Once the
+external "multiple workspace roots" resolver conflict cleared (another session's uncommitted
+`[workspace]` table in `🌀️procedural`'s Cargo.toml — confirmed via `git status`, not this ticket's file,
+left untouched), re-ran the wasm32 check: `dsl::DslValue`/`store::pack_rt::*` are called
+UNCONDITIONALLY at 5 call sites (in `dock`, `program_bridge`, and `shell` modules) despite both crates
+being declared under `[target.'cfg(not(target_arch = "wasm32"))'.dependencies]` in `Cargo.toml` —
+meaning either those call sites need `#[cfg(not(target_arch = "wasm32"))]` guards, or `dsl`/`store`
+genuinely need to be available on wasm32 too (the crate's own doc header calls itself a "WASM renderer",
+so excluding them entirely could itself be the actual bug). Unlike the 4 fixes above (missing import,
+missing dependency, type coercion, wrong crate name — all mechanical, single correct answer), this
+needs an architectural call about which side is wrong, which risks changing real runtime behavior on the
+crate's primary target rather than a structural fix. Also: this crate's `Trunk.toml`/`🌐️index.html` were
+already flagged during the move as having broken/unreachable relative paths pre-dating this ticket,
+suggesting its wasm-specific build pipeline may already be stale/unmaintained in practice. Left
+unfixed — flagging for a separate ticket with someone who knows the intended wasm/native split here.
+Plain `cargo check`/`--features native-bin` (what regular dev workflows actually use) are both clean.
+
+**W4 renderer-engine-wgpu module extraction: IN PROGRESS.** With the crate's default-target build now
+clean, launched a 7-agent sequential Workflow (one shared `lib.rs`, so strictly serialized) to split its
+7 top-level `pub mod` blocks — `dock` (~1954 lines, NEW `Dock` element, no react counterpart exists yet),
+`engine_canvas` (~2019 lines, NEW `EngineCanvas`), `interpreter` (~1915 lines, existing `Interpreter`
+dir, react counterpart already extracted), `program_bridge` (~588 lines, NEW `ProgramBridge`), `scenes`
+(~6653 lines, NEW `Scenes`, kept as one file per this ticket's precedent of not force-splitting large
+cohesive blocks further), `shell` (~11054 lines, existing `Shell` dir), `icon_atlas` (~174 lines,
+existing `IconRenderHost` dir) — into `🧱️elements/<Name>/🧊️component.rs`, wired back via
+`#[path = "..."] pub mod <name>;` at the original crate-root location (module NAME never changes, so
+every `crate::<name>::…` reference elsewhere in the file needs zero other edits). `mod
+generated_plugin_hosts;` (already `#[path]`-backed to a registry-generated file) and the crate's own
+`camera_dispatch_deadline_tests` mod are explicitly excluded from this extraction, left in place.
+
 ## W4 follow-up: renderer-engine-react barrel had incomplete re-exports (module-load crash, separate from the ui-react circular-import class)
 
 While verifying the ui-react fix above, ran `bun ./📜️script.ts test` on `framework-renderer-react`

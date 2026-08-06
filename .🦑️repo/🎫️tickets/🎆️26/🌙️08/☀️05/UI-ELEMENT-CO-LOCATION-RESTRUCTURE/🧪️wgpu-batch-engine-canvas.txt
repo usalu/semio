@@ -1,0 +1,61 @@
+Batch: wgpu extraction — engine_canvas mod
+Crate: semio-framework-os-renderer-wgpu
+File edited: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️lib.rs
+
+Element: EngineCanvas (NEW dir, no react counterpart) -> wrote
+🧧️elements-path: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EngineCanvas/🧊️component.rs
+mod name: engine_canvas (unchanged — every `crate::engine_canvas::...` call site elsewhere in
+lib.rs, e.g. lines ~2533, 2875, 2905-3167, 7373-7458+, keeps resolving with zero other edits.)
+
+Line range extracted (pre-edit lib.rs, re-grepped fresh via `grep -n "^pub mod engine_canvas {"`
+which landed at line 20, matching next `pub mod interpreter {` at line 2039): opening brace at
+line 20, matching closing brace at line 2037 (confirmed by a brace-depth-counting script, landed
+exactly 1 line before the next `pub mod interpreter {` at 2039 — sane). Inner body = lines 21-2036
+(2016 raw lines). Extracted via `sed -n '21,2036p'`, then dropped the outer
+`// #region engine_canvas` / `// #endregion engine_canvas` wrapper comment lines (redundant once
+it's its own file) and the inner `//! 🎨️ Embeds...` doc line (moved up into the new file's header
+docstring, same pattern as the Dock pilot), dedented the remaining 2013 lines by 4 spaces (was
+indented one level inside `pub mod engine_canvas { ... }`), brace-balance-checked the dedented
+body (depth 0) before writing.
+
+lib.rs edit: replaced the entire `pub mod engine_canvas { ... }` block (lines 20-2037) with:
+  #[path = "../../../../🧱️elements/EngineCanvas/🧊️component.rs"]
+  pub mod engine_canvas;
+Sanity-checked the full-file line-count arithmetic before writing back (19 head + 2 new + 21446
+tail = 21467, matches wc -l of the assembled replacement) and re-read the seam (lines 15-26) by
+eye before committing.
+
+Post-edit sanity: brace-balance-checked both files again after the header/dedent work (lib.rs:
+depth 0; EngineCanvas/🧊️component.rs: depth 0). No stray `region engine_canvas`/`endregion
+engine_canvas` markers remain in either file (grepped both, zero hits).
+
+Verification: DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo check -p
+semio-framework-os-renderer-wgpu
+Result: BLOCKED — external, unrelated concurrent workspace churn, same class as documented in
+📋️w0-status.md's W4 section and [[feedback-concurrent-cargo-workspace-churn]]. Every attempt
+(5 retries over several minutes, plus a 4-minute backgrounded Monitor poll) hit the identical
+error:
+  error: failed to load manifest for workspace member
+  `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/⚡️implementations/🦀️rust`
+  referenced by workspace at `/Users/ueli/Documents/semio/Cargo.toml`
+  Caused by:
+    failed to read `.../⚡️implementations/🦀️rust/Cargo.toml`
+  Caused by:
+    No such file or directory (os error 2)
+Confirmed via `git status --porcelain` on that exact path: another session is mid-migration of
+the `🏗️bim` plugin from its old `⚡️implementations/🦀️rust` location to a new
+`📦️packages/🦀️rust` taxonomy location (staged deletes/adds on both the old and new paths,
+`MD`/`AD`/`AM` status lines) — a workspace-wide resolver failure unrelated to any file this batch
+touched (never mentions `wgpu`, `engine_canvas`, or any renderer-engine path). Not something to
+fix myself (not this ticket's file, another session's active work), consistent with this exact
+scenario's stated handling in the batch instructions.
+
+**Reported as hand-verified-only, not cargo-check-verified**, per the instructions for this exact
+"transient external workspace error" case. Hand verification performed: module-path mapping
+(`crate::engine_canvas::...` call sites unchanged, `use` statements preserved verbatim by the
+dedent-only transform), brace-balance checks on both files pre- and post-edit, line-count
+arithmetic on the full-file reassembly, and an eyeball read of the seam and both file boundaries.
+Next session/agent picking this up: retry `DEVELOPER_DIR=/Library/Developer/CommandLineTools
+cargo check -p semio-framework-os-renderer-wgpu` once the `🏗️bim` plugin migration's workspace
+churn settles — expect the same 138 pre-existing warnings, 0 errors, per the crate's confirmed
+pre-batch baseline (this ticket's own W4 status entry).

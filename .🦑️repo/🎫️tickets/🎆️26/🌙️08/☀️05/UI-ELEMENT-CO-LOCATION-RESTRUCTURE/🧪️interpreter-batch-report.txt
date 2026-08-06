@@ -1,0 +1,73 @@
+Batch: mod "interpreter" -> element dir "Interpreter" (EXISTING, react-side had 🟦️component.tsx only)
+
+Source: framework/products/os/modules/renderer/engine/packages/rust/targets/wgpu/lib.rs
+  - "pub mod interpreter {" opening line: 23 (re-grepped fresh; earlier dock/engine_canvas batches
+    had already shifted lib.rs down from its original ~25400-line size to 21467 lines before this
+    batch started)
+  - matching closing "}": line 1936 (brace-counted with a naive {}-counter script that walks
+    char-by-char from the opening brace; lands immediately before the next "pub mod program_bridge {"
+    at line 1938, as expected -- sanity check passed)
+  - inner content extracted: lines 24-1935 (1912 raw lines)
+    - line 24 was "// #region interpreter" and line 1935 was "// #endregion interpreter" -- outer
+      region markers wrapping the whole mod body; dropped as redundant once the mod is a standalone
+      file (consistent with the Dock batch precedent). Every other inner marker (none in this module
+      besides the "//#endregion 🔬️Introspection" subregion close) was preserved as-is.
+    - remaining 1910 lines dedented by 4 spaces (verified beforehand that all 1912 raw lines were
+      blank or indented >=4 spaces, so a uniform single-level dedent via `sed 's/^    //'` is safe)
+
+Created: framework/products/os/modules/renderer/engine/elements/Interpreter/🧊️component.rs
+  (1917 lines: 7-line doc-comment header I wrote + 1910 lines of dedented body, the first of which
+  is the module's own original inner doc line "//! 🧩️ Maps framework UiNode trees to ui_wgpu widget
+  nodes." kept as the header's closing paragraph, matching Dock/EngineCanvas precedent). Element dir
+  "Interpreter" already existed (react side only, 🟦️component.tsx) -- this wgpu 🧊️component.rs is
+  the new sibling leaf, no dir creation needed.
+
+lib.rs edit: replaced lines 23-1936 (original block) with:
+  #[path = "../../../../🧱️elements/Interpreter/🧊️component.rs"]
+  pub mod interpreter;
+  Module name "interpreter" unchanged. lib.rs line count: 21467 -> 19555 (delta -1912, matches
+  1914 removed lines minus the 2 replacement lines).
+
+Hand-verification (cargo check blocked -- see below -- so verified by diff/brace-balance instead):
+  - diff of lib.rs head (lines 1-22, before the mod) old vs new: IDENTICAL
+  - diff of lib.rs tail (old lines 1937-end vs new lines 25-end, i.e. everything after the
+    replacement) : IDENTICAL, untouched
+  - diff of the component.rs file's body (everything after my 7-line header) vs the independently
+    saved raw-extraction-minus-region-markers file : IDENTICAL, byte-for-byte, 1910 lines both sides
+  - net brace balance of the full component.rs file, counted char-by-char: 0 (balanced)
+  - grepped `crate::interpreter::...` call sites elsewhere in lib.rs (e.g. lines 622, 1888, 2223,
+    2606, ...): all still present and syntactically valid references to the unchanged module name
+  => content-integrity fully verified by diff/brace-balance; did NOT get a compiler pass on this
+     specific edit due to the blocker below.
+
+cargo check result: BLOCKED, not by my change. Ran twice (incl. one retry after an 8s wait per
+instructions). Same error both times, verbatim:
+
+  error: failed to load manifest for workspace member
+  `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/⚡️implementations/🦀️rust`
+  referenced by workspace at `/Users/ueli/Documents/semio/Cargo.toml`
+
+  Caused by:
+    failed to read
+    `.../✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/⚡️implementations/🦀️rust/Cargo.toml`
+
+  Caused by:
+    No such file or directory (os error 2)
+
+  This is not the exact "multiple workspace roots" message named in the task, but the same class:
+  a workspace-manifest-level failure (fails before cargo reaches
+  semio-framework-os-renderer-wgpu specifically) pointing at ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim
+  -- a completely different plugin/technology than anything touched in this batch (renderer/engine/
+  wgpu/Interpreter). Confirmed via `find` that
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/⚡️implementations/ does not exist on disk, i.e. some other
+  concurrent session has that plugin's crate-and-taxonomy migration mid-flight (git status at session
+  start showed several other live PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION tickets in
+  progress: PUZZLE, RASTER, SPACE, BLOCK, and the dock-batch-report from this same ticket hit an
+  analogous missing-workspace-member error against a different plugin, trinity/jack, confirming this
+  is a recurring transient condition from concurrent sessions, not a fixed state). Root Cargo.toml
+  itself also shows as locally modified per the initial git status. Not something I touched or
+  attempted to fix -- out of scope, different technology, per the task's explicit instruction not to
+  chase this class of error.
+
+  Per the task's contingency instructions, treating my own edit as hand-verified-only (see diff/
+  brace-balance verification above) and reporting this blocker rather than attempting a fix.

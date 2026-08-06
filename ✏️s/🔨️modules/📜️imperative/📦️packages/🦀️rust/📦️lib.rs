@@ -1,0 +1,14 @@
+//! ⚙️ Headless imperative engine: ordered path of side-effect steps.
+
+#[path = "../../⚙️engine/🦀️component.rs"]
+pub mod engine;
+
+#[path = "../../📝️compiler/🦀️component.rs"]
+pub mod compiler;
+
+#[path = "../../📇️registry/🦀️component.rs"]
+pub mod registry;
+
+pub use compiler::compile_to_text;
+pub use engine::{EffectLogEntry, Executor, Path, RunResult, Step};
+pub use registry::{imperative_catalogue_json, imperative_module_registry};

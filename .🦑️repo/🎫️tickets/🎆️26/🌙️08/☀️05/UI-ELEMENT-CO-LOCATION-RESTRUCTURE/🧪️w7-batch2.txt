@@ -1,0 +1,3 @@
+W7 batch: Accordion, ActionGroup, Avatar, Band, Breadcrumb, Canvas, Card, Collapsible, Combobox
+All 9 moved via mv (no retype). No relative imports found in any file (all imports are bare specifiers: @semio-tech/ui-react, @storybook/react, react-router, react). No import fixups needed.
+Titles verified byte-identical (meta.title) pre/post move via git show HEAD vs new file, and via direct pre-move grep vs post-move grep.

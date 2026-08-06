@@ -1,0 +1,12 @@
+import { discoverPackages, discoverPackageProblems, discoverOwners, discoverBurndown, validateTaxonomy, getWorkspaceRoot } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+const root = getWorkspaceRoot();
+console.log("=== validateTaxonomy ===", validateTaxonomy());
+const pkgs = discoverPackages(root);
+console.log("=== packages:", pkgs.length);
+for (const p of pkgs) console.log(` ${p.role}\t${p.lang}\t${p.target ?? "-"}\t${p.area}\t${p.maturity}\t${p.id}\t${p.ownerRel}`);
+const owners = discoverOwners(root);
+console.log("=== owners:", owners.length);
+for (const o of owners) console.log(` ${o.ownerRel}\tarea=${o.area}\t${o.maturity}\tlangs=${o.langs.join("|")}\ttargets=${o.targets.join("|")}\troles=${o.roles.join("|")}\tresidual=${o.residualImplDirs}\trootEntries=${o.entryFilesAtOwnerRoot.join("|")}`);
+console.log("=== problems ===", JSON.stringify(discoverPackageProblems(root), null, 1));
+const b = discoverBurndown(root);
+console.log("=== burndown ===", JSON.stringify({ ownersTotal: b.ownersTotal, packagesTotal: b.packagesTotal, cleanOwners: b.cleanOwners, mixedOwners: b.mixedOwners.map((o) => `${o.ownerRel}:${o.residualImplDirs}:${o.entryFilesAtOwnerRoot.join(",")}`), implDirsTotal: b.implDirsTotal, implDirsByArea: b.implDirsByArea, unmarkedManifests: b.unmarkedManifests, packagingViolations: b.packagingViolations.map((v) => v.path) }, null, 1));

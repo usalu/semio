@@ -1,0 +1,92 @@
+=== 📐️brep/⚙️engine ===
+    Updating crates.io index
+    Blocking waiting for file lock on package cache
+     Locking 30 packages to latest compatible versions
+      Adding pollster v0.4.0 (available: v1.0.1)
+    Blocking waiting for file lock on package cache
+   Compiling futures-io v0.3.33
+   Compiling syn v2.0.119
+   Compiling futures-macro v0.3.33
+   Compiling futures-util v0.3.33
+   Compiling futures-executor v0.3.33
+   Compiling futures v0.3.33
+   Compiling semio-framework-os-kernel-3d-brep-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️modules/🧊️3d/📐️brep/⚙️engine/⚡️implementations/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 6m 11s
+     Running unittests ../../../../📐️brep/⚙️engine/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/kernel_3d_engine-6623179fa076eff0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+=== 🥽️mesh ===
+test tests::rotate_mesh_rotates_vertices_about_axis ... ok
+test tests::scale_mesh_scales_vertices ... ok
+test tests::set_shading_rejects_invalid_handle_and_marks_smooth ... ok
+test tests::set_vertex_position_updates_and_rejects_invalid_handle ... ok
+test tests::rotate_vertices_rejects_empty_and_rotates_around_pivot ... ok
+test tests::scale_vertices_rejects_empty_and_scales_around_pivot ... ok
+test tests::snap_vertices_to_grid_rejects_non_positive_and_snaps ... ok
+test tests::tessellate_has_positions_and_indices ... ok
+test tests::tessellate_concave_face_tags_all_triangles_with_one_face_id ... ok
+test tests::to_obj_includes_uv_coordinates_when_present ... ok
+test tests::translate_moves_vertices ... ok
+test tests::triangulate_produces_triangles_only ... ok
+test tests::unwrap_uv_produces_bounded_coordinates ... ok
+test tests::subdivide_faces_rejects_empty_and_quadruples_selected_face ... ok
+test tests::vec3_dot_cross_length_lerp ... ok
+test tests::unwrap_uv_splits_islands_across_seam ... ok
+test tests::vec3_normalize_zero_vector_returns_zero ... ok
+test tests::vertex_position_invalid_handle_returns_err ... ok
+test tests::weld_coincident_vertices_unifies_independently_tessellated_seam ... ok
+test tests::decimate_converges_near_target_ratio_without_emptying_mesh ... ok
+test tests::decimate_reduces_vertices ... ok
+test tests::decimate_no_op_when_ratio_at_max_and_clamps_below_min ... ok
+
+test result: ok. 62 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+=== 🎬️scene ===
+test tests::ray_pick_mesh_detail_misses_when_aabb_not_hit ... ok
+test tests::ray_pick_mesh_detail_returns_triangle_index_and_barycentrics ... ok
+test tests::ray_plane_point_hits_plane_ahead_and_misses_parallel ... ok
+test tests::ray_plane_point_rejects_intersection_behind_origin ... ok
+test tests::ray_segment_distance_measures_perpendicular_gap ... ok
+test tests::ray_segment_distance_none_for_degenerate_segment ... ok
+test tests::rectangle_marquee_bounds_use_start_and_end_corners ... ok
+test tests::rotate_vector_by_90_degrees_around_z_axis ... ok
+test tests::screen_segment_distance_degenerate_segment_falls_back_to_point_distance ... ok
+test tests::screen_segment_distance_projects_point_onto_segment ... ok
+test tests::screen_select_components_default_granularity_selects_whole_instance ... ok
+test tests::screen_select_components_edge_granularity_selects_ids ... ok
+test tests::screen_select_components_face_granularity_selects_visible_triangle ... ok
+test tests::screen_select_components_skips_missing_mesh_lookup ... ok
+test tests::screen_select_components_vertex_granularity_selects_ids ... ok
+test tests::screen_select_instances_window_requires_full_vertex_enclosure ... ok
+test tests::segment_intersects_polygon_true_when_endpoint_inside ... ok
+test tests::segment_intersects_rect_detects_boundary_crossing ... ok
+test tests::segments_intersect_detects_collinear_touch ... ok
+test tests::segments_intersect_detects_proper_crossing ... ok
+test tests::vec3_from_f64_converts_components ... ok
+test tests::screen_select_components_filters_by_active_instance_id ... ok
+
+test result: ok. 77 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+=== 🗺️spatial ===
+    Updating crates.io index
+     Locking 31 packages to latest compatible versions
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+   Compiling semio-framework-os-kernel-3d-brep-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️modules/🧊️3d/📐️brep/⚙️engine/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-3d-spatial v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️modules/🧊️3d/🗺️spatial/⚡️implementations/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 6.73s
+     Running unittests ../../../🗺️spatial/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/kernel_3d_spatial-95b09274b9cf1eea)
+
+running 5 tests
+test tests::aabb_overlap_finds_intersecting_leaves ... ok
+test tests::empty_bvh_returns_no_matches ... ok
+test tests::nearest_point_finds_closest_leaf ... ok
+test tests::ray_hits_only_crossed_leaves ... ok
+test tests::many_leaves_build_and_query_correctly ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+=== 📐️brep ===

@@ -10,6 +10,7 @@ import {
   coverageEnabled,
   daemonBudgetOpts,
   devToolingEnv,
+  discoverOwners,
   discoverPackages,
   dispatchPolicyArgv,
   dispatchSubcommand,
@@ -44,6 +45,7 @@ import {
   TEST_LEVELS,
   tryRun,
   type BreachRecord,
+  type PackageRole,
   type LcovFileRecord,
   type TestLevel,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
@@ -1465,7 +1467,7 @@ export class Neo4jCypherExport {
 /**
  * ⚖️ Wave 4 app-plugin consistency policy — the machine-checkable subset of the Wave 4 V1 (duplication),
  * V2 (structure), V3 (coupling) audit findings under `.🦑️repo/🎫️tickets/26/07/18/WAVE-4-*-AUDIT`, wired via
- * `repo/lib/js/🟨️nx-plugin.mjs` into the synthetic `breach-script_ts` nx lint target (`bun ./📜️script.ts policy`).
+ * `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🟨️nx-plugin.mjs` into the synthetic `breach-script_ts` nx lint target (`bun ./📜️script.ts policy`).
  * Judgment-call findings (a real SDK/primitive gap, e.g. the terminology native/reuse Labels axis, or
  * puzzle's icon-based `tree_item_with_action`) are encoded as explicit low-priority allowlisted/tracked
  * breaches, never as a hard `policy` failure — see `POLICY_SDK_GAP_ALLOWLIST` below.
@@ -1473,9 +1475,6 @@ export class Neo4jCypherExport {
 
 //#region 🔧️PolicyFsScan
 const POLICY_SKIP_DIRS = new Set(["node_modules", ".git", ".🦑️repo", "target", "dist", ".claude", "vendor", ".venv", ".turbo", ".nx", ".storybook", "storybook-static"]);
-
-/** 🌳️`✏️s/🔌️plugins` root — every plugin dir directly below it is `<emoji+variation-selector><ascii-slug>` (e.g. `📐️cad`, `🌊️flow`). */
-const POLICY_PLUGINS_ROOT = "✏️s/🔌️plugins";
 
 /** 🧹️Drops every non-ASCII codepoint (emoji + variation selectors), e.g. `"📐️cad"` -> `"cad"`, `"🗣️dsl"` -> `"dsl"`. */
 function policyStripEmoji(segment: string): string {
@@ -1491,17 +1490,36 @@ function policyCanonicalComponent(segment: string): string {
 }
 
 /**
- * 🔑Canonical `<pluginId>` scope key for a path under `✏️s/🔌️plugins/` — the ASCII plugin slug, stable
- * across the legacy per-module-crate layout AND the future one-crate-per-plugin taxonomy layout, so
+ * 🗂️Owner dirs of every discovered `role = "plugin"` package, longest first — the discovery-driven
+ * replacement for the old hardcoded `✏️s/🔌️plugins` prefix constant (mechanism step M4): "which plugin
+ * owns this path" is answered by the shared package catalog (`🔣️taxonomy.json` + `🟦️discovery.ts`)
+ * instead of a path literal this file has to keep in sync. Nested non-plugin owners (trinity's
+ * `role = "tool"` jack shell/lsp packages) are deliberately excluded so they keep resolving to their
+ * enclosing plugin's scope key, exactly as the prefix form did.
+ */
+const policyPluginOwnerCache = new Map<string, readonly string[]>();
+
+function policyPluginOwnerDirs(repoRoot: string): readonly string[] {
+  const cached = policyPluginOwnerCache.get(repoRoot);
+  if (cached) return cached;
+  const owners = [...new Set(discoverPackages(repoRoot).filter((pkg) => pkg.role === "plugin").map((pkg) => pkg.ownerRel))].sort((a, b) => b.length - a.length);
+  policyPluginOwnerCache.set(repoRoot, owners);
+  return owners;
+}
+
+/**
+ * 🔑Canonical `<pluginId>` scope key for a path inside a discovered plugin owner — the ASCII plugin slug,
+ * stable across the legacy per-module-crate layout AND the Shape V2 one-package-per-plugin layout, so
  * allowlists keyed off it survive the crate move untouched (see the master ticket's discovery contract).
- * Returns `""` for a path outside the plugins tree (framework/compose/etc. keep their own scope
+ * Returns `""` for a path outside every plugin owner (framework/hub/compose keep their own scope
  * identity — this function is deliberately plugin-scoped, matching every allowlist that uses it).
  */
-function policyScopeKey(cratePath: string): string {
-  const prefix = `${POLICY_PLUGINS_ROOT}/`;
-  if (!cratePath.startsWith(prefix)) return "";
-  const pluginSegment = cratePath.slice(prefix.length).split("/")[0] ?? "";
-  return policyStripEmoji(pluginSegment);
+function policyScopeKey(repoRoot: string, relPath: string): string {
+  const norm = relPath.replaceAll("\\", "/");
+  for (const owner of policyPluginOwnerDirs(repoRoot)) {
+    if (norm === owner || norm.startsWith(`${owner}/`)) return policyStripEmoji(owner.split("/").pop() ?? "");
+  }
+  return "";
 }
 
 /** 🔑The `🎛️apps/<app>` id inside a crate path (ASCII, e.g. `"3d"`, `"5d"`), or `""` when the crate isn't nested under an app dir (plugin-root module/manifest crates). Used as the disambiguator for allowlist keys where the app id itself (not an enclosing `pub mod`, which no longer exists now each app is its own crate) is what distinguishes sibling crates of a multi-app plugin. */
@@ -1568,64 +1586,109 @@ function policyNormalizeRelPath(relPath: string): string {
   return norm;
 }
 
-/** 🏗️One discovered plugin crate: `dir` is its Cargo.toml-containing directory (repo-relative), `libRelPath` its crate-root source file (repo-relative — NOT always `${dir}/📦️lib.rs`: the future taxonomy shape's root lives two levels up from the `📦️packages/🦀️rust` Cargo.toml dir, per the plan's `[lib] path = "../../📦️lib.rs"` sandwich). */
-type PolicyCrateRef = { dir: string; libRelPath: string; shape: "legacy" | "taxonomy" };
+/**
+ * 🏗️One discovered rust crate. `dir` is its `Cargo.toml`-containing directory (repo-relative),
+ * `libRelPath` its crate-root source file as the manifest itself declares it (`[lib]`/`[[bin]]`
+ * `path`) — never assumed, because the two shapes disagree: Shape V2 keeps the entry beside the
+ * manifest (`📦️packages/🦀️rust/📦️lib.rs`) while the Shape V1 leftovers still point two levels up
+ * (`path = "../../📦️lib.rs"`). `role`/`ownerRel`/`area` come straight from the shared discovery
+ * contract; `pluginId` is `""` for every crate outside a plugin owner (framework/hub/s-modules).
+ */
+type PolicyCrateRef = {
+  dir: string;
+  libRelPath: string;
+  shape: "legacy" | "taxonomy";
+  role: PackageRole | "";
+  ownerRel: string;
+  pluginId: string;
+  area: string;
+};
+
+/** 🚦️Priority floor for a rule firing on newly-visible surface: framework/hub/s-module crates entered these rules' field of view only with mechanism step M4, so their findings land as tracked (`"low"`) until a dedicated sweep triages them — plugin findings keep the priority the rule already used. */
+function policyNewSurfacePriority(crate: PolicyCrateRef, pluginPriority: BreachRecord["priority"]): BreachRecord["priority"] {
+  return crate.pluginId ? pluginPriority : "low";
+}
+
+/** 🚪️Crate-root source file a `Cargo.toml` declares, resolved repo-relative: reads the `[lib]`/`[[bin]]` `path` key, falling back to the vocabulary's rust entry filenames beside the manifest and then at the owner root. */
+function policyCrateEntryPath(repoRoot: string, manifestDirRel: string, ownerRel: string): string {
+  const manifestAbs = join(repoRoot, manifestDirRel, "Cargo.toml");
+  if (existsSync(manifestAbs)) {
+    const lines = readFileSync(manifestAbs, "utf8").split(/\r?\n/);
+    for (let i = 0; i < lines.length; i++) {
+      if (!/^\s*\[\[?(?:lib|bin)\]?\]\s*$/.test(lines[i]!)) continue;
+      for (let j = i + 1; j < lines.length && !/^\s*\[/.test(lines[j]!); j++) {
+        const declared = lines[j]!.match(/^\s*path\s*=\s*"([^"]+)"\s*$/)?.[1];
+        if (declared) return relative(repoRoot, resolve(join(repoRoot, manifestDirRel), declared)).replaceAll("\\", "/");
+      }
+    }
+  }
+  for (const entry of loadTaxonomy().ecosystems["🦀️rust"]?.entryFilenames ?? []) {
+    if (existsSync(join(repoRoot, manifestDirRel, entry))) return `${manifestDirRel}/${entry}`;
+    if (existsSync(join(repoRoot, ownerRel, entry))) return `${ownerRel}/${entry}`;
+  }
+  return `${manifestDirRel}/📦️lib.rs`;
+}
 
 /**
- * 🔎️Discovers every real plugin crate under `✏️s/🔌️plugins/`. PRIMARY (today's real shape, W0–W3):
- * any `⚡️implementations/🦀️rust` dir holding both `Cargo.toml` and `📦️lib.rs` — this recursive walk
- * (not a fixed-depth pattern) naturally covers the app-level bundle crate
- * (`<plugin>/🎛️apps/<app>/⚡️implementations/🦀️rust`), every per-module crate
- * (`<plugin>/🎛️apps/<app>/🔨️modules/{⚙️engine,🗣️dsl,🔧️op,🎒️pack,📡️protocol,🖱️ui}/⚡️implementations/🦀️rust`),
- * plugin-root modules (`<plugin>/🔨️modules/<module>/⚡️implementations/🦀️rust`), the manifest/artifact
- * crate (`<plugin>/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust`), and extension crates alike — every
- * shape that exists in the repo today. TOLERANT secondary (future taxonomy shape, W1+): a plugin
- * already migrated to `<plugin>/📦️packages/🦀️rust/Cargo.toml` is also recognized, with its crate root
- * resolved at the owner (plugin) root per the plan's `#[path]` sandwich — both shapes may coexist for
- * an "in-flight" plugin during W1–W3 (see the master ticket's `LEGACY_LAYOUT_TOLERANT` discovery contract).
+ * 🔎️Discovers every rust crate these rules can see, driven by the shared package catalog
+ * (`discoverPackages`/`discoverOwners` over `🔣️taxonomy.json`) rather than by a hardcoded area path.
+ * PRIMARY: every `📦️packages/🦀️rust[/🎯️targets/<target>]/Cargo.toml` carrying a semio role marker —
+ * plugins AND, for the first time (mechanism step M4), framework/hub/s-module/tool packages, which the
+ * previous Shape-V1-only matcher could never see. SECONDARY (burn-down, deleted at the finalization
+ * flip): residual `⚡️implementations/🦀️rust` sandwiches *inside* an already-discovered owner, so a
+ * half-migrated owner keeps being checked; an owner that has not adopted `📦️packages` at all is
+ * pre-contract and stays out of scope until it does.
  */
-function policyDiscoverPluginCrateDirs(repoRoot: string): PolicyCrateRef[] {
-  const found: PolicyCrateRef[] = [];
-  let pluginNames: string[];
-  try {
-    pluginNames = readdirSync(join(repoRoot, POLICY_PLUGINS_ROOT), { withFileTypes: true })
-      .filter((e) => e.isDirectory() && !POLICY_SKIP_DIRS.has(e.name))
-      .map((e) => e.name);
-  } catch {
-    pluginNames = [];
+function policyDiscoverCrateDirs(repoRoot: string): PolicyCrateRef[] {
+  const taxonomy = loadTaxonomy();
+  const found = new Map<string, PolicyCrateRef>();
+
+  for (const pkg of discoverPackages(repoRoot, taxonomy)) {
+    if (pkg.lang !== "🦀️rust") continue;
+    found.set(pkg.packageRel, {
+      dir: pkg.packageRel,
+      libRelPath: policyCrateEntryPath(repoRoot, pkg.packageRel, pkg.ownerRel),
+      shape: "taxonomy",
+      role: pkg.role,
+      ownerRel: pkg.ownerRel,
+      pluginId: policyScopeKey(repoRoot, pkg.ownerRel),
+      area: pkg.area,
+    });
   }
 
-  for (const plugin of pluginNames) {
-    const pluginRel = `${POLICY_PLUGINS_ROOT}/${plugin}`;
-
+  for (const owner of discoverOwners(repoRoot, taxonomy)) {
+    const pluginId = policyScopeKey(repoRoot, owner.ownerRel);
     const walkLegacy = (relDir: string): void => {
-      const abs = join(repoRoot, relDir);
       let entries: ReturnType<typeof readdirSync>;
       try {
-        entries = readdirSync(abs, { withFileTypes: true });
+        entries = readdirSync(join(repoRoot, relDir), { withFileTypes: true });
       } catch {
         return;
       }
       for (const ent of entries) {
-        if (!ent.isDirectory() || POLICY_SKIP_DIRS.has(ent.name)) continue;
+        if (!ent.isDirectory() || POLICY_SKIP_DIRS.has(ent.name) || ent.name === taxonomy.packagesDirName) continue;
         const childRel = `${relDir}/${ent.name}`;
         if (ent.name === "🦀️rust" && relDir.endsWith("/⚡️implementations")) {
-          if (existsSync(join(repoRoot, childRel, "📦️lib.rs")) && existsSync(join(repoRoot, childRel, "Cargo.toml"))) {
-            found.push({ dir: childRel, libRelPath: `${childRel}/📦️lib.rs`, shape: "legacy" });
+          if (!found.has(childRel) && existsSync(join(repoRoot, childRel, "📦️lib.rs")) && existsSync(join(repoRoot, childRel, "Cargo.toml"))) {
+            found.set(childRel, {
+              dir: childRel,
+              libRelPath: `${childRel}/📦️lib.rs`,
+              shape: "legacy",
+              role: pluginId ? "plugin" : (owner.roles[0] ?? ""),
+              ownerRel: owner.ownerRel,
+              pluginId,
+              area: owner.area,
+            });
           }
           continue;
         }
         walkLegacy(childRel);
       }
     };
-    walkLegacy(pluginRel);
-
-    const taxonomyCargoDir = `${pluginRel}/📦️packages/🦀️rust`;
-    if (existsSync(join(repoRoot, taxonomyCargoDir, "Cargo.toml")) && existsSync(join(repoRoot, pluginRel, "📦️lib.rs"))) {
-      found.push({ dir: taxonomyCargoDir, libRelPath: `${pluginRel}/📦️lib.rs`, shape: "taxonomy" });
-    }
+    walkLegacy(owner.ownerRel);
   }
-  return found.sort((a, b) => a.dir.localeCompare(b.dir));
+
+  return [...found.values()].sort((a, b) => a.dir.localeCompare(b.dir));
 }
 //#endregion 🔧️PolicyFsScan
 
@@ -2170,7 +2233,8 @@ function policyTestkitDelegateBreaches(scope: string, content: string): BreachRe
 }
 
 /** 📏️V1 rule: local `tree_item_with_action` redefinitions need an allowlisted SDK gap; other `tree_item_*` wrappers must delegate to it. */
-function policyTreeItemBreaches(scope: string, content: string, lines: readonly string[]): BreachRecord[] {
+function policyTreeItemBreaches(crate: PolicyCrateRef, content: string, lines: readonly string[]): BreachRecord[] {
+  const scope = crate.dir;
   const breaches: BreachRecord[] = [];
   const modSpans = policyParseModSpans(lines);
 
@@ -2182,7 +2246,7 @@ function policyTreeItemBreaches(scope: string, content: string, lines: readonly 
     // multiple apps namespaced by mod); today (and in the future taxonomy) each app is its own crate,
     // so fall back to the app id from the crate's own path when there's no such wrapper.
     const mod = policyModAtLine(modSpans, lineNo) || policyAppIdFromCrateDir(scope);
-    if (POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST.has(`${policyScopeKey(scope)}#${mod}`)) continue;
+    if (POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST.has(`${crate.pluginId}#${mod}`)) continue;
     breaches.push({
       id: `sdk-tree-item-redefinition-${scope}-${lineNo}`,
       summary: `Local "fn tree_item_with_action" shadows the SDK primitive of the same name`,
@@ -2220,7 +2284,8 @@ function policyTreeItemBreaches(scope: string, content: string, lines: readonly 
 }
 
 /** 📏️V1 rule: `struct XLabels` must be defined inside `semio_framework_plugin::app_labels! { ... }`, unless allowlisted as a documented SDK gap. */
-function policyLabelsStructBreaches(scope: string, content: string): BreachRecord[] {
+function policyLabelsStructBreaches(crate: PolicyCrateRef, content: string): BreachRecord[] {
+  const scope = crate.dir;
   const breaches: BreachRecord[] = [];
   const re = /struct\s+(\w*Labels)\s*\{/g;
   let m: RegExpExecArray | null;
@@ -2231,7 +2296,7 @@ function policyLabelsStructBreaches(scope: string, content: string): BreachRecor
     const lineNo = policyLineOfIndex(content, m.index);
     const precedingLines = content.split("\n").slice(Math.max(0, lineNo - 8), lineNo - 1);
     if (precedingLines.some((l) => l.includes("app_labels!"))) continue;
-    const allowed = POLICY_LABELS_TWO_AXIS_ALLOWLIST.has(`${policyScopeKey(scope)}#${structName}`);
+    const allowed = POLICY_LABELS_TWO_AXIS_ALLOWLIST.has(`${crate.pluginId}#${structName}`);
     breaches.push({
       id: `sdk-labels-struct-${scope}-${structName}`,
       summary: allowed ? `"struct ${structName}" is a tracked SDK-primitive gap (terminology axis) — Wave 4 decision pending` : `"struct ${structName}" hand-rolls its label set instead of semio_framework_plugin::app_labels!/LocaleLabels`,
@@ -2250,23 +2315,26 @@ function policyLabelsStructBreaches(scope: string, content: string): BreachRecor
 //#endregion 🔧️PolicyRuleSdkMechanisms
 
 //#region 🔧️PolicyRuleCargoArtifacts
-/** 📏️V2 rule: no stray `Cargo.lock`/`target/` checked into a discovered plugin crate dir. */
+/**
+ * 📏️V2 rule: no stray `Cargo.lock` checked into a discovered crate dir (the workspace root owns the
+ * single lockfile; a nested one is the classic leftover of an isolated verification overlay).
+ * `target/` is deliberately NOT checked: the repo-wide `.gitignore` `target/` entry makes an on-disk
+ * `target/` a local build product that can never be "checked into" anything, so flagging it would turn
+ * every developer's own `cargo build` into a high-priority breach.
+ */
 function policyCargoArtifactBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  for (const { dir } of crates) {
-    for (const stray of ["Cargo.lock", "target"]) {
-      if (existsSync(join(repoRoot, dir, stray))) {
-        breaches.push({
-          id: `stray-cargo-artifact-${dir}-${stray}`,
-          summary: `Stray "${stray}" checked into ${dir}/`,
-          kind: "app-plugin/stray-cargo-artifact",
-          scope: dir,
-          priority: "high",
-          reason: "Wave 4 V2 structure audit: plugin crates must not carry their own Cargo.lock or target/ (workspace-managed).",
-          solution: `Remove ${dir}/${stray} (and add it to .gitignore if missing).`,
-        });
-      }
-    }
+  for (const crate of crates) {
+    if (!existsSync(join(repoRoot, crate.dir, "Cargo.lock"))) continue;
+    breaches.push({
+      id: `stray-cargo-artifact-${crate.dir}-Cargo.lock`,
+      summary: `Stray "Cargo.lock" checked into ${crate.dir}/`,
+      kind: "app-plugin/stray-cargo-artifact",
+      scope: crate.dir,
+      priority: policyNewSurfacePriority(crate, "high"),
+      reason: "Wave 4 V2 structure audit: crates must not carry their own Cargo.lock (workspace-managed) — a nested one silently pins a second dependency graph.",
+      solution: `Remove ${crate.dir}/Cargo.lock (leftover of an isolated verification overlay).`,
+    });
   }
   return breaches;
 }
@@ -2281,14 +2349,13 @@ const POLICY_CARGO_DEP_RE = /^([\w.-]+)\s*=\s*\{[^\n]*?\bpath\s*=\s*"([^"]+)"[^\
  * list (`framework/`, `vcs/`, `protocol/`, …) that never matched this repo's real emoji-prefixed
  * directories (dead in the same way the discoverer below it was) — replaced with the structural check
  * that actually expresses the rule's intent: coupling is only a concern for dependencies that resolve
- * *inside* `✏️s/🔌️plugins/` (`policyScopeKey` returns `""` for anything else — framework/compose/hub/repo
- * infra is always allowed by construction, no prefix list to keep in sync).
+ * *inside* a discovered plugin owner (`policyScopeKey` returns `""` for anything else —
+ * framework/compose/hub/repo infra is always allowed by construction, no prefix list to keep in sync).
  */
 function policyAppCouplingBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const crateDirSet = new Set(crates.map((c) => c.dir));
   const breaches: BreachRecord[] = [];
-  for (const { dir } of crates) {
-    const selfPluginId = policyScopeKey(dir);
+  for (const { dir, pluginId: selfPluginId } of crates) {
     const cargoTomlAbs = join(repoRoot, dir, "Cargo.toml");
     if (!existsSync(cargoTomlAbs)) continue;
     const text = readFileSync(cargoTomlAbs, "utf8");
@@ -2299,7 +2366,7 @@ function policyAppCouplingBreaches(repoRoot: string, crates: readonly PolicyCrat
       const depPath = m[2]!;
       const resolvedAbs = resolve(join(repoRoot, dir), depPath);
       const resolvedRel = relative(repoRoot, resolvedAbs).split("\\").join("/");
-      const otherPluginId = policyScopeKey(resolvedRel);
+      const otherPluginId = policyScopeKey(repoRoot, resolvedRel);
       if (!otherPluginId || otherPluginId === selfPluginId) continue; // outside the plugins tree entirely, or the same plugin's own tree
       if (crateDirSet.has(resolvedRel)) {
         breaches.push({
@@ -2336,7 +2403,7 @@ function policyAppCouplingBreaches(repoRoot: string, crates: readonly PolicyCrat
 //#endregion 🔧️PolicyRuleAppCoupling
 
 //#region 🔧️PolicyRuleNoJsonFixtures
-/** 🔎️Repo-wide `.../example/*.json` file paths (repo-relative), skipping the same dirs `policyDiscoverPluginCrateDirs` skips. */
+/** 🔎️Repo-wide `.../example/*.json` file paths (repo-relative), skipping the same dirs `policyDiscoverCrateDirs` skips. */
 function policyDiscoverExampleJsonFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
@@ -2459,7 +2526,7 @@ function policyOpsGrammarBreaches(repoRoot: string): BreachRecord[] {
 //#endregion 🔧️PolicyRuleOpsGrammar
 
 //#region 🔧️PolicyRuleDslCompleteness
-/** 🔎️Repo-wide `*.rs` file paths (repo-relative), skipping the same dirs `policyDiscoverPluginCrateDirs` skips. */
+/** 🔎️Repo-wide `*.rs` file paths (repo-relative), skipping the same dirs `policyDiscoverCrateDirs` skips. */
 function policyAllRustFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
@@ -3167,57 +3234,55 @@ function policyMcpConfigBreaches(repoRoot: string): BreachRecord[] {
 
 //#region 🔧️PolicyRuleTaxonomy
 /**
- * 🎫️ W0 mechanism-prep (Crate Consolidation & Plugin Taxonomy Restructure, master ticket
- * `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`): four structural rules over the
- * FUTURE taxonomy shape (`<plugin>/📦️packages/🦀️rust`, `PolicyCrateRef.shape === "taxonomy"`).
- * Deliberately WARN-only (`priority: "medium"`, never `"high"`) — nothing has migrated in W0, so every
- * one of these is vacuous (0 breaches) against today's tree, exactly like `POLICY_GRAMMAR_FILE_ALLOWLIST`
- * was seeded empty for its own not-yet-adopted rule. They exist now so a later wave's per-plugin merge
- * agent gets real, immediate feedback instead of a silent gap; W4 finalization promotes them to `"high"`.
+ * 🎫️ Structural rules over the Shape V2 taxonomy tree (`<owner>/📦️packages/<lang>[/🎯️targets/<t>]`,
+ * `PolicyCrateRef.shape === "taxonomy"`), master ticket
+ * `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`. Their vocabulary is no longer
+ * duplicated here: every directory name, leaf filename and line budget below is read from the shared
+ * `🔣️taxonomy.json` via `loadTaxonomy()` (mechanism step M1), so a vocabulary edit can never leave the
+ * registry validator and this policy disagreeing again.
+ *
+ * 🚦️Severity: WARN-only (never `"high"`) until the finalization flip promotes them. Findings on
+ * framework/hub/s-module owners — surface these rules could not see at all before mechanism step M4
+ * removed the Shape-V1-only, plugins-only discoverer — land one notch lower still (`"low"`, via
+ * `policyNewSurfacePriority`), because nothing has ever triaged them.
  */
-
-/** 🌳️`<plugin>` root dir for a `PolicyCrateRef` of `shape: "taxonomy"` (its Cargo.toml dir is `<plugin>/📦️packages/🦀️rust`). */
-function policyTaxonomyPluginRoot(crateDir: string): string {
-  return crateDir.replace(/\/📦️packages\/🦀️rust$/, "");
-}
 
 function policyReaddirSafe(repoRoot: string, relDir: string): { name: string; isDirectory: boolean }[] {
   try {
-    return readdirSync(join(repoRoot, relDir), { withFileTypes: true }).map((e) => ({ name: e.name, isDirectory: e.isDirectory() }));
+    return readdirSync(join(repoRoot, relDir), { withFileTypes: true })
+      .filter((e) => !POLICY_SKIP_DIRS.has(e.name))
+      .map((e) => ({ name: e.name, isDirectory: e.isDirectory() }));
   } catch {
     return [];
   }
 }
 
-const POLICY_ARTIFACT_COMPONENT_DIRS = ["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr", "⚙️engine"];
-const POLICY_WINDOW_CHILD_DIRS = ["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options"];
-
 /**
  * 📏️Taxonomy validator, discovery-contract clause 1: every `🗿️artifacts/<a>/` may only contain the known
- * artifact component vocabulary (plus its own `🦀️component.rs`), and every `🪟️windows/<w>/` may only
- * contain `{🍱️panes,🪀️widgets,🪛️utilities,🎬️actions,🎚️options}` (plus its own `🦀️component.rs`) — see the
- * master ticket's discovery contract for the normative list.
+ * artifact child vocabulary (`taxonomy.artifactChildDirs`, plus its own leaf file), and every
+ * `🪟️windows/<w>/` may only contain `taxonomy.windowChildDirs` (plus its own leaf file).
  */
 function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
   const breaches: BreachRecord[] = [];
   for (const crate of crates) {
     if (crate.shape !== "taxonomy") continue;
-    const pluginRoot = policyTaxonomyPluginRoot(crate.dir);
-    const pluginId = policyScopeKey(pluginRoot);
+    const ownerRoot = crate.ownerRel;
+    const scopeId = crate.pluginId || policyStripEmoji(ownerRoot.split("/").pop() ?? "");
 
-    const artifactsRoot = `${pluginRoot}/🗿️artifacts`;
+    const artifactsRoot = `${ownerRoot}/${taxonomy.artifactsDirName}`;
     for (const artifact of policyReaddirSafe(repoRoot, artifactsRoot).filter((e) => e.isDirectory)) {
       const artifactDir = `${artifactsRoot}/${artifact.name}`;
       for (const child of policyReaddirSafe(repoRoot, artifactDir).filter((e) => e.isDirectory)) {
-        if (POLICY_ARTIFACT_COMPONENT_DIRS.includes(child.name)) continue;
+        if (taxonomy.artifactChildDirs.includes(child.name)) continue;
         breaches.push({
           id: `taxonomy-dirs-artifact-${artifactDir}-${child.name}`,
           summary: `"${artifactDir}/${child.name}" is not a recognized artifact component dir`,
           kind: "taxonomy/dirs",
-          scope: `${pluginId}/${policyStripEmoji(artifact.name)}`,
-          priority: "medium",
-          reason: `Discovery contract: an artifact dir may only contain ${POLICY_ARTIFACT_COMPONENT_DIRS.join(", ")}.`,
-          solution: `Move "${child.name}" into a recognized component dir, or if it's a genuinely new taxonomy vocabulary word, update POLICY_ARTIFACT_COMPONENT_DIRS with a ticket citation.`,
+          scope: `${scopeId}/${policyStripEmoji(artifact.name)}`,
+          priority: policyNewSurfacePriority(crate, "medium"),
+          reason: `Discovery contract: an artifact dir may only contain ${taxonomy.artifactChildDirs.join(", ")}.`,
+          solution: `Move "${child.name}" into a recognized component dir, or if it's a genuinely new taxonomy vocabulary word, add it to 🔣️taxonomy.json's artifactChildDirs with a ticket citation.`,
         });
       }
     }
@@ -3225,19 +3290,19 @@ function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly PolicyCra
     const walkForWindows = (relDir: string): void => {
       for (const entry of policyReaddirSafe(repoRoot, relDir).filter((e) => e.isDirectory)) {
         const childRel = `${relDir}/${entry.name}`;
-        if (entry.name === "🪟️windows") {
+        if (entry.name === taxonomy.windowsDirName) {
           for (const w of policyReaddirSafe(repoRoot, childRel).filter((e) => e.isDirectory)) {
             const windowDir = `${childRel}/${w.name}`;
             for (const child of policyReaddirSafe(repoRoot, windowDir).filter((e) => e.isDirectory)) {
-              if (POLICY_WINDOW_CHILD_DIRS.includes(child.name)) continue;
+              if (taxonomy.windowChildDirs.includes(child.name)) continue;
               breaches.push({
                 id: `taxonomy-dirs-window-${windowDir}-${child.name}`,
                 summary: `"${windowDir}/${child.name}" is not a recognized window child dir`,
                 kind: "taxonomy/dirs",
-                scope: `${pluginId}/${policyStripEmoji(w.name)}`,
-                priority: "medium",
-                reason: `Discovery contract: a window dir may only contain ${POLICY_WINDOW_CHILD_DIRS.join(", ")}.`,
-                solution: `Move "${child.name}" into a recognized window-child dir, or if it's a genuinely new taxonomy vocabulary word, update POLICY_WINDOW_CHILD_DIRS with a ticket citation.`,
+                scope: `${scopeId}/${policyStripEmoji(w.name)}`,
+                priority: policyNewSurfacePriority(crate, "medium"),
+                reason: `Discovery contract: a window dir may only contain ${taxonomy.windowChildDirs.join(", ")}.`,
+                solution: `Move "${child.name}" into a recognized window-child dir, or if it's a genuinely new taxonomy vocabulary word, add it to 🔣️taxonomy.json's windowChildDirs with a ticket citation.`,
               });
             }
           }
@@ -3246,59 +3311,59 @@ function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly PolicyCra
         walkForWindows(childRel);
       }
     };
-    walkForWindows(`${pluginRoot}/🎛️apps`);
+    walkForWindows(`${ownerRoot}/${taxonomy.appsDirName}`);
   }
   return breaches;
 }
 
-const POLICY_TAXONOMY_LEAF_PARENT_DIRS = ["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr", "🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options", "🎮️commands", "🛠️tools", "📌️panels"];
-
-/** 📏️Taxonomy validator, discovery-contract clause 2: every taxonomy leaf's primary source file is literally named `🦀️component.rs` (sibling `🦀️<topic>.rs` files are allowed alongside it, per the plan's `⚙️engine` big-engine allowance — this only requires component.rs to be present, not exclusive). */
+/** 📏️Taxonomy validator, discovery-contract clause 2: every taxonomy leaf's primary source file is literally named after its lang (`taxonomy.taxonomyLeafFilenames`, e.g. `🦀️component.rs`); sibling `🦀️<topic>.rs` files are allowed alongside it, per the `⚙️engine` big-engine allowance — this only requires the leaf to be present, not exclusive. */
 function policyComponentFileBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const leafFilename = taxonomy.taxonomyLeafFilenames["🦀️rust"] ?? "🦀️component.rs";
+  const sourceExtension = taxonomy.ecosystems["🦀️rust"]?.sourceExtension ?? ".rs";
   const breaches: BreachRecord[] = [];
   for (const crate of crates) {
     if (crate.shape !== "taxonomy") continue;
-    const pluginRoot = policyTaxonomyPluginRoot(crate.dir);
-    const pluginId = policyScopeKey(pluginRoot);
+    const ownerRoot = crate.ownerRel;
 
     const walk = (relDir: string): void => {
       const entries = policyReaddirSafe(repoRoot, relDir);
       const parentName = relDir.split("/").pop() ?? "";
-      const hasRustFile = entries.some((e) => !e.isDirectory && e.name.endsWith(".rs"));
-      if (POLICY_TAXONOMY_LEAF_PARENT_DIRS.includes(parentName)) {
+      const hasRustFile = entries.some((e) => !e.isDirectory && e.name.endsWith(sourceExtension));
+      if (taxonomy.taxonomyLeafParentDirs.includes(parentName)) {
         // relDir itself is a vocabulary dir (e.g. 🔧️op/) whose immediate .rs files are the leaf — or,
         // for 🎮️commands/🛠️tools/📌️panels, an extra <name>/ nesting level holds the leaf instead.
-        if (hasRustFile && !entries.some((e) => !e.isDirectory && e.name === "🦀️component.rs")) {
+        if (hasRustFile && !entries.some((e) => !e.isDirectory && e.name === leafFilename)) {
           breaches.push({
             id: `component-file-${relDir}`,
-            summary: `"${relDir}" has .rs source but no 🦀️component.rs`,
+            summary: `"${relDir}" has ${sourceExtension} source but no ${leafFilename}`,
             kind: "taxonomy/component-file",
-            scope: pluginId,
-            priority: "medium",
-            reason: "Discovery contract: every taxonomy leaf's primary file must be literally named 🦀️component.rs.",
-            solution: `Rename ${relDir}'s primary source file to 🦀️component.rs (sibling 🦀️<topic>.rs files may stay).`,
+            scope: crate.pluginId || crate.ownerRel,
+            priority: policyNewSurfacePriority(crate, "medium"),
+            reason: `Discovery contract: every taxonomy leaf's primary file must be literally named ${leafFilename}.`,
+            solution: `Rename ${relDir}'s primary source file to ${leafFilename} (sibling 🦀️<topic>${sourceExtension} files may stay).`,
           });
         }
       }
       for (const entry of entries.filter((e) => e.isDirectory)) walk(`${relDir}/${entry.name}`);
     };
-    walk(`${pluginRoot}/🗿️artifacts`);
-    walk(`${pluginRoot}/🎛️apps`);
+    walk(`${ownerRoot}/${taxonomy.artifactsDirName}`);
+    walk(`${ownerRoot}/${taxonomy.appsDirName}`);
   }
   return breaches;
 }
 
 /**
- * 📏️Anti-inlining tripwire (Single-File-Repo hazard ruling, master ticket): a migrated plugin's root
+ * 📏️Anti-inlining tripwire (Single-File-Repo hazard ruling, master ticket): a migrated package's entry
  * `📦️lib.rs` must stay wiring-only (`#[path]` mod declarations + `semio_plugin!{}` registration) — no
- * non-trivial `fn`/`impl` body content beyond a generous line budget. Catches the exact regression this
- * repo has hit twice before: an agent following the (now-scoped) "single file repo" goal inlining split
- * `#[path]` modules back into `lib.rs`.
+ * non-trivial `fn`/`impl` body content beyond `taxonomy.libWiringLineBudget`. Catches the exact
+ * regression this repo has hit twice before: an agent following the (now-scoped) "single file repo" goal
+ * inlining split `#[path]` modules back into `lib.rs`.
  */
-const POLICY_TAXONOMY_LIB_SHAPE_LINE_BUDGET = 150;
 const POLICY_FN_OR_IMPL_OPEN_RE = /^\s*(?:pub(?:\([^)]*\))?\s+)?(?:async\s+)?(?:fn\s+\w+\s*(?:<[^>]*>)?\s*\([^;{]*\)[^;{]*|impl(?:<[^>]*>)?\s+[^;{]+)\{\s*$/;
 
 function policyTaxonomyLibShapeBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
+  const lineBudget = loadTaxonomy().libWiringLineBudget;
   const breaches: BreachRecord[] = [];
   for (const crate of crates) {
     if (crate.shape !== "taxonomy") continue;
@@ -3322,14 +3387,14 @@ function policyTaxonomyLibShapeBreaches(repoRoot: string, crates: readonly Polic
       bodyLines += bodyLineList.filter((l) => l.trim() && !l.trim().startsWith("//")).length;
       coveredUntilLine = lineNo + bodyLineList.length - 1;
     });
-    if (bodyLines <= POLICY_TAXONOMY_LIB_SHAPE_LINE_BUDGET) continue;
+    if (bodyLines <= lineBudget) continue;
     breaches.push({
       id: `taxonomy-lib-shape-${crate.libRelPath}`,
-      summary: `"${crate.libRelPath}" has ~${bodyLines} lines of fn/impl body content — a migrated plugin's lib.rs must stay wiring-only`,
+      summary: `"${crate.libRelPath}" has ~${bodyLines} lines of fn/impl body content — a migrated package's lib.rs must stay wiring-only`,
       kind: "taxonomy/lib-shape",
-      scope: policyScopeKey(policyTaxonomyPluginRoot(crate.dir)),
-      priority: "medium",
-      reason: "Single-File-Repo hazard ruling: a taxonomy plugin's 📦️lib.rs is #[path] mod wiring + semio_plugin!{} registration only — real logic lives in the taxonomy component files, never inlined back.",
+      scope: crate.pluginId || crate.ownerRel,
+      priority: policyNewSurfacePriority(crate, "medium"),
+      reason: "Single-File-Repo hazard ruling: a taxonomy package's 📦️lib.rs is #[path] mod wiring + semio_plugin!{} registration only — real logic lives in the taxonomy component files, never inlined back.",
       solution: `Move the non-trivial fn/impl bodies out of ${crate.libRelPath} into their owning taxonomy component file(s); lib.rs should only declare "#[path = \\"...\\"] mod ...;" and call semio_plugin!{...}.`,
     });
   }
@@ -3341,11 +3406,13 @@ function policyTaxonomyLibShapeBreaches(repoRoot: string, crates: readonly Polic
  * `26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE` (Single-File-Repo hazard ruling, scope note 2): a
  * `"taxonomy"`-area TypeScript package's entry file (`taxonomy.entryFilenames["🟦️typescript"]`, e.g.
  * `📦️index.tsx`) must stay a wiring-only re-export barrel — counts non-import/export/comment/blank lines
- * and flags a breach past `libWiringLineBudget`. Warn-only (`priority: "medium"`) and vacuous today: no
- * `taxonomy.areas` entry is `"taxonomy"` yet (that flip is the W6 activation step of that ticket) and no
- * package yet carries a `role = "framework"` marker, so `discoverPackages` returns nothing to check
- * against — seeded empty exactly like `policyTaxonomyLibShapeBreaches` was for W0.
+ * and flags a breach past `libWiringLineBudget`. Warn-only (`priority: "medium"`) and still vacuous
+ * today: the graduated area state is `"clean"` and no area has graduated yet (that flip is the W6
+ * activation step of that ticket). The literal it compares against used to be `"taxonomy"`, a value that
+ * is not in `taxonomy.areaStates` at all and therefore could never match — fixed here to `"clean"` while
+ * mechanism step M4 was in this region (see `🔣️taxonomy.json`'s `_areaStateComment`).
  */
+const POLICY_BARREL_GRADUATED_AREA_STATE = "clean";
 const POLICY_BARREL_WIRING_LINE_RE = /^\s*(\/\/.*)?$|^\s*export\s+(type\s+)?(\*|\{[^}]*\})\s+from\s+"[^"]+";?\s*(\/\/.*)?$|^\s*import\s+.+\s+from\s+"[^"]+";?\s*(\/\/.*)?$/;
 
 function policyTaxonomyBarrelShapeBreaches(repoRoot: string): BreachRecord[] {
@@ -3354,7 +3421,7 @@ function policyTaxonomyBarrelShapeBreaches(repoRoot: string): BreachRecord[] {
   if (!entryFilename) return [];
   const breaches: BreachRecord[] = [];
   for (const pkg of discoverPackages(repoRoot, taxonomy)) {
-    if (pkg.lang !== "🟦️typescript" || pkg.area !== "taxonomy") continue;
+    if (pkg.lang !== "🟦️typescript" || pkg.area !== POLICY_BARREL_GRADUATED_AREA_STATE) continue;
     const entryAbs = join(repoRoot, pkg.packageRel, entryFilename);
     if (!existsSync(entryAbs)) continue;
     const lines = readFileSync(entryAbs, "utf8").split(/\r?\n/);
@@ -3375,13 +3442,19 @@ function policyTaxonomyBarrelShapeBreaches(repoRoot: string): BreachRecord[] {
 
 const POLICY_PROTOCOL_SEGMENT_RE = /^protocol$/i;
 
-/** 📏️Discovery-contract clause 4: no path segment (dir or file stem) or `mod`/`struct`/`enum`/`type` identifier fragment named "protocol" may exist under a migrated plugin — `spr` is the only accepted name for that concept going forward. */
+/**
+ * 📏️Discovery-contract clause 4: no path segment (dir or file stem) or `mod`/`struct`/`enum`/`type`
+ * identifier fragment named "protocol" may exist under a migrated plugin — `📡️spr` is the only accepted
+ * name for that concept going forward. Scoped to `role = "plugin"` owners on purpose: the rename is a
+ * plugin-tree contract today, while the framework's own `📡️protocol` kernel module is renamed by the
+ * os-kernel merge (plan wave W8c) — flagging it here would report a rename that is scheduled, not late.
+ */
 function policySprNamingBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const crate of crates) {
-    if (crate.shape !== "taxonomy") continue;
-    const pluginRoot = policyTaxonomyPluginRoot(crate.dir);
-    const pluginId = policyScopeKey(pluginRoot);
+    if (crate.shape !== "taxonomy" || crate.role !== "plugin") continue;
+    const ownerRoot = crate.ownerRel;
+    const pluginId = crate.pluginId;
 
     const walk = (relDir: string): void => {
       for (const entry of policyReaddirSafe(repoRoot, relDir)) {
@@ -3401,7 +3474,7 @@ function policySprNamingBreaches(repoRoot: string, crates: readonly PolicyCrateR
         if (entry.isDirectory) walk(childRel);
       }
     };
-    walk(pluginRoot);
+    walk(ownerRoot);
 
     const abs = join(repoRoot, crate.libRelPath);
     if (!existsSync(abs)) continue;
@@ -3427,18 +3500,21 @@ function policySprNamingBreaches(repoRoot: string, crates: readonly PolicyCrateR
 
 //#region 🔖️PolicyExport
 /**
- * ⚖️Runs every Wave 4 rule over every discovered plugin crate (`policyDiscoverPluginCrateDirs` — legacy
- * per-module-crate shape today, tolerant of the future taxonomy shape once plugins start migrating),
- * plus the four W0 taxonomy rules (warn-only, `PolicyRuleTaxonomy` region) over any already-migrated
- * plugin. No `framework/plugin/rs` exemption is needed: the discoverer is scoped to `✏️s/🔌️plugins/`
- * only, so the framework SDK crate itself is never a member of `crateDirs` in the first place.
+ * ⚖️Runs every Wave 4 app-plugin rule over every discovered crate that belongs to a plugin, plus the
+ * taxonomy rules (`PolicyRuleTaxonomy` region) over EVERY discovered Shape V2 rust package repo-wide.
+ * Discovery is the shared package catalog (`policyDiscoverCrateDirs` → `discoverPackages`), so the
+ * plugins/framework/hub split is expressed by each package's declared `role`, not by a path literal:
+ * the Wave 4 rules encode plugin-app conventions (`App::builder`, `semio_plugin!`, the SDK testkit) and
+ * stay `role = "plugin"`, while the structural taxonomy rules apply to every owner that has adopted the
+ * shape. The framework SDK crate is excluded by role, exactly as the old plugins-only path scoping did.
  */
 export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency", (_l: TechnologyLinter): BreachRecord[] => {
   const repoRoot = getWorkspaceRoot();
-  const crateDirs = policyDiscoverPluginCrateDirs(repoRoot);
+  const crateDirs = policyDiscoverCrateDirs(repoRoot);
   const breaches: BreachRecord[] = [];
 
   for (const crate of crateDirs) {
+    if (crate.role !== "plugin") continue;
     const abs = join(repoRoot, crate.libRelPath);
     if (!existsSync(abs)) continue; // tolerant: an in-flight taxonomy crate whose lib.rs hasn't landed yet must not crash the lint
     const content = readFileSync(abs, "utf8");
@@ -3450,8 +3526,8 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
     breaches.push(...policyModLayoutBreaches(crate.dir, lines));
     breaches.push(...policySelectionIdsBreaches(crate.dir, content));
     breaches.push(...policyTestkitDelegateBreaches(crate.dir, content));
-    breaches.push(...policyTreeItemBreaches(crate.dir, content, lines));
-    breaches.push(...policyLabelsStructBreaches(crate.dir, content));
+    breaches.push(...policyTreeItemBreaches(crate, content, lines));
+    breaches.push(...policyLabelsStructBreaches(crate, content));
   }
 
   breaches.push(...policyCargoArtifactBreaches(repoRoot, crateDirs));

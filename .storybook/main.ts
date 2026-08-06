@@ -54,7 +54,6 @@ function buildStorybookAliases(): Record<string, string> {
   const baseline: Record<string, string> = {
     "@semio-tech/ui-react": toVitePath(uiReactDir),
     "@semio-tech/ui-styling": toVitePath(uiStylingDir),
-    "@semio-tech/puzzle-assets": toVitePath(resolve(repoRootPath, "✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript")),
     "@semio-tech/compose-js": toVitePath(composeJsDir),
     "@semio-tech/compose-react": toVitePath(composeJsDir),
     "@semio-tech/assets": toVitePath(composeAssetsDir),

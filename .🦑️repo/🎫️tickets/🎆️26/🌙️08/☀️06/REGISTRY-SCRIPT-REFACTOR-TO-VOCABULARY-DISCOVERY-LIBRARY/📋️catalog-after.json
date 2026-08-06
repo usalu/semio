@@ -1,0 +1,1293 @@
+{
+  "plugins": [
+    {
+      "pluginId": "animate",
+      "cratePath": "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-animate",
+      "wasmOut": "semio_s_plugin_animate.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "architect",
+      "cratePath": "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-architect",
+      "wasmOut": "semio_s_plugin_architect.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "block",
+      "cratePath": "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-block",
+      "wasmOut": "semio_s_plugin_block.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "cad",
+      "cratePath": "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-cad",
+      "wasmOut": "semio_s_plugin_cad.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "dag",
+      "cratePath": "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-dag",
+      "wasmOut": "semio_s_plugin_dag.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "demonstrator",
+      "cratePath": "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-demonstrator",
+      "wasmOut": "semio_s_plugin_demonstrator.wasm",
+      "contributes": [],
+      "consumes": [
+        "forms.questionKind",
+        "flow.extension",
+        "process.machines"
+      ]
+    },
+    {
+      "pluginId": "draw",
+      "cratePath": "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-draw",
+      "wasmOut": "semio_s_plugin_draw.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "energy",
+      "cratePath": "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-energy",
+      "wasmOut": "semio_s_plugin_energy.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "fem",
+      "cratePath": "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-fem",
+      "wasmOut": "semio_s_plugin_fem.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "fem",
+      "cratePath": "✏️s/🔌️plugins/🏗️fem/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
+      "packageName": "semio-s-plugin-fem",
+      "wasmOut": "semio_s_plugin_fem.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "flow",
+      "cratePath": "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-flow",
+      "wasmOut": "semio_s_plugin_flow.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "forms",
+      "cratePath": "✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-forms",
+      "wasmOut": "semio_s_plugin_forms.wasm",
+      "contributes": [],
+      "consumes": [
+        "forms.questionKind"
+      ]
+    },
+    {
+      "pluginId": "gis",
+      "cratePath": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-gis",
+      "wasmOut": "semio_s_plugin_gis.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "imperative",
+      "cratePath": "✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-imperative",
+      "wasmOut": "semio_s_plugin_imperative.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "layout",
+      "cratePath": "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-layout",
+      "wasmOut": "semio_s_plugin_layout.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "lowpoly",
+      "cratePath": "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-lowpoly",
+      "wasmOut": "semio_s_plugin_lowpoly.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "mathematical",
+      "cratePath": "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-mathematical",
+      "wasmOut": "semio_s_plugin_mathematical.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "norm",
+      "cratePath": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-norm",
+      "wasmOut": "semio_s_plugin_norm.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "note",
+      "cratePath": "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-note",
+      "wasmOut": "semio_s_plugin_note.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "playbook",
+      "cratePath": "✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-playbook",
+      "wasmOut": "semio_s_plugin_playbook.wasm",
+      "contributes": [],
+      "consumes": [
+        "playbook.blockKind"
+      ]
+    },
+    {
+      "pluginId": "playbook-module-procedural",
+      "cratePath": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/⚡️implementations/🦀️rust",
+      "packageName": "semio-s-plugin-playbook-procedural",
+      "wasmOut": "semio_s_plugin_playbook_procedural.wasm",
+      "contributes": [
+        "playbook.blockKind"
+      ],
+      "consumes": []
+    },
+    {
+      "pluginId": "procedural",
+      "cratePath": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-procedural",
+      "wasmOut": "semio_s_plugin_procedural.wasm",
+      "contributes": [],
+      "consumes": [
+        "forms.questionKind",
+        "flow.extension"
+      ]
+    },
+    {
+      "pluginId": "process",
+      "cratePath": "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-process",
+      "wasmOut": "semio_s_plugin_process.wasm",
+      "contributes": [],
+      "consumes": [
+        "process.machines"
+      ]
+    },
+    {
+      "pluginId": "puzzle",
+      "cratePath": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-puzzle",
+      "wasmOut": "semio_s_plugin_puzzle.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "raster",
+      "cratePath": "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-raster",
+      "wasmOut": "semio_s_plugin_raster.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "reasoning-mindmap",
+      "cratePath": "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-reasoning-mindmap",
+      "wasmOut": "semio_s_plugin_reasoning_mindmap.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "remodel",
+      "cratePath": "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-remodel",
+      "wasmOut": "semio_s_plugin_remodel.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "s",
+      "cratePath": "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-space",
+      "wasmOut": "semio_s_plugin_space.wasm",
+      "contributes": [],
+      "consumes": [],
+      "host": {
+        "landingAppId": "home",
+        "hostAppId": "studio"
+      }
+    },
+    {
+      "pluginId": "sequence",
+      "cratePath": "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-sequence",
+      "wasmOut": "semio_s_plugin_sequence.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "shooting",
+      "cratePath": "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-shooting",
+      "wasmOut": "semio_s_plugin_shooting.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "sourcing",
+      "cratePath": "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-sourcing",
+      "wasmOut": "semio_s_plugin_sourcing.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "sourcing-module-beams",
+      "cratePath": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/⚡️implementations/🦀️rust",
+      "packageName": "semio-s-plugin-sourcing-beams",
+      "wasmOut": "semio_s_plugin_sourcing_beams.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "sourcing-module-slabs",
+      "cratePath": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/⚡️implementations/🦀️rust",
+      "packageName": "semio-s-plugin-sourcing-slabs",
+      "wasmOut": "semio_s_plugin_sourcing_slabs.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "sourcing-module-windows",
+      "cratePath": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/⚡️implementations/🦀️rust",
+      "packageName": "semio-s-plugin-sourcing-windows",
+      "wasmOut": "semio_s_plugin_sourcing_windows.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "trinity",
+      "cratePath": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-trinity",
+      "wasmOut": "semio_s_plugin_trinity.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "vcs",
+      "cratePath": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-vcs",
+      "wasmOut": "semio_s_plugin_vcs.wasm",
+      "contributes": [],
+      "consumes": []
+    },
+    {
+      "pluginId": "writer",
+      "cratePath": "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust",
+      "packageName": "semio-s-plugin-writer",
+      "wasmOut": "semio_s_plugin_writer.wasm",
+      "contributes": [],
+      "consumes": []
+    }
+  ],
+  "playgrounds": [
+    {
+      "variant": "aggregator",
+      "pluginId": "demonstrator",
+      "cratePath": "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust",
+      "app": "puzzle3d-play",
+      "brand": "entwerfen-mit-bestand-aggregator",
+      "aliases": [
+        "mit-bestand",
+        "entwerfen-mit-bestand"
+      ],
+      "ports": {
+        "react": 6023,
+        "wgpu": 6123
+      },
+      "examples": [],
+      "engines": [],
+      "assets": [
+        {
+          "kind": "mesh-collection",
+          "route": "/mesh",
+          "app": "puzzle3d-play",
+          "roots": [
+            "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🌱️metabolism/🎨️representation",
+            "♻️mit-bestand/🖼️assets/🏚️abbau-aufbau"
+          ],
+          "placeholder": "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🥽️mesh/🧊️placeholder.glb",
+          "filterFromExamples": true
+        },
+        {
+          "kind": "static-dir",
+          "route": "/infinite-fixture",
+          "app": "puzzle3d-play",
+          "root": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures"
+        }
+      ]
+    },
+    {
+      "variant": "animate",
+      "pluginId": "animate",
+      "cratePath": "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust",
+      "aliases": [],
+      "ports": {
+        "react": 6051,
+        "wgpu": 6151
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "architect",
+      "pluginId": "architect",
+      "cratePath": "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust",
+      "aliases": [],
+      "ports": {
+        "react": 6090,
+        "wgpu": 6190
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "aussuchen",
+      "pluginId": "demonstrator",
+      "cratePath": "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust",
+      "app": "sourcing-curate",
+      "brand": "entwerfen-mit-bestand-aussuchen",
+      "aliases": [
+        "entwerfen-mit-bestand-aussuchen"
+      ],
+      "ports": {
+        "react": 6030,
+        "wgpu": 6130
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "bearbeiten",
+      "pluginId": "demonstrator",
+      "cratePath": "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust",
+      "app": "process3d-play",
+      "brand": "entwerfen-mit-bestand-bearbeiten",
+      "aliases": [
+        "entwerfen-mit-bestand-bearbeiten"
+      ],
+      "ports": {
+        "react": 6031,
+        "wgpu": 6131
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "block2d",
+      "pluginId": "block",
+      "cratePath": "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust",
+      "app": "block2d-play",
+      "aliases": [
+        "block 2d"
+      ],
+      "ports": {
+        "react": 6024,
+        "wgpu": 6124
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "block3d",
+      "pluginId": "block",
+      "cratePath": "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust",
+      "app": "block3d-play",
+      "aliases": [
+        "block 3d"
+      ],
+      "ports": {
+        "react": 6025,
+        "wgpu": 6125
+      },
+      "examples": [],
+      "engines": [],
+      "assets": [
+        {
+          "kind": "mesh-collection",
+          "route": "/mesh",
+          "app": "block3d-play",
+          "roots": [
+            "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🌱️metabolism/🎨️representation",
+            "♻️mit-bestand/🖼️assets/🏚️abbau-aufbau"
+          ],
+          "placeholder": "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🥽️mesh/🧊️placeholder.glb",
+          "filterFromExamples": true
+        }
+      ]
+    },
+    {
+      "variant": "block5d",
+      "pluginId": "block",
+      "cratePath": "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust",
+      "app": "block5d-play",
+      "aliases": [
+        "block 5d"
+      ],
+      "ports": {
+        "react": 6026,
+        "wgpu": 6126
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "cad",
+      "pluginId": "cad",
+      "cratePath": "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust",
+      "app": "cad-play",
+      "aliases": [],
+      "ports": {
+        "react": 6020,
+        "wgpu": 6120
+      },
+      "examples": [],
+      "engines": [],
+      "assets": [
+        {
+          "kind": "static-dir",
+          "route": "/cad-fixture",
+          "app": "cad-play",
+          "root": "✏️s/🔌️plugins/📐️cad/🧫️fixtures"
+        }
+      ]
+    },
+    {
+      "variant": "dag",
+      "pluginId": "dag",
+      "cratePath": "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust",
+      "aliases": [],
+      "ports": {
+        "react": 6017,
+        "wgpu": 6117
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "din16798",
+      "pluginId": "norm",
+      "cratePath": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+      "app": "norm-din-en-16798-play",
+      "aliases": [],
+      "ports": {
+        "react": 6092,
+        "wgpu": 6192
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "din18599",
+      "pluginId": "norm",
+      "cratePath": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+      "app": "norm-din-v-18599-play",
+      "aliases": [],
+      "ports": {
+        "react": 6093,
+        "wgpu": 6193
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "din4108",
+      "pluginId": "norm",
+      "cratePath": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+      "app": "norm-din-4108-play",
+      "aliases": [],
+      "ports": {
+        "react": 6091,
+        "wgpu": 6191
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "draw",
+      "pluginId": "draw",
+      "cratePath": "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust",
+      "aliases": [],
+      "ports": {
+        "react": 6064,
+        "wgpu": 6164
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "en1990",
+      "pluginId": "norm",
+      "cratePath": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+      "app": "norm-en-1990-play",
+      "aliases": [],
+      "ports": {
+        "react": 6094,
+        "wgpu": 6194
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "en1991",
+      "pluginId": "norm",
+      "cratePath": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+      "app": "norm-en-1991-play",
+      "aliases": [],
+      "ports": {
+        "react": 6095,
+        "wgpu": 6195
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "en1992",
+      "pluginId": "norm",
+      "cratePath": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+      "app": "norm-en-1992-play",
+      "aliases": [],
+      "ports": {
+        "react": 6096,
+        "wgpu": 6196
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "en1993",
+      "pluginId": "norm",
+      "cratePath": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+      "app": "norm-en-1993-play",
+      "aliases": [],
+      "ports": {
+        "react": 6097,
+        "wgpu": 6197
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "en1994",
+      "pluginId": "norm",
+      "cratePath": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+      "app": "norm-en-1994-play",
+      "aliases": [],
+      "ports": {
+        "react": 6098,
+        "wgpu": 6198
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "en1995",
+      "pluginId": "norm",
+      "cratePath": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+      "app": "norm-en-1995-play",
+      "aliases": [],
+      "ports": {
+        "react": 6099,
+        "wgpu": 6199
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "en1996",
+      "pluginId": "norm",
+      "cratePath": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+      "app": "norm-en-1996-play",
+      "aliases": [],
+      "ports": {
+        "react": 6100,
+        "wgpu": 6200
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "en1997",
+      "pluginId": "norm",
+      "cratePath": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+      "app": "norm-en-1997-play",
+      "aliases": [],
+      "ports": {
+        "react": 6101,
+        "wgpu": 6201
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "en1998",
+      "pluginId": "norm",
+      "cratePath": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+      "app": "norm-en-1998-play",
+      "aliases": [],
+      "ports": {
+        "react": 6102,
+        "wgpu": 6202
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "en1999",
+      "pluginId": "norm",
+      "cratePath": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+      "app": "norm-en-1999-play",
+      "aliases": [],
+      "ports": {
+        "react": 6103,
+        "wgpu": 6203
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "fem2d",
+      "pluginId": "fem",
+      "cratePath": "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust",
+      "app": "fem2d-play",
+      "aliases": [
+        "fem 2d"
+      ],
+      "ports": {
+        "react": 6086,
+        "wgpu": 6186
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "fem3d",
+      "pluginId": "fem",
+      "cratePath": "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust",
+      "app": "fem3d-play",
+      "aliases": [
+        "fem 3d"
+      ],
+      "ports": {
+        "react": 6087,
+        "wgpu": 6187
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "flow",
+      "pluginId": "flow",
+      "cratePath": "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust",
+      "aliases": [],
+      "ports": {
+        "react": 6016,
+        "wgpu": 6116
+      },
+      "examples": [],
+      "engines": [
+        "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust"
+      ],
+      "assets": []
+    },
+    {
+      "variant": "forms",
+      "pluginId": "forms",
+      "cratePath": "✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust",
+      "aliases": [],
+      "ports": {
+        "react": 6058,
+        "wgpu": 6158
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "generator",
+      "pluginId": "demonstrator",
+      "cratePath": "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust",
+      "app": "procedural3d-play",
+      "brand": "entwerfen-mit-bestand-generator",
+      "aliases": [
+        "entwerfen-mit-bestand-generator"
+      ],
+      "ports": {
+        "react": 6027,
+        "wgpu": 6127
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "gis2d",
+      "pluginId": "gis",
+      "cratePath": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
+      "app": "gis2d-play",
+      "aliases": [
+        "gis 2d"
+      ],
+      "ports": {
+        "react": 6040,
+        "wgpu": 6140
+      },
+      "examples": [],
+      "engines": [
+        "./🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust"
+      ],
+      "assets": [
+        {
+          "kind": "tile-proxy",
+          "route": "/osm",
+          "app": "gis2d-play",
+          "upstream": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+          "cache": "osm-tiles"
+        },
+        {
+          "kind": "tile-proxy",
+          "route": "/vt",
+          "app": "gis2d-play",
+          "upstream": "https://tiles.openfreemap.org/planet",
+          "cache": "openfreemap-vt"
+        }
+      ]
+    },
+    {
+      "variant": "gis3d",
+      "pluginId": "gis",
+      "cratePath": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
+      "app": "gis3d-play",
+      "aliases": [
+        "gis 3d"
+      ],
+      "ports": {
+        "react": 6083,
+        "wgpu": 6183
+      },
+      "examples": [],
+      "engines": [
+        "./🧰️framework/🔨️modules/🗺️surface/🏔️terrain/⚡️implementations/🦀️rust"
+      ],
+      "assets": [
+        {
+          "kind": "tile-proxy",
+          "route": "/dem",
+          "app": "gis3d-play",
+          "upstream": "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
+          "cache": "terrarium-dem"
+        }
+      ]
+    },
+    {
+      "variant": "imperative",
+      "pluginId": "imperative",
+      "cratePath": "✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust",
+      "aliases": [],
+      "ports": {
+        "react": 6076,
+        "wgpu": 6176
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "iso16757",
+      "pluginId": "norm",
+      "cratePath": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+      "app": "norm-iso-16757-play",
+      "aliases": [],
+      "ports": {
+        "react": 6104,
+        "wgpu": 6204
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "koordinator",
+      "pluginId": "demonstrator",
+      "cratePath": "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust",
+      "app": "cad-play",
+      "brand": "entwerfen-mit-bestand-koordinator",
+      "aliases": [
+        "entwerfen-mit-bestand-koordinator"
+      ],
+      "ports": {
+        "react": 6028,
+        "wgpu": 6128
+      },
+      "examples": [],
+      "engines": [],
+      "assets": [
+        {
+          "kind": "static-dir",
+          "route": "/cad-fixture",
+          "app": "cad-play",
+          "root": "✏️s/🔌️plugins/📐️cad/🧫️fixtures"
+        }
+      ]
+    },
+    {
+      "variant": "layout",
+      "pluginId": "layout",
+      "cratePath": "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust",
+      "aliases": [],
+      "ports": {
+        "react": 6079,
+        "wgpu": 6179
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "lowpoly",
+      "pluginId": "lowpoly",
+      "cratePath": "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust",
+      "aliases": [],
+      "ports": {
+        "react": 6078,
+        "wgpu": 6178
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "mathematical",
+      "pluginId": "mathematical",
+      "cratePath": "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust",
+      "app": "mathematical-play",
+      "aliases": [
+        "mathematical",
+        "math"
+      ],
+      "ports": {
+        "react": 6084,
+        "wgpu": 6184
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "note",
+      "pluginId": "note",
+      "cratePath": "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust",
+      "aliases": [],
+      "ports": {
+        "react": 6080,
+        "wgpu": 6180
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "playbook",
+      "pluginId": "playbook",
+      "cratePath": "✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust",
+      "aliases": [],
+      "ports": {
+        "react": 6085,
+        "wgpu": 6185
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "procedural2d",
+      "pluginId": "procedural",
+      "cratePath": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust",
+      "app": "procedural2d-play",
+      "aliases": [
+        "procedural 2d"
+      ],
+      "ports": {
+        "react": 6021,
+        "wgpu": 6121
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "procedural3d",
+      "pluginId": "procedural",
+      "cratePath": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust",
+      "app": "procedural3d-play",
+      "aliases": [
+        "procedural 3d"
+      ],
+      "ports": {
+        "react": 6018,
+        "wgpu": 6118
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "process3d",
+      "pluginId": "process",
+      "cratePath": "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust",
+      "app": "process3d-play",
+      "aliases": [
+        "process 3d"
+      ],
+      "ports": {
+        "react": 6022,
+        "wgpu": 6122
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "puzzle2d",
+      "pluginId": "puzzle",
+      "cratePath": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
+      "app": "puzzle2d-play",
+      "aliases": [
+        "2d"
+      ],
+      "ports": {
+        "react": 6012,
+        "wgpu": 6112
+      },
+      "examples": [],
+      "engines": [
+        "🧰️framework/🔨️modules/🗺️surface/🎲️board-2d/⚡️implementations/🦀️rust"
+      ],
+      "assets": []
+    },
+    {
+      "variant": "puzzle3d",
+      "pluginId": "puzzle",
+      "cratePath": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
+      "app": "puzzle3d-play",
+      "aliases": [
+        "3d"
+      ],
+      "ports": {
+        "react": 6013,
+        "wgpu": 6113
+      },
+      "examples": [],
+      "engines": [],
+      "assets": [
+        {
+          "kind": "mesh-collection",
+          "route": "/mesh",
+          "app": "puzzle3d-play",
+          "roots": [
+            "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🌱️metabolism/🎨️representation",
+            "♻️mit-bestand/🖼️assets/🏚️abbau-aufbau"
+          ],
+          "placeholder": "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🥽️mesh/🧊️placeholder.glb",
+          "filterFromExamples": true
+        },
+        {
+          "kind": "static-dir",
+          "route": "/infinite-fixture",
+          "app": "puzzle3d-play",
+          "root": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures"
+        }
+      ]
+    },
+    {
+      "variant": "puzzle5d",
+      "pluginId": "puzzle",
+      "cratePath": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
+      "app": "puzzle5d-play",
+      "aliases": [
+        "5d"
+      ],
+      "ports": {
+        "react": 6014,
+        "wgpu": 6114
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "raster",
+      "pluginId": "raster",
+      "cratePath": "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust",
+      "aliases": [],
+      "ports": {
+        "react": 6060,
+        "wgpu": 6160
+      },
+      "examples": [],
+      "engines": [
+        "./🧰️framework/🔨️modules/🗺️surface/🎨️paint/⚡️implementations/🦀️rust"
+      ],
+      "assets": []
+    },
+    {
+      "variant": "reasoning-wires",
+      "pluginId": "reasoning-mindmap",
+      "cratePath": "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust",
+      "aliases": [
+        "wires"
+      ],
+      "ports": {
+        "react": 6015,
+        "wgpu": 6115
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "remodel",
+      "pluginId": "remodel",
+      "cratePath": "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust",
+      "aliases": [],
+      "ports": {
+        "react": 6063,
+        "wgpu": 6163
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "s",
+      "pluginId": "s",
+      "cratePath": "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust",
+      "aliases": [],
+      "ports": {
+        "react": 6070,
+        "wgpu": 6066
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "sequence",
+      "pluginId": "sequence",
+      "cratePath": "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust",
+      "aliases": [],
+      "ports": {
+        "react": 6077,
+        "wgpu": 6177
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "shooting",
+      "pluginId": "shooting",
+      "cratePath": "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust",
+      "aliases": [],
+      "ports": {
+        "react": 6019,
+        "wgpu": 6119
+      },
+      "examples": [],
+      "engines": [],
+      "assets": [
+        {
+          "kind": "mesh-collection",
+          "route": "/mesh",
+          "roots": [
+            "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🌱️metabolism/🎨️representation",
+            "♻️mit-bestand/🖼️assets/🏚️abbau-aufbau"
+          ],
+          "placeholder": "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🥽️mesh/🧊️placeholder.glb",
+          "filterFromExamples": true
+        }
+      ]
+    },
+    {
+      "variant": "sourcing",
+      "pluginId": "sourcing",
+      "cratePath": "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust",
+      "app": "sourcing-curate",
+      "aliases": [
+        "curate"
+      ],
+      "ports": {
+        "react": 6081,
+        "wgpu": 6181
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "trinity-jack",
+      "pluginId": "trinity",
+      "cratePath": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust",
+      "app": "trinity-jack-play",
+      "aliases": [
+        "trinity jack"
+      ],
+      "ports": {
+        "react": 6054,
+        "wgpu": 6154
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "trinity-rewrite",
+      "pluginId": "trinity",
+      "cratePath": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust",
+      "app": "trinity-rewrite-play",
+      "aliases": [
+        "trinity rewrite"
+      ],
+      "ports": {
+        "react": 6056,
+        "wgpu": 6156
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "vcs",
+      "pluginId": "vcs",
+      "cratePath": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust",
+      "aliases": [],
+      "ports": {
+        "react": 6075,
+        "wgpu": 6175
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "vdi3805",
+      "pluginId": "norm",
+      "cratePath": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+      "app": "norm-vdi-3805-play",
+      "aliases": [],
+      "ports": {
+        "react": 6105,
+        "wgpu": 6205
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "verfolgen",
+      "pluginId": "demonstrator",
+      "cratePath": "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust",
+      "app": "gis2d-play",
+      "brand": "entwerfen-mit-bestand-verfolgen",
+      "aliases": [
+        "entwerfen-mit-bestand-verfolgen"
+      ],
+      "ports": {
+        "react": 6032,
+        "wgpu": 6132
+      },
+      "examples": [],
+      "engines": [
+        "./🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust"
+      ],
+      "assets": [
+        {
+          "kind": "tile-proxy",
+          "route": "/osm",
+          "app": "gis2d-play",
+          "upstream": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+          "cache": "osm-tiles"
+        },
+        {
+          "kind": "tile-proxy",
+          "route": "/vt",
+          "app": "gis2d-play",
+          "upstream": "https://tiles.openfreemap.org/planet",
+          "cache": "openfreemap-vt"
+        }
+      ]
+    },
+    {
+      "variant": "writer",
+      "pluginId": "writer",
+      "cratePath": "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust",
+      "aliases": [],
+      "ports": {
+        "react": 6062,
+        "wgpu": 6162
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    }
+  ]
+}

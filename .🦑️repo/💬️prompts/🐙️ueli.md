@@ -365,6 +365,60 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Every plugin defines artifacts, every artifact has examples, every enigne has examples, etc Place and create for everything examples where they belong.
+Every custom format must use .semio extension at the end. Add the internal hierarchy on the file name just for readability but the format process must be able to derive it only from the content.
+There must be a general .semio file processor for os that automatically distinguishes between different formats an
+
+```
+plugins
+  <plugin>
+    artifacts
+      <artifact>
+        examples
+          <example>
+            packs
+              <pack>
+                component.rs
+                component.<artifact>.pack.semio
+                …
+            dsls
+              <dsl>
+                component.rs
+                component.dsl.semio
+                …
+            ops
+              <op>
+                component.rs
+                component.op.semio
+                …
+            sprs
+              <spr>
+                component.rs
+                component.spr.semio
+                …
+            …
+          …
+        …
+      …
+    apps
+      <app>
+        engine
+          examples
+            <example>
+              component.rs
+              component.cmd.semio
+                …
+              …
+            …
+          …
+      …
+    …
+  …
+```
+e.g. wronng where it is not properly put under artifact: ✏️s/🔌️plugins/🌍️gis/📚️examples/🌍️reuse.map.gismap
+
+---
+
 The codebase is currently split up according language independent taxony-tree component structure where the different implementations sit right next to each other. (follwing the repo principle that when logic is duplicated it must be close to each other).
 
 ```
@@ -395,19 +449,31 @@ ui
 
 ---
 
+Every app mode has first class support for selection, hover (every hover has a list of transitive hovers e.g. catalogue and document where the instance also shows the hover over the superclass, etc), presence (ephemeral state that is shared to show other users presence such as mouse cursor, camera, etc)
+
+```
 apps
 			<app>
-        component.rs
-        component.ts
-        …
-        selection
-          component.rs
-          component.ts
-          …
-        hover
-          component.rs
-          component.ts
-          …
+        modes
+          <mode>
+            component.rs
+            component.ts
+            …
+            selection
+              component.rs
+              component.ts
+              …
+            hover
+              component.rs
+              component.ts
+              …
+            presence
+              component.rs
+              component.ts
+              …
+            …
+```
+
 ---
 
 The codebase still has the pattern of

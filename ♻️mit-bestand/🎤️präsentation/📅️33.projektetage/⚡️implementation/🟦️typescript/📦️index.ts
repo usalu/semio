@@ -603,7 +603,7 @@ function mount(): void {
   if (!el) {
     return;
   }
-  void Promise.all([import("@semio-tech/animate-present-renderer-react"), import("@semio-tech/ui-react")]).then(([{ mountPresentation }, { DEFAULT_UI_DRIVER }]) => {
+  void Promise.all([import("@semio-tech/animate-js"), import("@semio-tech/ui-react")]).then(([{ mountPresentation }, { DEFAULT_UI_DRIVER }]) => {
     mountPresentation(el, deck, {
       transition: "fade",
       slideNumber: false,

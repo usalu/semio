@@ -1,0 +1,74 @@
+Batch: mod "dock" -> element dir "Dock" (NEW)
+
+Source: framework/products/os/modules/renderer/engine/packages/rust/targets/wgpu/lib.rs
+  - "pub mod dock {" opening line: 17 (re-grepped fresh)
+  - matching closing "}" : line 1969 (brace-counted with a naive {}-counter script, then eyeballed;
+    lands immediately before the next "pub mod engine_canvas {" at line 1971, as expected)
+  - inner content extracted: lines 18-1968 (1951 raw lines)
+    - line 18 was "// #region dock" and line 1968 was "// #endregion dock" — these were the outer
+      region markers wrapping the whole mod body; dropped as redundant once the mod is a standalone
+      file (every OTHER inner region/subregion, e.g. DockTypes/DockTests/etc., was preserved as-is)
+    - remaining 1949 lines dedented by 4 spaces (they were indented one level for being inside
+      "pub mod dock { ... }"; sibling 🧊️component.rs files elsewhere in the repo's 🧱️elements tree
+      are column-0, so dedented to match that convention)
+
+Created: framework/products/os/modules/renderer/engine/elements/Dock/🧊️component.rs (1955 lines:
+  6-line doc-comment header I wrote + 1949 lines of dedented body). Element dir "Dock" is NEW — no
+  react-side Dock element existed yet (this concept was inline in Mode/Canvas), so I created the dir.
+
+  Header note: the recipe pointed at ui-crate sibling files (Select, Button `🧊️component.rs`) as the
+  header template, but those don't actually have a literal "line 2 path comment" — they're `//!`
+  doc-comment blocks describing a DIFFERENT wiring pattern (a `#[cfg(feature="engine")]` crate-root
+  sibling mod placed to dodge nested-module `#[path]` resolution, specific to the ui crate's
+  `widgets` mod). That reasoning doesn't apply here (dock was already top-level in lib.rs, so this is
+  a straight block-for-file swap, no nesting workaround needed). I wrote a `//!` header in the same
+  established style (unique leading emoji per CLAUDE.md, states the extraction ticket, states the
+  exact #[path] wiring, notes crate::dock::... call sites are unaffected) instead of copying an
+  inapplicable template verbatim. The original inner `//! 🪟️ Mode dock — ...` doc line from the mod
+  body was kept immediately after as a second doc paragraph.
+
+lib.rs edit: replaced lines 17-1969 (original block) with:
+  #[path = "../../../../🧱️elements/Dock/🧊️component.rs"]
+  pub mod dock;
+  Module name "dock" unchanged. lib.rs line count: 25434 -> 23483 (delta -1951, matches removed
+  block size minus the 2 replacement lines).
+
+Hand-verification (cargo check could NOT run — see below — so I verified by diff instead of relying
+on the compiler):
+  - diff of lib.rs lines 1-16 (before header) : IDENTICAL, untouched
+  - diff of lib.rs original lines 1970-end vs new lib.rs lines 19-end : IDENTICAL, untouched
+  - diff of reconstructed-expected-body (original lines 19-1967, dedented, i.e. everything between
+    the two stripped region-marker lines) vs actual extracted body in the new component.rs file
+    (everything after my 6-line header) : IDENTICAL, byte-for-byte, 1949 lines both sides
+  - net brace balance of the extracted body, counted char-by-char: 0 (balanced)
+  => content-integrity is fully verified by diff; I did NOT get a compiler pass on this specific
+     edit.
+
+cargo check result: BLOCKED, not by my change.
+  Command: DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo check -p semio-framework-os-renderer-wgpu
+  Ran 3x (incl. one retry after an 8s wait per instructions). Same error every time, verbatim:
+
+    error: failed to load manifest for workspace member `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🐚️shell/⚡️implementations/🦀️rust`
+    referenced by workspace at `/Users/ueli/Documents/semio/Cargo.toml`
+
+    Caused by:
+      failed to read `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🐚️shell/⚡️implementations/🦀️rust/Cargo.toml`
+
+    Caused by:
+      No such file or directory (os error 2)
+
+  This is NOT the exact "multiple workspace roots" message the task called out by name, but it is
+  the same class of thing: a workspace-manifest-level failure (fails before cargo even gets to
+  resolving semio-framework-os-renderer-wgpu specifically), pointing at
+  ✏️s/🔌️plugins/🔱️trinity/... — a completely different plugin/technology than anything I touched
+  (renderer/engine/wgpu/Dock). Confirmed via `find`: 🔨️modules/🔌️jack/🐚️shell/ exists but its
+  ⚡️implementations/🦀️rust subdirectory does not — i.e. some other concurrent session has a
+  trinity/jack plugin restructuring mid-flight (git status at session start showed several other
+  live PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION tickets in progress: PUZZLE, RASTER,
+  SPACE, BLOCK) that has a workspace member referenced in the root Cargo.toml momentarily missing on
+  disk. Root Cargo.toml itself also shows as locally modified (M) in git status, consistent with a
+  concurrent in-progress edit there. Not something I should touch or attempt to fix — out of scope,
+  different technology, and my instructions were explicit not to chase this.
+
+  Per the task's own contingency instructions I am treating my own edit as hand-verified-only (see
+  diff verification above) and reporting this blocker rather than attempting a fix.

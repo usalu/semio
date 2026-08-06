@@ -1,0 +1,30 @@
+W7 batch: Command, Diagram, DiagramNode, Dialog, Field, Footer, HistoryTable, HoverCard, IconSelector
+
+Moves performed (plain mv, no retyping):
+.storybook/stories/ui/Command.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Command/🧪️story.tsx
+.storybook/stories/ui/Diagram.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Diagram/🧪️story.tsx
+.storybook/stories/ui/DiagramNode.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/DiagramNode/🧪️story.tsx
+.storybook/stories/ui/Dialog.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Dialog/🧪️story.tsx
+.storybook/stories/ui/Field.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Field/🧪️story.tsx
+.storybook/stories/ui/Footer.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Footer/🧪️story.tsx
+.storybook/stories/ui/HistoryTable.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/HistoryTable/🧪️story.tsx
+.storybook/stories/ui/HoverCard.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/HoverCard/🧪️story.tsx
+.storybook/stories/ui/IconSelector.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/IconSelector/🧪️story.tsx
+
+Import fixups: NONE. All 9 files only import from bare specifiers (@semio-tech/ui-react,
+@storybook/react, @storybook/react-vite, react). No "./" or "../" imports found in any
+of the 9 files (grep before move and after move both empty). No fixture/nakagin usage
+in this batch.
+
+Title verification (meta.title, checked before and after move — identical strings):
+Command       -> "🖱️ui⚛️react/Command"
+Diagram       -> "🖱️ui⚛️react/Diagram"
+DiagramNode   -> "🖱️ui⚛️react/DiagramNode"
+Dialog        -> "🖱️ui⚛️react/Dialog"
+Field         -> "🖱️ui⚛️react/Field"
+Footer        -> "🖱️ui⚛️react/Footer"
+HistoryTable  -> "🖱️ui⚛️react/HistoryTable"
+HoverCard     -> "🖱️ui⚛️react/HoverCard"
+IconSelector  -> "🖱️ui⚛️react/IconSelector"
+
+Old source files confirmed absent from .storybook/stories/ui/ after move.

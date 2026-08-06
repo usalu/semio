@@ -1,0 +1,13 @@
+{
+  "title": "Trinity Plugin Residual Mop-Up (Jack Tools)",
+  "emoji": "🔺️",
+  "status": "open",
+  "description": "De-sandwich 🔱️trinity's jack tool residuals per Rule B (plugin residuals stay separate installable/loadable units, de-sandwiched in place, published names frozen), Shape V2 amendment. Scope: ✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/** only. (1) Move the 🐚️shell bin crate (semio-s-plugin-trinity-jack-shell) from 🐚️shell/⚡️implementations/🦀️rust to 🐚️shell/📦️packages/🦀️rust, Shape V2 shaped (entry file same-dir as manifest), add project.json+script.ts nx wiring (none existed before). (2) Move the 🧠️lsp crate (semio-s-plugin-trinity-jack-lsp) from 🧠️lsp/⚡️implementations/🦀️rust to 🧠️lsp/📦️packages/🦀️rust, relocate AGENTS.md to 🧠️lsp/ owner root. (3) Extract the nested 🟦️worker.ts (currently wrongly nested inside the LSP's rust impl dir, no package.json) into a proper new TS package 🧠️lsp/📦️packages/🟦️typescript/ (real package.json, naming per @semio-tech/trinity-jack-lsp-worker convention) with its actual content moved to 🧠️lsp/🟦️component.ts per Shape V2 (component content at owner root, packaging code in packages/). Fix the broken `from \"./protocol.ts\"` import found in worker.ts (no such file exists - dead/broken import, protocol types are defined locally in the same file already). Also sweep for any other stray TS files under ✏️s/🔌️plugins/🔱️trinity not inside ⚡️implementations. Update root Cargo.toml member lines (192-193) via registrar handoff only - do not edit directly. Root package.json workspaces array IS OK to edit directly for the new TS package. Verify cargo check/clippy/test for both rust crates via isolated temp workspace overlay (root workspace may be blocked by pre-existing norm issue per SOURCING-SHAPE-V2 ticket's finding), and bun install/typecheck for the new TS package.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2516"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪503e1738df834976a2efd518cc2843bf"
+  ]
+}

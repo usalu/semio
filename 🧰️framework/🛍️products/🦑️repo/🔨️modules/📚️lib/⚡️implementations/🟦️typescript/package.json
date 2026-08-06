@@ -4,8 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./📦️index.ts",
-    "./nx-plugin": "./🟨️nx-plugin.mjs"
+    ".": "./📦️index.ts"
   },
   "scripts": {
     "lint": "bun ./📜️script.ts lint",

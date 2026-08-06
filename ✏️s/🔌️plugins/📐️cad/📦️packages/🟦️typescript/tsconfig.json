@@ -1,0 +1,17 @@
+{
+  "extends": "../../../../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": ".",
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "📦️index.ts",
+    "../../🔨️modules/🫀️core/🟦️component.ts",
+    "../../🔨️modules/📺️renderer/🟦️component.tsx",
+    "../../🔨️modules/📐️brepjs/🟦️component.ts",
+    "../../🔨️modules/🔍️query/🟦️component.ts",
+    "../../🔨️modules/🎰️stately/🟦️component.ts",
+    "../../🔨️modules/🏃️runtime/🟦️component.ts"
+  ]
+}

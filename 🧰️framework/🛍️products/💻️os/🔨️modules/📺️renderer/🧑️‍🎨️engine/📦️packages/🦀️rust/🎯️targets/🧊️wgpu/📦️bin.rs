@@ -3,7 +3,7 @@ fn main() {}
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
-    use semio_framework_renderer_wgpu::run_native;
+    use semio_framework_os_renderer_wgpu::run_native;
     use std::env;
     use std::path::PathBuf;
 

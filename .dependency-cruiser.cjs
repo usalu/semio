@@ -11,6 +11,14 @@ const PLUGINS = fs
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name);
 
+/** 🔣️ `forbiddenPathSegments` (both `⚡️implementations` spellings) read from the M1 shared vocabulary
+ * (`26/08/06/MECHANISM-VOCABULARY-AND-DISCOVERY-LIBRARY`) rather than re-hardcoded here, so this config
+ * and the registry/root-policy scripts can never drift on which spellings are banned. Plain JSON require —
+ * no TS toolchain needed from this plain `.cjs` config. */
+const TAXONOMY = JSON.parse(
+  fs.readFileSync(path.join(__dirname, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🔣️taxonomy.json"), "utf8"),
+);
+
 function crossTechnologyRules() {
   const rules = [];
   for (const from of TECHNOLOGIES) {
@@ -51,6 +59,51 @@ function crossPluginRules() {
     }
   }
   return rules;
+}
+
+/** 🌳️ Step 7 of the spicy-umbrella mechanism wave (`26/08/06/DEPENDENCY-CRUISER-CONFIG-MODERNIZATION-FOR-TAXONOMY-SHAPE`):
+ * forbids any dependency whose RESOLVED path still carries a `⚡️implementations`/`⚡️implementation`
+ * segment (Shape V2 tree purity, both spellings, from `🔣️taxonomy.json`'s `forbiddenPathSegments`).
+ * WARN, not error — plugins are fully retrofitted but framework/hub/mit-bestand haven't been touched by
+ * this initiative yet, so real hits are EXPECTED here; promotion to error is W10 finalization's job, not
+ * this ticket's. */
+function noImplSegmentRule() {
+  const alternation = TAXONOMY.forbiddenPathSegments.map((segment) => segment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+  return {
+    name: "no-impl-segment",
+    severity: "warn",
+    comment: "Shape V2 tree purity: no dependency path may carry a ⚡️implementations/⚡️implementation segment — WARN until the W10 finalization flip promotes this to error",
+    from: {},
+    to: { path: `(^|/)(${alternation})(/|$)` },
+  };
+}
+
+/** 📦️ Step 7's "`$1`-capture rule": a relative (`local`) import may freely reach anywhere inside its OWN
+ * package/module family — same directory tree, any depth — but must not resolve into a SIBLING family via
+ * a deep relative path; cross-family reuse goes through a `@semio-tech/…` package-name import instead.
+ * "Family" is approximated with a path-segment heuristic (chosen over wiring up M1's `discoverPackages()`
+ * here: that library is an ESM/TS module meant for the registry/root-policy TS scripts, and importing it
+ * into this plain `.cjs` config would need a build step for no real gain — the taxonomy's actual package
+ * unit, `<owner>/📦️packages/<lang>/`, is Shape V2 end-state and most of these areas are still legacy
+ * sandwiches today, so a `📦️packages`-anchored capture would simply fail to match almost anything yet;
+ * the directory-family heuristic below already covers the real, present-day gap: `✏️s/🔌️plugins/*` cross
+ * imports are already an ERROR via `crossPluginRules`, so plugins are deliberately left out here to avoid
+ * a redundant WARN — the gap this rule actually closes is *within* 🧰️framework (product-to-product,
+ * module-to-module), ✏️s/🔨️modules (s-module-to-s-module), 🌎️hub/🔨️modules, and ♻️mit-bestand
+ * (item-to-item), none of which any existing rule reaches). */
+function crossPackageRelativeRule() {
+  const familyPattern = "🧰️framework/(?:🛍️products|🔨️modules)/[^/]+|✏️s/🔨️modules/[^/]+|🌎️hub/🔨️modules/[^/]+|♻️mit-bestand/[^/]+";
+  return {
+    name: "no-cross-package-relative",
+    severity: "warn",
+    comment:
+      "Deep relative imports must not cross package/module family boundaries in favor of @semio-tech/… package-name imports — WARN until package-name imports are the norm repo-wide, then promote at finalization",
+    from: { path: `^(${familyPattern})/` },
+    to: {
+      dependencyTypes: ["local"],
+      pathNot: "^$1/",
+    },
+  };
 }
 
 module.exports = {
@@ -141,6 +194,8 @@ module.exports = {
     },
     ...crossTechnologyRules(),
     ...crossPluginRules(),
+    noImplSegmentRule(),
+    crossPackageRelativeRule(),
   ],
   options: {
     doNotFollow: {

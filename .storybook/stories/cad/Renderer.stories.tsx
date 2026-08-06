@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 💻️ .storybook/stories/cad/Renderer.stories.tsx
-// Specs: Host `InteractionCanvas`/`InteractionSpatialView` from `@semio-tech/cad-js-renderer` against the real
+// Specs: Host `InteractionCanvas`/`InteractionSpatialView` from `@semio-tech/cad-js`'s `renderer` namespace against the real
 // `primitive.box` interaction shipped at `cad/asset/modelDefinition/spatial.shape/interaction/box.json` — no
 // `cad/plugin/rs` wasm exists yet (verified: only `Cargo.toml`/`lib.rs`, no `pkg/`), so this drives the pure-TS
 // interaction state machine (`pureTsStateEngineProvider`) with a story-local `StoryBoxKernel` that copies every
@@ -18,8 +18,14 @@
 // #region 🔌️Adapters
 import type { Meta, StoryObj } from "@storybook/react";
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
-import { InteractionCanvas, InteractionSpatialView, r3fPreviewKernel, useInteractionRuntime, useInteractionSnapshot, useTessellation } from "@semio-tech/cad-js-renderer";
-import { Model, loadSpatialInteraction, solidRef, type InteractionRuntimeOptions, type InteractionSpec, type MeshTransfer, type SpatialKernel, type Vec3 } from "@semio-tech/cad-js-core";
+import { core, renderer } from "@semio-tech/cad-js";
+const { InteractionCanvas, InteractionSpatialView, r3fPreviewKernel, useInteractionRuntime, useInteractionSnapshot, useTessellation } = renderer;
+const { Model, loadSpatialInteraction, solidRef } = core;
+type InteractionRuntimeOptions = core.InteractionRuntimeOptions;
+type InteractionSpec = core.InteractionSpec;
+type MeshTransfer = core.MeshTransfer;
+type SpatialKernel = core.SpatialKernel;
+type Vec3 = core.Vec3;
 // #endregion 🔌️Adapters
 
 // #region 🧊️StoryBoxKernel

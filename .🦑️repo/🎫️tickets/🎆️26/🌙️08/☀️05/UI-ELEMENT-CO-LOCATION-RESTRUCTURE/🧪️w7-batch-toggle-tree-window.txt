@@ -1,0 +1,21 @@
+W7 batch: ToggleGroup, Tooltip, Tree, UIDialog, VirtualFileSystem, Window
+
+Moves (plain mv, no retyping):
+.storybook/stories/ui/ToggleGroup.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/ToggleGroup/🧪️story.tsx
+.storybook/stories/ui/Tooltip.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Tooltip/🧪️story.tsx
+.storybook/stories/ui/Tree.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Tree/🧪️story.tsx
+.storybook/stories/ui/UIDialog.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/UIDialog/🧪️story.tsx
+.storybook/stories/ui/VirtualFileSystem.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/VirtualFileSystem/🧪️story.tsx
+.storybook/stories/ui/Window.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Window/🧪️story.tsx
+
+Titles (meta.title), verified byte-identical before/after move:
+ToggleGroup:        "🖱️ui⚛️react/ToggleGroup"
+Tooltip:             "🖱️ui⚛️react/Tooltip"
+Tree:                "🖱️ui⚛️react/Tree"
+UIDialog:            "🖱️ui⚛️react/UIDialog"  (note: UIDialog.stories.tsx also has two unrelated string literals "title: \"Add Capsule Instance\"" / "title: \"Delete Design?\"" used as dialog-content props, NOT meta.title -- left untouched, correctly ignored)
+VirtualFileSystem:   "🖱️ui⚛️react/VirtualFileSystem"
+Window:              "🖱️ui⚛️react/Window"
+
+Relative imports: grepped every file in this batch pre- and post-move for `from "../` / `from "./` -- zero hits in all six files. No fixup needed (Textarea/Table fixture-import fixup does not apply to this batch).
+
+git status confirms: 6x " D" on old .storybook/stories/ui/*.stories.tsx paths, 6x "??" on new 🧱️elements/<Name>/🧪️story.tsx paths (plain untracked move, as expected pre-add).

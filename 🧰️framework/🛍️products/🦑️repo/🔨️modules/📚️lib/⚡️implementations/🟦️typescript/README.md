@@ -40,4 +40,4 @@ bun path/to/script.ts policy
 bun repo/lib/js/bin/lint.ts path/to/script.ts
 ```
 
-Nx registers `./repo/lib/js/🟨️nx-plugin.mjs`, which matches `**/📜️script.ts` that export `policy` and adds cacheable `breach-*` targets (`bun "<script.ts>" policy`).
+Nx registers `./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🟨️nx-plugin.mjs`, which matches `**/📜️script.ts` that export `policy` and adds cacheable `breach-*` targets (`bun "<script.ts>" policy`).

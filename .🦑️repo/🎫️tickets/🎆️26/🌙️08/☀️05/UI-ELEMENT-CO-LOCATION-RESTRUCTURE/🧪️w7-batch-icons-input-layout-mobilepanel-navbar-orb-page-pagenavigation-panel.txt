@@ -1,0 +1,31 @@
+W7 batch: Icons, Input, Layout, MobilePanel, Navbar, Orb, Page, PageNavigation, Panel
+
+All 9 files moved via `mv` (plain file move, no retyping):
+.storybook/stories/ui/Icons.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Icons/🧪️story.tsx
+.storybook/stories/ui/Input.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Input/🧪️story.tsx
+.storybook/stories/ui/Layout.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Layout/🧪️story.tsx
+.storybook/stories/ui/MobilePanel.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/MobilePanel/🧪️story.tsx
+.storybook/stories/ui/Navbar.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Navbar/🧪️story.tsx
+.storybook/stories/ui/Orb.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Orb/🧪️story.tsx
+.storybook/stories/ui/Page.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Page/🧪️story.tsx
+.storybook/stories/ui/PageNavigation.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/PageNavigation/🧪️story.tsx
+.storybook/stories/ui/Panel.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Panel/🧪️story.tsx
+
+File sizes/mtimes preserved by mv (identical bytes moved) - confirmed via ls before/after.
+
+Relative-import check (grep -nE "from ['\"]\.\.?/") on all 9 pre-move files: zero hits.
+All imports are bare specifiers (@semio-tech/ui-react, @semio-tech/assets, @storybook/react, react, react-router).
+No import fixups needed for this batch (the ../../fixture/nakagin case only applies to Textarea/Table, not in this batch).
+
+Title verification (grep "^  title:" on post-move files, matched against pre-move grep):
+Icons          -> "🖱️ui⚛️react/Icons"          (line 20, unchanged)
+Input          -> "🖱️ui⚛️react/Input"          (line 16, unchanged)
+Layout         -> "🖱️ui⚛️react/Layout"         (line 24, unchanged)
+MobilePanel    -> "🖱️ui⚛️react/MobilePanel"    (line 29, unchanged)
+Navbar         -> "🖱️ui⚛️react/Navbar"         (line 29, unchanged)
+Orb            -> "🖱️ui⚛️react/Orb"            (line 16, unchanged)
+Page           -> "🖱️ui⚛️react/Page"           (line 20, unchanged)
+PageNavigation -> "🖱️ui⚛️react/PageNavigation" (line 21, unchanged)
+Panel          -> "🖱️ui⚛️react/Panel"          (line 26, unchanged)
+
+All destination 🧱️elements/<Name>/ dirs pre-existed (already had extracted React components).

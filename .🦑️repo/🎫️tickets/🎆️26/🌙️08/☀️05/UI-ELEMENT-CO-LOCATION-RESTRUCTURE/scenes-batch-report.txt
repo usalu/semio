@@ -1,0 +1,60 @@
+Module: scenes (pub mod scenes { ... } in wgpu lib.rs)
+Element dir: Scenes (NEW) -> 🧱️elements/Scenes/🧊️component.rs
+Extracted line range (pre-edit lib.rs): opening "pub mod scenes {" at line 37,
+matching closing "}" at line 6688 (verified by brace-depth scan skipping
+strings/chars/comments/raw-strings, tool: brace_finder.cjs in this folder;
+sanity-checked by eye against surrounding boundary lines 6683-6691, which
+showed the nested "//#endregion TextEditor" / "//#endregion scenes" region
+comments immediately before the blank line + "pub mod shell {" at 6690).
+
+Inner body extracted: lines 38-6687 (6650 lines), dedented one level (leading
+4 spaces stripped per line) to match this ticket's established file-backed
+pattern (checked against sibling files Dock/component.rs and
+EngineCanvas/component.rs, both already extracted under this same ticket).
+The body's own leading "//#region scenes" + doc-comment + blank (3 lines) and
+trailing "//#endregion scenes" (1 line) were stripped as redundant outer
+wrapper markers, mirroring how Dock/EngineCanvas do not repeat their own
+module-name region markers (the doc-comment content was folded into the new
+file's header instead). Nested inner regions (e.g. "//#endregion TextEditor")
+were left untouched.
+
+lib.rs edit: replaced the entire "pub mod scenes { ... }" block (lines 37-6688
+in the pre-edit file) with:
+  #[path = "../../../../🧱️elements/Scenes/🧊️component.rs"]
+  pub mod scenes;
+Module name "scenes" unchanged, so all crate::scenes::... call sites elsewhere
+keep resolving unchanged.
+
+Verification: brace-balance re-check on the new component.rs file (same
+comment/string/char/raw-string-aware scanner) returned final depth=0,
+minDepth=0 (never goes negative) -- i.e. structurally sound Rust braces.
+
+cargo check: BLOCKED, not by this edit. `DEVELOPER_DIR=/Library/Developer/CommandLineTools
+cargo check -p semio-framework-os-renderer-wgpu` fails at the workspace-manifest
+load stage (before reaching this crate at all) with:
+
+  error: failed to load manifest for workspace member
+  `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/⚡️implementations/🦀️rust`
+  referenced by workspace at `/Users/ueli/Documents/semio/Cargo.toml`
+  Caused by:
+    failed to read `.../🏗️bim/⚡️implementations/🦀️rust/Cargo.toml`
+  Caused by:
+    No such file or directory (os error 2)
+
+Confirmed that directory literally does not exist right now
+(✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/⚡️implementations/ has no 🦀️rust subdir) --
+this is an unrelated concurrent session mid-move on the bim/flow plugin
+(matches the several other *-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION
+tickets visible in git status right now: PUZZLE, RASTER, SPACE, BLOCK). Not
+the exact "multiple workspace roots" string named in the task brief, but the
+same class of transient repo-wide workspace churn from another session per
+the "Concurrent Cargo Workspace Churn" memory note. Retried cargo check 5x
+over ~2 minutes (immediate, +8s, +20s, +15s, +15s) -- same failure every time,
+still failing as of the last check, root Cargo.toml NOT touched (out of
+ticket scope). Treating this batch's own edit as hand-verified-only per the
+task brief's fallback instructions.
+
+Note: 4 purely-intermediate scratch files from the sed/dedent pipeline
+(scenes_body.txt, scenes_body_dedent.txt, scenes_body_final.txt,
+scenes_header.txt) were deleted after assembly into the final component.rs --
+their content is fully subsumed by the final file, nothing unique was lost.

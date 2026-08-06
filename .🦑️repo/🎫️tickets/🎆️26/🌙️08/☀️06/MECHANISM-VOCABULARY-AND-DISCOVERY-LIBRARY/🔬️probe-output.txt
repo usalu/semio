@@ -1,0 +1,158 @@
+=== validateTaxonomy === []
+=== packages: 43
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-writer	✏️s/🔌️plugins/✒️writer
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-mathematical	✏️s/🔌️plugins/➗️mathematical
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-procedural	✏️s/🔌️plugins/🌀️procedural
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-flow	✏️s/🔌️plugins/🌊️flow
+ plugin	🟦️typescript	-	mixed	clean	flow-js	✏️s/🔌️plugins/🌊️flow
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-gis	✏️s/🔌️plugins/🌍️gis
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-vcs	✏️s/🔌️plugins/🌿️vcs
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-animate	✏️s/🔌️plugins/🎞️animate
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-shooting	✏️s/🔌️plugins/🎥️shooting
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-demonstrator	✏️s/🔌️plugins/🎪️demonstrator
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-sequence	✏️s/🔌️plugins/🎬️sequence
+ plugin	🦀️rust	-	mixed	mixed	semio-s-plugin-fem	✏️s/🔌️plugins/🏗️fem
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-architect	✏️s/🔌️plugins/🏛️architect
+ plugin	🦀️rust	-	mixed	mixed	semio-s-plugin-process	✏️s/🔌️plugins/🏭️process
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-lowpoly	✏️s/🔌️plugins/💠️lowpoly
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-reasoning-mindmap	✏️s/🔌️plugins/💡️reasoning
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-forms	✏️s/🔌️plugins/📋️forms
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-layout	✏️s/🔌️plugins/📏️layout
+ plugin	🦀️rust	-	mixed	mixed	semio-s-plugin-cad	✏️s/🔌️plugins/📐️cad
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-norm	✏️s/🔌️plugins/📕️norm
+ plugin	🦀️rust	-	mixed	mixed	semio-s-plugin-playbook	✏️s/🔌️plugins/📖️playbook
+ plugin	🦀️rust	-	mixed	mixed	semio-s-plugin-imperative	✏️s/🔌️plugins/📜️imperative
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-remodel	✏️s/🔌️plugins/📸️remodel
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-energy	✏️s/🔌️plugins/🔋️energy
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-trinity	✏️s/🔌️plugins/🔱️trinity
+ tool	🦀️rust	-	mixed	clean	semio-s-plugin-trinity-jack-shell	✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🐚️shell
+ tool	🦀️rust	-	mixed	clean	semio-s-plugin-trinity-jack-lsp	✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp
+ tool	🟦️typescript	-	mixed	clean	trinity-jack-lsp-worker	✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-dag	✏️s/🔌️plugins/🕸️dag
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-draw	✏️s/🔌️plugins/🖍️draw
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-raster	✏️s/🔌️plugins/🖨️raster
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-note	✏️s/🔌️plugins/🗒️note
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-puzzle	✏️s/🔌️plugins/🧩️puzzle
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-block	✏️s/🔌️plugins/🧱️block
+ plugin	🦀️rust	-	mixed	clean	semio-s-plugin-space	✏️s/🔌️plugins/🪐️space
+ plugin	🦀️rust	-	mixed	mixed	semio-s-plugin-sourcing	✏️s/🔌️plugins/🪵️sourcing
+ framework	🦀️rust	⌨️tui	legacy	clean	ui-tui	🧰️framework/🔨️modules/🖱️ui
+ framework	🟦️typescript	⚛️react	legacy	clean	ui-react	🧰️framework/🔨️modules/🖱️ui
+ framework	🦀️rust	🧊️wgpu	legacy	clean	ui-wgpu	🧰️framework/🔨️modules/🖱️ui
+ framework	🦀️rust	-	legacy	clean	ui-styling	🧰️framework/🔨️modules/🖱️ui/🎨️styling
+ framework	🟦️typescript	-	legacy	clean	ui-styling-ts	🧰️framework/🔨️modules/🖱️ui/🎨️styling
+ framework	🟦️typescript	⚛️react	legacy	clean	renderer-react	🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine
+ framework	🦀️rust	🧊️wgpu	legacy	clean	renderer-wgpu	🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine
+=== owners: 41
+ ✏️s/🔌️plugins/✒️writer	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/➗️mathematical	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🌀️procedural	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🌊️flow	area=mixed	clean	langs=🦀️rust|🟦️typescript	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim	area=mixed	clean	langs=	targets=	roles=	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🌍️gis	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🌿️vcs	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🎞️animate	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🎥️shooting	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🎪️demonstrator	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🎬️sequence	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🏗️fem	area=mixed	mixed	langs=🦀️rust	targets=	roles=plugin	residual=17	rootEntries=📦️lib.rs
+ ✏️s/🔌️plugins/🏛️architect	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🏭️process	area=mixed	mixed	langs=🦀️rust	targets=	roles=plugin	residual=1	rootEntries=
+ ✏️s/🔌️plugins/💠️lowpoly	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/💡️reasoning	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/📋️forms	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/📏️layout	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/📐️cad	area=mixed	mixed	langs=🦀️rust	targets=	roles=plugin	residual=10	rootEntries=
+ ✏️s/🔌️plugins/📕️norm	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/📖️playbook	area=mixed	mixed	langs=🦀️rust	targets=	roles=plugin	residual=1	rootEntries=
+ ✏️s/🔌️plugins/📜️imperative	area=mixed	mixed	langs=🦀️rust	targets=	roles=plugin	residual=5	rootEntries=
+ ✏️s/🔌️plugins/📸️remodel	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🔋️energy	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🔱️trinity	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🐚️shell	area=mixed	clean	langs=🦀️rust	targets=	roles=tool	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp	area=mixed	clean	langs=🦀️rust|🟦️typescript	targets=	roles=tool	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🕸️dag	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🖍️draw	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🖍️draw/🔄️fsm	area=mixed	clean	langs=	targets=	roles=	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🖍️draw/🔄️fsm/✨️macros	area=mixed	clean	langs=	targets=	roles=	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🖨️raster	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🗒️note	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🧩️puzzle	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🧱️block	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🪐️space	area=mixed	clean	langs=🦀️rust	targets=	roles=plugin	residual=0	rootEntries=
+ ✏️s/🔌️plugins/🪵️sourcing	area=mixed	mixed	langs=🦀️rust	targets=	roles=plugin	residual=3	rootEntries=
+ 🌎️hub	area=legacy	mixed	langs=	targets=	roles=	residual=5	rootEntries=
+ 🧰️framework/🔨️modules/🖱️ui	area=legacy	clean	langs=🦀️rust|🟦️typescript	targets=🧊️wgpu|⌨️tui|⚛️react	roles=framework	residual=0	rootEntries=
+ 🧰️framework/🔨️modules/🖱️ui/🎨️styling	area=legacy	clean	langs=🦀️rust|🟦️typescript	targets=	roles=framework	residual=0	rootEntries=
+ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine	area=legacy	clean	langs=🦀️rust|🟦️typescript	targets=🧊️wgpu|⚛️react	roles=framework	residual=0	rootEntries=
+=== problems === []
+=== burndown === {
+ "ownersTotal": 41,
+ "packagesTotal": 43,
+ "cleanOwners": 34,
+ "mixedOwners": [
+  "✏️s/🔌️plugins/🏗️fem:17:📦️lib.rs",
+  "✏️s/🔌️plugins/🏭️process:1:",
+  "✏️s/🔌️plugins/📐️cad:10:",
+  "✏️s/🔌️plugins/📖️playbook:1:",
+  "✏️s/🔌️plugins/📜️imperative:5:",
+  "✏️s/🔌️plugins/🪵️sourcing:3:",
+  "🌎️hub:5:"
+ ],
+ "implDirsTotal": 217,
+ "implDirsByArea": {
+  "legacy": 180,
+  "mixed": 37
+ },
+ "unmarkedManifests": [
+  {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/pyproject.toml",
+   "area": "legacy"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/Cargo.toml",
+   "area": "mixed"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
+   "area": "mixed"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
+   "area": "mixed"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🖍️draw/🔄️fsm/📦️packages/🦀️rust/Cargo.toml",
+   "area": "mixed"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🖍️draw/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml",
+   "area": "mixed"
+  }
+ ],
+ "packagingViolations": [
+  "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🤖️generated.rs",
+  "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🔣️ui-axes.json",
+  "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️globals.css",
+  "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️globals-ui.css",
+  "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️theme.css",
+  "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/README.md",
+  "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🔣️components.json",
+  "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/AGENTS.md",
+  "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🤖️generated.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🔣️tokens.json",
+  "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts",
+  "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🛂️manifest.jsonadapters.manifest.json",
+  "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🎨️palette.css",
+  "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🎨️ui.css",
+  "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🧪️index.test.ts",
+  "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️tokens.generated.ts",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🌐️index.html",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️index.test.ts",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🔣️semio_logo.svg",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts",
+  "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🐚️shell/📦️packages/🦀️rust/Cargo.lock",
+  "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/Cargo.lock",
+  "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/Cargo.lock"
+ ]
+}

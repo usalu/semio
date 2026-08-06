@@ -8531,6 +8531,7 @@ dependencies = [
  "semio-framework-kernel-infinite-world",
  "semio-framework-os-kernel-3d-scene",
  "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-dsl-core",
  "semio-framework-os-kernel-flow-core",
  "semio-framework-os-kernel-infinite-canvas",
  "semio-framework-os-kernel-protocol",

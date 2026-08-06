@@ -1,0 +1,73 @@
+{
+  "name": "@semio-tech/cad-js",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": ["{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🔨️modules/**/*.ts", "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🔨️modules/**/*.tsx", "{projectRoot}/**/*"]
+  },
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "env": {
+          "CAD_JS_RENDERER_PLAY_PORT": "6041"
+        },
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test quick",
+        "env": {
+          "CAD_JS_RENDERER_PLAY_PORT": "6041"
+        },
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test long",
+        "env": {
+          "CAD_JS_RENDERER_PLAY_PORT": "6041"
+        },
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test exhaustive",
+        "env": {
+          "CAD_JS_RENDERER_PLAY_PORT": "6041"
+        },
+        "forwardAllArgs": true
+      }
+    },
+    "generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts generate",
+        "forwardAllArgs": true
+      }
+    },
+    "fixture": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts fixture",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

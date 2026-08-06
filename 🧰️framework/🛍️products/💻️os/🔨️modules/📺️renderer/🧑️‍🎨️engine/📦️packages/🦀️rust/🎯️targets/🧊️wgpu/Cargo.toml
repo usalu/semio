@@ -57,6 +57,7 @@ store_sync = { path = "../../../../../../🏪️store/🔄️sync/⚡️implemen
 vcs = { path = "../../../../../../🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
 store = { path = "../../../../../../🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
 dsl = { path = "../../../../../../🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+dsl_core = { path = "../../../../../../🗣️dsl/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-core" }
 protocol = { path = "../../../../../../📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 tokio = { version = "1", features = ["sync"], default-features = false }
 ureq = "2.12.1"

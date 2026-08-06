@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@semio-tech/animate-present-core": "workspace:*",
-    "@semio-tech/animate-present-renderer-react": "workspace:*"
+    "@semio-tech/animate-js": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",

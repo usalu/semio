@@ -1,0 +1,133 @@
+
+┌  Building storybook v10.5.6
+│
+◇  Cleaning outputDir:
+│  .🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE/storybook-static-ui
+│
+◇  Loading presets
+│
+◇  Building manager..
+│
+●  Building open services..
+│
+●  Building preview..
+│  Vite vite v7.3.6 building client environment for production...
+│  Vite transforming...
+│
+▲  Vite [plugin vite:react-docgen-typescript] .storybook/preview.tsx:
+│  Skipping docgen for
+│  "/Users/ueli/Documents/semio/.storybook/preview.tsx" because it is not
+│  included in the active TypeScript project.
+│
+▲  Vite node_modules/react-router/dist/development/index.mjs (11:0):
+│  Module level directives cause errors when bundled, "use client" in
+│  "node_modules/react-router/dist/development/index.mjs" was ignored.
+│  Vite ✓ 114 modules transformed.
+│
+■  Vite ✗ Build failed in 14.00s
+│
+■  Failed to build the preview
+│
+■  [@tailwindcss/vite:generate:build] Can't resolve
+│  '../🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/🎨️globals.css'
+│  in './.storybook'
+│  file: ./.storybook/globals.css
+│  at finishWithoutResolve
+│  (./node_modules/enhanced-resolve/lib/Resolver.js:952:18)
+│  at ./node_modules/enhanced-resolve/lib/Resolver.js:1048:13
+│  at ./node_modules/enhanced-resolve/lib/Resolver.js:1132:5
+│  at eval (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:15:1)
+│  at ./node_modules/enhanced-resolve/lib/Resolver.js:1132:5
+│  at eval (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:27:1)
+│  at ./node_modules/enhanced-resolve/lib/DescriptionFilePlugin.js:94:43
+│  at ./node_modules/enhanced-resolve/lib/Resolver.js:1132:5
+│  at eval (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:15:1)
+│  at ./node_modules/enhanced-resolve/lib/Resolver.js:1132:5
+│  at eval (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:15:1)
+│  at ./node_modules/enhanced-resolve/lib/Resolver.js:1132:5
+│  at eval (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:16:1)
+│  at ./node_modules/enhanced-resolve/lib/Resolver.js:1132:5
+│  at eval (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:27:1)
+│  at ./node_modules/enhanced-resolve/lib/DescriptionFilePlugin.js:94:43
+│  at ./node_modules/enhanced-resolve/lib/Resolver.js:1132:5
+│  at eval (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:16:1)
+│  at ./node_modules/enhanced-resolve/lib/Resolver.js:1132:5
+│  at eval (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:15:1)
+│  at ./node_modules/enhanced-resolve/lib/DirectoryExistsPlugin.js:52:15
+│  at SyncAsyncFileSystemDecorator.stat
+│  (./node_modules/enhanced-resolve/lib/SyncAsyncFileSystemDecorator.js:66:34)
+│  at ./node_modules/enhanced-resolve/lib/DirectoryExistsPlugin.js:35:9
+│  at Hook.eval [as callAsync] (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:7:1)
+│  at Resolver.doResolve
+│  (./node_modules/enhanced-resolve/lib/Resolver.js:1129:16)
+│  at ./node_modules/enhanced-resolve/lib/ConditionalPlugin.js:42:14
+│  at _next0 (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:8:1)
+│  at eval (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:30:1)
+│  at ./node_modules/enhanced-resolve/lib/Resolver.js:1132:5
+│  at eval (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:16:1)
+│  at ./node_modules/enhanced-resolve/lib/Resolver.js:1132:5
+│  at eval (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:15:1)
+│  at ./node_modules/enhanced-resolve/lib/Resolver.js:1132:5
+│  at eval (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:15:1)
+│  at ./node_modules/enhanced-resolve/lib/FileExistsPlugin.js:50:14
+│  at SyncAsyncFileSystemDecorator.stat
+│  (./node_modules/enhanced-resolve/lib/SyncAsyncFileSystemDecorator.js:66:34)
+│  at ./node_modules/enhanced-resolve/lib/FileExistsPlugin.js:33:8
+│  at Hook.eval [as callAsync] (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:7:1)
+│  at Resolver.doResolve
+│  (./node_modules/enhanced-resolve/lib/Resolver.js:1129:16)
+│  at ./node_modules/enhanced-resolve/lib/NextPlugin.js:30:14
+│  at Hook.eval [as callAsync] (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:7:1)
+│  at Resolver.doResolve
+│  (./node_modules/enhanced-resolve/lib/Resolver.js:1129:16)
+│  at ./node_modules/enhanced-resolve/lib/AppendPlugin.js:40:14
+│  at _next1 (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:8:1)
+│  at eval (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:31:1)
+│  at ./node_modules/enhanced-resolve/lib/Resolver.js:1132:5
+│  at eval (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:15:1)
+│  at ./node_modules/enhanced-resolve/lib/Resolver.js:1132:5
+│  at eval (eval at create
+│  (./node_modules/tapable/lib/HookCodeFactory.js:31:10),
+│  <anonymous>:15:1)
+│  at ./node_modules/enhanced-resolve/lib/FileExistsPlugin.js:50:14
+│
+└  Storybook exited with an error
+

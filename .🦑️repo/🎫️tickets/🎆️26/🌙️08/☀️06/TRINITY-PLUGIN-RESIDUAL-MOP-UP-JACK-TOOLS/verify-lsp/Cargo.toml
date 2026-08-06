@@ -1,0 +1,54 @@
+cargo-features = ["trim-paths"]
+
+[package]
+name = "semio-s-plugin-trinity-jack-lsp"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Jack language server — JSON-RPC LSP subset over trinity graphs"
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/📦️lib.rs"
+
+[dependencies]
+mathematical_graph_dsl = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/🕸️graph/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph-dsl" }
+trinity = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust", package = "semio-s-plugin-trinity" }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+thiserror = "2.0.18"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.106"
+
+[workspace]
+
+[profile.dev]
+debug = false
+incremental = true
+
+[profile.dev.build-override]
+opt-level = 3
+
+[lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"

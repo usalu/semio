@@ -1,0 +1,13 @@
+{
+  "title": "Hub Product Crate Consolidation Dress Rehearsal",
+  "emoji": "🌎️",
+  "status": "open",
+  "description": "Consolidate 🌎️hub from 5 crates (semio-hub, semio-hub-directory, semio-hub-directory-{sqlite,postgres,neo4j}) down to 1 crate `semio-hub` at 🌎️hub/📦️packages/🦀️rust/, applying Shape V2 tree-purity taxonomy layout at 🌎️hub root (📇️directory/🦀️component.rs + 📇️directory/{🌐️neo4j,🐘️postgres,🪶️sqlite}/🦀️component.rs, each backend gated behind a Cargo feature). This is the first framework-family merge (product/hub role) — the dress rehearsal for the much larger os-kernel/framework wave. Backend DB driver deps (rusqlite/sqlx-postgres+sqlx-core/neo4rs) become optional+feature-gated; axum/tokio/dashmap/etc. stay unconditional. Binary target `os-hub` preserved via [[bin]] alongside [lib]. Also produce 📋️TEMPLATE-FAMILY.md (general framework/product family merge recipe) in the master ticket folder 26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE/. Zero dependents confirmed via grep. Verify with cargo check/clippy/test (no features, all-features, each feature individually) against pre-merge test baseline, then delete old crate dirs and end with a registrar handoff block (never touching root Cargo.toml directly).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2514"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪c3cf2e1c270d4ce092ff2aff4964dd43"
+  ]
+}

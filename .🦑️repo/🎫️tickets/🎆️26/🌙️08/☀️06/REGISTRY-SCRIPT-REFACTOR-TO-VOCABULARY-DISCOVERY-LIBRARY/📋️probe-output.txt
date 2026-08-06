@@ -1,0 +1,61 @@
+
+### role=framework (7)
+  🦀️rust/⌨️tui  ui-tui  <- 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui  [area=legacy maturity=clean]
+  🟦️typescript/⚛️react  ui-react  <- 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react  [area=legacy maturity=clean]
+  🦀️rust/🧊️wgpu  ui-wgpu  <- 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu  [area=legacy maturity=clean]
+  🦀️rust  ui-styling  <- 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust  [area=legacy maturity=clean]
+  🟦️typescript  ui-styling-ts  <- 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript  [area=legacy maturity=clean]
+  🟦️typescript/⚛️react  renderer-react  <- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react  [area=legacy maturity=clean]
+  🦀️rust/🧊️wgpu  renderer-wgpu  <- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu  [area=legacy maturity=clean]
+
+### role=hub (1)
+  🦀️rust  semio-hub  <- 🌎️hub/📦️packages/🦀️rust  [area=legacy maturity=mixed]
+
+### role=plugin (33)
+  🦀️rust  semio-s-plugin-writer  <- ✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-mathematical  <- ✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-procedural  <- ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-flow  <- ✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🟦️typescript  flow-js  <- ✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-gis  <- ✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-vcs  <- ✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-animate  <- ✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-shooting  <- ✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-demonstrator  <- ✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-sequence  <- ✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-fem  <- ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust  [area=mixed maturity=mixed]
+  🦀️rust  semio-s-plugin-architect  <- ✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-process  <- ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust  [area=mixed maturity=mixed]
+  🦀️rust  semio-s-plugin-lowpoly  <- ✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-reasoning-mindmap  <- ✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-forms  <- ✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-layout  <- ✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-cad  <- ✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-norm  <- ✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-playbook  <- ✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust  [area=mixed maturity=mixed]
+  🦀️rust  semio-s-plugin-imperative  <- ✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust  [area=mixed maturity=mixed]
+  🦀️rust  semio-s-plugin-remodel  <- ✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-energy  <- ✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-trinity  <- ✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-dag  <- ✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-draw  <- ✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-raster  <- ✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-note  <- ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-puzzle  <- ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-block  <- ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-space  <- ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-sourcing  <- ✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust  [area=mixed maturity=mixed]
+
+### role=s-module (3)
+  🦀️rust  semio-s-2d  <- ✏️s/🔨️modules/◻2d/📦️packages/🦀️rust  [area=legacy maturity=mixed]
+  🦀️rust  semio-s-mindmap  <- ✏️s/🔨️modules/💭️mindmap/📦️packages/🦀️rust  [area=legacy maturity=mixed]
+  🦀️rust  semio-s-imperative  <- ✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust  [area=legacy maturity=mixed]
+
+### role=tool (3)
+  🦀️rust  semio-s-plugin-trinity-jack-shell  <- ✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🐚️shell/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🦀️rust  semio-s-plugin-trinity-jack-lsp  <- ✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust  [area=mixed maturity=clean]
+  🟦️typescript  trinity-jack-lsp-worker  <- ✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript  [area=mixed maturity=clean]
+
+### owners=48 packages=47
+
+### problems (0)

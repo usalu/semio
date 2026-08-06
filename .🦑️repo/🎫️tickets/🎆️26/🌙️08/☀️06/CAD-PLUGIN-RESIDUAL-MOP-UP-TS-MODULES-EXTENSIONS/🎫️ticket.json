@@ -1,0 +1,13 @@
+{
+  "title": "Cad Plugin Residual Mop-Up (TS Modules + Extensions)",
+  "emoji": "📐️",
+  "status": "open",
+  "description": "Fold 📐️cad's 6 leftover TS modules (Rule A) into one npm package @semio-tech/cad-js at ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/, and de-sandwich cad's 4 TS extensions (Rule B) in place, per the Shape V2 amendment in the-codebase-still-has-spicy-umbrella.md. Delete the empty 🔨️modules/🔷️dotnet dir. Update root package.json workspaces array. Verify bun install + typecheck/test per package.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2520"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪8c45d99735fe46a38978a8215b9fa7d1"
+  ]
+}

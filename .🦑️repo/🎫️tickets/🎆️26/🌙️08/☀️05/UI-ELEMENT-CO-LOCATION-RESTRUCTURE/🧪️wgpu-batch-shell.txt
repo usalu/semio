@@ -1,0 +1,42 @@
+Batch: shell -> Shell element (wgpu engine)
+
+Mod: pub mod shell { ... } in
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️lib.rs
+
+Target element dir: existing 🧱️elements/Shell/ (react-only before this batch; added the wgpu leaf)
+New file: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs
+
+Line range extracted (pre-edit lib.rs, 1-indexed):
+  - block wrapper: line 40 "pub mod shell {" .. line 11092 "}" (matching closing brace, brace-depth counted from mod's own '{', naive-count sanity-confirmed: next declaration after 11092 is "pub mod icon_atlas {" at line 11094, exactly as expected)
+  - "// #region shell" marker line 41 + doc-comment line 42 + blank line 43 folded into the new file's header docstring (matches sibling convention from dock/engine_canvas/interpreter/program_bridge/scenes batches)
+  - body content lines 44..11090 (11047 lines) extracted verbatim via sed, then dedented by exactly 4 leading spaces per line (`sed 's/^    //'`) to match sibling leaf-file convention
+  - "// #endregion shell" (line 11091) dropped (implicit at file end, same as siblings)
+  - new component.rs: 11055 lines total (7-line header + 1 blank + 11047 body lines)
+
+lib.rs edit: replaced lines 40-11092 with:
+  #[path = "../../../../🧱️elements/Shell/🧊️component.rs"]
+  pub mod shell;
+  lib.rs: 12325 -> 1274 lines. Module name `shell` unchanged; `use shell::ShellState;` and all other `crate::shell::...`/`shell::...` call sites elsewhere in lib.rs require zero changes.
+
+Hand verification (workspace-wide cargo check blocked, see below):
+  - brace balance in new component.rs: open { = 2753, close } = 2753 (node -e regex count)
+  - `struct ShellState` present at line 409 of the new file (the symbol lib.rs's `use shell::ShellState;` depends on)
+  - `DEVELOPER_DIR=/Library/Developer/CommandLineTools rustfmt --edition 2021 --check` on both the new component.rs and the edited lib.rs: exit 1 (pure reformatting diffs only, e.g. rustfmt wants to collapse a few already-long `_ => { ... }` match arms and long `if`/let chains onto fewer lines) — zero "error:" lines, i.e. both files parse as syntactically valid Rust. No functional diff, just line-wrapping preference (pre-existing in the codebase, not introduced by this extraction).
+
+cargo check result: BLOCKED, not by my edit.
+  `DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo check -p semio-framework-os-renderer-wgpu`
+  (also retried with `--manifest-path .../🧊️wgpu/Cargo.toml`, and retried 3x with sleeps up to +20s)
+  consistently fails at the workspace-manifest-load stage, before reaching this crate, with:
+
+    error: failed to load manifest for workspace member `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/⚡️implementations/🦀️rust`
+    referenced by workspace at `/Users/ueli/Documents/semio/Cargo.toml`
+
+    Caused by:
+      failed to read `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/⚡️implementations/🦀️rust/Cargo.toml`
+
+    Caused by:
+      No such file or directory (os error 2)
+
+  This is the "Concurrent Cargo Workspace Churn" pattern (unrelated concurrent session mid-move on the bim flow-extension plugin's Rust dir, per git status showing several other in-flight PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION tickets touching ✏️s/🔌️plugins/*). Not the exact "multiple workspace roots" wording from the ticket brief, but same category (workspace-wide resolver failure from someone else's file churn, unrelated to the wgpu crate or this extraction). Per the ticket's instruction, treating my own edit as hand-verified-only rather than attempting to fix the bim plugin dir myself.
+
+Status: EXTRACTION DONE, HAND-VERIFIED ONLY. Real `cargo check -p semio-framework-os-renderer-wgpu` still needs to be (re-)run by whoever/whenever the workspace-wide bim-plugin blocker clears, to confirm 0 new errors and the same 138-warning baseline.

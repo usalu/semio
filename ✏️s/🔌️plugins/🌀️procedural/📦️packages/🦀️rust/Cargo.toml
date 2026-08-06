@@ -59,3 +59,5 @@ wasm-bindgen = "0.2.106"
 [dev-dependencies]
 vcs = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
 kernel_3d_scene = { path = "../../../../../✏️s/🔨️modules/🧊️3d/🎬️scene/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-scene" }
+
+

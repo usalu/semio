@@ -1,0 +1,14 @@
+{
+  "title": "Flow Plugin Residual Mop-Up (TS Module + Extension De-Sandwich)",
+  "emoji": "🌊️",
+  "status": "closed",
+  "description": "W6 pilot: fold flow's leftover 🧮️compute TS module into @semio-tech/flow-js at 📦️packages/🟦️typescript, de-sandwich the 🏗️bim extension crate/npm-wrapper into 🧩️extensions/🏗️bim/📦️packages/{🦀️rust,🟦️typescript}, verify with real cargo/bun commands, then write TEMPLATE-TS.md and TEMPLATE-EXT.md recipes into the master ticket folder for the rest of W6 to follow. Scope strictly limited to ✏️s/🔌️plugins/🌊️flow/**; root Cargo.toml member-line change ends in a registrar-handoff block, not applied directly. Root package.json workspaces array touched only (two line edits: add flow-js entry, deepen the flow extensions glob to .../📦️packages/🟦️typescript).",
+  "summary": "Duplicate ticket — opened before discovering the pre-existing, already-open ticket `26/08/06/FLOW-PLUGIN-TS-MODULES-AND-EXTENSIONS-CONSOLIDATION` covers the exact same W6 flow pilot task (dispatched earlier by the orchestrating session per master.md's ~03:15 note). No source files were touched under this duplicate ticket — closing immediately with zero code changes. All actual work happens under the correct pre-existing ticket path instead, per CLAUDE.md's rule to reuse an existing ticket covering the same task rather than fork a new one.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2515"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪1adc5b3b73e743aaa60452cf3722c4b5"
+  ]
+}

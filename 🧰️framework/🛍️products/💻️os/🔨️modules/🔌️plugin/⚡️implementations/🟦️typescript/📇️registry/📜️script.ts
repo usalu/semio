@@ -1,8 +1,10 @@
 #!/usr/bin/env bun
 /** 📜️ `@semio-tech/plugin-registry` — single-source plugin registry codegen from workspace crates. */
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
-import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, loadTaxonomy, discoverPackages, discoverPackageProblems } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { basename, dirname, join, relative } from "node:path";
+import type { AreaState, DiscoveredPackage, PackageRole } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { areaOf, BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, loadTaxonomy, discoverPackages, discoverPackageProblems } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { generateLaunchJson, LAUNCH_OUTPUT_REL_PATH } from "./🖥️launch.ts";
 
 //#region 🔖️PluginRegistryEntry
 export type PluginHostMetadata = {
@@ -21,43 +23,83 @@ export type PluginRegistryEntry = {
 };
 
 //#region 🏛️DiscoveryContract
-/** @emoji 🧭️ Accepts both the current 7-crate-per-app plugin shape and the future one-crate-per-plugin
- * taxonomy shape (`📦️packages/🦀️rust/Cargo.toml` + `[package.metadata.semio] role = "…"`) while
- * migration is in flight — see the discovery contract in master ticket
- * `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`. A plugin discoverable under both
- * shapes at once is "in-flight", not an error. Flipped off in the W4 finalization wave once every
- * plugin/framework-module-family has migrated, at which point the legacy regexes are deleted outright. */
-const LEGACY_LAYOUT_TOLERANT = true;
+/** @emoji 🔣️ The one shared taxonomy vocabulary (`🦑️repo/📚️lib`'s `🔣️taxonomy.json`), read once. Every
+ * directory-name, manifest-filename, role and area literal this script used to hardcode as a path regex
+ * now comes from here, so registry discovery can never drift from the root policy script's or the SDK
+ * testkit's view of the same contract — see mechanism ticket
+ * `26/08/06/MECHANISM-VOCABULARY-AND-DISCOVERY-LIBRARY`. */
+const TAXONOMY = loadTaxonomy();
 
-/** @emoji 🎛️ Single source of truth for the taxonomy tree's apps-container segment name, so anything
- * deriving an app-root path (the constitutional gate, example discovery) shares one literal instead of
- * duplicating it independently and drifting apart if the segment is ever renamed. */
-const APPS_DIRNAME = "🎛️apps";
+/** @emoji 🗺️ Area root of the plugin tree, cross-checked against `taxonomy.areas` at load time so this
+ * literal can never outlive a vocabulary rename: the area's declared `AreaState` — not a hand-flipped
+ * boolean — decides whether pre-Shape-V2 crates are still discovered and whether taxonomy findings warn
+ * or fail (see `PLUGINS_AREA_STATE`). */
+const PLUGINS_AREA = "✏️s/🔌️plugins";
+if (!(PLUGINS_AREA in TAXONOMY.areas)) throw new Error(`📇️registry: "${PLUGINS_AREA}" is not a declared area in 🔣️taxonomy.json (${Object.keys(TAXONOMY.areas).join(", ")})`);
 
-/** @emoji 🏛️ True when a manifest's `[package.metadata.semio]` block declares `role = "<role>"` — the
- * identity check for the new one-crate-per-plugin/framework-module-family taxonomy contract. */
-function hasSemioRole(text: string, role: "plugin" | "framework"): boolean {
-  const block = tomlBlocksAfterHeader(text.split("\n"), (line) => line === "[package.metadata.semio]")[0];
-  if (!block) return false;
-  return new RegExp(`^role\\s*=\\s*"${role}"\\s*$`, "m").test(block.join("\n"));
+/** @emoji 🗺️ Declared migration state of the plugin area — the per-area replacement for the removed
+ * `LEGACY_LAYOUT_TOLERANT` boolean. `legacy`/`mixed` ⇒ pre-Shape-V2 crates are still part of the catalog
+ * and taxonomy findings are warn-only; `clean` ⇒ the legacy arm goes silent and the findings fail the
+ * gate (the W10 finalization flip becomes a one-word vocabulary edit, not a code change). */
+const PLUGINS_AREA_STATE: AreaState = areaOf(PLUGINS_AREA, TAXONOMY) ?? "legacy";
+
+/** @emoji 🏚️ True while an area still admits the pre-Shape-V2 sandwich layout. */
+function areaAdmitsLegacyShape(state: AreaState): boolean {
+  return state === "legacy" || state === "mixed";
 }
 
-/** @emoji 🧭️ True when a manifest path matches the new one-crate-per-plugin taxonomy contract shape
- * (`✏️s/🔌️plugins/<p>/📦️packages/🦀️rust/Cargo.toml`) — the single source of truth for that shape,
- * shared by crate discovery (`findPluginCargoFiles`) and in-flight playground dedupe
- * (`dedupeInFlightPlaygroundEntries`) so the two never drift apart. */
-function isNewContractPluginManifestPath(path: string): boolean {
-  return /\/✏️s\/🔌️plugins\/[^/]+\/📦️packages\/🦀️rust\/Cargo\.toml$/.test(path);
-}
-//#endregion 🏛️DiscoveryContract
+/** @emoji 🎛️ Taxonomy tree segment names, single-sourced from the vocabulary: anything deriving an
+ * app-root path (the constitutional gate, example discovery, the window audit) shares one value. */
+const APPS_DIRNAME = TAXONOMY.appsDirName;
+const RUST_LANG = "🦀️rust";
+const RUST_MANIFEST_FILENAME = TAXONOMY.ecosystems[RUST_LANG].manifestFilename ?? "Cargo.toml";
 
-function findPluginCargoFiles(root: string): string[] {
+/** @emoji 🚫️ Build/vendor noise and dot-directories (e.g. `.claude/worktrees/…`, which used to leak
+ * duplicate registry rows for every crate that also exists inside a worktree checkout). */
+const WALK_SKIP_DIRS = new Set(["node_modules", "target", "🤖️generated"]);
+
+/** @emoji 🧩️ Roles whose packages may carry a `[package.metadata.component]` wasm component and thus
+ * belong in the plugin catalog: the plugin itself and the extensions it contributes. Every other role
+ * (`framework`, `tool`, `s-module`, …) is filtered out by `tryParsePluginCargo` anyway — listing them
+ * here keeps the intent explicit instead of implicit in a downstream parse failure. */
+const COMPONENT_ROLES: ReadonlySet<PackageRole> = new Set<PackageRole>(["plugin", "extension"]);
+
+/** @emoji 📦️ Every rust package in the repo that declares a component-bearing role, via the shared
+ * `discoverPackages()` walk (two-level `📦️packages/🦀️rust/` and three-level `🎯️targets/<t>/` shapes
+ * alike). Replaces the two hand-written "new contract" path regexes this script used to carry. */
+function discoverComponentPackages(repoRoot: string): DiscoveredPackage[] {
+  return discoverPackages(repoRoot, TAXONOMY).filter((pkg) => pkg.lang === RUST_LANG && COMPONENT_ROLES.has(pkg.role));
+}
+
+/**
+ * @emoji 🏚️ Pre-Shape-V2 component crates still on disk inside the plugin area: a
+ * `<forbidden segment>/🦀️rust/Cargo.toml` sandwich (the legacy plugin bundle crate and its
+ * `🧩️extensions` siblings). Selected structurally from the vocabulary — `forbiddenPathSegments` plus
+ * the rust ecosystem's manifest filename — instead of the three hand-written path regexes this script
+ * used to carry, and gated on the plugin area's declared state so the whole arm disappears by
+ * vocabulary edit at the finalization flip. Crates matching the shape without a
+ * `[package.metadata.component]` package are dropped downstream by `tryParsePluginCargo`, exactly as
+ * before.
+ */
+/** @emoji 🏚️ Absolute path of a legacy `<dir>/<forbidden segment>/🦀️rust/Cargo.toml` sandwich manifest
+ * when one exists — the vocabulary-driven replacement for the `"⚡️implementations"` literals this
+ * script used to splice into paths by hand (both spellings are covered, per
+ * `taxonomy.forbiddenPathSegments`). */
+function legacyRustManifestIn(dir: string): string | undefined {
+  for (const segment of TAXONOMY.forbiddenPathSegments) {
+    const manifestPath = join(dir, segment, RUST_LANG, RUST_MANIFEST_FILENAME);
+    if (existsSync(manifestPath)) return manifestPath;
+  }
+  return undefined;
+}
+
+function findLegacyComponentManifests(repoRoot: string): string[] {
+  if (!areaAdmitsLegacyShape(PLUGINS_AREA_STATE)) return [];
+  const forbidden = new Set(TAXONOMY.forbiddenPathSegments);
   const out: string[] = [];
   function walk(dir: string) {
     for (const name of readdirSync(dir)) {
-      // 🚫️ Skip build/vendor noise and any dot-directory (e.g. `.claude/worktrees/…`), which used to
-      // leak duplicate registry rows for every crate that also exists inside a worktree checkout.
-      if (name.startsWith(".") || name === "node_modules" || name === "🤖️generated" || name === "target") continue;
+      if (name.startsWith(".") || WALK_SKIP_DIRS.has(name) || name === TAXONOMY.packagesDirName) continue;
       const path = join(dir, name);
       let st: ReturnType<typeof statSync>;
       try {
@@ -65,39 +107,28 @@ function findPluginCargoFiles(root: string): string[] {
       } catch {
         continue;
       }
-      if (st.isDirectory()) {
-        walk(path);
-      } else if (name === "Cargo.toml" && !path.includes("/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/")) {
-        const isModuleCrate = /\/🔨️modules\/[^/]+\/⚡️implementations\/🦀️rust\/Cargo\.toml$/.test(path);
-        // 🏛️ Contribution bundle crate: `✏️s/🔌️plugins/<p>/🧩️extensions/<e>/⚡️implementations/🦀️rust/Cargo.toml` (new node/document
-        // types the plugin contributes, e.g. imperative's control/logic/math/text).
-        const isExtensionCrate = /\/✏️s\/🔌️plugins\/[^/]+\/🧩️extensions\/[^/]+\/⚡️implementations\/🦀️rust\/Cargo\.toml$/.test(path);
-        // 🏛️ Plugin bundle crate lives at `✏️s/🔌️plugins/<p>/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml`.
-        const isPluginBundleCrate = /\/✏️s\/🔌️plugins\/[^/]+\/🛂️manifest\/🗿️artifact\/⚡️implementations\/🦀️rust\/Cargo\.toml$/.test(path);
-        if (isModuleCrate || isExtensionCrate || isPluginBundleCrate) {
-          out.push(path);
-          continue;
-        }
-        if (LEGACY_LAYOUT_TOLERANT) {
-          // 🏛️ New taxonomy contract crates, identified by `[package.metadata.semio] role` rather than
-          // by path shape. Framework crates are discovered the same way but never carry
-          // `[package.metadata.component]`, so `tryParsePluginCargo` drops them below — matching how
-          // ordinary (non-plugin) module crates already get silently filtered out of the registry today.
-          const isNewPluginCrate = isNewContractPluginManifestPath(path);
-          // 🎯️ `(?:🎯️targets\/[^/]+\/)?` widened for UI-ELEMENT-CO-LOCATION-RESTRUCTURE: a framework
-          // module may have one crate per render target (`📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml`)
-          // instead of a single crate directly under `📦️packages/🦀️rust/`.
-          const isNewFrameworkCrate = !isNewPluginCrate && /\/🧰️framework\/.*\/📦️packages\/🦀️rust\/(?:🎯️targets\/[^/]+\/)?Cargo\.toml$/.test(path);
-          if (isNewPluginCrate || isNewFrameworkCrate) {
-            const text = readFileSync(path, "utf8");
-            if (hasSemioRole(text, isNewPluginCrate ? "plugin" : "framework")) out.push(path);
-          }
-        }
+      if (!st.isDirectory()) continue;
+      if (forbidden.has(name)) {
+        const manifestPath = join(path, RUST_LANG, RUST_MANIFEST_FILENAME);
+        if (existsSync(manifestPath)) out.push(manifestPath);
+        continue;
       }
+      walk(path);
     }
   }
-  walk(root);
-  return out.sort();
+  const areaRoot = join(repoRoot, ...PLUGINS_AREA.split("/"));
+  if (existsSync(areaRoot)) walk(areaRoot);
+  return out;
+}
+//#endregion 🏛️DiscoveryContract
+
+/** @emoji 🧭️ Every manifest that may contribute a row to the plugin catalog: the shared package
+ * discovery contract plus, while the plugin area is pre-`clean`, the legacy sandwich crates a plugin
+ * sheds when it migrates. A plugin discoverable under both shapes at once is "in-flight", not an
+ * error. */
+function findPluginCargoFiles(root: string): string[] {
+  const contract = discoverComponentPackages(root).map((pkg) => join(root, pkg.manifestPath));
+  return [...new Set([...contract, ...findLegacyComponentManifests(root)])].sort();
 }
 
 function parsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistryEntry {
@@ -269,7 +300,7 @@ function parsePlaygroundsForCrate(manifestPath: string, pluginId: string, crateP
 }
 
 //#region 🧹️PlaygroundDedupe
-/** @emoji 🧹️ In-flight migration dedupe (see `LEGACY_LAYOUT_TOLERANT`): when a plugin's legacy bundle
+/** @emoji 🧹️ In-flight migration dedupe (see `PLUGINS_AREA_STATE`): when a plugin's legacy bundle
  * crate and its new-contract taxonomy crate are BOTH on disk at once, they typically carry identical
  * `[[package.metadata.semio.playground]]` rows — same variant id, same aliases, same ports — which
  * would otherwise trip `validatePlaygroundRegistry`'s duplicate checks for the entire workspace on
@@ -277,18 +308,17 @@ function parsePlaygroundsForCrate(manifestPath: string, pluginId: string, crateP
  * `pluginId` AND at least one (but not all) entries come from a new-contract crate is the expected
  * transient migration shape, so only the new-contract entry/entries survive. A variant collision
  * across DIFFERENT plugin ids is left untouched — that is a genuine naming collision for
- * `validatePlaygroundRegistry` to catch. */
-function dedupeInFlightPlaygroundEntries(playgrounds: readonly PlaygroundEntry[]): PlaygroundEntry[] {
+ * `validatePlaygroundRegistry` to catch. `contractCratePaths` is the repo-relative package-dir set from
+ * `discoverComponentPackages`, so "is this the new shape?" is answered by the shared discovery walk
+ * rather than by a second copy of a path regex. */
+function dedupeInFlightPlaygroundEntries(playgrounds: readonly PlaygroundEntry[], contractCratePaths: ReadonlySet<string>): PlaygroundEntry[] {
   const byVariant = new Map<string, PlaygroundEntry[]>();
   for (const entry of playgrounds) byVariant.set(entry.variant, [...(byVariant.get(entry.variant) ?? []), entry]);
   const dropped = new Set<PlaygroundEntry>();
   for (const group of byVariant.values()) {
     if (group.length <= 1) continue;
     if (new Set(group.map((entry) => entry.pluginId)).size > 1) continue;
-    // 🏛️ `cratePath` is repo-root-relative (no leading slash) while `isNewContractPluginManifestPath`
-    // matches an absolute-shaped suffix (`/✏️s/🔌️plugins/…`) — prefix with "/" so the shared regex
-    // still matches instead of duplicating it in a relative-path form.
-    const newContract = group.filter((entry) => isNewContractPluginManifestPath(`/${entry.cratePath}/Cargo.toml`));
+    const newContract = group.filter((entry) => contractCratePaths.has(entry.cratePath));
     if (newContract.length === 0 || newContract.length === group.length) continue;
     for (const entry of group) if (!newContract.includes(entry)) dropped.add(entry);
   }
@@ -308,7 +338,7 @@ export function generatePlaygroundRegistry(repoRoot = getWorkspaceRoot(), option
       rawPlaygrounds.push({ ...playground, examples: discoverExamplesForPlayground(repoRoot, entry.cratePath, entry.pluginId, playground.variant), assets });
     }
   }
-  const playgrounds = dedupeInFlightPlaygroundEntries(rawPlaygrounds);
+  const playgrounds = dedupeInFlightPlaygroundEntries(rawPlaygrounds, new Set(discoverComponentPackages(repoRoot).map((pkg) => pkg.packageRel)));
   for (let i = 0; i < playgrounds.length; i++) {
     const row = playgrounds[i];
     if (!row.brand || row.examples.length > 0) continue;
@@ -500,6 +530,65 @@ ${rows}
 ];
 `;
 }
+
+//#region 🏛️FrameworkPackageCatalog
+/** @emoji 🏛️ One framework package as seen by the shared discovery contract (`role = "framework"`).
+ * The framework families are not wasm components, so they never enter `PLUGIN_BUILD_TARGETS`; this is
+ * their own catalog section — the consumable answer to "which framework packages exist, in which
+ * language/render target, and how far has their owner migrated" that every downstream mechanism
+ * (workspaces generator, storybook scopes, dep-cruiser) previously had to rediscover by hand. */
+export type FrameworkPackageEntry = {
+  readonly id: string;
+  readonly ownerPath: string;
+  readonly packagePath: string;
+  readonly lang: string;
+  readonly target?: string;
+  readonly area: string;
+  readonly maturity: string;
+};
+
+/** @emoji 🏛️ Framework-role half of the shared `discoverPackages()` walk (three-level `🎯️targets`
+ * aware), flattened into a stable catalog. Plugin and framework catalogs therefore come from one
+ * traversal and one vocabulary, and can never drift apart. */
+export function generateFrameworkPackageRegistry(repoRoot = getWorkspaceRoot()): FrameworkPackageEntry[] {
+  return discoverPackages(repoRoot, TAXONOMY)
+    .filter((pkg) => pkg.role === "framework")
+    .map((pkg) => ({
+      id: pkg.id,
+      ownerPath: pkg.ownerRel,
+      packagePath: pkg.packageRel,
+      lang: pkg.lang,
+      ...(pkg.target ? { target: pkg.target } : {}),
+      area: pkg.area,
+      maturity: pkg.maturity,
+    }))
+    .sort((a, b) => a.id.localeCompare(b.id) || a.packagePath.localeCompare(b.packagePath));
+}
+
+function emitFrameworkPackagesTypeScript(entries: FrameworkPackageEntry[]): string {
+  const rows = entries
+    .map((entry) => {
+      const target = entry.target !== undefined ? `, target: ${JSON.stringify(entry.target)}` : "";
+      return `\t{ id: ${JSON.stringify(entry.id)}, ownerPath: ${JSON.stringify(entry.ownerPath)}, packagePath: ${JSON.stringify(entry.packagePath)}, lang: ${JSON.stringify(entry.lang)}${target}, area: ${JSON.stringify(entry.area)}, maturity: ${JSON.stringify(entry.maturity)} },`;
+    })
+    .join("\n");
+  return `/** @generated by framework/plugin/registry/script.ts — do not edit. */
+export type FrameworkPackage = {
+\treadonly id: string;
+\treadonly ownerPath: string;
+\treadonly packagePath: string;
+\treadonly lang: string;
+\treadonly target?: string;
+\treadonly area: string;
+\treadonly maturity: string;
+};
+
+export const FRAMEWORK_PACKAGES: readonly FrameworkPackage[] = [
+${rows}
+];
+`;
+}
+//#endregion 🏛️FrameworkPackageCatalog
 
 //#region 🎮️PlaygroundSession
 export type PlaygroundSessionPlugin = {
@@ -712,10 +801,13 @@ const CONSTITUTIONAL_SLOT_DIRNAME: Record<(typeof CONSTITUTIONAL_SLOTS)[number],
  * per subdirectory) — must carry all seven constitutional-crate slot manifests. Hard-fails `check` so
  * a future split can never silently regress to a partial 4-of-7 or 5-of-7 crate set. Plugins that
  * haven't reached `s/plugin/` yet (nothing under `app/`) are out of scope, not a violation — this gate
- * only enforces completeness for plugins that have already started the split. */
+ * only enforces completeness for plugins that have already started the split. Goes silent entirely
+ * once the plugin area is declared `clean`: the legacy constitution has no meaning without legacy
+ * crates. */
 function validateConstitutionalCrates(repoRoot: string, migratedPluginIds: ReadonlySet<string> = new Set()): string[] {
   const errors: string[] = [];
-  const pluginRoot = join(repoRoot, "✏️s", "🔌️plugins");
+  if (!areaAdmitsLegacyShape(PLUGINS_AREA_STATE)) return errors;
+  const pluginRoot = join(repoRoot, ...PLUGINS_AREA.split("/"));
   if (!existsSync(pluginRoot)) return errors;
   for (const pluginName of readdirSync(pluginRoot).sort()) {
     // 🚦️ A plugin already discovered under the new one-crate-per-plugin taxonomy contract
@@ -724,19 +816,19 @@ function validateConstitutionalCrates(repoRoot: string, migratedPluginIds: Reado
     if (migratedPluginIds.has(pluginName)) continue;
     const appRoot = join(pluginRoot, pluginName, APPS_DIRNAME);
     if (!existsSync(appRoot) || !statSync(appRoot).isDirectory()) continue;
-    const isFlatSingleApp = existsSync(join(appRoot, "⚡️implementations", "🦀️rust", "Cargo.toml"));
+    const isFlatSingleApp = legacyRustManifestIn(appRoot) !== undefined;
     const appDirs = isFlatSingleApp ? [{ label: pluginName, dir: appRoot }] : readdirSync(appRoot)
       .filter((name) => statSync(join(appRoot, name)).isDirectory())
       .filter((name) => name !== "🤝️shared")
       .map((name) => ({ label: `${pluginName}/${name}`, dir: join(appRoot, name) }));
     for (const { label, dir } of appDirs) {
       const missing: string[] = [];
-      if (!existsSync(join(dir, "⚡️implementations", "🦀️rust", "Cargo.toml"))) missing.push("rs");
+      if (legacyRustManifestIn(dir) === undefined) missing.push("rs");
       for (const slot of CONSTITUTIONAL_SLOTS) {
-        if (!existsSync(join(dir, "🔨️modules", CONSTITUTIONAL_SLOT_DIRNAME[slot], "⚡️implementations", "🦀️rust", "Cargo.toml"))) missing.push(slot);
+        if (legacyRustManifestIn(join(dir, "🔨️modules", CONSTITUTIONAL_SLOT_DIRNAME[slot])) === undefined) missing.push(slot);
       }
       if (missing.length > 0) {
-        errors.push(`✏️s/🔌️plugins/${label} is missing constitutional crate slot(s): ${missing.join(", ")} (expected 7: rs, ${CONSTITUTIONAL_SLOTS.join(", ")})`);
+        errors.push(`${PLUGINS_AREA}/${label} is missing constitutional crate slot(s): ${missing.join(", ")} (expected 7: rs, ${CONSTITUTIONAL_SLOTS.join(", ")})`);
       }
     }
   }
@@ -749,36 +841,23 @@ function validateConstitutionalCrates(repoRoot: string, migratedPluginIds: Reado
  * `🔣️taxonomy.json` (single vocabulary source of truth, see master ticket
  * `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`; this used to be an independently
  * hand-maintained copy, which is exactly the drift `🔣️taxonomy.json` exists to prevent). */
-const TAXONOMY_ARTIFACT_COMPONENTS = loadTaxonomy().artifactComponentDirs;
+const TAXONOMY_ARTIFACT_COMPONENTS = TAXONOMY.artifactComponentDirs;
 /** @emoji 🪟️ A window dir may only contain these children, each itself a `🦀️component.rs` leaf. */
-const TAXONOMY_WINDOW_CHILDREN = new Set(loadTaxonomy().windowChildDirs);
-const TAXONOMY_LEAF_FILENAME = loadTaxonomy().taxonomyLeafFilenames["🦀️rust"] ?? "🦀️component.rs";
+const TAXONOMY_WINDOW_CHILDREN = new Set(TAXONOMY.windowChildDirs);
+const TAXONOMY_LEAF_FILENAME = TAXONOMY.taxonomyLeafFilenames[RUST_LANG];
+/** @emoji 🚪️ Rust entry filename and its Shape V2 home relative to the owner root. */
+const RUST_ENTRY_FILENAME = TAXONOMY.entryFilenames[RUST_LANG];
+const RUST_ENTRY_DIR_FROM_OWNER = TAXONOMY.rustEntryPathRules.entryDirFromOwner.split("/");
 
-//#region 🏛️FrameworkPackageGate
-/** @emoji 🖼️ `discoverPackages` results filtered to `role === "framework"` — the framework-module-family
- * analogue of `findNewContractPluginRoots`, added by `26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE`.
- * Reuses the shared discovery walk (three-level `🎯️targets` aware) instead of hand-rolling a second
- * walker, so plugin and framework package catalogs never drift apart. Empty until a framework module
- * (ui, renderer-engine, styling, assets, …) actually carries a `role = "framework"` marker. */
-function discoverFrameworkPackages(repoRoot: string) {
-  return discoverPackages(repoRoot).filter((p) => p.role === "framework");
-}
-//#endregion 🏛️FrameworkPackageGate
-
-/** @emoji 🧭️ Plugin roots discovered via the *new* taxonomy contract (`📦️packages/🦀️rust/Cargo.toml`
- * with `role = "plugin"`) — distinct from `findPluginCargoFiles`, which also matches the legacy
- * 7-crate shape. Empty until a plugin has migrated (W1+); the taxonomy validator below is a no-op
- * until then. */
+/** @emoji 🧭️ Plugin roots discovered via the shared package contract (`role = "plugin"`, rust, owner
+ * sitting directly under the plugin area) — distinct from `findPluginCargoFiles`, which additionally
+ * matches the legacy sandwich shape. Drives both the taxonomy tree audit and the constitutional gate's
+ * migrated-plugin exemption, so the two can never disagree about which plugins have moved. */
 function findNewContractPluginRoots(repoRoot: string): { pluginId: string; pluginRoot: string }[] {
-  const roots: { pluginId: string; pluginRoot: string }[] = [];
-  const pluginsDir = join(repoRoot, "✏️s", "🔌️plugins");
-  if (!existsSync(pluginsDir)) return roots;
-  for (const pluginId of readdirSync(pluginsDir).sort()) {
-    const manifestPath = join(pluginsDir, pluginId, "📦️packages", "🦀️rust", "Cargo.toml");
-    if (!existsSync(manifestPath)) continue;
-    if (hasSemioRole(readFileSync(manifestPath, "utf8"), "plugin")) roots.push({ pluginId, pluginRoot: join(pluginsDir, pluginId) });
-  }
-  return roots;
+  return discoverPackages(repoRoot, TAXONOMY)
+    .filter((pkg) => pkg.role === "plugin" && pkg.lang === RUST_LANG && dirname(pkg.ownerRel) === PLUGINS_AREA)
+    .map((pkg) => ({ pluginId: basename(pkg.ownerRel), pluginRoot: join(repoRoot, pkg.ownerRel) }))
+    .sort((a, b) => a.pluginId.localeCompare(b.pluginId));
 }
 
 function listDirs(dir: string): string[] {
@@ -786,14 +865,14 @@ function listDirs(dir: string): string[] {
   return readdirSync(dir).filter((name) => statSync(join(dir, name)).isDirectory());
 }
 
-/** @emoji 🚦️ Warn-only structural audit of one migrated plugin's taxonomy tree. Not wired to fail
- * `check` yet — every plugin is still on the legacy shape, so this only ever runs against
- * `findNewContractPluginRoots` results, which are empty until W1+. Promoted to a hard error in W4
- * finalization once every plugin has moved (replaces `validateConstitutionalCrates` at that point). */
+/** @emoji 🚦️ Structural audit of one migrated plugin's taxonomy tree, entirely against
+ * `🔣️taxonomy.json`'s vocabulary. Severity is decided by the caller from the plugin area's declared
+ * maturity: warn while it is `legacy`/`mixed`, hard failure once it is `clean` (at which point it
+ * fully replaces `validateConstitutionalCrates`). */
 function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   const findings: string[] = [];
 
-  const artifactsDir = join(pluginRoot, "🗿️artifacts");
+  const artifactsDir = join(pluginRoot, TAXONOMY.artifactsDirName);
   for (const artifact of listDirs(artifactsDir)) {
     for (const component of TAXONOMY_ARTIFACT_COMPONENTS) {
       if (!existsSync(join(artifactsDir, artifact, component, TAXONOMY_LEAF_FILENAME))) {
@@ -805,9 +884,9 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   // 🪟️ windows live under apps/<app>/modes/<mode>/windows/<w> and may only contain the fixed child set.
   const appsDir = join(pluginRoot, APPS_DIRNAME);
   for (const app of listDirs(appsDir)) {
-    const modesDir = join(appsDir, app, "🎭️modes");
+    const modesDir = join(appsDir, app, TAXONOMY.modesDirName);
     for (const mode of listDirs(modesDir)) {
-      const windowsDir = join(modesDir, mode, "🪟️windows");
+      const windowsDir = join(modesDir, mode, TAXONOMY.windowsDirName);
       for (const w of listDirs(windowsDir)) {
         for (const child of listDirs(join(windowsDir, w))) {
           if (!TAXONOMY_WINDOW_CHILDREN.has(child)) {
@@ -855,8 +934,8 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   // unprefixed — both are valid, and a flat "resolve every #[path] against the raw file directory"
   // approach mis-resolves the first style. So: walk the file's brace structure with a resolved-base
   // stack, seeded with the file's own directory.
-  const v1LibRsPath = join(pluginRoot, "📦️lib.rs");
-  const v2LibRsPath = join(pluginRoot, "📦️packages", "🦀️rust", "📦️lib.rs");
+  const v1LibRsPath = join(pluginRoot, RUST_ENTRY_FILENAME);
+  const v2LibRsPath = join(pluginRoot, ...RUST_ENTRY_DIR_FROM_OWNER, RUST_ENTRY_FILENAME);
   const libRsPath = existsSync(v2LibRsPath) ? v2LibRsPath : v1LibRsPath;
   if (existsSync(libRsPath)) {
     const libDir = dirname(libRsPath);
@@ -968,76 +1047,107 @@ function validatePlaygroundSessions(repoRoot: string): string[] {
   return errors;
 }
 
-class GenerateScript extends BundleScript {
-  run(_segments: string[]): void {
-    const repoRoot = getWorkspaceRoot();
-    const entries = generatePluginRegistry(repoRoot);
-    const playgrounds = generatePlaygroundRegistry(repoRoot);
-    const outDir = join(this.root, "🤖️generated");
-    mkdirSync(outDir, { recursive: true });
-    writeFileSync(join(outDir, "🔣️plugins.json"), `${JSON.stringify(entries, null, 2)}\n`);
-    writeFileSync(join(outDir, "🟦️plugins.ts"), emitTypeScript(entries));
-    writeFileSync(join(outDir, "🔣️playgrounds.json"), `${JSON.stringify(playgrounds, null, 2)}\n`);
-    writeFileSync(join(outDir, "🟦️playgrounds.ts"), emitPlaygroundsTypeScript(playgrounds));
-    writeFileSync(join(outDir, "🦀️hosts.rs"), emitRustHosts(entries, playgrounds));
-    writeFileSync(join(outDir, "🦀️artifacts.rs"), emitRustArtifacts(entries));
-    console.log(`plugin registry catalog refreshed (${entries.length} plugin crates, ${playgrounds.length} playgrounds) -> ${outDir}`);
-  }
-}
-
-/** @emoji 🔎️ Renders the catalog in memory and byte-compares it against `generated/*` — never writes (a lint/verify step must never let the auto-commit daemon land regenerated files). */
-class CheckScript extends BundleScript {
-  run(_segments: string[]): void {
-    const repoRoot = getWorkspaceRoot();
-    const entries = generatePluginRegistry(repoRoot);
-    const playgrounds = generatePlaygroundRegistry(repoRoot);
-    const outDir = join(this.root, "🤖️generated");
-    const expected: Record<string, string> = {
+/** @emoji 🗂️ The full generated catalog, rendered in memory once and consumed by both `generate`
+ * (writes) and `check` (byte-compares) so the two can never disagree about what belongs in
+ * `🤖️generated/`. */
+function renderCatalogFiles(repoRoot: string): { files: Record<string, string>; entries: PluginRegistryEntry[]; playgrounds: PlaygroundEntry[]; frameworkPackages: FrameworkPackageEntry[] } {
+  const entries = generatePluginRegistry(repoRoot);
+  const playgrounds = generatePlaygroundRegistry(repoRoot);
+  const frameworkPackages = generateFrameworkPackageRegistry(repoRoot);
+  return {
+    entries,
+    playgrounds,
+    frameworkPackages,
+    files: {
       "🔣️plugins.json": `${JSON.stringify(entries, null, 2)}\n`,
       "🟦️plugins.ts": emitTypeScript(entries),
       "🔣️playgrounds.json": `${JSON.stringify(playgrounds, null, 2)}\n`,
       "🟦️playgrounds.ts": emitPlaygroundsTypeScript(playgrounds),
+      "🔣️framework.json": `${JSON.stringify(frameworkPackages, null, 2)}\n`,
+      "🟦️framework.ts": emitFrameworkPackagesTypeScript(frameworkPackages),
       "🦀️hosts.rs": emitRustHosts(entries, playgrounds),
       "🦀️artifacts.rs": emitRustArtifacts(entries),
-    };
-    const stale = Object.entries(expected)
+    },
+  };
+}
+
+class GenerateScript extends BundleScript {
+  run(_segments: string[]): void {
+    const repoRoot = getWorkspaceRoot();
+    const { files, entries, playgrounds, frameworkPackages } = renderCatalogFiles(repoRoot);
+    const outDir = join(this.root, "🤖️generated");
+    mkdirSync(outDir, { recursive: true });
+    for (const [name, content] of Object.entries(files)) writeFileSync(join(outDir, name), content);
+    console.log(`plugin registry catalog refreshed (${entries.length} plugin crates, ${playgrounds.length} playgrounds, ${frameworkPackages.length} framework packages) -> ${outDir}`);
+    // 🖥️ `.vscode/launch.json` is the second consumer of the very same playground catalog, so it is
+    // regenerated here rather than from a separate entry point — `check` enforces its freshness. Written
+    // last so a seed/devLaunchers problem can never leave the catalog itself unwritten.
+    const launchPath = join(repoRoot, LAUNCH_OUTPUT_REL_PATH);
+    writeFileSync(launchPath, generateLaunchJson(repoRoot, playgrounds));
+    console.log(`${LAUNCH_OUTPUT_REL_PATH} regenerated -> ${launchPath}`);
+  }
+}
+
+/** @emoji 🔎️ Renders the catalog in memory and byte-compares it against `generated/*` plus
+ * `.vscode/launch.json` — never writes (a lint/verify step must never let the auto-commit daemon land
+ * regenerated files). Launch freshness is folded in here rather than living in a second, unenforced
+ * entry point, so one `check` covers every artifact `generate` produces. */
+class CheckScript extends BundleScript {
+  run(_segments: string[]): void {
+    const repoRoot = getWorkspaceRoot();
+    const { files, entries, playgrounds, frameworkPackages } = renderCatalogFiles(repoRoot);
+    const outDir = join(this.root, "🤖️generated");
+    const stale = Object.entries(files)
       .filter(([name, content]) => !existsSync(join(outDir, name)) || readFileSync(join(outDir, name), "utf8") !== content)
-      .map(([name]) => name);
+      .map(([name]) => `generated/${name}`);
+    // 🖥️ A seed/devLaunchers mismatch throws out of `generateLaunchJson`; report it as a violation
+    // instead of an unhandled exception so the rest of the gate's findings still reach the dev.
+    const launchViolations: string[] = [];
+    try {
+      const launchPath = join(repoRoot, LAUNCH_OUTPUT_REL_PATH);
+      const expectedLaunch = generateLaunchJson(repoRoot, playgrounds);
+      if (!existsSync(launchPath) || readFileSync(launchPath, "utf8") !== expectedLaunch) stale.push(LAUNCH_OUTPUT_REL_PATH);
+    } catch (error) {
+      launchViolations.push(`${LAUNCH_OUTPUT_REL_PATH} cannot be rendered: ${(error as Error).message}`);
+    }
     if (stale.length > 0) {
-      console.error(`plugin registry catalog is stale: ${stale.map((name) => `generated/${name}`).join(", ")}`);
+      console.error(`plugin registry catalog is stale: ${stale.join(", ")}`);
       console.error("run `bun nx run @semio-tech/plugin-registry:generate` to refresh.");
       process.exit(1);
     }
     const newContractPluginRoots = findNewContractPluginRoots(repoRoot);
     const migratedPluginIds = new Set(newContractPluginRoots.map(({ pluginId }) => pluginId));
-    const violations = [...validatePlaygroundRegistry(playgrounds), ...validatePlaygroundSessions(repoRoot), ...validateConstitutionalCrates(repoRoot, migratedPluginIds)];
+    const violations = [...launchViolations, ...validatePlaygroundRegistry(playgrounds), ...validatePlaygroundSessions(repoRoot), ...validateConstitutionalCrates(repoRoot, migratedPluginIds)];
     if (violations.length > 0) {
       console.error("plugin registry catalog has playground validation errors:");
       for (const violation of violations) console.error(`  - ${violation}`);
       process.exit(1);
     }
-    // 🗿️ Taxonomy tree audit for plugins already discovered via the new one-crate-per-plugin contract
-    // (see `findNewContractPluginRoots`). Warn-only during migration — promoted to a hard failure in
-    // W4 finalization once every plugin has moved off the legacy 7-crate shape.
-    if (LEGACY_LAYOUT_TOLERANT) {
-      const taxonomyFindings = newContractPluginRoots.flatMap(({ pluginId, pluginRoot }) => validateTaxonomyTree(pluginRoot, pluginId));
-      if (taxonomyFindings.length > 0) {
-        console.warn("plugin taxonomy tree findings (in-flight plugins — not failing the gate yet):");
+    // 🗿️ Taxonomy tree audit for plugins discovered via the shared package contract. Its severity is
+    // the plugin area's declared maturity, not a hand-flipped flag: warn while the area is
+    // `legacy`/`mixed` (plugins still mid-migration), hard failure once it is declared `clean` — the
+    // finalization flip is then a one-word edit in `🔣️taxonomy.json`.
+    const taxonomyFindings = newContractPluginRoots.flatMap(({ pluginId, pluginRoot }) => validateTaxonomyTree(pluginRoot, pluginId));
+    if (taxonomyFindings.length > 0) {
+      if (areaAdmitsLegacyShape(PLUGINS_AREA_STATE)) {
+        console.warn(`plugin taxonomy tree findings (area "${PLUGINS_AREA}" is "${PLUGINS_AREA_STATE}" — not failing the gate yet):`);
         for (const finding of taxonomyFindings) console.warn(`  - ${finding}`);
+      } else {
+        console.error(`plugin taxonomy tree violations (area "${PLUGINS_AREA}" is "${PLUGINS_AREA_STATE}"):`);
+        for (const finding of taxonomyFindings) console.error(`  - ${finding}`);
+        process.exit(1);
       }
     }
-    // 🏛️ Framework-package discovery (`role === "framework"`, three-level `🎯️targets`-aware) — warn-only
-    // report, same posture as the plugin taxonomy audit above. Empty until a framework module (ui,
-    // renderer-engine, styling, assets, …) carries a `role = "framework"` marker (UI-ELEMENT-CO-LOCATION-
-    // RESTRUCTURE W1+); a non-empty `discoverPackageProblems` outside a legacy/mixed/exempt area means a
-    // manifest lost its marker or a `🎯️targets/<target>/` dir is missing its manifest.
-    const frameworkPackages = discoverFrameworkPackages(repoRoot);
-    const discoveryProblems = discoverPackageProblems(repoRoot);
+    // 🧭️ Shared-discovery diagnostics: a non-empty `discoverPackageProblems` outside a
+    // legacy/mixed/exempt area means a manifest lost its role marker (the failure mode that silently
+    // dropped a migrated extension crate from this very catalog) or a `🎯️targets/<target>/` dir is
+    // missing its manifest. Warn-only while any area is pre-`clean`.
+    const discoveryProblems = discoverPackageProblems(repoRoot, TAXONOMY);
     if (discoveryProblems.length > 0) {
       console.warn("package discovery problems:");
       for (const problem of discoveryProblems) console.warn(`  - [${problem.kind}] ${problem.message}`);
     }
-    console.log(`plugin registry catalog is fresh (${entries.length} plugin crates, ${playgrounds.length} playgrounds, ${frameworkPackages.length} framework packages).`);
+    console.log(`plugin registry catalog is fresh (${entries.length} plugin crates, ${playgrounds.length} playgrounds, ${frameworkPackages.length} framework packages); ${LAUNCH_OUTPUT_REL_PATH} is fresh.`);
   }
 }
 

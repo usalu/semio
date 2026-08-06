@@ -17,7 +17,9 @@ import {
   playgroundPlayViteDefine,
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
 import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts";
-import { areaOf, discoverPackages, getWorkspaceRoot, loadTaxonomy, readSemioMarker } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { areaOf, clearDiscoveryCache, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadTaxonomy, readSemioMarker, validateTaxonomy } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 describe("Neo4j graph database registry", () => {
   test("joins name segments with hyphen", () => {
     expect(joinNeo4jGraphDatabaseName(["compose", "kit"])).toBe("compose-kit");
@@ -1112,12 +1114,73 @@ describe("loadTaxonomy", () => {
   test("parses 🔣️taxonomy.json into the expected shape", () => {
     const taxonomy = loadTaxonomy();
     expect(taxonomy.artifactComponentDirs).toEqual(["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr"]);
-    expect(taxonomy.artifactChildDirsExtra).toEqual(["⚙️engine"]);
     expect(taxonomy.windowChildDirs).toEqual(["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options"]);
-    expect(taxonomy.taxonomyLeafFilename).toBe("🦀️component.rs");
+    expect(taxonomy.taxonomyLeafFilenames["🦀️rust"]).toBe("🦀️component.rs");
     expect(taxonomy.libWiringLineBudget).toBe(150);
     expect(taxonomy.packagesDirName).toBe("📦️packages");
     expect(Object.keys(taxonomy.areas).length).toBeGreaterThan(0);
+  });
+
+  test("keeps the artifact completeness set and the artifact structural set as two separate lists", () => {
+    const taxonomy = loadTaxonomy();
+    // ⚙️ The disagreement this vocabulary exists to settle: registry's validateTaxonomyTree requires 5
+    // components, root script's POLICY_ARTIFACT_COMPONENT_DIRS allows 6. Both are right — different questions.
+    expect(taxonomy.artifactChildDirs).toEqual(["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr", "⚙️engine"]);
+    expect(taxonomy.artifactChildDirs.filter((dir) => !taxonomy.artifactComponentDirs.includes(dir))).toEqual(["⚙️engine"]);
+  });
+
+  test("forbids both the plural and singular implementations spellings", () => {
+    expect(loadTaxonomy().forbiddenPathSegments).toEqual(["⚡️implementations", "⚡️implementation"]);
+  });
+
+  test("describes every declared lang with a manifest/marker/leaf contract", () => {
+    const taxonomy = loadTaxonomy();
+    for (const lang of taxonomy.langs) {
+      const ecosystem = taxonomy.ecosystems[lang];
+      expect(ecosystem).toBeDefined();
+      expect(ecosystem.leafFilename.includes("component")).toBe(true);
+    }
+    expect(taxonomy.ecosystems["🦀️rust"].marker).toEqual({ in: "manifest", format: "toml", table: "package.metadata.semio", roleKey: "role", idKey: "id" });
+    expect(taxonomy.ecosystems["🟦️typescript"].marker).toEqual({ in: "manifest", format: "json", table: "semio", roleKey: "role", idKey: "id" });
+    expect(taxonomy.ecosystems["🐍️python"].marker?.table).toBe("tool.semio");
+    // 🐹️ Go's manifest is 📋️project.json (go.mod must stay at the owner root — a Go module root has to contain its sources).
+    expect(taxonomy.ecosystems["🐹️go"].manifestFilename).toBe("📋️project.json");
+    expect(taxonomy.ecosystems["🐹️go"].moduleRootFilename).toBe("go.mod");
+    expect(taxonomy.ecosystems["🐹️go"].marker?.table).toBe("metadata.semio");
+  });
+
+  test("encodes Shape V2 entry location and both valid rust #[path] base conventions", () => {
+    const taxonomy = loadTaxonomy();
+    expect(taxonomy.entryLocation).toBe("packages");
+    expect(taxonomy.rustEntryPathRules.entryDirFromOwner).toBe("📦️packages/🦀️rust");
+    expect(taxonomy.rustEntryPathRules.resolution).toBe("cumulative");
+    expect(taxonomy.rustEntryPathRules.conventions.map((convention) => convention.id)).toEqual(["leaf-prefixed", "once-reset"]);
+    // 🥞️ A grouping `#[path = "."]` reset is never prefixed under either convention — the bug that only a real compile catches.
+    expect(taxonomy.rustEntryPathRules.conventions.every((convention) => convention.groupingReset === ".")).toBe(true);
+  });
+
+  test("declares the area-state enum that replaces LEGACY_LAYOUT_TOLERANT", () => {
+    const taxonomy = loadTaxonomy();
+    expect(taxonomy.areaStates).toEqual(["legacy", "mixed", "clean", "exempt"]);
+    expect(taxonomy.migratedMarker).toBe("packages-dir-exists");
+  });
+});
+
+describe("validateTaxonomy", () => {
+  test("the shipped vocabulary is internally consistent", () => {
+    expect(validateTaxonomy()).toEqual([]);
+  });
+
+  test("reports an area state outside the declared enum", () => {
+    const taxonomy = loadTaxonomy();
+    const broken = { ...taxonomy, areas: { ...taxonomy.areas, "🧰️framework": "taxonomy" as never } };
+    expect(validateTaxonomy(broken).some((problem) => problem.includes("areaStates"))).toBe(true);
+  });
+
+  test("reports a completeness dir missing from the structural set", () => {
+    const taxonomy = loadTaxonomy();
+    const broken = { ...taxonomy, artifactChildDirs: taxonomy.artifactChildDirs.filter((dir) => dir !== "📡️spr") };
+    expect(validateTaxonomy(broken).some((problem) => problem.includes("📡️spr"))).toBe(true);
   });
 });
 
@@ -1147,23 +1210,159 @@ describe("readSemioMarker", () => {
     expect(readSemioMarker(join(root, "does/not/exist/Cargo.toml"), "🦀️rust")).toBeUndefined();
   });
 
-  test("go and python ecosystems are not yet implemented", () => {
+  test("reads role + id from a typescript package.json's \"semio\" key", () => {
+    const root = getWorkspaceRoot();
+    const manifestPath = join(root, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/package.json");
+    expect(readSemioMarker(manifestPath, "🟦️typescript")).toEqual({ role: "framework", id: "ui-styling-ts" });
+  });
+
+  test("returns undefined for a non-existent manifest", () => {
+    const root = getWorkspaceRoot();
+    expect(readSemioMarker(join(root, "does/not/exist/Cargo.toml"), "🦀️rust")).toBeUndefined();
+  });
+
+  test("does not mistake one ecosystem's manifest for another's", () => {
     const root = getWorkspaceRoot();
     const manifestPath = join(root, "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/Cargo.toml");
     expect(readSemioMarker(manifestPath, "🐹️go")).toBeUndefined();
     expect(readSemioMarker(manifestPath, "🐍️python")).toBeUndefined();
   });
+
+  test("reads the go and python marker contracts those ecosystems will carry", () => {
+    // 🌱️ No go/python package declares a marker on disk yet (W8 restructures them); this pins the contract
+    // the vocabulary promises so the reader is written and proven before the first real manifest lands.
+    const dir = mkdtempSync(join(tmpdir(), "semio-marker-"));
+    try {
+      const goManifest = join(dir, "📋️project.json");
+      writeFileSync(goManifest, JSON.stringify({ name: "@semio-tech/repo-cli", metadata: { semio: { role: "product", id: "repo-cli" } } }));
+      expect(readSemioMarker(goManifest, "🐹️go")).toEqual({ role: "product", id: "repo-cli" });
+      const pyManifest = join(dir, "pyproject.toml");
+      writeFileSync(pyManifest, '[project]\nname = "x"\n\n[tool.semio]\nrole = "framework"\nid = "ui-styling-py"\n');
+      expect(readSemioMarker(pyManifest, "🐍️python")).toEqual({ role: "framework", id: "ui-styling-py" });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("discoverPackages", () => {
-  test("finds already-migrated plugins with role \"plugin\" under the real repo root", () => {
+  /** 🧭️ Every plugin dir that carries a rust package manifest — derived from disk, never a hand-maintained list (`taxonomy.migratedMarker`). */
+  const migratedPluginDirs = (root: string): string[] =>
+    readdirSync(join(root, "✏️s/🔌️plugins"), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && existsSync(join(root, "✏️s/🔌️plugins", entry.name, "📦️packages/🦀️rust/Cargo.toml")))
+      .map((entry) => `✏️s/🔌️plugins/${entry.name}`)
+      .sort();
+
+  test("finds every migrated plugin under the real repo root", () => {
     const root = getWorkspaceRoot();
     const catalog = discoverPackages(root);
-    expect(catalog.length).toBeGreaterThan(0);
-    expect(catalog.every((p) => p.role === "plugin")).toBe(true);
-    expect(catalog.some((p) => p.ownerRel === "✏️s/🔌️plugins/✒️writer")).toBe(true);
-    const writerEntry = catalog.find((p) => p.ownerRel === "✏️s/🔌️plugins/✒️writer");
+    const pluginOwners = [...new Set(catalog.filter((pkg) => pkg.role === "plugin").map((pkg) => pkg.ownerRel))].sort();
+    expect(pluginOwners).toEqual(migratedPluginDirs(root));
+    const writerEntry = catalog.find((pkg) => pkg.ownerRel === "✏️s/🔌️plugins/✒️writer");
     expect(writerEntry?.area).toBe("mixed");
     expect(writerEntry?.lang).toBe("🦀️rust");
+    expect(writerEntry?.id).toBe("semio-s-plugin-writer");
+  });
+
+  test("only ever reports roles from the declared vocabulary", () => {
+    const taxonomy = loadTaxonomy();
+    const catalog = discoverPackages(getWorkspaceRoot());
+    expect(catalog.filter((pkg) => !taxonomy.roles.includes(pkg.role))).toEqual([]);
+    expect(catalog.filter((pkg) => !taxonomy.langs.includes(pkg.lang))).toEqual([]);
+  });
+
+  test("resolves the three-level 🎯️targets shape for framework ui", () => {
+    const catalog = discoverPackages(getWorkspaceRoot());
+    const uiTargets = catalog.filter((pkg) => pkg.ownerRel === "🧰️framework/🔨️modules/🖱️ui").map((pkg) => pkg.target).sort();
+    expect(uiTargets).toEqual(["⌨️tui", "⚛️react", "🧊️wgpu"]);
+    expect(catalog.filter((pkg) => pkg.ownerRel === "🧰️framework/🔨️modules/🖱️ui").every((pkg) => pkg.role === "framework")).toBe(true);
+  });
+
+  test("an in-flight plugin is discovered as mixed, never as a problem", () => {
+    const root = getWorkspaceRoot();
+    // 🏗️ fem is the last plugin still mid-migration: a marked new-contract package PLUS residual
+    // ⚡️implementations sandwiches and a Shape V1 owner-root entry file. Tolerating that state (instead of
+    // erroring on it) is the whole point of deriving maturity from disk. Once fem lands this flips to clean,
+    // which the assertions below allow for without going vacuous.
+    const owners = discoverOwners(root);
+    const fem = owners.find((owner) => owner.ownerRel === "✏️s/🔌️plugins/🏗️fem");
+    expect(fem).toBeDefined();
+    expect(fem?.roles).toEqual(["plugin"]);
+    expect(fem?.maturity).toBe(fem!.residualImplDirs === 0 && fem!.entryFilesAtOwnerRoot.length === 0 ? "clean" : "mixed");
+    expect(discoverPackageProblems(root).filter((problem) => problem.path.startsWith("✏️s/🔌️plugins/🏗️fem"))).toEqual([]);
+  });
+
+  test("the real repo raises no discovery problems", () => {
+    expect(discoverPackageProblems(getWorkspaceRoot())).toEqual([]);
+  });
+});
+
+describe("discoverOwners", () => {
+  test("every owner groups its own packages and derives maturity from its residuals", () => {
+    const owners = discoverOwners(getWorkspaceRoot());
+    expect(owners.length).toBeGreaterThan(0);
+    for (const owner of owners) {
+      expect(owner.packages.every((pkg) => pkg.ownerRel === owner.ownerRel)).toBe(true);
+      expect(owner.packages.every((pkg) => pkg.maturity === owner.maturity)).toBe(true);
+      expect(owner.maturity).toBe(owner.residualImplDirs === 0 && owner.entryFilesAtOwnerRoot.length === 0 ? "clean" : "mixed");
+      expect(owner.langs).toEqual([...new Set(owner.packages.map((pkg) => pkg.lang))]);
+    }
+  });
+
+  test("nested owners are their own rows, not folded into the enclosing plugin", () => {
+    const owners = discoverOwners(getWorkspaceRoot()).map((owner) => owner.ownerRel);
+    // 🖍️ draw ships a proc-macro sibling crate; a nested 📦️packages dir is an owner in its own right.
+    expect(owners).toContain("✏️s/🔌️plugins/🖍️draw");
+    expect(owners.some((owner) => owner.startsWith("✏️s/🔌️plugins/🖍️draw/"))).toBe(true);
+  });
+});
+
+describe("discoverBurndown", () => {
+  /** 🔥️ Independent recursive count of forbidden-segment dirs under one path — deliberately not sharing the discovery walk. */
+  const countImplDirs = (absDir: string): number => {
+    let total = 0;
+    for (const entry of readdirSync(absDir, { withFileTypes: true })) {
+      if (!entry.isDirectory() || entry.name.startsWith(".") || entry.name === "node_modules" || entry.name === "target" || entry.name === "pkg") continue;
+      if (loadTaxonomy().forbiddenPathSegments.includes(entry.name)) {
+        total += 1;
+        continue;
+      }
+      total += countImplDirs(join(absDir, entry.name));
+    }
+    return total;
+  };
+
+  test("counts residual ⚡️implementations dirs the same way an independent walk does", () => {
+    const root = getWorkspaceRoot();
+    const burndown = discoverBurndown(root);
+    const perPluginArea = burndown.implDirsByArea["mixed"] ?? 0;
+    expect(perPluginArea).toBe(countImplDirs(join(root, "✏️s/🔌️plugins")));
+    expect(burndown.implDirsTotal).toBeGreaterThanOrEqual(perPluginArea);
+  });
+
+  test("owner residual counts add up to their area total", () => {
+    const root = getWorkspaceRoot();
+    const burndown = discoverBurndown(root);
+    const owners = discoverOwners(root).filter((owner) => owner.area === "mixed");
+    const summed = owners.reduce((total, owner) => total + owner.residualImplDirs, 0);
+    expect(summed).toBe(burndown.implDirsByArea["mixed"] ?? 0);
+    expect(burndown.mixedOwners.every((owner) => owner.residualImplDirs > 0 || owner.entryFilesAtOwnerRoot.length > 0)).toBe(true);
+    expect(burndown.cleanOwners + burndown.mixedOwners.length).toBe(burndown.ownersTotal);
+  });
+
+  test("markerless package manifests stay visible even where they are a silent skip", () => {
+    const root = getWorkspaceRoot();
+    const burndown = discoverBurndown(root);
+    const catalogPaths = new Set(discoverPackages(root).map((pkg) => pkg.manifestPath));
+    expect(burndown.unmarkedManifests.every((manifest) => !catalogPaths.has(manifest.path))).toBe(true);
+    // 📦️ Data/doc files parked inside a 📦️packages dir violate Shape V2 (packaging code only) and must burn down.
+    expect(burndown.packagingViolations.every((violation) => violation.path.includes("📦️packages/"))).toBe(true);
+  });
+
+  test("clearDiscoveryCache forces a fresh walk", () => {
+    const root = getWorkspaceRoot();
+    const first = discoverPackages(root);
+    clearDiscoveryCache();
+    expect(discoverPackages(root).map((pkg) => pkg.manifestPath)).toEqual(first.map((pkg) => pkg.manifestPath));
   });
 });

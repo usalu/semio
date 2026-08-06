@@ -71,7 +71,7 @@ const KNOWN_BROKEN_IN_AGGREGATOR = new Map<string, string>([
     "imports the unresolved package '@semio-tech/assets' — pre-existing, unrelated to this file",
   ],
   [
-    "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/⚡️implementations/🟦️typescript/🧪️vitest.config.ts",
+    "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/🧪️vitest.config.ts",
     "imports the unresolved package '@semio-tech/animate-present-core' — pre-existing, unrelated to this file",
   ],
 ]);

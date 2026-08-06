@@ -693,7 +693,7 @@ function FrameworkOsShellInner({
 
   const ensureBackboneWorker = useCallback((): Worker => {
     if (backboneWorkerRef.current) return backboneWorkerRef.current;
-    const worker = new Worker(new URL("../../product/os/core/js/🟦️backbone-🟦️worker.ts", import.meta.url), { type: "module" });
+    const worker = new Worker(new URL("../../../../../⚡️implementations/🟦️typescript/🟦️backbone-worker.ts", import.meta.url), { type: "module" });
     worker.onmessage = (messageEvent: MessageEvent<BackboneWorkerResponse | { readonly wire: Uint8Array }>) => {
       const message = "wire" in messageEvent.data ? decodeBackboneWorkerResponse(messageEvent.data.wire) : messageEvent.data;
       if (message.kind !== "event") return;

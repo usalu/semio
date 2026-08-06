@@ -122,11 +122,11 @@
       "options": {}
     },
     {
-      "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🟨️nx-plugin.mjs",
+      "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🟨️nx-plugin.mjs",
       "options": {}
     },
     {
-      "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🟨️nx-emoji-project-plugin.mjs",
+      "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🟨️nx-emoji-project-plugin.mjs",
       "options": {}
     }
   ]

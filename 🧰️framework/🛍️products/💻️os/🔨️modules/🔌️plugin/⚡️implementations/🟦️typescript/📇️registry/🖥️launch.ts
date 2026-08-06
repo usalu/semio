@@ -1,23 +1,25 @@
-#!/usr/bin/env bun
 /**
- * 🖥️ Generates `.vscode/launch.json` from the hand-maintained seed (`.vscode/🧩️launch.seed.jsonc`)
- * plus the plugin/playground registry (`generatePlaygroundRegistry`) — the single source of truth for
- * per-plugin dev-server ports. Never hand-edit `.vscode/launch.json` directly: edit the seed file (for
- * keyboard/mouse shortcuts, bespoke tooling launchers, fixture/native variants, build/publish groups,
- * and the `devLaunchers` per-playground-variant templates), or a plugin's
- * `[[package.metadata.semio.playground]]` block (for ports), then regenerate.
+ * 🖥️ Renders `.vscode/launch.json` from the hand-maintained seed (`.vscode/🧩️launch.seed.jsonc`) plus
+ * the playground registry — the single source of truth for per-plugin dev-server ports. Never
+ * hand-edit `.vscode/launch.json` directly: edit the seed file (for keyboard/mouse shortcuts, bespoke
+ * tooling launchers, fixture/native variants, build/publish groups, and the `devLaunchers`
+ * per-playground-variant templates), or a plugin's `[[package.metadata.semio.playground]]` block (for
+ * ports), then regenerate.
  *
- * Usage: `bun 🖥️launch.ts generate` (writes) · `bun 🖥️launch.ts generate --check` (verifies, never writes).
+ * 🚪️ Module only — `📜️script.ts` owns the CLI: `generate` writes this output alongside the registry
+ * catalog and `check` verifies its freshness (CLAUDE.md: one `script.ts` per bundle). The playground
+ * catalog is passed IN rather than imported, so this module never depends on `📜️script.ts` at runtime.
  *
  * @see .🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/LAUNCH-JSON-GENERATOR-FROM-PLAYGROUND-REGISTRY
+ * @see .🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/REGISTRY-SCRIPT-REFACTOR-TO-VOCABULARY-DISCOVERY-LIBRARY
  */
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { getWorkspaceRoot } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
-import { generatePlaygroundRegistry } from "./📜️script.ts";
+import type { PlaygroundEntry } from "./📜️script.ts";
 
 const SEED_REL_PATH = ".vscode/🧩️launch.seed.jsonc";
-const OUTPUT_REL_PATH = ".vscode/launch.json";
+/** @emoji 📄️ Repo-relative path of the generated output, shared with `📜️script.ts`'s freshness gate. */
+export const LAUNCH_OUTPUT_REL_PATH = ".vscode/launch.json";
 const DEV_LAUNCHERS_MARKER =
   ',\n\n  // 🎮️devLaunchers — per-playground-variant dev-launcher metadata (not part of the generated\n  // output); see 🖥️launch.ts readSeed() for the exact split contract this marker line supports.\n  "devLaunchers": ';
 
@@ -100,9 +102,8 @@ function reindent(jsonText: string, extraSpaces: number): string {
 //#region 🔖️Generate
 /** @emoji 🏗️ Renders the full `.vscode/launch.json` text: seed skeleton with every
  * `@generated:<variant>:<renderer>` placeholder substituted by a fresh, registry-ported entry. */
-export function generateLaunchJson(repoRoot: string = getWorkspaceRoot()): string {
+export function generateLaunchJson(repoRoot: string, playgrounds: readonly PlaygroundEntry[]): string {
   const { skeleton, devLaunchers } = readSeed(repoRoot);
-  const playgrounds = generatePlaygroundRegistry(repoRoot);
   const byVariant = new Map(playgrounds.map((entry) => [entry.variant, entry]));
   let out = skeleton;
   for (const [variant, launcher] of Object.entries(devLaunchers)) {
@@ -122,31 +123,4 @@ export function generateLaunchJson(repoRoot: string = getWorkspaceRoot()): strin
   if (out.includes("@generated:")) throw new Error("🖥️launch.ts: an @generated placeholder was not resolved (devLaunchers table is missing an entry)");
   return out;
 }
-//#endregion
-
-//#region 🔖️CLI
-async function main(): Promise<void> {
-  const segments = process.argv.slice(2);
-  if (segments[0] !== "generate") {
-    console.error("usage: bun 🖥️launch.ts generate [--check]");
-    process.exit(1);
-  }
-  const check = segments.includes("--check");
-  const repoRoot = getWorkspaceRoot();
-  const expected = generateLaunchJson(repoRoot);
-  const outPath = join(repoRoot, OUTPUT_REL_PATH);
-  if (check) {
-    const actual = existsSync(outPath) ? readFileSync(outPath, "utf8") : "";
-    if (actual !== expected) {
-      console.error(`${OUTPUT_REL_PATH} is stale: run \`bun 🖥️launch.ts generate\` to refresh.`);
-      process.exit(1);
-    }
-    console.log(`${OUTPUT_REL_PATH} is fresh.`);
-    return;
-  }
-  writeFileSync(outPath, expected);
-  console.log(`${OUTPUT_REL_PATH} regenerated -> ${outPath}`);
-}
-
-if (import.meta.main) await main();
 //#endregion

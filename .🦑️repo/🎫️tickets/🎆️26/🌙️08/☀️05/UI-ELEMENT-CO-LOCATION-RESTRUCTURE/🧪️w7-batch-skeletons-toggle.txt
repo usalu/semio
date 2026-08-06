@@ -1,0 +1,31 @@
+W7 batch: Skeletons, Slider, Stepper, Steps, Strip, Table, Tabs, Textarea, Toggle
+
+Moves (mv, no retyping):
+.storybook/stories/ui/Skeletons.stories.tsx -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Skeletons/🧪️story.tsx
+.storybook/stories/ui/Slider.stories.tsx    -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Slider/🧪️story.tsx
+.storybook/stories/ui/Stepper.stories.tsx   -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Stepper/🧪️story.tsx
+.storybook/stories/ui/Steps.stories.tsx     -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Steps/🧪️story.tsx
+.storybook/stories/ui/Strip.stories.tsx     -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Strip/🧪️story.tsx
+.storybook/stories/ui/Table.stories.tsx     -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Table/🧪️story.tsx
+.storybook/stories/ui/Tabs.stories.tsx      -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Tabs/🧪️story.tsx
+.storybook/stories/ui/Textarea.stories.tsx  -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Textarea/🧪️story.tsx
+.storybook/stories/ui/Toggle.stories.tsx    -> 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Toggle/🧪️story.tsx
+
+Import fixups (only 2, all others use bare "@semio-tech/ui-react" etc, no change needed):
+- Table/🧪️story.tsx: "../../fixture/nakagin" -> "../../../../../.storybook/fixture/nakagin"
+- Textarea/🧪️story.tsx: "../../fixture/nakagin" -> "../../../../../.storybook/fixture/nakagin"
+Both verified via ls that ../../../../../.storybook/fixture/nakagin.ts exists relative to new file dirs.
+
+Title verification (unchanged, byte-identical to pre-move grep):
+Skeletons: "🖱️ui⚛️react/Skeletons"
+Slider:    "🖱️ui⚛️react/Slider"
+Stepper:   "🖱️ui⚛️react/Stepper"
+Steps:     "🖱️ui⚛️react/Steps"
+Strip:     "🖱️ui⚛️react/Strip"
+Table:     "🖱️ui⚛️react/Table"
+Tabs:      "🖱️ui⚛️react/Tabs"
+Textarea:  "🖱️ui⚛️react/Textarea"
+Toggle:    "🖱️ui⚛️react/Toggle"
+
+grep for remaining relative imports (from "../" or "./") in all 9 new files: only the 2 intentional fixture imports above remain, both verified resolvable.
+All 9 old .storybook/stories/ui/<Name>.stories.tsx confirmed removed (no such file).

@@ -10,6 +10,9 @@
 // #endregion 🧲️Header
 
 import type { Plugin } from "vite";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { discoverPackages, loadTaxonomy, readSemioMarkerSubTable } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
 import type { PlaygroundAssetSpec } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
 
 export type { PlaygroundAssetSpec };
@@ -44,8 +47,15 @@ export type StoryScope = {
 // #region 🔖️ScopeRegistry
 const repoRelative = (path: string) => path;
 
-/** @emoji 🗂️ Every registered Storybook scope. Add a row here + `stories/<id>/` to add a new slice — no other file needs to know about it. */
-export const STORY_SCOPES: readonly StoryScope[] = [
+/**
+ * @emoji 🗂️ Every HAND-CURATED Storybook scope — scopes that cannot (yet) be derived from a package's
+ * own opt-in (custom `aliases`/`assets`/`vitePlugins`, a cross-owner `sourceRoots` entry, more than one
+ * scope per package, or an owner under an area that hasn't migrated to `📦️packages` yet — `framework`,
+ * `infinite`, `compose*`, `coda`). Add a row here + `stories/<id>/` for those; everything else should
+ * prefer the package-catalog opt-in below (`GENERATED_SCOPES`) instead of a new row here — see
+ * `26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG`.
+ */
+export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
   {
     id: "ui",
     titlePrefix: "🖱️ui⚛️react",
@@ -53,7 +63,6 @@ export const STORY_SCOPES: readonly StoryScope[] = [
       repoRelative("🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"),
       repoRelative("🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript"),
       repoRelative("🧰️framework/🔨️modules/🖱️ui/🖼️assets"),
-      repoRelative("✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript"),
       repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementations/🟦️typescript"),
     ],
     aliases: {
@@ -62,36 +71,32 @@ export const STORY_SCOPES: readonly StoryScope[] = [
       "@semio-tech/coda-desktop/renderer": "compose/client/ui/desktop/js/renderer.tsx",
       "@semio-tech/compose-rs-wasm": "compose/client/lib/rs/pkg/compose.js",
     },
-  },
-  {
-    id: "styling",
-    titlePrefix: "🎨️styling",
-    sourceRoots: [repoRelative("🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript")],
+    // 🎫️ 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE W7: most stories moved to co-locate with their
+    // component (🧱️elements/<Element>/🧪️story.tsx); the legacy glob stays for stories whose component
+    // is still barrel-inline (not yet extracted) or whose target element dir is already occupied by
+    // another story sharing its name (the fixed single-leaf-filename taxonomy holds one story file per
+    // dir — see 📋️w0-status.md's W7 section for the full per-story disposition).
+    storyGlobs: ["./stories/ui/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)", "../🧰️framework/🔨️modules/🖱️ui/🧱️elements/**/🧪️story.tsx"],
   },
   {
     id: "puzzle",
     titlePrefix: "🧩️puzzle",
-    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript")],
+    sourceRoots: [],
   },
   {
     id: "puzzle/2d",
     titlePrefix: "🧩️puzzle🩻️2d",
-    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d"), repoRelative("✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript")],
+    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d")],
   },
   {
     id: "puzzle/3d",
     titlePrefix: "🧩️puzzle🧊️3d",
-    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d"), repoRelative("✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript"), repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/⚡️implementations/🟦️typescript")],
+    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d"), repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/⚡️implementations/🟦️typescript")],
   },
   {
     id: "puzzle/5d",
     titlePrefix: "🧩️puzzle🕐️5d",
-    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d"), repoRelative("✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript")],
-  },
-  {
-    id: "block",
-    titlePrefix: "🧱️block",
-    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧱️block")],
+    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d")],
   },
   {
     id: "compose",
@@ -177,11 +182,6 @@ export const STORY_SCOPES: readonly StoryScope[] = [
     },
   },
   {
-    id: "cad",
-    titlePrefix: "📐️cad",
-    sourceRoots: [repoRelative("✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript"), repoRelative("✏️s/🔌️plugins/📐️cad/🖼️assets"), repoRelative("✏️s/🔌️plugins/📐️cad/🧫️fixtures")],
-  },
-  {
     id: "coda",
     titlePrefix: "🧠️coda",
     sourceRoots: [repoRelative("compose/client/ui/desktop")],
@@ -189,13 +189,86 @@ export const STORY_SCOPES: readonly StoryScope[] = [
       "@semio-tech/coda-desktop/renderer": "compose/client/ui/desktop/js/renderer.tsx",
     },
   },
-  {
-    id: "animate",
-    titlePrefix: "🎬️animate",
-    sourceRoots: [repoRelative("✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/⚡️implementations/🟦️typescript")],
-  },
 ];
 // #endregion 🔖️ScopeRegistry
+
+// #region 🔖️GeneratedScopes
+/**
+ * @emoji 🏷️ Opt-in Storybook coverage a package declares in its OWN manifest — rust
+ * `[package.metadata.semio.storybook]`, TS `package.json`'s `"semio": {"storybook": {...}}` (read via
+ * `readSemioMarkerSubTable`, the generic per-package opt-in mechanism in the shared repo-lib discovery
+ * module). `sourceRoots`/`storyGlobs` entries are OWNER-relative (joined against the discovered
+ * package's `ownerRel`; `"."` denotes the owner root itself) so a scope survives its owning package's
+ * directory moving without a manifest edit — only `📦️packages/…`'s own manifest and this generator need
+ * updating, never a literal full path here. Deliberately minimal (id/titlePrefix/sourceRoots/storyGlobs
+ * only, one scope per package, no `aliases`/`assets`/`vitePlugins`) — a package needing more than this
+ * stays a `HAND_CURATED_SCOPES` entry instead. See
+ * `26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG`.
+ */
+type StorybookOptIn = {
+  readonly id?: string;
+  readonly titlePrefix?: string;
+  readonly sourceRoots?: readonly string[];
+  readonly storyGlobs?: readonly string[];
+};
+
+/** @emoji 🧹️ Narrows the untyped `Record<string, unknown>` `readSemioMarkerSubTable` returns down to the fields `StorybookOptIn` actually understands, dropping anything else silently (a package's opt-in table is its own manifest's business — this generator only reads what it needs). */
+function coerceStorybookOptIn(raw: Record<string, unknown> | undefined): StorybookOptIn | undefined {
+  if (!raw) return undefined;
+  const strings = (value: unknown): readonly string[] | undefined => (Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : undefined);
+  return {
+    id: typeof raw.id === "string" ? raw.id : undefined,
+    titlePrefix: typeof raw.titlePrefix === "string" ? raw.titlePrefix : undefined,
+    sourceRoots: strings(raw.sourceRoots),
+    storyGlobs: strings(raw.storyGlobs),
+  };
+}
+
+/** @emoji 📖️ Every package-catalog-derived scope: walks `discoverPackages(repoRoot)`, keeps only packages whose manifest opts into `storybook`, and resolves each declared owner-relative `sourceRoots`/`storyGlobs` entry against that package's real, freshly-discovered `ownerRel` — never a literal path baked in here. */
+export function buildGeneratedScopes(repoRoot: string): readonly StoryScope[] {
+  const taxonomy = loadTaxonomy();
+  const scopes: StoryScope[] = [];
+  for (const pkg of discoverPackages(repoRoot, taxonomy)) {
+    const optIn = coerceStorybookOptIn(readSemioMarkerSubTable(join(repoRoot, pkg.manifestPath), pkg.lang, "storybook", taxonomy));
+    if (!optIn) continue;
+    if (!optIn.sourceRoots || optIn.sourceRoots.length === 0) {
+      throw new Error(`[storybook] "${pkg.manifestPath}" opts into Storybook coverage but declares no sourceRoots.`);
+    }
+    const id = optIn.id ?? pkg.id;
+    scopes.push({
+      id,
+      titlePrefix: optIn.titlePrefix ?? id,
+      sourceRoots: optIn.sourceRoots.map((root) => join(pkg.ownerRel, root).replaceAll("\\", "/")),
+      ...(optIn.storyGlobs ? { storyGlobs: optIn.storyGlobs.map((glob) => join(pkg.ownerRel, glob).replaceAll("\\", "/")) } : {}),
+    });
+  }
+  return scopes;
+}
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+
+/** @emoji 🏠️ `.storybook/scopes.ts` sits directly under the repo root — one `resolve(..)` up from `HERE`. */
+export function repoRootFromHere(): string {
+  return resolve(HERE, "..");
+}
+
+/** @emoji 🗂️ Every package-catalog-derived scope, resolved against the real on-disk repo root. */
+export const GENERATED_SCOPES: readonly StoryScope[] = buildGeneratedScopes(repoRootFromHere());
+// #endregion 🔖️GeneratedScopes
+
+// #region 🔖️ScopeMerge
+/** @emoji 🗂️ Every registered Storybook scope: `HAND_CURATED_SCOPES` plus every package-catalog opt-in (`GENERATED_SCOPES`). Throws on an id collision (config-time conflict, never silent last-wins — same discipline as `buildScopeAliases`). */
+export const STORY_SCOPES: readonly StoryScope[] = (() => {
+  const merged: StoryScope[] = [...HAND_CURATED_SCOPES];
+  const seenIds = new Set(merged.map((s) => s.id));
+  for (const scope of GENERATED_SCOPES) {
+    if (seenIds.has(scope.id)) throw new Error(`[storybook] generated scope id ${JSON.stringify(scope.id)} collides with a HAND_CURATED_SCOPES entry — rename one.`);
+    seenIds.add(scope.id);
+    merged.push(scope);
+  }
+  return merged;
+})();
+// #endregion 🔖️ScopeMerge
 
 // #region 🔖️ScopeResolution
 /** @emoji 🎯️ A scope token matches a registered scope's id or any of its descendants (`compose` matches `compose/ui`). */

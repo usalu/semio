@@ -1,0 +1,63 @@
+{
+  "name": "os-hub",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "namedInputs": {
+    "default": ["{workspaceRoot}/🌎️hub/**/*.rs", "{projectRoot}/**/*"]
+  },
+  "targets": {
+    "setup": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts setup"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev"
+      }
+    }
+  }
+}

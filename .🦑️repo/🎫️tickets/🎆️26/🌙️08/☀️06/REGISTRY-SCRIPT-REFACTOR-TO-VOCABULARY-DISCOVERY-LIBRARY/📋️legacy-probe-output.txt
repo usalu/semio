@@ -1,0 +1,41 @@
+sandwich Cargo.toml with [package.metadata.component]: 5
+  bundle  ✏️s/🔌️plugins/🏗️fem/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml
+  extension  ✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/⚡️implementations/🦀️rust/Cargo.toml
+  extension  ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/⚡️implementations/🦀️rust/Cargo.toml
+  extension  ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/⚡️implementations/🦀️rust/Cargo.toml
+  extension  ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/⚡️implementations/🦀️rust/Cargo.toml
+
+non-sandwich Cargo.toml with [package.metadata.component]: 33
+  ✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/Cargo.toml
+  ✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/Cargo.toml

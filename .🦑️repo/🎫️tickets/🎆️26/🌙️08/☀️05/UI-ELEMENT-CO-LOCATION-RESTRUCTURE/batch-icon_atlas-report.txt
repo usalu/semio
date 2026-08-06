@@ -1,0 +1,56 @@
+Module: icon_atlas
+Target element dir: IconRenderHost (existing) -> 🧊️component.rs newly added
+Source: framework/products/os/modules/renderer/engine/packages/rust/targets/wgpu/lib.rs
+Extracted line range (pre-edit lib.rs): lines 43-113
+  - line 43: "pub mod icon_atlas {" (wrapper, dropped)
+  - lines 44-112: inner body (moved verbatim, minus 4-space dedent, minus the internal
+    "// #region icon_atlas" / "// #endregion icon_atlas" markers which were redundant once the
+    whole file IS that module -- consistent with sibling extracted files, e.g. Dock/EngineCanvas,
+    which don't wrap their entire body in one file-spanning region either)
+  - line 113: "}" (wrapper close, dropped)
+Last module in file before "mod camera_dispatch_deadline_tests" (untouched, stays in lib.rs).
+
+lib.rs replacement:
+    #[path = "../../../../🧱️elements/IconRenderHost/🧊️component.rs"]
+    pub mod icon_atlas;
+
+New file: 🧧️.../🧱️elements/IconRenderHost/🧊️component.rs (74 lines incl. header)
+Header pattern copied/adapted from Dock and Shell sibling component.rs files.
+
+Verification:
+- cargo check -p semio-framework-os-renderer-wgpu: BLOCKED, not by my change.
+  Repo-wide error (workspace-manifest-level, before any per-crate compilation even starts):
+
+    error: failed to load manifest for workspace member
+    `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/⚡️implementations/🦀️rust`
+    referenced by workspace at `/Users/ueli/Documents/semio/Cargo.toml`
+    Caused by: failed to read .../⚡️implementations/🦀️rust/Cargo.toml
+    Caused by: No such file or directory (os error 2)
+
+  Root cause confirmed external: `git status` shows this exact path mid-rename by a concurrent
+  session (R  .../⚡️implementations/🦀️rust/Cargo.toml -> .../📦️packages/🦀️rust/Cargo.toml, staged
+  but root Cargo.toml's workspace `members` list at line 164 still points at the old
+  ⚡️implementations path). Same class as documented in my own memory note
+  "Concurrent Cargo Workspace Churn" -- unrelated plugin (bim under flow/extensions), not touched
+  by this ticket. Retried after sleep(5) and again a few minutes later; still present both times.
+  This is NOT the literal "multiple workspace roots" message named in the task brief, but it is
+  the same external-churn failure mode (blocks manifest load before wgpu crate is even reached),
+  so treating it the same way: not mine, hand-verify only, do not attempt to fix someone else's
+  in-flight rename.
+
+- Hand verification performed instead:
+  - `rustfmt --edition 2021 --check` on the new IconRenderHost/🧊️component.rs: exit 0, ZERO diff
+    (file already canonically formatted -- also proves it parses as valid Rust).
+  - `rustfmt --edition 2021 --check` on the edited lib.rs: exit 1, but ALL reported diffs are
+    pre-existing line-wrap/formatting nits in OTHER already-extracted sibling files (Dock, Shell,
+    Interpreter, ProgramBridge, Scenes) reached via existing #[path] modules -- none in the
+    icon_atlas region I touched, and rustfmt itself fully parsed the file (including following the
+    #[path] attributes through Dock/Shell/etc.) without any syntax error, which confirms my edit
+    did not break parsing.
+  - Manual brace/byte-for-byte diff check: new file's body is character-identical to the original
+    lib.rs lines 44-112 (dedented 4 spaces only), no transcription drift.
+
+Files touched:
+- framework/products/os/modules/renderer/engine/packages/rust/targets/wgpu/lib.rs (mod icon_atlas
+  block replaced with #[path] declaration)
+- framework/products/os/modules/renderer/engine/elements/IconRenderHost/🧊️component.rs (new file)

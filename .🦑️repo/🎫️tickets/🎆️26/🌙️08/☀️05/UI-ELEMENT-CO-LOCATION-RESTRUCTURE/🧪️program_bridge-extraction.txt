@@ -1,0 +1,33 @@
+Module: program_bridge -> element dir ProgramBridge (NEW)
+lib.rs original block: lines 26-607 (opening "pub mod program_bridge {" at 26, matching "}" at 607,
+verified by brace-depth counter script landing exactly at the boundary right before the untouched
+crate-root "#[path=...] mod generated_plugin_hosts;" PluginHostConfig block, which was left untouched).
+
+Extracted inner content: lib.rs lines 27-606 (580 lines) -> dedented 4 spaces, outer
+"// #region program_bridge" / "// #endregion program_bridge" wrapper lines dropped (redundant once
+the whole file IS that module, matching the Dock/EngineCanvas precedent in this same elements tree).
+Inner "//#region 🏠️🧳️PluginHostConfig" / "//#endregion" substructure (program_bridge's own, distinct
+from the crate-root generated_plugin_hosts one) was left intact inside the extracted body.
+
+New file: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ProgramBridge/🧊️component.rs
+(585 lines: 7-line header docstring, matching Dock/EngineCanvas header pattern, + dedented body).
+Brace-balance self-check on the new file: final depth 0 (verified with a standalone script).
+
+lib.rs edit: replaced lines 26-607 with:
+  #[path = "../../../../🧱️elements/ProgramBridge/🧊️component.rs"]
+  pub mod program_bridge;
+(module name "program_bridge" unchanged; verified via `sed -n` that the following
+"//#region 🏠️🧳️PluginHostConfig" / generated_plugin_hosts block is untouched and immediately follows).
+
+cargo check: BLOCKED by an unrelated concurrent-session workspace error (not my change):
+  error: failed to load manifest for workspace member
+  `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/⚡️implementations/🦀️rust`
+  Caused by: failed to read .../Cargo.toml -- No such file or directory (os error 2)
+Root Cargo.toml (line 164) still lists this old path as a workspace member while another concurrent
+session has mid-migrated the bim plugin to a new 📦️packages/🦀️rust layout (confirmed via `git status`
+on that plugin's directory showing D/A pairs for the old/new paths) -- this is NOT the "multiple
+workspace roots" message named in the task instructions, but is the same class of external, transient
+concurrent-workspace-churn failure (see project memory "Concurrent Cargo Workspace Churn"). Retried
+once after 5s, error persisted identically. Did not touch Cargo.toml or the bim plugin.
+Treating my own edit as hand-verified-only (line-range math + brace-balance self-check +
+byte-for-byte dedent diff against the original block), per task instructions for this failure class.

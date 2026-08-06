@@ -1,0 +1,9 @@
+{
+  "extends": "../../../../../../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": ".",
+    "allowImportingTsExtensions": true
+  },
+  "include": ["📦️index.ts", "../../🟦️component.ts"]
+}

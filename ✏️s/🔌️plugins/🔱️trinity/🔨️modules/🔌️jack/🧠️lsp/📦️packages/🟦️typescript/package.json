@@ -1,0 +1,32 @@
+{
+  "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "name": "@semio-tech/trinity-jack-lsp-worker",
+  "version": "0.1.0",
+  "description": "trinity jack lsp · Web Worker JSON-RPC pump over the LSP's WASM `JackLspSession`",
+  "private": true,
+  "type": "module",
+  "semio": {
+    "role": "tool",
+    "id": "trinity-jack-lsp-worker"
+  },
+  "exports": {
+    ".": "./📦️index.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript"
+  },
+  "bundleKind": "library"
+}

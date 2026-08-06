@@ -267,7 +267,7 @@ impl DocumentApp for Procedural3dPlayApp {
             "removeGeneration" => Ok(Procedural3dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
             "renameGeneration" => Ok(Procedural3dCommand::RenameGeneration(rename_generation::RenameGeneration { id: str_arg(&["id"]).unwrap_or_default(), name: str_arg(&["name"]).unwrap_or_default() })),
             "updateGenerationValues" => {
-                let value = args.get("value").map(|entry| dsl::to_dsl_value(entry).unwrap_or(dsl::DslValue::Null)).unwrap_or(dsl::DslValue::Null);
+                let value = args.get("value").map_or(dsl::DslValue::Null, |entry| dsl::to_dsl_value(entry).unwrap_or(dsl::DslValue::Null));
                 Ok(Procedural3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues {
                     generation_id: str_arg(&["generationId", "generation_id"]),
                     question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
@@ -666,9 +666,9 @@ mod tests {
 
     #[test]
     fn each_example_loads_distinct_fixture_and_preview_geometry() {
-        let _serial = crate::artifacts::procedural3d::engine::test_support::lock();
         use crate::artifacts::procedural3d::engine::*;
         use crate::artifacts::procedural3d::widget_id;
+        let _serial = test_support::lock();
         let examples = [
             PROCEDURAL_EXAMPLE_HEX_COLUMN,
             PROCEDURAL_EXAMPLE_RECT_EXTRUDE,
