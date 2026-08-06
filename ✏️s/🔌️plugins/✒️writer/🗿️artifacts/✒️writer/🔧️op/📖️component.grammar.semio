@@ -1,0 +1,6 @@
+dialect grammar
+grammar writer
+extension writer
+use family-embed
+start document
+document = TEXT*

@@ -1,0 +1,6 @@
+dialect grammar
+grammar shooting
+extension shooting
+use family-scene
+start document
+document = TEXT*

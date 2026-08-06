@@ -12,7 +12,7 @@
 //! canonical text form so generated values stay representable by `vcs`/`dsl_derive`'s future
 //! DSL-bidirectional tests without this crate needing to depend on either of them.
 
-use dsl_schema::{DslValue, ExprValue, FieldValue, RecordSpec, RecordValue, Shape, WireNode, WireValue};
+use dsl_schema::{DslValue, ExprValue, FieldValue, RecordSpec, RecordValue, Shape, WireEdgeLabel, WireNode, WireValue};
 use std::collections::HashMap;
 
 //#region 🔖️Arbitrary
@@ -208,7 +208,7 @@ impl RecordValueGen {
             Shape::Map(_) => FieldValue::Map(Vec::new()),
             Shape::Value => FieldValue::Value(DslValue::Null),
             Shape::Table(_) => FieldValue::List(Vec::new()),
-            Shape::Wire => FieldValue::Wire(WireValue { from: WireNode { id: "n".to_string(), kind: None, port: None }, edge: None, properties: DslValue::Null }),
+            Shape::Wire => FieldValue::Wire(WireValue { from: WireNode { id: "n".to_string(), kind: None, port: None }, edge: None, edge_label: WireEdgeLabel::default(), properties: DslValue::Null }),
             Shape::Quantity(_) | Shape::Angle(_) => FieldValue::Float(self.next_f64()),
             Shape::Ref(_) => FieldValue::Text(self.next_string(6)),
             Shape::Coord(dims) => FieldValue::Tuple((0..*dims).map(|_| FieldValue::Float(self.next_f64())).collect()),
@@ -250,7 +250,7 @@ impl RecordValueGen {
         let from = self.generate_wire_node();
         let edge = if self.next_bool() { Some((self.next_bool(), self.generate_wire_node())) } else { None };
         let properties = self.generate_dsl_value(depth, max_depth);
-        WireValue { from, edge, properties }
+        WireValue { from, edge, edge_label: WireEdgeLabel::default(), properties }
     }
     //#endregion 🔖️Shapes
 }

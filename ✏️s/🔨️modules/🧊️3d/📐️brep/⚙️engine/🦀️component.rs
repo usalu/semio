@@ -1,5 +1,8 @@
 //! 🧭️ Brep kernel interface: geometry handles and mesh transfer contracts.
 
+#[path = "🧮️compute/🦀️component.rs"]
+pub mod compute;
+
 pub use crate::brep::engine::compute::block_on;
 
 use async_trait::async_trait;

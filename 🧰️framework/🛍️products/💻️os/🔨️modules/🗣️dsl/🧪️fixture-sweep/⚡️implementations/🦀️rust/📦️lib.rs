@@ -94,67 +94,65 @@ mod tests {
 
     fn registry() -> Vec<(&'static str, &'static str, CheckFn)> {
         vec![
-            ("writer", <WriterProjection as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<WriterProjection>),
-            ("mathematical", <MathProjection as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<MathProjection>),
-            ("procedural_2d", <Procedural2dDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Procedural2dDocument>),
-            ("procedural_3d", <Procedural3dDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Procedural3dDocument>),
-            ("flow_app", <FlowFixture as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<FlowFixture>),
-            ("gis2d", <GisMapDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<GisMapDocument>),
+            ("writer", <WriterProjection as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<WriterProjection>),
+            ("mathematical", <MathProjection as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<MathProjection>),
+            ("procedural_2d", <Procedural2dDocument as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<Procedural2dDocument>),
+            ("procedural_3d", <Procedural3dDocument as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<Procedural3dDocument>),
+            ("flow_app", <FlowFixture as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<FlowFixture>),
             ("gis2d", "gis.gismap", store::test_support::check_dsl_fixture_text_laws::<GisMapDocument>),
-            ("gis3d", <Gis3dTerrainDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Gis3dTerrainDocument>),
             ("gis3d", "gis.gisterrain", store::test_support::check_dsl_fixture_text_laws::<Gis3dTerrainDocument>),
-            ("vcs_app", <VcsDemoProjection as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<VcsDemoProjection>),
-            ("present", <PresentDeck as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<PresentDeck>),
-            ("shooting", <ShootingFixture as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<ShootingFixture>),
-            ("sequence", <SequenceFixture as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<SequenceFixture>),
-            ("fem2d", <Fem2dDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Fem2dDocument>),
-            ("fem3d", <Fem3dDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Fem3dDocument>),
-            ("process_3d", <Process3dDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Process3dDocument>),
-            ("lowpoly", <LowpolyProjection as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<LowpolyProjection>),
-            ("reasoning_wires", <MindmapWiresDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<MindmapWiresDocument>),
-            ("layout", <LayoutDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<LayoutDocument>),
-            ("cad_document", <CadScene as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<CadScene>),
-            ("iso16757", <Iso16757Document as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Iso16757Document>),
-            ("vdi3805", <Vdi3805Document as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Vdi3805Document>),
-            ("din4108", <Din4108Document as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Din4108Document>),
-            ("din16798", <Din16798Document as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Din16798Document>),
-            ("en1990", <En1990Document as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<En1990Document>),
-            ("en1991", <En1991Document as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<En1991Document>),
-            ("en1992", <En1992Document as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<En1992Document>),
-            ("en1993", <En1993Document as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<En1993Document>),
-            ("en1994", <En1994Document as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<En1994Document>),
-            ("en1995", <En1995Document as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<En1995Document>),
-            ("en1996", <En1996Document as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<En1996Document>),
-            ("en1997", <En1997Document as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<En1997Document>),
-            ("en1998", <En1998Document as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<En1998Document>),
-            ("en1999", <En1999Document as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<En1999Document>),
-            ("din18599", <Din18599Document as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Din18599Document>),
-            ("playbook", <PlaybookSpec as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<PlaybookSpec>),
-            ("imperative", <ImperativeDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<ImperativeDocument>),
-            ("remodel", <RemodelScene as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<RemodelScene>),
-            ("rewrite", <RewriteRuleState as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<RewriteRuleState>),
-            ("trinity_ram", <GraphFixture as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<GraphFixture>),
-            ("dag_app", <DagDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<DagDocument>),
-            ("draw", <DrawDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<DrawDocument>),
-            ("raster", <RasterProjection as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<RasterProjection>),
-            ("note_app", <NoteDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<NoteDocument>),
-            ("puzzle_2d", <Puzzle2dProjection as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Puzzle2dProjection>),
-            ("puzzle_5d", <Puzzle5dProjection as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Puzzle5dProjection>),
-            ("puzzle_3d", <Puzzle3dProjection as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Puzzle3dProjection>),
-            ("block_2d", <Block2dDefinition as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Block2dDefinition>),
-            ("block_5d", <Block5dDefinition as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Block5dDefinition>),
-            ("block_3d", <Block3dDefinition as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Block3dDefinition>),
-            ("home", <SHomeDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<SHomeDocument>),
-            ("semio_framework_os", <WorkflowDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<WorkflowDocument>),
-            ("sourcing", <CurateDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<CurateDocument>),
+            ("vcs_app", <VcsDemoProjection as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<VcsDemoProjection>),
+            ("present", <PresentDeck as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<PresentDeck>),
+            ("shooting", <ShootingFixture as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<ShootingFixture>),
+            ("sequence", <SequenceFixture as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<SequenceFixture>),
+            ("fem2d", <Fem2dDocument as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<Fem2dDocument>),
+            ("fem3d", <Fem3dDocument as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<Fem3dDocument>),
+            ("process_3d", <Process3dDocument as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<Process3dDocument>),
+            ("lowpoly", <LowpolyProjection as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<LowpolyProjection>),
+            ("reasoning_wires", <MindmapWiresDocument as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<MindmapWiresDocument>),
+            ("layout", <LayoutDocument as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<LayoutDocument>),
+            ("cad_document", <CadScene as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<CadScene>),
+            ("iso16757", <Iso16757Document as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<Iso16757Document>),
+            ("vdi3805", <Vdi3805Document as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<Vdi3805Document>),
+            ("din4108", <Din4108Document as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<Din4108Document>),
+            ("din16798", <Din16798Document as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<Din16798Document>),
+            ("en1990", <En1990Document as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<En1990Document>),
+            ("en1991", <En1991Document as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<En1991Document>),
+            ("en1992", <En1992Document as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<En1992Document>),
+            ("en1993", <En1993Document as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<En1993Document>),
+            ("en1994", <En1994Document as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<En1994Document>),
+            ("en1995", <En1995Document as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<En1995Document>),
+            ("en1996", <En1996Document as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<En1996Document>),
+            ("en1997", <En1997Document as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<En1997Document>),
+            ("en1998", <En1998Document as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<En1998Document>),
+            ("en1999", <En1999Document as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<En1999Document>),
+            ("din18599", <Din18599Document as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<Din18599Document>),
+            ("playbook", <PlaybookSpec as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<PlaybookSpec>),
+            ("imperative", <ImperativeDocument as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<ImperativeDocument>),
+            ("remodel", <RemodelScene as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<RemodelScene>),
+            ("rewrite", <RewriteRuleState as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<RewriteRuleState>),
+            ("trinity_ram", <GraphFixture as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<GraphFixture>),
+            ("dag_app", <DagDocument as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<DagDocument>),
+            ("draw", <DrawDocument as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<DrawDocument>),
+            ("raster", <RasterProjection as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<RasterProjection>),
+            ("note_app", <NoteDocument as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<NoteDocument>),
+            ("puzzle_2d", <Puzzle2dProjection as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<Puzzle2dProjection>),
+            ("puzzle_5d", <Puzzle5dProjection as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<Puzzle5dProjection>),
+            ("puzzle_3d", <Puzzle3dProjection as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<Puzzle3dProjection>),
+            ("block_2d", <Block2dDefinition as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<Block2dDefinition>),
+            ("block_5d", <Block5dDefinition as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<Block5dDefinition>),
+            ("block_3d", <Block3dDefinition as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<Block3dDefinition>),
+            ("home", <SHomeDocument as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<SHomeDocument>),
+            ("semio_framework_os", <WorkflowDocument as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<WorkflowDocument>),
+            ("sourcing", <CurateDocument as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<CurateDocument>),
             // 🌱️ `forms` app fixtures ship as `*.forms`, but `FormSpec` is a bare `pub use` alias of
             // `playbook::PlaybookSpec` (forms never overrode `#[dsl(extension = ...)]`), so
-            // `<FormSpec as store::DocumentDsl>::EXTENSION` is actually `"playbook"`, not `"forms"` —
+            // `<FormSpec as store::DocumentDsl>::envelope_id()` is actually `"playbook"`, not `"forms"` —
             // registered here under the file's real suffix too since `parse_dsl`/`print_dsl` only
             // care about the grammar's field shape, never the extension string.
             ("forms", "forms", store::test_support::check_dsl_fixture_text_laws::<FormSpec>),
-            ("space", <SpaceProjection as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<SpaceProjection>),
-            ("space", <CollectionProjection as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<CollectionProjection>),
+            ("space", <SpaceProjection as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<SpaceProjection>),
+            ("space", <CollectionProjection as store::DocumentDsl>::envelope_id(), store::test_support::check_dsl_fixture_text_laws::<CollectionProjection>),
         ]
     }
     //#endregion 🔖️Registry
@@ -300,6 +298,41 @@ mod tests {
         }
 
         assert!(failures.is_empty(), "dsl fixture law sweep failed for {} check(s) across {} fixture file(s):\n\n{}", failures.len(), fixture_files.len(), failures.join("\n\n"));
+    }
+
+    #[test]
+    fn repo_wide_semio_example_kind_coverage() {
+        let root = repo_root();
+        let kinds = ["🗣️dsls", "🎒️packs", "🔧️ops", "📡️sprs"];
+        let plugins = root.join("✏️s").join("🔌️plugins");
+        let mut gaps: Vec<String> = Vec::new();
+        let read_dir = |p: &Path| std::fs::read_dir(p).ok().map(|d| d.filter_map(|e| e.ok()).collect::<Vec<_>>()).unwrap_or_default();
+        for plugin in read_dir(&plugins) {
+            let plugin_path = plugin.path();
+            if !plugin_path.is_dir() {
+                continue;
+            }
+            let artifacts = plugin_path.join("🗿️artifacts");
+            for artifact in read_dir(&artifacts) {
+                let artifact_path = artifact.path();
+                if !artifact_path.is_dir() {
+                    continue;
+                }
+                let examples = artifact_path.join("📚️examples");
+                for set in read_dir(&examples) {
+                    let set_path = set.path();
+                    if !set_path.is_dir() {
+                        continue;
+                    }
+                    for kind in kinds {
+                        if !set_path.join(kind).is_dir() {
+                            gaps.push(format!("{} missing {}", set_path.display(), kind));
+                        }
+                    }
+                }
+            }
+        }
+        assert!(gaps.is_empty(), "semio example kind gaps:\n{}", gaps.join("\n"));
     }
     //#endregion 🔖️Sweep
 }

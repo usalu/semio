@@ -7233,6 +7233,7 @@ dependencies = [
  "semio-framework-os-kernel-dsl-schema",
  "semio-framework-os-kernel-pack",
  "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-semio",
  "semio-framework-os-kernel-store",
  "serde",
  "serde_json",
@@ -7342,6 +7343,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-os-kernel-dsl-lsp"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel-dsl",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-os-kernel-dsl-notation"
 version = "0.1.0"
 dependencies = [
@@ -7365,6 +7375,7 @@ name = "semio-framework-os-kernel-dsl-schema"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-dsl-core",
+ "semio-framework-os-kernel-dsl-notation",
  "serde",
 ]
 
@@ -8333,6 +8344,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-os-kernel-semio"
+version = "0.1.0"
+dependencies = [
+ "pretty_assertions",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "semio-framework-os-kernel-space"
 version = "0.1.0"
 dependencies = [
@@ -8359,6 +8378,7 @@ dependencies = [
  "semio-framework-os-kernel-dsl-core",
  "semio-framework-os-kernel-pack",
  "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-semio",
  "semio-framework-os-kernel-vcs",
  "serde",
  "serde-wasm-bindgen",
@@ -8677,17 +8697,19 @@ dependencies = [
 name = "semio-hub"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "axum 0.8.9",
  "dashmap",
  "futures",
+ "neo4rs",
+ "rusqlite",
  "semio-framework-os-kernel-db",
  "semio-framework-os-kernel-protocol",
- "semio-hub-directory",
- "semio-hub-directory-neo4j",
- "semio-hub-directory-postgres",
- "semio-hub-directory-sqlite",
  "serde",
  "serde_json",
+ "sqlx-core",
+ "sqlx-postgres",
+ "testcontainers-modules",
  "thiserror 2.0.18",
  "tokio",
  "tokio-tungstenite 0.26.2",
@@ -8697,51 +8719,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-hub-directory"
+name = "semio-s-2d"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "futures",
+ "geo",
+ "pollster",
+ "rayon",
+ "semio-framework-core",
  "serde",
- "serde_json",
  "thiserror 2.0.18",
-]
-
-[[package]]
-name = "semio-hub-directory-neo4j"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "neo4rs",
- "semio-hub-directory",
- "serde_json",
- "tokio",
- "uuid",
-]
-
-[[package]]
-name = "semio-hub-directory-postgres"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "semio-hub-directory",
- "serde_json",
- "sqlx-core",
- "sqlx-postgres",
- "testcontainers-modules",
- "tokio",
- "uuid",
-]
-
-[[package]]
-name = "semio-hub-directory-sqlite"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "rusqlite",
- "semio-hub-directory",
- "serde_json",
- "tokio",
- "uuid",
 ]
 
 [[package]]
@@ -8923,6 +8911,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-imperative"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel-neural-engine",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
+ "semio-framework-os-kernel-vcs",
+ "semio-s-plugin-imperative-control",
+ "semio-s-plugin-imperative-core",
+ "semio-s-plugin-imperative-logic",
+ "semio-s-plugin-imperative-math",
+ "semio-s-plugin-imperative-text",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-s-kernel-flow-extension-brep"
 version = "0.1.0"
 dependencies = [
@@ -8967,9 +8972,8 @@ version = "0.1.0"
 dependencies = [
  "getrandom 0.3.4",
  "semio-framework-os-kernel-neural-engine",
+ "semio-s-2d",
  "semio-s-kernel-flow-extension-wasm",
- "semio-s-kernel-geometry-2d",
- "semio-s-kernel-geometry-2d-engine",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -9026,46 +9030,6 @@ name = "semio-s-kernel-flow-extension-wasm"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-neural-engine",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-kernel-geometry-2d"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "geo",
- "semio-framework-core",
- "semio-s-kernel-geometry-2d-engine",
- "serde",
-]
-
-[[package]]
-name = "semio-s-kernel-geometry-2d-engine"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "futures",
- "pollster",
- "rayon",
- "serde",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "semio-s-kernel-imperative"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-neural-engine",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
- "semio-s-plugin-imperative-control",
- "semio-s-plugin-imperative-core",
- "semio-s-plugin-imperative-logic",
- "semio-s-plugin-imperative-math",
- "semio-s-plugin-imperative-text",
  "serde",
  "serde_json",
 ]
@@ -9203,8 +9167,7 @@ dependencies = [
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
- "semio-s-kernel-geometry-2d",
- "semio-s-kernel-geometry-2d-engine",
+ "semio-s-2d",
  "semio-s-plugin-draw-fsm",
  "serde",
  "serde_json",
@@ -9345,7 +9308,7 @@ dependencies = [
  "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-vcs",
  "semio-framework-plugin",
- "semio-s-kernel-imperative",
+ "semio-s-imperative",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -9658,7 +9621,7 @@ dependencies = [
  "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-vcs",
  "semio-framework-plugin",
- "semio-s-kernel-imperative",
+ "semio-s-imperative",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -9780,11 +9743,7 @@ dependencies = [
 name = "semio-s-plugin-trinity-jack-lsp"
 version = "0.1.0"
 dependencies = [
- "semio-framework-os-kernel-math-graph-dsl",
- "semio-s-plugin-trinity",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
+ "semio-framework-os-kernel-dsl-lsp",
  "wasm-bindgen",
 ]
 

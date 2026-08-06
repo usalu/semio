@@ -1,0 +1,6 @@
+dialect grammar
+grammar en1998
+extension en1998
+use family-sheet
+start document
+document = TEXT*

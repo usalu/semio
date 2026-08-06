@@ -1,0 +1,6 @@
+dialect grammar
+grammar forms
+extension forms
+use family-catalog
+start document
+document = TEXT*

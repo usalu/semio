@@ -1,0 +1,19 @@
+[package]
+name = "semio-s-language-bundle"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "s-module"
+
+[lib]
+crate-type = ["rlib"]
+path = "📦️lib.rs"
+
+[dependencies]
+dsl_lsp = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧠️lsp/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-lsp" }
+dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }

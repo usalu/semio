@@ -3,7 +3,7 @@
 use crate::artifacts::din4108::Document;
 
 /// 📜️ Bundled default example document (`.semio` envelope + DSL body).
-pub const DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../📚️examples/♻️default/🗣️dsls/♻️default/🧬️component.norm.din4108.dsl.semio");
+pub const DEFAULT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️default/🗣️dsls/♻️default/🧬️component.norm.din4108.dsl.semio");
 
 /// 📖️ Parses DIN 4108 DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {

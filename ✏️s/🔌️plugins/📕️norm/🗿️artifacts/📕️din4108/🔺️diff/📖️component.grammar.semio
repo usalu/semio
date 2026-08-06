@@ -1,0 +1,6 @@
+dialect grammar
+grammar din4108
+extension din4108
+use family-sheet
+start document
+document = TEXT*

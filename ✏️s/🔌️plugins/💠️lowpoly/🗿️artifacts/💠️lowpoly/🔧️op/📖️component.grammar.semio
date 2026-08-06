@@ -1,0 +1,6 @@
+dialect grammar
+grammar lowpoly
+extension lowpoly
+use family-scene
+start document
+document = TEXT*

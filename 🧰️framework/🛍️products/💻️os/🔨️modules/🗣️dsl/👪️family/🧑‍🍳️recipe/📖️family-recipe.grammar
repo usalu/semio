@@ -1,5 +1,0 @@
-grammar family-recipe
-start step
-
-step = IDENT ":" IDENT "(" arg* ")"
-arg = IDENT | INT | FLOAT | TEXT

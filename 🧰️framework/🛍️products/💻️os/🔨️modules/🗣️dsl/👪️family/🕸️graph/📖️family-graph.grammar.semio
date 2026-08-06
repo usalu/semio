@@ -1,0 +1,8 @@
+dialect grammar
+grammar family-graph
+start edge
+
+node = IDENT {":" IDENT}? {"@" IDENT}?
+edge = node ARROW node | node DASHARROW node | node "-" edge-label ARROW node | node "-" edge-label "-" node
+edge-label = "[" IDENT? {":" IDENT}? "]"
+chain = node {ARROW node}+ | node {DASHARROW node}+

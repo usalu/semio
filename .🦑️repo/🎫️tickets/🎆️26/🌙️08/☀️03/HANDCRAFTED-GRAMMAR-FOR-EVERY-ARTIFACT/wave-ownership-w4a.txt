@@ -1,0 +1,6 @@
+# W4a graph/wiring — disjoint plugin globs
+🕸️dag/**
+💡️reasoning/**
+🎬️sequence/**
+➗️mathematical/**
+🔱️trinity/** (jack LSP fold only; no hot flow)

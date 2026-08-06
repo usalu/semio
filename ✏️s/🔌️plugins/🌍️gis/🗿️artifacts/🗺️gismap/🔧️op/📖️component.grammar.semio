@@ -1,0 +1,6 @@
+dialect grammar
+grammar gismap
+extension gismap
+use family-geo
+start document
+document = TEXT*

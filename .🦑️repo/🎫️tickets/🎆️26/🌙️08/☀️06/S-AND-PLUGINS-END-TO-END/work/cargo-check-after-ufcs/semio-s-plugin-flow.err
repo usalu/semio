@@ -1,0 +1,39 @@
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:1083:21: warning: unused variable: `len`: help: if this is intentional, prefix it with an underscore: `_len`
+warning: `semio-framework-os-kernel-dsl-core` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os-kernel-dsl-core` to apply 1 suggestion)
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust/../../../🖋️notation/⚡️implementations/🦀️rust/📦️lib.rs:269:4: warning: function `print_edge_label` is never used
+warning: `semio-framework-os-kernel-dsl-notation` (lib) generated 1 warning
+    Checking semio-framework-os-kernel-math-graph-manifest v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-playbook v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/⚡️implementations/🦀️rust)
+    Checking semio-s-2d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️modules/◻2d/📦️packages/🦀️rust)
+    Checking semio-framework-os-kernel-3d-brep v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️modules/🧊️3d/📐️brep/⚡️implementations/🦀️rust)
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3296:68: warning: unnecessary qualification
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+    Checking semio-framework-os-kernel-math-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-math-graph-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/🕸️graph/🗣️dsl/⚡️implementations/🦀️rust)
+    Checking semio-s-kernel-flow-extension-draw v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/🖍️draw)
+    Checking semio-framework-os-kernel-math-graph-drawing v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/🕸️graph/🖊️drawing/⚡️implementations/🦀️rust)
+    Checking semio-s-kernel-flow-extension-brep v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/📐️brep)
+    Checking semio-framework-os-kernel-infinite-board v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/⚡️implementations/🦀️rust)
+    Checking semio-framework-kernel-neural-dag v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚡️implementations/🦀️rust/🕸️dag)
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/📐️brep/../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/📐️brep/📦️lib.rs:2228:4: warning: function `tessellate_geometry_json_for_wasm` is never used
+warning: `semio-s-kernel-flow-extension-brep` (lib) generated 1 warning
+    Checking semio-framework-os-kernel-infinite-board-port v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-infinite-board-normal-undirected v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/➕️normal/↔undirected/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-infinite-board-port-directed v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-infinite-board-port-directed-dag v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust)
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust/../../../../../../🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust/📦️lib.rs:2859:48: warning: unnecessary qualification
+warning: `semio-framework-os-kernel-infinite-board-port-directed-dag` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os-kernel-infinite-board-port-directed-dag` to apply 1 suggestion)
+    Checking semio-framework-os-kernel-flow-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust)
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:2011:19: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:2042:48: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:2048:76: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:3724:59: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:3728:17: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:3757:28: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:3785:36: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:1435:9: warning: variable does not need to be mutable
+warning: `semio-framework-os-kernel-flow-core` (lib) generated 8 warnings (run `cargo fix --lib -p semio-framework-os-kernel-flow-core` to apply 8 suggestions)
+    Checking semio-s-plugin-flow v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 4.34s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`

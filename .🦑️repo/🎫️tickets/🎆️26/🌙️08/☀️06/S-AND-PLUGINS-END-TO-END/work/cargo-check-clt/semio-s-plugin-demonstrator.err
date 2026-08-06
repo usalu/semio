@@ -1,0 +1,42 @@
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:1083:21: warning: unused variable: `len`: help: if this is intentional, prefix it with an underscore: `_len`
+warning: `semio-framework-os-kernel-dsl-core` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os-kernel-dsl-core` to apply 1 suggestion)
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust/../../../🖋️notation/⚡️implementations/🦀️rust/📦️lib.rs:269:4: warning: function `print_edge_label` is never used
+warning: `semio-framework-os-kernel-dsl-notation` (lib) generated 1 warning
+    Checking semio-framework-os-kernel-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-surface-tiled-map v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust)
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+warning: build failed, waiting for other jobs to finish...
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:103:39: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:103:74: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:148:29: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:148:64: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:153:39: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:153:74: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:166:32: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:166:67: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:184:57: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:184:92: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:199:46: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:202:59: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:214:54: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:219:46: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:219:81: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:243:34: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:243:69: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:1081:25: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:1088:6: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:1354:17: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:1355:19: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:1359:53: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:1382:17: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:1501:24: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:1541:32: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:1803:59: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:2496:17: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:2695:43: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:2710:13: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:2820:21: warning: unnecessary qualification
+🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust/../../../🗺️tiled-map/⚡️implementations/🦀️rust/📦️lib.rs:2855:6: warning: unnecessary qualification
+warning: `semio-framework-os-kernel-surface-tiled-map` (lib) generated 31 warnings (run `cargo fix --lib -p semio-framework-os-kernel-surface-tiled-map` to apply 31 suggestions)

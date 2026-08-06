@@ -1,0 +1,6 @@
+dialect grammar
+grammar procedural3d
+extension procedural3d
+use family-graph
+start document
+document = TEXT*

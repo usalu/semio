@@ -1,0 +1,19 @@
+# W4b text/knowledge (norm family core + vocabulary agents)
+📏️norm/**
+📝️note/**
+📚️curate/**
+
+# W4c geometry/media
+🖼️raster/**
+🎞️animate/**
+🏗️lowpoly/**
+
+# W4d engineering/spatial
+🏗️fem/**
+📐️cad/** (collision recheck before edits)
+
+# W4e hot last
+🌊️flow/**
+🌀️procedural/**
+🧩️block/**
+🧩️puzzle/**

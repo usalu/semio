@@ -460,7 +460,16 @@ pub struct LanguageSpec {
     pub extension: Option<&'static str>,
     pub role: LanguageRole,
     pub grammar: Option<&'static str>,
+    pub grammar_path: Option<&'static str>,
     pub hooks: IdiomHooks,
+}
+
+impl LanguageSpec {
+    /// @emoji 🧬️ Services a facet still on generic `RecordSpec`/`DocumentDsl` until its handcrafted
+    /// `.semio` spec lands — same hooks as the parent document grammar, distinct registry id.
+    pub fn derived(parent: LanguageSpec, id: &'static str, role: LanguageRole) -> Self {
+        Self { id, extension: None, role, grammar: parent.grammar, grammar_path: parent.grammar_path, hooks: parent.hooks }
+    }
 }
 
 static LANGUAGE_REGISTRY: OnceLock<Mutex<HashMap<&'static str, LanguageSpec>>> = OnceLock::new();
@@ -483,13 +492,13 @@ pub fn language(id: &str) -> Option<LanguageSpec> {
     registry.get(id).copied()
 }
 
-/// @emoji 🔍️ Looks up a registered grammar by the file extension it opens — the resolution a
-/// writer (or any editor) needs to pick a language for a document it's opening by path/URI. `None`
-/// for extensions with no registered document/config grammar (op grammars and embedded idioms
-/// have no extension of their own and are never found this way).
-pub fn language_for_extension(ext: &str) -> Option<LanguageSpec> {
-    let registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
-    registry.values().find(|spec| spec.extension == Some(ext)).copied()
+/// @emoji 🔍️ Resolves a registered DSL grammar from `.semio` file bytes (content-derived envelope).
+pub fn language_for_semio_content(bytes: &[u8]) -> Option<LanguageSpec> {
+    let envelope = semio_format::sniff(bytes).ok()?;
+    if envelope.component != semio_format::Component::Dsl {
+        return None;
+    }
+    language(&envelope.envelope_id())
 }
 //#endregion 🔖️Idiom
 
@@ -597,21 +606,23 @@ mod tests {
     }
 
     #[test]
-    fn language_registry_resolves_by_id_and_by_extension() {
+    fn language_registry_resolves_by_id_and_semio_content() {
         register_language(LanguageSpec {
             id: "greet-doc",
             extension: Some("greet"),
             role: LanguageRole::Document,
             grammar: None,
+            grammar_path: None,
             hooks: hooks_for::<GreetIdiom>(),
         });
         let by_id = language("greet-doc").expect("registered language must be found by its id");
         assert_eq!(by_id.extension, Some("greet"));
         assert_eq!(by_id.role, LanguageRole::Document);
-        let by_ext = language_for_extension("greet").expect("registered language must be found by its extension");
-        assert_eq!(by_ext.id, "greet-doc");
+        let bytes = b"semio greet-doc.dsl v1\nhello world\n";
+        let by_content = language_for_semio_content(bytes).expect("registered language must be found by sniffed envelope");
+        assert_eq!(by_content.id, "greet-doc");
         assert!(language("never-registered-id").is_none());
-        assert!(language_for_extension("never-registered-ext").is_none());
+        assert!(language_for_semio_content(b"semio missing.dsl v1\n").is_none());
     }
 
     #[test]

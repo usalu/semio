@@ -1,0 +1,5 @@
+dialect protocol
+protocol vdi3805
+version 1
+start record
+record = varint*

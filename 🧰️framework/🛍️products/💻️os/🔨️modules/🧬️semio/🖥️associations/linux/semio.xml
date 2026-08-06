@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/vnd.semio">
+    <comment>Semio document</comment>
+    <glob pattern="*.semio"/>
+    <glob pattern="*.dsl.semio"/>
+    <glob pattern="*.pack.semio"/>
+    <glob pattern="*.op.semio"/>
+    <glob pattern="*.spr.semio"/>
+    <glob pattern="*.cmd.semio"/>
+  </mime-type>
+</mime-info>

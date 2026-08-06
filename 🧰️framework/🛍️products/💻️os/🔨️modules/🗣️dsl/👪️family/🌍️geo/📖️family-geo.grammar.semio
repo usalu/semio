@@ -1,0 +1,6 @@
+dialect grammar
+grammar family-geo
+start point
+
+point = FLOAT FLOAT FLOAT? crs?
+crs = "crs" IDENT

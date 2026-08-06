@@ -270,11 +270,25 @@ pub struct WireNode {
     pub port: Option<String>,
 }
 
+/// @emoji 🏷️ Optional id/kind label on a wire edge (`-[e1:Connection]->` / fused `-e1:Connection>`).
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct WireEdgeLabel {
+    pub id: Option<String>,
+    pub kind: Option<String>,
+}
+
+impl WireEdgeLabel {
+    pub fn is_empty(&self) -> bool {
+        self.id.is_none() && self.kind.is_none()
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct WireValue {
     pub from: WireNode,
     /// `Some((directed, to))` if this line describes an edge, `None` for a bare node declaration.
     pub edge: Option<(bool, WireNode)>,
+    pub edge_label: WireEdgeLabel,
     pub properties: DslValue,
 }
 
@@ -958,24 +972,82 @@ fn parse_dsl_value(cursor: &mut Cursor, depth: usize) -> Result<DslValue, TextEr
 
 /// @emoji 🕸️ Parses one wire literal. `<-` is accepted sugar only: normalized here by swapping
 /// the two endpoints, so the stored `WireValue` (and everything reprinted from it) only ever
-/// holds `->`/`--` — `b<-a` and `a->b` parse to the identical value and print identically.
+/// holds `->`/`--` or fused labeled arrows — `b<-a` and `a->b` parse to the identical value.
 fn parse_wire(cursor: &mut Cursor) -> Result<WireValue, TextError> {
-    let mut from = parse_wire_node(cursor)?;
-    let edge = if matches!(cursor.peek().kind, TokenKind::Arrow | TokenKind::DashArrow | TokenKind::BackArrow) {
-        let arrow_kind = cursor.advance().kind;
-        let to = parse_wire_node(cursor)?;
-        match arrow_kind {
-            TokenKind::BackArrow => {
-                let swapped_to = std::mem::replace(&mut from, to);
-                Some((true, swapped_to))
-            }
-            other => Some((other == TokenKind::Arrow, to)),
+    fn parse_wire_label(cursor: &mut Cursor) -> Result<WireEdgeLabel, TextError> {
+        cursor.expect(TokenKind::LBracket)?;
+        let id = if cursor.peek().kind == TokenKind::Ident {
+            Some(ident_like_text(&cursor.advance()))
+        } else {
+            None
+        };
+        let kind = if cursor.peek().kind == TokenKind::Colon {
+            cursor.advance();
+            Some(ident_like_text(&cursor.expect(TokenKind::Ident)?))
+        } else {
+            None
+        };
+        let label = WireEdgeLabel { id, kind };
+        if label.is_empty() {
+            return Err(TextError::new("edge label `[...]` must name an id and/or a `:kind`", cursor.span()));
         }
-    } else {
-        None
+        cursor.expect(TokenKind::RBracket)?;
+        Ok(label)
+    }
+
+    let mut from = parse_wire_node(cursor)?;
+    let mut edge_label = WireEdgeLabel::default();
+    let edge = match cursor.peek().kind {
+        TokenKind::Arrow => {
+            cursor.advance();
+            let to = parse_wire_node(cursor)?;
+            Some((true, to))
+        }
+        TokenKind::DashArrow => {
+            cursor.advance();
+            let to = parse_wire_node(cursor)?;
+            Some((false, to))
+        }
+        TokenKind::BackArrow => {
+            cursor.advance();
+            if cursor.peek().kind == TokenKind::LBracket {
+                edge_label = parse_wire_label(cursor)?;
+                cursor.expect(TokenKind::Minus)?;
+            }
+            let to = parse_wire_node(cursor)?;
+            let swapped_to = std::mem::replace(&mut from, to);
+            Some((true, swapped_to))
+        }
+        TokenKind::Minus if cursor.peek_at(1).kind == TokenKind::LBracket => {
+            cursor.advance();
+            edge_label = parse_wire_label(cursor)?;
+            let directed = match cursor.peek().kind {
+                TokenKind::Arrow => {
+                    cursor.advance();
+                    true
+                }
+                TokenKind::DashArrow => {
+                    cursor.advance();
+                    false
+                }
+                other => {
+                    return Err(TextError::new(format!("expected `->` or `--` to close a labeled edge, found {other:?}"), cursor.span()));
+                }
+            };
+            let to = parse_wire_node(cursor)?;
+            Some((directed, to))
+        }
+        TokenKind::EdgeArrow => {
+            let token = cursor.advance();
+            let (directed, label) = dsl_notation::decode_fused_edge_arrow(&token.text.as_str())?;
+            edge_label = WireEdgeLabel { id: label.id, kind: label.kind };
+            let to = parse_wire_node(cursor)?;
+            Some((directed, to))
+        }
+        _ => None,
     };
     let properties = if cursor.peek().kind == TokenKind::LBrace { parse_dsl_value(cursor, 0)? } else { DslValue::Object(Vec::new()) };
-    Ok(WireValue { from, edge, properties })
+    Ok(WireValue { from, edge, edge_label, properties })
 }
 
 /// @emoji 🔌️ Small public entry point other crates (the graph wire module, trinity) can call
@@ -1913,24 +1985,20 @@ fn print_dsl_value(value: &DslValue, writer: &mut Writer) {
 }
 
 fn print_wire(wire: &WireValue, writer: &mut Writer) {
-    let node_text = |node: &WireNode| -> String {
-        let mut s = node.id.clone();
-        if let Some(kind) = &node.kind {
-            s.push(':');
-            s.push_str(kind);
-        }
-        if let Some(port) = &node.port {
-            s.push('@');
-            s.push_str(port);
-        }
-        s
+    let map_node = |node: &WireNode| dsl_notation::EdgeNode {
+        id: node.id.clone(),
+        kind: node.kind.clone(),
+        port: node.port.clone(),
     };
-    let mut atom = node_text(&wire.from);
-    if let Some((directed, to)) = &wire.edge {
-        atom.push_str(if *directed { "->" } else { "--" });
-        atom.push_str(&node_text(to));
-    }
-    writer.atom(atom);
+    let edge = dsl_notation::EdgeValue {
+        from: map_node(&wire.from),
+        link: wire.edge.as_ref().map(|(directed, to)| dsl_notation::EdgeLink {
+            directed: *directed,
+            label: dsl_notation::EdgeLabel { id: wire.edge_label.id.clone(), kind: wire.edge_label.kind.clone() },
+            to: map_node(to),
+        }),
+    };
+    writer.atom(dsl_notation::print_edge(&edge));
     if !matches!(&wire.properties, DslValue::Object(entries) if entries.is_empty()) {
         print_dsl_value(&wire.properties, writer);
     }
@@ -2342,6 +2410,7 @@ mod tests {
         assert_round_trip("edge a:Kind@out->b:Kind2@in", &spec);
         assert_round_trip("edge a--b", &spec);
         assert_round_trip("edge solo", &spec);
+        assert_round_trip("edge a -e1:Connection> b", &spec);
     }
 
     // --- RecordLayout::Call: `<name> = <keyword>(args)` construction-chain notation ---

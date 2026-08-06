@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Semio
+Comment=Open self-describing .semio documents
+MimeType=application/vnd.semio
+Exec=semio open %f
+Terminal=false

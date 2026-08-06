@@ -5010,7 +5010,7 @@ struct SynapseDsl {
 fn synapse_to_dsl(synapse: &SynapseSpec) -> SynapseDsl {
     let from = dsl::WireNode { id: synapse.from.clone(), kind: None, port: (!synapse.from_port.is_empty()).then(|| synapse.from_port.clone()) };
     let to = dsl::WireNode { id: synapse.to.clone(), kind: None, port: (!synapse.to_port.is_empty()).then(|| synapse.to_port.clone()) };
-    SynapseDsl { id: synapse.id.clone(), link: dsl::Wire(dsl::WireValue { from, edge: Some((true, to)), properties: dsl::DslValue::Object(Vec::new()) }) }
+    SynapseDsl { id: synapse.id.clone(), link: dsl::Wire(dsl::WireValue { from, edge: Some((true, to)), edge_label: dsl::WireEdgeLabel::default(), properties: dsl::DslValue::Object(Vec::new()) }) }
 }
 
 fn synapse_from_dsl(synapse: SynapseDsl) -> Result<SynapseSpec, String> {

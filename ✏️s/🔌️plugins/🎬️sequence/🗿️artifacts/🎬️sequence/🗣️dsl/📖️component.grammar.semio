@@ -1,0 +1,6 @@
+dialect grammar
+grammar sequence
+extension sequence
+use family-graph
+start document
+document = TEXT*

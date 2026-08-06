@@ -1,0 +1,20 @@
+[package]
+name = "semio-framework-os-kernel-dsl-family-geo"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "The geo family notation kit — coordinate tuples and crs refs for gis/vcs artifacts"
+
+
+[lints]
+workspace = true
+[lib]
+name = "dsl_family_geo"
+path = "../../../../👪️family/🌍️geo/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+dsl_core = { package = "semio-framework-os-kernel-dsl-core", path = "../../../../🫀️core/⚡️implementations/🦀️rust" }
+dsl_notation = { package = "semio-framework-os-kernel-dsl-notation", path = "../../../../🖋️notation/⚡️implementations/🦀️rust" }
+
+[dev-dependencies]
+dsl_grammar = { package = "semio-framework-os-kernel-dsl-grammar", path = "../../../../📖️grammar/⚡️implementations/🦀️rust" }

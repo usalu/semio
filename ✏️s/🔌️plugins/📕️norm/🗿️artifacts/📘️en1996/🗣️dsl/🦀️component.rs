@@ -6,7 +6,7 @@ use crate::artifacts::en1996::Document;
 /// an EN-annex masonry class 2 wall check under a transient design situation, distinct from
 /// `Document::default()`'s DE-annex/persistent values so the grammar's non-default branches
 /// (annex, masonry class, design situation, exposure, mortar) are exercised too.
-pub const EN1996_LOADBEARING_WALL_EXAMPLE_TEXT: &str = include_str!("../../📚️examples/📕️loadbearing-wall/🗣️dsls/📕️loadbearing-wall/🧬️component.norm.en1996.dsl.semio");
+pub const EN1996_LOADBEARING_WALL_EXAMPLE_TEXT: &str = include_str!("../📚️examples/📕️loadbearing-wall/🗣️dsls/📕️loadbearing-wall/🧬️component.norm.en1996.dsl.semio");
 
 /// 📖️ Parses `.en1996` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {

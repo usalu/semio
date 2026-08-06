@@ -1,0 +1,5 @@
+dialect protocol
+protocol en1999
+version 1
+start record
+record = varint*

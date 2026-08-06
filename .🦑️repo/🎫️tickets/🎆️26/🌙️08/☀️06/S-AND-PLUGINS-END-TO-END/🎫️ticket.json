@@ -1,0 +1,10 @@
+{
+  "title": "S And Plugins End To End",
+  "emoji": "🔧",
+  "status": "open",
+  "description": "After the in-flight massive refactor waves stabilize, get ✏️s and all plugins compiling and working end to end (cargo check/test, bun script.ts verify, and runtime smoke for key plugins).",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪fe9c5c51a4ea49fe8caa1401f54ad4bd"
+  ]
+}

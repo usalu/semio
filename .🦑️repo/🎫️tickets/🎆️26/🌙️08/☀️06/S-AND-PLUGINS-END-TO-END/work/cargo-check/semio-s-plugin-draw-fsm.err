@@ -1,0 +1,7 @@
+   Compiling semio-s-plugin-draw-fsm-macros v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🔄️fsm/✨️macros/📦️packages/🦀️rust)
+    Checking serde v1.0.228
+    Checking thiserror v2.0.18
+warning: failed running `"xcrun" "--sdk" "macosx" "--show-sdk-path"` to find MacOSX.sdk
+error: linking with `cc` failed: exit status: 69
+warning: `semio-s-plugin-draw-fsm-macros` (lib) generated 1 warning
+error: could not compile `semio-s-plugin-draw-fsm-macros` (lib) due to 1 previous error; 1 warning emitted

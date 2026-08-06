@@ -1,0 +1,6 @@
+dialect grammar
+grammar remodel
+extension remodel
+use family-scene
+start document
+document = TEXT*

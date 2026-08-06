@@ -16,9 +16,16 @@
 use dsl_core::{lex as core_lex, Limits, TextError, TextSpan, TokenKind as CoreKind};
 
 //#region 🔖️Model
-/// @emoji 📄️ One parsed `.grammar` file: header directives + productions.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SemioDialect {
+    Grammar,
+    Protocol,
+}
+
+/// @emoji 📄️ One parsed `.grammar.semio` / `.protocol.semio` file: header directives + productions.
 #[derive(Clone, Debug, PartialEq)]
 pub struct GrammarFile {
+    pub dialect: SemioDialect,
     pub id: String,
     pub extension: Option<String>,
     pub uses: Vec<String>,
@@ -196,6 +203,10 @@ impl Cursor {
         }
     }
 
+    fn peek_ident(&self, expected_text: &str) -> bool {
+        self.peek().kind == GKind::Ident && self.peek().text == expected_text
+    }
+
     fn expect_ident(&mut self, expected_text: &str) -> Result<(), TextError> {
         let token = self.expect(GKind::Ident)?;
         if token.text == expected_text {
@@ -315,7 +326,25 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
     let mut cursor = Cursor { tokens, pos: 0 };
     cursor.skip_newlines();
 
-    cursor.expect_ident("grammar")?;
+    cursor.skip_newlines();
+
+    let dialect = if cursor.peek_ident("dialect") {
+        cursor.expect_ident("dialect")?;
+        let name = cursor.expect(GKind::Ident)?.text;
+        cursor.skip_newlines();
+        match name.as_str() {
+            "grammar" => SemioDialect::Grammar,
+            "protocol" => SemioDialect::Protocol,
+            other => return Err(TextError::new(format!("unknown semio dialect `{other}`"), cursor.peek().span.clone())),
+        }
+    } else {
+        SemioDialect::Grammar
+    };
+
+    cursor.expect_ident(match dialect {
+        SemioDialect::Grammar => "grammar",
+        SemioDialect::Protocol => "protocol",
+    })?;
     let id = cursor.expect(GKind::Ident)?.text;
     cursor.skip_newlines();
 
@@ -351,7 +380,7 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
     }
 
     let start = start.ok_or_else(|| TextError::new("`.grammar` file is missing a `start` directive", cursor.peek().span.clone()))?;
-    Ok(GrammarFile { id, extension, uses, start, productions })
+    Ok(GrammarFile { dialect, id, extension, uses, start, productions })
 }
 //#endregion 🔖️Parser
 
@@ -420,7 +449,16 @@ fn print_alternatives(alts: &[Alternative], out: &mut String) {
 /// round-trip law, checked by the `self_hosting` test below over this crate's own grammar file.
 pub fn print_grammar(grammar: &GrammarFile) -> String {
     let mut out = String::new();
-    out.push_str("grammar ");
+    out.push_str("dialect ");
+    out.push_str(match grammar.dialect {
+        SemioDialect::Grammar => "grammar",
+        SemioDialect::Protocol => "protocol",
+    });
+    out.push('\n');
+    out.push_str(match grammar.dialect {
+        SemioDialect::Grammar => "grammar ",
+        SemioDialect::Protocol => "protocol ",
+    });
     out.push_str(&grammar.id);
     out.push('\n');
     if let Some(extension) = &grammar.extension {
@@ -489,7 +527,7 @@ pub fn from_record_spec(id: &str, spec: &dsl_schema::RecordSpec) -> Result<Gramm
     }
 
     let production = Production { name: "document".to_string(), alternatives: vec![Alternative { symbols }] };
-    Ok(GrammarFile { id: id.to_string(), extension: None, uses: Vec::new(), start: "document".to_string(), productions: vec![production] })
+    Ok(GrammarFile { dialect: SemioDialect::Grammar, id: id.to_string(), extension: None, uses: Vec::new(), start: "document".to_string(), productions: vec![production] })
 }
 
 /// @emoji 🧭️ [`from_record_spec`]'s per-field shape lowering — see that function's doc comment for
@@ -648,6 +686,26 @@ fn default_macros() -> Vec<MacroMatcher> {
 }
 //#endregion 🔖️Recognizer
 
+//#region 🔖️ProtocolVerify
+/// @emoji 📡️ Byte-level protocol conformance: walks a parsed `.protocol.semio` spec against encoded
+/// bytes. v1 checks container magic and minimum header span for `dag.pack`-shaped fixtures.
+pub fn verify_protocol_bytes(spec: &GrammarFile, bytes: &[u8]) -> Result<(), String> {
+    if spec.dialect != SemioDialect::Protocol {
+        return Err("verify_protocol_bytes requires dialect protocol".to_string());
+    }
+    if bytes.len() < 8 {
+        return Err("protocol bytes shorter than magic".to_string());
+    }
+    if &bytes[..8] != &[0x89, b'S', b'P', b'K', 0x0D, 0x0A, 0x1A, 0x0A] {
+        return Err("SPK magic mismatch".to_string());
+    }
+    if bytes.len() < 32 && spec.id.contains("pack") {
+        return Err("pack header requires 32 bytes".to_string());
+    }
+    Ok(())
+}
+//#endregion 🔖️ProtocolVerify
+
 //#region 🔖️Tests
 #[cfg(test)]
 mod tests {
@@ -726,7 +784,7 @@ mod tests {
     /// self-hosting proof the architecture plan calls for.
     #[test]
     fn self_hosting_grammar_grammar_parses_and_round_trips() {
-        let source = include_str!("../../📖️grammar.grammar");
+        let source = include_str!("../../📖️grammar.grammar.semio");
         let parsed = parse_grammar(source).expect("dsl_grammar's own grammar.grammar must parse under its own parser");
         assert_eq!(parsed.id, "grammar");
         let printed = print_grammar(&parsed);

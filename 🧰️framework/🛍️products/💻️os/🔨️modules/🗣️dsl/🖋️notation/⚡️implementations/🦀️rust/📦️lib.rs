@@ -130,7 +130,7 @@ fn parse_edge_node(cursor: &mut Cursor) -> Result<EdgeNode, TextError> {
     Ok(EdgeNode { id, kind, port })
 }
 
-fn decode_fused_edge_arrow(text: &str) -> Result<(bool, EdgeLabel), TextError> {
+pub fn decode_fused_edge_arrow(text: &str) -> Result<(bool, EdgeLabel), TextError> {
     let body = text.strip_prefix('-').ok_or_else(|| TextError::new("fused edge must start with `-`", TextSpan::at(1, 1)))?;
     let (core, directed) = if let Some(core) = body.strip_suffix('>') {
         (core, true)
@@ -232,7 +232,7 @@ fn parse_edge(cursor: &mut Cursor) -> Result<EdgeValue, TextError> {
         }
         TokenKind::EdgeArrow => {
             let token = cursor.advance();
-            let (directed, label) = decode_fused_edge_arrow(token.text.as_str())?;
+            let (directed, label) = decode_fused_edge_arrow(&token.text.as_str())?;
             let to = parse_edge_node(cursor)?;
             Some(EdgeLink { directed, label, to })
         }

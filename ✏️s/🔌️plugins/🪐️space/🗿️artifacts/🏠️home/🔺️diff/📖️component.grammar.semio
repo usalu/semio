@@ -1,0 +1,6 @@
+dialect grammar
+grammar home
+extension home
+use family-recipe
+start document
+document = TEXT*

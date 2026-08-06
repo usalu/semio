@@ -1,0 +1,6 @@
+dialect grammar
+grammar curate
+extension curate
+use family-catalog
+start document
+document = TEXT*

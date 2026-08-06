@@ -1,0 +1,6 @@
+dialect grammar
+grammar note
+extension note
+use family-scene
+start document
+document = TEXT*

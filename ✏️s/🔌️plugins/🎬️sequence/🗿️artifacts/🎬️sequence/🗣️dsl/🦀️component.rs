@@ -21,7 +21,7 @@ pub struct SequenceEdgeDsl {
 pub fn sequence_edge_to_dsl(edge: &SequenceEdge) -> SequenceEdgeDsl {
     let from = dsl::WireNode { id: edge.from.clone(), kind: None, port: None };
     let to = dsl::WireNode { id: edge.to.clone(), kind: None, port: None };
-    SequenceEdgeDsl { id: edge.id.clone(), link: dsl::Wire(dsl::WireValue { from, edge: Some((true, to)), properties: dsl::DslValue::Object(Vec::new()) }) }
+    SequenceEdgeDsl { id: edge.id.clone(), link: dsl::Wire(dsl::WireValue { from, edge: Some((true, to)), edge_label: dsl::WireEdgeLabel::default(), properties: dsl::DslValue::Object(Vec::new()) }) }
 }
 
 pub fn sequence_edge_from_dsl(edge: SequenceEdgeDsl) -> Result<SequenceEdge, String> {

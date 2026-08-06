@@ -1,0 +1,5 @@
+dialect grammar
+grammar family-embed
+start fence
+
+fence = "```" IDENT TEXT "```"

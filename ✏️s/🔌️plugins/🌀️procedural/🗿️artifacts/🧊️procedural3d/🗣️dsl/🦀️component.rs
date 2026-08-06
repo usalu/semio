@@ -125,6 +125,7 @@ pub fn synapse_to_dsl(synapse: &SynapseSpec) -> SynapseSpecDsl {
         wire: dsl::Wire(dsl::WireValue {
             from: dsl::WireNode { id: synapse.from.clone(), kind: None, port: (!synapse.from_port.is_empty()).then(|| synapse.from_port.clone()) },
             edge: Some((true, dsl::WireNode { id: synapse.to.clone(), kind: None, port: (!synapse.to_port.is_empty()).then(|| synapse.to_port.clone()) })),
+            edge_label: dsl::WireEdgeLabel::default(),
             properties: dsl::DslValue::Object(Vec::new()),
         }),
     }

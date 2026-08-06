@@ -1,0 +1,5 @@
+dialect protocol
+protocol din16798
+version 1
+start record
+record = varint*

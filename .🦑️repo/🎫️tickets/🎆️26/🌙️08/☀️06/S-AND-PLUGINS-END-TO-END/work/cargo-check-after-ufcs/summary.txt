@@ -1,0 +1,33 @@
+=== semio-framework-os-kernel-dsl-derive ===
+OK semio-framework-os-kernel-dsl-derive
+=== semio-framework-os-kernel-dsl ===
+OK semio-framework-os-kernel-dsl
+=== semio-framework-os-kernel-space ===
+OK semio-framework-os-kernel-space
+=== semio-framework-os-kernel-workflow ===
+OK semio-framework-os-kernel-workflow
+=== semio-framework-os-kernel-playbook ===
+OK semio-framework-os-kernel-playbook
+=== semio-framework-os-kernel-math-graph-dsl ===
+OK semio-framework-os-kernel-math-graph-dsl
+=== semio-s-2d ===
+OK semio-s-2d
+=== semio-s-imperative ===
+OK semio-s-imperative
+=== semio-s-plugin-note ===
+FAIL semio-s-plugin-note
+31:✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././../../🗿️artifacts/🗒️note/🗣️dsl/🦀️component.rs:6:43: error: couldn't read `✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././../../🗿️artifacts/🗒️note/🗣️dsl/../../📚️examples/♻️semio/🗣️dsls/♻️semio/🧬️component.note.note.dsl.semio`: No such file or directory (os error 2)
+32:error: could not compile `semio-s-plugin-note` (lib) due to 1 previous error
+=== semio-s-plugin-block ===
+OK semio-s-plugin-block
+=== semio-s-plugin-gis ===
+OK semio-s-plugin-gis
+=== semio-s-plugin-cad ===
+FAIL semio-s-plugin-cad
+23:✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/././../../🗿️artifacts/📐️cad/🗣️dsl/🦀️component.rs:9:44: error: couldn't read `✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/././../../🗿️artifacts/📐️cad/🗣️dsl/../../📚️examples/♻️default/🗣️dsls/♻️default/🧬️component.cad.cad.dsl.semio`: No such file or directory (os error 2)
+24:error: could not compile `semio-s-plugin-cad` (lib) due to 1 previous error
+=== semio-s-plugin-flow ===
+OK semio-s-plugin-flow
+=== semio-s-plugin-dag ===
+OK semio-s-plugin-dag
+DONE ok=12 fail=2

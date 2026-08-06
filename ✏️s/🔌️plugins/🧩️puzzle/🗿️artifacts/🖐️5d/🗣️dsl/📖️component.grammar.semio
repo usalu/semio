@@ -1,0 +1,6 @@
+dialect grammar
+grammar 5d
+extension 5d
+use family-document
+start document
+document = TEXT*

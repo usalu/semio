@@ -1,8 +1,0 @@
-grammar family-catalog
-start stock
-
-stock = "stock" slash-path IDENT TEXT count? kind-args?
-slash-path = IDENT
-count = IDENT
-kind-args = IDENT+
-compat = IDENT DASHARROW IDENT

@@ -1,0 +1,6 @@
+dialect grammar
+grammar vcs
+extension vcs
+use family-geo
+start document
+document = TEXT*

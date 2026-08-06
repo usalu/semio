@@ -1,0 +1,6 @@
+dialect grammar
+grammar dag
+extension dag
+use family-graph
+start document
+document = TEXT*

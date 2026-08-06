@@ -1,0 +1,6 @@
+dialect grammar
+grammar flow
+extension flow
+use family-graph
+start document
+document = TEXT*

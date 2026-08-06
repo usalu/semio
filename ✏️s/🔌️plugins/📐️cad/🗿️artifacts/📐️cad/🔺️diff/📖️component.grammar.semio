@@ -1,0 +1,6 @@
+dialect grammar
+grammar cad
+extension cad
+use family-scene
+start document
+document = TEXT*

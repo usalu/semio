@@ -1,0 +1,6 @@
+dialect grammar
+grammar gisterrain
+extension gisterrain
+use family-geo
+start document
+document = TEXT*

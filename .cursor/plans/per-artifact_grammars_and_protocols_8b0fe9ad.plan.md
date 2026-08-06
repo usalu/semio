@@ -10,37 +10,37 @@ todos:
     status: completed
   - id: p1-arrow
     content: "P1: add TokenKind::EdgeArrow fused arrow to dsl_core, replace WireValue, update the pack wire codec in one atomic landing with one format bump; revert the bracketed workaround"
-    status: in_progress
+    status: completed
   - id: p1-semio-grammar
     content: "P1/M2: rename .grammar to .grammar.semio, add the dialect header directive, keep dsl_grammar self-hosting"
-    status: pending
+    status: completed
   - id: p1-semio-protocol
     content: "P1/M3: design the .protocol.semio binary dialect and byte-level recognizer; prove it on one artifact's pack and spr facets"
-    status: pending
+    status: completed
   - id: p1-registry
     content: "P1/M5a: collapse the Idiom registry into the Language registry with LanguageSpec::derived so unconverted facets stay serviced"
-    status: pending
+    status: completed
   - id: p2-families
     content: "P2: build the 3 remaining family kits (scene, embed, geo) with their .grammar.semio fragments"
-    status: pending
+    status: completed
   - id: p2-lsp
     content: "P2/M5b: build dsl_lsp, LanguageSession and s_language_bundle; delete the dead Jack LSP crate"
-    status: pending
+    status: completed
   - id: p2-ts-scaffold
     content: "P2/M4: scaffold TypeScript packages for the 29 plugins that lack one, with the WASM facade pattern and a Rust-agreement conformance test"
-    status: pending
+    status: completed
   - id: p2-writer
     content: "P2/M6: refactor the writer onto LanguageSession, delete the Jack forks and regex tokenizers, add OpenDocument with registry-based extension resolution"
-    status: pending
+    status: in_progress
   - id: m7-policy
     content: "M7: repurpose policyGrammarFileBreaches for handcrafted specs, seed POLICY_GRAMMAR_FILE_ALLOWLIST with all missing spec files, add the protocol and TS-facade allowlists"
-    status: pending
+    status: completed
   - id: p3-pilots
     content: "P3: retrofit fem2d, note and dag to the full 5-facet checklist and file the family exemplars"
     status: pending
   - id: w4-fanout
     content: "W4a-e: fan out across all remaining artifacts in five waves with disjoint per-plugin ownership, hot plugins last"
-    status: pending
+    status: completed
   - id: p5-flagday
     content: "P5: complete the coverage matrix, delete dsl_derive's DocumentDsl and OpText emission and the dsl::__rt text path, empty all three allowlists"
     status: pending

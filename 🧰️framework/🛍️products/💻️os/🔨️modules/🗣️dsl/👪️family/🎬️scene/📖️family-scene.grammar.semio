@@ -1,0 +1,8 @@
+dialect grammar
+grammar family-scene
+start scene
+
+scene = layer*
+layer = IDENT "@" FLOAT FLOAT FLOAT? props?
+props = "{" prop* "}"
+prop = IDENT "=" TEXT

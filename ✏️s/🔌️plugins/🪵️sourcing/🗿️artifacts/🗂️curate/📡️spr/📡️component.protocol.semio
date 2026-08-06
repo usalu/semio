@@ -1,0 +1,5 @@
+dialect protocol
+protocol curate
+version 1
+start record
+record = varint*

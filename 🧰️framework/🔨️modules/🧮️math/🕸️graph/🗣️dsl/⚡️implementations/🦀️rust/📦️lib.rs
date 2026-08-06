@@ -394,7 +394,7 @@ pub mod wire {
     pub fn wire_literal_from_dag(nodes: &[WireNode], edges: &[WireEdge]) -> String {
         let mut lines = Vec::new();
         for node in nodes {
-            let value = dsl_schema::WireValue { from: dsl_schema::WireNode { id: node.id.clone(), kind: Some(node.kind.clone()), port: node.port.clone() }, edge: None, properties: properties_to_dsl_object(&node.properties) };
+            let value = dsl_schema::WireValue { from: dsl_schema::WireNode { id: node.id.clone(), kind: Some(node.kind.clone()), port: node.port.clone() }, edge: None, edge_label: dsl_schema::WireEdgeLabel::default(), properties: properties_to_dsl_object(&node.properties) };
             lines.push(render_wire_line(&value));
         }
         for edge in edges {
@@ -403,6 +403,7 @@ pub mod wire {
             let value = dsl_schema::WireValue {
                 from: dsl_schema::WireNode { id: edge.from.clone(), kind: Some(from_kind.to_string()), port: Some(edge.from_port.clone()) },
                 edge: Some((edge.directed, dsl_schema::WireNode { id: edge.to.clone(), kind: Some(to_kind.to_string()), port: Some(edge.to_port.clone()) })),
+                edge_label: dsl_schema::WireEdgeLabel::default(),
                 properties: properties_to_dsl_object(&edge.properties),
             };
             lines.push(render_wire_line(&value));
@@ -871,7 +872,8 @@ fn push_dsl_core_segment(segment: &str, base_offset: usize, forgiving: bool, out
             dsl_core::TokenKind::Text => push_spanned(out, Token::StringLit(text), start, end),
             // `{`/`}` aren't part of Jack's grammar (no map/object literals) — same "stray
             // character" treatment as an outright `dsl_core::TokenKind::Error` below.
-            dsl_core::TokenKind::LBrace
+            dsl_core::TokenKind::EdgeArrow
+            | dsl_core::TokenKind::LBrace
             | dsl_core::TokenKind::RBrace
             | dsl_core::TokenKind::Caret
             | dsl_core::TokenKind::DotDot

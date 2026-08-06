@@ -1,0 +1,6 @@
+dialect grammar
+grammar program
+extension program
+use family-document
+start document
+document = TEXT*

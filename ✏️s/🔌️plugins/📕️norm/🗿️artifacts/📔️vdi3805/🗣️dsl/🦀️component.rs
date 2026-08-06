@@ -3,7 +3,7 @@
 use crate::artifacts::vdi3805::Document;
 
 /// 📜️ Bundled reference-catalogue example (`.semio` envelope + DSL body).
-pub const REFERENCE_EXAMPLE_TEXT: &str = include_str!("../../📚️examples/♻️default/🗣️dsls/♻️default/🧬️component.norm.vdi3805.dsl.semio");
+pub const REFERENCE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️default/🗣️dsls/♻️default/🧬️component.norm.vdi3805.dsl.semio");
 
 /// 📖️ Parses VDI 3805 DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {

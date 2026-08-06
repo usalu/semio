@@ -1,0 +1,6 @@
+dialect grammar
+grammar vdi3805
+extension vdi3805
+use family-sheet
+start document
+document = TEXT*

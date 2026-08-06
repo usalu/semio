@@ -1,0 +1,5 @@
+dialect protocol
+protocol mathematical
+version 1
+start record
+record = varint*

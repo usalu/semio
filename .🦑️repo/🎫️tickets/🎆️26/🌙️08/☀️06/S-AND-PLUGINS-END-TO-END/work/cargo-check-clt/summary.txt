@@ -1,0 +1,309 @@
+packages:       68
+=== semio-s-2d ===
+FAIL semio-s-2d
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+9:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-3d ===
+FAIL semio-s-3d
+1:error: package ID specification `semio-s-3d` did not match any packages
+=== semio-s-app-fem-2d ===
+FAIL semio-s-app-fem-2d
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-app-fem-2d-dsl ===
+FAIL semio-s-app-fem-2d-dsl
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-app-fem-2d-engine ===
+FAIL semio-s-app-fem-2d-engine
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-app-fem-2d-op ===
+FAIL semio-s-app-fem-2d-op
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-app-fem-2d-pack ===
+FAIL semio-s-app-fem-2d-pack
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-app-fem-2d-protocol ===
+FAIL semio-s-app-fem-2d-protocol
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-app-fem-2d-ui ===
+FAIL semio-s-app-fem-2d-ui
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-app-fem-3d ===
+FAIL semio-s-app-fem-3d
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-app-fem-3d-dsl ===
+FAIL semio-s-app-fem-3d-dsl
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-app-fem-3d-engine ===
+FAIL semio-s-app-fem-3d-engine
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-app-fem-3d-op ===
+FAIL semio-s-app-fem-3d-op
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-app-fem-3d-pack ===
+FAIL semio-s-app-fem-3d-pack
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-app-fem-3d-protocol ===
+FAIL semio-s-app-fem-3d-protocol
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-app-fem-3d-ui ===
+FAIL semio-s-app-fem-3d-ui
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-imperative ===
+FAIL semio-s-imperative
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-kernel-reasoning-mindmap ===
+FAIL semio-s-kernel-reasoning-mindmap
+22:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+23:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+24:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-language-bundle ===
+FAIL semio-s-language-bundle
+1:error: package ID specification `semio-s-language-bundle` did not match any packages
+=== semio-s-mindmap ===
+FAIL semio-s-mindmap
+1:error: package ID specification `semio-s-mindmap` did not match any packages
+=== semio-s-plugin-animate ===
+FAIL semio-s-plugin-animate
+11:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+12:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+13:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-architect ===
+FAIL semio-s-plugin-architect
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-block ===
+FAIL semio-s-plugin-block
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-cad ===
+FAIL semio-s-plugin-cad
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-dag ===
+FAIL semio-s-plugin-dag
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-demonstrator ===
+FAIL semio-s-plugin-demonstrator
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+9:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-draw ===
+FAIL semio-s-plugin-draw
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+9:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-draw-fsm ===
+OK semio-s-plugin-draw-fsm
+=== semio-s-plugin-draw-fsm-macros ===
+OK semio-s-plugin-draw-fsm-macros
+=== semio-s-plugin-energy ===
+OK semio-s-plugin-energy
+=== semio-s-plugin-fem ===
+FAIL semio-s-plugin-fem
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-fem-core ===
+OK semio-s-plugin-fem-core
+=== semio-s-plugin-fem-shared ===
+FAIL semio-s-plugin-fem-shared
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-flow ===
+FAIL semio-s-plugin-flow
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-flow-extension-bim ===
+FAIL semio-s-plugin-flow-extension-bim
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-forms ===
+FAIL semio-s-plugin-forms
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-gis ===
+FAIL semio-s-plugin-gis
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+9:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-imperative ===
+FAIL semio-s-plugin-imperative
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-imperative-control ===
+OK semio-s-plugin-imperative-control
+=== semio-s-plugin-imperative-core ===
+OK semio-s-plugin-imperative-core
+=== semio-s-plugin-imperative-logic ===
+OK semio-s-plugin-imperative-logic
+=== semio-s-plugin-imperative-math ===
+OK semio-s-plugin-imperative-math
+=== semio-s-plugin-imperative-text ===
+OK semio-s-plugin-imperative-text
+=== semio-s-plugin-layout ===
+FAIL semio-s-plugin-layout
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-lowpoly ===
+FAIL semio-s-plugin-lowpoly
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-mathematical ===
+FAIL semio-s-plugin-mathematical
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-norm ===
+FAIL semio-s-plugin-norm
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-note ===
+FAIL semio-s-plugin-note
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-playbook ===
+FAIL semio-s-plugin-playbook
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-playbook-procedural ===
+FAIL semio-s-plugin-playbook-procedural
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-procedural ===
+FAIL semio-s-plugin-procedural
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-process ===
+FAIL semio-s-plugin-process
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-puzzle ===
+FAIL semio-s-plugin-puzzle
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-raster ===
+FAIL semio-s-plugin-raster
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-reasoning-mindmap ===
+FAIL semio-s-plugin-reasoning-mindmap
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-remodel ===
+FAIL semio-s-plugin-remodel
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-sequence ===
+FAIL semio-s-plugin-sequence
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-shooting ===
+FAIL semio-s-plugin-shooting
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-sourcing ===
+FAIL semio-s-plugin-sourcing
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-sourcing-beams ===
+FAIL semio-s-plugin-sourcing-beams
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-sourcing-slabs ===
+FAIL semio-s-plugin-sourcing-slabs
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-sourcing-windows ===
+FAIL semio-s-plugin-sourcing-windows
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-space ===
+FAIL semio-s-plugin-space
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-trinity ===
+FAIL semio-s-plugin-trinity
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-trinity-jack-lsp ===
+FAIL semio-s-plugin-trinity-jack-lsp
+19:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+20:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+21:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-trinity-jack-shell ===
+FAIL semio-s-plugin-trinity-jack-shell
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-vcs ===
+FAIL semio-s-plugin-vcs
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+=== semio-s-plugin-writer ===
+FAIL semio-s-plugin-writer
+6:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:497:20: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+7:🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs:498:30: error[E0433]: cannot find module or crate `store` in this scope: use of unresolved module or unlinked crate `store`
+8:error: could not compile `semio-framework-os-kernel-dsl` (lib) due to 2 previous errors
+DONE ok=9 fail=59

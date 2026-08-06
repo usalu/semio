@@ -1587,6 +1587,8 @@ pub mod app {
         /// TS gate.
         fn assert_taxonomy_components(plugin_root: &std::path::Path, app_root: &std::path::Path) {
             const ARTIFACT_COMPONENTS: [&str; 5] = ["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr"];
+            const EXAMPLE_KINDS: [&str; 4] = ["🗣️dsls", "🎒️packs", "🔧️ops", "📡️sprs"];
+            const EXAMPLES: &str = "📚️examples";
             const LEAF: &str = "🦀️component.rs";
             let subdirectories = |dir: &std::path::Path| -> Vec<std::path::PathBuf> {
                 std::fs::read_dir(dir)
@@ -1603,12 +1605,28 @@ pub mod app {
             for artifact in &artifacts {
                 let missing: Vec<&str> = ARTIFACT_COMPONENTS.into_iter().filter(|component| !artifact.join(component).join(LEAF).is_file()).collect();
                 assert!(missing.is_empty(), "taxonomy gate: artifact {} is missing component(s): {}", artifact.display(), missing.join(", "));
+                let examples_root = artifact.join(EXAMPLES);
+                assert!(examples_root.is_dir(), "taxonomy gate: artifact {} is missing {EXAMPLES}", artifact.display());
+                let example_sets = subdirectories(&examples_root);
+                assert!(!example_sets.is_empty(), "taxonomy gate: artifact {} {EXAMPLES} has no example set", artifact.display());
+                for example_set in &example_sets {
+                    for kind in EXAMPLE_KINDS {
+                        assert!(example_set.join(kind).is_dir(), "taxonomy gate: artifact {} example {} missing {kind}", artifact.display(), example_set.file_name().unwrap_or_default().to_string_lossy());
+                    }
+                }
             }
+
+            assert!(!plugin_root.join(EXAMPLES).is_dir(), "taxonomy gate: plugin-root {EXAMPLES} is forbidden at {}", plugin_root.display());
 
             let apps = subdirectories(app_root);
             assert!(!apps.is_empty(), "taxonomy gate: {} declares no apps", app_root.display());
             for app in &apps {
                 assert!(app.join(LEAF).is_file(), "taxonomy gate: app {} is missing its {LEAF}", app.display());
+                assert!(
+                    app.join("⚙️engine").join(EXAMPLES).is_dir(),
+                    "taxonomy gate: app {} is missing ⚙️engine/{EXAMPLES}",
+                    app.display()
+                );
             }
         }
 

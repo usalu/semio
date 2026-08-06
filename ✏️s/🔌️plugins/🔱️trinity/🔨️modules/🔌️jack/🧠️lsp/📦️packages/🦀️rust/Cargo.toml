@@ -3,7 +3,7 @@ name = "semio-s-plugin-trinity-jack-lsp"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Jack language server — JSON-RPC LSP subset over trinity graphs"
+description = "Jack LSP shim — re-exports dsl_lsp (see crate docs)"
 
 [lints]
 workspace = true
@@ -22,17 +22,7 @@ crate-type = ["rlib", "cdylib"]
 path = "📦️lib.rs"
 
 [dependencies]
-mathematical_graph_dsl = { path = "../../../../../../../../🧰️framework/🔨️modules/🧮️math/🕸️graph/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph-dsl" }
-# 📌️ Repointed to the merged plugin crate by the CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE
-# migration (ticket 26/08/05/TRINITY-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION) — this LSP
-# server is a residual not itself restructured in that migration, only repointed so it keeps building
-# after the old `semio-s-plugin-trinity-jack`/`semio-s-plugin-trinity-ram` crates were deleted;
-# `trinity_jack::`/`trinity_ram::` call sites below now resolve via `trinity::core::`/
-# `trinity::artifacts::jack::`.
-trinity = { path = "../../../../../../../../✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust", package = "semio-s-plugin-trinity" }
-serde = { workspace = true }
-serde_json = { workspace = true }
-thiserror = { workspace = true }
+dsl_lsp = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧠️lsp/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-lsp" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = { workspace = true }

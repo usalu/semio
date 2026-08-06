@@ -13,7 +13,7 @@ use crate::apps::writer::commands::engagement::{engagement_input, engagement_sub
 use crate::apps::writer::commands::inspect::{lint_document, request_completions};
 use crate::apps::writer::commands::locale::set_locale;
 use crate::apps::writer::commands::selection::{select_ast_node, set_ast_hover, set_ast_selection, set_editor_selection, text_hover, text_select};
-use crate::apps::writer::commands::text::{commit_rename, format_document, set_active_example, set_document, set_document_json, set_fixture_json, set_text, text_edit};
+use crate::apps::writer::commands::text::{commit_rename, format_document, open_document, set_active_example, set_document, set_document_json, set_fixture_json, set_text, text_edit};
 use crate::apps::writer::config::{WriterConfig, WriterConfigOperation};
 use crate::apps::writer::modes::edit;
 use crate::apps::writer::modes::edit::windows::main;
@@ -92,6 +92,7 @@ semio_framework_plugin::app_commands! {
         "textEdit" as "text-edit" => text_edit::TextEdit,
         "setText" as "set-text" => set_text::SetText,
         "setDocument" as "document" => set_document::SetDocument,
+        "openDocument" as "open-document" => open_document::OpenDocument,
         "setDocumentJson" as "document-json" => set_document_json::SetDocumentJson,
         "setFixtureJson" as "fixture-json" => set_fixture_json::SetFixtureJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
@@ -423,7 +424,7 @@ mod tests {
     #[test]
     fn command_surface_has_the_expected_row_count_and_distinct_wire_keywords() {
         let commands = every_command();
-        assert_eq!(commands.len(), 24, "every WriterCommand row must be covered by every_command()");
+        assert_eq!(commands.len(), 25, "every WriterCommand row must be covered by every_command()");
         let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
         keywords.sort();
         keywords.dedup();

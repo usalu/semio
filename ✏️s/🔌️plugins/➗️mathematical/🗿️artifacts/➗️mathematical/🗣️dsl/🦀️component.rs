@@ -36,7 +36,7 @@ pub struct MathEdgeDsl {
 pub fn math_edge_to_dsl(edge: &MathEdge, directed: bool) -> MathEdgeDsl {
     let from = dsl::WireNode { id: edge.source.clone(), kind: None, port: None };
     let to = dsl::WireNode { id: edge.target.clone(), kind: None, port: None };
-    MathEdgeDsl { id: edge.id.clone(), wire: dsl::Wire(dsl::WireValue { from, edge: Some((directed, to)), properties: dsl::DslValue::Object(Vec::new()) }) }
+    MathEdgeDsl { id: edge.id.clone(), wire: dsl::Wire(dsl::WireValue { from, edge: Some((directed, to)), edge_label: dsl::WireEdgeLabel::default(), properties: dsl::DslValue::Object(Vec::new()) }) }
 }
 
 pub fn math_edge_from_dsl(edge: MathEdgeDsl) -> Result<MathEdge, String> {

@@ -1,0 +1,6 @@
+dialect grammar
+grammar wires
+extension wires
+use family-graph
+start document
+document = TEXT*

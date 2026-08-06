@@ -6,7 +6,7 @@ use crate::artifacts::cad::CadScene;
 /// 📄️ The `default` example scene, handcrafted in the `.cad` DSL — a small structural column with
 /// a two-vertex/one-edge/one-wire/one-face/one-shell/one-solid brep, a site-photo reference, and
 /// objects across the shape/building/structure-classic panes.
-pub const CAD_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../📚️examples/♻️default/🗣️dsls/♻️default/🧬️component.cad.cad.dsl.semio");
+pub const CAD_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️default/🗣️dsls/♻️default/🧬️component.cad.cad.dsl.semio");
 
 /// 📖️ Parses `.cad` DSL text into a `CadScene`.
 pub fn parse_dsl(text: &str) -> Result<CadScene, store::TextError> {

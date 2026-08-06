@@ -613,10 +613,17 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident.clone();
     let container = parse_container_attrs(&input);
-    let envelope_id = container
-        .id
-        .or(container.extension)
-        .ok_or_else(|| syn::Error::new_spanned(&input, "DslDocument requires #[dsl(id = \"plugin.artifact\")] or #[dsl(extension = \"...\")]"))?;
+    let envelope_id = match container.id.or(container.extension) {
+        Some(id) => id,
+        None => {
+            return syn::Error::new_spanned(
+                &input,
+                "DslDocument requires #[dsl(id = \"plugin.artifact\")] or #[dsl(extension = \"...\")]",
+            )
+            .to_compile_error()
+            .into();
+        }
+    };
     let extension_suffix = envelope_id.rsplit('.').next().unwrap_or(&envelope_id);
     let envelope_id_lit = envelope_id.as_str();
     let extension_suffix_lit = extension_suffix;
@@ -666,7 +673,7 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
             fn print_dsl(&self) -> String {
                 let body = ::dsl::__rt::print_document_record(&self.__dsl_to_record(), &Self::__dsl_spec());
                 let envelope = ::store::semio_format::SemioEnvelope::from_envelope_id(
-                    Self::envelope_id(),
+                    <Self as ::store::DocumentDsl>::envelope_id(),
                     ::store::semio_format::Component::Dsl,
                     1,
                 ).expect("valid envelope_id");
@@ -700,7 +707,7 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
             fn encode_pack_with(&self, options: &::store::PackEncodeOptions) -> Result<Vec<u8>, ::store::PackError> {
                 let inner = ::store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
                 let envelope = ::store::semio_format::SemioEnvelope::from_envelope_id(
-                    Self::envelope_id(),
+                    <Self as ::store::DocumentDsl>::envelope_id(),
                     ::store::semio_format::Component::Pack,
                     1,
                 ).map_err(|e| ::store::PackError::Schema(e.to_string()))?;
@@ -709,10 +716,10 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
             fn decode_pack_with(bytes: &[u8], options: &::store::PackDecodeOptions) -> Result<Self, ::store::PackError> {
                 let (envelope, inner) = ::store::semio_format::unwrap_binary(bytes)
                     .map_err(|e| ::store::PackError::Schema(e.to_string()))?;
-                if envelope.envelope_id() != Self::envelope_id() {
+                if envelope.envelope_id() != <Self as ::store::DocumentDsl>::envelope_id() {
                     return Err(::store::PackError::Schema(format!(
                         "pack envelope mismatch: expected {}, got {}",
-                        Self::envelope_id(),
+                        <Self as ::store::DocumentDsl>::envelope_id(),
                         envelope.envelope_id()
                     )));
                 }

@@ -1,0 +1,6 @@
+dialect grammar
+grammar 3d
+extension 3d
+use family-document
+start document
+document = TEXT*

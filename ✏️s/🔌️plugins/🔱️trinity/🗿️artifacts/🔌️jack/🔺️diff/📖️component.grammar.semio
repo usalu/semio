@@ -1,0 +1,6 @@
+dialect grammar
+grammar jack
+extension jack
+use family-graph
+start document
+document = TEXT*

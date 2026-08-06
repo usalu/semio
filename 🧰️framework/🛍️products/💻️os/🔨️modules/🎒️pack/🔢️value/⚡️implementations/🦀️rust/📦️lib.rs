@@ -10,7 +10,7 @@
 //! `.🦑️repo/🎫️tickets/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/contract.md` for the binding
 //! byte layout this module implements against.
 
-use dsl_schema::{DslValue, FieldSpec, FieldValue, RecordSpec, RecordValue, Shape, WireNode, WireValue};
+use dsl_schema::{DslValue, FieldSpec, FieldValue, RecordSpec, RecordValue, Shape, WireEdgeLabel, WireNode, WireValue};
 use pack_core::{write_varint_i64, write_varint_u64, ByteReader, ChunkId, CodecId, PackError, PackLimits};
 use std::collections::{HashMap, HashSet};
 
@@ -554,6 +554,7 @@ fn encode_dsl_value(ctx: &mut EncCtx<'_>, v: &DslValue, depth: u16, out: &mut Ve
 /// (`from`, optional `to`, `props`); everything here just needs to round-trip, which it does.
 fn encode_wire(ctx: &mut EncCtx<'_>, w: &WireValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
     check_depth(ctx.options.limits.max_depth, depth)?;
+    let has_label = !w.edge_label.is_empty();
     let mut presence = 0u8;
     if w.edge.is_some() {
         presence |= 0b01;
@@ -563,10 +564,29 @@ fn encode_wire(ctx: &mut EncCtx<'_>, w: &WireValue, depth: u16, out: &mut Vec<u8
             presence |= 0b10;
         }
     }
+    if has_label {
+        presence |= 0b100;
+    }
     out.push(presence);
     encode_wire_node(ctx, &w.from, out);
     if let Some((_, to)) = &w.edge {
         encode_wire_node(ctx, to, out);
+    }
+    if has_label {
+        let mut lp = 0u8;
+        if w.edge_label.id.is_some() {
+            lp |= 0b01;
+        }
+        if w.edge_label.kind.is_some() {
+            lp |= 0b10;
+        }
+        out.push(lp);
+        if let Some(id) = &w.edge_label.id {
+            encode_string(ctx, id, out);
+        }
+        if let Some(kind) = &w.edge_label.kind {
+            encode_string(ctx, kind, out);
+        }
     }
     encode_dsl_value(ctx, &w.properties, depth + 1, out)?;
     Ok(())
@@ -897,8 +917,16 @@ fn decode_wire(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u16) ->
     } else {
         None
     };
+    let edge_label = if presence & 0b100 != 0 {
+        let lp = reader.read_u8()?;
+        let id = if lp & 0b01 != 0 { Some(decode_string(reader, ctx)?) } else { None };
+        let kind = if lp & 0b10 != 0 { Some(decode_string(reader, ctx)?) } else { None };
+        WireEdgeLabel { id, kind }
+    } else {
+        WireEdgeLabel::default()
+    };
     let properties = decode_dsl_value(reader, ctx, depth + 1)?;
-    Ok(WireValue { from, edge, properties })
+    Ok(WireValue { from, edge, edge_label, properties })
 }
 
 fn decode_wire_node(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>) -> Result<WireNode, PackError> {
@@ -1489,6 +1517,7 @@ mod tests {
             FieldValue::Wire(WireValue {
                 from: WireNode { id: "a".to_string(), kind: Some("Kind".to_string()), port: None },
                 edge: Some((true, WireNode { id: "b".to_string(), kind: None, port: Some("out".to_string()) })),
+                edge_label: WireEdgeLabel::default(),
                 properties: DslValue::Object(vec![("weight".to_string(), DslValue::Number(2.0))]),
             }),
         );
@@ -1686,7 +1715,7 @@ mod tests {
     fn wire_literal_round_trips_bare_node_and_undirected_edge() {
         let spec = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "w", Shape::Wire)]);
         let mut fields = HashMap::new();
-        fields.insert(1, FieldValue::Wire(WireValue { from: WireNode { id: "solo".to_string(), kind: None, port: None }, edge: None, properties: DslValue::Object(vec![]) }));
+        fields.insert(1, FieldValue::Wire(WireValue { from: WireNode { id: "solo".to_string(), kind: None, port: None }, edge: None, edge_label: WireEdgeLabel::default(), properties: DslValue::Object(vec![]) }));
         let record = RecordValue { fields };
         let bytes = encode_document(&spec, &record, &EncodeOptions::default()).expect("encode");
         let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).expect("decode");

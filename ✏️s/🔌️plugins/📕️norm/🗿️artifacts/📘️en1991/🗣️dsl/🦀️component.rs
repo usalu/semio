@@ -8,7 +8,7 @@ use crate::artifacts::en1991::Document;
 /// construction, accidental impact, bridge, crane, silo) at plausible non-zero values — distinct
 /// from `Document::default()`'s category-B/DE-annex/standard-fire-curve values so the grammar's
 /// non-default branches (category, annex, fire curve) are exercised too.
-pub const EN1991_RETAIL_HYDROCARBON_FIRE_EXAMPLE_TEXT: &str = include_str!("../../📚️examples/📕️retail-hydrocarbon-fire/🗣️dsls/📕️retail-hydrocarbon-fire/🧬️component.norm.en1991.dsl.semio");
+pub const EN1991_RETAIL_HYDROCARBON_FIRE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/📕️retail-hydrocarbon-fire/🗣️dsls/📕️retail-hydrocarbon-fire/🧬️component.norm.en1991.dsl.semio");
 
 /// 📖️ Parses `.en1991` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {

@@ -1,0 +1,6 @@
+dialect grammar
+grammar playbook
+extension playbook
+use family-recipe
+start document
+document = TEXT*

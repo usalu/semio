@@ -1,0 +1,6 @@
+dialect grammar
+grammar process3d
+extension process3d
+use family-recipe
+start document
+document = TEXT*

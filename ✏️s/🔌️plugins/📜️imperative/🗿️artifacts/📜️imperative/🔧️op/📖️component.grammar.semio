@@ -1,0 +1,6 @@
+dialect grammar
+grammar imperative
+extension imperative
+use family-graph
+start document
+document = TEXT*

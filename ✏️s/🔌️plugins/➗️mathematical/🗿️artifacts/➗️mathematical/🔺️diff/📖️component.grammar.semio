@@ -1,0 +1,6 @@
+dialect grammar
+grammar mathematical
+extension mathematical
+use family-graph
+start document
+document = TEXT*

@@ -1,0 +1,6 @@
+dialect grammar
+grammar raster
+extension raster
+use family-scene
+start document
+document = TEXT*

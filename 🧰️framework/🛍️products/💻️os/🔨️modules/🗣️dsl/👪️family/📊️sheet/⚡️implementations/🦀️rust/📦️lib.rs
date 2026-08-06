@@ -203,7 +203,7 @@ mod tests {
     /// @emoji 📖️ The fragment's `.grammar` file must at least parse under `dsl_grammar`'s parser.
     #[test]
     fn grammar_file_is_syntactically_valid() {
-        let source = include_str!("../../📖️family-sheet.grammar");
+        let source = include_str!("../../📖️family-sheet.grammar.semio");
         let grammar = dsl_grammar::parse_grammar(source).expect("family-sheet.grammar must parse");
         assert_eq!(grammar.id, "family-sheet");
     }

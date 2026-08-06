@@ -3,7 +3,7 @@
 use crate::artifacts::note::NoteDocument;
 
 /// 📄️ The `semio` example document, handcrafted in the `.note` DSL.
-pub const SEMIO_NOTE_EXAMPLE_TEXT: &str = include_str!("../../📚️examples/♻️semio/🗣️dsls/♻️semio/🧬️component.note.note.dsl.semio");
+pub const SEMIO_NOTE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️semio/🗣️dsls/♻️semio/🧬️component.note.note.dsl.semio");
 
 /// 📖️ Parses `.note` DSL text into a `NoteDocument`.
 pub fn parse_dsl(text: &str) -> Result<NoteDocument, store::TextError> {

@@ -61,10 +61,12 @@ function areaAdmitsLegacyShape(state: AreaState): boolean {
 /** @emoji 🎛️ Taxonomy tree segment names, single-sourced from the vocabulary: anything deriving an
  * app-root path (the constitutional gate, example discovery, the window audit) shares one value. */
 const APPS_DIRNAME = TAXONOMY.appsDirName;
-/** @emoji 📚️ Owner-root example data dir, cross-checked against the vocabulary's allowed root data dirs
- * so a rename there cannot leave playground example discovery silently pointing at nothing. */
+/** @emoji 📚️ Artifact-scoped example data dir (`artifactChildDirs`, not owner root). */
 const EXAMPLES_DIRNAME = "📚️examples";
-if (!TAXONOMY.rootDataDirNames.includes(EXAMPLES_DIRNAME)) throw new Error(`📇️registry: "${EXAMPLES_DIRNAME}" is not one of 🔣️taxonomy.json's rootDataDirNames (${TAXONOMY.rootDataDirNames.join(", ")})`);
+if (!TAXONOMY.artifactChildDirs.includes(EXAMPLES_DIRNAME)) {
+  throw new Error(`📇️registry: "${EXAMPLES_DIRNAME}" must be listed in 🔣️taxonomy.json artifactChildDirs (${TAXONOMY.artifactChildDirs.join(", ")})`);
+}
+const EXAMPLE_COMPONENT_DIRS = TAXONOMY.exampleComponentDirs ?? [];
 const RUST_LANG = "🦀️rust";
 const RUST_MANIFEST_FILENAME = TAXONOMY.ecosystems[RUST_LANG].manifestFilename ?? "Cargo.toml";
 
@@ -291,6 +293,22 @@ function discoverExamplesForPlayground(repoRoot: string, cratePath: string, plug
   const areaSegments = PLUGINS_AREA.split("/");
   const inPluginArea = areaSegments.every((segment, index) => segments[index] === segment);
   const techRoot = inPluginArea ? segments.slice(0, areaSegments.length + 1).join("/") : segments[0];
+  const collectJsonExampleIds = (dir: string): string[] => {
+    if (!existsSync(dir)) return [];
+    return idsIn(dir);
+  };
+  const artifactExampleIds: string[] = [];
+  const artifactsDir = join(repoRoot, techRoot, TAXONOMY.artifactsDirName);
+  if (existsSync(artifactsDir)) {
+    for (const artifact of listDirs(artifactsDir)) {
+      const examplesRoot = join(artifactsDir, artifact, EXAMPLES_DIRNAME);
+      for (const setName of listDirs(examplesRoot)) {
+        artifactExampleIds.push(...collectJsonExampleIds(join(examplesRoot, setName)));
+      }
+      artifactExampleIds.push(...collectJsonExampleIds(examplesRoot));
+    }
+  }
+  if (artifactExampleIds.length > 0) return [...new Set(artifactExampleIds)].sort();
   const rootDir = join(repoRoot, techRoot, EXAMPLES_DIRNAME);
   if (existsSync(rootDir)) return idsIn(rootDir);
   if (variant.startsWith(pluginId) && variant.length > pluginId.length) {
@@ -858,6 +876,8 @@ function validateConstitutionalCrates(repoRoot: string, migratedPluginIds: Reado
  * `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`; this used to be an independently
  * hand-maintained copy, which is exactly the drift `🔣️taxonomy.json` exists to prevent). */
 const TAXONOMY_ARTIFACT_COMPONENTS = TAXONOMY.artifactComponentDirs;
+const TAXONOMY_ARTIFACT_SPEC_FILENAMES = TAXONOMY.artifactSpecFilenames ?? {};
+const TAXONOMY_TS_LEAF_FILENAME = TAXONOMY.ecosystems["🟦️typescript"]?.leafFilename ?? "🟦️component.ts";
 /** @emoji 🪟️ A window dir may only contain these children, each itself a `🦀️component.rs` leaf. */
 const TAXONOMY_WINDOW_CHILDREN = new Set(TAXONOMY.windowChildDirs);
 const TAXONOMY_LEAF_FILENAME = TAXONOMY.taxonomyLeafFilenames[RUST_LANG];
@@ -891,14 +911,50 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   const artifactsDir = join(pluginRoot, TAXONOMY.artifactsDirName);
   for (const artifact of listDirs(artifactsDir)) {
     for (const component of TAXONOMY_ARTIFACT_COMPONENTS) {
-      if (!existsSync(join(artifactsDir, artifact, component, TAXONOMY_LEAF_FILENAME))) {
+      const facetDir = join(artifactsDir, artifact, component);
+      if (!existsSync(join(facetDir, TAXONOMY_LEAF_FILENAME))) {
         findings.push(`${pluginId}: artifact "${artifact}" is missing ${component}/${TAXONOMY_LEAF_FILENAME}`);
+      }
+      const specName = TAXONOMY_ARTIFACT_SPEC_FILENAMES[component];
+      if (specName && !existsSync(join(facetDir, specName))) {
+        findings.push(`${pluginId}: artifact "${artifact}" is missing ${component}/${specName}`);
+      }
+      if (!existsSync(join(facetDir, TAXONOMY_TS_LEAF_FILENAME))) {
+        findings.push(`${pluginId}: artifact "${artifact}" is missing ${component}/${TAXONOMY_TS_LEAF_FILENAME}`);
+      }
+    }
+    const examplesRoot = join(artifactsDir, artifact, EXAMPLES_DIRNAME);
+    if (!existsSync(examplesRoot)) {
+      findings.push(`${pluginId}: artifact "${artifact}" is missing ${EXAMPLES_DIRNAME}/`);
+      continue;
+    }
+    const exampleSets = listDirs(examplesRoot);
+    if (exampleSets.length === 0) {
+      findings.push(`${pluginId}: artifact "${artifact}" ${EXAMPLES_DIRNAME} has no example set`);
+      continue;
+    }
+    for (const exampleSet of exampleSets) {
+      for (const kind of EXAMPLE_COMPONENT_DIRS) {
+        if (!existsSync(join(examplesRoot, exampleSet, kind))) {
+          findings.push(`${pluginId}: artifact "${artifact}" example "${exampleSet}" is missing ${kind}/`);
+        }
       }
     }
   }
 
-  // 🪟️ windows live under apps/<app>/modes/<mode>/windows/<w> and may only contain the fixed child set.
+  if (existsSync(join(pluginRoot, EXAMPLES_DIRNAME))) {
+    findings.push(`${pluginId}: plugin-root ${EXAMPLES_DIRNAME}/ is forbidden — relocate under 🗿️artifacts/<artifact>/${EXAMPLES_DIRNAME}`);
+  }
+
   const appsDir = join(pluginRoot, APPS_DIRNAME);
+  for (const app of listDirs(appsDir)) {
+    const engineExamples = join(appsDir, app, "⚙️engine", EXAMPLES_DIRNAME);
+    if (!existsSync(engineExamples)) {
+      findings.push(`${pluginId}: app "${app}" is missing ⚙️engine/${EXAMPLES_DIRNAME}/`);
+    }
+  }
+
+  // 🪟️ windows live under apps/<app>/modes/<mode>/windows/<w> and may only contain the fixed child set.
   for (const app of listDirs(appsDir)) {
     const modesDir = join(appsDir, app, TAXONOMY.modesDirName);
     for (const mode of listDirs(modesDir)) {
@@ -916,7 +972,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   // 🦀️ collect every actual component.rs on disk (for the lib.rs cross-check below) and flag any
   // taxonomy leaf file that isn't literally named `component.rs`.
   const componentFiles: string[] = [];
-  const taxonomyLeafParents = new Set<string>([...TAXONOMY_ARTIFACT_COMPONENTS, ...TAXONOMY_WINDOW_CHILDREN]);
+  const taxonomyLeafParents = new Set<string>([...TAXONOMY_ARTIFACT_COMPONENTS, ...TAXONOMY_WINDOW_CHILDREN, ...EXAMPLE_COMPONENT_DIRS]);
   function walkPluginTree(dir: string) {
     for (const name of readdirSync(dir)) {
       if (name.startsWith(".") || name === "target" || name === "node_modules") continue;
