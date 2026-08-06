@@ -14,7 +14,7 @@ use serde_json::{json, Value};
 use std::collections::HashMap;
 
 // 📍️ The engine's `🕸️meshing`/`🗺️mesh-preview`/`🎵️modal-buckling` components are declared ONCE, by the
-// plugin root's wiring (`📦️lib.rs`'s `artifacts::fem3d::engine` block) — declaring them here too would
+// plugin root's wiring (`📦️glue.rs`'s `artifacts::fem3d::engine` block) — declaring them here too would
 // compile each file a second time as `engine::component::<m>`, giving every type in them a silent twin.
 use crate::artifacts::fem3d::engine::{mesh_preview, meshing};
 
@@ -24,8 +24,128 @@ use crate::artifacts::fem3d::engine::{mesh_preview, meshing};
 /// depending on its concrete `Projection`/`Operation` types. Reached from the plugin root's
 /// `semio_plugin!{ setup: … }` via `crate::core::register_all_engines`.
 pub fn register() {
+    register_fem3d_languages();
+    register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::fem3d::Fem3dPlayApp>(crate::artifacts::fem3d::FEM_3D_SCHEMA);
 }
+
+fn pilot_language_hooks(lang: &'static str) -> dsl::IdiomHooks {
+    dsl::IdiomHooks {
+        lang,
+        canonicalize: |text| Ok(text.to_string()),
+        classify: |_| Vec::new(),
+        complete: |_, _| Vec::new(),
+    }
+}
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "fem3d",
+        extension: Some("fem3d"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::fem3d::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::fem3d::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: pilot_language_hooks("fem3d"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "fem3d.ops",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::fem3d::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::fem3d::op::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: pilot_language_hooks("fem3d.ops"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "fem3d.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::fem3d::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::fem3d::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: pilot_language_hooks("fem3d.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "fem3d.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::fem3d::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::fem3d::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: pilot_language_hooks("fem3d.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "fem3d.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::fem3d::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::fem3d::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: pilot_language_hooks("fem3d.spr"),
+    });
+}
+
+
+fn register_fem3d_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "fem.fem3d",
+        extension: Some("fem3d"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::fem3d::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::fem3d::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("fem.fem3d"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "fem.fem3d.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::fem3d::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::fem3d::op::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("fem.fem3d.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "fem.fem3d.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::fem3d::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::fem3d::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("fem.fem3d.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "3d.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::fem3d::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::fem3d::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("3d.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "3d.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::fem3d::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::fem3d::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("3d.spr"),
+    });
+}
+
 // #endregion 🔖️Register
 
 pub fn empty_fem3d_projection() -> Fem3dDocument {

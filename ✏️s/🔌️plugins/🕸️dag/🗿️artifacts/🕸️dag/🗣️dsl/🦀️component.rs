@@ -7,6 +7,13 @@
 
 use crate::artifacts::dag::DagDocument;
 
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 /// 📄️ The canonical DAG fixture, handcrafted in the `.dag` DSL — the same file the DAG kernel's own
 /// tests parse.
 pub const DAG_EXAMPLE_TEXT: &str =
@@ -43,3 +50,17 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod semio_grammar_conformance {
+    use super::*;
+
+    #[test]
+    fn component_grammar_semio_is_grammar_dialect() {
+        let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
+        assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);
+        assert!(!COMPONENT_GRAMMAR_SEMIO.is_empty());
+        let _ = COMPONENT_GRAMMAR_PATH;
+    }
+}
+

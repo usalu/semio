@@ -91,13 +91,13 @@ This confirms the split before the refactor and proves the result after. Remove 
 
 An action is either a document action or a view action, declared once and enforced by the type system rather than by remembering to add a string to a list. Today the intent is implicit and rediscovered by diffing.
 
-In [📦️lib.rs](✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs):
+In [📦️glue.rs](✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs):
 
 - Add `puzzle3d_action_intent(action) -> ActionIntent` (`View` | `Document`), covering every arm of the `match`.
 - For `View`: never clone `doc.projection.0`, never call `puzzle3d_operations_from_fixture_change`, and emit `operations: vec![]` directly. The existing "must not emit operations" guard becomes a debug assertion instead of the thing we pay a document diff to satisfy.
 - For `Document`: keep the existing snapshot and delta path unchanged.
 
-Generalize in [🔌️plugin/📦️lib.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs) so `VcsDocumentApp::dispatch_action` skips `refresh_cache()`'s history rebuild work for view actions too, keeping the invariant framework-wide rather than puzzle-specific.
+Generalize in [🔌️plugin/📦️glue.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs) so `VcsDocumentApp::dispatch_action` skips `refresh_cache()`'s history rebuild work for view actions too, keeping the invariant framework-wide rather than puzzle-specific.
 
 ## Mechanism 2: selection is a set, not a list
 

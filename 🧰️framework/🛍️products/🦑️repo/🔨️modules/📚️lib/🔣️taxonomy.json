@@ -33,7 +33,7 @@
         "idKey": "id"
       },
       "entryFilenames": [
-        "📦️lib.rs",
+        "📦️glue.rs",
         "📦️bin.rs"
       ],
       "leafFilename": "🦀️component.rs",
@@ -50,8 +50,7 @@
         "idKey": "id"
       },
       "entryFilenames": [
-        "📦️index.tsx",
-        "📦️index.ts"
+        "🟦️glue.ts"
       ],
       "leafFilename": "🟦️component.ts",
       "sourceExtension": ".ts"
@@ -100,7 +99,7 @@
       "lang": "🦀️rust",
       "leafFilename": "🧊️component.rs",
       "entryFilenames": [
-        "📦️lib.rs",
+        "📦️glue.rs",
         "📦️bin.rs"
       ]
     },
@@ -108,15 +107,14 @@
       "lang": "🦀️rust",
       "leafFilename": "⌨️component.rs",
       "entryFilenames": [
-        "📦️lib.rs"
+        "📦️glue.rs"
       ]
     },
     "⚛️react": {
       "lang": "🟦️typescript",
       "leafFilename": "🟦️component.tsx",
       "entryFilenames": [
-        "📦️index.tsx",
-        "📦️index.ts"
+        "🟦️glue.ts"
       ]
     }
   },
@@ -158,12 +156,11 @@
     "📋️project.json",
     "📜️script.ts",
     "build.rs",
-    "📦️lib.rs",
+    "📦️glue.rs",
     "📦️bin.rs",
-    "📦️index.ts",
-    "📦️index.tsx",
     "🐍️__init__.py",
-    "🟦️vitest.setup.ts"
+    "🟦️vitest.setup.ts",
+    "🟦️glue.ts"
   ],
   "packagingFileSuffixes": [
     ".config.ts",
@@ -253,8 +250,8 @@
     "⌨️tui": "⌨️component.rs"
   },
   "entryFilenames": {
-    "🦀️rust": "📦️lib.rs",
-    "🟦️typescript": "📦️index.tsx"
+    "🦀️rust": "📦️glue.rs",
+    "🟦️typescript": "🟦️glue.ts"
   },
   "storyLeafFilename": "🧪️story.tsx",
   "libWiringLineBudget": 150,

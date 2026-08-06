@@ -50,7 +50,7 @@ Three violations of "the default driver hides nothing behind hover, and drag sta
    ```
    `buildPalettePointerProps` (19429) likewise attaches `onPointerDown` to the whole row.
 
-2. **Row actions hide until hover regardless of driver.** `TreeSectionAction.revealOnHover` (16690) routes actions into `treeHeaderRevealActionsClassName` (16423), which is `opacity-0 pointer-events-none` until `group-hover/tree-row`. The Rust twin `UiTreeItemAction.reveal_on_hover` (wgpu `📦️lib.rs` 2564) does the same and additionally *skips hit-target registration* when unhovered (20826). Hover is a per-action decision today; it must be a driver decision.
+2. **Row actions hide until hover regardless of driver.** `TreeSectionAction.revealOnHover` (16690) routes actions into `treeHeaderRevealActionsClassName` (16423), which is `opacity-0 pointer-events-none` until `group-hover/tree-row`. The Rust twin `UiTreeItemAction.reveal_on_hover` (wgpu `📦️glue.rs` 2564) does the same and additionally *skips hit-target registration* when unhovered (20826). Hover is a per-action decision today; it must be a driver decision.
 
 3. **One drag handle per tree row.** A row can only express a single drag role, so reorder and palette-transfer collapse onto the same grip.
 
@@ -87,7 +87,7 @@ Inside `//#region 📜️Tree` and `//#region 🫳️DragAffordance`:
 - Stamp `data-ui-reveal-region` on the row action group so `driver.chrome === "hover"` (compact) drives reveal instead of the deleted class.
 - Add i18n keys `ui.tree.drag.sort` and `ui.tree.drag.transfer` to the `ui` schema (3759), the `en` bundle (4877), and the `de` bundle — `check-chrome-i18n` in [📜️script.ts](📜️script.ts) enforces this.
 
-### 2. Shared Rust model — [wgpu 📦️lib.rs](🧰️framework/🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust/📦️lib.rs)
+### 2. Shared Rust model — [wgpu 📦️glue.rs](🧰️framework/🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust/📦️lib.rs)
 
 - `UiTreeItemAction.reveal_on_hover: Option<bool>` (2564) becomes `placement: Option<UiTreeActionPlacement>` with a serde camelCase enum `Row`/`Menu`; same for the internal `TreeItemAction` (19652) and the conversion at 18719.
 - Painter: drop the `reveal_on_hover && !hovered` skips at 14583 and 20826 — row actions always paint and always register hit targets. Menu-placement actions are appended to the row context menu the painter builds from `UiTreeItemNode.menu` (2618).
@@ -103,7 +103,7 @@ Inside `//#region 📜️Tree` and `//#region 🫳️DragAffordance`:
 
 Hand-classify each of the 15 `reveal_on_hover: Some(true)` sites — frequent toggles stay `Row`, destructive and rare ones become `Menu`:
 
-- `Row`: puzzle 3d eye/lock toggles ([📦️lib.rs](✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs) 2523-2525)
+- `Row`: puzzle 3d eye/lock toggles ([📦️glue.rs](✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs) 2523-2525)
 - `Menu`: deletes and removes in [cad](✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs) (1096-1171), [process 3d](✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs) (588-669), [playbook](🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/⚡️implementations/🦀️rust/📦️lib.rs) (767-775), [lowpoly](✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs) (658), [os plugin](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs) (3232), [sourcing](✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs) (242)
 - Playbook's raw `Label::data("Remove")` (767) becomes a localized label while the file is open.
 

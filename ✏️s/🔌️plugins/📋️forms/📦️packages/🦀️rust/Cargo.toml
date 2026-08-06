@@ -21,7 +21,7 @@ ports = { react = 6058, wgpu = 6158 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [dependencies]
 playbook = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-playbook" }

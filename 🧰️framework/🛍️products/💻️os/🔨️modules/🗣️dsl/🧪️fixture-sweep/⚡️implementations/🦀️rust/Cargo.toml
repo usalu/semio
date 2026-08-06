@@ -15,6 +15,7 @@ fem = { path = "../../../../../../../../✏️s/🔌️plugins/🏗️fem/📦�
 
 [dev-dependencies]
 dsl = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+dsl_grammar = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-grammar" }
 store = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
 # ✒️ Repointed to the merged writer plugin crate by the crate-consolidation taxonomy migration
 # (ticket 26/08/05/WRITER-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION) — `WriterProjection`

@@ -12,7 +12,7 @@ role = "tool"
 workspace = true
 
 [lib]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [[bin]]
 name = "semio"

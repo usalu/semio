@@ -1,0 +1,23 @@
+{
+  "id": "26/08/06/FRAMEWORK-SINGLETON-PACKAGE-PURITY",
+  "title": "Framework Singleton Package Purity",
+  "status": "closed",
+  "goal": "aioptimizedrepo",
+  "due": "2026-08-06",
+  "client": "cursor-chat",
+  "llm": "cursor-grok-4.5-high",
+  "closedAt": "2026-08-06",
+  "summary": "Singleton packages use 📦️glue.rs path-wiring into owner 🦀️component.rs. Editor/hash/schema/UI TUI extracted; math/surface/core renamed. Taxonomy entryFilenames rust→glue applied by registrar.",
+  "filesWorkedOn": [
+    "🧰️framework/🔨️modules/✍️editor/🦀️component.rs",
+    "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/📦️glue.rs",
+    "🧰️framework/🔨️modules/#⃣hash/🦀️component.rs",
+    "🌰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust/📦️glue.rs",
+    "🧰️framework/🔨️modules/🧬️schema/🦀️component.rs",
+    "🌰️framework/🔨️modules/🖱️ui/⌨️tui/🦀️component.rs",
+    "🌰️framework/📦️packages/🦀️rust/📦️glue.rs",
+    "🌰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔣️taxonomy.json",
+    "📜️script.ts",
+    ".🦑️repo/🎫️tickets/🎆️26/� combos08/☀️06/FRAMEWORK-SINGLETON-PACKAGE-PURITY/📋️registrar-handoff.md"
+  ]
+}

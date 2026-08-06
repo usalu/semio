@@ -194,6 +194,33 @@ function inventory() {
         }
       })(),
     },
+    entryFiles: (() => {
+      const glueRs=[], libRs=[], glueTs=[], indexTs=[];
+      const stack=[REPO_ROOT];
+      while (stack.length) {
+        const dir=stack.pop();
+        let entries; try { entries=readdirSync(dir,{withFileTypes:true}); } catch { continue; }
+        for (const e of entries) {
+          if (PRUNE.has(e.name) || e.name===".🦑️repo" || e.name==="node_modules") continue;
+          const p=join(dir,e.name);
+          if (e.isDirectory()) { stack.push(p); continue; }
+          const rel=relative(REPO_ROOT,p).replaceAll("\\","/");
+          if (!rel.includes("📦️packages/")) continue;
+          if (e.name==="📦️glue.rs") glueRs.push(rel);
+          else if (e.name==="📦️lib.rs") libRs.push(rel);
+          else if (e.name==="🟦️glue.ts") glueTs.push(rel);
+          else if (e.name==="📦️index.ts" || e.name==="📦️index.tsx") indexTs.push(rel);
+        }
+      }
+      return {
+        glueRsUnderPackages: glueRs.length,
+        libRsUnderPackages: libRs.length,
+        glueTsUnderPackages: glueTs.length,
+        indexTsUnderPackages: indexTs.length,
+        sampleLibRs: libRs.slice(0,20),
+        sampleGlueRs: glueRs.slice(0,10),
+      };
+    })(),
     markdownWithImplLinks: mdImplLinkCounts(),
     outsideFrameworkImplDirs: implDirs
       .map((d) => relative(REPO_ROOT, d).replaceAll("\\", "/"))

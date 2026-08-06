@@ -76,8 +76,8 @@ Rewrite every consumer of `@semio-tech/ui-asset` to `@semio-tech/assets`: `🧰�
 
 Rewrite the Rust paths that point into A:
 - `🧰️framework/🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust/📦️lib.rs:3` (`#[path]`) and `:12905-12918` (font `include_bytes!`)
-- `🧰️framework/🛍️products/💻️os/…/📺️renderer/…/🧊️wgpu/…/build.rs:7` and `📦️lib.rs:32366`
-- `🧰️framework/🛍️products/💻️os/…/♾️infinite/🖼️canvas/…/build.rs:15` and `📦️lib.rs:1218`
+- `🧰️framework/🛍️products/💻️os/…/📺️renderer/…/🧊️wgpu/…/build.rs:7` and `📦️glue.rs:32366`
+- `🧰️framework/🛍️products/💻️os/…/♾️infinite/🖼️canvas/…/build.rs:15` and `📦️glue.rs:1218`
 
 ## Part 2 - Make `/asset/*` enforced by API
 

@@ -9,7 +9,7 @@ rust-version = "1.88"
 workspace = true
 [lib]
 crate-type = ["rlib"]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [dependencies]
 serde_json = "1.0.140"

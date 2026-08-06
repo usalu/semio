@@ -3,11 +3,14 @@
   "root": "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust",
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🖥️host",
   "projectType": "library",
-  "tags": ["lang:rust", "role:product", "family:os-host"],
+  "tags": [
+    "lang:rust",
+    "role:product",
+    "family:os-host"
+  ],
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🖥️host/**/*.rs",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/⚡️implementations/**/*.rs",
       "{projectRoot}/**/*"
     ]
   },
@@ -25,7 +28,9 @@
         "command": "bun 📜️script.ts wasm",
         "cwd": "{projectRoot}"
       },
-      "outputs": ["{projectRoot}/pkg"]
+      "outputs": [
+        "{projectRoot}/pkg"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
@@ -33,7 +38,9 @@
         "command": "bun 📜️script.ts test",
         "cwd": "{projectRoot}"
       },
-      "dependsOn": ["wasm"]
+      "dependsOn": [
+        "wasm"
+      ]
     },
     "test-quick": {
       "executor": "nx:run-commands",

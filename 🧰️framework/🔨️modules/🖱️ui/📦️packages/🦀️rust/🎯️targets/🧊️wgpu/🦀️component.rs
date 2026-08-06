@@ -1,4 +1,4 @@
-//! 🧩 `component` engine module — extracted from wgpu `📦️lib.rs` (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE).
+//! 🧩 `component` engine module — extracted from wgpu `📦️glue.rs` (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE).
 
 pub mod layout {
     // #region layout

@@ -6713,53 +6713,10 @@ dependencies = [
 name = "semio-framework-compiler"
 version = "0.1.0"
 dependencies = [
- "semio-framework-compiler-math",
- "semio-framework-compiler-svg",
- "semio-framework-compiler-syntax",
- "semio-framework-compiler-text",
- "semio-framework-compiler-world",
- "semio-framework-os-kernel-dsl-core",
-]
-
-[[package]]
-name = "semio-framework-compiler-math"
-version = "0.1.0"
-dependencies = [
- "semio-framework-compiler-syntax",
- "semio-framework-compiler-text",
- "semio-framework-compiler-world",
-]
-
-[[package]]
-name = "semio-framework-compiler-svg"
-version = "0.1.0"
-dependencies = [
  "base64 0.22.1",
- "semio-framework-compiler-math",
- "semio-framework-compiler-syntax",
- "semio-framework-compiler-text",
- "semio-framework-compiler-world",
-]
-
-[[package]]
-name = "semio-framework-compiler-syntax"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl-core",
- "semio-framework-os-kernel-dsl-grammar",
-]
-
-[[package]]
-name = "semio-framework-compiler-text"
-version = "0.1.0"
-dependencies = [
  "rustybuzz",
- "semio-framework-compiler-world",
+ "semio-framework-os-kernel",
 ]
-
-[[package]]
-name = "semio-framework-compiler-world"
-version = "0.1.0"
 
 [[package]]
 name = "semio-framework-core"
@@ -7215,6 +7172,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-dsl-core",
  "semio-framework-os-kernel-dsl-derive",
+ "semio-framework-os-kernel-dsl-grammar",
  "semio-framework-os-kernel-dsl-schema",
  "semio-framework-os-kernel-pack",
  "semio-framework-os-kernel-protocol",
@@ -7258,6 +7216,7 @@ dependencies = [
  "semio-framework-os-kernel-dsl-core",
  "semio-framework-os-kernel-dsl-notation",
  "semio-framework-os-kernel-dsl-schema",
+ "serde_json",
 ]
 
 [[package]]

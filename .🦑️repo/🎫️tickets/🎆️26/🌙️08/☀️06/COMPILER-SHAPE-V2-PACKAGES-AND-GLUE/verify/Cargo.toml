@@ -1,0 +1,20 @@
+[workspace]
+members = ["shell"]
+resolver = "2"
+
+[workspace.lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"

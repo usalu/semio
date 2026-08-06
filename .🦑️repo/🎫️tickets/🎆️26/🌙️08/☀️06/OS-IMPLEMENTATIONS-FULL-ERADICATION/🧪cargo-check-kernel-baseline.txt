@@ -1,0 +1,20 @@
+error: failed to load manifest for workspace member `/Users/ueli/Documents/semio/✏️s/🔨️modules/💭️mindmap/📦️packages/🦀️rust`
+referenced by workspace at `/Users/ueli/Documents/semio/Cargo.toml`
+
+Caused by:
+  failed to load manifest for dependency `semio-framework-os-kernel-infinite-board-normal-directed`
+
+Caused by:
+  failed to load manifest for dependency `semio-framework-os-kernel-infinite-board`
+
+Caused by:
+  failed to load manifest for dependency `semio-framework-os-kernel-infinite-canvas`
+
+Caused by:
+  failed to load manifest for dependency `semio-framework-compiler`
+
+Caused by:
+  failed to read `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/⚡️implementations/🦀️rust/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)

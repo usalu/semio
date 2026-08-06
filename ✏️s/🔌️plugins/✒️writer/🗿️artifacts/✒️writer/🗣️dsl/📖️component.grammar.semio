@@ -4,6 +4,10 @@ extension writer
 use family-embed
 start document
 
-document = field*
-field = IDENT "=" (TEXT | fence | INT | FLOAT | BOOL)
+document = schema-field id-field? language-id-field? uri-field? text-field?
+schema-field = "schema" "=" (TEXT | IDENT)
+id-field = "id" "=" (TEXT | IDENT)
+language-id-field = "language-id" "=" (TEXT | IDENT)
+uri-field = "uri" "=" (TEXT | IDENT)
+text-field = "text" "=" (TEXT | fence)
 fence = "```" IDENT TEXT "```"

@@ -1,7 +1,7 @@
 //! 🌫️ Dense reconstruction: PatchMatch multi-view stereo, depth fusion, TSDF volumes and point-cloud analysis.
 
 // 🔗️ Sibling engine topic files, aliased to their pre-merge crate names so every path in
-// this file is byte-identical to the crate it was moved from (see 📦️lib.rs for the wiring).
+// this file is byte-identical to the crate it was moved from (see 📦️glue.rs for the wiring).
 use crate::artifacts::remodel::engine::{camera as remodel_camera, images as remodel_image};
 
 use std::collections::HashMap;

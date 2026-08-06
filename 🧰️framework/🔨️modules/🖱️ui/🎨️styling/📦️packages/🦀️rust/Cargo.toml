@@ -13,4 +13,4 @@ id = "ui-styling"
 [lints]
 workspace = true
 [lib]
-path = "📦️lib.rs"
+path = "📦️glue.rs"

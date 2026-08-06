@@ -1,19 +1,23 @@
 dialect grammar
-grammar raster.diff
+grammar raster.document.diff
 extension raster
 use family-scene
 start diff
 
-diff = step*
-step = add-layer | remove-layer | patch-layer | move-layer | replace
-add-layer = "add-layer" {"parent" "=" IDENT}? {"index" "=" INT}? layer
-remove-layer = "remove-layer" "id" "=" IDENT
-patch-layer = "patch-layer" "id" "=" IDENT "patch" "{" prop* "}"
-move-layer = "move-layer" "id" "=" IDENT {"parent" "=" IDENT}? {"index" "=" INT}?
-replace = "replace" "{" prop* "}"
-layer = "pixel" prop* | "group" prop* | "adjustment" prop*
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
+diff = op-line*
+op-line = ("add-layer" | "remove-layer" | "patch-layer" | "move-layer" | "replace-document") assign* block?
+
+assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
 list = "[" value* "]"
-map = "{" prop* "}"
-value = TEXT | FLOAT | INT | BOOL | list | map
+map = "{" assign* "}"
+value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
+qty = (FLOAT | INT) IDENT?
+block = "{" record* "}"
+record = IDENT assign* block?
+table = IDENT table-schema "{" row* "}"
+table-schema = "[" col {"," col}* "]"
+col = IDENT ":" IDENT
+row = field+
+field = IDENT "=" value | value
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)

@@ -173,6 +173,6 @@ Extend **existing** puzzle3d UI tests in the same `lib.rs` (and existing rendere
 - `✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs` — scopes, instances JSON, document tree, action guards
 - `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/⚡️implementations/🦀️rust/🌍️world/📦️lib.rs` — selection-only sync
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx` — World3dHost selection apply + Tree selectedIds memo
-- `�️framework/🔨️modules/🖱️ui/✊️wgpu/.../📦️lib.rs` — optional `selected_ids` on `UiTreeNode`
+- `�️framework/🔨️modules/🖱️ui/✊️wgpu/.../📦️glue.rs` — optional `selected_ids` on `UiTreeNode`
 - Framework plugin / kernel — `UiDirtyScope` / `ActionEmit` selection patch + host apply
 

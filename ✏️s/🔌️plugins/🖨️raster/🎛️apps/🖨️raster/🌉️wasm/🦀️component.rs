@@ -1,6 +1,6 @@
 //! 🌉️ Raster play app — the `wasm-bindgen` VCS bridge: a JS-facing surface distinct from the WASM
 //! Component Model plugin ABI the rest of this crate speaks. Only compiled for `target_arch = "wasm32"`
-//! (was: the plugin-root `📦️lib.rs`'s `RasterDocumentVcs` in the old bundle crate).
+//! (was: the plugin-root `📦️glue.rs`'s `RasterDocumentVcs` in the old bundle crate).
 
 #[cfg(target_arch = "wasm32")]
 mod document_vcs {

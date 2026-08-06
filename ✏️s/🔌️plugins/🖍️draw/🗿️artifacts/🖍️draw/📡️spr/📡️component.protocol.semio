@@ -1,6 +1,8 @@
 dialect protocol
 protocol draw.spr
 version 1
+schema draw.document.operation
+start record
 framing record
 field format u8
 field ordinal varint

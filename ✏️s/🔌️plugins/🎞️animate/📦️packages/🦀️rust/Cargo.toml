@@ -29,7 +29,7 @@ ports = { react = 6051, wgpu = 6151 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [dependencies]
 math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }

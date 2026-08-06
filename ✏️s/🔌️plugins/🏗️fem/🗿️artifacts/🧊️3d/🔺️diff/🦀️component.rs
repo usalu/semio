@@ -10,6 +10,13 @@ use crate::artifacts::fem3d::{element_id, Fem3dDocument, FemAnalysisSettings, Fe
 use protocol::OperationDiff;
 use serde::{Deserialize, Serialize};
 
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 // #region 🔖️HasId
 /// 🪪️ A document collection entry's stable id — the common shape `index_of`/`apply_collection_diff`
 /// generalize over.
@@ -217,3 +224,17 @@ mod tests {
     }
 }
 // #endregion 🧪️Tests
+
+#[cfg(test)]
+mod semio_grammar_conformance {
+    use super::*;
+
+    #[test]
+    fn component_grammar_semio_is_grammar_dialect() {
+        let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
+        assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);
+        assert!(!COMPONENT_GRAMMAR_SEMIO.is_empty());
+        let _ = COMPONENT_GRAMMAR_PATH;
+    }
+}
+

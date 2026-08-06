@@ -12,7 +12,7 @@
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
-// (clippy::result_large_err is allowed crate-wide from the plugin root 📦️lib.rs.)
+// (clippy::result_large_err is allowed crate-wide from the plugin root 📦️glue.rs.)
 
 use crate::apps::layout::commands::{author, export, pointer, view};
 use crate::apps::layout::config::{LayoutConfig, LayoutConfigOperation};

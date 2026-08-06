@@ -23,7 +23,7 @@ ports = { react = 6015, wgpu = 6115 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [dependencies]
 semio-s-mindmap = { path = "../../../../🔨️modules/💭️mindmap/📦️packages/🦀️rust" }

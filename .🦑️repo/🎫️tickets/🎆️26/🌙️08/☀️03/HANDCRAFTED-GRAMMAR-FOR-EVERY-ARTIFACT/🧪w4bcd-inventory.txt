@@ -1,0 +1,22 @@
+grammar=105
+protocol=70
+total=175
+| W4d | ✒️writer | writer (3g+2p) | 5 |
+| W4d | 🌍️gis | gismap (3g+2p), gisterrain (3g+2p) | 10 |
+| W4c | 🎞️animate | present (3g+2p) | 5 |
+| W4c | 🎥️shooting | shooting (3g+2p) | 5 |
+| W4d | 🏗️fem | 3d (3g+2p), 2d (3g+2p) | 10 |
+| W4d | 🏛️architect | program (3g+2p) | 5 |
+| W4d | 🏭️process | process3d (3g+2p) | 5 |
+| W4c | 💠️lowpoly | lowpoly (3g+2p) | 5 |
+| W4d | 📋️forms | forms (3g+2p) | 5 |
+| W4c | 📏️layout | layout (3g+2p) | 5 |
+| W4b | 📕️norm | din4108 (3g+2p), din18599 (3g+2p), din16798 (3g+2p), en1995 (3g+2p), en1992 (3g+2p), en1993 (3g+2p), en1994 (3g+2p), vdi3805 (3g+2p), iso16757 (3g+2p), en1991 (3g+2p), en1996 (3g+2p), en1998 (3g+2p), en1999 (3g+2p), en1997 (3g+2p), en1990 (3g+2p) | 75 |
+| W4d | 📖️playbook | playbook (3g+2p) | 5 |
+| W4d | 📜️imperative | imperative (3g+2p) | 5 |
+| W4c | 📸️remodel | remodel (3g+2p) | 5 |
+| W4c | 🖍️draw | draw (3g+2p) | 5 |
+| W4c | 🖨️raster | raster (3g+2p) | 5 |
+| W4c | 🗒️note | note (3g+2p) | 5 |
+| W4d | 🪐️space | home (3g+2p) | 5 |
+| W4d | 🪵️sourcing | curate (3g+2p) | 5 |

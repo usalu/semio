@@ -1,19 +1,19 @@
 {
-  "generatedAt": "2026-08-06T12:16:02.713Z",
+  "generatedAt": "2026-08-06T12:59:25.597Z",
   "ticket": "26/08/06/PERIPHERY-PROJECT-JSON-AND-FINALIZATION",
   "goal": "🎯aioptimizedrepo",
   "implementations": {
-    "total": 99,
+    "total": 92,
     "singularImplementationDirs": 1,
     "byTopArea": {
-      "🧰️framework": 99
+      "🧰️framework": 92
     },
     "frameworkBuckets": {
       "products/💻️os": 1,
       "os/📖️playbook": 1,
       "os/🔁️workflow": 1,
       "os/🧠️neural": 2,
-      "os/🗣️dsl": 16,
+      "os/🗣️dsl": 15,
       "os/♾️infinite": 12,
       "os/🧬️semio": 1,
       "os/🏪️store": 3,
@@ -25,24 +25,14 @@
       "os/🎒️pack": 10,
       "os/🔌️plugin": 2,
       "os/🌊️flow": 3,
-      "os/🏃️run": 1,
-      "modules/📚️compiler": 6
+      "os/🏃️run": 1
     }
   },
   "projectJson": {
-    "totalReferencingImpl": 91,
-    "underImplPath": 89,
-    "staleCwdOrInputUnderPackages": 2,
-    "stalePackages": [
-      {
-        "path": "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📋️project.json",
-        "kind": "stale-input"
-      },
-      {
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📋️project.json",
-        "kind": "stale-cwd"
-      }
-    ],
+    "totalReferencingImpl": 87,
+    "underImplPath": 87,
+    "staleCwdOrInputUnderPackages": 0,
+    "stalePackages": [],
     "sampleUnderImpl": [
       "♻️mit-bestand/🧺️demonstrator/dist/asset/📋️project.json",
       "♻️mit-bestand/🧺️demonstrator/dist/asset/🪧️logo/📋️project.json",
@@ -62,15 +52,8 @@
     ]
   },
   "staleConfig": {
-    "goWorkImplLines": [
-      "\t./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/⚡️implementations/🐹️go",
-      "\t./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/⚡️implementations/🐹️go",
-      "\t./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🐹️go",
-      "\t./🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go"
-    ],
-    "devcontainerPostCreateImpl": [
-      "go build -o '🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client' './🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/⚡️implementations/🐹️go'"
-    ],
+    "goWorkImplLines": [],
+    "devcontainerPostCreateImpl": [],
     "vitestKnownBrokenPaths": [
       "🧰️framework/🛍️products/💻️os/⚡️implementations/🟦️typescript/🧪️vitest.config.ts",
       "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/🧪️vitest.config.ts"
@@ -78,7 +61,26 @@
     "taxonomyJsonOldPathExists": false,
     "taxonomyJsonNewPathExists": true,
     "rootScriptRepoLibImportExists": false,
-    "dependencyCruiserTaxonomyLoadOk": false
+    "dependencyCruiserTaxonomyLoadOk": true
+  },
+  "entryFiles": {
+    "glueRsUnderPackages": 72,
+    "libRsUnderPackages": 0,
+    "glueTsUnderPackages": 0,
+    "indexTsUnderPackages": 49,
+    "sampleLibRs": [],
+    "sampleGlueRs": [
+      "🌎️hub/📦️packages/🦀️rust/📦️glue.rs",
+      "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/📦️glue.rs",
+      "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/📦️glue.rs",
+      "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/📦️glue.rs",
+      "✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/📦️glue.rs",
+      "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/📦️glue.rs",
+      "✏️s/🔌️plugins/🖍️draw/🔄️fsm/📦️packages/🦀️rust/📦️glue.rs",
+      "✏️s/🔌️plugins/🖍️draw/🔄️fsm/✨️macros/📦️packages/🦀️rust/📦️glue.rs",
+      "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📦️glue.rs",
+      "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/📦️glue.rs"
+    ]
   },
   "markdownWithImplLinks": {
     ".cursor": 36,

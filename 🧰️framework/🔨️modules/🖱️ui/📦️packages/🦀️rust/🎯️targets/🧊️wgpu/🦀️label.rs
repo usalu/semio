@@ -1,5 +1,5 @@
 //! 🎗️ Compile-time-checked UI labels (`Label` / `LabelText` / `LocalizedLabel` / `AppLabels`).
-//! Extracted from wgpu target `📦️lib.rs` (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE).
+//! Extracted from wgpu target `📦️glue.rs` (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE).
 
 // 🎗️ Replaces raw `String` labels on `UiNode` and the app manifest — a `Label` is only constructible
 // from `app_labels!`-produced `LabelText` or explicit runtime data (`Label::data`), so a hardcoded

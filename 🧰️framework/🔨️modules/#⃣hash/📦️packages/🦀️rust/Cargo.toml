@@ -12,7 +12,7 @@ id = "hash"
 [lints]
 workspace = true
 [lib]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [dependencies]
 blake3 = "1.8.2"

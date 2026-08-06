@@ -1,7 +1,7 @@
 //! 🔍️ Feature detection, binary description, matching and optical flow: oriented FAST, rBRIEF, Hamming matching and pyramidal Lucas-Kanade.
 
 // 🔗️ Sibling engine topic files, aliased to their pre-merge crate names so every path in
-// this file is byte-identical to the crate it was moved from (see 📦️lib.rs for the wiring).
+// this file is byte-identical to the crate it was moved from (see 📦️glue.rs for the wiring).
 use crate::artifacts::remodel::engine::images as remodel_image;
 
 use remodel_image::{build_pyramid, extract_patch, gaussian_blur, scharr_gradients, zncc, GradientField, ImageGray, Pyramid};

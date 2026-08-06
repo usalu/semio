@@ -104,7 +104,7 @@ cache = "openfreemap-vt"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [dependencies]
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }

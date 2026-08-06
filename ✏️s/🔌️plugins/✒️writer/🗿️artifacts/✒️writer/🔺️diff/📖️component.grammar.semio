@@ -4,6 +4,14 @@ extension writer
 use family-embed
 start diff
 
-diff = field*
-field = IDENT "=" (TEXT | fence | INT | FLOAT | BOOL)
+diff = text-field | document-field
+text-field = "text" "=" (TEXT | fence)
+document-field = "document" "=" document-block
+document-block = "{" doc-field* "}"
+doc-field = schema-field | id-field | language-id-field | uri-field | text-field
+schema-field = "schema" "=" (TEXT | IDENT)
+id-field = "id" "=" (TEXT | IDENT)
+language-id-field = "language-id" "=" (TEXT | IDENT)
+uri-field = "uri" "=" (TEXT | IDENT)
+text-field = "text" "=" (TEXT | fence)
 fence = "```" IDENT TEXT "```"

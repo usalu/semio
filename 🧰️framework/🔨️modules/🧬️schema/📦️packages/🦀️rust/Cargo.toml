@@ -13,7 +13,7 @@ id = "schema"
 [lints]
 workspace = true
 [lib]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [dependencies]
 jsonschema = "0.29.1"

@@ -1,6 +1,6 @@
 //! ⚙️ Animate present artifact — headless compute (constitutional: engine). Also hosts the plugin's
-//! `register()` entrypoint (moved from the old bundle crate's `📦️lib.rs`, called from the plugin-root
-//! `📦️lib.rs`'s `semio_plugin!{}` `setup:` field), and — as sibling `🦀️<topic>.rs` files, per the
+//! `register()` entrypoint (moved from the old bundle crate's `📦️glue.rs`, called from the plugin-root
+//! `📦️glue.rs`'s `semio_plugin!{}` `setup:` field), and — as sibling `🦀️<topic>.rs` files, per the
 //! taxonomy's allowance for big engines — the Manim-class animation core (`animate_core`, only ever used
 //! by this app's own engine and by `animate_video`) and the headless video renderer (`animate_video`,
 //! only ever used by this engine's `compiler` submodule below). Both were their own plugin-level crates
@@ -339,7 +339,7 @@ pub use slide::{PresentScene, PresentSection, PresentSlide, PRESENT_SCENE_SCHEMA
 use crate::artifacts::present::PRESENT_DECK_SCHEMA;
 
 //#region 🔖️Register
-/// 🔌️ Called by the plugin-root `📦️lib.rs`'s `semio_plugin!{}` `setup:` field.
+/// 🔌️ Called by the plugin-root `📦️glue.rs`'s `semio_plugin!{}` `setup:` field.
 pub fn register() {
     semio_framework_os::register_2d_export_handlers(PRESENT_DECK_SCHEMA, "animate", animate_present_document_json_to_svg);
     semio_framework_os::register_dwg_import_handler(PRESENT_DECK_SCHEMA, animate_present_document_json_from_dwg);

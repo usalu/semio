@@ -18,7 +18,7 @@ role = "s-module"
 
 [lib]
 crate-type = ["rlib", "cdylib"]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [dependencies]
 infinite_board_normal_directed = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/➕️normal/➡️directed/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-normal-directed" }

@@ -3,7 +3,7 @@
 //! on top of [`remodel_image`]. DAG position: `remodel_image` → `remodel_video` → `remodel_engine`.
 
 // 🔗️ Sibling engine topic files, aliased to their pre-merge crate names so every path in
-// this file is byte-identical to the crate it was moved from (see 📦️lib.rs for the wiring).
+// this file is byte-identical to the crate it was moved from (see 📦️glue.rs for the wiring).
 use crate::artifacts::remodel::engine::images as remodel_image;
 
 // #region 🔖️Bytes

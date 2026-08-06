@@ -15,7 +15,7 @@ id = "renderer-wgpu"
 workspace = true
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [dependencies]
 semio-framework-core = { path = "../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework-core" }

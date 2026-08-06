@@ -4,7 +4,7 @@ extension imperative
 start diff
 
 diff = op-line*
-op-line = ("steps-add" | "steps-remove" | "steps-move" | "steps-patch" | "steps-set" | "path-ref") assign* block?
+op-line = ("add" | "remove" | "move" | "patch") assign* block?
 assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
 list = "[" value* "]"
 map = "{" assign* "}"

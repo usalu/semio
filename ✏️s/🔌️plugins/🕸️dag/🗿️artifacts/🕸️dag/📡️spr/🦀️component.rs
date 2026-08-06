@@ -11,6 +11,13 @@
 use crate::artifacts::dag::op::DagOperation;
 use protocol::OpBinary;
 
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
+
 /// 📦️ Encodes a `DagOperation` to its binary command form.
 pub fn encode_op(operation: &DagOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
@@ -35,3 +42,25 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod semio_protocol_conformance {
+    use super::*;
+
+    #[test]
+    fn component_protocol_semio_is_protocol_dialect() {
+        let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
+        assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
+        assert!(!COMPONENT_PROTOCOL_SEMIO.is_empty());
+        let _ = COMPONENT_PROTOCOL_PATH;
+    }
+
+    #[test]
+    fn verify_protocol_bytes_against_encoded_spr() {
+        let operation = DagOperation::SetNodes { nodes: Vec::new() };
+        let bytes = encode_op(&operation).expect("encode op");
+        let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
+        ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes spr bytes");
+    }
+}
+

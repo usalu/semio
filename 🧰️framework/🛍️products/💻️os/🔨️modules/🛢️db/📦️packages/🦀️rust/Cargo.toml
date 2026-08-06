@@ -14,7 +14,7 @@ workspace = true
 
 [lib]
 name = "db"
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [dependencies]
 db_core = { path = "../../🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-core" }

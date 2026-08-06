@@ -108,7 +108,7 @@ export async function buildIconAtlas(): Promise<{
  *
  * Returns a dispose callback for hosts (e.g. Storybook, the multi-shell harness) that need to unmount —
  * it detaches the canvas and releases this call's `acquirePluginModule` leases. The underlying wasm event
- * loop still has no JS-visible stop handle (see the doc comment on `semio_wgpu_mount` in `📦️lib.rs` for
+ * loop still has no JS-visible stop handle (see the doc comment on `semio_wgpu_mount` in `📦️glue.rs` for
  * why a real one isn't wired up yet), so this remains a best-effort cleanup, not a full runtime teardown:
  * the mount keeps rendering into a detached canvas until the page unloads.
  */

@@ -1541,12 +1541,12 @@ pub mod app {
             // marker the registry's discovery contract uses and checked against the taxonomy shape instead.
             // Mirrors the registry's `LEGACY_LAYOUT_TOLERANT` flag: both shapes pass while the migration is
             // in flight. Two entry-file locations are both accepted here (ticket
-            // `26/08/05/SHAPE-V2-TREE-PURITY-BROADCAST`): the pre-V2 owner-root `📦️lib.rs` beside
-            // `🗿️artifacts/`, and the V2 shape's `📦️packages/🦀️rust/📦️lib.rs` (entry file relocated inside
+            // `26/08/05/SHAPE-V2-TREE-PURITY-BROADCAST`): the pre-V2 owner-root `📦️glue.rs` beside
+            // `🗿️artifacts/`, and the V2 shape's `📦️packages/🦀️rust/📦️glue.rs` (entry file relocated inside
             // packages; owner root no longer carries it). A plugin can be in either shape depending on
             // whether its retrofit pass has landed yet.
             if let Some(plugin_root) = app_root.parent() {
-                let has_entry_file = plugin_root.join("📦️lib.rs").is_file() || plugin_root.join("📦️packages").join("🦀️rust").join("📦️lib.rs").is_file();
+                let has_entry_file = plugin_root.join("📦️glue.rs").is_file() || plugin_root.join("📦️packages").join("🦀️rust").join("📦️glue.rs").is_file();
                 if has_entry_file && plugin_root.join("🗿️artifacts").is_dir() {
                     assert_taxonomy_components(plugin_root, &app_root);
                     return;

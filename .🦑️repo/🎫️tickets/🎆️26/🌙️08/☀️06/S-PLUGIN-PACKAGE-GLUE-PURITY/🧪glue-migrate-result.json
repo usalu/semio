@@ -1,0 +1,54 @@
+{
+  "renamed": 38,
+  "extracted": [
+    {
+      "suffix": "🔌️plugins/🌊️flow/🧩️extensions/🏗️bim",
+      "action": "extracted"
+    },
+    {
+      "suffix": "🔌️plugins/📜️imperative/🧩️extensions/🫀️core",
+      "action": "extracted"
+    },
+    {
+      "suffix": "🔌️plugins/📜️imperative/🧩️extensions/🧠️logic",
+      "action": "extracted"
+    },
+    {
+      "suffix": "🔌️plugins/📜️imperative/🧩️extensions/🧮️math",
+      "action": "extracted"
+    },
+    {
+      "suffix": "🔌️plugins/📜️imperative/🧩️extensions/🎮️control",
+      "action": "extracted"
+    },
+    {
+      "suffix": "🔌️plugins/📜️imperative/🧩️extensions/📝️text",
+      "action": "extracted"
+    },
+    {
+      "suffix": "🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams",
+      "action": "extracted"
+    },
+    {
+      "suffix": "🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs",
+      "action": "extracted"
+    },
+    {
+      "suffix": "🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows",
+      "action": "extracted"
+    },
+    {
+      "suffix": "🔌️plugins/🖍️draw/🔄️fsm/✨️macros",
+      "action": "extracted-macro-include"
+    },
+    {
+      "suffix": "🔌️plugins/🖍️draw/🔄️fsm",
+      "action": "extracted"
+    },
+    {
+      "suffix": "🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural",
+      "action": "extracted"
+    }
+  ],
+  "errors": []
+}

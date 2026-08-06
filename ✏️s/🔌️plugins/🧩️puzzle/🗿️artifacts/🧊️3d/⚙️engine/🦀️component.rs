@@ -17,7 +17,7 @@ use crate::artifacts::puzzle3d::Puzzle3dProjection;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Reexports
-// 🧩️ The sibling topic modules are declared (with their `#[path]`s) in the plugin-root `📦️lib.rs`,
+// 🧩️ The sibling topic modules are declared (with their `#[path]`s) in the plugin-root `📦️glue.rs`,
 // beside every other taxonomy component; these re-exports keep the whole engine surface reachable
 // under one `crate::artifacts::puzzle3d::engine::…` name regardless of which topic file owns it.
 pub use crate::artifacts::puzzle3d::engine::brush::apply_brush_placement_to_fixture;

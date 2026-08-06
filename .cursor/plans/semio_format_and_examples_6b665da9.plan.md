@@ -43,7 +43,7 @@ isProject: false
 
 Three independent defects, one root cause: format identity lives in the *filename*, and examples live at the *plugin root* instead of under the thing they exemplify.
 
-- 116 `#[dsl(extension = "...")]` declarations mint 30+ bespoke extensions (`.gismap`, `.puzzle3d`, `.en1990`, `.spk`, `.dsl`, `.ops`). Dispatch happens by extension string in [dsl/📦️lib.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs) (`language_for_extension`) and in the fixture sweep's hand-maintained 55-row registry.
+- 116 `#[dsl(extension = "...")]` declarations mint 30+ bespoke extensions (`.gismap`, `.puzzle3d`, `.en1990`, `.spk`, `.dsl`, `.ops`). Dispatch happens by extension string in [dsl/📦️glue.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs) (`language_for_extension`) and in the fixture sweep's hand-maintained 55-row registry.
 - All ~70 example files sit at plugin root, e.g. `✏️s/🔌️plugins/🌍️gis/📚️examples/🌍️reuse.map.gismap` — not under `🗿️artifacts/🗺️gismap/`. Only `🏭️process` nests correctly. 7 plugins have no examples; **no** plugin has a pack, op, spr or cmd example anywhere.
 - No `.semio` format, no content sniffing, no OS file association exist. The only content-derived identity today is the SPK magic `[0x89 S P K 0x0D 0x0A 0x1A 0x0A]` in [pack/📐️format](🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📐️format/⚡️implementations/🦀️rust/📦️lib.rs).
 
@@ -98,7 +98,7 @@ flowchart TD
 
 
 
-Wave 5 partition — 52 artifacts and 53 apps across 32 plugins, each agent moving existing examples, authoring the missing pack/op/spr/cmd ones, wiring `#[path]` modules in the plugin's `📦️packages/🦀️rust/📦️lib.rs`, and running that plugin's `cargo test`:
+Wave 5 partition — 52 artifacts and 53 apps across 32 plugins, each agent moving existing examples, authoring the missing pack/op/spr/cmd ones, wiring `#[path]` modules in the plugin's `📦️packages/🦀️rust/📦️glue.rs`, and running that plugin's `cargo test`:
 
 - `📕️norm` (15 artifacts) splits into 3 agents by norm family.
 - `🧩️puzzle`, `🧱️block`, `🌀️procedural`, `🏗️fem`, `🌍️gis`, `🔱️trinity`, `🪐️space` — one agent each (2–3 artifacts).

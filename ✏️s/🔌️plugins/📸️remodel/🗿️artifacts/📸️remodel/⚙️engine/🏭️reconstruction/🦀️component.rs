@@ -4,7 +4,7 @@
 //! document types — the app-level translation layer in `🦀️component.rs` does that in both directions).
 
 // 🔗️ Sibling engine topic files, aliased to their pre-merge crate names so every path in
-// this file is byte-identical to the crate it was moved from (see 📦️lib.rs for the wiring).
+// this file is byte-identical to the crate it was moved from (see 📦️glue.rs for the wiring).
 // 🏃️ `motion` is deliberately absent: the pipeline accepts `EngineParams::motion_enabled` but does not
 // yet drive the motion topic file from `advance()` — a documented gap carried over verbatim from the
 // pre-merge crate, which declared the same dependency without ever using it.

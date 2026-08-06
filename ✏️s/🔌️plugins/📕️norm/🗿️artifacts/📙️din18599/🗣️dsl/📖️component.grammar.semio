@@ -4,14 +4,9 @@ extension din18599
 use family-sheet
 start document
 
-document = (header | clause | table | assign)*
-header = IDENT TEXT*
-clause = IDENT "=" expr
-assign = IDENT "=" (FLOAT | INT | TEXT | BOOL)
-expr = term {("+" | "-") term}*
-term = factor {("*" | "/") factor}*
-factor = FLOAT | INT | IDENT | call | "-" factor
-call = IDENT "(" expr {"," expr}* ")"
-table = "[" column* "]" row*
-column = IDENT ":" IDENT
-row = (FLOAT | INT | TEXT | BOOL)*
+document = header assign*
+header = "semio" IDENT "v" INT
+assign = ("started" | "actor" | "use-class" | "heated-area-m2" | "occupants" | "h-t" | "h-v" | "internal-gains-w-m2" | "solar-gains-kwh" | "system-losses-kwh" | "renewable-kwh" | "annual-limit-kwh" | "energy-carrier" | "reference-q-p-kwh" | "theta-e-c" | "g-h-w-m2") "=" value
+value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
+UNITNUM = FLOAT UNIT | INT UNIT
+UNIT = IDENT

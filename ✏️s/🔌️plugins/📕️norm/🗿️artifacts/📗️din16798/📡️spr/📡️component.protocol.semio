@@ -1,6 +1,8 @@
 dialect protocol
 protocol din16798.spr
 version 1
+schema din16798
+start record
 framing record
 field format u8
 field ordinal varint

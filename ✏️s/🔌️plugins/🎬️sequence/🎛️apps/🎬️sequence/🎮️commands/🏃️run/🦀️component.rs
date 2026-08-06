@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Run
 // 🧭️ Submodules are named `run_command`/`stop_command` (not `run`/`stop`) to dodge clippy's
-// `module_inception` — the owning Rust module (wired as `commands::playback` in `📦️lib.rs`, distinct
+// `module_inception` — the owning Rust module (wired as `commands::playback` in `📦️glue.rs`, distinct
 // from this directory's `🏃️run` taxonomy name) would otherwise contain a child module of the exact
 // same name.
 pub mod run_command {

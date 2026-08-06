@@ -16,7 +16,7 @@ workspace = true
 [lib]
 name = "semio_framework_math"
 crate-type = ["rlib", "cdylib"]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [dependencies]
 dsl = { path = "../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }

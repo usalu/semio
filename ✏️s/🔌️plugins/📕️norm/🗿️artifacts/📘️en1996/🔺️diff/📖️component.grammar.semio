@@ -4,14 +4,8 @@ extension en1996
 use family-sheet
 start diff
 
-diff = (header | clause | table | assign)*
-header = IDENT TEXT*
-clause = IDENT "=" expr
-assign = IDENT "=" (FLOAT | INT | TEXT | BOOL)
-expr = term {("+" | "-") term}*
-term = factor {("*" | "/") factor}*
-factor = FLOAT | INT | IDENT | call | "-" factor
-call = IDENT "(" expr {"," expr}* ")"
-table = "[" column* "]" row*
-column = IDENT ":" IDENT
-row = (FLOAT | INT | TEXT | BOOL)*
+diff = change*
+change = ("set" | "unset" | "replace") ("m-ed-knm" | "n-ed-kn" | "v-ed-kn" | "h-ed-kn" | "z-mm3" | "area-mm2" | "shear-area-mm2" | "f-k-mpa" | "f-vk-mpa" | "annex" | "masonry-class" | "design-situation" | "mu" | "wall-thickness-mm" | "fire-resistance-min" | "unit" | "exposure" | "mortar" | "bed-joint-thickness-mm" | "storeys" | "h-ef-mm" | "t-ef-mm" | "started" | "actor" | IDENT) ("=" value)?
+value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
+UNITNUM = FLOAT UNIT | INT UNIT
+UNIT = IDENT

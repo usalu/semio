@@ -1,0 +1,2 @@
+- Updated root `📜️script.ts` default package entry fallback to `📦️glue.rs`.
+- Ticket closed.

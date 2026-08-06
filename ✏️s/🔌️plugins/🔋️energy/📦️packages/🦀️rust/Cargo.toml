@@ -15,7 +15,7 @@ package = "semio:energy"
 role = "plugin"
 
 [lib]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [dependencies]
 math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }

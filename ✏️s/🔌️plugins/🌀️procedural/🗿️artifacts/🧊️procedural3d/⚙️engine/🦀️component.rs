@@ -532,7 +532,7 @@ pub fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &s
 //#endregion 🔖️GumballTransforms
 
 /// 🔌️ Registers this artifact's plugin-level exports — mesh export/import bridges, DWG mesh bridge,
-/// pack<->dsl document codec. Called once from the plugin-root `📦️lib.rs`'s `semio_plugin!` `setup:`.
+/// pack<->dsl document codec. Called once from the plugin-root `📦️glue.rs`'s `semio_plugin!` `setup:`.
 pub fn register() {
     semio_framework_os::register_mesh_exporter("3d.procedural", "procedural", procedural3d_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
     semio_framework_os::register_mesh_exporter("3d.procedural", "procedural", procedural3d_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));

@@ -1,6 +1,8 @@
 dialect protocol
 protocol shooting.pack
 version 1
+schema shooting.fixture
+start frame
 framing magic 0x8953504B0D0A1A0A
 header fixed 32
 field format_major u16

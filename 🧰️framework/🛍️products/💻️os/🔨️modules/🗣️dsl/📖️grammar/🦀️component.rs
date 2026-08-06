@@ -215,6 +215,22 @@ impl Cursor {
             Err(TextError::new(format!("expected keyword `{expected_text}`, found `{}`", token.text), token.span))
         }
     }
+
+    fn skip_line(&mut self) {
+        while self.peek().kind != GKind::Newline && self.peek().kind != GKind::Eof {
+            self.advance();
+        }
+        if self.peek().kind == GKind::Newline {
+            self.advance();
+        }
+    }
+}
+
+fn is_protocol_directive_line(keyword: &str, cursor: &Cursor) -> bool {
+    if cursor.peek().kind == GKind::Equals {
+        return false;
+    }
+    matches!(keyword, "version" | "schema" | "framing" | "header" | "field" | "segment" | "record" | "footer" | "chain")
 }
 
 fn is_all_upper(text: &str) -> bool {
@@ -369,6 +385,10 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
             }
             "start" => {
                 start = Some(cursor.expect(GKind::Ident)?.text);
+                cursor.skip_newlines();
+            }
+            keyword if dialect == SemioDialect::Protocol && is_protocol_directive_line(keyword, &cursor) => {
+                cursor.skip_line();
                 cursor.skip_newlines();
             }
             _ => {
@@ -693,16 +713,28 @@ pub fn verify_protocol_bytes(spec: &GrammarFile, bytes: &[u8]) -> Result<(), Str
     if spec.dialect != SemioDialect::Protocol {
         return Err("verify_protocol_bytes requires dialect protocol".to_string());
     }
-    if bytes.len() < 8 {
-        return Err("protocol bytes shorter than magic".to_string());
+    let is_pack = spec.start == "frame" || spec.id.contains("pack");
+    let is_spr = spec.start == "record" || spec.id.contains("spr");
+    if is_pack {
+        if bytes.len() < 8 {
+            return Err("pack bytes shorter than magic".to_string());
+        }
+        if &bytes[..8] != &[0x89, b'S', b'P', b'K', 0x0D, 0x0A, 0x1A, 0x0A] {
+            return Err("SPK magic mismatch".to_string());
+        }
+        if bytes.len() < 32 {
+            return Err("pack header requires 32 bytes".to_string());
+        }
+        return Ok(());
     }
-    if &bytes[..8] != &[0x89, b'S', b'P', b'K', 0x0D, 0x0A, 0x1A, 0x0A] {
-        return Err("SPK magic mismatch".to_string());
+    if is_spr {
+        if bytes.is_empty() {
+            return Err("spr bytes empty".to_string());
+        }
+        // record protocols: at least format u8 present
+        return Ok(());
     }
-    if bytes.len() < 32 && spec.id.contains("pack") {
-        return Err("pack header requires 32 bytes".to_string());
-    }
-    Ok(())
+    Err(format!("protocol spec start '{}' is neither frame nor record", spec.start))
 }
 //#endregion 🔖️ProtocolVerify
 
@@ -855,5 +887,31 @@ mod tests {
         assert!(error.contains("Map"), "error should name the unsupported shape: {error}");
     }
     //#endregion 🔖️FromRecordSpecTests
+
+    #[test]
+    fn parse_grammar_sets_dialect_grammar_vs_protocol() {
+        let g = parse_grammar("dialect grammar\ngrammar demo\nstart doc\ndoc = \"x\"\n").expect("grammar");
+        assert_eq!(g.dialect, SemioDialect::Grammar);
+        let p = parse_grammar("dialect protocol\nprotocol demo.pack\nstart frame\n").expect("protocol");
+        assert_eq!(p.dialect, SemioDialect::Protocol);
+        assert_eq!(p.start, "frame");
+        assert_eq!(p.id, "demo.pack");
+    }
+
+    #[test]
+    fn verify_protocol_bytes_branches_pack_spk_vs_spr_record() {
+        let pack = parse_grammar("dialect protocol\nprotocol demo.pack\nstart frame\n").expect("pack spec");
+        let spr = parse_grammar("dialect protocol\nprotocol demo.spr\nstart record\n").expect("spr spec");
+        let mut spk = vec![0x89, b'S', b'P', b'K', 0x0D, 0x0A, 0x1A, 0x0A];
+        spk.extend(std::iter::repeat(0u8).take(24));
+        verify_protocol_bytes(&pack, &spk).expect("pack accepts SPK header");
+        let mut spr_magic = vec![0x89, b'S', b'P', b'R', 0x0D, 0x0A, 0x1A, 0x0A];
+        spr_magic.extend(std::iter::repeat(0u8).take(24));
+        assert!(verify_protocol_bytes(&pack, &spr_magic).is_err(), "pack must reject SPR magic");
+        assert!(verify_protocol_bytes(&spr, &[]).is_err(), "spr rejects empty");
+        verify_protocol_bytes(&spr, &[1u8]).expect("spr record accepts non-empty op bytes without SPK");
+        verify_protocol_bytes(&spr, &spk).expect("spr must not require SPK magic");
+    }
+
 }
 //#endregion 🔖️Tests

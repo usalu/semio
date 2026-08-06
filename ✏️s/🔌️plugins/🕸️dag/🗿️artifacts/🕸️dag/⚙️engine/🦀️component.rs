@@ -19,8 +19,128 @@ use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecor
 /// documents without depending on this crate's concrete `Projection`/`Operation` types. Called from the
 /// plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    register_artifact_languages();
+    register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::dag::DagPlayApp>(DAG_DOCUMENT_SCHEMA);
 }
+
+fn pilot_language_hooks(lang: &'static str) -> dsl::IdiomHooks {
+    dsl::IdiomHooks {
+        lang,
+        canonicalize: |text| Ok(text.to_string()),
+        classify: |_| Vec::new(),
+        complete: |_, _| Vec::new(),
+    }
+}
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "dag",
+        extension: Some("dag"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::dag::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::dag::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: pilot_language_hooks("dag"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "dag.ops",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::dag::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::dag::op::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: pilot_language_hooks("dag.ops"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "dag.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::dag::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::dag::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: pilot_language_hooks("dag.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "dag.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::dag::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::dag::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: pilot_language_hooks("dag.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "dag.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::dag::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::dag::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: pilot_language_hooks("dag.spr"),
+    });
+}
+
+fn register_artifact_languages() {
+    let doc_hooks = dsl::passthrough_hooks("dag.document");
+    dsl::register_language(dsl::LanguageSpec {
+        id: "dag.document",
+        extension: Some("dag"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::dag::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::dag::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: doc_hooks,
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "dag.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::dag::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::dag::op::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("dag.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "dag.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::dag::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::dag::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("dag.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "dag.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::dag::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::dag::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("dag.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "dag.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::dag::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::dag::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("dag.spr"),
+    });
+}
+
 //#endregion 🔖️Register
 
 //#region ⚠️ Errors

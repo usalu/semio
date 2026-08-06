@@ -72,8 +72,8 @@ const WORKSPACE_ROOT = import.meta.dir;
 const BUN = process.execPath;
 const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap");
 const REPO_CLIENT_DIR = join("🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client");
-const REPO_CLIENT_GO = join(REPO_CLIENT_DIR, "⌨️cli", "⚡️implementations", "🐹️go");
-const REPO_MCP_GO = join(REPO_CLIENT_DIR, "🔌️mcp", "⚡️implementations", "🐹️go");
+const REPO_CLIENT_GO = join(REPO_CLIENT_DIR, "⌨️cli");
+const REPO_MCP_GO = join(REPO_CLIENT_DIR, "🔌️mcp");
 process.env.NX_ISOLATE_PLUGINS ??= "false";
 
 export { Script };
@@ -1594,7 +1594,7 @@ function policyAppIdFromCrateDir(cratePath: string): string {
   return appsIdx >= 0 && segments.length > appsIdx + 1 ? policyStripEmoji(segments[appsIdx + 1]!) : "";
 }
 
-/** 🧵Non-default file inside a crate/component dir (e.g. `benches/protocol.rs`) stays distinguishable from its crate's default entry file (`📦️lib.rs` legacy, `🦀️component.rs` future) instead of collapsing onto the same key — dropped extension, emoji-stripped, dash-joined. */
+/** 🧵Non-default file inside a crate/component dir (e.g. `benches/protocol.rs`) stays distinguishable from its crate's default entry file (`📦️glue.rs` package glue, `🦀️component.rs` domain leaf) instead of collapsing onto the same key — dropped extension, emoji-stripped, dash-joined. */
 function policyFileSuffix(tailSegments: readonly string[], defaultFile: string): string {
   if (tailSegments.length === 1 && tailSegments[0] === defaultFile) return "";
   return `#${tailSegments.map((s) => policyStripEmoji(s.replace(/\.rs$/, ""))).join("-")}`;
@@ -1622,7 +1622,7 @@ function policyNormalizeRelPath(relPath: string): string {
   const implIdx = segments.indexOf("⚡️implementations");
   if (implIdx > 1) {
     const moduleSeg = segments[implIdx - 1]!;
-    const suffix = policyFileSuffix(segments.slice(implIdx + 2), "📦️lib.rs");
+    const suffix = policyFileSuffix(segments.slice(implIdx + 2), "📦️glue.rs");
     const ownerChain = segments.slice(0, implIdx - 1).filter((s) => s !== "🔨️modules" && s !== "🛂️manifest");
     const pluginsIdx = ownerChain.indexOf("🔌️plugins");
     if (pluginsIdx >= 0 && ownerChain.length > pluginsIdx + 1) {
@@ -1655,8 +1655,8 @@ function policyNormalizeRelPath(relPath: string): string {
  * 🏗️One discovered rust crate. `dir` is its `Cargo.toml`-containing directory (repo-relative),
  * `libRelPath` its crate-root source file as the manifest itself declares it (`[lib]`/`[[bin]]`
  * `path`) — never assumed, because the two shapes disagree: Shape V2 keeps the entry beside the
- * manifest (`📦️packages/🦀️rust/📦️lib.rs`) while the Shape V1 leftovers still point two levels up
- * (`path = "../../📦️lib.rs"`). `role`/`ownerRel` come straight from the shared discovery contract;
+ * manifest (`📦️packages/🦀️rust/📦️glue.rs`) while the Shape V1 leftovers still point two levels up
+ * (`path = "../../📦️glue.rs"`). `role`/`ownerRel` come straight from the shared discovery contract;
  * `pluginId` is `""` for every crate outside a plugin owner (framework/hub/s-modules).
  */
 type PolicyCrateRef = {
@@ -1690,7 +1690,7 @@ function policyCrateEntryPath(repoRoot: string, manifestDirRel: string, ownerRel
     if (existsSync(join(repoRoot, manifestDirRel, entry))) return `${manifestDirRel}/${entry}`;
     if (existsSync(join(repoRoot, ownerRel, entry))) return `${ownerRel}/${entry}`;
   }
-  return `${manifestDirRel}/📦️lib.rs`;
+  return `${manifestDirRel}/📦️glue.rs`;
 }
 
 /**
@@ -1706,7 +1706,7 @@ function policyCrateEntryPath(repoRoot: string, manifestDirRel: string, ownerRel
 function policyDiscoverCrateDirs(repoRoot: string): PolicyCrateRef[] {
   const taxonomy = loadTaxonomy();
   const forbiddenSegments = new Set<string>(taxonomy.forbiddenPathSegments);
-  const legacyEntryFilename = taxonomy.entryFilenames["🦀️rust"] ?? "📦️lib.rs";
+  const legacyEntryFilename = taxonomy.entryFilenames["🦀️rust"] ?? "📦️glue.rs";
   const found = new Map<string, PolicyCrateRef>();
 
   for (const pkg of discoverPackages(repoRoot, taxonomy)) {
@@ -3813,10 +3813,10 @@ function policyComponentFileBreaches(repoRoot: string, crates: readonly PolicyCr
 
 /**
  * 📏️Anti-inlining tripwire (Single-File-Repo hazard ruling, master ticket): a migrated package's entry
- * `📦️lib.rs` must stay wiring-only (`#[path]` mod declarations + `semio_plugin!{}` registration) — no
+ * `📦️glue.rs` must stay wiring-only (`#[path]` mod declarations + `semio_plugin!{}` registration) — no
  * non-trivial `fn`/`impl` body content beyond `taxonomy.libWiringLineBudget`. Catches the exact
  * regression this repo has hit twice before: an agent following the (now-scoped) "single file repo" goal
- * inlining split `#[path]` modules back into `lib.rs`.
+ * inlining split `#[path]` modules back into `glue.rs`.
  */
 const POLICY_FN_OR_IMPL_OPEN_RE = /^\s*(?:pub(?:\([^)]*\))?\s+)?(?:async\s+)?(?:fn\s+\w+\s*(?:<[^>]*>)?\s*\([^;{]*\)[^;{]*|impl(?:<[^>]*>)?\s+[^;{]+)\{\s*$/;
 
@@ -3848,12 +3848,12 @@ function policyTaxonomyLibShapeBreaches(repoRoot: string, crates: readonly Polic
     if (bodyLines <= lineBudget) continue;
     breaches.push({
       id: `taxonomy-lib-shape-${crate.libRelPath}`,
-      summary: `"${crate.libRelPath}" has ~${bodyLines} lines of fn/impl body content — a migrated package's lib.rs must stay wiring-only`,
+      summary: `"${crate.libRelPath}" has ~${bodyLines} lines of fn/impl body content — a migrated package's glue.rs must stay wiring-only`,
       kind: "taxonomy/lib-shape",
       scope: crate.pluginId || crate.ownerRel,
       priority: policyNewSurfacePriority(crate, "medium"),
-      reason: "Single-File-Repo hazard ruling: a taxonomy package's 📦️lib.rs is #[path] mod wiring + semio_plugin!{} registration only — real logic lives in the taxonomy component files, never inlined back.",
-      solution: `Move the non-trivial fn/impl bodies out of ${crate.libRelPath} into their owning taxonomy component file(s); lib.rs should only declare "#[path = \\"...\\"] mod ...;" and call semio_plugin!{...}.`,
+      reason: "Single-File-Repo hazard ruling: a taxonomy package's 📦️glue.rs is #[path] mod wiring + semio_plugin!{} registration only — real logic lives in the taxonomy component files, never inlined back.",
+      solution: `Move the non-trivial fn/impl bodies out of ${crate.libRelPath} into their owning taxonomy component file(s); glue.rs should only declare "#[path = \\"...\\"] mod ...;" and call semio_plugin!{...}.`,
     });
   }
   return breaches;
@@ -3863,7 +3863,7 @@ function policyTaxonomyLibShapeBreaches(repoRoot: string, crates: readonly Polic
  * 📏️TS analogue of `policyTaxonomyLibShapeBreaches`, added by ticket
  * `26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE` (Single-File-Repo hazard ruling, scope note 2): a
  * `"taxonomy"`-area TypeScript package's entry file (`taxonomy.entryFilenames["🟦️typescript"]`, e.g.
- * `📦️index.tsx`) must stay a wiring-only re-export barrel — counts non-import/export/comment/blank lines
+ * `🟦️glue.ts`) must stay a wiring-only re-export barrel — counts non-import/export/comment/blank lines
  * and flags a breach past `libWiringLineBudget`. Warn-only (`priority: "medium"`) and still vacuous
  * today: the graduated area state is `"clean"` and no area has graduated yet (that flip is the W6
  * activation step of that ticket). The literal it compares against used to be `"taxonomy"`, a value that

@@ -43,6 +43,11 @@ impl ActionBus {
     }
 }
 
+/// @emoji 🔀️ Bridges staged `serde_json::Value` action args into `ActionDescriptor.args`.
+pub fn optional_json_to_dsl(args: Option<serde_json::Value>) -> Option<DslValue> {
+    args.map(|value| dsl::to_dsl_value(&value).unwrap_or(DslValue::Null))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

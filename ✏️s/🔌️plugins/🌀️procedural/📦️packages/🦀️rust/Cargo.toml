@@ -33,7 +33,7 @@ ports = { react = 6018, wgpu = 6118 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [dependencies]
 flow_core = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-flow-core", default-features = false }

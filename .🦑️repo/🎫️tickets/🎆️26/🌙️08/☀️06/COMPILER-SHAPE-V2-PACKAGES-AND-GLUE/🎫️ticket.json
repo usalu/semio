@@ -1,0 +1,12 @@
+{
+  "id": "26/08/06/COMPILER-SHAPE-V2-PACKAGES-AND-GLUE",
+  "title": "Compiler Shape V2 Packages And Glue",
+  "status": "closed",
+  "goal": "aioptimizedrepo",
+  "due": "2026-08-06",
+  "client": "cursor-chat",
+  "llm": "cursor-grok-4.5-high",
+  "notes": " Registrar applied member swap + consumer path retarget 2026-08-06.",
+  "closedAt": "2026-08-06",
+  "summary": "Compiler Shape V2 complete: unified semio-framework-compiler with glue+components, zero implementations. Registrar applied member/path swaps. Root cargo check still blocked on os-kernel compile (OS ticket)."
+}

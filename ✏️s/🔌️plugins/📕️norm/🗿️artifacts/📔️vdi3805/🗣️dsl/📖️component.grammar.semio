@@ -4,14 +4,9 @@ extension vdi3805
 use family-sheet
 start document
 
-document = (header | clause | table | assign)*
-header = IDENT TEXT*
-clause = IDENT "=" expr
-assign = IDENT "=" (FLOAT | INT | TEXT | BOOL)
-expr = term {("+" | "-") term}*
-term = factor {("*" | "/") factor}*
-factor = FLOAT | INT | IDENT | call | "-" factor
-call = IDENT "(" expr {"," expr}* ")"
-table = "[" column* "]" row*
-column = IDENT ":" IDENT
-row = (FLOAT | INT | TEXT | BOOL)*
+document = header assign*
+header = "semio" IDENT "v" INT
+assign = ("manufacturer-file" | "catalog" | "edition-profile" | "correction-as-of" | "strict-mode" | "index" | "geometry" | "curves" | "limits" | "started" | "actor" | "header-version" | "manufacturer" | "created" | "charset" | "record-count" | "building-system-number" | "system-code" | "subsystem" | "sequence" | "extensions" | "fields" | "file" | "manufacturer-code" | "product-group" | "article-number" | "de" | "en" | "family" | "id" | "geometry-ref" | "parameters" | "dn" | "kind" | "value" | "kvs" | "unit" | "delta" | "symbol" | "function-refs" | "year" | "month" | "bbox" | "min-x" | "min-y" | "min-z" | "max-x" | "max-y" | "max-z" | "scale" | "x-unit" | "si-factor" | "y-unit" | "max-file-bytes" | "max-records" | "max-field-length" | "max-nesting-depth") "=" value
+value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
+UNITNUM = FLOAT UNIT | INT UNIT
+UNIT = IDENT

@@ -1,0 +1,10 @@
+{
+  "counts": {
+    "grammarOnText": 156,
+    "protocolOnBinary": 104,
+    "wrongFile": 0,
+    "wrongDialect": 0
+  },
+  "missing": [],
+  "wrong": []
+}

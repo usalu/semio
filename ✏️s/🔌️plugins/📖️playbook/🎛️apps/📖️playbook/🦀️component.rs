@@ -167,7 +167,7 @@ pub fn create_playbook_play_app() -> App {
 //#endregion 🔖️Manifest
 
 //#region 🔖️Setup
-/// 🗂️ Called from the plugin root's `semio_plugin!{ setup: … }` — re-exported so `📦️lib.rs` names one
+/// 🗂️ Called from the plugin root's `semio_plugin!{ setup: … }` — re-exported so `📦️glue.rs` names one
 /// symbol instead of reaching into the artifact `⚙️engine` node directly.
 pub use crate::artifacts::playbook::engine::register as setup;
 //#endregion 🔖️Setup

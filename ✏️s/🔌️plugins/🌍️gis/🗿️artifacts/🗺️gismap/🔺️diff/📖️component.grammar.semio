@@ -5,7 +5,7 @@ use family-geo
 start diff
 
 diff = op-line*
-op-line = ("positions-add" | "positions-remove" | "positions-move" | "positions-patch" | "positions-set" | "routes-add" | "routes-remove" | "routes-move" | "routes-patch" | "routes-set" | "regions-add" | "regions-remove" | "regions-move" | "regions-patch" | "regions-set" | "set-document") assign* block?
+op-line = ("add-position" | "remove-position" | "move-position" | "patch-position" | "add-route" | "remove-route" | "move-route" | "patch-route" | "add-region" | "remove-region" | "move-region" | "patch-region" | "set-document") assign* block?
 assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
 list = "[" value* "]"
 map = "{" assign* "}"

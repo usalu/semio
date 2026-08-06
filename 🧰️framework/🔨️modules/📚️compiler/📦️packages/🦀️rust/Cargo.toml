@@ -1,0 +1,22 @@
+[package]
+name = "semio-framework-compiler"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "The semio incremental document compiler — syntax, fonts, layout, and SVG emission in one crate, replacing Typst"
+
+[package.metadata.semio]
+role = "framework"
+id = "compiler"
+
+[lints]
+workspace = true
+
+[lib]
+name = "compiler"
+path = "📦️glue.rs"
+
+[dependencies]
+dsl_core = { package = "semio-framework-os-kernel", path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust" }
+rustybuzz = "0.20.1"
+base64 = "0.22.1"

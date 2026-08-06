@@ -16,6 +16,7 @@ path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️m
 dsl_core = { path = "../../🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-core" }
 dsl_schema = { path = "../../🧬️schema/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-schema" }
 dsl_derive = { path = "../../✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
+dsl_grammar = { path = "../../📖️grammar/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-grammar" }
 pack = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-pack" }
 protocol = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 semio_format = { path = "../../../🧬️semio/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-semio" }

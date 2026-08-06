@@ -13,14 +13,14 @@ Inside every owner's domain tree, **only three things may exist**: `component.<e
 
 ```
 <owner>/
-  📦️packages/🦀️rust/{Cargo.toml, 📋️project.json, 📜️script.ts, build.rs?, lib.rs}
-  📦️packages/🟦️typescript/{package.json, tsconfig…, index.ts}
+  📦️packages/🦀️rust/{Cargo.toml, 📋️project.json, 📜️script.ts, build.rs?, 📦️glue.rs}
+  📦️packages/🟦️typescript/{package.json, tsconfig…, 🟦️glue.ts}
   📚️examples/ 🧫️fixtures/ 🤖️generated/ 🛂️manifest.json  AGENTS.md README.md   # owner-root ONLY
   <component>/…/<component>/🦀️component.rs (+ 🟦️component.ts / 🐹️component.go / 🐍️component.py siblings)
 ```
 
 Rules (clarified, binding):
-- (a) `📦️packages` = packaging code ONLY (manifests + bundling entry `lib.rs`/`index.ts`).
+- (a) `📦️packages` = packaging code ONLY (manifests + bundling entry `📦️glue.rs`/`🟦️glue.ts`).
 - (b) data dirs live at **owner root**, never inside packages.
 - (c) in-tree `AGENTS.md`/`README.md` relocate to owner root content-untouched; on collision, flag — never merge.
 - Leaf variants (`config.rs`, `terminology.rs`, topic files) → `<folder>/🦀️component.rs` with vocabulary emoji; module names unchanged; only `#[path]` strings change.

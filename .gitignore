@@ -590,3 +590,5 @@ nul
 !elements/client/bin
 !elements/server/lib
 !elements/server/bin
+# Shape V2 standalone verification — never commit nested workspace locks
+**/📦️packages/**/Cargo.lock

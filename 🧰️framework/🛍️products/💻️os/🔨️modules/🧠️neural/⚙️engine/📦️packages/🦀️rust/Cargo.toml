@@ -14,7 +14,7 @@ workspace = true
 [lib]
 name = "neural_engine"
 crate-type = ["rlib"]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [features]
 default = ["parallel"]

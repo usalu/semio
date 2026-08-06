@@ -16,7 +16,7 @@ wasm-opt = false
 
 [lib]
 crate-type = ["rlib", "cdylib"]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [features]
 default = ["macros", "serde"]

@@ -20,6 +20,7 @@ pub use dsl_derive::{DslDiff, DslDocument, DslEnum, DslOps, DslRecord, DslScalar
 pub use crate::os_dsl::schema::*;
 
 pub use crate::os_dsl::schema::{from_dsl_value, to_dsl_value};
+pub use dsl_grammar::{parse_grammar, print_grammar, verify_protocol_bytes, GrammarFile, SemioDialect, Recognizer};
 
 //#region 🔖️Field
 /// @emoji 🔗️ Bridges a concrete Rust field type to the engine's `Shape`/`FieldValue` — every
@@ -407,6 +408,13 @@ pub fn hooks_for<I: DslIdiom>() -> IdiomHooks {
     IdiomHooks { lang: I::LANG, canonicalize: |text| I::parse(text).map(|ast| I::print(&ast)), classify: I::classify, complete: I::complete }
 }
 
+/// @emoji 🪞 Minimal hooks for binary/text facets that register a [`LanguageSpec`] without a custom
+/// [`DslIdiom`] front-end — canonicalize is identity; classify/complete are empty.
+pub fn passthrough_hooks(lang: &'static str) -> IdiomHooks {
+    IdiomHooks { lang, canonicalize: |text| Ok(text.to_string()), classify: |_| Vec::new(), complete: |_, _| Vec::new() }
+}
+
+
 static IDIOM_REGISTRY: OnceLock<Mutex<HashMap<&'static str, IdiomHooks>>> = OnceLock::new();
 
 fn idiom_registry() -> &'static Mutex<HashMap<&'static str, IdiomHooks>> {
@@ -444,6 +452,8 @@ pub enum LanguageRole {
     Ops,
     Embedded,
     Diff,
+    Pack,
+    Spr,
 }
 
 /// @emoji 📖️ One app's grammar, registered once at plugin/idiom init: identity, the extension it
@@ -460,6 +470,8 @@ pub struct LanguageSpec {
     pub role: LanguageRole,
     pub grammar: Option<&'static str>,
     pub grammar_path: Option<&'static str>,
+    pub protocol: Option<&'static str>,
+    pub protocol_path: Option<&'static str>,
     pub hooks: IdiomHooks,
 }
 
@@ -467,7 +479,7 @@ impl LanguageSpec {
     /// @emoji 🧬️ Services a facet still on generic `RecordSpec`/`DocumentDsl` until its handcrafted
     /// `.semio` spec lands — same hooks as the parent document grammar, distinct registry id.
     pub fn derived(parent: LanguageSpec, id: &'static str, role: LanguageRole) -> Self {
-        Self { id, extension: None, role, grammar: parent.grammar, grammar_path: parent.grammar_path, hooks: parent.hooks }
+        Self { id, extension: None, role, grammar: parent.grammar, grammar_path: parent.grammar_path, protocol: parent.protocol, protocol_path: parent.protocol_path, hooks: parent.hooks }
     }
 }
 
@@ -619,6 +631,8 @@ mod tests {
             role: LanguageRole::Document,
             grammar: None,
             grammar_path: None,
+            protocol: None,
+            protocol_path: None,
             hooks: hooks_for::<GreetIdiom>(),
         });
         let by_id = language("greet-doc").expect("registered language must be found by its id");

@@ -22,7 +22,7 @@ wasm-opt = false
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [dependencies]
 sourcing_curate = { path = "../../../../../../../✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust", package = "semio-s-plugin-sourcing" }

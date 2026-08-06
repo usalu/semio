@@ -234,7 +234,7 @@ pub fn procedural2d_document_from_dwg(_drawing: &semio_framework_core::DwgDrawin
 }
 
 /// 🔌️ Registers this artifact's plugin-level exports — pack<->dsl document codec, mesh/svg export
-/// bridges. Called once from the plugin-root `📦️lib.rs`'s `semio_plugin!` `setup:`.
+/// bridges. Called once from the plugin-root `📦️glue.rs`'s `semio_plugin!` `setup:`.
 pub fn register() {
     semio_framework_os::register_2d_export_handlers("2d.procedural", "procedural2d", procedural2d_document_json_to_svg);
     semio_framework_os::register_dwg_import_handler("2d.procedural", procedural2d_document_from_dwg);

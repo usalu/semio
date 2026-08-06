@@ -9,7 +9,7 @@ description = "Declarative app plugin SDK for semio framework WASM components"
 workspace = true
 
 [lib]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [features]
 default = []

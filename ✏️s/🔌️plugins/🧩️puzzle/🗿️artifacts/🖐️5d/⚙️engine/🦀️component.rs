@@ -16,7 +16,7 @@ use crate::artifacts::puzzle5d::{Puzzle5dError, Puzzle5dProjection};
 use std::collections::HashSet;
 
 //#region 🔖️Reexports
-// 🧩️ The sibling topic modules are declared (with their `#[path]`s) in the plugin-root `📦️lib.rs`,
+// 🧩️ The sibling topic modules are declared (with their `#[path]`s) in the plugin-root `📦️glue.rs`,
 // beside every other taxonomy component; these re-exports keep the whole engine surface reachable
 // under one `crate::artifacts::puzzle5d::engine::…` name regardless of which topic file owns it.
 pub use crate::artifacts::puzzle5d::engine::compose::import_compose_design_json;

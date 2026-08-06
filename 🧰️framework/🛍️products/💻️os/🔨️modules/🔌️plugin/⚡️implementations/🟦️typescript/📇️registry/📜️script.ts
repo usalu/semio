@@ -991,10 +991,9 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   }
   walkPluginTree(pluginRoot);
 
-  // 📦️ lib.rs mod/#[path] cross-check: every component.rs on disk must be declared, and no declared
+  // 📦️ glue.rs mod/#[path] cross-check: every component.rs on disk must be declared, and no declared
   // #[path] target may dangle (point at a file that doesn't exist) — reported as separate findings.
-  // 🌳️ Shape V2-aware: the entry file lives at `📦️packages/🦀️rust/📦️lib.rs` under V2 or at `📦️lib.rs`
-  // directly under the older V1 shape.
+  // 🌳️ Shape V2-aware: the entry file lives at `📦️packages/🦀️rust/📦️glue.rs` (taxonomy.entryFilenames).
   //
   // 🧮️ #[path] resolution is CUMULATIVE, not always-relative-to-the-raw-file: each nested `pub mod X`
   // (or leaf `mod X;`) resolves its own `#[path]` string relative to its immediately enclosing mod's

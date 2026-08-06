@@ -23,7 +23,7 @@ wasm-opt = false
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [features]
 default = ["component-guest"]

@@ -4,8 +4,12 @@ extension rewrite
 use family-embed
 start document
 
-document = field*
-field = "before-fixture-json" "=" TEXT | "lhs-json" "=" TEXT | "rhs-json" "=" fence | "parameter-bindings" map | "rule-layout" map
-fence = "```" "json" TEXT "```"
+document = before-field lhs-field rhs-field bindings-field layout-field
+before-field = "before-fixture-json" "=" TEXT
+lhs-field = "lhs-json" "=" (TEXT | fence)
+rhs-field = "rhs-json" "=" (TEXT | fence)
+bindings-field = "parameter-bindings" "=" map
+layout-field = "rule-layout" "=" map
+fence = "\`\`\`" "json" TEXT "\`\`\`"
 map = "{" map-entry* "}"
 map-entry = IDENT "=" (TEXT | INT | FLOAT | BOOL)

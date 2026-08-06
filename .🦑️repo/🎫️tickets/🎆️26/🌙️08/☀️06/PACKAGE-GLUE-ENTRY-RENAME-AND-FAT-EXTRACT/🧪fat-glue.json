@@ -1,0 +1,22 @@
+[
+  {
+    "lines": 1112,
+    "paths": 0,
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs"
+  },
+  {
+    "lines": 858,
+    "paths": 0,
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📦️glue.rs"
+  },
+  {
+    "lines": 12,
+    "paths": 0,
+    "file": "✏️s/🔨️modules/🗣️lang/📦️packages/🦀️rust/📦️glue.rs"
+  },
+  {
+    "lines": 5,
+    "paths": 0,
+    "file": "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/📦️glue.rs"
+  }
+]

@@ -4,26 +4,32 @@ extension procedural2d
 use family-graph
 start operation
 
-operation = keyword-stmt | op-stmt*
-op-stmt = IDENT assign* block?
+operation = set-widget | remove-widget | set-synapse | remove-synapse | set-layout | remove-layout | set-camera | set-schema | generation-op
+set-widget = "set-widget" assign* block?
+remove-widget = "remove-widget" assign* block?
+set-synapse = "set-synapse" assign* block?
+remove-synapse = "remove-synapse" assign* block?
+set-layout = "set-layout" assign* block?
+remove-layout = "remove-layout" assign* block?
+set-camera = "set-camera" assign* block?
+set-schema = "set-schema" assign* block?
+generation-op = "generation" assign* block?
+
+assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
+list = "[" value* "]"
+map = "{" assign* "}"
+value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
+qty = (FLOAT | INT) IDENT?
+block = "{" record* "}"
+record = IDENT assign* block?
+table = IDENT table-schema "{" row* "}"
+table-schema = "[" col {"," col}* "]"
+col = IDENT ":" IDENT
+row = field+
+field = IDENT "=" value | value
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)
 node = IDENT {":" IDENT}? {"@" IDENT}?
 edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
 edge-label = IDENT {":" IDENT}?
-wire = node edge-arrow node
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | list | map
-table-schema = "[" col {"," col}* "]"
-col = IDENT ":" IDENT
-table = table-schema "{" row* "}"
-row = field+
-field = IDENT "=" value
-block = "{" record* "}"
-record = IDENT assign* block?
-
-// artifact-keywords: value, dict-entry, camera-json, widget-layout, synapse-spec, form-generation
-keyword-stmt = ("value" | "dict-entry" | "camera-json" | "widget-layout" | "synapse-spec" | "form-generation") field*
-field = IDENT "=" (TEXT | INT | FLOAT | BOOL)
+wire = node edge-arrow node props?

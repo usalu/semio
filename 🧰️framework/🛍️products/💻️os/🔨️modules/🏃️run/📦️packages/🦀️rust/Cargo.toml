@@ -13,7 +13,7 @@ id = "os-run"
 workspace = true
 
 [lib]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [[bin]]
 name = "semio-framework-os-run"

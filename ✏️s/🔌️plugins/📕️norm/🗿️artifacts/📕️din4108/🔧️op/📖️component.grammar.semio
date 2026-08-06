@@ -4,14 +4,8 @@ extension din4108
 use family-sheet
 start operation
 
-operation = (header | clause | table | assign)*
-header = IDENT TEXT*
-clause = IDENT "=" expr
-assign = IDENT "=" (FLOAT | INT | TEXT | BOOL)
-expr = term {("+" | "-") term}*
-term = factor {("*" | "/") factor}*
-factor = FLOAT | INT | IDENT | call | "-" factor
-call = IDENT "(" expr {"," expr}* ")"
-table = "[" column* "]" row*
-column = IDENT ":" IDENT
-row = (FLOAT | INT | TEXT | BOOL)*
+operation = ("set" | "patch" | "remove") field*
+field = ("category" | "layers" | "climate" | "airtightness-n50" | "psi-times-l-sum" | "rh-int" | "catalog-id" | "material-id" | "airtightness-class" | "t-int-c" | "solar-absorptance" | "irradiance-w-m2" | "moisture-mu-exterior" | "moisture-mu-interior" | "envelope-area-m2" | "bb2-details-conform" | "application-type" | "declared-application-class" | "started" | "actor" | IDENT) "=" value
+value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
+UNITNUM = FLOAT UNIT | INT UNIT
+UNIT = IDENT

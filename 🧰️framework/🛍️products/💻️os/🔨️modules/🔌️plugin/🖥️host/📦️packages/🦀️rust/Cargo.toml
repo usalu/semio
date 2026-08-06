@@ -12,7 +12,7 @@ id = "os-plugin-host"
 workspace = true
 
 [lib]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [dependencies]
 semio-framework-core = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-core" }

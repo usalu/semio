@@ -61,7 +61,7 @@ What is *not* yet true, and is what this plan delivers:
 - **Config is destructive today.** `DocumentApp::apply_config_bytes` is documented verbatim as *"NOT a document operation, not undoable, not routed through the `DocumentStore`"*, and `OsAppInstance.config` is an untyped `Option<serde_json::Value>`.
 - **App state is scattered across seven places.** Document store (VCS'd), app-struct fields behind `&mut self`, host-pushed `ViewState`, the `view_state: Vec<u8>` field on `AppCommand::Command`, `ConfigSpec`/`apply_config_bytes`, `OsAppInstance.config`, and real React state in the renderer (`draftDoc`, workflow diagram `nodes`/`edges`, `viewportCamera`, staged command args, slider/label overlays).
 - **A completed sweep pushed state the wrong way.** Tickets `26/07/31/NOTE-CAMERA-AS-SESSION-ONLY-VIEW-ACTION`, `MOVE-DRAW-PLUGIN-CAMERA-TO-RUNTIME-STATE`, `PUZZLE-3D-CAMERA-BECOMES-PER-WINDOW-SESSION-ONLY-VIEW-ACTION`, `TRINITY-…`, `RASTER-…` and ~10 siblings deliberately moved camera *out* of documents into volatile app-struct runtime state. This plan reverses that direction: camera and friends become **configuration**, which is persisted and non-destructive. Those tickets' outcomes are superseded, not re-litigated.
-- **`🔁️workflow` is squatting the name.** That module's package is `semio-framework-os-kernel-workflow` but its lib is `playbook` and it models a Blockly-style step/block form editor. The real workflow graph (`OsWorkflow`, `OsWorkflowNode`, `OsAppInstance`) is buried in the 5k-line os `📦️lib.rs`.
+- **`🔁️workflow` is squatting the name.** That module's package is `semio-framework-os-kernel-workflow` but its lib is `playbook` and it models a Blockly-style step/block form editor. The real workflow graph (`OsWorkflow`, `OsWorkflowNode`, `OsAppInstance`) is buried in the 5k-line os `📦️glue.rs`.
 
 Confirmed decisions: **two VCS'd artifacts per node** (Config = all options plus interaction/view state; Document = content), and **grain = every semantic interaction plus every settled view change**, with intra-gesture pointermove coalescing into one amended config edit.
 
@@ -113,7 +113,7 @@ Three graph layers get explicit, non-overlapping roles (no more bridging one int
 
 - **`Workflow`** (kernel, in `🔁️workflow`) is *the* persisted app-node graph. A node is `{ id, plugin_id, app_id, document_ref, config_ref, inputs, outputs, position }`.
 - **node-graph surface / DAG kernel** is the shared *renderer* board. `DagNodeKind::AppInstance` becomes the only node kind used for app nodes.
-- **flow's neural `Tree`** is an *app's internal* compute graph. Flow is itself a workflow node. The `os_workflow_to_flow_fixture` bridge in os `📦️lib.rs` (~3769) is deleted as a cross-model leak.
+- **flow's neural `Tree`** is an *app's internal* compute graph. Flow is itself a workflow node. The `os_workflow_to_flow_fixture` bridge in os `📦️glue.rs` (~3769) is deleted as a cross-model leak.
 
 ## What moves where
 
@@ -125,7 +125,7 @@ Three graph layers get explicit, non-overlapping roles (no more bridging one int
 
 Stays *out* of config (host-transient only, never persisted): raw intra-gesture pointer coordinates, marquee rubber-band points, menu open/close, in-flight WASM session handles. These coalesce via `ActionEmit::amend` into one config edit at gesture end.
 
-Deleted mechanisms: `ViewState` struct, `AppCommand::Command.view_state`, `DocumentApp::apply_config_bytes`, `OsAppInstance.config` + `OsOperation::SetAppInstanceConfig` (os `📦️lib.rs` ~397/505/581), `HostEffect::ReplayShellCommand` and `InverseAction` (a config op *is* the inverse now), `os_workflow_to_flow_fixture`.
+Deleted mechanisms: `ViewState` struct, `AppCommand::Command.view_state`, `DocumentApp::apply_config_bytes`, `OsAppInstance.config` + `OsOperation::SetAppInstanceConfig` (os `📦️glue.rs` ~397/505/581), `HostEffect::ReplayShellCommand` and `InverseAction` (a config op *is* the inverse now), `os_workflow_to_flow_fixture`.
 
 ## Waves
 
@@ -133,7 +133,7 @@ Rules for every wave: work inside a repo-MCP ticket; packages within a wave are 
 
 ### Wave A - Kernel foundations (3 parallel, file-disjoint)
 
-- **WP-A1 - Free the workflow name.** Move the playbook domain from `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/⚡️implementations/🦀️rust/📦️lib.rs` to a new module `🔨️modules/📖️playbook/⚡️implementations/🦀️rust/📦️lib.rs`, package `semio-framework-os-kernel-playbook`, lib stays `playbook`. Update `Cargo.toml` workspace members, `📋️project.json`, dependents (playbook plugin, forms plugin). Then extract the workflow graph out of os `📦️lib.rs` (module at ~3328) into `🔁️workflow` as `Workflow`, `WorkflowNode`, `WorkflowEdge`, `WorkflowOperation` (dropping the `Os` prefix), plus `workflow_node_for_app(&AppDefinition) -> WorkflowNode` so *any* app is instantiable as a node from its manifest alone.
+- **WP-A1 - Free the workflow name.** Move the playbook domain from `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/⚡️implementations/🦀️rust/📦️lib.rs` to a new module `🔨️modules/📖️playbook/⚡️implementations/🦀️rust/📦️lib.rs`, package `semio-framework-os-kernel-playbook`, lib stays `playbook`. Update `Cargo.toml` workspace members, `📋️project.json`, dependents (playbook plugin, forms plugin). Then extract the workflow graph out of os `📦️glue.rs` (module at ~3328) into `🔁️workflow` as `Workflow`, `WorkflowNode`, `WorkflowEdge`, `WorkflowOperation` (dropping the `Os` prefix), plus `workflow_node_for_app(&AppDefinition) -> WorkflowNode` so *any* app is instantiable as a node from its manifest alone.
 - **WP-A2 - Config artifact in store.** In `🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs`, add a `🔖️Config` region: `ConfigEnvelope<C, ConfigOperation>` and `ConfigStore` as type aliases over the existing `DocumentEnvelope`/`DocumentStore` (same append-only machinery, no parallel implementation), plus `create_config_envelope`. Add `store::test_support::assert_config_round_trip`. In `🧰️framework/⚡️implementations/🦀️rust/📦️lib.rs`, extend `ConfigSpec` so it can be derived from a `dsl::DslRecord` config type and validated against a config projection.
 - **WP-A3 - Channel frames.** In `🔨️modules/📡️protocol/🧵️channel/⚡️implementations/🦀️rust/📦️lib.rs`: bump `CHANNEL_VERSION` to 2; delete `view_state` from `AppCommand::Command`; replace `AppCommand::Configure` with `AppCommand::ConfigCommand { seq, command: Vec<u8> }` (a `store::DocumentCommand` over the config store, so undo/redo/checkpoint work on config); add `AppCommand::LoadConfig { seq, pack, spr }`, `AppCommand::ReadConfig { seq }`; add `AppFrame::Config { in_reply_to, pack, spr, ops }` and `AppFrame::ConfigChanged { envelopes, origin }`. Extend the hex fixture corpus.
 
@@ -175,7 +175,7 @@ Accept: dev-shell `SpaceE2eVerify` plus the react-vs-wgpu parity sweep green; th
 ### Wave D - Workflow node instantiation end to end (3 parallel)
 
 - **WP-D1 - Bundle and runner.** `🔨️modules/🏃️run/⚡️implementations/🦀️rust/{📦️lib.rs,📦️bin.rs}`: `SpaceBundle` gains `config/<nodeId>.pack|.spr`. Per-node frame script becomes `Hello -> LoadConfig -> LoadDocument -> MediaIn* -> MediaOut/MediaFingerprint* -> ReadDocument -> ReadConfig`, persisting both artifacts back. `NodeRunRecord.config_fingerprint` now hashes the config artifact head edit id rather than a JSON blob.
-- **WP-D2 - OS studio and node graph.** os `📦️lib.rs`: delete `OsAppInstance.config` and `OsOperation::SetAppInstanceConfig`; nodes reference `config_ref`. Open-node flow binds the live app instance to that node's config artifact so UI interaction writes straight through. Delete `os_workflow_to_flow_fixture`. `🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/⚡️implementations/🦀️rust/📦️lib.rs` + the DAG kernel: `AppInstance` is the sole app node kind; a palette entry is generated for every `AppDefinition` in the registry so **every app is instantiable**.
+- **WP-D2 - OS studio and node graph.** os `📦️glue.rs`: delete `OsAppInstance.config` and `OsOperation::SetAppInstanceConfig`; nodes reference `config_ref`. Open-node flow binds the live app instance to that node's config artifact so UI interaction writes straight through. Delete `os_workflow_to_flow_fixture`. `🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/⚡️implementations/🦀️rust/📦️lib.rs` + the DAG kernel: `AppInstance` is the sole app node kind; a palette entry is generated for every `AppDefinition` in the registry so **every app is instantiable**.
 - **WP-D3 - Scripts and launch targets.** Root `📜️script.ts` `os` region: `os workflow new|add-node|run` subcommands; register every new runnable in `.vscode/launch.json` following existing grouping and naming.
 
 Accept: `cargo test -p semio-framework-os-run -p semio-framework-os`; `bun ./script.ts os run … --dry` then a real run.

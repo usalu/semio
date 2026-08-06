@@ -1,6 +1,6 @@
 //! 🌉️ Writer play app — editor-host aliases and the wasm-bindgen document VCS bridge (was: the
 //! plugin-root `document_vcs` module + `WriterHost`/`WriterSession` aliases in the old bundle crate's
-//! `📦️lib.rs`).
+//! `📦️glue.rs`).
 
 pub use framework_editor::*;
 

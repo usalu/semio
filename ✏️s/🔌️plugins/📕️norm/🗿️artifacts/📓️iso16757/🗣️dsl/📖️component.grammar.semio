@@ -4,14 +4,9 @@ extension iso16757
 use family-sheet
 start document
 
-document = (header | clause | table | assign)*
-header = IDENT TEXT*
-clause = IDENT "=" expr
-assign = IDENT "=" (FLOAT | INT | TEXT | BOOL)
-expr = term {("+" | "-") term}*
-term = factor {("*" | "/") factor}*
-factor = FLOAT | INT | IDENT | call | "-" factor
-call = IDENT "(" expr {"," expr}* ")"
-table = "[" column* "]" row*
-column = IDENT ":" IDENT
-row = (FLOAT | INT | TEXT | BOOL)*
+document = header assign*
+header = "semio" IDENT "v" INT
+assign = ("catalogue" | "dictionary" | "geometry" | "selection" | "part-number-rule" | "part-number-inputs" | "script-limits" | "exchange-process" | "started" | "actor" | "id" | "metadata" | "edition-profile" | "names" | "short-name" | "preferred" | "locale" | "text" | "lifecycle" | "revision" | "status" | "manufacturer" | "version" | "accessories" | "compositions" | "extensions" | "fields" | "parameter-id" | "allowed-values" | "kind" | "value" | "default-value" | "article-number" | "geometry-id" | "parameter-values" | "dn" | "property-values" | "definition-id" | "symbol" | "si-factor" | "dimension" | "length" | "mass" | "time" | "temperature" | "min" | "max" | "reference" | "objects" | "parameters" | "depth" | "height" | "width" | "spaces" | "bounds" | "surfaces" | "ports" | "medium" | "position" | "direction" | "port-type" | "parameter-bindings" | "class-id" | "series-id" | "constraints" | "property-id" | "operator" | "source" | "max-steps" | "max-recursion" | "timeout-ms") "=" value
+value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
+UNITNUM = FLOAT UNIT | INT UNIT
+UNIT = IDENT

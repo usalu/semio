@@ -4,14 +4,8 @@ extension en1993
 use family-sheet
 start operation
 
-operation = (header | clause | table | assign)*
-header = IDENT TEXT*
-clause = IDENT "=" expr
-assign = IDENT "=" (FLOAT | INT | TEXT | BOOL)
-expr = term {("+" | "-") term}*
-term = factor {("*" | "/") factor}*
-factor = FLOAT | INT | IDENT | call | "-" factor
-call = IDENT "(" expr {"," expr}* ")"
-table = "[" column* "]" row*
-column = IDENT ":" IDENT
-row = (FLOAT | INT | TEXT | BOOL)*
+operation = ("set" | "patch" | "remove") field*
+field = ("annex" | "n-ed-kn" | "m-ed-knm" | "v-ed-kn" | "a-mm2" | "a-v-mm2" | "w-pl-mm3" | "f-y-mpa" | "f-u-mpa" | "chi" | "a-net-mm2" | "tension-n-ed-kn" | "fire-thickness-mm" | "fire-rating" | "fire-massivity" | "fire-mu-0" | "fire-design-temperature-c" | "cf-b-bar-mm" | "cf-t-mm" | "cf-k-sigma" | "cf-psi" | "cf-n-ed-kn" | "cf-gross-resistance-kn" | "stainless-m-ed-knm" | "stainless-w-pl-mm3" | "stainless-f-y-mpa" | "plated-lambda-p" | "plated-sigma-ed-mpa" | "silo-t-mm" | "silo-r-mm" | "shell-sigma-x-ed-mpa" | "silo-k" | "silo-gamma-kn-m3" | "silo-depth-m" | "bolt-f-ed-kn" | "bolt-n-bolts" | "bolt-a-s-mm2" | "bolt-e1-mm" | "bolt-e2-mm" | "bolt-d0-mm" | "bolt-d-mm" | "bolt-t-mm" | "bolt-f-u-mpa" | "bolt-f-ub-mpa" | "weld-a-mm" | "weld-l-mm" | "weld-f-u-mpa" | "weld-steel-grade" | "weld-f-ed-kn" | "delta-sigma-mpa" | "fatigue-category" | "fatigue-method" | "t10-steel-subgrade" | "t10-actual-thickness-mm" | "t10-t-ed-c" | "tension-component-f-uk-kn" | "tension-component-f-k-kn" | "tension-component-n-ed-kn" | "hss-w-el-mm3" | "hss-f-y-mpa" | "hss-section-class" | "hss-m-ed-knm" | "bridge-lambda" | "bridge-phi-2" | "bridge-delta-sigma-p-mpa" | "tower-wind-factor" | "tower-n-ed-kn" | "pile-sigma-mpa" | "pile-k-red" | "pile-n-ed-kn" | "crane-f-z-ed-kn" | "crane-wheel-contact-length-mm" | "crane-dispersion-mm" | "crane-t-w-mm" | "started" | "actor" | IDENT) "=" value
+value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
+UNITNUM = FLOAT UNIT | INT UNIT
+UNIT = IDENT

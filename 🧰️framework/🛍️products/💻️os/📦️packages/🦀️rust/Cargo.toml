@@ -15,7 +15,7 @@ workspace = true
 [lib]
 name = "semio_framework_os_kernel"
 crate-type = ["rlib", "cdylib"]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [features]
 default = ["deflate"]

@@ -65,7 +65,7 @@ root = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [build-dependencies]
 serde_json.workspace = true

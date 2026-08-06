@@ -1,8 +1,17 @@
 {
-  "title": "Periphery Project Json And Finalization",
+  "title": "Periphery Project Json and Finalization",
   "emoji": "🧹",
   "status": "open",
   "description": "Part of CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE. Goal 🎯aioptimizedrepo. Exclusive ownership of assigned tree. Never edit root Cargo.toml/package.json (registrar). Shape V2 only. Temp files in this ticket folder only.",
-  "goal": "🎯aioptimizedrepo",
-  "sessions": []
+  "goal": "aioptimizedrepo",
+  "sessions": [],
+  "id": "26/08/06/PERIPHERY-PROJECT-JSON-AND-FINALIZATION",
+  "phase": "ready-for-w10-handoff",
+  "due": "2026-08-06",
+  "summary": "Safe periphery applied (dep-cruiser taxonomy path, Go roots, post-create, gitignore nested locks, stale project.json, glue entryFilenames). W10 severity flip + vitest/registry path patches deferred until OS implementations eradication reaches zero.",
+  "blockers": [
+    "~91 OS implementations remaining",
+    "49 TS package index.ts pending glue rename",
+    "vitest KNOWN_BROKEN + plugin registry path until OS TS cutover"
+  ]
 }

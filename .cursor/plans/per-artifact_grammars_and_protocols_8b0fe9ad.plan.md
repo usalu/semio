@@ -31,7 +31,7 @@ todos:
     status: completed
   - id: p2-writer
     content: "P2/M6: refactor the writer onto LanguageSession, delete the Jack forks and regex tokenizers, add OpenDocument with registry-based extension resolution"
-    status: in_progress
+    status: completed
   - id: m7-policy
     content: "M7: repurpose policyGrammarFileBreaches for handcrafted specs, seed POLICY_GRAMMAR_FILE_ALLOWLIST with all missing spec files, add the protocol and TS-facade allowlists"
     status: completed
@@ -40,10 +40,10 @@ todos:
     status: completed
   - id: w4-fanout
     content: "W4a-e: fan out across all remaining artifacts in five waves with disjoint per-plugin ownership, hot plugins last"
-    status: in_progress
+    status: completed
   - id: p5-flagday
     content: "P5: complete the coverage matrix, delete dsl_derive's DocumentDsl and OpText emission and the dsl::__rt text path, empty all three allowlists"
-    status: in_progress
+    status: completed
   - id: p6-p7-verify
     content: "P6/P7: full conformance sweep in every mode, test exhaustive at 95% LCOV, OS boot smoke, writer opens 6+ document kinds live with evidence, close the ticket"
     status: completed
@@ -129,7 +129,7 @@ Only 3 of 32 plugins have a TS package today ([flow](✏️s/🔌️plugins/🌊
 
 ### M5. Language registry and shared LSP host
 
-Complete section A5/A6 of the absorbed architecture: collapse the `🔖️Idiom` registry in the [dsl facade](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs) into `🔖️Language` (`LanguageSpec` with `role`, `grammar`, `grammar_path`, `hooks`). `LanguageSpec::derived` auto-services unconverted facets so nothing goes dark mid-migration. Add `dsl_lsp` (LSP 3.17 JSON-RPC, spec-compliant `semanticTokens` `{data:[]}`) plus in-process `LanguageSession`. Aggregate via a new `s_language_bundle` under `✏️s/🔨️modules/🗣️lang/` — framework must not depend on plugins. Delete the dead [Jack LSP](✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/📦️lib.rs), folding its behavior into Jack's `LanguageSpec`.
+Complete section A5/A6 of the absorbed architecture: collapse the `🔖️Idiom` registry in the [dsl facade](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs) into `🔖️Language` (`LanguageSpec` with `role`, `grammar`, `grammar_path`, `hooks`). `LanguageSpec::derived` auto-services unconverted facets so nothing goes dark mid-migration. Add `dsl_lsp` (LSP 3.17 JSON-RPC, spec-compliant `semanticTokens` `{data:[]}`) plus in-process `LanguageSession`. Aggregate via a new `s_language_bundle` under `✏️s/🔨️modules/🗣️lang/` — framework must not depend on plugins. Delete the dead [Jack LSP](✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/📦️glue.rs), folding its behavior into Jack's `LanguageSpec`.
 
 ### M6. Writer integration
 

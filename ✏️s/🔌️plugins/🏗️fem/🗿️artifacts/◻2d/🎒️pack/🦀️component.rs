@@ -3,6 +3,13 @@
 use crate::artifacts::fem2d::Fem2dDocument;
 use store::PackError;
 
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
+
 /// 📦️ Encodes a `Fem2dDocument` to its binary pack form.
 pub fn encode(document: &Fem2dDocument) -> Vec<u8> {
     store::DocumentPack::encode_pack(document)
@@ -95,3 +102,25 @@ mod tests {
     }
 }
 // #endregion 🧪️Tests
+
+#[cfg(test)]
+mod semio_protocol_conformance {
+    use super::*;
+
+    #[test]
+    fn component_protocol_semio_is_protocol_dialect() {
+        let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
+        assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
+        assert!(!COMPONENT_PROTOCOL_SEMIO.is_empty());
+        let _ = COMPONENT_PROTOCOL_PATH;
+    }
+
+    #[test]
+    fn verify_protocol_bytes_against_encoded_pack() {
+        let document = Fem2dDocument::default();
+        let bytes = encode(&document);
+        let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
+        ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes pack bytes");
+    }
+}
+

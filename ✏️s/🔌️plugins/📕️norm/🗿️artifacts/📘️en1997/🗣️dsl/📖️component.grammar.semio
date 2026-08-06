@@ -4,14 +4,9 @@ extension en1997
 use family-sheet
 start document
 
-document = (header | clause | table | assign)*
-header = IDENT TEXT*
-clause = IDENT "=" expr
-assign = IDENT "=" (FLOAT | INT | TEXT | BOOL)
-expr = term {("+" | "-") term}*
-term = factor {("*" | "/") factor}*
-factor = FLOAT | INT | IDENT | call | "-" factor
-call = IDENT "(" expr {"," expr}* ")"
-table = "[" column* "]" row*
-column = IDENT ":" IDENT
-row = (FLOAT | INT | TEXT | BOOL)*
+document = header assign*
+header = "semio" IDENT "v" INT
+assign = ("v-ed-kn" | "h-ed-kn" | "footing-area-m2" | "phi-deg" | "c-kpa" | "gamma-kn-m3" | "b-m" | "d-f-m" | "e-s-mpa" | "nu" | "design-approach" | "annex" | "settlement-limit-mm" | "n-pile-ed-kn" | "alpha-s" | "pile-d-m" | "q-s-kpa" | "pile-l-m" | "q-b-kpa" | "pile-base-area-m2" | "pile-n-profiles" | "z-investigated-m" | "started" | "actor") "=" value
+value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
+UNITNUM = FLOAT UNIT | INT UNIT
+UNIT = IDENT

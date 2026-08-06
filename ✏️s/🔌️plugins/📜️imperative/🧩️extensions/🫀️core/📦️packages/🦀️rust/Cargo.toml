@@ -9,7 +9,7 @@ rust-version = "1.88"
 workspace = true
 [lib]
 crate-type = ["rlib"]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [dependencies]
 neural_engine = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }

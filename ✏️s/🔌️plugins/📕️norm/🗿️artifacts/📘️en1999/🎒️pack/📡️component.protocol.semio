@@ -1,6 +1,8 @@
 dialect protocol
 protocol en1999.pack
 version 1
+schema en1999
+start frame
 framing magic 0x8953504B0D0A1A0A
 header fixed 32
 field format_major u16
@@ -10,7 +12,4 @@ field header_crc32 u32
 segment kind u8
 segment flags u8
 segment payload varint bytes
-record field id u16 type tag
-field tag varint
-field body bytes
 footer fixed 84

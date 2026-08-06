@@ -1,0 +1,28 @@
+{
+  "ticket": "26/08/06/PERIPHERY-PROJECT-JSON-AND-FINALIZATION",
+  "at": "2026-08-06T13:00:28.208Z",
+  "peripheryApplied": [
+    ".dependency-cruiser.cjs taxonomy path",
+    "📜️script.ts REPO_CLIENT_GO / REPO_MCP_GO module roots",
+    ".devcontainer/post-create.sh MCP path",
+    ".gitignore **/📦️packages/**/Cargo.lock",
+    "dsl-derive project.json cwd",
+    "os-host project.json namedInputs",
+    "taxonomy.json entryFilenames/packagingFileNames -> glue",
+    "policy/registry wording -> glue"
+  ],
+  "assertTaxonomyComponents": "verified artifact-owned examples; plugin-root forbidden (no change)",
+  "inventory": {
+    "implementations": 92,
+    "libRsUnderPackages": 0,
+    "glueRsUnderPackages": 72,
+    "glueTsUnderPackages": 0,
+    "indexTsUnderPackages": 49
+  },
+  "notApplied": [
+    "root Cargo.toml / package.json / bun.lock / nx.json / go.work (go.work already clean)",
+    "physical OS/compiler implementations deletion",
+    "vitest KNOWN_BROKEN cleanup (registrar)",
+    "plugin registry path under implementations (waits OS plugin cutover)"
+  ]
+}\n

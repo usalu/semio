@@ -215,6 +215,22 @@ impl Cursor {
             Err(TextError::new(format!("expected keyword `{expected_text}`, found `{}`", token.text), token.span))
         }
     }
+
+    fn skip_line(&mut self) {
+        while self.peek().kind != GKind::Newline && self.peek().kind != GKind::Eof {
+            self.advance();
+        }
+        if self.peek().kind == GKind::Newline {
+            self.advance();
+        }
+    }
+}
+
+fn is_protocol_directive_line(keyword: &str, cursor: &Cursor) -> bool {
+    if cursor.peek().kind == GKind::Equals {
+        return false;
+    }
+    matches!(keyword, "version" | "schema" | "framing" | "header" | "field" | "segment" | "record" | "footer" | "chain")
 }
 
 fn is_all_upper(text: &str) -> bool {
@@ -369,6 +385,10 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
             }
             "start" => {
                 start = Some(cursor.expect(GKind::Ident)?.text);
+                cursor.skip_newlines();
+            }
+            keyword if dialect == SemioDialect::Protocol && is_protocol_directive_line(keyword, &cursor) => {
+                cursor.skip_line();
                 cursor.skip_newlines();
             }
             _ => {
@@ -693,16 +713,28 @@ pub fn verify_protocol_bytes(spec: &GrammarFile, bytes: &[u8]) -> Result<(), Str
     if spec.dialect != SemioDialect::Protocol {
         return Err("verify_protocol_bytes requires dialect protocol".to_string());
     }
-    if bytes.len() < 8 {
-        return Err("protocol bytes shorter than magic".to_string());
+    let is_pack = spec.start == "frame" || spec.id.contains("pack");
+    let is_spr = spec.start == "record" || spec.id.contains("spr");
+    if is_pack {
+        if bytes.len() < 8 {
+            return Err("pack bytes shorter than magic".to_string());
+        }
+        if &bytes[..8] != &[0x89, b'S', b'P', b'K', 0x0D, 0x0A, 0x1A, 0x0A] {
+            return Err("SPK magic mismatch".to_string());
+        }
+        if bytes.len() < 32 {
+            return Err("pack header requires 32 bytes".to_string());
+        }
+        return Ok(());
     }
-    if &bytes[..8] != &[0x89, b'S', b'P', b'K', 0x0D, 0x0A, 0x1A, 0x0A] {
-        return Err("SPK magic mismatch".to_string());
+    if is_spr {
+        if bytes.is_empty() {
+            return Err("spr bytes empty".to_string());
+        }
+        // record protocols: at least format u8 present
+        return Ok(());
     }
-    if bytes.len() < 32 && spec.id.contains("pack") {
-        return Err("pack header requires 32 bytes".to_string());
-    }
-    Ok(())
+    Err(format!("protocol spec start '{}' is neither frame nor record", spec.start))
 }
 //#endregion 🔖️ProtocolVerify
 
@@ -855,5 +887,145 @@ mod tests {
         assert!(error.contains("Map"), "error should name the unsupported shape: {error}");
     }
     //#endregion 🔖️FromRecordSpecTests
+
+    
+    #[test]
+    fn parse_grammar_sets_dialect_grammar_vs_protocol() {
+        let g = parse_grammar("dialect grammar\ngrammar demo\nstart doc\ndoc = \"x\"\n").expect("grammar");
+        assert_eq!(g.dialect, SemioDialect::Grammar);
+        let p = parse_grammar("dialect protocol\nprotocol demo.pack\nstart frame\n").expect("protocol");
+        assert_eq!(p.dialect, SemioDialect::Protocol);
+        assert_eq!(p.start, "frame");
+        assert_eq!(p.id, "demo.pack");
+    }
+
+    #[test]
+    fn verify_protocol_bytes_branches_pack_spk_vs_spr_record() {
+        let pack = parse_grammar("dialect protocol\nprotocol demo.pack\nstart frame\n").expect("pack spec");
+        let spr = parse_grammar("dialect protocol\nprotocol demo.spr\nstart record\n").expect("spr spec");
+        let mut spk = vec![0x89, b'S', b'P', b'K', 0x0D, 0x0A, 0x1A, 0x0A];
+        spk.extend(std::iter::repeat(0u8).take(24));
+        verify_protocol_bytes(&pack, &spk).expect("pack accepts SPK header");
+        let mut spr_magic = vec![0x89, b'S', b'P', b'R', 0x0D, 0x0A, 0x1A, 0x0A];
+        spr_magic.extend(std::iter::repeat(0u8).take(24));
+        assert!(verify_protocol_bytes(&pack, &spr_magic).is_err(), "pack must reject SPR magic");
+        assert!(verify_protocol_bytes(&spr, &[]).is_err(), "spr rejects empty");
+        verify_protocol_bytes(&spr, &[1u8]).expect("spr record accepts non-empty op bytes without SPK");
+        verify_protocol_bytes(&spr, &spk).expect("spr must not require SPK magic");
+    }
+
+    //#region 🔖️PluginSemioSpecSweep
+    fn repo_root() -> std::path::PathBuf {
+        let mut dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        loop {
+            if dir.join("nx.json").is_file() {
+                return dir;
+            }
+            if !dir.pop() {
+                panic!("could not locate repo root (nx.json) ascending from {}", env!("CARGO_MANIFEST_DIR"));
+            }
+        }
+    }
+
+    const TICKET_REL: &str = ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/🧪e2e-dialect-sweep.json";
+
+    fn collect_plugin_semio_specs(plugins_root: &std::path::Path) -> Vec<(std::path::PathBuf, SemioDialect)> {
+        use std::fs;
+        let text_facets = ["🗣️dsl", "🔧️op", "🔺️diff"];
+        let bin_facets = ["🎒️pack", "📡️spr"];
+        let mut out = Vec::new();
+        let read_dirs = |p: &std::path::Path| -> Vec<std::path::PathBuf> {
+            fs::read_dir(p).ok().map(|d| d.filter_map(|e| e.ok().map(|e| e.path())).filter(|p| p.is_dir()).collect()).unwrap_or_default()
+        };
+        for plugin in read_dirs(plugins_root) {
+            let artifacts = plugin.join("🗿️artifacts");
+            if !artifacts.is_dir() {
+                continue;
+            }
+            for artifact in read_dirs(&artifacts) {
+                for facet in text_facets {
+                    let path = artifact.join(facet).join("📖️component.grammar.semio");
+                    if path.is_file() {
+                        out.push((path, SemioDialect::Grammar));
+                    }
+                }
+                for facet in bin_facets {
+                    let path = artifact.join(facet).join("📡️component.protocol.semio");
+                    if path.is_file() {
+                        out.push((path, SemioDialect::Protocol));
+                    }
+                }
+            }
+        }
+        out.sort_by(|a, b| a.0.cmp(&b.0));
+        out
+    }
+
+    #[test]
+    fn repo_plugin_semio_specs_parse_with_expected_dialect() {
+        let root = repo_root();
+        let plugins = root.join("✏️s").join("🔌️plugins");
+        let specs = collect_plugin_semio_specs(&plugins);
+        assert!(!specs.is_empty(), "expected handcrafted facet specs under {plugins:?}");
+        let mut failures = Vec::new();
+        for (path, expected) in &specs {
+            let text = std::fs::read_to_string(path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+            match parse_grammar(&text) {
+                Err(err) => failures.push(format!("{}: parse failed: {}", path.strip_prefix(&root).unwrap_or(path).display(), err.message)),
+                Ok(parsed) if parsed.dialect != *expected => failures.push(format!("{}: dialect {:?}, expected {:?}", path.strip_prefix(&root).unwrap_or(path).display(), parsed.dialect, expected)),
+                Ok(_) => {}
+            }
+        }
+        assert!(failures.is_empty(), "plugin semio spec parse sweep failed ({} / {}):\n{}", failures.len(), specs.len(), failures.join("\n"));
+    }
+
+    #[test]
+    fn ticket_e2e_dialect_sweep_manifest_matches_repo_inventory() {
+        let root = repo_root();
+        let manifest_path = root.join(TICKET_REL);
+        let raw = std::fs::read_to_string(&manifest_path).unwrap_or_else(|e| panic!("read {}: {e} — run 🔧️e2e-semio-dialect-sweep.mjs", manifest_path.display()));
+        let doc: serde_json::Value = serde_json::from_str(&raw).expect("manifest json");
+        let grammars = doc["manifest"]["grammars"].as_array().expect("manifest.grammars");
+        let protocols = doc["manifest"]["protocols"].as_array().expect("manifest.protocols");
+        let live = collect_plugin_semio_specs(&root.join("✏️s").join("🔌️plugins"));
+        let live_grammar = live.iter().filter(|(_, d)| *d == SemioDialect::Grammar).count();
+        let live_protocol = live.iter().filter(|(_, d)| *d == SemioDialect::Protocol).count();
+        assert_eq!(grammars.len(), live_grammar, "manifest grammar count drift");
+        assert_eq!(protocols.len(), live_protocol, "manifest protocol count drift");
+        assert_eq!(doc["counts"]["failures"].as_u64().unwrap_or(1), 0, "sweep reported failures: {:?}", doc["failures"]);
+    }
+
+    #[test]
+    fn writer_dsl_grammar_recognizes_shipped_fixture_tokens() {
+        let root = repo_root();
+        let grammar_path = root.join("✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🗣️dsl/📖️component.grammar.semio");
+        let fixture_path = root.join("✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.writer.writer.dsl.semio");
+        let grammar_src = std::fs::read_to_string(&grammar_path).expect("writer grammar");
+        let fixture_raw = std::fs::read_to_string(&fixture_path).expect("writer dsl fixture");
+        let fixture = fixture_raw.lines().skip(1).collect::<Vec<_>>().join("\n");
+        let grammar = parse_grammar(&grammar_src).expect("parse writer grammar");
+        assert_eq!(grammar.dialect, SemioDialect::Grammar);
+        let recognizer = Recognizer::compile(&grammar);
+        assert!(recognizer.recognize(&fixture).expect("recognize writer fixture"), "writer dsl grammar must accept shipped fixture body tokens");
+    }
+
+    #[test]
+    fn handcrafted_dag_pack_protocol_spec_parses_as_protocol() {
+        let root = repo_root();
+        let path = root.join("✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🎒️pack/📡️component.protocol.semio");
+        let spec = parse_grammar(&std::fs::read_to_string(&path).expect("read")).expect("parse dag.pack protocol");
+        assert_eq!(spec.dialect, SemioDialect::Protocol);
+        assert_eq!(spec.start, "frame");
+    }
+
+    #[test]
+    fn handcrafted_dag_spr_protocol_spec_parses_as_protocol() {
+        let root = repo_root();
+        let path = root.join("✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📡️spr/📡️component.protocol.semio");
+        let spec = parse_grammar(&std::fs::read_to_string(&path).expect("read")).expect("parse dag.spr protocol");
+        assert_eq!(spec.dialect, SemioDialect::Protocol);
+        assert_eq!(spec.start, "record");
+    }
+    //#endregion 🔖️PluginSemioSpecSweep
 }
 //#endregion 🔖️Tests

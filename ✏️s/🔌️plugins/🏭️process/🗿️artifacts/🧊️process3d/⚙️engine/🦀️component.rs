@@ -24,7 +24,7 @@ const PROCESS3D_KERNEL_MEMO_CAP: usize = 128;
 
 //#region 🔖️Plugin
 /// 🔌️ Registers this app's document exporters/import handlers and codec with the OS runtime — the
-/// `setup` hook `📦️lib.rs`'s `semio_plugin!{}` invocation calls.
+/// `setup` hook `📦️glue.rs`'s `semio_plugin!{}` invocation calls.
 pub fn register() {
     fn process3d_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
         let document: Process3dDocument = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;

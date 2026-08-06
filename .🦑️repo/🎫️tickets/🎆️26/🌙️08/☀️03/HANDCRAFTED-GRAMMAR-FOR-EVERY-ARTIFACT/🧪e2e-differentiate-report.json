@@ -1,0 +1,23 @@
+{
+  "before": {
+    "grammarTotal": 156,
+    "grammarPass": 156,
+    "grammarFail": 0,
+    "protocolTotal": 104,
+    "protocolPass": 104,
+    "protocolFail": 0,
+    "weak": []
+  },
+  "after": {
+    "grammarTotal": 156,
+    "grammarPass": 156,
+    "grammarFail": 0,
+    "protocolTotal": 104,
+    "protocolPass": 104,
+    "protocolFail": 0,
+    "weak": []
+  },
+  "rounds": [],
+  "totalFilesRewritten": 0,
+  "timestamp": "2026-08-06T12:57:20.774Z"
+}

@@ -36,3 +36,27 @@
 3. Wire WASM in facet `🟦️component.ts` (still throw stubs) and shrink handcrafted-grammar allowlists in root policy.
 4. Other waves/plugins outside W4a/W4e graph/HOT slices — coverage matrix may still list open artifacts.
 5. Trinity/jack multi-artifact naming: index exports use per-artifact ascii ids (e.g. `jack_dsl`, `rewrite_dsl`), not plugin slug alone.
+
+
+## Wave W4b (norm) — done (follow-up)
+
+- All 15 norm artifacts × 5 facets (75 files) rewritten to section-keyword sheet grammars + pack/spr protocols.
+- See `wave-w4b-norm-done.md`.
+
+## Wave W4c / W4d / W4a / W4e
+
+- See respective `wave-w4*-done.md` files. Fan-out ownership complete.
+
+## Cargo
+
+- `cargo metadata` currently succeeds on host; earlier writer session Cargo.toml:152 report may have been transient/pre-fix. Re-run `cargo check -p semio-s-plugin-writer --lib` on Linux/CI (no Xcode).
+
+## Wave W4bcd (finish)
+
+- Consolidated W4b/W4c/W4d: **175** facet specs; finish pass **21** files (writer keywords + scene/writer protocol schema framing).
+- Report: `wave-w4bcd-done.md`.
+
+## Wave W4bcd finish
+
+- Confirmed `wave-w4bcd-done.md` + all W4a–e done reports present.
+- No remaining `statement*` / TEXT-stub grammars; sole `TEXT*` hit is valid vcs list production.

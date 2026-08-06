@@ -1,0 +1,17 @@
+SKIP_NO_LIB 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow
+SKIP_NO_LIB 🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev
+SKIP_PROTOCOL 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📜️history
+SKIP_PROTOCOL 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core
+SKIP_PROTOCOL 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔌️io
+SKIP_PROTOCOL 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📡️wire
+SKIP_PROTOCOL 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧪️testkit
+SKIP_PROTOCOL 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/💎️materialize
+SKIP_PROTOCOL 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔀️crdt
+SKIP_PROTOCOL 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol
+SKIP_PROTOCOL 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command
+SKIP_PROTOCOL 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧵️channel
+SKIP_PROTOCOL 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔗️causal
+SKIP_PROTOCOL 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📐️format
+SKIP_PROTOCOL 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⌨️cli
+SKIP_NO_LIB 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer
+SKIP_NO_LIB 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f

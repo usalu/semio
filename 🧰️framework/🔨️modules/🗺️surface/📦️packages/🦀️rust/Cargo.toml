@@ -28,7 +28,7 @@ wasm-opt = ["-Oz", "--strip-debug", "--strip-producers", "--enable-bulk-memory",
 
 [lib]
 crate-type = ["rlib", "cdylib"]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [dependencies]
 math = { path = "../../../🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }

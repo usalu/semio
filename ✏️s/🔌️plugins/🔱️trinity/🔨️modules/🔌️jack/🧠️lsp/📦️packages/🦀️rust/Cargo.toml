@@ -19,7 +19,7 @@ wasm-opt = false
 
 [lib]
 crate-type = ["rlib", "cdylib"]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [dependencies]
 dsl_lsp = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧠️lsp/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-lsp" }

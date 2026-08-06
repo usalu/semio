@@ -201,7 +201,7 @@ pub fn gis2d_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Strin
 //#region 🔖️Registration
 /// 🗂️ Native setup hook for the `gis.map` artifact — the SVG export + DWG import handlers plus the
 /// pack↔dsl document codec `framework/sync`'s `FolderEndpoint` reaches for. Called from the plugin
-/// root's `📦️lib.rs` setup fn.
+/// root's `📦️glue.rs` setup fn.
 pub fn register() {
     semio_framework_os::register_2d_export_handlers("2d.map", "gis2d", gis2d_document_json_to_svg);
     semio_framework_os::register_dwg_import_handler("2d.map", gis2d_document_json_from_dwg);

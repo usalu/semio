@@ -1,7 +1,7 @@
 //! 🌍️ Georeferencing and survey products: GCPs, geodetic transforms, DSM/DTM, orthomosaics, contours, volumes and quality reports.
 
 // 🔗️ Sibling engine topic files, aliased to their pre-merge crate names so every path in
-// this file is byte-identical to the crate it was moved from (see 📦️lib.rs for the wiring).
+// this file is byte-identical to the crate it was moved from (see 📦️glue.rs for the wiring).
 use crate::artifacts::remodel::engine::{camera as remodel_camera, dense as remodel_dense, images as remodel_image, mesh as remodel_mesh, sfm as remodel_sfm};
 
 use std::collections::HashMap;

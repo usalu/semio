@@ -16,7 +16,7 @@ const PLUGINS = fs
  * and the registry/root-policy scripts can never drift on which spellings are banned. Plain JSON require —
  * no TS toolchain needed from this plain `.cjs` config. */
 const TAXONOMY = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🔣️taxonomy.json"), "utf8"),
+  fs.readFileSync(path.join(__dirname, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔣️taxonomy.json"), "utf8"),
 );
 
 function crossTechnologyRules() {

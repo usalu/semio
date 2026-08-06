@@ -334,5 +334,82 @@ mod tests {
         }
         assert!(gaps.is_empty(), "semio example kind gaps:\n{}", gaps.join("\n"));
     }
+
+    //#region 🔖️HandcraftedProtocolConformance
+    fn handcrafted_protocol_spec(root: &Path, plugin_emoji: &str, artifact_emoji: &str, facet: &str) -> String {
+        root.join("✏️s")
+            .join("🔌️plugins")
+            .join(plugin_emoji)
+            .join("🗿️artifacts")
+            .join(artifact_emoji)
+            .join(facet)
+            .join("📡️component.protocol.semio")
+            .to_string_lossy()
+            .into_owned()
+    }
+
+    #[test]
+    fn handcrafted_dag_pack_bytes_verify_against_pack_protocol_spec() {
+        use dag_app::DagDocument;
+        use dsl_grammar::{parse_grammar, verify_protocol_bytes, SemioDialect};
+        use store::DocumentPack;
+
+        let root = repo_root();
+        let spec_src = std::fs::read_to_string(handcrafted_protocol_spec(&root, "🕸️dag", "🕸️dag", "🎒️pack")).expect("dag pack protocol");
+        let spec = parse_grammar(&spec_src).expect("parse");
+        assert_eq!(spec.dialect, SemioDialect::Protocol);
+        let fixture_path = root.join("✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.dag.dag.dsl.semio");
+        let fixture = std::fs::read_to_string(&fixture_path).expect("dag dsl fixture");
+        let document = <DagDocument as store::DocumentDsl>::parse_dsl(&fixture).expect("parse dag fixture");
+        let bytes = DagDocument::encode_pack(&document);
+        verify_protocol_bytes(&spec, &bytes).expect("dag pack bytes must match frame protocol spec");
+    }
+
+    #[test]
+    fn handcrafted_dag_spr_bytes_verify_against_spr_protocol_spec() {
+        use dag_app::DagOperation;
+        use dsl_grammar::{parse_grammar, verify_protocol_bytes, SemioDialect};
+        use protocol::OpBinary;
+
+        let root = repo_root();
+        let spec_src = std::fs::read_to_string(handcrafted_protocol_spec(&root, "🕸️dag", "🕸️dag", "📡️spr")).expect("dag spr protocol");
+        let spec = parse_grammar(&spec_src).expect("parse");
+        assert_eq!(spec.dialect, SemioDialect::Protocol);
+        let operation = DagOperation::SetNodes { nodes: Vec::new() };
+        let bytes = operation.encode_op().expect("encode dag op");
+        verify_protocol_bytes(&spec, &bytes).expect("dag spr bytes must match record protocol spec");
+    }
+
+    #[test]
+    fn handcrafted_note_pack_bytes_verify_against_pack_protocol_spec() {
+        use dsl_grammar::{parse_grammar, verify_protocol_bytes, SemioDialect};
+        use note_app::artifacts::note::dsl;
+        use note_app::artifacts::note::pack;
+        use store::DocumentPack;
+
+        let root = repo_root();
+        let spec_src = std::fs::read_to_string(handcrafted_protocol_spec(&root, "🗒️note", "🗒️note", "🎒️pack")).expect("note pack protocol");
+        let spec = parse_grammar(&spec_src).expect("parse");
+        assert_eq!(spec.dialect, SemioDialect::Protocol);
+        let document = dsl::parse_dsl(dsl::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse note fixture");
+        let bytes = pack::encode(&document);
+        verify_protocol_bytes(&spec, &bytes).expect("note pack bytes must match frame protocol spec");
+    }
+
+    #[test]
+    fn handcrafted_fem2d_pack_bytes_verify_against_pack_protocol_spec() {
+        use dsl_grammar::{parse_grammar, verify_protocol_bytes, SemioDialect};
+        use fem::artifacts::fem2d::{pack, Fem2dDocument};
+        use store::DocumentPack;
+
+        let root = repo_root();
+        let spec_src = std::fs::read_to_string(handcrafted_protocol_spec(&root, "🏗️fem", "◻2d", "🎒️pack")).expect("fem2d pack protocol");
+        let spec = parse_grammar(&spec_src).expect("parse");
+        assert_eq!(spec.dialect, SemioDialect::Protocol);
+        let document = Fem2dDocument::default();
+        let bytes = pack::encode(&document);
+        verify_protocol_bytes(&spec, &bytes).expect("fem2d pack bytes must match frame protocol spec");
+    }
+    //#endregion 🔖️HandcraftedProtocolConformance
     //#endregion 🔖️Sweep
 }

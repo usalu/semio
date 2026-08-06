@@ -4,14 +4,8 @@ extension en1995
 use family-sheet
 start operation
 
-operation = (header | clause | table | assign)*
-header = IDENT TEXT*
-clause = IDENT "=" expr
-assign = IDENT "=" (FLOAT | INT | TEXT | BOOL)
-expr = term {("+" | "-") term}*
-term = factor {("*" | "/") factor}*
-factor = FLOAT | INT | IDENT | call | "-" factor
-call = IDENT "(" expr {"," expr}* ")"
-table = "[" column* "]" row*
-column = IDENT ":" IDENT
-row = (FLOAT | INT | TEXT | BOOL)*
+operation = ("set" | "patch" | "remove") field*
+field = ("annex" | "m-ed-knm" | "n-ed-kn" | "v-ed-kn" | "w-mm3" | "a-mm2" | "b-mm" | "h-mm" | "f-m-k" | "f-c-0-k" | "service-class" | "load-duration" | "m-crit-knm" | "f-ed-kn" | "a-ef-mm2" | "f-v-k" | "fire-duration-min" | "section-depth-mm" | "a-vert-m-s2" | "n-cycles-bridge" | "started" | "actor" | IDENT) "=" value
+value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
+UNITNUM = FLOAT UNIT | INT UNIT
+UNIT = IDENT

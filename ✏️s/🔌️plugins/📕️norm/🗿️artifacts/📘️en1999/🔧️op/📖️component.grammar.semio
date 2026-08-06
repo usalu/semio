@@ -4,14 +4,8 @@ extension en1999
 use family-sheet
 start operation
 
-operation = (header | clause | table | assign)*
-header = IDENT TEXT*
-clause = IDENT "=" expr
-assign = IDENT "=" (FLOAT | INT | TEXT | BOOL)
-expr = term {("+" | "-") term}*
-term = factor {("*" | "/") factor}*
-factor = FLOAT | INT | IDENT | call | "-" factor
-call = IDENT "(" expr {"," expr}* ")"
-table = "[" column* "]" row*
-column = IDENT ":" IDENT
-row = (FLOAT | INT | TEXT | BOOL)*
+operation = ("set" | "patch" | "remove") field*
+field = ("n-ed-kn" | "m-ed-knm" | "a-mm2" | "w-el-mm3" | "alloy" | "chi" | "i-t-mm4" | "l-cr-mm" | "theta-c" | "delta-sigma-ed" | "delta-sigma-c" | "fatigue-m" | "n-cycles" | "v-weld-ed-kn" | "weld-throat-mm" | "weld-length-mm" | "beta-w" | "sheet-b-mm" | "sheet-t-mm" | "sheet-k-sigma" | "sheet-w-el-mm3" | "sheet-m-ed-knm" | "shell-t-mm" | "shell-r-mm" | "sigma-ed-shell-mpa" | "annex" | "started" | "actor" | IDENT) "=" value
+value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
+UNITNUM = FLOAT UNIT | INT UNIT
+UNIT = IDENT

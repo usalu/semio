@@ -12,7 +12,7 @@ workspace = true
 role = "s-module"
 
 [lib]
-path = "📦️lib.rs"
+path = "📦️glue.rs"
 
 [features]
 default = ["parallel", "brep"]

@@ -24,7 +24,7 @@ isProject: false
 
 ## Decision
 
-Rename **every file basename that tools and repo constitution allow** under `✏️s`, `🧰️framework`, `🌎️hub`, and `♻️mit-bestand`. Keep hard-required names. Where a tool supports an alternate path, rename and reconfigure (same pattern as today’s `[lib] path = "…/📦️lib.rs"`).
+Rename **every file basename that tools and repo constitution allow** under `✏️s`, `🧰️framework`, `🌎️hub`, and `♻️mit-bestand`. Keep hard-required names. Where a tool supports an alternate path, rename and reconfigure (same pattern as today’s `[lib] path = "…/📦️glue.rs"`).
 
 `compose/` is out of this pass (still pre-emoji directory layout; separate structural ticket). `.repo/` ticket artifacts stay as-is. Dotfiles stay as-is.
 
