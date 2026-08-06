@@ -17,13 +17,13 @@ path = "📦️glue.rs"
 [dependencies]
 semio-framework-core = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-core" }
 ui_wgpu = { path = "../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
-vcs = { path = "../../../../🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
-store = { path = "../../../../🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
-dsl = { path = "../../../../🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+vcs = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+store = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+dsl = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 wasmtime = { version = "22.0.1", features = ["cranelift", "component-model"] }
 wasmtime-wasi = "22.0.1"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-protocol = { path = "../../../../📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+protocol = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 thiserror = "2.0.12"
-dsl_core = { path = "../../../../🗣️dsl/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-core" }
+dsl_core = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }

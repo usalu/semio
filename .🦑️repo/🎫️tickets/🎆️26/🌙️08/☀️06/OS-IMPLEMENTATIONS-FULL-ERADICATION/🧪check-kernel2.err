@@ -1,0 +1,3 @@
+error: no matching package named `semio-s-kernel-flow-extension-brep` found
+location searched: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust
+required by package `semio-s-plugin-playbook-procedural v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust)`

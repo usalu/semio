@@ -1,0 +1,10 @@
+appended PresencePeer to spr wire
+framework-core PresencePeer -> reexport from kernel
+added wire codec reexports to spr
+added PresencePeer reexports to spr
+removed config_spec from store
+store semio_format -> crate::os_semio
+store sync retargeted
+wired os_semio
+kernel Cargo.toml updated
+framework-core retargeted to kernel

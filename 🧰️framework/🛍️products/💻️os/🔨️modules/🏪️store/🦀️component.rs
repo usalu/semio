@@ -138,7 +138,7 @@ pub trait DocumentDsl: Sized {
     }
 }
 
-pub use semio_format;
+pub use crate::os_semio as semio_format;
 
 // 🎞️ CW3 kernel cut-over: `OpText` moved (method order flipped, behavior unchanged) to
 // `protocol_command`, re-exported via the `🚧️TEMPORARY protocol shim` near the top of this file.
@@ -614,40 +614,7 @@ macro_rules! impl_whole_record_config {
     };
 }
 
-pub fn config_spec_from_record_spec(spec: &crate::os_dsl::RecordSpec) -> semio_framework_core::ConfigSpec {
-    use semio_framework_core::{ConfigFieldSpec, ConfigSpec};
-    let fields = spec.fields.iter().filter(|field| !field.key.is_empty()).map(|field| ConfigFieldSpec { key: field.key.clone(), label: field.key.clone(), shape: shape_to_config_field_shape(&field.shape), default: None }).collect();
-    ConfigSpec { fields }
-}
-
-pub fn config_spec_from_dsl_record<T: DocumentPack>() -> semio_framework_core::ConfigSpec {
-    T::record_spec().map(|spec| config_spec_from_record_spec(&spec)).unwrap_or_default()
-}
-
-fn shape_to_config_field_shape(shape: &crate::os_dsl::Shape) -> semio_framework_core::ConfigFieldShape {
-    use crate::os_dsl::Shape;
-    use semio_framework_core::ConfigFieldShape;
-    match shape {
-        Shape::Bool => ConfigFieldShape::Toggle,
-        Shape::Int | Shape::UInt | Shape::Float | Shape::Quantity(_) | Shape::Angle(_) | Shape::Count => ConfigFieldShape::Number { min: None, max: None, step: None },
-        Shape::Text | Shape::Ref(_) | Shape::Embed(_) => ConfigFieldShape::Text,
-        Shape::Enum(variants) => ConfigFieldShape::Select { options: variants.iter().map(|(tag, _)| tag.clone()).collect() },
-        Shape::Record(spec_fn) => ConfigFieldShape::Record(config_spec_from_record_spec(&spec_fn()).fields),
-        _ => ConfigFieldShape::Text,
-    }
-}
-
-/// @emoji ✅️ Validates a JSON projection against a manifest `ConfigSpec` (required keys must be present).
-pub fn validate_config_projection(spec: &semio_framework_core::ConfigSpec, value: &DslValue) -> Result<(), String> {
-    let object = value.as_object().ok_or_else(|| "config projection must be a JSON object".to_string())?;
-    for field in &spec.fields {
-        if object.iter().any(|(key, _)| key == &field.key) {
-            continue;
-        }
-        return Err(format!("missing config field `{key}`", key = field.key));
-    }
-    Ok(())
-}
+// config_spec_* removed — ConfigSpec is UI (framework-core); avoids kernel↔core cycle
 //#endregion 🔖️Config
 
 //#region 🔖️Materialize

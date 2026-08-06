@@ -31,11 +31,11 @@ component-guest = ["dep:semio-framework-plugin", "dep:semio-framework-core"]
 standalone-wasm = ["dep:wasm-bindgen"]
 
 [dependencies]
-flow_extension_sdk = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/🕸️wasm", package = "semio-s-kernel-flow-extension-wasm" }
+flow_extension_sdk = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-s-kernel-flow-extension-wasm" }
 neural_engine = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin", optional = true }
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin", optional = true }
 semio-framework-core = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

@@ -1,1 +1,0 @@
-A wasm-compatible rust implemention of [neural](../AGENTS.md).

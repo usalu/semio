@@ -14,83 +14,21 @@ use std::collections::HashMap;
 /// depending on its concrete `Projection`/`Operation` types. Reached from the plugin root's
 /// `semio_plugin!{ setup: … }` via `crate::core::register_all_engines`.
 pub fn register() {
-    register_fem2d_languages();
     register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::fem2d::Fem2dPlayApp>(crate::artifacts::fem2d::FEM_2D_SCHEMA);
 }
 
-fn pilot_language_hooks(lang: &'static str) -> dsl::IdiomHooks {
-    dsl::IdiomHooks {
-        lang,
-        canonicalize: |text| Ok(text.to_string()),
-        classify: |_| Vec::new(),
-        complete: |_, _| Vec::new(),
-    }
-}
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "fem2d",
-        extension: Some("fem2d"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::fem2d::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::fem2d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: pilot_language_hooks("fem2d"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "fem2d.ops",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::fem2d::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::fem2d::op::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: pilot_language_hooks("fem2d.ops"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "fem2d.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::fem2d::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::fem2d::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: pilot_language_hooks("fem2d.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "fem2d.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::fem2d::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::fem2d::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: pilot_language_hooks("fem2d.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "fem2d.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::fem2d::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::fem2d::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: pilot_language_hooks("fem2d.spr"),
-    });
-}
-
-fn register_fem2d_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "fem.fem2d",
         extension: Some("fem2d"),
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::fem2d::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::fem2d::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
+        protocol: Some(crate::artifacts::fem2d::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::fem2d::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("fem.fem2d"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -99,8 +37,8 @@ fn register_fem2d_languages() {
         role: dsl::LanguageRole::Ops,
         grammar: Some(crate::artifacts::fem2d::op::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::fem2d::op::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
+        protocol: Some(crate::artifacts::fem2d::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::fem2d::spr::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("fem.fem2d.op"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -134,6 +72,7 @@ fn register_fem2d_languages() {
         hooks: dsl::passthrough_hooks("2d.spr"),
     });
 }
+
 
 // #endregion 🔖️Register
 

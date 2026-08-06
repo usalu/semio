@@ -1,0 +1,11 @@
+error: failed to load manifest for workspace member `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu`
+referenced by workspace at `/Users/ueli/Documents/semio/Cargo.toml`
+
+Caused by:
+  failed to load manifest for dependency `semio-framework-os-kernel-flow-core`
+
+Caused by:
+  failed to read `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)

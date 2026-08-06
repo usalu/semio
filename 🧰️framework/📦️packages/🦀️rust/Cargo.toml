@@ -22,16 +22,11 @@ thiserror = { workspace = true }
 ts-rs = { workspace = true, optional = true }
 ui_wgpu = { path = "../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 semio-framework-hash = { path = "../../🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
-# 🎞️ CW3 kernel cut-over: HybridLogicalTimestamp/UndoPolicy/MergeStrategyKind and the operation-
-# flavored id newtypes (OperationId/ActorId/DocumentId/DocumentVersion/SchemaId) now canonically
-# live in `protocol_core`; framework/core re-exports them under their existing names (see `kernel`
-# module) so every existing internal/external reference keeps resolving unchanged.
-protocol_core = { path = "../../🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol-core" }
-# 🎯️ W6 kernel unification: `kernel::DocumentDiff` re-exports `protocol::DocumentDiff` (the binary
-# causal-envelope shape from W5), needing the full facade (protocol_causal's `DocumentDiff`, not
-# just protocol_core).
-protocol = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
-dsl = { path = "../../🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+# 🎯️ OS kernel owns spr/dsl types — aliases avoid dual trees / cycle with old implementations.
+semio-framework-os-kernel = { path = "../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+protocol_core = { path = "../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+protocol = { path = "../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+dsl = { path = "../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"

@@ -9,9 +9,9 @@ name = "proof"
 path = "main.rs"
 
 [dependencies]
-protocol = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
-dsl = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
-flow_core = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-flow-core", default-features = false }
+protocol = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+dsl = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+flow_core = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", default-features = false }
 old_2d_protocol = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-s-app-procedural-2d-protocol" }
 old_3d_protocol = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-s-app-procedural-3d-protocol" }
 old_3d_engine = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-procedural-3d-engine" }

@@ -19,9 +19,9 @@ crate-type = ["rlib", "cdylib"]
 path = "📦️glue.rs"
 
 [dependencies]
-dsl = { path = "../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
-dsl_core = { path = "../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-core" }
-dsl_schema = { path = "../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-schema" }
+dsl = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+dsl_core = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+dsl_schema = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 neural_engine = { path = "../../../../🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 kurbo = "0.13.1"
 serde = { version = "1.0.219", features = ["derive"] }

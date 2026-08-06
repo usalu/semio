@@ -1,0 +1,47 @@
+10:    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🧑‍🍳️recipe/⚡️implementations/🦀️rust",
+16:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🫀️core/⚡️implementations/🦀️rust",
+17:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/⚡️implementations/🦀️rust",
+18:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔘️state/⚡️implementations/🦀️rust",
+19:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/⚡️implementations/🦀️rust",
+20:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🪶️sqlite/⚡️implementations/🦀️rust",
+21:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🐘️postgres/⚡️implementations/🦀️rust",
+22:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🌐️neo4j/⚡️implementations/🦀️rust",
+23:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/⚡️implementations/🦀️rust",
+24:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/⚡️implementations/🦀️rust",
+25:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔢️index/⚡️implementations/🦀️rust",
+26:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚔️conflict/⚡️implementations/🦀️rust",
+27:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📽️projection/⚡️implementations/🦀️rust",
+28:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔍️query/⚡️implementations/🦀️rust",
+29:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/👁️preview/⚡️implementations/🦀️rust",
+30:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔒️security/⚡️implementations/🦀️rust",
+31:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📄️document/⚡️implementations/🦀️rust",
+32:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗜️compact/⚡️implementations/🦀️rust",
+33:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/⚡️implementations/🦀️rust",
+34:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🌐️cluster/⚡️implementations/🦀️rust",
+35:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/👁️observe/⚡️implementations/🦀️rust",
+36:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/⚡️implementations/🦀️rust",
+37:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️testkit/⚡️implementations/🦀️rust",
+38:    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/⚡️implementations/🦀️rust",
+39:    "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/⚡️implementations/🦀️rust",
+40:    "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/⚡️implementations/🦀️rust",
+41:    "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/⚡️implementations/🦀️rust",
+44:    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/⚡️implementations/🦀️rust",
+45:    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust",
+46:    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust",
+47:    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/↔undirected/⚡️implementations/🦀️rust",
+48:    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/➕️normal/➡️directed/⚡️implementations/🦀️rust",
+49:    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/➕️normal/↔undirected/⚡️implementations/🦀️rust",
+50:    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/⚡️implementations/🦀️rust",
+51:    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/⚡️implementations/🦀️rust",
+52:    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust",
+58:    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust",
+148:semio-framework-os-kernel-db-core = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🫀️core/⚡️implementations/🦀️rust" }  # 22 refs
+149:semio-framework-os-kernel-db-state = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔘️state/⚡️implementations/🦀️rust" }  # 9 refs
+150:semio-framework-os-kernel-db-storage = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/⚡️implementations/🦀️rust" }  # 14 refs
+151:semio-framework-os-kernel-db-wal = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/⚡️implementations/🦀️rust" }  # 6 refs
+155:semio-framework-os-kernel-flow-core = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust" }  # 21 refs
+156:semio-framework-os-kernel-infinite-board-port-directed-dag = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust" }  # 11 refs
+157:semio-framework-os-kernel-infinite-canvas = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust" }  # 27 refs
+161:semio-framework-os-kernel-playbook = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/⚡️implementations/🦀️rust" }  # 24 refs
+168:semio-framework-plugin = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust" }  # 104 refs
+169:semio-s-kernel-flow-extension-wasm = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/🕸️wasm" }  # 10 refs

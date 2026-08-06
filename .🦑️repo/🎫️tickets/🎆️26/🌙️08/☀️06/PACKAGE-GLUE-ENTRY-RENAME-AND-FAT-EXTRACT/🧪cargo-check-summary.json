@@ -11,8 +11,8 @@
   },
   {
     "rel": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust",
-    "ok": true,
-    "status": 0
+    "ok": false,
+    "status": 101
   },
   {
     "rel": "✏️s/🔌️plugins/🖍️draw/🔄️fsm/✨️macros/📦️packages/🦀️rust",
@@ -21,21 +21,6 @@
   },
   {
     "rel": "✏️s/🔌️plugins/🖍️draw/🔄️fsm/📦️packages/🦀️rust",
-    "ok": false,
-    "status": 101
-  },
-  {
-    "rel": "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust",
-    "ok": false,
-    "status": 101
-  },
-  {
-    "rel": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust",
-    "ok": false,
-    "status": 101
-  },
-  {
-    "rel": "🌎️hub/📦️packages/🦀️rust",
     "ok": false,
     "status": 101
   }

@@ -33,11 +33,11 @@ path = "📦️glue.rs"
 [dependencies]
 math = { path = "../../../🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 ui_styling = { path = "../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-infinite_canvas = { path = "../../../../🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
+infinite_canvas = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 puzzle = { path = "../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle" }
-store = { path = "../../../../🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
-infinite_board_port_directed_dag = { path = "../../../../🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-dag" }
-dsl = { path = "../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+store = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+infinite_board_port_directed_dag = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+dsl = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 image = { version = "0.25", default-features = false, features = ["png"] }

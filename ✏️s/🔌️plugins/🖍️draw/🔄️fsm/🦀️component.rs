@@ -215,12 +215,12 @@ mod host {
         struct DummyMachine;
         impl Machine for DummyMachine {
             type Context = ();
-            type Event = crate::testing::support::UnitEvent;
+            type Event = super::testing::support::UnitEvent;
             type Input = ();
             type Output = ();
             type Effect = &'static str;
             type Config = crate::BitSet<1>;
-            fn definition() -> &'static crate::kernel::MachineDefinition<Self> {
+            fn definition() -> &'static super::kernel::MachineDefinition<Self> {
                 unimplemented!("host tests never step a machine")
             }
         }
@@ -262,7 +262,7 @@ mod host {
 mod inspect {
     //! 🔎️ Inspection protocol — structured, microstep-granular observation of a running machine.
 
-    use crate::kernel::Command;
+    use super::kernel::Command;
     use crate::{Machine, NodeId};
 
     //#region 🔖️Inspection
@@ -336,8 +336,8 @@ mod inspect {
 
         #[test]
         fn trace_inspector_records_one_microstep_per_transition() {
-            use crate::kernel::{init, macrostep};
-            use crate::testing::support::{UnitToggleEvent, UnitToggleMachine};
+            use super::kernel::{init, macrostep};
+            use super::testing::support::{UnitToggleEvent, UnitToggleMachine};
 
             let mut sink = Vec::new();
             let mut snapshot = init::<UnitToggleMachine>((), &mut sink);
@@ -361,7 +361,7 @@ mod kernel {
     //! Nothing in this module executes I/O, sleeps, or reaches a host: every effectful
     //! request becomes a [`Command`] pushed to a [`CommandSink`] for the caller to route.
 
-    use crate::inspect::{InspectionEvent, Inspector};
+    use super::inspect::{InspectionEvent, Inspector};
     use crate::{ActionId, ActorId, Configuration, EventId, GuardId, InvokeId, Machine, NodeId, StatechartEvent, TimerId};
     use std::collections::VecDeque;
 
@@ -452,7 +452,7 @@ mod kernel {
         pub make_output: Option<OutputFn<M>>,
         pub guards: &'static [GuardFn<M>],
         pub actions: &'static [ActionFn<M>],
-        /// Stable hash of the compiled structure — used to gate [`crate::persist::restore`].
+        /// Stable hash of the compiled structure — used to gate [`super::persist::restore`].
         pub fingerprint: u64,
         pub manifest_json: &'static str,
     }
@@ -942,7 +942,7 @@ mod kernel {
                 sink.push(Command::StartInvoke(invoke_id));
             }
         }
-        let mut inspector = crate::inspect::NullInspector;
+        let mut inspector = super::inspect::NullInspector;
         run_to_completion(&mut snapshot, None, sink, &mut inspector);
         snapshot
     }
@@ -968,7 +968,7 @@ mod kernel {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::inspect::NullInspector;
+        use super::inspect::NullInspector;
         use crate::{ActionId, BitSet, EventId, GuardId, NodeId};
 
         //#region 🔖️ToggleMachine
@@ -1279,7 +1279,7 @@ mod persist {
     //! Never serializes JS promises, futures, callbacks, timer handles, or actor
     //! references — only the logical configuration, history and context survive.
 
-    use crate::kernel::{Snapshot, Status};
+    use super::kernel::{Snapshot, Status};
     use crate::{Configuration, Machine, NodeId};
 
     //#region 🔖️Persist
@@ -1321,7 +1321,7 @@ mod persist {
         PersistedSnapshot { version: 1, fingerprint: def.fingerprint, states, history, done: matches!(snapshot.status, Status::Done(_)) }
     }
 
-    fn stable_id_to_node(def_nodes: &[crate::kernel::NodeDef], stable_id: &str) -> Result<NodeId, RestoreError> {
+    fn stable_id_to_node(def_nodes: &[super::kernel::NodeDef], stable_id: &str) -> Result<NodeId, RestoreError> {
         def_nodes.iter().position(|n| n.stable_id == stable_id).map(|idx| NodeId(idx as u16)).ok_or_else(|| RestoreError::UnknownStableId(stable_id.to_string()))
     }
 
@@ -1363,15 +1363,15 @@ mod persist {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::kernel::{init, macrostep};
-        use crate::testing::support::{unit_toggle_definition, UnitToggleContext, UnitToggleEvent, UnitToggleMachine};
+        use super::kernel::{init, macrostep};
+        use super::testing::support::{unit_toggle_definition, UnitToggleContext, UnitToggleEvent, UnitToggleMachine};
 
         #[test]
         fn persist_then_restore_round_trips_active_state() {
             let _ = unit_toggle_definition();
             let mut sink = Vec::new();
             let mut snapshot = init::<UnitToggleMachine>((), &mut sink);
-            let mut inspector = crate::inspect::NullInspector;
+            let mut inspector = super::inspect::NullInspector;
             macrostep(&mut snapshot, UnitToggleEvent::Flip, &mut sink, &mut inspector);
             assert!(snapshot.matches("on"));
 
@@ -1425,8 +1425,8 @@ mod runtime {
     //! Every actor processes its mailbox serially; nothing here mutates a snapshot
     //! concurrently, even on multithreaded native targets.
 
-    use crate::host::Host;
-    use crate::kernel::{init, macrostep, Command, Status};
+    use super::host::Host;
+    use super::kernel::{init, macrostep, Command, Status};
     use crate::{ActorId, Machine, NullInspector, Snapshot, StepReport};
     use std::collections::VecDeque;
 
@@ -1508,7 +1508,7 @@ mod runtime {
             let idx = self.actors.iter().position(|a| a.id == to)?;
             let mut buffer: Vec<Command<M>> = Vec::new();
             let mut inspector = NullInspector;
-            let report = crate::kernel::timer_elapsed(&mut self.actors[idx].snapshot, timer, &mut buffer, &mut inspector);
+            let report = super::kernel::timer_elapsed(&mut self.actors[idx].snapshot, timer, &mut buffer, &mut inspector);
             self.route_commands(to, buffer);
             Some(report)
         }
@@ -1597,8 +1597,8 @@ mod runtime {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::host::TestHost;
-        use crate::testing::support::{UnitToggleContext, UnitToggleEvent, UnitToggleMachine};
+        use super::host::TestHost;
+        use super::testing::support::{UnitToggleContext, UnitToggleEvent, UnitToggleMachine};
 
         #[test]
         fn actor_system_drains_sent_events_through_one_macrostep_each() {
@@ -1627,7 +1627,7 @@ mod testing {
     //! Fixtures are plain Rust structs/consts rather than a separate JSON format or
     //! separate test files, per this workspace's "extend existing test files" rule.
 
-    use crate::kernel::{init, macrostep, Command, Status};
+    use super::kernel::{init, macrostep, Command, Status};
     use crate::{Configuration, Machine, NullInspector, Snapshot};
 
     //#region 🔖️Model
@@ -1762,7 +1762,7 @@ mod testing {
 
     #[cfg(test)]
     pub(crate) mod support {
-        use crate::kernel::{MachineDefinition, NodeDef, NodeKind, TransitionDef, TransitionKind, Trigger, ROOT};
+        use super::kernel::{MachineDefinition, NodeDef, NodeKind, TransitionDef, TransitionKind, Trigger, ROOT};
         use crate::{BitSet, EventId, Machine, StatechartEvent};
 
         #[derive(Clone, Debug, PartialEq)]
@@ -1837,7 +1837,7 @@ mod testing {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::testing::support::{UnitToggleEvent, UnitToggleMachine};
+        use super::testing::support::{UnitToggleEvent, UnitToggleMachine};
 
         #[test]
         fn explore_reaches_both_toggle_states() {
@@ -2389,7 +2389,7 @@ mod checkout_integration {
         crate::macrostep(&mut snapshot, checkout::Event::Retry, &mut sink, &mut inspector);
         assert!(snapshot.matches("processing"));
 
-        let persisted = crate::persist(&snapshot);
+        let persisted = super::persist(&snapshot);
         assert_eq!(persisted.fingerprint, checkout::Checkout::definition().fingerprint);
         let restored = crate::restore::<checkout::Checkout>(&persisted, snapshot.context.clone(), &[]).expect("restore should succeed");
         assert!(restored.matches("processing"));

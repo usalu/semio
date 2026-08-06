@@ -1,0 +1,21 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️component.rs",
+    "roleDoc": false,
+    "specDoc": false,
+    "impl": true,
+    "implSkipped": true,
+    "lookup": true,
+    "lookupSkipped": true,
+    "status": "unchanged"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs",
+    "roleDoc": true,
+    "specDoc": true,
+    "impl": true,
+    "lookup": true,
+    "status": "updated",
+    "delta": 3308
+  }
+]

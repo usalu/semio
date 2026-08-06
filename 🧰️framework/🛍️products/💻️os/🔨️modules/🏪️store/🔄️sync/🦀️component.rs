@@ -15,7 +15,7 @@
 
 use crate::os_spr::{decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, OperationEnvelope, ServerFrame};
 use crate::os_spr::core::{ActorId, OperationId};
-use semio_framework_core::PresencePeer;
+use crate::os_spr::PresencePeer;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use crate::os_store::{reconcile_alternative, BackboneMessage, ChannelBackbone, ChannelBackboneRemote, DocumentPackFiles, DocumentStore, DocumentTextFiles, SpaceConflict};
@@ -288,7 +288,7 @@ pub mod backbone_worker_wire {
 // folder-reconstruction path move `crate::os_spr::OperationEnvelope`s without spelling this type), so it
 // stays a native-only import to avoid an unused-import warning on the wasm32 build.
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_core::DocumentId;
+use crate::os_spr::core::DocumentId;
 
 /// @emoji 🆔️ One `HistoryEdit`'s op ids, matching `crate::os_spr::operation_envelope_from_edit`'s own
 /// fallback convention (`meta[i].op_id` when present, else `"{edit.id}#{i}"`) so this is the SAME
@@ -430,15 +430,15 @@ fn rollback_envelope(envelope: &OperationEnvelope) -> OperationEnvelope {
 }
 
 /// @emoji 📡️ `PresencePeer` -> the binary blob `crate::os_spr::wire::ClientFrame::Presence` carries
-/// opaquely (`semio_framework_core::encode_presence_peer` — `protocol_wire` has no dependency on
+/// opaquely (`crate::os_spr::encode_presence_peer` — `protocol_wire` has no dependency on
 /// this crate's `PresencePeer` type, so the frame only ever moves the pre-encoded bytes).
 fn presence_to_bytes(peer: &PresencePeer) -> Vec<u8> {
-    semio_framework_core::encode_presence_peer(peer)
+    crate::os_spr::encode_presence_peer(peer)
 }
 
 /// @emoji 📡️ The inverse of {@link presence_to_bytes}, for `ServerFrame::Presence`'s peer roster.
 fn presence_from_bytes(bytes: &[u8]) -> Option<PresencePeer> {
-    semio_framework_core::decode_presence_peer(bytes).ok()
+    crate::os_spr::decode_presence_peer(bytes).ok()
 }
 
 /// @emoji ⏰️ Millisecond wall-clock reads for {@link next_timestamp}: `SystemTime` natively,

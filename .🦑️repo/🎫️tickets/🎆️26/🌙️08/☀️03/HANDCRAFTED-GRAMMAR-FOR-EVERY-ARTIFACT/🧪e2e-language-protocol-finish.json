@@ -1,0 +1,163 @@
+{
+  "fixes": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs",
+      "fix": "removed-dup-passthrough",
+      "remaining": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️component.rs",
+      "fix": "passthrough-ok",
+      "count": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧠️lsp/⚡️implementations/🦀️rust/📦️lib.rs",
+      "fix": "lsp-wired"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧠️lsp/🦀️component.rs",
+      "fix": "lsp-unchanged",
+      "hasDiag": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/⚙️engine/🦀️component.rs",
+      "fix": "enrich-no-change",
+      "ids": [
+        "dag.document",
+        "dag.op",
+        "dag.diff",
+        "dag.pack",
+        "dag.spr",
+        "n99"
+      ],
+      "hasRegisterPilot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/⚙️engine/🦀️component.rs",
+      "fix": "enrich-no-change",
+      "ids": [
+        "note.document",
+        "note.op",
+        "note.diff",
+        "note.pack",
+        "note.spr",
+        "empty",
+        "group-1"
+      ],
+      "hasRegisterPilot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/⚙️engine/🦀️component.rs",
+      "fix": "enrich-no-change",
+      "ids": [
+        "jack",
+        "writer.document",
+        "writer.op",
+        "writer.diff",
+        "writer.pack",
+        "writer.spr",
+        "text:out",
+        "text.document",
+        "empty",
+        "plaintext"
+      ],
+      "hasRegisterPilot": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/⚙️engine/🦀️component.rs",
+      "fix": "enrich-no-change",
+      "ids": [
+        "fem.fem2d",
+        "fem.fem2d.op",
+        "fem.fem2d.diff",
+        "2d.pack",
+        "2d.spr",
+        "2d.fem",
+        "geometry:in",
+        "results:out",
+        "n1",
+        "n2",
+        "e1",
+        "steel",
+        "ipe300",
+        "steel",
+        "ipe300",
+        "s1",
+        "n1",
+        "s2",
+        "n2",
+        "dead",
+        "l1",
+        "e1",
+        "n1",
+        "n2",
+        "n3",
+        "e1",
+        "steel",
+        "ipe300",
+        "e2",
+        "steel",
+        "ipe300",
+        "steel",
+        "ipe300",
+        "s1",
+        "n1",
+        "s2",
+        "n3",
+        "dead",
+        "l1",
+        "e1",
+        "l2",
+        "e2",
+        "n1",
+        "n2",
+        "n3",
+        "e1",
+        "steel",
+        "rod",
+        "e2",
+        "steel",
+        "rod",
+        "steel",
+        "rod",
+        "s1",
+        "n1",
+        "s2",
+        "n2",
+        "dead",
+        "l1",
+        "n3",
+        "l2",
+        "n3",
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "r1",
+        "steel",
+        "steel",
+        "s1",
+        "c0",
+        "s2",
+        "c1",
+        "self",
+        "pressure",
+        "a1",
+        "r1",
+        "self",
+        "live",
+        "l2",
+        "n1",
+        "uls",
+        "dead",
+        "live"
+      ],
+      "hasRegisterPilot": true
+    },
+    {
+      "fix": "lsp-hook-contract-updated"
+    }
+  ],
+  "libExists": true,
+  "compExists": true
+}

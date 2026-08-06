@@ -1,0 +1,2 @@
+remaining=0
+note=dsl sandwiches briefly restored by parallel agent; re-deleted; stable at 0 after 3s

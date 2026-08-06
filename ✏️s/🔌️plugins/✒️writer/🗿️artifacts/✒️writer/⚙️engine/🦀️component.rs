@@ -29,7 +29,6 @@ pub struct GrammarToken {
 /// folder endpoints and any other schema-string-keyed caller can print/parse writer documents. Called
 /// from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
-    register_pilot_languages();
     register_writer_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::writer::WriterPlayApp>(WRITER_DOCUMENT_SCHEMA);
 }
@@ -127,68 +126,6 @@ impl dsl::DslIdiom for WireWriterIdiom {
 }
 
 
-fn pilot_language_hooks(lang: &'static str) -> dsl::IdiomHooks {
-    dsl::IdiomHooks {
-        lang,
-        canonicalize: |text| Ok(text.to_string()),
-        classify: |_| Vec::new(),
-        complete: |_, _| Vec::new(),
-    }
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
-pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "writer",
-        extension: Some("writer"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::writer::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::writer::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: pilot_language_hooks("writer"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "writer.ops",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::writer::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::writer::op::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: pilot_language_hooks("writer.ops"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "writer.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::writer::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::writer::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: pilot_language_hooks("writer.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "writer.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::writer::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::writer::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: pilot_language_hooks("writer.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "writer.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::writer::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::writer::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: pilot_language_hooks("writer.spr"),
-    });
-}
 
 
 fn register_writer_languages() {
@@ -211,8 +148,8 @@ fn register_writer_languages() {
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::writer::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::writer::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
+        protocol: Some(crate::artifacts::writer::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::writer::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("writer.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -221,8 +158,8 @@ fn register_writer_languages() {
         role: dsl::LanguageRole::Ops,
         grammar: Some(crate::artifacts::writer::op::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::writer::op::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
+        protocol: Some(crate::artifacts::writer::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::writer::spr::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("writer.op"),
     });
     dsl::register_language(dsl::LanguageSpec {

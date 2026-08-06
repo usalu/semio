@@ -49,7 +49,7 @@ typegen = ["wgpu", "dep:ts-rs"]
 [dependencies]
 ui_styling = { path = "../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 unicode-width = { version = "0.2.2", optional = true }
-dsl = { path = "../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl", optional = true }
+dsl = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", optional = true }
 serde = { version = "1.0.219", features = ["derive"], optional = true }
 serde_json = { version = "1.0.140", optional = true }
 ts-rs = { version = "10", optional = true }

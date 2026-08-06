@@ -22,7 +22,7 @@ crate-type = ["rlib", "cdylib"]
 path = "📦️glue.rs"
 
 [dependencies]
-dsl_lsp = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧠️lsp/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-lsp" }
+dsl_lsp = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = { workspace = true }

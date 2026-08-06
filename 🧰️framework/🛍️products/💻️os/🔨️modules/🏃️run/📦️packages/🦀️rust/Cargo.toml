@@ -17,21 +17,21 @@ path = "📦️glue.rs"
 
 [[bin]]
 name = "semio-framework-os-run"
-path = "../../⚡️implementations/🦀️rust/📦️bin.rs"
+path = "../../📦️bin.rs"
 
 [dependencies]
 semio-framework-core = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-core" }
 semio-framework-os = { path = "../../../../🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
-workflow = { path = "../../../🔁️workflow/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-workflow" }
-semio-framework-plugin = { path = "../../../🔌️plugin/⚡️implementations/🦀️rust", package = "semio-framework-plugin" }
+workflow = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-plugin = { path = "../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
 framework_hash = { path = "../../../../../../🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
-store = { path = "../../../🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
-dsl = { path = "../../../🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
-protocol = { path = "../../../📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+dsl = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+protocol = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"
-dsl_core = { path = "../../../🗣️dsl/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-core" }
+dsl_core = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }

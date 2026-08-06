@@ -1,9 +1,11 @@
 {
   "id": "26/08/06/PACKAGE-GLUE-ENTRY-RENAME-AND-FAT-EXTRACT",
   "title": "Package Glue Entry Rename And Fat Extract",
-  "status": "open",
+  "status": "closed",
   "goal": "aioptimizedrepo",
   "due": "2026-08-06",
   "client": "cursor-chat",
-  "llm": "cursor-grok-4.5-high"
+  "llm": "cursor-grok-4.5-high",
+  "closedAt": "2026-08-06",
+  "summary": "72 package 📦️lib.rs→📦️glue.rs; 12 fat extracts. Registrar fixed duplicate semio-framework-plugin member (packages wins). Residual fat glue: dsl-derive, repo-cli, renderer wgpu target."
 }

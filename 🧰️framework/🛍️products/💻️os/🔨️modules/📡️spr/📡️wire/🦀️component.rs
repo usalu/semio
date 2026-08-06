@@ -640,3 +640,180 @@ mod tests {
     //#endregion 🔖️Codec
 }
 //#endregion 🧪️Tests
+
+
+//#region 🔖️Presence
+// 🎯️ W6 kernel unification: `PayloadHash`/`OperationEnvelope`/`OpDagError`/`OpDag`/`InsertResult`
+// (the local causal-sync types) and `HubClientFrame`/`HubServerFrame` (the local semio_hub wire frames)
+// are DELETED — `store`/`store_sync` (their only consumers outside this crate) now speak
+// `protocol::{OperationEnvelope, OpDag, OpDagError, InsertResult}`/`protocol::{ClientFrame,
+// ServerFrame}` directly (W5 already made these real binary types; this wave just stops
+// duplicating them here). `PresencePoint`/`PresenceViewport`/`PresencePeer` below are NOT
+// duplicates of anything in `protocol` — no equivalent exists there — so they stay, kept in their
+// own region since the `🔖️HubProtocol` name they used to share with the now-deleted frame enums no
+// longer fits.
+/// @emoji 📍️ A live cursor position in document space, broadcast as part of a peer's presence frame.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PresencePoint {
+    pub x: f64,
+    pub y: f64,
+}
+
+/// @emoji 🖼️ A peer's visible canvas rectangle (pan + zoom), so remote cursors/ghosts can be rendered
+/// scaled relative to what each peer is actually looking at.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PresenceViewport {
+    pub x: f64,
+    pub y: f64,
+    pub zoom: f64,
+}
+
+/// @emoji 📡️ Presence roster entry broadcast to every peer connected to a document.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PresencePeer {
+    pub actor: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selection_json: Option<String>,
+    pub connected_at_ms: i64,
+    /// @emoji 🪪️ Authenticated semio_hub user id, when this peer connected with an `AuthSession` rather than an anonymous share token.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub user_id: Option<String>,
+    /// @emoji 🎚️ The peer's resolved studio role (`"owner"`/`"member"`/`"viewer"`), present alongside `user_id`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub role: Option<String>,
+    /// @emoji 🖱️ Live cursor position, when the peer's client streams pointer telemetry.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cursor: Option<PresencePoint>,
+    /// @emoji 🔭️ The peer's current pan/zoom, for scaling remote cursors/ghosts relative to their view.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub viewport: Option<PresenceViewport>,
+    /// @emoji 👻️ Serialized preview of an in-flight drag (opaque JSON, schema owned by the dragging app).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub drag_ghost_json: Option<String>,
+}
+
+/// @emoji 🎯️ Binary `PresencePeer` codec: `actor str | presence bitmask u8 | connected_at_ms
+/// varint | fields present per bitmask`. `protocol_wire::ClientFrame::Presence`/`ServerFrame::
+/// Presence` carry the resulting bytes opaquely (that crate has no dependency on this one) —
+/// this is the encode/decode pair store_sync calls on either side of the wire.
+/// `selection_json`/`drag_ghost_json` stay opaque app-owned text (never re-parsed as JSON here,
+/// same as `DocumentDiff.payload` staying opaque bytes).
+pub fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
+    let mut out = Vec::new();
+    crate::os_spr::core::write_str(&mut out, &peer.actor);
+    let mut presence = 0u8;
+    if peer.label.is_some() {
+        presence |= 1 << 0;
+    }
+    if peer.selection_json.is_some() {
+        presence |= 1 << 1;
+    }
+    if peer.user_id.is_some() {
+        presence |= 1 << 2;
+    }
+    if peer.role.is_some() {
+        presence |= 1 << 3;
+    }
+    if peer.cursor.is_some() {
+        presence |= 1 << 4;
+    }
+    if peer.viewport.is_some() {
+        presence |= 1 << 5;
+    }
+    if peer.drag_ghost_json.is_some() {
+        presence |= 1 << 6;
+    }
+    out.push(presence);
+    crate::os_spr::core::write_varint_u64(&mut out, peer.connected_at_ms as u64);
+    if let Some(label) = &peer.label {
+        crate::os_spr::core::write_str(&mut out, label);
+    }
+    if let Some(selection_json) = &peer.selection_json {
+        crate::os_spr::core::write_str(&mut out, selection_json);
+    }
+    if let Some(user_id) = &peer.user_id {
+        crate::os_spr::core::write_str(&mut out, user_id);
+    }
+    if let Some(role) = &peer.role {
+        crate::os_spr::core::write_str(&mut out, role);
+    }
+    if let Some(cursor) = &peer.cursor {
+        crate::os_spr::core::write_f64(&mut out, cursor.x);
+        crate::os_spr::core::write_f64(&mut out, cursor.y);
+    }
+    if let Some(viewport) = &peer.viewport {
+        crate::os_spr::core::write_f64(&mut out, viewport.x);
+        crate::os_spr::core::write_f64(&mut out, viewport.y);
+        crate::os_spr::core::write_f64(&mut out, viewport.zoom);
+    }
+    if let Some(drag_ghost_json) = &peer.drag_ghost_json {
+        crate::os_spr::core::write_str(&mut out, drag_ghost_json);
+    }
+    out
+}
+
+/// @emoji 🎯️ Inverse of [`encode_presence_peer`].
+pub fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::os_spr::core::ProtocolError> {
+    let mut pos = 0usize;
+    let actor = crate::os_spr::core::read_str(bytes, &mut pos)?;
+    let presence = *bytes.get(pos).ok_or(crate::os_spr::core::ProtocolError::Malformed { what: "presence peer", offset: pos as u64, detail: "truncated".to_string() })?;
+    pos += 1;
+    let connected_at_ms = crate::os_spr::core::read_varint_u64(bytes, &mut pos)? as i64;
+    let label = if presence & (1 << 0) != 0 { Some(crate::os_spr::core::read_str(bytes, &mut pos)?) } else { None };
+    let selection_json = if presence & (1 << 1) != 0 { Some(crate::os_spr::core::read_str(bytes, &mut pos)?) } else { None };
+    let user_id = if presence & (1 << 2) != 0 { Some(crate::os_spr::core::read_str(bytes, &mut pos)?) } else { None };
+    let role = if presence & (1 << 3) != 0 { Some(crate::os_spr::core::read_str(bytes, &mut pos)?) } else { None };
+    let cursor = if presence & (1 << 4) != 0 {
+        let x = crate::os_spr::core::read_f64(bytes, &mut pos)?;
+        let y = crate::os_spr::core::read_f64(bytes, &mut pos)?;
+        Some(PresencePoint { x, y })
+    } else {
+        None
+    };
+    let viewport = if presence & (1 << 5) != 0 {
+        let x = crate::os_spr::core::read_f64(bytes, &mut pos)?;
+        let y = crate::os_spr::core::read_f64(bytes, &mut pos)?;
+        let zoom = crate::os_spr::core::read_f64(bytes, &mut pos)?;
+        Some(PresenceViewport { x, y, zoom })
+    } else {
+        None
+    };
+    let drag_ghost_json = if presence & (1 << 6) != 0 { Some(crate::os_spr::core::read_str(bytes, &mut pos)?) } else { None };
+    Ok(PresencePeer { actor, label, selection_json, connected_at_ms, user_id, role, cursor, viewport, drag_ghost_json })
+}
+
+#[cfg(test)]
+mod presence_codec_tests {
+    use super::{PresencePeer, PresencePoint, PresenceViewport, decode_presence_peer, encode_presence_peer};
+
+    #[test]
+    fn presence_peer_binary_round_trips_with_every_field_absent() {
+        let peer = PresencePeer { actor: "peer-1".into(), label: None, selection_json: None, connected_at_ms: 1000, user_id: None, role: None, cursor: None, viewport: None, drag_ghost_json: None };
+        let bytes = encode_presence_peer(&peer);
+        assert_eq!(decode_presence_peer(&bytes).unwrap(), peer);
+    }
+
+    #[test]
+    fn presence_peer_binary_round_trips_with_every_field_present() {
+        let peer = PresencePeer {
+            actor: "peer-2".into(),
+            label: Some("Ada".into()),
+            selection_json: Some("{\"ids\":[1,2]}".into()),
+            connected_at_ms: 1_700_000_000_000,
+            user_id: Some("user-9".into()),
+            role: Some("owner".into()),
+            cursor: Some(PresencePoint { x: 1.5, y: -2.25 }),
+            viewport: Some(PresenceViewport { x: 0.0, y: 10.0, zoom: 1.75 }),
+            drag_ghost_json: Some("{\"kind\":\"move\"}".into()),
+        };
+        let bytes = encode_presence_peer(&peer);
+        assert_eq!(decode_presence_peer(&bytes).unwrap(), peer);
+    }
+}
+
+//#endregion 🔖️Presence

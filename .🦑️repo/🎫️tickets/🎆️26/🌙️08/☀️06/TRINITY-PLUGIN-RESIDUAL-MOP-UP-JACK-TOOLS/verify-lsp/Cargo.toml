@@ -18,7 +18,7 @@ crate-type = ["rlib", "cdylib"]
 path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/📦️lib.rs"
 
 [dependencies]
-dsl_lsp = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧠️lsp/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-lsp" }
+dsl_lsp = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-lsp" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.106"

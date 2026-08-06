@@ -1,7 +1,13 @@
-//! 🖥️ Semio framework OS host — native studio shell, plugin supervisor, workflow, wasm exports.
+//! 🖥️ Semio framework OS host — Shape V2 glue.
 #![feature(linkage)]
 
-#[path = "../../../⚡️implementations/🦀️rust/📦️lib.rs"]
-mod host_core;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_os_kernel as pack;
+extern crate semio_framework_os_kernel as spr;
 
+#[path = "../../../🦀️component.rs"]
+mod host_core;
 pub use host_core::*;

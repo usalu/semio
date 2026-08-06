@@ -1,0 +1,79 @@
+OK  dsl facade has protocol: Option<&'static str>
+OK  dsl facade has protocol_path: Option<&'static str>
+OK  dsl facade has LanguageRole
+OK  dsl facade has Pack,
+OK  dsl facade has Spr,
+OK  dsl facade has passthrough_hooks
+OK  dsl facade has protocol: parent.protocol
+OK  passthrough_hooks count=1
+OK  verify branches on frame
+OK  verify branches on record
+OK  SPK check for pack
+OK  spr empty check
+OK  dialect unit test
+OK  verify branch unit test
+OK  dag/dag/dsl grammar include
+OK  dag/dag/dsl Grammar dialect assert
+OK  dag/dag/op grammar include
+OK  dag/dag/op Grammar dialect assert
+OK  dag/dag/diff grammar include
+OK  dag/dag/diff Grammar dialect assert
+OK  dag/dag/pack protocol include
+OK  dag/dag/pack Protocol dialect assert
+OK  dag/dag/pack verify_protocol_bytes
+OK  dag/dag/spr protocol include
+OK  dag/dag/spr Protocol dialect assert
+OK  dag/dag/spr verify_protocol_bytes
+OK  dag/dag/engine LanguageSpec regs=5 pack=true spr=true
+OK  note/note/dsl grammar include
+OK  note/note/dsl Grammar dialect assert
+OK  note/note/op grammar include
+OK  note/note/op Grammar dialect assert
+OK  note/note/diff grammar include
+OK  note/note/diff Grammar dialect assert
+OK  note/note/pack protocol include
+OK  note/note/pack Protocol dialect assert
+OK  note/note/pack verify_protocol_bytes
+OK  note/note/spr protocol include
+OK  note/note/spr Protocol dialect assert
+OK  note/note/spr verify_protocol_bytes
+OK  note/note/engine LanguageSpec regs=5 pack=true spr=true
+OK  fem/2d/dsl grammar include
+OK  fem/2d/dsl Grammar dialect assert
+OK  fem/2d/op grammar include
+OK  fem/2d/op Grammar dialect assert
+OK  fem/2d/diff grammar include
+OK  fem/2d/diff Grammar dialect assert
+OK  fem/2d/pack protocol include
+OK  fem/2d/pack Protocol dialect assert
+OK  fem/2d/pack verify_protocol_bytes
+OK  fem/2d/spr protocol include
+OK  fem/2d/spr Protocol dialect assert
+OK  fem/2d/spr verify_protocol_bytes
+OK  fem/2d/engine LanguageSpec regs=5 pack=true spr=true
+OK  fem/3d/dsl grammar include
+OK  fem/3d/dsl Grammar dialect assert
+OK  fem/3d/op grammar include
+OK  fem/3d/op Grammar dialect assert
+OK  fem/3d/diff grammar include
+OK  fem/3d/diff Grammar dialect assert
+OK  fem/3d/pack protocol include
+OK  fem/3d/pack Protocol dialect assert
+OK  fem/3d/pack verify_protocol_bytes
+OK  fem/3d/spr protocol include
+OK  fem/3d/spr Protocol dialect assert
+OK  fem/3d/spr verify_protocol_bytes
+OK  fem/3d/engine LanguageSpec regs=5 pack=true spr=true
+OK  writer/writer/dsl grammar include
+OK  writer/writer/dsl Grammar dialect assert
+OK  writer/writer/op grammar include
+OK  writer/writer/op Grammar dialect assert
+OK  writer/writer/diff grammar include
+OK  writer/writer/diff Grammar dialect assert
+OK  writer/writer/pack protocol include
+OK  writer/writer/pack Protocol dialect assert
+OK  writer/writer/pack verify_protocol_bytes
+OK  writer/writer/spr protocol include
+OK  writer/writer/spr Protocol dialect assert
+OK  writer/writer/spr verify_protocol_bytes
+OK  writer/writer/engine LanguageSpec regs=6 pack=true spr=true

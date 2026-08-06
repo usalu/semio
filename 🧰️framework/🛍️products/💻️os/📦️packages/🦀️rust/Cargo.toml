@@ -37,9 +37,7 @@ serde_json = "1.0.140"
 thiserror = "2.0.12"
 tokio = { version = "1", features = ["sync", "macros"], default-features = false }
 ureq = { version = "2", optional = true }
-semio-framework-core = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-core" }
 semio-framework-hash = { path = "../../../../🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
-semio_format = { path = "../../🔨️modules/🧬️semio/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-semio" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.83"
@@ -61,3 +59,7 @@ path = "../../🔨️modules/🎒️pack/⌨️cli/📦️main.rs"
 [[bin]]
 name = "spr"
 path = "../../🔨️modules/📡️spr/⌨️cli/📦️main.rs"
+
+[[bin]]
+name = "semio"
+path = "../../🔨️modules/🧬️semio/📦️bin.rs"

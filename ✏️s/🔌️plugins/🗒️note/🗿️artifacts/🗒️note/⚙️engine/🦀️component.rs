@@ -8,85 +8,23 @@ use std::sync::atomic::{AtomicU32, Ordering};
 
 //#region 🔖️Register
 pub fn register() {
-    register_note_languages();
     register_pilot_languages();
     semio_framework_os::register_2d_export_handlers("2d.note", "note", note_document_json_to_svg);
     semio_framework_os::register_dwg_import_handler("2d.note", note_document_json_from_dwg);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::note::NotePlayApp>(NOTE_DOCUMENT_SCHEMA);
 }
 
-fn pilot_language_hooks(lang: &'static str) -> dsl::IdiomHooks {
-    dsl::IdiomHooks {
-        lang,
-        canonicalize: |text| Ok(text.to_string()),
-        classify: |_| Vec::new(),
-        complete: |_, _| Vec::new(),
-    }
-}
 
 /// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
 pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
-        id: "note",
-        extension: Some("note"),
-        role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::note::dsl::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::note::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: pilot_language_hooks("note"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "note.ops",
-        extension: None,
-        role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::note::op::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::note::op::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: pilot_language_hooks("note.ops"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "note.diff",
-        extension: None,
-        role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::note::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::note::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: pilot_language_hooks("note.diff"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "note.pack",
-        extension: None,
-        role: dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::note::pack::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::note::pack::COMPONENT_PROTOCOL_PATH),
-        hooks: pilot_language_hooks("note.pack"),
-    });
-    dsl::register_language(dsl::LanguageSpec {
-        id: "note.spr",
-        extension: None,
-        role: dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(crate::artifacts::note::spr::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::note::spr::COMPONENT_PROTOCOL_PATH),
-        hooks: pilot_language_hooks("note.spr"),
-    });
-}
-
-fn register_note_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "note.document",
         extension: Some("note"),
         role: dsl::LanguageRole::Document,
         grammar: Some(crate::artifacts::note::dsl::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::note::dsl::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
+        protocol: Some(crate::artifacts::note::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::note::pack::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("note.document"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -95,8 +33,8 @@ fn register_note_languages() {
         role: dsl::LanguageRole::Ops,
         grammar: Some(crate::artifacts::note::op::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::artifacts::note::op::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
+        protocol: Some(crate::artifacts::note::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::note::spr::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("note.op"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -130,6 +68,7 @@ fn register_note_languages() {
         hooks: dsl::passthrough_hooks("note.spr"),
     });
 }
+
 
 //#endregion 🔖️Register
 

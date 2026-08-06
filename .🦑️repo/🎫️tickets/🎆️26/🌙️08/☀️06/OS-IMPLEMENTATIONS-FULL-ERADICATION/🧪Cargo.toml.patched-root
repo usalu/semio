@@ -1,0 +1,246 @@
+cargo-features = ["trim-paths"]
+
+[workspace]
+members = [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+    "✏️s/🔨️modules/💭️mindmap/📦️packages/🦀️rust",
+    "✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
+    "🧰️framework/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
+    "✏️s/🔨️modules/◻2d/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🐚️shell/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
+    "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🖍️draw/🔄️fsm/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🖍️draw/🔄️fsm/✨️macros/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust",
+    "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust",
+    # 🧹️ Adopted 2026-07-18 (RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN): these crates lived
+    # inside the workspace dir but were neither members nor excluded, so they could
+    # not run any cargo command standalone. Adoption fixes real breakage.
+    "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust",
+    "🌎️hub/📦️packages/🦀️rust",
+    "compose/client/lib/rs",
+    "compose/client/lib/query/rs",
+    "compose/client/bin/gql/rs",
+    "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust",
+]
+
+resolver = "2"
+
+# 📦️ W0 mechanism prep (CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE, ticket
+# 26/08/05/ROOT-WORKSPACE-DEPENDENCIES-AND-REGISTRAR-PROTOCOL). Purely additive: no
+# existing member below adopts `.workspace = true` yet, so this table changes nothing
+# about today's build. It exists so later waves can opt a crate in with one line, or
+# repoint a merged/moved crate's consumers by editing exactly one line here.
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[workspace.dependencies]
+semio-framework-math = { path = "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust" }
+# 🌐️ Canonical versions for the highest-fanout external deps, chosen as the newest
+# explicit requirement string already used somewhere in the 630 manifests (matches what
+# Cargo.lock already resolves to, so adopting `.workspace = true` later is a no-op for
+# resolution). Deps below the ~10-manifest survey bar are left alone (see ticket report).
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+wasm-bindgen = "0.2.106"
+thiserror = "2.0.18"
+tokio = { version = "1" }
+ts-rs = "10"
+
+# 🧭️ Internal path deps for crates that exist TODAY at their current location, surveyed
+# by counting `path = "…"` dependency references across all Cargo.toml files (>5 other
+# manifests). Not wired to any member yet — a later wave can adopt `.workspace = true` as
+# a drop-in, or repoint ONE line here when a crate merges/moves instead of editing every
+# consumer. `# N refs` is the survey count. Grouped: os-kernel/core, math, ui, plugin-internal.
+# ---- core (24) ----
+semio-framework-core = { path = "🧰️framework/📦️packages/🦀️rust" }  # 58 refs
+semio-framework-os = { path = "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }  # 35 refs
+semio-framework-os-kernel-db = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust" }  # 22 refs
+semio-framework-os-kernel-db = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust" }  # 9 refs
+semio-framework-os-kernel-db = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust" }  # 14 refs
+semio-framework-os-kernel-db = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust" }  # 6 refs
+semio-framework-os-kernel-dsl = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel-semio = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel-dsl-core = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel-flow-core = { path = "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
+semio-framework-os-kernel-infinite-board-port-directed-dag = { path = "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
+semio-framework-os-kernel-infinite-canvas = { path = "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
+semio-framework-os-kernel-pack = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel-pack-core = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel-pack-format = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel-playbook = { path = "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
+semio-framework-os-kernel-protocol = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel-protocol-core = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel-protocol-format = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel-store = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel-vcs = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+# 🧭️ Keep alias on OLD impl until W8c plugin cut-over deletes the sandwich (packages path already exists on disk).
+semio-framework-plugin = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+semio-s-kernel-flow-extension-wasm = { path = "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
+
+# ---- math (13) ----
+
+# ---- ui (2) ----
+semio-framework-ui-styling = { path = "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust" }  # 15 refs
+semio-framework-ui = { path = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust" }
+semio-framework-surface = { path = "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust" }
+
+# ---- plugin (62) ----
+semio-s-2d = { path = "✏️s/🔨️modules/◻2d/📦️packages/🦀️rust" }
+semio-s-3d = { path = "✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
+semio-s-mindmap = { path = "✏️s/🔨️modules/💭️mindmap/📦️packages/🦀️rust" }
+semio-s-imperative = { path = "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust" }
+semio-s-plugin-animate = { path = "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust" }
+semio-s-plugin-cad = { path = "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust" }
+semio-s-plugin-draw = { path = "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust" }
+semio-s-plugin-flow = { path = "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust" }
+semio-s-plugin-layout = { path = "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust" }
+semio-s-plugin-lowpoly = { path = "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust" }
+semio-s-plugin-norm = { path = "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust" }
+semio-s-plugin-procedural = { path = "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust" }
+semio-s-plugin-process = { path = "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust" }
+semio-s-plugin-puzzle = { path = "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust" }
+semio-s-plugin-remodel = { path = "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust" }
+semio-s-plugin-sequence = { path = "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust" }
+semio-s-plugin-shooting = { path = "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust" }
+semio-s-plugin-sourcing = { path = "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust" }
+semio-s-plugin-space = { path = "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust" }
+semio-s-plugin-trinity = { path = "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust" }
+semio-s-plugin-vcs = { path = "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust" }
+semio-s-plugin-writer = { path = "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust" }
+
+[profile.dev]
+debug = false
+incremental = true
+
+[profile.dev.build-override]
+opt-level = 3
+
+# 🩹️ `store`'s dev-profile wasm32-wasip2 build crashes rust-lld with a SIGSEGV inside
+# `lld::wasm::ElemSection::writeBody` at `-O0`/`codegen-units=16` (verified reproducible,
+# unrelated to any code-correctness issue — `[profile.wasm-release.package...store]` below
+# already carries the same `codegen-units = 1` fix for the release path). Mirroring it here
+# for `dev` so plugin dev-loop builds (`SEMIO_PLUGIN_PROFILE` unset) don't hit the same crash.
+[profile.dev.package.semio-framework-os-kernel]
+codegen-units = 1
+
+# 🚀️ Ship profile for native binaries (`cargo build --release`, compose hub/gql, os-run in CI).
+# Dev loops use `[profile.dev]` only — see root `📜️script.ts` `os run` and wgpu native defaults.
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"
+incremental = false
+trim-paths = "object"
+
+# 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT. wasm32-wasip2 plugin components only — os-dev's
+# 📜️script.ts passes `--profile wasm-release` when building plugin crates. Inherits ship-oriented
+# `[profile.release]` above, then overrides for wasm size/runtime (see below).
+#
+# - opt-level "s" (not "z"): "z" measurably slows hot numeric loops in geometry/FEM solvers for a
+#   few extra percent of size; the wasm-opt -Oz post-pass (see buildPlugin/transpilePluginComponent)
+#   gets the "z"-class shrink without paying that runtime cost in every plugin.
+# - lto "thin" (not "fat"): fat LTO re-links ~25 plugin cdylibs individually — 2-4x slower per plugin
+#   for a low single-digit percent size gain over thin. Thin still gets full cross-crate inlining.
+# - codegen-units = 1: maximizes cross-crate dedup/inlining and also sidesteps the LLVM-22
+#   ElemSection::writeBody crash noted above (a stable low CGU count, same fix as `store`'s override).
+# - strip = "symbols": drops the wasm `name` custom section, which is pure debug/dev-tooling weight
+#   (measured ~14MB on the largest single plugin, ~87MB across the built fleet) never used at runtime.
+# - incremental = false: deterministic output; also makes these units cacheable by `sccache`, which
+#   never caches incremental builds (today's plugin builds pay full non-incremental cost anyway).
+# - trim-paths = "object": strips absolute build-host cargo-registry paths retained in panic
+#   `Location` strings (panic = "unwind" is intentionally NOT overridden here — wasm32-wasip2's
+#   target spec already defaults to panic-strategy "abort", so plugins already abort-on-panic and
+#   `catch_unwind` already never catches on this target; setting it explicitly would be a no-op).
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+incremental = false
+trim-paths = "object"
+
+# Explicit: profile inheritance does NOT inherit package-specific overrides from the parent
+# profile, so without this `store` would fall back to workspace defaults under `wasm-release`.
+[profile.wasm-release.package.semio-framework-os-kernel]
+codegen-units = 1
+
+# 🧹️ RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN baseline. Kept at "warn" (never "deny") in
+# the manifest so live concurrent edits never hard-break; zero-warning is enforced
+# at verification gates via `cargo clippy -- -D warnings`. NEVER set RUSTFLAGS to
+# add -D warnings — it replaces (not merges) .cargo/config.toml's rustflags.
+[workspace.lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"
+# phase B (enable after the T2/T3 waves land): unwrap_used = "warn"

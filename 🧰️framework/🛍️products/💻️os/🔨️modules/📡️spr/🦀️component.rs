@@ -27,9 +27,9 @@ pub use crate::os_spr::command::{
     apply_collection_operation, collection_diff_from_operation, invert_collection_operation, operation_descriptor, register_operation_descriptor, CollectionDiff, CollectionOperation, CommandOutcome, DiffCodec, Edit, Identified, ItemPatch, OpBinary,
     OpText, Operation, OperationDescriptor, OperationDiff, OperationEvent, OperationMeta, OperationUpcaster, Patchable, ReconcileReport, ReconcileSeverity,
 };
-pub use crate::os_spr::core::{ActorId, ConflictRule, DocumentId, DocumentVersion, HybridLogicalTimestamp, MergeStrategyKind, OperationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy};
+pub use crate::os_spr::core::{ActorId, ConflictRule, DocumentId, DocumentVersion, HybridLogicalTimestamp, MergeStrategyKind, OperationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64};
 pub use crate::os_spr::crdt::merge_concurrent_diffs;
-pub use crate::os_spr::wire::{decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, ServerFrame};
+pub use crate::os_spr::wire::{decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame, decode_presence_peer, encode_presence_peer, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresencePoint, PresenceViewport, ServerFrame};
 //#endregion 🔖️Reexports
 
 //#region 🔖️Compile

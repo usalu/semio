@@ -24,15 +24,13 @@ path = "📦️glue.rs"
 
 [dependencies]
 semio-framework-core = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-core" }
-semio-framework-plugin = { path = "../../../🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", package = "semio-framework-plugin" }
+semio-framework-plugin = { path = "../../../🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
 ui_wgpu = { path = "../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 semio-s-3d = { path = "../../../../../../✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
-vcs = { path = "../../../🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
-store = { path = "../../../🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
-protocol = { path = "../../../🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
-dsl = { path = "../../../🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
-workflow = { path = "../../../🔨️modules/🔁️workflow/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-workflow" }
-space = { path = "../../../🔨️modules/🪐️space/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-space" }
+vcs = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+store = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+protocol = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+dsl = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"
@@ -44,7 +42,7 @@ usvg = "0.45.1"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rusqlite = { version = "0.38.0", features = ["bundled"] }
-store_sync = { path = "../../../🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store-sync" }
+store_sync = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync"] }
 tokio = { version = "1", features = ["sync"], default-features = false }
 uuid = { version = "1.20", features = ["v7", "serde"] }
 

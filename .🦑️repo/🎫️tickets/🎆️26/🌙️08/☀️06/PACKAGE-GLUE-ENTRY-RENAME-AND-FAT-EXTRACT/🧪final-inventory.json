@@ -1,0 +1,91 @@
+{
+  "packageLibRsRemaining": 0,
+  "packageGlueRs": 72,
+  "extractedOwners": [
+    {
+      "file": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/🦀️component.rs",
+      "lines": 767
+    },
+    {
+      "file": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core/🦀️component.rs",
+      "lines": 150
+    },
+    {
+      "file": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/🦀️component.rs",
+      "lines": 153
+    },
+    {
+      "file": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/🦀️component.rs",
+      "lines": 137
+    },
+    {
+      "file": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/🦀️component.rs",
+      "lines": 58
+    },
+    {
+      "file": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/🦀️component.rs",
+      "lines": 144
+    },
+    {
+      "file": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/🦀️component.rs",
+      "lines": 44
+    },
+    {
+      "file": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/🦀️component.rs",
+      "lines": 44
+    },
+    {
+      "file": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/🦀️component.rs",
+      "lines": 44
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🔄️fsm/✨️macros/🦀️component.rs",
+      "lines": 1522
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🔄️fsm/🦀️component.rs",
+      "lines": 2419
+    },
+    {
+      "file": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️component.rs",
+      "lines": 894
+    }
+  ],
+  "remainingFatZeroPath": [
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs",
+      "lines": 1112
+    },
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📦️glue.rs",
+      "lines": 858
+    }
+  ],
+  "remainingFatLarge": [
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs",
+      "lines": 1206,
+      "paths": 8
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs",
+      "lines": 1112,
+      "paths": 0
+    },
+    {
+      "file": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs",
+      "lines": 1078,
+      "paths": 368
+    },
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📦️glue.rs",
+      "lines": 858,
+      "paths": 0
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/📦️glue.rs",
+      "lines": 483,
+      "paths": 175
+    }
+  ]
+}

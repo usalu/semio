@@ -1,0 +1,13 @@
+{
+  "status": "ready-for-registrar",
+  "implDirsRemainingUnderOs": 0,
+  "cargoCheckKernel": "blocked-root-Cargo.toml-stale-members",
+  "registrarMustApply": true,
+  "blockers": [
+    "Root Cargo.toml still lists ~38 deleted os/**/⚡️implementations members",
+    "Stale workspace.deps: db-core/state/storage/wal, flow-core, infinite-*, playbook, flow-extension-wasm",
+    "Pre-existing missing compiler/**/⚡️implementations workspace members also block cargo check",
+    "Parallel agents may recreate dsl sandwiches — re-delete if needed before registrar lands"
+  ],
+  "handoffPath": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/OS-IMPLEMENTATIONS-FULL-ERADICATION/📋️registrar-handoff.md"
+}

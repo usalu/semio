@@ -1,7 +1,7 @@
 //! @emoji 📡️ `dsl_lsp` — LSP 3.17 JSON-RPC subset and in-process [`LanguageSession`] over
 //! [`crate::os_dsl::LanguageSpec`] hooks (semantic tokens, completion, canonicalize).
 
-use crate::os_dsl::{CompletionItem, LanguageSpec, TextError, TokenClass};
+use crate::os_dsl::{CompletionItem, GrammarFile, LanguageSpec, TextError, TokenClass};
 use serde_json::{json, Value};
 
 //#region 🔖️Session
@@ -59,6 +59,36 @@ impl LanguageSession {
     pub fn canonicalize(&self) -> Result<String, TextError> {
         (self.spec.hooks.canonicalize)(&self.text)
     }
+
+    /// @emoji 🩺 Text diagnostics from hooks + grammar dialect checks when `grammar` is present.
+    pub fn diagnostics(&self) -> Vec<TextError> {
+        let mut out = Vec::new();
+        if self.spec.is_text_role() {
+            if let Err(error) = self.canonicalize() {
+                out.push(error);
+            }
+            if let Err(error) = self.spec.parsed_grammar() {
+                out.push(error);
+            }
+        }
+        out
+    }
+
+    /// @emoji 📡️ Byte-level protocol verification when `protocol` text is present on the spec.
+    pub fn verify_protocol_bytes(&self, bytes: &[u8]) -> Result<(), String> {
+        self.spec.verify_protocol(bytes)
+    }
+
+    /// @emoji 📖️ Parsed grammar file for text roles (`None` when unset).
+    pub fn grammar_file(&self) -> Result<Option<GrammarFile>, TextError> {
+        self.spec.parsed_grammar()
+    }
+
+    /// @emoji 📡️ Parsed protocol file for binary verification (`None` when unset).
+    pub fn protocol_file(&self) -> Result<Option<GrammarFile>, TextError> {
+        self.spec.parsed_protocol()
+    }
+
 }
 //#endregion 🔖️Session
 

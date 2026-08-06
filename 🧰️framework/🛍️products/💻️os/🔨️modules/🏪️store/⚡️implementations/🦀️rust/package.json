@@ -1,8 +1,0 @@
-{
-  "name": "@semio-tech/store-rs",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./pkg/store.js"
-  }
-}

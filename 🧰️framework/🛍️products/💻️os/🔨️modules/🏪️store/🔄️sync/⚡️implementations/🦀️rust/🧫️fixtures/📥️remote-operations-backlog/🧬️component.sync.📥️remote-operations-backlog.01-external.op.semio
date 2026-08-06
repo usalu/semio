@@ -1,5 +1,0 @@
-semio sync.📥️remote-operations-backlog.op v1
-edit backlog-1 started="0" actor=peer
-  set-n n=2
-edit backlog-2 started="0" actor=peer
-  set-n n=3

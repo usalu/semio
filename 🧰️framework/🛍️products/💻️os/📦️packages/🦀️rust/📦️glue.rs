@@ -11,6 +11,7 @@ extern crate self as protocol;
 extern crate self as pack;
 extern crate self as spr;
 extern crate self as vcs;
+extern crate self as semio_format;
 
 
 // 🏷️ Former standalone crate names — proc-macros (`dsl_derive`) and in-tree `use store::` /
@@ -178,4 +179,8 @@ pub use crate::os_dsl::*;
 pub use crate::os_store::*;
 pub use crate::os_spr::*;
 pub use crate::os_pack::*;
+#[path = "../../🔨️modules/🧬️semio/🦀️component.rs"]
+pub mod os_semio;
+
 pub use crate::os_vcs::*;
+pub use crate::os_semio::*;
