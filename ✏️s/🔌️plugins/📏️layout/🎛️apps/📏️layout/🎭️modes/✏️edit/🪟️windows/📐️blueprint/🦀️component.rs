@@ -36,9 +36,9 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(doc: &LayoutDocument, config: &LayoutConfig) -> UiNode {
+pub fn render(engine: &mut crate::artifacts::layout::engine::scene::LayoutEngine, doc: &LayoutDocument, config: &LayoutConfig) -> UiNode {
     let camera = &config.camera;
-    build_canvas_2d_scene(LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_APP_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: canvas_layers(doc, config, true) })
+    build_canvas_2d_scene(LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_APP_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: canvas_layers(engine, doc, config, true) })
 }
 //#endregion 🔖️Render
 

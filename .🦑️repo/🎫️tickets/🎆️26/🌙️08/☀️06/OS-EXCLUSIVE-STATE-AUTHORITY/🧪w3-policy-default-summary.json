@@ -1,0 +1,21 @@
+{
+  "flag": false,
+  "total": 493,
+  "high": 208,
+  "osStateAuthority": 0,
+  "byKind": {
+    "dsl-migration/ts-facade-completeness": 260,
+    "protocol-migration/command-envelope-completeness": 97,
+    "dsl-migration/diff-completeness": 48,
+    "pack-migration/completeness": 45,
+    "app-plugin/app-coupling": 16,
+    "dsl-migration/completeness": 12,
+    "taxonomy/semio-examples": 5,
+    "budget/no-budget-null": 4,
+    "taxonomy/dirs": 3,
+    "taxonomy/lib-shape": 2,
+    "protocol-migration/db-server-only": 1
+  },
+  "osByKind": {},
+  "osSamples": []
+}

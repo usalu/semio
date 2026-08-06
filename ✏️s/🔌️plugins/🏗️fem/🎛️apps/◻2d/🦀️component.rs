@@ -16,10 +16,11 @@ use crate::artifacts::fem2d::op::Fem2dOperation;
 use crate::artifacts::fem2d::Fem2dDocument;
 use crate::core::shared::{DisplayMode, ResultDisplay};
 use crate::core::{Dof, ElementResult};
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     create_default_layout, ui_text, ActionArgDef, ActionArgOption, App, AppIo, ConfigSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, SurfaceKind,
     UiNode,
 };
+use store::EngineHandles;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
@@ -147,21 +148,20 @@ impl DocumentApp for Fem2dPlayApp {
     type Operation = Fem2dOperation;
     type Config = Fem2dConfig;
     type ConfigOperation = Fem2dConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = Fem2dCommand;
 
-    fn app_id(&self) -> &str {
-        FEM2D_APP_ID
-    }
+    const APP_ID: &'static str = FEM2D_APP_ID;
 
-    fn document_schema(&self) -> &str {
-        crate::artifacts::fem2d::FEM_2D_SCHEMA
-    }
+    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem2d::FEM_2D_SCHEMA;
 
-    fn initial_projection(&self) -> Fem2dDocument {
+    fn initial_projection() -> Fem2dDocument {
         crate::artifacts::fem2d::engine::empty_fem2d_projection()
     }
 
-    fn io(&self) -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(crate::artifacts::fem2d::engine::fem2d_io())
     }
 
@@ -171,12 +171,12 @@ impl DocumentApp for Fem2dPlayApp {
     /// `Structured` payload — `MediaPayload::Structured.json` doesn't require a `pack`-encoded value. A
     /// document with no load cases, or a solve failure, is reported as `MediaError::Payload` rather than
     /// an empty/panicking export.
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, Fem2dDocument>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, Fem2dDocument>) -> Result<Media, MediaError> {
         match port {
             "document:out" => {
-                let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+                let media_type = Self::io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
                 let bytes = <Fem2dDocument as store::DocumentPack>::encode_pack(doc.projection);
-                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "results:out" => {
                 if doc.projection.load_cases.is_empty() {
@@ -190,7 +190,7 @@ impl DocumentApp for Fem2dPlayApp {
         }
     }
 
-    fn whole_document_operation(&self, projection: Fem2dDocument) -> Option<Fem2dOperation> {
+    fn whole_document_operation(projection: Fem2dDocument) -> Option<Fem2dOperation> {
         Some(Fem2dOperation::SetDocument { document: projection })
     }
 
@@ -198,7 +198,7 @@ impl DocumentApp for Fem2dPlayApp {
     /// decodes a minimal, app-owned `{"outline": [[f64;2]...], "holes": [[[f64;2]...]...]}`
     /// polygon-with-holes contract into a new `FemRegion`, defaulted to the document's first existing
     /// material if any, else an `"unassigned"` placeholder id.
-    fn import_media(&self, port: &str, media: &Media, doc: &DocumentView<'_, Fem2dDocument>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, Fem2dDocument>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation, Self::DraftOperation>, MediaError> {
         match port {
             "document:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -233,11 +233,11 @@ impl DocumentApp for Fem2dPlayApp {
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(&self, command: &Fem2dCommand) -> &str {
+    fn command_id(command: &Fem2dCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &Fem2dCommand, doc: &DocumentView<'_, Fem2dDocument>, cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
+    fn handle(command: &Fem2dCommand, doc: &DocumentView<'_, Fem2dDocument>, cfg: &ConfigView<'_, Fem2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -245,11 +245,11 @@ impl DocumentApp for Fem2dPlayApp {
     /// `thickness`/`meshSize` defaults are baked directly into its handler, not user-configurable
     /// settings) — declaring `ConfigSpec::empty()` explicitly keeps the typed channel surface
     /// consistent with the sibling apps' convention.
-    fn config_spec(&self) -> ConfigSpec {
+    fn config_spec() -> ConfigSpec {
         ConfigSpec::empty()
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Fem2dDocument>, cfg: &ConfigView<'_, Fem2dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, Fem2dDocument>, cfg: &ConfigView<'_, Fem2dConfig>) -> UiNode {
         let camera = &cfg.projection.camera;
         match body_key {
             model_window::BODY_KEY => model_window::render(doc.projection, camera),
@@ -343,7 +343,7 @@ pub fn create_fem2d_app() -> App {
             .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             // 🎯️ Typed channel surface — `config_spec()`/`fem2d_io()` are this same information's single
             // source of truth, reused here rather than duplicated.
-            .config(Fem2dPlayApp.config_spec())
+            .config(Fem2dPlayApp::config_spec())
             .io(crate::artifacts::fem2d::engine::fem2d_io()),
     )
     .example("default", LocalizedLabel::native("Family House", "Einfamilienhaus"), FEM2D_EXAMPLE_DSL, "file")
@@ -508,7 +508,7 @@ mod tests {
 
     #[test]
     fn config_spec_declares_no_fields() {
-        assert!(Fem2dPlayApp.config_spec().fields.is_empty());
+        assert!(Fem2dPlayApp::config_spec().fields.is_empty());
     }
 
     #[test]
@@ -523,7 +523,7 @@ mod tests {
 
     #[test]
     fn app_io_forwards_the_engine_declared_ports() {
-        let io = Fem2dPlayApp.io().expect("io declared");
+        let io = Fem2dPlayApp::io().expect("io declared");
         assert!(io.ports.iter().any(|port| port.id == "geometry:in"));
         assert!(io.ports.iter().any(|port| port.id == "results:out"));
     }

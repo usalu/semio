@@ -2381,7 +2381,7 @@ version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbc773e24e02d4ddd8395fd30dc147524273a83e54e0f312d986ea30de5f5646"
 dependencies = [
- "roxmltree",
+ "roxmltree 0.20.0",
 ]
 
 [[package]]
@@ -2415,7 +2415,7 @@ dependencies = [
  "objc2-foundation 0.3.2",
  "peniko 0.4.1",
  "read-fonts 0.29.3",
- "roxmltree",
+ "roxmltree 0.20.0",
  "smallvec",
  "windows",
  "windows-core",
@@ -2438,7 +2438,7 @@ dependencies = [
  "objc2-foundation 0.3.2",
  "peniko 0.4.1",
  "read-fonts 0.29.3",
- "roxmltree",
+ "roxmltree 0.20.0",
  "smallvec",
  "windows",
  "windows-core",
@@ -3805,6 +3805,12 @@ name = "imagesize"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "edcd27d72f2f071c64249075f42e205ff93c9a4c5f6c6da53e79ed9f9832c285"
+
+[[package]]
+name = "imagesize"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09e54e57b4c48b40f7aec75635392b12b3421fa26fe8b4332e63138ed278459c"
 
 [[package]]
 name = "indexmap"
@@ -6198,9 +6204,9 @@ dependencies = [
  "log",
  "pico-args",
  "rgb",
- "svgtypes",
+ "svgtypes 0.15.3",
  "tiny-skia",
- "usvg",
+ "usvg 0.45.1",
  "zune-jpeg 0.4.21",
 ]
 
@@ -6274,6 +6280,15 @@ name = "roxmltree"
 version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c20b6793b5c2fa6553b250154b78d6d0db37e72700ae35fad9387a46f487c97"
+
+[[package]]
+name = "roxmltree"
+version = "0.21.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1964b10c76125c36f8afe190065a4bf9a87bf324842c05701330bba9f1cacbb"
+dependencies = [
+ "memchr",
+]
 
 [[package]]
 name = "rsqlite-vfs"
@@ -6768,7 +6783,7 @@ dependencies = [
  "thiserror 2.0.18",
  "tiny-skia",
  "tokio",
- "usvg",
+ "usvg 0.45.1",
  "uuid",
  "wasm-bindgen",
 ]
@@ -6791,10 +6806,29 @@ dependencies = [
 name = "semio-framework-os-infinite"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
+ "fontdb",
+ "image",
+ "js-sys",
+ "semio-framework-compiler",
+ "semio-framework-core",
+ "semio-framework-math",
  "semio-framework-os-kernel",
+ "semio-framework-ui",
+ "semio-framework-ui-styling",
+ "semio-s-3d",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+ "typst",
+ "typst-assets",
+ "typst-svg",
+ "vello",
+ "vello_encoding",
+ "vello_svg",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]
@@ -6881,7 +6915,7 @@ dependencies = [
  "tiny-skia",
  "tokio",
  "ureq",
- "usvg",
+ "usvg 0.45.1",
  "vello",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -7036,12 +7070,14 @@ name = "semio-s-2d"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "blake3",
  "futures",
  "geo",
  "pollster",
  "rayon",
  "semio-framework-core",
  "serde",
+ "serde_json",
  "thiserror 2.0.18",
 ]
 
@@ -7051,6 +7087,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
+ "blake3",
  "brepkit-check",
  "brepkit-geometry",
  "brepkit-io",
@@ -7063,6 +7100,7 @@ dependencies = [
  "rayon",
  "semio-framework-core",
  "semio-framework-math",
+ "semio-framework-os-kernel",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -7115,7 +7153,7 @@ dependencies = [
  "typst",
  "typst-assets",
  "typst-svg",
- "usvg",
+ "usvg 0.45.1",
  "vello",
  "wasm-bindgen",
  "wgpu",
@@ -8298,6 +8336,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "svgtypes"
+version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "695b5790b3131dafa99b3bbfd25a216edb3d216dad9ca208d4657bfb8f2abc3d"
+dependencies = [
+ "kurbo 0.13.1",
+ "siphasher",
+]
+
+[[package]]
 name = "swash"
 version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9182,7 +9230,7 @@ dependencies = [
  "rayon",
  "regex",
  "regex-syntax",
- "roxmltree",
+ "roxmltree 0.20.0",
  "rust_decimal",
  "rustc-hash 2.1.2",
  "rustybuzz",
@@ -9206,7 +9254,7 @@ dependencies = [
  "unicode-normalization",
  "unicode-segmentation",
  "unscanny",
- "usvg",
+ "usvg 0.45.1",
  "utf8_iter",
  "wasmi",
  "xmlwriter",
@@ -9518,16 +9566,43 @@ dependencies = [
  "data-url",
  "flate2",
  "fontdb",
- "imagesize",
+ "imagesize 0.13.0",
  "kurbo 0.11.3",
  "log",
  "pico-args",
- "roxmltree",
+ "roxmltree 0.20.0",
  "rustybuzz",
  "simplecss",
  "siphasher",
  "strict-num",
- "svgtypes",
+ "svgtypes 0.15.3",
+ "tiny-skia-path",
+ "unicode-bidi",
+ "unicode-script",
+ "unicode-vo",
+ "xmlwriter",
+]
+
+[[package]]
+name = "usvg"
+version = "0.46.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e419dff010bb12512b0ae9e3d2f318dfbdf0167fde7eb05465134d4e8756076f"
+dependencies = [
+ "base64 0.22.1",
+ "data-url",
+ "flate2",
+ "fontdb",
+ "imagesize 0.14.0",
+ "kurbo 0.13.1",
+ "log",
+ "pico-args",
+ "roxmltree 0.21.1",
+ "rustybuzz",
+ "simplecss",
+ "siphasher",
+ "strict-num",
+ "svgtypes 0.16.1",
  "tiny-skia-path",
  "unicode-bidi",
  "unicode-script",
@@ -9625,6 +9700,18 @@ dependencies = [
  "naga",
  "thiserror 2.0.18",
  "vello_encoding",
+]
+
+[[package]]
+name = "vello_svg"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "79dfa03829a8fb45ad458a05bd533d399d2259d042cdd78f391b290dbbdf1bd3"
+dependencies = [
+ "image",
+ "thiserror 2.0.18",
+ "usvg 0.46.0",
+ "vello",
 ]
 
 [[package]]

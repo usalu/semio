@@ -1,0 +1,72 @@
+$ bun ./📜️script.ts nx run @semio-tech/ui-react:test-quick
+
+> nx run @semio-tech/ui-react:test-quick
+
+> bun ./📜️script.ts test quick
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react
+
+ ❯ |@semio-tech/ui-react| 📦️index.tsx (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/ui-react| 📦️index.tsx [ 📦️index.tsx ]
+Error: Transform failed with 1 error:
+/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:7937:9: ERROR: Multiple exports with the same name "Cursor"
+  Plugin: vite:esbuild
+  File: /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx:7937:9
+  
+  Multiple exports with the same name "Cursor"
+  7935 |  // #region 🛒️Icons
+  7936 |  import { Cursor } from "../../../../🧱️elements/🔣Icons/🟦️component.tsx";
+  7937 |  export { Cursor };
+       |           ^
+  7938 |  // #endregion 🛒️Icons
+  7939 |  
+  
+ ❯ failureErrorWithLog ../../../../../../../node_modules/esbuild/lib/main.js:1748:18
+ ❯ ../../../../../../../node_modules/esbuild/lib/main.js:1017:49
+ ❯ ../../../../../../../node_modules/esbuild/lib/main.js:884:8
+ ❯ handleIncomingPacket ../../../../../../../node_modules/esbuild/lib/main.js:939:11
+ ❯ readFromStdout ../../../../../../../node_modules/esbuild/lib/main.js:862:6
+ ❯ addChunk internal:streams/readable:264:46
+ ❯ readableAddChunkPushByteMode internal:streams/readable:242:17
+ ❯ handleNumberResult internal:streams/native-readable:69:17
+ ❯ internal:streams/native-readable:43:67
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  16:15:41
+   Duration  781ms (transform 27ms, setup 201ms, import 0ms, tests 0ms, environment 452ms)
+
+Warning: command "bun ./📜️script.ts test quick" exited with non-zero status code
+
+
+ NX   Running target test-quick for project @semio-tech/ui-react failed
+
+Failed tasks:
+
+- @semio-tech/ui-react:test-quick
+
+Hint: run the command with --verbose for more details.
+
+1370 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1371 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1372 |  */
+1373 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1374 |   const status = runCmdInternal(cmd, args, opts);
+1375 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/ui-react:test-quick exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:1375:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:582:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:814:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:849:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:4246:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1

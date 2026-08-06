@@ -13,13 +13,12 @@ use base64::Engine as _;
 use crate::artifacts::cad::{cad_all_objects, cad_pane_from_model_definition_id, cad_pane_geometry, CadCamera, CadGeometry, CadNode, CadObject, CadPaneId, CadPrimitiveSlot, CadProjectionDsl, CadReference, CadScene, CAD_PLAY_DOCUMENT_SCHEMA};
 use crate::artifacts::cad::engine::geometry_import::{cad_object_from_mesh, cad_object_from_solid_handle, centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture};
 use semio_s_3d::brep::kernel::{mesh_data_from_mesh_transfer, BrepkitKernel};
-use semio_s_3d::brep::engine::{block_on, BrepKernel, GeometryHandle, MeshTransfer};
+use semio_s_3d::brep::engine::{block_on, BrepEngineHost, BrepKernel, GeometryHandle, MeshTransfer};
 use semio_framework_core::MeshImporter;
 use semio_framework_plugin::{mesh_from_kind, MeshData, OsMediaFormat, WorldProjectionConfig};
 use serde_json::Value;
 use std::collections::HashSet;
-use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::{Mutex, OnceLock};
+use std::sync::OnceLock;
 use crate::artifacts::cad::engine::transformation::solid_for_object;
 
 //#region 🔖️Compute
@@ -60,19 +59,24 @@ pub const CAD_FOREST_REFERENCE_PLANE_Z: f64 = 0.01;
 
 pub const CAD_FOREST_REFERENCE_Y_OFFSET_RATIO: f64 = 0.2;
 
-static CAD_BREP_KERNEL: OnceLock<Mutex<Box<dyn BrepKernel + Send + Sync>>> = OnceLock::new();
+static CAD_BREP_HOST: OnceLock<BrepEngineHost> = OnceLock::new();
 
-/// @emoji 📦️ Universal fallback extent for typologies with no authored geometry to measure.
-pub const CAD_DEFAULT_TYPOLOGY_EXTENT: [f64; 3] = [1.0, 1.0, 1.0];
+const CAD_BREP_CACHE_BUDGET_BYTES: usize = 64 * 1024 * 1024;
 
-pub fn cad_brep_kernel() -> &'static Mutex<Box<dyn BrepKernel + Send + Sync>> {
-    CAD_BREP_KERNEL.get_or_init(|| Mutex::new(Box::new(BrepkitKernel::new())))
+/// @emoji 🖥️ Host-owned brep session (`EngineHost` + compute-scoped kernel registry).
+pub fn cad_brep_host() -> &'static BrepEngineHost {
+    CAD_BREP_HOST.get_or_init(|| BrepEngineHost::new(CAD_BREP_CACHE_BUDGET_BYTES))
+}
+
+/// @emoji 🔩 Lock the cad brep kernel for synchronous `BrepKernel` calls.
+pub fn cad_brep_kernel() -> Result<std::sync::MutexGuard<'static, BrepkitKernel>, &'static str> {
+    cad_brep_host().kernel().lock().map_err(|_| "cad brep kernel lock poisoned")
 }
 
 /// @emoji 📐️ Tessellates a typology's primitive sized from authored geometry (or a universal
 /// fallback extent when no geometry was captured), instead of hardcoded per-typology constants.
 fn typology_brep_mesh(typology: &str, extent: Option<[f64; 3]>, solid_handle: Option<&str>, centroid: Option<[f64; 3]>) -> MeshData {
-    let Ok(mut kernel) = cad_brep_kernel().lock() else {
+    let Ok(mut kernel) = cad_brep_kernel() else {
         return mesh_from_kind(typology_mesh_kind(typology));
     };
     if let Some(handle_id) = solid_handle {
@@ -169,7 +173,7 @@ fn cad_document_pane_bundle(source_json: &str, model_index: usize) -> (Vec<CadOb
     let Some(objects_value) = root.pointer(&format!("/models/{model_index}/model/objects")).and_then(|value| value.as_array()) else {
         return (Vec::new(), geometry);
     };
-    let Ok(mut kernel) = cad_brep_kernel().lock() else {
+    let Ok(mut kernel) = cad_brep_kernel() else {
         return (Vec::new(), geometry);
     };
     let objects = objects_from_fixture_model(&mut **kernel, objects_value, &geometry);
@@ -401,21 +405,21 @@ pub fn cad_file_text_from_payload(payload: &Value) -> Option<String> {
 /// @emoji 🧊️ Imports a STEP payload into the shared kernel and wraps the first solid it contains
 /// (STEP files may hold more than one shape) as a new `CadObject`.
 pub fn import_step_object(text: &str) -> Option<CadObject> {
-    let mut kernel = cad_brep_kernel().lock().ok()?;
+    let mut kernel = cad_brep_kernel().ok()?;
     let handle = block_on(kernel.import_step(text)).ok()?.into_iter().next()?;
     Some(cad_object_from_solid_handle(&mut **kernel, next_cad_id("object-step"), "Imported STEP", "spatial.shape.imported", handle))
 }
 
 /// @emoji 🧊️ Imports an OBJ payload into the shared kernel as a new `CadObject`.
 pub fn import_obj_object(text: &str) -> Option<CadObject> {
-    let mut kernel = cad_brep_kernel().lock().ok()?;
+    let mut kernel = cad_brep_kernel().ok()?;
     let handle = block_on(kernel.import_obj(text, 0.01)).ok()?;
     Some(cad_object_from_solid_handle(&mut **kernel, next_cad_id("object-obj"), "Imported OBJ", "spatial.shape.imported", handle))
 }
 
 /// @emoji 🧊️ Imports an STL payload into the shared kernel as a new `CadObject`.
 pub fn import_stl_object(bytes: &[u8]) -> Option<CadObject> {
-    let mut kernel = cad_brep_kernel().lock().ok()?;
+    let mut kernel = cad_brep_kernel().ok()?;
     let handle = block_on(kernel.import_stl(bytes, 0.01)).ok()?;
     Some(cad_object_from_solid_handle(&mut **kernel, next_cad_id("object-stl"), "Imported STL", "spatial.shape.imported", handle))
 }
@@ -425,7 +429,7 @@ pub fn import_stl_object(bytes: &[u8]) -> Option<CadObject> {
 /// DWG-derived import path (`cad_object_from_mesh`) since GLB carries no exact B-Rep to preserve.
 pub fn import_glb_object(bytes: &[u8]) -> Option<CadObject> {
     let mesh = semio_framework_plugin::GlbImporter.import(bytes).ok()?;
-    let mut kernel = cad_brep_kernel().lock().ok()?;
+    let mut kernel = cad_brep_kernel().ok()?;
     Some(cad_object_from_mesh(&mut **kernel, next_cad_id("object-glb"), "Imported GLB", "spatial.shape.imported", &mesh))
 }
 
@@ -465,7 +469,7 @@ pub fn scene_from_spatial_payload(payload: &Value) -> Option<CadScene> {
     if payload.get("schema").and_then(|value| value.as_str()) == Some("spatial.modelspace") {
         let models = payload.get("models")?.as_array()?;
         let mut scene = default_document();
-        let Ok(mut kernel) = cad_brep_kernel().lock() else {
+        let Ok(mut kernel) = cad_brep_kernel() else {
             return None;
         };
         for entry in models {
@@ -504,7 +508,7 @@ pub fn scene_from_spatial_payload(payload: &Value) -> Option<CadScene> {
             .get("objects")
             .and_then(|value| value.as_array())
             .map(|objects| {
-                let Ok(mut kernel) = cad_brep_kernel().lock() else {
+                let Ok(mut kernel) = cad_brep_kernel() else {
                     return Vec::new();
                 };
                 objects_from_fixture_model(&mut **kernel, objects, &geometry)
@@ -547,7 +551,7 @@ pub fn primary_primitive_kind(object: &CadObject) -> &str {
 
 pub fn object_mesh_data(object: &CadObject, geometry: Option<&CadGeometry>) -> MeshData {
     let kind = primary_primitive_kind(object);
-    if let Ok(mut kernel) = cad_brep_kernel().lock() {
+    if let Ok(mut kernel) = cad_brep_kernel() {
         let mesh = geometry.filter(|_| !object.primitives.is_empty()).and_then(|geometry| tessellate_object_mesh_from_fixture(&mut **kernel, object, geometry)).or_else(|| tessellate_object_mesh(&mut **kernel, object, kind));
         if let Some(mut mesh) = mesh {
             if let Some(geometry) = geometry {
@@ -593,7 +597,7 @@ pub fn cad_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
 
 pub fn cad_document_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Result<Value, String> {
     let mut scene = default_document();
-    let mut kernel = cad_brep_kernel().lock().map_err(|_| "cad brep kernel lock poisoned".to_string())?;
+    let mut kernel = cad_brep_kernel().map_err(|_| "cad brep kernel lock poisoned".to_string())?;
     let objects: Vec<CadObject> = drawing
         .layers
         .iter()
@@ -618,7 +622,7 @@ pub fn cad_document_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Resu
 /// document, reusing the same OBJ-text-roundtrip kernel import as the DWG/STL/`importCadFile` paths.
 pub fn cad_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
     let mut scene = default_document();
-    let mut kernel = cad_brep_kernel().lock().map_err(|_| "cad brep kernel lock poisoned".to_string())?;
+    let mut kernel = cad_brep_kernel().map_err(|_| "cad brep kernel lock poisoned".to_string())?;
     let object = cad_object_from_mesh(&mut **kernel, next_cad_id("object-glb"), "Imported GLB", "spatial.shape.imported", mesh);
     scene.objects = vec![object];
     serde_json::to_value(&scene).map_err(|err| err.to_string())

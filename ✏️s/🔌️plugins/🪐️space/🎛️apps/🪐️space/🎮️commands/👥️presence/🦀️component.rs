@@ -20,8 +20,6 @@ pub mod presence_heartbeat {
     /// declare `None` `ui_scope` so it never triggers a full-shell `refresh-ui` for the sending client.
     pub fn handle(payload: &PresenceHeartbeat, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, SpaceConfigOperation>, Fault> {
         let config_operations = vec![SpaceConfigOperation::SetClient { client_id: Some(payload.client_id.clone()), client_name: Some(payload.name.clone()) }];
-        let next_config = crate::apps::space::apply_config_operations(cfg.projection, &config_operations);
-        crate::apps::space::publish_presence(&next_config);
         Ok(Emit { config_operations, ui_scope: semio_framework_core::kernel::UiDirtyScope::None, ..Default::default() })
     }
 }

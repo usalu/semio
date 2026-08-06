@@ -182,7 +182,7 @@ mod tests {
     fn creates_studio_via_home_action() {
         let port = crate::apps::home::catalog_port();
         let before = list_os_space_catalog_entries(port.clone()).expect("list").len();
-        let mut home = VcsDocumentApp::new(crate::apps::home::HomeApp);
+        let mut home = VcsDocumentApp::new(crate::apps::home::HomeApp::default());
         home.dispatch_typed(crate::apps::home::HomeCommand::CreateStudio(create_studio::CreateStudio { name: "Test Studio".into(), kind: "catalog".into(), folder_path: None }), &testkit::meta("local")).expect("create");
         let after = list_os_space_catalog_entries(port).expect("list").len();
         assert!(after >= before);

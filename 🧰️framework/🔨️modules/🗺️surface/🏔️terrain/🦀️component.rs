@@ -295,17 +295,9 @@ pub fn build_terrain_scene_json(descriptor: &TerrainDescriptorJson) -> String {
 //#endregion TerrainDescriptor
 
 //#region TerrainSession
-struct TerrainSessionState {
-    origin_lon: f64,
-    origin_lat: f64,
-    exaggeration: f64,
-    tiles: HashMap<String, DecodedElevationTile>,
-}
-
-impl Default for TerrainSessionState {
-    fn default() -> Self {
-        Self { origin_lon: 0.0, origin_lat: 0.0, exaggeration: 1.0, tiles: HashMap::new() }
-    }
+#[derive(Default)]
+struct TerrainElevationTiles {
+    by_key: HashMap<String, DecodedElevationTile>,
 }
 
 #[derive(Deserialize)]
@@ -327,23 +319,26 @@ struct VisibleTileRow {
 /// `framework_surface_tiled_map`'s `MapSession`, but yields mesh JSON rather than driving a canvas itself — actual
 /// rendering happens via the existing `World3d`/three.js instancing pipeline in React.
 pub struct TerrainSessionCore {
-    state: TerrainSessionState,
+    origin_lon: f64,
+    origin_lat: f64,
+    exaggeration: f64,
+    elevation: TerrainElevationTiles,
 }
 
 impl Default for TerrainSessionCore {
     fn default() -> Self {
-        Self { state: TerrainSessionState::default() }
+        Self { origin_lon: 0.0, origin_lat: 0.0, exaggeration: 1.0, elevation: TerrainElevationTiles::default() }
     }
 }
 
 impl TerrainSessionCore {
     pub fn set_project_origin(&mut self, lon: f64, lat: f64) {
-        self.state.origin_lon = lon;
-        self.state.origin_lat = lat;
+        self.origin_lon = lon;
+        self.origin_lat = lat;
     }
 
     pub fn set_exaggeration(&mut self, exaggeration: f64) {
-        self.state.exaggeration = exaggeration.max(0.0);
+        self.exaggeration = exaggeration.max(0.0);
     }
 
     pub fn visible_terrain_tiles_json(&self, camera_json: &str) -> String {
@@ -355,7 +350,7 @@ impl TerrainSessionCore {
         let dz = position[2] - target[2];
         let distance = (dx * dx + dy * dy + dz * dz).sqrt().max(1.0);
         let zoom = tiles::pick_zoom(distance);
-        let (center_lon, center_lat) = projection::local_meters_to_lonlat(target[0], target[1], self.state.origin_lon, self.state.origin_lat);
+        let (center_lon, center_lat) = projection::local_meters_to_lonlat(target[0], target[1], self.origin_lon, self.origin_lat);
         let rows: Vec<VisibleTileRow> = tiles::visible_tiles(center_lon, center_lat, zoom).into_iter().map(|(z, x, y)| VisibleTileRow { z, x, y, key: tiles::tile_key(z, x, y) }).collect();
         serde_json::to_string(&rows).unwrap_or_else(|_| "[]".to_string())
     }
@@ -363,7 +358,7 @@ impl TerrainSessionCore {
     pub fn upload_elevation_tile(&mut self, z: u32, x: u32, y: u32, bytes: &[u8]) -> bool {
         match decode_terrarium_png(bytes) {
             Ok(image) => {
-                self.state.tiles.insert(tiles::tile_key(z, x, y), DecodedElevationTile { z, x, y, image });
+                self.elevation.by_key.insert(tiles::tile_key(z, x, y), DecodedElevationTile { z, x, y, image });
                 true
             }
             Err(_) => false,
@@ -371,13 +366,13 @@ impl TerrainSessionCore {
     }
 
     pub fn evict_terrain_tile(&mut self, z: u32, x: u32, y: u32) {
-        self.state.tiles.remove(&tiles::tile_key(z, x, y));
+        self.elevation.by_key.remove(&tiles::tile_key(z, x, y));
     }
 
     pub fn terrain_tile_mesh_json(&self, z: u32, x: u32, y: u32) -> String {
-        match self.state.tiles.get(&tiles::tile_key(z, x, y)) {
+        match self.elevation.by_key.get(&tiles::tile_key(z, x, y)) {
             Some(tile) => {
-                let mesh = build_terrain_tile_mesh(tile, self.state.origin_lon, self.state.origin_lat, self.state.exaggeration);
+                let mesh = build_terrain_tile_mesh(tile, self.origin_lon, self.origin_lat, self.exaggeration);
                 serde_json::to_string(&mesh).unwrap_or_else(|_| "null".to_string())
             }
             None => "null".to_string(),

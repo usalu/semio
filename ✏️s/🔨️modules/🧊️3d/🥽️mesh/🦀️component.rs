@@ -1,4 +1,5 @@
-//! 🔷️ Half-edge mesh kernel for low-poly editing.
+//! 🔷️ Half-edge mesh kernel for low-poly editing. **Host authority:** `HalfedgeMesh` is a value
+//! document/engine payload — not a process-global mesh store.
 
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};

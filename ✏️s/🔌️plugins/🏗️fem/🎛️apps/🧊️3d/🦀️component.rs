@@ -15,9 +15,10 @@ use crate::apps::fem3d::modes::edit::windows::{model as window_model, results as
 use crate::artifacts::fem3d::op::Fem3dOperation;
 use crate::artifacts::fem3d::Fem3dDocument;
 use crate::core::{Dof, ElementResult};
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     create_default_layout, ActionArgDef, ActionArgOption, App, AppIo, ConfigSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, SurfaceKind, UiNode,
 };
+use store::EngineHandles;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
@@ -131,21 +132,20 @@ impl DocumentApp for Fem3dPlayApp {
     type Operation = Fem3dOperation;
     type Config = Fem3dConfig;
     type ConfigOperation = Fem3dConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = Fem3dCommand;
 
-    fn app_id(&self) -> &str {
-        FEM3D_APP_ID
-    }
+    const APP_ID: &'static str = FEM3D_APP_ID;
 
-    fn document_schema(&self) -> &str {
-        crate::artifacts::fem3d::FEM_3D_SCHEMA
-    }
+    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem3d::FEM_3D_SCHEMA;
 
-    fn initial_projection(&self) -> Fem3dDocument {
+    fn initial_projection() -> Fem3dDocument {
         crate::artifacts::fem3d::engine::empty_fem3d_projection()
     }
 
-    fn io(&self) -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(crate::artifacts::fem3d::engine::fem3d_io())
     }
 
@@ -154,12 +154,12 @@ impl DocumentApp for Fem3dPlayApp {
     /// one). `"results:out"` runs every load case/combination's analysis fresh and returns them as plain
     /// JSON text in a `Structured` payload. A document with no load cases, or a solve failure, is
     /// reported as `MediaError::Payload` rather than an empty/panicking export.
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, Fem3dDocument>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, Fem3dDocument>) -> Result<Media, MediaError> {
         match port {
             "document:out" => {
-                let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+                let media_type = Self::io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
                 let bytes = <Fem3dDocument as store::DocumentPack>::encode_pack(doc.projection);
-                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "results:out" => {
                 if doc.projection.load_cases.is_empty() {
@@ -173,7 +173,7 @@ impl DocumentApp for Fem3dPlayApp {
         }
     }
 
-    fn whole_document_operation(&self, projection: Fem3dDocument) -> Option<Fem3dOperation> {
+    fn whole_document_operation(projection: Fem3dDocument) -> Option<Fem3dOperation> {
         Some(Fem3dOperation::SetDocument { document: projection })
     }
 
@@ -183,7 +183,7 @@ impl DocumentApp for Fem3dPlayApp {
     /// usize}` extruded-footprint contract into a new `FemSolid`, defaulted to the document's first
     /// existing material if any, else an `"unassigned"` placeholder id — the solid simply won't solve
     /// until a real material is assigned.
-    fn import_media(&self, port: &str, media: &Media, doc: &DocumentView<'_, Fem3dDocument>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, Fem3dDocument>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation, Self::DraftOperation>, MediaError> {
         match port {
             "document:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -222,19 +222,19 @@ impl DocumentApp for Fem3dPlayApp {
     /// 🧮️ No sticky `ActionArgDef` defaults are mirrored here (all of `addSolid`'s
     /// `baseZ`/`layers`/`meshSize` defaults are baked directly into its handler, not user-configurable
     /// settings).
-    fn config_spec(&self) -> ConfigSpec {
+    fn config_spec() -> ConfigSpec {
         ConfigSpec::empty()
     }
 
-    fn command_id(&self, command: &Fem3dCommand) -> &str {
+    fn command_id(command: &Fem3dCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &Fem3dCommand, doc: &DocumentView<'_, Fem3dDocument>, cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation>, Fault> {
+    fn handle(command: &Fem3dCommand, doc: &DocumentView<'_, Fem3dDocument>, cfg: &ConfigView<'_, Fem3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Fem3dDocument>, cfg: &ConfigView<'_, Fem3dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, Fem3dDocument>, cfg: &ConfigView<'_, Fem3dConfig>) -> UiNode {
         let camera = &cfg.projection.camera;
         match body_key {
             window_model::FEM3D_BODY_MODEL => window_model::render(doc.projection, camera),
@@ -329,7 +329,7 @@ pub fn create_fem3d_app() -> App {
             .action_args("setResultDisplay", crate::core::shared::result_display_action_args())
             // 🎯️ Typed channel surface — `config_spec()`/`fem3d_io()` are this same information's single
             // source of truth, reused here rather than duplicated.
-            .config(Fem3dPlayApp::default().config_spec())
+            .config(Fem3dPlayApp::config_spec())
             .io(crate::artifacts::fem3d::engine::fem3d_io()),
     )
     .example("default", LocalizedLabel::native("Family House", "Einfamilienhaus"), FEM3D_EXAMPLE_DSL, "file")
@@ -601,7 +601,7 @@ mod tests {
 
     #[test]
     fn fem3d_io_matches_declared_artifact_identity_3d() {
-        let io = Fem3dPlayApp.io().expect("fem3d declares typed media I/O");
+        let io = Fem3dPlayApp::io().expect("fem3d declares typed media I/O");
         assert_eq!(io.artifact.id, "3d.fem");
         assert!(io.ports.iter().any(|port| port.id == "geometry:in"));
         assert!(io.ports.iter().any(|port| port.id == "results:out"));

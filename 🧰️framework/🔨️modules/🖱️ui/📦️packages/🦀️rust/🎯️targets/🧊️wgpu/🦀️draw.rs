@@ -688,7 +688,7 @@ pub struct GpuMeshBuffers {
 }
 
 #[derive(Default)]
-pub struct MeshGpuStore {
+pub struct MeshGpuTable {
     meshes: std::collections::HashMap<String, GpuMeshBuffers>,
 }
 
@@ -705,7 +705,7 @@ pub fn mesh_content_version(positions: &[f32], normals: &[f32], indices: &[u32])
     hash
 }
 
-impl MeshGpuStore {
+impl MeshGpuTable {
     pub fn get(&self, key: &str) -> Option<&GpuMeshBuffers> {
         self.meshes.get(key)
     }
@@ -891,13 +891,13 @@ pub struct RasterTexture {
     pub height: u32,
 }
 
-pub struct RasterTextureStore {
+pub struct RasterTextureTable {
     textures: std::collections::HashMap<String, RasterTexture>,
     layout: wgpu::BindGroupLayout,
     sampler: wgpu::Sampler,
 }
 
-impl RasterTextureStore {
+impl RasterTextureTable {
     pub fn new(device: &wgpu::Device, layout: &wgpu::BindGroupLayout) -> Self {
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor { label: Some("raster_sampler"), mag_filter: wgpu::FilterMode::Linear, min_filter: wgpu::FilterMode::Linear, ..Default::default() });
         Self { textures: std::collections::HashMap::new(), layout: layout.clone(), sampler }
@@ -1611,7 +1611,7 @@ impl UiPipelines {
     fn draw_world_pass_at<'a>(
         &'a self,
         pass: &mut wgpu::RenderPass<'a>,
-        mesh_store: &MeshGpuStore,
+        mesh_store: &MeshGpuTable,
         prepared: &PreparedWorldPass,
         slot: u32,
         instance_buffer: wgpu::BufferSlice<'a>,
@@ -1651,8 +1651,8 @@ impl UiPipelines {
         pass.set_bind_group(0, &self.glyph_bind_group, &[]);
     }
 
-    fn draw_world_range<'a>(pass: &mut wgpu::RenderPass<'a>, mesh_store: &MeshGpuStore, draw_call: &WorldDrawRange, instance_buffer: wgpu::BufferSlice<'a>, instance_stride: u64) {
-        let store_key = MeshGpuStore::lookup_key(&draw_call.mesh_key, draw_call.mesh_version);
+    fn draw_world_range<'a>(pass: &mut wgpu::RenderPass<'a>, mesh_store: &MeshGpuTable, draw_call: &WorldDrawRange, instance_buffer: wgpu::BufferSlice<'a>, instance_stride: u64) {
+        let store_key = MeshGpuTable::lookup_key(&draw_call.mesh_key, draw_call.mesh_version);
         let Some(mesh) = mesh_store.get(&store_key) else {
             return;
         };
@@ -1678,7 +1678,7 @@ impl UiPipelines {
     fn draw_raster_layers(
         &self,
         pass: &mut wgpu::RenderPass<'_>,
-        raster_store: &RasterTextureStore,
+        raster_store: &RasterTextureTable,
         draw: &DrawList,
         frame_buffers: &mut FrameBuffers,
         device: &wgpu::Device,
@@ -1756,7 +1756,7 @@ impl UiPipelines {
         pass_index_map: &[Option<usize>],
         instance_buffer: Option<wgpu::BufferSlice<'a>>,
         line_buffer: Option<wgpu::BufferSlice<'a>>,
-        mesh_store: &MeshGpuStore,
+        mesh_store: &MeshGpuTable,
         width: f32,
         height: f32,
         depth_enabled: bool,
@@ -1846,8 +1846,8 @@ impl UiPipelines {
         scene: &'a SceneColorTarget,
         depth_view: Option<&'a wgpu::TextureView>,
         draw: &DrawList,
-        mesh_store: &MeshGpuStore,
-        raster_store: &RasterTextureStore,
+        mesh_store: &MeshGpuTable,
+        raster_store: &RasterTextureTable,
         frame_buffers: &mut FrameBuffers,
         width: f32,
         height: f32,
@@ -1920,8 +1920,8 @@ impl UiPipelines {
         view: &'a wgpu::TextureView,
         draw: &DrawList,
         depth_view: Option<&'a wgpu::TextureView>,
-        mesh_store: &MeshGpuStore,
-        raster_store: &RasterTextureStore,
+        mesh_store: &MeshGpuTable,
+        raster_store: &RasterTextureTable,
         frame_buffers: &mut FrameBuffers,
         width: f32,
         height: f32,
@@ -1989,8 +1989,8 @@ impl UiPipelines {
         depth_view: Option<&'a wgpu::TextureView>,
         draw: &DrawList,
         overlay: Option<&DrawList>,
-        mesh_store: &MeshGpuStore,
-        raster_store: &RasterTextureStore,
+        mesh_store: &MeshGpuTable,
+        raster_store: &RasterTextureTable,
         frame_buffers: &mut FrameBuffers,
         width: f32,
         height: f32,
@@ -2028,8 +2028,8 @@ impl UiPipelines {
         depth_view: Option<&'a wgpu::TextureView>,
         draw: &DrawList,
         overlay: Option<&DrawList>,
-        mesh_store: &MeshGpuStore,
-        raster_store: &RasterTextureStore,
+        mesh_store: &MeshGpuTable,
+        raster_store: &RasterTextureTable,
         frame_buffers: &mut FrameBuffers,
         width: f32,
         height: f32,

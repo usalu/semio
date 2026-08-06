@@ -5,6 +5,10 @@
 pub mod engine;
 pub use engine::*;
 
+#[path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️component.rs"]
+pub mod os_engine;
+pub use os_engine::{Engine, EngineCache, EngineFault, EngineHandle as KernelEngineHandle, EngineKey};
+
 #[cfg(feature = "booleans")]
 #[path = "../../🔀️booleans/🦀️component.rs"]
 pub mod booleans;
@@ -15,4 +19,4 @@ pub mod trace;
 
 #[path = "../../🗄️store/🦀️component.rs"]
 mod store;
-pub use store::DrawingStore;
+pub use store::{DrawingEngine, DrawingStore};

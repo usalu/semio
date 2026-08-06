@@ -16,10 +16,11 @@ use crate::apps::draw::panels::{catalogue as catalogue_panel, layers as layers_p
 use crate::apps::draw::terminology::DrawPlayLabels;
 use crate::artifacts::draw::op::DrawOperation;
 use crate::artifacts::draw::{DrawDocument, DRAW_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, SurfaceKind, UtilityCategory, UtilityDefinition, WindowEngagement,
     WindowEngagementInput, WindowEngagementStatus,
 };
+use store::EngineHandles;
 use serde_json::Value;
 use std::sync::Mutex;
 use store::DocumentPack;
@@ -107,12 +108,12 @@ use canvas::{canvas_commit_draft, canvas_double_click, canvas_escape, canvas_poi
 /// state that is neither document nor view-config — the live gesture statechart — threaded into every
 /// command handler as the `app_commands!` dispatch context.
 #[derive(Default)]
-pub struct DrawPlayApp {
-    session: Mutex<DrawSession>,
-}
+pub struct DrawPlayApp;
 
-fn session_lock(app: &DrawPlayApp) -> std::sync::MutexGuard<'_, DrawSession> {
-    app.session.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+static DRAWPLAYAPP_SESSION: std::sync::LazyLock<std::sync::Mutex<DrawSession>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(<DrawSession>::default()));
+
+fn session_lock() -> std::sync::MutexGuard<'static, DrawSession> {
+    DRAWPLAYAPP_SESSION.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
 impl DocumentApp for DrawPlayApp {
@@ -120,59 +121,57 @@ impl DocumentApp for DrawPlayApp {
     type Operation = DrawOperation;
     type Config = DrawConfig;
     type ConfigOperation = DrawConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = DrawCommand;
 
-    fn app_id(&self) -> &str {
-        DRAW_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = DRAW_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = DRAW_DOCUMENT_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        DRAW_DOCUMENT_SCHEMA
-    }
-
-    fn initial_projection(&self) -> DrawDocument {
+    fn initial_projection() -> DrawDocument {
         crate::artifacts::draw::engine::default_draw_document("empty", None)
     }
 
-    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(crate::artifacts::draw::engine::draw_io())
     }
 
     /// 🎞️ `vector:out` (see `crate::artifacts::draw::engine::draw_vector_media`) plus the inherited
     /// `document:out` default (the pack of `doc.projection`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, DrawDocument>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, DrawDocument>) -> Result<Media, MediaError> {
         match port {
             "vector:out" => crate::artifacts::draw::engine::draw_vector_media(doc.projection),
             "document:out" => {
-                let media_type = self.io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.projection.encode_pack();
-                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
     }
 
-    fn whole_document_operation(&self, projection: DrawDocument) -> Option<DrawOperation> {
+    fn whole_document_operation(projection: DrawDocument) -> Option<DrawOperation> {
         Some(DrawOperation::SetDocument { document: projection })
     }
 
     /// 🏷️ `app_commands!`'s generated `command_id()`.
-    fn command_id(&self, command: &DrawCommand) -> &str {
+    fn command_id(command: &DrawCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &DrawCommand, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>) -> Result<Emit<DrawOperation, DrawConfigOperation>, Fault> {
-        let mut session = session_lock(self);
+    fn handle(command: &DrawCommand, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DrawOperation, DrawConfigOperation, Self::DraftOperation>, Fault> {
+        let mut session = session_lock();
         command.dispatch(doc, cfg, &mut session)
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>) -> semio_framework_plugin::UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>) -> semio_framework_plugin::UiNode {
         let document = doc.projection;
         let config = cfg.projection;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<DrawPlayLabels>(&config.locale);
         let active_utility = config.active_utility_id.as_str();
-        let session = session_lock(self);
+        let session = session_lock();
         match body_key {
             DRAW_PLAY_BODY_COMPOSITE => canvas_window::render(document, config, &session.gesture, active_utility),
             DRAW_PLAY_BODY_LAYERS => layers_panel::render(document, config, labels),

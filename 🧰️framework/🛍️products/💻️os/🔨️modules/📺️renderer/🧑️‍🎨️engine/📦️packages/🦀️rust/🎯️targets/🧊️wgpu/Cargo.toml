@@ -23,12 +23,10 @@ semio-framework-core = { path = "../../../../../../../../../📦️packages/🦀
 framework_surface_node_graph = { path = "../../../../../../../../../🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface" }
 framework_editor = { path = "../../../../../../../../../🔨️modules/✍️editor/📦️packages/🦀️rust", package = "semio-framework-editor" }
 infinite_canvas = { path = "../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
-infinite_world = { path = "../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 # 🎬️ Direct dependency (rather than reaching through `infinite_world`, which imports these privately)
 # so the Tutorial track's camera keyframes can convert to/from `OrbitController`/`Camera3d` — see
 # `//#region 🎬️Tutorial` in lib.rs.
 semio-s-3d = { path = "../../../../../../../../../../✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
-framework_surface_tiled_map = { path = "../../../../../../../../../🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface" }
 puzzle = { path = "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle" }
 semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 ui_wgpu = { path = "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }

@@ -14,7 +14,8 @@ use crate::artifacts::en1994::engine::En1994Family;
 use crate::artifacts::en1994::op::Operation;
 use crate::artifacts::en1994::Document;
 use crate::core::{NormConfig, NormConfigOperation, NormHost};
-use semio_framework_plugin::{App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, LocalizedLabel, Media, MediaError, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, LocalizedLabel, Media, MediaError, UiNode};
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const APP_ID: &str = "norm-en-1994-play";
@@ -50,37 +51,35 @@ impl DocumentApp for En1994PlayApp {
     type Operation = Operation;
     type Config = NormConfig;
     type ConfigOperation = NormConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = En1994Command;
 
-    fn app_id(&self) -> &str {
-        APP_ID
-    }
+    const APP_ID: &'static str = "norm-en-1994-play";
+    const DOCUMENT_SCHEMA: &'static str = "semio.norm.en1994/v1";
 
-    fn document_schema(&self) -> &str {
-        DOCUMENT_SCHEMA
-    }
-
-    fn config_schema(&self) -> &str {
+    fn config_schema() -> &'static str {
         CONFIG_SCHEMA
     }
 
-    fn initial_projection(&self) -> Document {
+    fn initial_projection() -> Document {
         Document::default()
     }
 
-    fn io(&self) -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(crate::core::app::norm_io(VARIANT, DOCUMENT_SCHEMA))
     }
 
-    fn command_id(&self, command: &En1994Command) -> &str {
+    fn command_id(command: &En1994Command) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &En1994Command, doc: &DocumentView<'_, Document>, cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Operation, NormConfigOperation>, Fault> {
+    fn handle(command: &En1994Command, doc: &DocumentView<'_, Document>, cfg: &ConfigView<'_, NormConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Operation, NormConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Document>, cfg: &ConfigView<'_, NormConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, Document>, cfg: &ConfigView<'_, NormConfig>) -> UiNode {
         let host = NormHost::<En1994Family>::from_document(doc.projection.clone());
         match body_key {
             inputs::BODY_INPUTS => inputs::render(doc.projection),
@@ -96,12 +95,12 @@ impl DocumentApp for En1994PlayApp {
     /// 🎞️ `"report:out"`/`"document:out"` — see `crate::core::app::export_media`, which all fifteen apps
     /// share (overriding this method shadows the SDK default entirely, so `"document:out"` is
     /// re-implemented there rather than left unreachable).
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, Document>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, Document>) -> Result<Media, MediaError> {
         crate::core::app::export_media::<En1994Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.projection)
     }
 
     /// 🎞️ `"model:in"`/`"document:in"` — see `crate::core::app::import_media`.
-    fn import_media(&self, port: &str, media: &Media, _doc: &DocumentView<'_, Document>) -> Result<Emit<Operation, NormConfigOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Document>) -> Result<Emit<Operation, NormConfigOperation, Self::DraftOperation>, MediaError> {
         crate::core::app::import_media::<Document>(port, media)
     }
     //#endregion 🔖️MediaPorts

@@ -7,7 +7,7 @@ use crate::apps::layout::canvas::active_page;
 use crate::apps::layout::commands::author::{add_frame, add_page};
 use crate::apps::layout::config::{LayoutConfig, LayoutDropPreviewState};
 use crate::apps::layout::config::LayoutConfigOperation;
-use crate::artifacts::layout::engine::scene::build_display_list_for_page;
+use crate::artifacts::layout::engine::scene::{build_display_list_for_page, LayoutEngine};
 use crate::artifacts::layout::op::LayoutOperation;
 use crate::artifacts::layout::{LayoutCamera, LayoutDocument};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
@@ -32,7 +32,8 @@ fn screen_to_world_for_surface(config: &LayoutConfig, blueprint: bool, sx: f64, 
 fn hit_test_at(doc: &LayoutDocument, config: &LayoutConfig, sx: f64, sy: f64, width: f64, height: f64, blueprint: bool) -> Option<String> {
     let page = active_page(doc, config)?;
     let (wx, wy) = screen_to_world_for_surface(config, blueprint, sx, sy, width, height);
-    let list = build_display_list_for_page(doc, page, &page.id, &config.selected_ids, config.hovered_id.as_deref(), blueprint);
+    let mut engine = LayoutEngine::new();
+    let list = build_display_list_for_page(&mut engine, doc, page, &page.id, &config.selected_ids, config.hovered_id.as_deref(), blueprint);
     list.hit_test(wx as f32, wy as f32)
 }
 //#endregion 🔖️Shared

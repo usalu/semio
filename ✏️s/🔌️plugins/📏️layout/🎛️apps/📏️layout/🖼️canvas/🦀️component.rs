@@ -5,7 +5,7 @@
 //! consumers it has, because artifacts must never depend on apps.
 
 use crate::apps::layout::config::LayoutConfig;
-use crate::artifacts::layout::engine::scene::build_display_list_for_page;
+use crate::artifacts::layout::engine::scene::{LayoutEngine, build_display_list_for_page};
 use crate::artifacts::layout::{LayoutDocument, Page};
 use serde_json::{json, Value};
 
@@ -146,12 +146,12 @@ fn display_list_to_host_layers(list: &crate::artifacts::layout::engine::scene::D
 
 /// 🖼️ Builds the host canvas-2d layer JSON for the given surface (`blueprint` or `preview`) — the
 /// single shared render path both `🎭️modes/✏️edit/🪟️windows/📐️blueprint` and `…/👁️preview` call.
-pub fn canvas_layers(doc: &LayoutDocument, config: &LayoutConfig, blueprint: bool) -> String {
+pub fn canvas_layers(engine: &mut LayoutEngine, doc: &LayoutDocument, config: &LayoutConfig, blueprint: bool) -> String {
     let page = match active_page(doc, config) {
         Some(page) => page,
         None => return "[]".into(),
     };
-    let list = build_display_list_for_page(doc, page, &page.id, &config.selected_ids, config.hovered_id.as_deref(), blueprint);
+    let list = build_display_list_for_page(engine, doc, page, &page.id, &config.selected_ids, config.hovered_id.as_deref(), blueprint);
     let layers = display_list_to_host_layers(&list, blueprint, &config.drop_preview);
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
 }
@@ -174,7 +174,8 @@ mod tests {
     fn canvas_layers_renders_the_page_background() {
         let doc = crate::artifacts::layout::engine::default_document();
         let config = LayoutConfig::default();
-        let json = canvas_layers(&doc, &config, true);
+        let mut engine = LayoutEngine::new();
+        let json = canvas_layers(&mut engine, &doc, &config, true);
         assert!(json.contains("layout.page-bg"));
     }
 }

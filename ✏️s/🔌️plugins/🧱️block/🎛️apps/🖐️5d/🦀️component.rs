@@ -17,9 +17,10 @@ use crate::apps::block5d::panels::{document as document_panel, inspection as ins
 use crate::apps::block5d::terminology::block5d_labels;
 use crate::artifacts::block5d::op::Block5dOperation;
 use crate::artifacts::block5d::{artifact_kind, Block5dDefinition, BLOCK_5D_SCHEMA};
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionDescriptor, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
+use store::EngineHandles;
 use serde_json::Value;
 
 //#region 🔖️Constants
@@ -65,32 +66,30 @@ impl DocumentApp for Block5dPlayApp {
     type Operation = Block5dOperation;
     type Config = Block5dConfig;
     type ConfigOperation = Block5dConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = Block5dCommand;
 
-    fn app_id(&self) -> &str {
-        BLOCK5D_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = BLOCK5D_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = BLOCK_5D_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        BLOCK_5D_SCHEMA
-    }
-
-    fn initial_projection(&self) -> Block5dDefinition {
+    fn initial_projection() -> Block5dDefinition {
         crate::artifacts::block5d::engine::empty_block5d_definition()
     }
 
-    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(crate::artifacts::block5d::engine::block5d_io())
     }
 
-    fn command_id(&self, command: &Block5dCommand) -> &str {
+    fn command_id(command: &Block5dCommand) -> &str {
         command.command_id()
     }
 
     /// 🎯️ Maps host action id + JSON args onto `Block5dCommand` — React/wgpu still speak the stringly
     /// `{action,args}` wire; this is the typed-command bridge until those call sites send `OpBinary`
     /// bytes directly.
-    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         let str_vec_field = |key: &str| -> Vec<String> {
             args.and_then(|value| value.get(key))
@@ -114,11 +113,11 @@ impl DocumentApp for Block5dPlayApp {
         }
     }
 
-    fn handle(&self, command: &Block5dCommand, doc: &DocumentView<'_, Block5dDefinition>, cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dOperation, Block5dConfigOperation>, Fault> {
+    fn handle(command: &Block5dCommand, doc: &DocumentView<'_, Block5dDefinition>, cfg: &ConfigView<'_, Block5dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block5dOperation, Block5dConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Block5dDefinition>, cfg: &ConfigView<'_, Block5dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, Block5dDefinition>, cfg: &ConfigView<'_, Block5dConfig>) -> UiNode {
         let labels = block5d_labels(&cfg.projection.locale);
         match body_key {
             board::BLOCK5D_BODY_BOARD => board::render(doc.projection, labels),
@@ -134,7 +133,7 @@ impl DocumentApp for Block5dPlayApp {
     /// a `kit.catalog`-schema `Media` value for the `"catalog:out"` port declared in
     /// `crate::artifacts::block5d::engine::block5d_io`. Falls through to the default whole-document
     /// pack export for every other port (`"document:out"`).
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, Block5dDefinition>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, Block5dDefinition>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
             // 🌉️ Reimplements `DocumentApp::export_media`'s default `"document:out"` behavior
             // verbatim — overriding the trait method forfeits the ability to delegate back to its
@@ -143,9 +142,9 @@ impl DocumentApp for Block5dPlayApp {
             if port != "document:out" {
                 return Err(MediaError::NotImplemented);
             }
-            let media_type = self.io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.document_media_type);
+            let media_type = Self::io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.document_media_type);
             let bytes = store::DocumentPack::encode_pack(doc.projection);
-            return Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
+            return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let fragment = crate::artifacts::block5d::engine::puzzle5d_catalog_fragment(doc.projection);
         Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() } })

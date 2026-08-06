@@ -1,0 +1,12 @@
+[DEBUG] invoking policy (SEMIO_OS_STATE_AUTHORITY=1)
+{
+  "total": 595,
+  "high": 310,
+  "osStateAuthority": 102,
+  "osByKind": {
+    "os-state-authority/item-scope-global": 23,
+    "os-state-authority/id-minting": 32,
+    "os-state-authority/authority-struct-map": 38,
+    "os-state-authority/document-app-shape": 9
+  }
+}

@@ -114,11 +114,13 @@ impl EngineCache {
         let key = Self::engine_key(engine_id, input);
         if self.entries.contains_key(&key) {
             self.touch(key);
+            eprintln!("[DEBUG] engine cache HIT engine_id={engine_id} key={:?}", key);
             return Ok(EngineHandle {
                 key,
                 engine_id: engine_id.to_string(),
             });
         }
+        eprintln!("[DEBUG] engine cache MISS engine_id={engine_id}");
         let output = {
             let engine = self
                 .engines

@@ -12,10 +12,11 @@ use crate::apps::raster::terminology::raster_play_labels;
 use crate::artifacts::raster::engine::{raster_composite_media, raster_io, semio_example_json};
 use crate::artifacts::raster::op::RasterOperation;
 use crate::artifacts::raster::{RasterLayerNode, RasterProjection as RasterDocument, RASTER_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     App, ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionKind, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     OsMediaCapability, OsMediaFormat, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
+use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
 use store::DocumentPack;
@@ -144,21 +145,19 @@ impl DocumentApp for RasterPlayApp {
     type Operation = RasterOperation;
     type Config = RasterConfig;
     type ConfigOperation = RasterConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = RasterCommand;
 
-    fn app_id(&self) -> &str {
-        RASTER_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = RASTER_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = RASTER_DOCUMENT_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        RASTER_DOCUMENT_SCHEMA
-    }
-
-    fn initial_projection(&self) -> RasterDocument {
+    fn initial_projection() -> RasterDocument {
         crate::artifacts::raster::engine::empty_raster_document()
     }
 
-    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(raster_io())
     }
 
@@ -166,13 +165,13 @@ impl DocumentApp for RasterPlayApp {
     /// raster_composite_media}`) plus the inherited `document:out` default (the pack of
     /// `doc.projection`, replicated inline — overriding `export_media` shadows the trait's provided
     /// body for every port on this app, not just the new ones).
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, RasterDocument>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, RasterDocument>) -> Result<Media, MediaError> {
         match port {
             "image:out" => raster_composite_media(doc.projection),
             "document:out" => {
-                let media_type = self.io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.projection.encode_pack();
-                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -182,7 +181,7 @@ impl DocumentApp for RasterPlayApp {
     /// (`raster_append_image_layer`) via a whole-document `ReplaceDocument` — `RasterOperation` has
     /// no granular "add asset" step (see that function's doc). Falls through to the inherited
     /// `document:in` default (base64 pack replace) for any other port.
-    fn import_media(&self, port: &str, media: &Media, doc: &DocumentView<'_, RasterDocument>) -> Result<Emit<RasterOperation, RasterConfigOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RasterDocument>) -> Result<Emit<RasterOperation, RasterConfigOperation, Self::DraftOperation>, MediaError> {
         if port != "image:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -193,23 +192,23 @@ impl DocumentApp for RasterPlayApp {
         Ok(Emit::operations(vec![RasterOperation::ReplaceDocument { document: next }]))
     }
 
-    fn whole_document_operation(&self, projection: RasterDocument) -> Option<RasterOperation> {
+    fn whole_document_operation(projection: RasterDocument) -> Option<RasterOperation> {
         Some(RasterOperation::ReplaceDocument { document: projection })
     }
 
-    fn command_id(&self, command: &RasterCommand) -> &str {
+    fn command_id(command: &RasterCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &RasterCommand, doc: &DocumentView<'_, RasterDocument>, cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterOperation, RasterConfigOperation>, Fault> {
+    fn handle(command: &RasterCommand, doc: &DocumentView<'_, RasterDocument>, cfg: &ConfigView<'_, RasterConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RasterOperation, RasterConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, RasterDocument>, cfg: &ConfigView<'_, RasterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &DocumentView<'_, RasterDocument>, cfg: &ConfigView<'_, RasterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(composite::RASTER_PLAY_WINDOW_COMPOSITE.into(), composite::window_measures(cfg.projection))])
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, RasterDocument>, cfg: &ConfigView<'_, RasterConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, RasterDocument>, cfg: &ConfigView<'_, RasterConfig>) -> UiNode {
         let document = doc.projection;
         let config = cfg.projection;
         let labels = raster_play_labels(config);

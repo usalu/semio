@@ -21,7 +21,8 @@ use crate::artifacts::present::engine::{build_tile_morph_prompt, next_frame_tile
 use crate::artifacts::present::op::PresentOperation;
 use crate::artifacts::present::{default_present_deck, FigureTileDraft, PresentDeck, PRESENT_DECK_SCHEMA};
 use protocol::CollectionOperation;
-use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
+use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -133,25 +134,23 @@ impl DocumentApp for AnimatePresentPlayApp {
     type Operation = PresentOperation;
     type Config = PresentConfig;
     type ConfigOperation = PresentConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = PresentCommand;
 
-    fn app_id(&self) -> &str {
-        PRESENT_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = PRESENT_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = PRESENT_DECK_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        PRESENT_DECK_SCHEMA
-    }
-
-    fn initial_projection(&self) -> PresentDeck {
+    fn initial_projection() -> PresentDeck {
         default_present_deck()
     }
 
-    fn io(&self) -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(crate::artifacts::present::engine::present_io())
     }
 
-    fn whole_document_operation(&self, projection: PresentDeck) -> Option<PresentOperation> {
+    fn whole_document_operation(projection: PresentDeck) -> Option<PresentOperation> {
         Some(PresentOperation::SetDeck { deck: projection })
     }
 
@@ -160,7 +159,7 @@ impl DocumentApp for AnimatePresentPlayApp {
     /// doc comment for why this schema's single shared `source` means tiles, not `source`, are the
     /// natural insertion point). Never mutates anything directly: the caller applies the returned
     /// `Tiles(Add)` through the ordinary, undoable document store.
-    fn import_media(&self, port: &str, media: &Media, doc: &DocumentView<'_, PresentDeck>) -> Result<Emit<PresentOperation, PresentConfigOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, PresentDeck>) -> Result<Emit<PresentOperation, PresentConfigOperation, Self::DraftOperation>, MediaError> {
         if port != "frames:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -175,15 +174,15 @@ impl DocumentApp for AnimatePresentPlayApp {
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(&self, command: &PresentCommand) -> &str {
+    fn command_id(command: &PresentCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &PresentCommand, doc: &DocumentView<'_, PresentDeck>, cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, PresentConfigOperation>, Fault> {
+    fn handle(command: &PresentCommand, doc: &DocumentView<'_, PresentDeck>, cfg: &ConfigView<'_, PresentConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PresentOperation, PresentConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, PresentDeck>, cfg: &ConfigView<'_, PresentConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, PresentDeck>, cfg: &ConfigView<'_, PresentConfig>) -> UiNode {
         let deck = doc.projection;
         let config = cfg.projection;
         let selected = &config.selected_ids;
@@ -251,7 +250,7 @@ pub fn create_animate_present_app() -> App {
             // 🎛️ App-scope command — see `🎮️commands/🌐️grid::reset_grid`'s doc comment for why this
             // isn't `seedGrid`/`clearTiles`.
             .app_command("animate.resetGrid", LocalizedLabel::native("Reset to Default Grid", "Auf Standardraster zurücksetzen"), "document")
-            .config(AnimatePresentPlayApp.config_spec())
+            .config(AnimatePresentPlayApp::config_spec())
             .io(crate::artifacts::present::engine::present_io()),
     )
     .example("demo", LocalizedLabel::native("Demo", "Demo"), store::DocumentDsl::print_dsl(&default_present_deck()), "cylinder")
@@ -380,7 +379,7 @@ mod tests {
     //#region 🔖️PortTests
     #[test]
     fn present_io_declares_frames_in_and_document_ports() {
-        let ports = AnimatePresentPlayApp.io().expect("io").all_ports();
+        let ports = AnimatePresentPlayApp::io().expect("io").all_ports();
         assert!(ports.iter().any(|port| port.id == "document:in"));
         assert!(ports.iter().any(|port| port.id == "document:out"));
         assert!(ports.iter().any(|port| port.id == "frames:in"));

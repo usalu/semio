@@ -1,10 +1,7 @@
 //! 🧱️ The B-Rep topology model: `Body` owns arenas of `Vertex/Edge/Coedge/Loop/Face/Shell/Solid`
 //! plus geometry pools (`Curve3`/`Curve2`/`Surface`) that entities reference by id rather than
-//! owning directly — two edges produced by splitting one edge share a `Curve3Id` with different
-//! parameter ranges, geometry equality is id equality, and nothing here holds an `Rc`/`Arc` or a
-//! back-pointer that would break serde round-tripping or determinism. Pcurves are first-class:
-//! every `Coedge` on a non-planar face carries one, per the plan's "pcurves are not optional
-//! cached projections" architectural rule.
+//! owning directly. **Host authority:** construct `Body` only inside an `Engine::compute` call or a
+//! host-owned `EngineCache` entry — never as long-lived plugin state.
 
 use crate::brep::arena::{CoedgeId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, Store, SurfaceId, VertexId};
 use crate::brep::curve::{Curve2, Curve3};

@@ -5,10 +5,11 @@ use flow_extension_brep::{export_solid_json, import_solid_json, tessellate_geome
 use playbook::{visible_blocks, PlaybookBlock};
 use protocol::{Operation, OperationDiff};
 use semio_framework_core::mesh_from_indexed;
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppLabels, ConfigView,
     Contribution, DocumentApp, DocumentView, Emit, Fault, Label, Locale, LocalizedLabel, PluginBundle, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, ViewState, WorldSunConfig,
 };
+use store::EngineHandles;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 
@@ -588,23 +589,21 @@ impl DocumentApp for ModuleApp {
     type Operation = ModulePayloadOperation;
     type Config = semio_framework_plugin::NoConfig;
     type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = Command;
 
-    fn app_id(&self) -> &str {
-        MODULE_APP_ID
-    }
+    const APP_ID: &'static str = MODULE_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = MODULE_DOCUMENT_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        MODULE_DOCUMENT_SCHEMA
-    }
-
-    fn initial_projection(&self) -> ModuleRenderPayload {
+    fn initial_projection() -> ModuleRenderPayload {
         default_payload()
     }
 
     /// 🏷️ Maps each `Command` variant back to the action id it was declared under in
     /// `create_module_app` — command-log labeling and the registry's kind-discipline check.
-    fn command_id(&self, command: &Command) -> &str {
+    fn command_id(command: &Command) -> &'static str {
         match command {
             Command::ExportSolid { .. } => ACTION_EXPORT_SOLID,
             Command::ImportSolid { .. } => ACTION_IMPORT_SOLID,
@@ -614,7 +613,7 @@ impl DocumentApp for ModuleApp {
     /// 🎯️ The bridge the React/wgpu shells still speak (`{action,args}`) — parses the two solid
     /// media actions this module dispatches into `Command`; `format` defaults to `"obj"` (matching
     /// the handlers' pre-B1 defaults) and `data` (import's file-callback payload) defaults to empty.
-    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Command, Fault> {
         let format = args.and_then(|value| value.get("format")).and_then(Value::as_str).unwrap_or("obj").to_string();
         match action {
             ACTION_EXPORT_SOLID => Ok(Command::ExportSolid { format }),
@@ -626,7 +625,7 @@ impl DocumentApp for ModuleApp {
         }
     }
 
-    fn handle(&self, command: &Command, doc: &DocumentView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>) -> Result<Emit<ModulePayloadOperation, semio_framework_plugin::NoConfigOperation>, Fault> {
+    fn handle(command: &Command, doc: &DocumentView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ModulePayloadOperation, semio_framework_plugin::NoConfigOperation, Self::DraftOperation>, Fault> {
         match command {
             Command::ExportSolid { format } => {
                 let mut payload = doc.projection.clone();
@@ -641,7 +640,7 @@ impl DocumentApp for ModuleApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>) -> UiNode {
         let labels = resolve_labels::<ModuleLabels>();
         match body_key {
             BODY_PARAMS => render_params_body(doc.projection, labels),
@@ -700,7 +699,7 @@ fn module_bundle() -> PluginBundle {
             params_body_key: BODY_PARAMS.into(),
             preview_body_key: BODY_PREVIEW.into(),
         })
-        .register_document_app(create_module_app(), ModuleApp::default)
+        .register_document_app::<ModuleApp>(create_module_app())
 }
 
 semio_framework_plugin::plugin_exports!(module_bundle);

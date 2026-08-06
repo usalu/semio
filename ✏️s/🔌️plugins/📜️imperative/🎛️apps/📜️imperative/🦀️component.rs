@@ -15,7 +15,8 @@ use crate::apps::imperative::terminology::imperative_labels;
 use crate::artifacts::imperative::engine::{default_document, imperative_io};
 use crate::artifacts::imperative::op::ImperativeOperation;
 use crate::artifacts::imperative::{ImperativeDocument, IMPERATIVE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode};
+use store::EngineHandles;
 use serde_json::Value;
 use store::DocumentPack;
 
@@ -74,38 +75,36 @@ impl DocumentApp for ImperativePlayApp {
     type Operation = ImperativeOperation;
     type Config = ImperativeConfig;
     type ConfigOperation = ImperativeConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = ImperativeCommand;
 
-    fn app_id(&self) -> &str {
-        IMPERATIVE_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = IMPERATIVE_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = IMPERATIVE_DOCUMENT_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        IMPERATIVE_DOCUMENT_SCHEMA
-    }
-
-    fn initial_projection(&self) -> ImperativeDocument {
+    fn initial_projection() -> ImperativeDocument {
         default_document()
     }
 
-    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(imperative_io())
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(&self, command: &ImperativeCommand) -> &str {
+    fn command_id(command: &ImperativeCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &ImperativeCommand, doc: &DocumentView<'_, ImperativeDocument>, cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeOperation, ImperativeConfigOperation>, Fault> {
+    fn handle(command: &ImperativeCommand, doc: &DocumentView<'_, ImperativeDocument>, cfg: &ConfigView<'_, ImperativeConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ImperativeOperation, ImperativeConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
     /// 🎞️ `"result:out"` exports the last `run` scope (a generic data value, the port recipe's
     /// `computation.imperative`-kinded output); `"document:out"` replicates `DocumentApp::export_media`'s
     /// default whole-document-pack behavior (unreachable once this override exists).
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, ImperativeDocument>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, ImperativeDocument>) -> Result<Media, MediaError> {
         match port {
             "result:out" => {
                 let host = crate::artifacts::imperative::engine::ImperativeHost::from_document(doc.projection.clone());
@@ -114,15 +113,15 @@ impl DocumentApp for ImperativePlayApp {
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.imperative".into(), json } })
             }
             "document:out" => {
-                let media_type = self.io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.projection.encode_pack();
-                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, ImperativeDocument>, cfg: &ConfigView<'_, ImperativeConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, ImperativeDocument>, cfg: &ConfigView<'_, ImperativeConfig>) -> UiNode {
         let document = doc.projection;
         let config = cfg.projection;
         let labels = imperative_labels(config);

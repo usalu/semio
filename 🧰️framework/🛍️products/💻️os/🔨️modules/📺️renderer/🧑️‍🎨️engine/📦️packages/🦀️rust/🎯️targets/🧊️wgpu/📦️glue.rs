@@ -13,6 +13,8 @@ extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
+extern crate framework_surface_node_graph as framework_surface_tiled_map;
+extern crate infinite_canvas as infinite_world;
 #[macro_export]
 macro_rules! action_args_json {
     ($($tt:tt)*) => {

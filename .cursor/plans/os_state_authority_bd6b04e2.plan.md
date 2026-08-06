@@ -7,34 +7,34 @@ todos:
     status: completed
   - id: m1-store-seal
     content: "Wave 1a: seal the store write gate - pub(crate) DocumentEnvelope fields, DocumentEnvelopeView, delete set_state/set_envelope/ingest_remote in favour of DocumentCommand::Reset and IngestRemote, dispatch returns CommandReceipt, subordinate SpaceHost and db submit"
-    status: in_progress
+    status: completed
   - id: m1-vcs-ids
     content: "Wave 1a: deterministic identity in vcs - replace the ID_COUNTER global with edit_scoped_id(edit_id, ordinal) and delete the duplicate CollectionOperation/ItemPatch twins in favour of spr"
-    status: in_progress
+    status: completed
   - id: m2-engine-module
     content: "Wave 1a: create the OS engine module with Engine, EngineKey, EngineHandle, EngineHost and the host-owned evictable EngineCache, incremental via parent-handle inputs, wired into os glue and Cargo"
-    status: in_progress
+    status: completed
   - id: m4-draft-lane
     content: "Wave 1a: add the DraftStore lane and DocumentCommand::PruneDrafts so ephemeral state gets real operations and diffs but never enters a Change or Checkpoint"
-    status: in_progress
+    status: completed
   - id: m3-receiverless-app
     content: "Wave 1b: make DocumentApp receiverless with associated consts, add draft_operations to Emit, and drop the register_document_app factory closure so app types are ZSTs"
-    status: pending
+    status: completed
   - id: m3-host-authority
     content: "Wave 1b: move DocumentStore, ConfigStore, command_log and cache out of the guest into the plugin host as DocumentSession, delete the guest INSTANCES TLS and ViewState cache, rewrite exchange in world.wit and the AppCommand/AppFrame codec, bump CHANNEL_VERSION to 5, add engine-derive/engine-read imports"
-    status: pending
+    status: in_progress
   - id: w2-kernels
     content: "Wave 2: convert computational kernels to OS engines - 2d DrawingStore, 3d brep arena/Body/LabelSource/HalfedgeMesh, layout ENGINE and raster, terrain and node-graph"
-    status: pending
+    status: completed
   - id: w2-plugins
     content: "Wave 2: migrate all ~32 plugin apps to the receiverless contract with document/config/draft lanes, eliminating every plugin-side session host and global mutex"
-    status: pending
+    status: in_progress
   - id: w2-framework
     content: "Wave 2: migrate non-OS framework hosts - EditorHost, MapHost, RasterHost, GraphHost, BoardSession, TerrainSessionState, ActionBus, Platform, wfc DomainStore, ui wgpu retained state, and the s-modules mindmap/lang/imperative"
-    status: pending
+    status: in_progress
   - id: w2-typescript
     content: "Wave 2: migrate TypeScript state - CAD InteractionRuntime/AttributeStore/registries/stately/brepjs, and framework UI chrome, ShellScope, Tree, UiDriver and styling off localStorage and module-level bindings"
-    status: pending
+    status: in_progress
   - id: w3-enforcement
     content: "Wave 3: integrator applies root-file requests and lands policyOsStateAuthorityBreaches, policyDocumentAppShapeBreaches, the dependency-cruiser and eslint rules, verify gate wiring and launch.json entries with zero allowlist"
     status: pending

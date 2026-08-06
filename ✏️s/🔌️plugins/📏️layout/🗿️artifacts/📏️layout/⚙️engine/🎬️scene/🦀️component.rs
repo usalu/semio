@@ -4,7 +4,7 @@
 
 use std::borrow::Cow;
 use std::io::{Cursor, Write};
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 
 use fontique::Blob;
 use image::{ImageBuffer, Rgba};
@@ -148,12 +148,6 @@ impl LayoutEngine {
     }
 }
 
-static ENGINE: OnceLock<std::sync::Mutex<LayoutEngine>> = OnceLock::new();
-
-fn engine() -> &'static std::sync::Mutex<LayoutEngine> {
-    ENGINE.get_or_init(|| std::sync::Mutex::new(LayoutEngine::new()))
-}
-
 fn alignment_from_str(value: &str) -> Alignment {
     match value {
         "center" | "middle" => Alignment::Middle,
@@ -167,11 +161,11 @@ fn default_paragraph(doc: &LayoutDocument) -> ParagraphStyle {
     doc.paragraph_styles.first().cloned().unwrap_or(ParagraphStyle { id: "paragraph.body".into(), name: "Body".into(), font_family: "Layout Sans".into(), font_size: 12.0, font_weight: 400, leading: 14.4, tracking: 0.0, alignment: "left".into() })
 }
 
-pub fn layout_story_in_frame(story: &TextStory, paragraph: &ParagraphStyle, frame_width: f32, frame_height: f32) -> (Layout<[u8; 4]>, bool) {
-    engine().lock().expect("layout engine").layout_story(story, paragraph, frame_width, frame_height)
+pub fn layout_story_in_frame(engine: &mut LayoutEngine, story: &TextStory, paragraph: &ParagraphStyle, frame_width: f32, frame_height: f32) -> (Layout<[u8; 4]>, bool) {
+    engine.layout_story(story, paragraph, frame_width, frame_height)
 }
 
-pub fn build_display_list_for_page(doc: &LayoutDocument, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool) -> DisplayList {
+pub fn build_display_list_for_page(engine: &mut LayoutEngine, doc: &LayoutDocument, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool) -> DisplayList {
     let resolved = resolve_page(doc, page);
     let mut rects = Vec::new();
     let mut text_runs = Vec::new();
@@ -215,7 +209,7 @@ pub fn build_display_list_for_page(doc: &LayoutDocument, page: &Page, active_pag
                     let paragraph = default_paragraph(doc);
                     let frame_width = (bounds.width - inset.width - inset.x * 2.0).max(1.0) as f32;
                     let frame_height = (bounds.height - inset.height - inset.y * 2.0).max(1.0) as f32;
-                    let (layout, _overset) = layout_story_in_frame(story, &paragraph, frame_width, frame_height);
+                    let (layout, _overset) = layout_story_in_frame(engine, story, &paragraph, frame_width, frame_height);
                     let mut glyphs = Vec::new();
                     let base_x = (bounds.x + inset.x) as f32;
                     let base_y = (bounds.y + inset.y) as f32;
@@ -359,17 +353,17 @@ pub struct SceneQuery<'a> {
     pub viewport: &'a Viewport,
 }
 
-pub fn build_scene_from_document_json(json: &str, query: &SceneQuery<'_>, drop_preview: Option<&LayoutDropPreview>) -> Result<Scene, LayoutError> {
+pub fn build_scene_from_document_json(engine: &mut LayoutEngine, json: &str, query: &SceneQuery<'_>, drop_preview: Option<&LayoutDropPreview>) -> Result<Scene, LayoutError> {
     let doc = parse_layout_document(json)?;
     let page = doc.pages.iter().find(|p| p.id == query.page_id).ok_or_else(|| LayoutError::PageNotFound(query.page_id.to_string()))?;
-    let list = build_display_list_for_page(&doc, page, query.page_id, query.selected_ids, query.hovered_id, query.chrome_blueprint);
+    let list = build_display_list_for_page(engine, &doc, page, query.page_id, query.selected_ids, query.hovered_id, query.chrome_blueprint);
     Ok(display_list_to_scene(&list, query.chrome_blueprint, query.camera, query.viewport, drop_preview))
 }
 
-pub fn hit_test_document_json(json: &str, sx: f64, sy: f64, query: &SceneQuery<'_>) -> Result<Option<String>, LayoutError> {
+pub fn hit_test_document_json(engine: &mut LayoutEngine, json: &str, sx: f64, sy: f64, query: &SceneQuery<'_>) -> Result<Option<String>, LayoutError> {
     let doc = parse_layout_document(json)?;
     let page = doc.pages.iter().find(|p| p.id == query.page_id).ok_or_else(|| LayoutError::PageNotFound(query.page_id.to_string()))?;
-    let list = build_display_list_for_page(&doc, page, query.page_id, query.selected_ids, query.hovered_id, true);
+    let list = build_display_list_for_page(engine, &doc, page, query.page_id, query.selected_ids, query.hovered_id, true);
     let world = camera::screen_to_world(query.camera, query.viewport, Point::new(sx, sy));
     Ok(list.hit_test(world.x as f32, world.y as f32))
 }
@@ -424,13 +418,15 @@ pub fn export_display_list_svg(list: &DisplayList) -> String {
 
 pub fn export_document_svg(doc: &LayoutDocument, page_id: &str) -> Result<String, LayoutError> {
     let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| LayoutError::PageNotFound(page_id.to_string()))?;
-    let list = build_display_list_for_page(doc, page, page_id, &[], None, false);
+    let mut engine = LayoutEngine::new();
+    let list = build_display_list_for_page(&mut engine, doc, page, page_id, &[], None, false);
     Ok(export_display_list_svg(&list))
 }
 
 pub fn export_document_pdf(doc: &LayoutDocument, page_id: &str) -> Result<Vec<u8>, LayoutError> {
     let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| LayoutError::PageNotFound(page_id.to_string()))?;
-    let list = build_display_list_for_page(doc, page, page_id, &[], None, false);
+    let mut engine = LayoutEngine::new();
+    let list = build_display_list_for_page(&mut engine, doc, page, page_id, &[], None, false);
     let mut body = String::new();
     body.push_str("BT\n/F1 12 Tf\n");
     body.push_str(&format!("{} {} {} {} re\nf\n", 0, 0, page.width, page.height));
@@ -465,7 +461,8 @@ pub fn export_document_pdf(doc: &LayoutDocument, page_id: &str) -> Result<Vec<u8
 
 pub fn export_document_png_cpu(doc: &LayoutDocument, page_id: &str) -> Result<Vec<u8>, LayoutError> {
     let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| LayoutError::PageNotFound(page_id.to_string()))?;
-    let list = build_display_list_for_page(doc, page, page_id, &[], None, false);
+    let mut engine = LayoutEngine::new();
+    let list = build_display_list_for_page(&mut engine, doc, page, page_id, &[], None, false);
     let width = list.page_width.max(1.0) as u32;
     let height = list.page_height.max(1.0) as u32;
     let mut img: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::from_pixel(width, height, Rgba([255, 255, 255, 255]));
@@ -563,7 +560,8 @@ mod tests {
         let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
         let viewport = Viewport { width: 400, height: 300, dpr: 1.0 };
         let query = SceneQuery { page_id: "page-1", selected_ids: &[], hovered_id: None, chrome_blueprint: true, camera: &camera, viewport: &viewport };
-        let scene = build_scene_from_document_json(json, &query, None).expect("scene");
+        let mut engine = LayoutEngine::new();
+        let scene = build_scene_from_document_json(&mut engine, json, &query, None).expect("scene");
         let _ = scene;
     }
 
@@ -573,7 +571,8 @@ mod tests {
         let camera = Camera { x: 0.0, y: 0.0, zoom: 0.5 };
         let viewport = Viewport { width: 400, height: 300, dpr: 1.0 };
         let query = SceneQuery { page_id: "page-1", selected_ids: &[], hovered_id: None, chrome_blueprint: true, camera: &camera, viewport: &viewport };
-        let hit = hit_test_document_json(json, 210.0, 160.0, &query).expect("hit");
+        let mut engine = LayoutEngine::new();
+        let hit = hit_test_document_json(&mut engine, json, 210.0, 160.0, &query).expect("hit");
         assert_eq!(hit.as_deref(), Some("frame-1"));
     }
 
@@ -582,7 +581,8 @@ mod tests {
         let json = r#"{"schema":"layout.fixture","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[{"id":"paragraph.body","name":"Body","fontFamily":"Layout Sans","fontSize":12,"fontWeight":400,"leading":14.4,"tracking":0,"alignment":"left"}],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}]}"#;
         let doc = parse_layout_document(json).expect("doc");
         let page = doc.pages.first().expect("page");
-        let list = build_display_list_for_page(&doc, page, "page-1", &[], Some("frame-1"), true);
+        let mut engine = LayoutEngine::new();
+        let list = build_display_list_for_page(&mut engine, &doc, page, "page-1", &[], Some("frame-1"), true);
         assert!(list.rects.iter().any(|rect| rect.object_id == "frame-1" && rect.hovered));
         assert!(list.rects.iter().all(|rect| rect.object_id != "frame-1" || rect.hovered));
     }
@@ -593,8 +593,9 @@ mod tests {
         let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
         let viewport = Viewport { width: 100, height: 100, dpr: 1.0 };
         let query = SceneQuery { page_id: "missing-page", selected_ids: &[], hovered_id: None, chrome_blueprint: true, camera: &camera, viewport: &viewport };
-        assert!(matches!(build_scene_from_document_json(json, &query, None), Err(LayoutError::PageNotFound(id)) if id == "missing-page"));
-        let hit = hit_test_document_json(json, 0.0, 0.0, &query);
+        let mut engine = LayoutEngine::new();
+        assert!(matches!(build_scene_from_document_json(&mut engine, json, &query, None), Err(LayoutError::PageNotFound(id)) if id == "missing-page"));
+        let hit = hit_test_document_json(&mut engine, json, 0.0, 0.0, &query);
         assert!(matches!(hit, Err(LayoutError::PageNotFound(id)) if id == "missing-page"));
     }
 
@@ -604,7 +605,8 @@ mod tests {
         let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
         let viewport = Viewport { width: 400, height: 400, dpr: 1.0 };
         let query = SceneQuery { page_id: "page-1", selected_ids: &[], hovered_id: None, chrome_blueprint: false, camera: &camera, viewport: &viewport };
-        let hit = hit_test_document_json(json, 300.0, 300.0, &query).expect("hit test");
+        let mut engine = LayoutEngine::new();
+        let hit = hit_test_document_json(&mut engine, json, 300.0, 300.0, &query).expect("hit test");
         assert!(hit.is_none());
     }
 
@@ -628,7 +630,8 @@ mod tests {
         let json = r#"{"schema":"layout.fixture","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":10,"right":10,"bottom":10,"left":10},"columns":{"count":2,"gutter":4},"guides":[{"x":5,"y":5,"w":1,"h":1}],"layerIds":[],"layers":[],"frames":[],"overrides":[]}]}"#;
         let doc = parse_layout_document(json).expect("doc");
         let page = doc.pages.first().expect("page");
-        let list = build_display_list_for_page(&doc, page, "different-active-page", &[], None, true);
+        let mut engine = LayoutEngine::new();
+        let list = build_display_list_for_page(&mut engine, &doc, page, "different-active-page", &[], None, true);
         assert!(list.guides.is_empty(), "guides must only render for the active blueprint page");
     }
 
@@ -637,7 +640,8 @@ mod tests {
         let json = r#"{"schema":"layout.fixture","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":[],"layers":[],"frames":[],"overrides":[]}]}"#;
         let doc = parse_layout_document(json).expect("doc");
         let page = doc.pages.first().expect("page");
-        let list = build_display_list_for_page(&doc, page, "page-1", &[], None, true);
+        let mut engine = LayoutEngine::new();
+        let list = build_display_list_for_page(&mut engine, &doc, page, "page-1", &[], None, true);
         assert!(list.guides.iter().all(|guide| guide.kind != "baseline"));
     }
 
@@ -646,7 +650,8 @@ mod tests {
         let json = r#"{"schema":"layout.fixture","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[{"id":"link-missing","path":"a.png","hash":"h","width":1,"height":1,"dpi":72,"state":"missing"},{"id":"link-ready","path":"b.png","hash":"h","width":1,"height":1,"dpi":72,"state":"ready","proxyDataUrl":"data:image/png;base64,AA=="}],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":400,"height":400,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["img-missing","img-ready","img-unlinked"]}],"frames":[{"id":"img-missing","layerId":"layer-1","kind":"image","bounds":{"x":0,"y":0,"w":10,"h":10,"rotation":0},"linkId":"link-missing"},{"id":"img-ready","layerId":"layer-1","kind":"image","bounds":{"x":20,"y":0,"w":10,"h":10,"rotation":0},"linkId":"link-ready"},{"id":"img-unlinked","layerId":"layer-1","kind":"image","bounds":{"x":40,"y":0,"w":10,"h":10,"rotation":0},"linkId":"link-gone"}],"overrides":[]}]}"#;
         let doc = parse_layout_document(json).expect("doc");
         let page = doc.pages.first().expect("page");
-        let list = build_display_list_for_page(&doc, page, "page-1", &[], None, false);
+        let mut engine = LayoutEngine::new();
+        let list = build_display_list_for_page(&mut engine, &doc, page, "page-1", &[], None, false);
         let by_id = |id: &str| list.images.iter().find(|i| i.object_id == id).expect("image present");
         assert!(by_id("img-missing").placeholder, "missing-state link stays a placeholder");
         assert!(!by_id("img-ready").placeholder, "ready link with a proxy is not a placeholder");
@@ -655,15 +660,16 @@ mod tests {
 
     #[test]
     fn layout_story_in_frame_resolves_alignment_variants_and_detects_overset() {
+        let mut engine = LayoutEngine::new();
         let story = TextStory { id: "story-1".into(), content: "Hello layout engine, this line should wrap across several lines of text.".into(), style_runs: Vec::new() };
         for alignment in ["left", "center", "middle", "right", "justify", "justified", "unrecognized"] {
             let paragraph = ParagraphStyle { id: "p".into(), name: "Body".into(), font_family: "Layout Sans".into(), font_size: 12.0, font_weight: 400, leading: 14.4, tracking: 0.0, alignment: alignment.into() };
-            let (layout, overset) = layout_story_in_frame(&story, &paragraph, 80.0, 10.0);
+            let (layout, overset) = layout_story_in_frame(&mut engine, &story, &paragraph, 80.0, 10.0);
             assert!(layout.height() > 0.0, "alignment {alignment} should still measure a positive height");
             assert!(overset, "narrow/short frame with long content should overset for alignment {alignment}");
         }
         let paragraph = ParagraphStyle { id: "p".into(), name: "Body".into(), font_family: "Layout Sans".into(), font_size: 12.0, font_weight: 400, leading: 14.4, tracking: 0.0, alignment: "left".into() };
-        let (_, not_overset) = layout_story_in_frame(&story, &paragraph, 2000.0, 2000.0);
+        let (_, not_overset) = layout_story_in_frame(&mut engine, &story, &paragraph, 2000.0, 2000.0);
         assert!(!not_overset);
     }
 
@@ -764,7 +770,8 @@ mod tests {
     fn scene_png_from_display_list_writes_a_valid_png() {
         let doc = sample_document();
         let page = doc.pages.iter().find(|p| p.id == "page-1").expect("page-1");
-        let list = build_display_list_for_page(&doc, page, "page-1", &[], None, false);
+        let mut engine = LayoutEngine::new();
+        let list = build_display_list_for_page(&mut engine, &doc, page, "page-1", &[], None, false);
         let bytes = scene_png_from_display_list(&list).expect("scene png export succeeds");
         assert!(bytes.starts_with(&[0x89, b'P', b'N', b'G']));
     }

@@ -36,6 +36,7 @@ const emptyModelDefinitionAssetModules = (): ModelDefinitionAssetModules => ({
 
 let modelDefinitionAssetModules: ModelDefinitionAssetModules = emptyModelDefinitionAssetModules();
 
+/** Derived indexes from {@link modelDefinitionAssetModules} — not authoritative document state; cleared on {@link registerModelDefinitionAssets}. */
 let modelDefinitionFolderIdMapCache: ReadonlyMap<string, string> | null = null;
 let typologyOwnerByIdCache: ReadonlyMap<string, string> | null = null;
 let actionOwnerByIdCache: ReadonlyMap<string, string> | null = null;
@@ -4405,57 +4406,57 @@ export class DeclarativeActionRuntime {
   }
 }
 
-/** @emoji 🧭️ Runtime registry for data-only `ActionSpec` entries (model-definitions + host overrides). */
-export class ActionRegistry {
-  private readonly defs = new Map<string, ActionDef>();
+/** @emoji 🧭️ Immutable map of registered data-only `ActionSpec` entries (model-definitions + host overrides). */
+export type ActionRegistry = ReadonlyMap<string, ActionDef>;
 
-  register(def: ActionDef): void {
-    this.defs.set(def.id, def);
-  }
+/** @emoji 🧭️ Registers one action definition; returns a new registry (immutable update). */
+export function registerActionDef(registry: ActionRegistry, def: ActionDef): ActionRegistry {
+  const next = new Map(registry);
+  next.set(def.id, def);
+  return next;
+}
 
-  get(id: string): ActionDef | null {
-    return this.defs.get(id) ?? null;
-  }
+/** @emoji 🧭️ Lists registered action definitions in stable id order. */
+export function listActionDefs(registry: ActionRegistry): readonly ActionDef[] {
+  return [...registry.values()].sort((a, b) => a.id.localeCompare(b.id));
+}
 
-  list(): readonly ActionDef[] {
-    return [...this.defs.values()];
-  }
+/** @emoji 🧩️ Runs a registered action (`selection.apply`, geometry actions, …) without an interaction session. */
+export async function runRegisteredAction(
+  registry: ActionRegistry,
+  id: string,
+  params: Record<string, unknown>,
+  ctx: {
+    readonly kernel: SpatialKernel;
+    readonly preview: SpatialPreviewKernel;
+    readonly model: Model;
+    readonly activeModelDefinitionId?: string | null;
+  },
+): Promise<ActionResult> {
+  assertActionAvailableInModelDefinition(id, ctx.activeModelDefinitionId);
+  const def = registry.get(id) ?? null;
+  if (def?.spec) return new DeclarativeActionRuntime(def.spec).run(params, ctx);
+  if (def?.run) return Promise.resolve(def.run(params, ctx));
+  const kernelResult = await executeActionCapability(id, params, {}, ctx);
+  if (kernelResult && typeof kernelResult === "object" && "diff" in (kernelResult as object)) return kernelResult as ActionResult;
+  if (kernelResult && typeof kernelResult === "object" && "patch" in (kernelResult as object)) return kernelResult as ActionResult;
+  if (kernelResult !== undefined) return { data: kernelResult };
+  throw new Error(`Unknown action: ${id}`);
+}
 
-  /** @emoji 🧩️ Runs a registered action (`selection.apply`, geometry actions, …) without an interaction session. */
-  async run(
-    id: string,
-    params: Record<string, unknown>,
-    ctx: {
-      readonly kernel: SpatialKernel;
-      readonly preview: SpatialPreviewKernel;
-      readonly model: Model;
-      readonly activeModelDefinitionId?: string | null;
-    },
-  ): Promise<ActionResult> {
-    assertActionAvailableInModelDefinition(id, ctx.activeModelDefinitionId);
-    const def = this.get(id);
-    if (def?.spec) return new DeclarativeActionRuntime(def.spec).run(params, ctx);
-    if (def?.run) return Promise.resolve(def.run(params, ctx));
-    const kernelResult = await executeActionCapability(id, params, {}, ctx);
-    if (kernelResult && typeof kernelResult === "object" && "diff" in (kernelResult as object)) return kernelResult as ActionResult;
-    if (kernelResult && typeof kernelResult === "object" && "patch" in (kernelResult as object)) return kernelResult as ActionResult;
-    if (kernelResult !== undefined) return { data: kernelResult };
-    throw new Error(`Unknown action: ${id}`);
+/** @emoji 🧭️ Shipped model-definition actions plus capability-backed fallbacks. */
+export function modelDefinitionActionRegistry(): ActionRegistry {
+  const map = new Map<string, ActionDef>();
+  for (const spec of shippedActionCatalog()) map.set(spec.id, { id: spec.id, label: spec.label, spec });
+  for (const def of modelDefinitionActionCapabilityDefs()) {
+    if (map.has(def.id)) continue;
+    map.set(def.id, {
+      id: def.id,
+      label: def.label ?? def.id,
+      spec: capabilityActionSpecJson(def.id, def.label ?? def.id) as ActionSpec,
+    });
   }
-
-  static withModelDefinitionActions(): ActionRegistry {
-    const r = new ActionRegistry();
-    for (const spec of shippedActionCatalog()) r.register({ id: spec.id, label: spec.label, spec });
-    for (const def of modelDefinitionActionCapabilityDefs()) {
-      if (r.get(def.id)) continue;
-      r.register({
-        id: def.id,
-        label: def.label ?? def.id,
-        spec: capabilityActionSpecJson(def.id, def.label ?? def.id) as ActionSpec,
-      });
-    }
-    return r;
-  }
+  return map;
 }
 
 /** @emoji 📍️ Centroid of a face boundary for measure/annotation anchors. */
@@ -4920,8 +4921,9 @@ export async function runSelectionApply(
     readonly actions?: ActionRegistry;
   },
 ): Promise<readonly SelectionTarget[]> {
-  const actions = ctx.actions ?? ActionRegistry.withModelDefinitionActions();
-  const result = await actions.run(
+  const actions = ctx.actions ?? modelDefinitionActionRegistry();
+  const result = await runRegisteredAction(
+    actions,
     "selection.apply",
     {
       operation: params.operation,
@@ -5034,7 +5036,7 @@ export async function applyEffectAsync(
   const math = preview ?? kernel;
   if (!math) return;
   const env: ExprEnv = { context: ctx, event, model, activeModelDefinitionId, preview: math };
-  const reg = actions ?? ActionRegistry.withModelDefinitionActions();
+  const reg = actions ?? modelDefinitionActionRegistry();
   if (a.operation === "assign") {
     const v = evalExpr(a.value, env);
     writePathTarget(a.target, env, v);
@@ -5071,7 +5073,7 @@ export async function applyEffectAsync(
       paramBag[k] = evalExpr(ex, env);
     }
     const k = kernel ?? (null as unknown as SpatialKernel);
-    const r = await reg.run(a.action, paramBag, { kernel: k, preview: math, model, activeModelDefinitionId: activeModelDefinitionId ?? null });
+    const r = await runRegisteredAction(reg, a.action, paramBag, { kernel: k, preview: math, model, activeModelDefinitionId: activeModelDefinitionId ?? null });
     if (r.patch) applyActionPatchToContext(ctx, r.patch);
   }
 }
@@ -5940,7 +5942,7 @@ export class InteractionRuntime {
     private readonly opts: InteractionRuntimeOptions,
   ) {
     this.sm = (opts.stateEngine ?? pureTsStateEngineProvider).create(spec);
-    this.actions = opts.actions ?? ActionRegistry.withModelDefinitionActions();
+    this.actions = opts.actions ?? modelDefinitionActionRegistry();
   }
 
   /** @emoji 🔌️ Precise BREP kernel wired into this runtime (tessellation, commit, derived views). */
@@ -6478,7 +6480,7 @@ export class InteractionRuntime {
       }
       const kit = typologyConstructKitByInteraction().get(this.spec.id);
       const actionId = kit ? typologyConstructCommitActionForMode(kit, String(paramBag.constructMode ?? ctx.constructMode ?? "")) : operation.action;
-      const ar = await this.actions.run(actionId, paramBag, {
+      const ar = await runRegisteredAction(this.actions, actionId, paramBag, {
         kernel: k,
         preview: this.previewKernel(),
         model: model,
@@ -6545,7 +6547,8 @@ export async function runSelectionOperationInteraction(
   if (!defn) throw new Error(`Not a selection operation: ${interactionId}`);
   assertActionAvailableInModelDefinition(interactionId, mdId);
   const seedTargets = opts.seedTargets ?? [];
-  const result = await (opts.actions ?? ActionRegistry.withModelDefinitionActions()).run(
+  const result = await runRegisteredAction(
+    opts.actions ?? modelDefinitionActionRegistry(),
     interactionId,
     { seedTargets, __context: {}, __event: { kind: "commit" } },
     { kernel: opts.kernel, preview: opts.previewKernel ?? (opts.kernel as unknown as SpatialPreviewKernel), model: opts.document.model, activeModelDefinitionId: mdId },
@@ -6660,36 +6663,33 @@ export function resolveSpatialInteractionKeyForModelDefinition(modelDefinitionId
   return null;
 }
 
-/** @emoji 🧭️ model-definition `InteractionSpec` registry (fixtures + host `register`). */
-export class InteractionRegistry {
-  private readonly specs = new Map<string, InteractionSpec>();
+/** @emoji 🧭️ model-definition `InteractionSpec` map (fixtures + host `registerInteraction`). */
+export type InteractionRegistry = ReadonlyMap<string, InteractionSpec>;
 
-  register(spec: InteractionSpec): void {
-    this.specs.set(spec.id, spec);
-  }
+/** @emoji 🧭️ Registers one compiled interaction; returns a new registry (immutable update). */
+export function registerInteractionSpec(registry: InteractionRegistry, spec: InteractionSpec): InteractionRegistry {
+  const next = new Map(registry);
+  next.set(spec.id, spec);
+  return next;
+}
 
-  get(id: string): InteractionSpec | null {
-    return this.specs.get(id) ?? null;
-  }
+/** @emoji 🧭️ Lists registered interaction specs in stable id order. */
+export function listInteractionSpecs(registry: InteractionRegistry): readonly InteractionSpec[] {
+  return [...registry.values()].sort((a, b) => a.id.localeCompare(b.id));
+}
 
-  list(): readonly InteractionSpec[] {
-    return [...this.specs.values()];
+/** @emoji 🧭️ Shipped model-definition interactions compiled from fixtures. */
+export function modelDefinitionInteractionRegistry(): InteractionRegistry {
+  const map = new Map<string, InteractionSpec>();
+  for (const raw of shippedInteractionJsons()) {
+    const spec = parseInteractionSpec(raw);
+    if (spec) map.set(spec.id, compileInteraction(spec));
   }
-
-  static withModelDefinitionInteractions(): InteractionRegistry {
-    const r = new InteractionRegistry();
-    const xs = shippedInteractionJsons().map((raw) => {
-      const spec = parseInteractionSpec(raw);
-      return spec ? compileInteraction(spec) : null;
-    });
-    for (const s of xs) {
-      if (s) r.register(s);
-    }
-    return r;
-  }
+  return map;
 }
 
 const COMPILED_INTERACTION_BY_ID = new Map<string, InteractionSpec>();
+/** Clears the derived interaction compile cache when model-definition assets change. */
 interactionCompileCacheClear = () => COMPILED_INTERACTION_BY_ID.clear();
 
 /** @emoji 📚️ Loads a model-definition interaction by stable `id` (compiled once per id for stable React runtime identity). */
@@ -7077,11 +7077,12 @@ if (import.meta.vitest) {
       expect(all.map((row) => row.id)).toEqual(["hull"]);
     });
     it("ActionRegistry rejects out-of-scope actions for active model definition", async () => {
-      const actions = ActionRegistry.withModelDefinitionActions();
+      const actions = modelDefinitionActionRegistry();
       const model = new Model();
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
       await expect(
-        actions.run(
+        runRegisteredAction(
+          actions,
           "primitive.createBoxFromCorners",
           { cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1, __context: {}, __event: { kind: "test" } },
           { kernel, preview: kernel as unknown as SpatialPreviewKernel, model, activeModelDefinitionId: "aec.building.energy" },
@@ -7538,9 +7539,9 @@ if (import.meta.vitest) {
     it("transform.copy action constrains vertical delta to Z only", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("e2e-box")));
-      const actions = ActionRegistry.withModelDefinitionActions();
+      const actions = modelDefinitionActionRegistry();
       const from: Vec3 = [0, 0, 0];
-      const r = await actions.run(
+      const r = await runRegisteredAction(actions,
         "transform.copy",
         {
           targets: [{ kind: "solid", id: "e2e-box", editable: true }],
@@ -7614,7 +7615,7 @@ if (import.meta.vitest) {
     });
     it("loads model-definition actions from data-only JSON specs", () => {
       const specs = listModelDefinitionActionSpecs();
-      const registry = ActionRegistry.withModelDefinitionActions();
+      const registry = modelDefinitionActionRegistry();
       expect(specs.length).toBeGreaterThan(0);
       expect(specs.every((s) => registry.get(s.id)?.spec?.schema === "spatial.action")).toBe(true);
       expect(specs.every((s) => registry.get(s.id) !== null)).toBe(true);
@@ -7635,8 +7636,7 @@ if (import.meta.vitest) {
     it("every typology ships construct kit or legacy create interactions", () => {
       const actionIds = new Set(listModelDefinitionActionSpecs().map((row) => row.id));
       const interactionIds = new Set(
-        InteractionRegistry.withModelDefinitionInteractions()
-          .list()
+        listInteractionSpecs(modelDefinitionInteractionRegistry())
           .map((row) => row.id),
       );
       for (const typology of listModelDefinitionTypologies()) {
@@ -7683,7 +7683,7 @@ if (import.meta.vitest) {
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
       const typology = "energy.energy.hull";
       const ids = typologyConstructAssetIds(typology, "Hull");
-      await ActionRegistry.withModelDefinitionActions().run(
+      await runRegisteredAction(modelDefinitionActionRegistry(),
         ids.constructFrom2PointsAndHeight,
         { typology, constructMode: "2PointsAndHeight", pointA: [0, 0, 0], pointB: [3, 2, 0], height: 2.5 },
         { kernel, preview: kernel as unknown as SpatialPreviewKernel, model, activeModelDefinitionId: "aec.building.energy" },
@@ -7989,7 +7989,7 @@ if (import.meta.vitest) {
         },
         commit: { fromStates: ["committed"], operation: { kind: "action", action: "command.finish", params: {} } },
       })!;
-      const interactions = InteractionRegistry.withModelDefinitionInteractions();
+      const interactions = modelDefinitionInteractionRegistry();
       interactions.register(compileInteraction(pickChild));
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
       const rt = createInteractionRuntime(compileInteraction(host), {
@@ -8115,7 +8115,7 @@ if (import.meta.vitest) {
           operation: { kind: "action", action: "command.finish", params: {} },
         },
       })!;
-      const reg = InteractionRegistry.withModelDefinitionInteractions();
+      const reg = modelDefinitionInteractionRegistry();
       reg.register(compileInteraction(grandchild));
       reg.register(compileInteraction(child));
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
@@ -8139,8 +8139,8 @@ if (import.meta.vitest) {
       expect(snap.context.token).toBe("ok");
     });
     it("ActionRegistry.withModelDefinitionActions registers declarative model-definition actions only", () => {
-      const r = ActionRegistry.withModelDefinitionActions();
-      const ids = new Set(r.list().map((d) => d.id));
+      const r = modelDefinitionActionRegistry();
+      const ids = new Set(listActionDefs(r).map((d) => d.id));
       expect(ids.has("primitive.createBoxFromCorners")).toBe(true);
       expect(ids.has("box.aabbFromDiagonalCorners")).toBe(true);
       expect(ids.has("command.finish")).toBe(true);
@@ -8148,10 +8148,10 @@ if (import.meta.vitest) {
       expect(ids.has("selection.apply")).toBe(true);
       expect(ids.has("selection.selectAll")).toBe(true);
       expect(ids.has("selection.selectVertices")).toBe(true);
-      expect(r.list().every((def) => def.spec !== undefined && def.run === undefined)).toBe(true);
+      expect(listActionDefs(r).every((def) => def.spec !== undefined && def.run === undefined)).toBe(true);
     });
     it("register replaces a model-definition action id", () => {
-      const r = ActionRegistry.withModelDefinitionActions();
+      const r = modelDefinitionActionRegistry();
       const before = r.get("measure.faceArea")?.label;
       r.register({
         id: "measure.faceArea",
@@ -8162,7 +8162,7 @@ if (import.meta.vitest) {
       expect(before).not.toBe("override");
     });
     it("InteractionRegistry.withModelDefinitionInteractions get matches buildBoxInteractionSpec", () => {
-      const reg = InteractionRegistry.withModelDefinitionInteractions();
+      const reg = modelDefinitionInteractionRegistry();
       expect(reg.get("primitive.box")).toEqual(buildBoxInteractionSpec());
     });
     it("loadSpatialInteraction resolves callable surface.construct hub from shipped assets", () => {
@@ -8197,20 +8197,20 @@ if (import.meta.vitest) {
       const p0: Vec3 = [0, 0, 0];
       const p1: Vec3 = [2, 3, 0];
       const p2: Vec3 = [1, 1, 0];
-      await ActionRegistry.withModelDefinitionActions().run("primitive.createBoxFrom3Points", { p0, p1, p2, __context: {}, __event: { kind: "x" } }, { kernel: k as unknown as SpatialKernel, preview: M, model });
+      await runRegisteredAction(modelDefinitionActionRegistry(),"primitive.createBoxFrom3Points", { p0, p1, p2, __context: {}, __event: { kind: "x" } }, { kernel: k as unknown as SpatialKernel, preview: M, model });
       expect(k.lastInput).toEqual({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 3 });
     });
     it("command.addSelection applies selection modifiers", async () => {
-      const actions = ActionRegistry.withModelDefinitionActions();
+      const actions = modelDefinitionActionRegistry();
       const base = [{ kind: "wire", id: "w0", editable: true }] as const;
       const next = [{ kind: "wire", id: "w1", editable: true }] as const;
-      const additive = await actions.run(
+      const additive = await runRegisteredAction(actions,
         "command.addSelection",
         { targets: next, __context: { targets: base }, __event: { kind: "selection.changed", modifiers: { shift: true } } },
         { kernel: M as unknown as SpatialKernel, preview: M, model: new Model() },
       );
       expect((additive.patch?.set as { targets?: readonly SelectionTarget[] }).targets).toEqual([...base, ...next]);
-      const subtractive = await actions.run(
+      const subtractive = await runRegisteredAction(actions,
         "command.addSelection",
         {
           targets: next,
@@ -8220,7 +8220,7 @@ if (import.meta.vitest) {
         { kernel: M as unknown as SpatialKernel, preview: M, model: new Model() },
       );
       expect((subtractive.patch?.set as { targets?: readonly SelectionTarget[] }).targets).toEqual(base);
-      const invertive = await actions.run(
+      const invertive = await runRegisteredAction(actions,
         "command.addSelection",
         {
           targets: [
@@ -8238,21 +8238,21 @@ if (import.meta.vitest) {
       ]);
     });
     it("selection.apply runs selectAll, deselectAll, invert, and selectKinds", async () => {
-      const actions = ActionRegistry.withModelDefinitionActions();
+      const actions = modelDefinitionActionRegistry();
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
       const seed = [{ kind: "vertex", id: Object.keys(model.vertices)[0]!, editable: true }] as const;
-      const all = await actions.run("selection.apply", { operation: "selectAll", seedTargets: [], __context: {} }, { kernel: M as unknown as SpatialKernel, preview: M, model });
+      const all = await runRegisteredAction(actions,"selection.apply", { operation: "selectAll", seedTargets: [], __context: {} }, { kernel: M as unknown as SpatialKernel, preview: M, model });
       const allTargets = selectionTargetsFromActionResult(all);
       expect(allTargets.length).toBeGreaterThan(8);
       expect(allTargets.every((t) => t.kind !== "surface")).toBe(true);
-      const cleared = await actions.run("selection.apply", { operation: "deselectAll", seedTargets: allTargets, __context: {} }, { kernel: M as unknown as SpatialKernel, preview: M, model });
+      const cleared = await runRegisteredAction(actions,"selection.apply", { operation: "deselectAll", seedTargets: allTargets, __context: {} }, { kernel: M as unknown as SpatialKernel, preview: M, model });
       expect(selectionTargetsFromActionResult(cleared)).toEqual([]);
-      const verts = await actions.run("selection.apply", { operation: "selectKinds", kinds: ["vertex"], seedTargets: [], __context: {} }, { kernel: M as unknown as SpatialKernel, preview: M, model });
+      const verts = await runRegisteredAction(actions,"selection.apply", { operation: "selectKinds", kinds: ["vertex"], seedTargets: [], __context: {} }, { kernel: M as unknown as SpatialKernel, preview: M, model });
       const vertTargets = selectionTargetsFromActionResult(verts);
       expect(vertTargets.length).toBe(8);
       expect(vertTargets.every((t) => t.kind === "vertex")).toBe(true);
-      const inverted = await actions.run("selection.apply", { operation: "invert", seedTargets: vertTargets.slice(0, 1), __context: {} }, { kernel: M as unknown as SpatialKernel, preview: M, model });
+      const inverted = await runRegisteredAction(actions,"selection.apply", { operation: "invert", seedTargets: vertTargets.slice(0, 1), __context: {} }, { kernel: M as unknown as SpatialKernel, preview: M, model });
       const invertedTargets = selectionTargetsFromActionResult(inverted);
       expect(invertedTargets.some((t) => t.kind === "vertex")).toBe(true);
       expect(invertedTargets.some((t) => t.kind === "face")).toBe(true);
@@ -8261,7 +8261,7 @@ if (import.meta.vitest) {
     it("selection.selectAll returns targets without model diff", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
-      const result = await ActionRegistry.withModelDefinitionActions().run("selection.selectAll", { seedTargets: [], __context: {}, __event: { kind: "commit" } }, { kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M, model });
+      const result = await runRegisteredAction(modelDefinitionActionRegistry(),"selection.selectAll", { seedTargets: [], __context: {}, __event: { kind: "commit" } }, { kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M, model });
       const targets = selectionTargetsFromActionResult(result);
       expect(targets.length).toBeGreaterThan(8);
       expect(targets.some((t) => t.kind === "solid")).toBe(true);
@@ -8276,17 +8276,17 @@ if (import.meta.vitest) {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
       const hist = new DocumentHistory();
-      await ActionRegistry.withModelDefinitionActions().run("selection.selectAll", { seedTargets: [], __context: {}, __event: { kind: "commit" } }, { kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M, model });
+      await runRegisteredAction(modelDefinitionActionRegistry(),"selection.selectAll", { seedTargets: [], __context: {}, __event: { kind: "commit" } }, { kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M, model });
       expect(hist.entries()).toEqual([]);
     });
     it.each(listSelectionOperationsForModelDefinition(defaultModelDefinitionId()))("registers selection command action $id", (defn) => {
-      expect(ActionRegistry.withModelDefinitionActions().get(defn.id)?.spec?.schema).toBe("spatial.action");
+      expect(modelDefinitionActionRegistry().get(defn.id)?.spec?.schema).toBe("spatial.action");
     });
     it("selection.invert honors seed targets", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("e2e-box")));
       const seed = [{ kind: "solid", id: "e2e-box", editable: true }] as const;
-      const result = await ActionRegistry.withModelDefinitionActions().run("selection.invert", { seedTargets: seed, __context: {}, __event: { kind: "commit" } }, { kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M, model });
+      const result = await runRegisteredAction(modelDefinitionActionRegistry(),"selection.invert", { seedTargets: seed, __context: {}, __event: { kind: "commit" } }, { kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M, model });
       const targets = selectionTargetsFromActionResult(result);
       expect(targets.some((t) => t.kind === "solid" && t.id === "e2e-box")).toBe(false);
       expect(targets.length).toBeGreaterThan(0);
@@ -8294,8 +8294,8 @@ if (import.meta.vitest) {
     it("ActionRegistry.run executes selection.apply headless", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
-      const actions = ActionRegistry.withModelDefinitionActions();
-      const result = await actions.run(
+      const actions = modelDefinitionActionRegistry();
+      const result = await runRegisteredAction(actions,
         "selection.apply",
         {
           operation: "selectKinds",
@@ -8337,9 +8337,9 @@ if (import.meta.vitest) {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("e2e-box")));
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
-      const actions = ActionRegistry.withModelDefinitionActions();
+      const actions = modelDefinitionActionRegistry();
       const run = async (id: string, targets: readonly SelectionTarget[]) => {
-        const result = await actions.run(id, { seedTargets: targets, __context: {}, __event: { kind: "commit" } }, { kernel, preview: M, model });
+        const result = await runRegisteredAction(actions,id, { seedTargets: targets, __context: {}, __event: { kind: "commit" } }, { kernel, preview: M, model });
         return selectionTargetsFromActionResult(result);
       };
       const all = await run("selection.selectAll", []);
@@ -8923,7 +8923,7 @@ if (import.meta.vitest) {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("m-area")));
       const fid = Object.keys(model.faces)[0]! as FaceRef;
-      const r = await ActionRegistry.withModelDefinitionActions().run("measure.faceArea", { faceId: fid }, { model: model, kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M });
+      const r = await runRegisteredAction(modelDefinitionActionRegistry(),"measure.faceArea", { faceId: fid }, { model: model, kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M });
       expect(r.data).toBeGreaterThan(0);
       expect(r.diff?.anchors?.added?.length).toBe(1);
       expect(r.diff!.anchors!.added![0]!.attachment.kind).toBe("face");

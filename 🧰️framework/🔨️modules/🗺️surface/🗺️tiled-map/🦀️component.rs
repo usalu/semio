@@ -1350,16 +1350,27 @@ impl Default for MapLayerVisibility {
     }
 }
 
-pub struct MapHost {
-    pub camera: canvas::camera::Camera,
-    pub viewport: canvas::camera::Viewport,
+/// 🗺️ GIS feature tables mirrored from projection JSON — not authoritative document state (OS `DocumentStore` owns packs).
+#[derive(Default)]
+pub struct MapFeatureTables {
     pub positions: std::collections::BTreeMap<String, PositionData>,
     pub routes: std::collections::BTreeMap<String, RouteData>,
     pub regions: std::collections::BTreeMap<String, RegionData>,
+}
+
+#[derive(Default)]
+struct MapTileLedger {
     tile_images: std::collections::BTreeMap<String, std::sync::Arc<RasterImage>>,
     last_raster_visible: std::collections::BTreeSet<String>,
     vector_tiles: std::collections::BTreeMap<String, vector_tiles::VectorTile>,
     last_vector_visible: std::collections::BTreeSet<String>,
+}
+
+pub struct MapHost {
+    pub camera: canvas::camera::Camera,
+    pub viewport: canvas::camera::Viewport,
+    pub features: MapFeatureTables,
+    tiles: MapTileLedger,
     render_mode: MapTileMode,
     vector_style: MapVectorStyle,
     forced_lod_id: Option<String>,
@@ -1502,13 +1513,8 @@ impl Default for MapHost {
         Self {
             camera: projection::default_world_camera(&viewport),
             viewport,
-            positions: std::collections::BTreeMap::new(),
-            routes: std::collections::BTreeMap::new(),
-            regions: std::collections::BTreeMap::new(),
-            tile_images: std::collections::BTreeMap::new(),
-            last_raster_visible: std::collections::BTreeSet::new(),
-            vector_tiles: std::collections::BTreeMap::new(),
-            last_vector_visible: std::collections::BTreeSet::new(),
+            features: MapFeatureTables::default(),
+            tiles: MapTileLedger::default(),
             render_mode: MapTileMode::Combined,
             vector_style: MapVectorStyle::Colored,
             forced_lod_id: None,
@@ -1764,18 +1770,18 @@ impl MapHost {
     }
 
     fn retain_tiles_for_keys(&mut self, keys: &std::collections::BTreeSet<String>) {
-        self.tile_images.retain(|k, _| keys.contains(k));
-        while self.tile_images.len() > MAX_MAP_TILE_CACHE_ENTRIES {
-            if self.tile_images.pop_first().is_none() {
+        self.tiles.tile_images.retain(|k, _| keys.contains(k));
+        while self.tiles.tile_images.len() > MAX_MAP_TILE_CACHE_ENTRIES {
+            if self.tiles.tile_images.pop_first().is_none() {
                 break;
             }
         }
     }
 
     fn retain_vector_tiles_for_keys(&mut self, keys: &std::collections::BTreeSet<String>) {
-        self.vector_tiles.retain(|k, _| keys.contains(k));
-        while self.vector_tiles.len() > MAX_MAP_TILE_CACHE_ENTRIES {
-            if self.vector_tiles.pop_first().is_none() {
+        self.tiles.vector_tiles.retain(|k, _| keys.contains(k));
+        while self.tiles.vector_tiles.len() > MAX_MAP_TILE_CACHE_ENTRIES {
+            if self.tiles.vector_tiles.pop_first().is_none() {
                 break;
             }
         }
@@ -1800,29 +1806,29 @@ impl MapHost {
         let rgba = img.to_rgba8();
         let (w, h) = rgba.dimensions();
         let image = RasterImage::rgba8(w, h, Arc::new(rgba.into_raw()));
-        self.tile_images.insert(tiles::tile_key(z, x, y), std::sync::Arc::new(image));
+        self.tiles.tile_images.insert(tiles::tile_key(z, x, y), std::sync::Arc::new(image));
         Ok(())
     }
 
     pub fn upload_vector_tile(&mut self, z: u32, x: u32, y: u32, pbf_bytes: &[u8]) -> Result<(), FrameworkSurfaceTiledMapError> {
         let tile = vector_tiles::decode_mvt(pbf_bytes)?;
-        self.vector_tiles.insert(tiles::tile_key(z, x, y), tile);
+        self.tiles.vector_tiles.insert(tiles::tile_key(z, x, y), tile);
         Ok(())
     }
 
     pub fn sync_map_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
         let desc: MapDescriptorJson = serde_json::from_str(json)?;
-        self.positions.clear();
-        self.routes.clear();
-        self.regions.clear();
+        self.features.positions.clear();
+        self.features.routes.clear();
+        self.features.regions.clear();
         for p in desc.positions {
-            self.positions.insert(p.id.clone(), p);
+            self.features.positions.insert(p.id.clone(), p);
         }
         for r in desc.routes {
-            self.routes.insert(r.id.clone(), r);
+            self.features.routes.insert(r.id.clone(), r);
         }
         for reg in desc.regions {
-            self.regions.insert(reg.id.clone(), reg);
+            self.features.regions.insert(reg.id.clone(), reg);
         }
         Ok(())
     }
@@ -1870,7 +1876,7 @@ impl MapHost {
         let hit_r = 14.0;
         let hit_r2 = hit_r * hit_r;
         let mut best: Option<(String, f64)> = None;
-        for pos in self.positions.values() {
+        for pos in self.features.positions.values() {
             let w = projection::lonlat_to_world(pos.lon, pos.lat);
             let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
             let dx = s.x - sx;
@@ -1886,7 +1892,7 @@ impl MapHost {
     fn hit_test_route(&self, sx: f64, sy: f64) -> Option<String> {
         let hit_r = ui_styling::strokes::MAP_ROUTE_DEFAULT * 4.0 + 6.0;
         let mut best: Option<(String, f64)> = None;
-        for route in self.routes.values() {
+        for route in self.features.routes.values() {
             if route.points.len() < 2 {
                 continue;
             }
@@ -1927,14 +1933,14 @@ impl MapHost {
     }
 
     fn position_screen_distance(&self, sx: f64, sy: f64, id: &str) -> Option<f64> {
-        let pos = self.positions.get(id)?;
+        let pos = self.features.positions.get(id)?;
         let w = projection::lonlat_to_world(pos.lon, pos.lat);
         let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
         Some(((s.x - sx).powi(2) + (s.y - sy).powi(2)).sqrt())
     }
 
     fn route_screen_distance(&self, sx: f64, sy: f64, id: &str) -> Option<f64> {
-        let route = self.routes.get(id)?;
+        let route = self.features.routes.get(id)?;
         if route.points.len() < 2 {
             return None;
         }
@@ -1956,7 +1962,7 @@ impl MapHost {
         let (min_y, max_y) = if y0 <= y1 { (y0, y1) } else { (y1, y0) };
         let mut positions: Vec<String> = Vec::new();
         let mut routes: Vec<String> = Vec::new();
-        for pos in self.positions.values() {
+        for pos in self.features.positions.values() {
             let w = projection::lonlat_to_world(pos.lon, pos.lat);
             let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
             let hit = if crossing { s.x >= min_x && s.x <= max_x && s.y >= min_y && s.y <= max_y } else { s.x >= min_x && s.x <= max_x && s.y >= min_y && s.y <= max_y };
@@ -1964,7 +1970,7 @@ impl MapHost {
                 positions.push(pos.id.clone());
             }
         }
-        for route in self.routes.values() {
+        for route in self.features.routes.values() {
             if route.points.len() < 2 {
                 continue;
             }
@@ -1994,7 +2000,7 @@ impl MapHost {
         }
         let mut positions: Vec<String> = Vec::new();
         let mut routes: Vec<String> = Vec::new();
-        for pos in self.positions.values() {
+        for pos in self.features.positions.values() {
             let w = projection::lonlat_to_world(pos.lon, pos.lat);
             let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
             let inside = map_point_in_polygon(s.x, s.y, &points);
@@ -2006,7 +2012,7 @@ impl MapHost {
                 positions.push(pos.id.clone());
             }
         }
-        for route in self.routes.values() {
+        for route in self.features.routes.values() {
             if route.points.len() < 2 {
                 continue;
             }
@@ -2030,7 +2036,7 @@ impl MapHost {
         match kind {
             "position" => self.position_screen_json(id),
             "route" => {
-                let Some(route) = self.routes.get(id) else {
+                let Some(route) = self.features.routes.get(id) else {
                     return "null".into();
                 };
                 if route.points.is_empty() {
@@ -2085,7 +2091,7 @@ impl MapHost {
     }
 
     pub fn position_screen_json(&self, id: &str) -> String {
-        let Some(pos) = self.positions.get(id) else {
+        let Some(pos) = self.features.positions.get(id) else {
             return "null".into();
         };
         let w = projection::lonlat_to_world(pos.lon, pos.lat);
@@ -2099,7 +2105,7 @@ impl MapHost {
         let max_zoom = limits.get("max").and_then(|value| value.as_f64()).unwrap_or(64.0);
         match kind {
             "position" => {
-                let Some(pos) = self.positions.get(id) else {
+                let Some(pos) = self.features.positions.get(id) else {
                     return false;
                 };
                 let world = projection::lonlat_to_world(pos.lon, pos.lat);
@@ -2111,7 +2117,7 @@ impl MapHost {
                 true
             }
             "route" => {
-                let Some(route) = self.routes.get(id) else {
+                let Some(route) = self.features.routes.get(id) else {
                     return false;
                 };
                 if route.points.len() < 2 {
@@ -2142,11 +2148,11 @@ impl MapHost {
     }
 
     pub fn has_tile(&self, key: &str) -> bool {
-        self.tile_images.contains_key(key)
+        self.tiles.tile_images.contains_key(key)
     }
 
     pub fn has_vector_tile(&self, key: &str) -> bool {
-        self.vector_tiles.contains_key(key)
+        self.tiles.vector_tiles.contains_key(key)
     }
 
     pub fn selected_positions_json(&self) -> Vec<String> {
@@ -2172,19 +2178,19 @@ impl MapHost {
     pub fn prepare_visible_tiles(&mut self) {
         let z = self.pick_raster_tile_zoom();
         let visible = tiles::visible_tiles(&self.camera, &self.viewport, z);
-        let keys = tiles::tile_retention_keys(&visible, &self.last_raster_visible);
+        let keys = tiles::tile_retention_keys(&visible, &self.tiles.last_raster_visible);
         self.retain_tiles_for_keys(&keys);
-        self.last_raster_visible = visible.iter().map(|(tz, tx, ty)| tiles::tile_key(*tz, *tx, *ty)).collect();
+        self.tiles.last_raster_visible = visible.iter().map(|(tz, tx, ty)| tiles::tile_key(*tz, *tx, *ty)).collect();
         if matches!(self.render_mode, MapTileMode::Vector | MapTileMode::Combined) {
             if vector_tiles_available_at_camera_zoom(self.camera.zoom) {
                 let vz = self.pick_vector_tile_zoom();
                 let vvisible = tiles::visible_tiles(&self.camera, &self.viewport, vz);
-                let vkeys = tiles::tile_retention_keys(&vvisible, &self.last_vector_visible);
+                let vkeys = tiles::tile_retention_keys(&vvisible, &self.tiles.last_vector_visible);
                 self.retain_vector_tiles_for_keys(&vkeys);
-                self.last_vector_visible = vvisible.iter().map(|(tz, tx, ty)| tiles::tile_key(*tz, *tx, *ty)).collect();
+                self.tiles.last_vector_visible = vvisible.iter().map(|(tz, tx, ty)| tiles::tile_key(*tz, *tx, *ty)).collect();
             } else {
-                self.vector_tiles.clear();
-                self.last_vector_visible.clear();
+                self.tiles.vector_tiles.clear();
+                self.tiles.last_vector_visible.clear();
             }
         }
     }
@@ -2402,7 +2408,7 @@ impl MapHost {
         let forced_lod = self.forced_lod_id.as_deref();
 
         let mut draw: Vec<(u32, u32, u32, &vector_tiles::VectorTile)> = Vec::new();
-        for (key, tile) in &self.vector_tiles {
+        for (key, tile) in &self.tiles.vector_tiles {
             let Some((tz, tx, ty)) = tiles::parse_tile_key(key) else {
                 continue;
             };
@@ -2693,7 +2699,7 @@ impl MapHost {
             return;
         }
         let mut draw: Vec<(u32, u32, u32, std::sync::Arc<RasterImage>)> = Vec::new();
-        for (key, img) in &self.tile_images {
+        for (key, img) in &self.tiles.tile_images {
             let Some((tz, tx, ty)) = tiles::parse_tile_key(key) else {
                 continue;
             };
@@ -2718,7 +2724,7 @@ impl MapHost {
         let fill = self.theme.region_fill;
         let stroke = self.theme.region_stroke;
         let jump = self.screen_segment_jump_limit();
-        for reg in self.regions.values() {
+        for reg in self.features.regions.values() {
             if reg.ring.len() < 3 {
                 continue;
             }
@@ -2744,7 +2750,7 @@ impl MapHost {
         let stroke_color = self.theme.route_stroke;
         let selection_color = self.theme.selection_stroke;
         let hover_color = self.theme.hover_stroke;
-        for route in self.routes.values() {
+        for route in self.features.routes.values() {
             if route.points.len() < 2 {
                 continue;
             }
@@ -2786,7 +2792,7 @@ impl MapHost {
         let lod_idx = resolve_map_lod_index_from_span(span);
         let pos_scale = self.layer_stroke_scale.positions;
         let pos_label_px = vector_tiles::vector_label_px_for_lod(lod_idx, span, self.layer_stroke_scale.position_labels);
-        for pos in self.positions.values() {
+        for pos in self.features.positions.values() {
             let selected = self.selected_positions.contains(&pos.id);
             let hovered = self.hovered_kind.as_deref() == Some("position") && self.hovered_id.as_deref() == Some(pos.id.as_str());
             let fill = match pos.kind.as_deref() {

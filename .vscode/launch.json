@@ -3460,6 +3460,22 @@
         "group": "3_dev",
         "order": 386.15
       }
-    }
+    },
+    {
+      "name": "⚖️policy",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts policy",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_build", "order": 900 }
+    },
+    {
+      "name": "⚖️policy🎫️os-state-authority",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "SEMIO_OS_STATE_AUTHORITY=1 bun ./📜️script.ts policy",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_build", "order": 901 }
+    },
   ]
 }

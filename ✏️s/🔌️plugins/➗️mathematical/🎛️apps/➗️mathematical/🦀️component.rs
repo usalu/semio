@@ -19,9 +19,10 @@ use crate::apps::mathematical::modes::edit;
 use crate::apps::mathematical::modes::edit::windows::{geometry as geometry_window, graph as graph_window};
 use crate::artifacts::mathematical::op::MathOperation;
 use crate::artifacts::mathematical::{MathProjection, MATH_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ui_text, ActionArgDef, ActionArgOption, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
+use store::EngineHandles;
 use store::DocumentPack;
 
 //#region 🔖️Constants
@@ -62,32 +63,30 @@ impl DocumentApp for MathematicalPlayApp {
     type Operation = MathOperation;
     type Config = MathConfig;
     type ConfigOperation = MathConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = MathCommand;
 
-    fn app_id(&self) -> &str {
-        MATH_APP_ID
-    }
+    const APP_ID: &'static str = MATH_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        MATH_DOCUMENT_SCHEMA
-    }
-
-    fn initial_projection(&self) -> MathProjection {
+    fn initial_projection() -> MathProjection {
         MathProjection::default()
     }
 
-    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(crate::artifacts::mathematical::engine::mathematical_io())
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`. `setLocale` has no manifest declaration (host-pushed,
     /// not a user-facing action).
-    fn command_id(&self, command: &MathCommand) -> &str {
+    fn command_id(command: &MathCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &MathCommand, doc: &DocumentView<'_, MathProjection>, cfg: &ConfigView<'_, MathConfig>) -> Result<Emit<MathOperation, MathConfigOperation>, Fault> {
+    fn handle(command: &MathCommand, doc: &DocumentView<'_, MathProjection>, cfg: &ConfigView<'_, MathConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<MathOperation, MathConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -95,7 +94,7 @@ impl DocumentApp for MathematicalPlayApp {
     /// components/SCC group/BFS distance — the port recipe's `computation.mathematical`-kinded output);
     /// `"document:out"` replicates `DocumentApp::export_media`'s default whole-document-pack behavior
     /// (unreachable once this override exists).
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, MathProjection>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, MathProjection>) -> Result<Media, MediaError> {
         match port {
             "result:out" => {
                 let overlay = crate::artifacts::mathematical::engine::algorithm_overlay(&doc.projection.graph);
@@ -103,15 +102,15 @@ impl DocumentApp for MathematicalPlayApp {
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.mathematical".into(), json } })
             }
             "document:out" => {
-                let media_type = self.io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.projection.encode_pack();
-                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, MathProjection>, cfg: &ConfigView<'_, MathConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, MathProjection>, cfg: &ConfigView<'_, MathConfig>) -> UiNode {
         match body_key {
             MATH_PLAY_BODY_GRAPH => graph_window::render(&doc.projection.graph, &cfg.projection.camera),
             MATH_PLAY_BODY_GEOMETRY => geometry_window::render(&doc.projection.geometry),

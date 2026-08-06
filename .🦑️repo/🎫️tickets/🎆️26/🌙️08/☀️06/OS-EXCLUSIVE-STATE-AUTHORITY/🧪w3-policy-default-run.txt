@@ -1,0 +1,7 @@
+[DEBUG] invoking policy (SEMIO_OS_STATE_AUTHORITY=)
+{
+  "total": 493,
+  "high": 208,
+  "osStateAuthority": 0,
+  "osByKind": {}
+}

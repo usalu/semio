@@ -1,4 +1,7 @@
 //! 🕸️ Generic node-graph engine for framework renderers.
+//!
+//! `GraphHost` diffs `NodeGraphScenePayload` into a retained `DagHost` for hit-testing and layout;
+//! the OS infinite-board projection remains authoritative — this host is a render-session cache.
 
 pub use infinite_board_port_directed_dag as dag;
 pub use infinite_canvas as canvas;

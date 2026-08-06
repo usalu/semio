@@ -46,3 +46,17 @@ Store re-exports: `mint_*`, `content_addressed_entity_id`, `edit_scoped_id`.
 ```bash
 cargo check -p semio-framework-os-kernel --lib
 ```
+
+## Cargo check result (`2026-08-06`)
+
+```bash
+cargo check -p semio-framework-os-kernel --lib
+```
+
+- **VCS identity code:** no errors in `🌿️vcs/🦀️component.rs`; mint helpers type-check.
+- **Blocking errors (out of M1 VCS IDENTITY scope — store-seal Wave):**
+  - `DocumentCommand::IngestRemote` / `PruneDrafts` missing match arms (text/binary codecs)
+  - `OperationEnvelope` lacks `Serialize`/`Deserialize` while nested in `DocumentCommand`
+  - `dispatch` now returns `CommandReceipt` but several wrappers still expect `Result<()>`
+
+Log: `🧪m1-vcs-ids-cargo-check.log`

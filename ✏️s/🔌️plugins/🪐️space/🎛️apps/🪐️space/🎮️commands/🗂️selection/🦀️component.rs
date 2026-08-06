@@ -26,14 +26,12 @@ pub mod select_instance {
 /// 🔁️ Shared body for `node_graph_select` and `set_media_node_selection` — both replace the node
 /// selection wholesale (optionally "select all"), publish presence, and set a single active node when
 /// exactly one is selected.
-fn select_nodes(node_ids: Vec<String>, select_all: bool, projection: &WorkflowDocument, config: &SpaceConfig) -> Emit<WorkflowOperation, SpaceConfigOperation> {
+fn select_nodes(node_ids: Vec<String>, select_all: bool, projection: &WorkflowDocument, _config: &SpaceConfig) -> Emit<WorkflowOperation, SpaceConfigOperation> {
     let node_ids = if select_all { projection.graph.nodes.iter().map(|node| node.id.clone()).collect() } else { node_ids };
     let mut config_operations = vec![SpaceConfigOperation::SetSelection { node_ids: node_ids.clone() }];
     if node_ids.len() == 1 {
         config_operations.push(SpaceConfigOperation::SetActiveNode { node_id: node_ids.first().cloned() });
     }
-    let next_config = crate::apps::space::apply_config_operations(config, &config_operations);
-    crate::apps::space::publish_presence(&next_config);
     Emit::config(config_operations)
 }
 
@@ -86,8 +84,6 @@ pub mod set_app_instance_selection {
         if payload.node_ids.len() == 1 {
             config_operations.push(SpaceConfigOperation::SetActiveNode { node_id: payload.node_ids.first().cloned() });
         }
-        let next_config = crate::apps::space::apply_config_operations(cfg.projection, &config_operations);
-        crate::apps::space::publish_presence(&next_config);
         Ok(Emit::config(config_operations))
     }
 }
@@ -109,7 +105,7 @@ mod tests {
 
     #[test]
     fn presence_heartbeat_publishes_peer_for_other_clients() {
-        use crate::apps::space::testkit::{apply_config, studio_emit};
+        use crate::apps::space::testkit::{apply_config, studio_emit, studio_presence_peers_json};
         use crate::apps::space::SpaceCommand;
         use crate::core::demo_space_projection;
         let projection = demo_space_projection();
@@ -117,15 +113,19 @@ mod tests {
         let first_node_id = projection.graph.nodes[0].id.clone();
         let select_emit = studio_emit(&projection, &config, &SpaceCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { node_ids: vec![first_node_id], select_all: false })).expect("handle");
         let config_after_select = apply_config(&config, &select_emit.config_operations);
-        let _ = studio_emit(&projection, &config_after_select, &SpaceCommand::PresenceHeartbeat(crate::apps::space::commands::presence::presence_heartbeat::PresenceHeartbeat { client_id: "client-test-a".into(), name: "Ada".into() }))
-            .expect("handle");
+        let _ = studio_emit(
+            &projection,
+            &config_after_select,
+            &SpaceCommand::PresenceHeartbeat(crate::apps::space::commands::presence::presence_heartbeat::PresenceHeartbeat { client_id: "client-test-a".into(), name: "Ada".into() }),
+        )
+        .expect("handle");
         let other_config = SpaceConfig { client_id: Some("client-test-b".into()), space_id: config_after_select.space_id.clone(), ..SpaceConfig::default() };
-        let peers = crate::apps::space::presence_peers_json(&other_config);
+        let peers = studio_presence_peers_json(&other_config);
         assert!(peers.contains("client-test-a"));
         assert!(peers.contains("Ada"));
         assert!(peers.contains(r#""selectionCount":1"#));
         let self_config = SpaceConfig { client_id: Some("client-test-a".into()), ..config_after_select };
-        let self_view = crate::apps::space::presence_peers_json(&self_config);
+        let self_view = studio_presence_peers_json(&self_config);
         assert!(!self_view.contains("client-test-a"));
     }
 }

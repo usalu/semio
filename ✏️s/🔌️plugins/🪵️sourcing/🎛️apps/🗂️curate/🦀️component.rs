@@ -12,10 +12,11 @@ use crate::apps::curate::modes::curate::windows::{curated, grid, pool, preview};
 use crate::apps::curate::terminology::sourcing_curate_labels;
 use crate::artifacts::curate::op::SourcingOperation;
 use crate::artifacts::curate::{CurateDocument, SOURCING_CURATE_SCHEMA};
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     OsMediaCapability, UiNode,
 };
+use store::EngineHandles;
 use store::DocumentPack;
 
 //#region 🔖️Constants
@@ -79,58 +80,56 @@ impl DocumentApp for SourcingCurateApp {
     type Operation = SourcingOperation;
     type Config = SourcingCurateConfig;
     type ConfigOperation = SourcingCurateConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = SourcingCurateCommand;
 
-    fn app_id(&self) -> &str {
-        SOURCING_CURATE_APP_ID
-    }
+    const APP_ID: &'static str = SOURCING_CURATE_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATE_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        SOURCING_CURATE_SCHEMA
-    }
-
-    fn initial_projection(&self) -> CurateDocument {
+    fn initial_projection() -> CurateDocument {
         crate::artifacts::curate::engine::default_document()
     }
 
-    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(crate::artifacts::curate::engine::sourcing_curate_io())
     }
 
     /// 🎞️ `catalog:out` (see `crate::artifacts::curate::engine::sourcing_catalog_fragment`) plus the
     /// inherited `document:out` default (the pack of `doc.projection`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, CurateDocument>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, CurateDocument>) -> Result<Media, MediaError> {
         match port {
             "catalog:out" => Ok(Media {
                 media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
                 payload: MediaPayload::Structured { schema: "kit.catalog".into(), json: crate::artifacts::curate::engine::sourcing_catalog_fragment(doc.projection).to_string() },
             }),
             "document:out" => {
-                let media_type = self.io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.projection.encode_pack();
-                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
     }
 
-    fn whole_document_operation(&self, projection: CurateDocument) -> Option<SourcingOperation> {
+    fn whole_document_operation(projection: CurateDocument) -> Option<SourcingOperation> {
         Some(SourcingOperation::SetDocument { document: projection })
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`. `setLocale` has no manifest declaration (host-pushed,
     /// not a user-facing action).
-    fn command_id(&self, command: &SourcingCurateCommand) -> &str {
+    fn command_id(command: &SourcingCurateCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &SourcingCurateCommand, doc: &DocumentView<'_, CurateDocument>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation>, Fault> {
+    fn handle(command: &SourcingCurateCommand, doc: &DocumentView<'_, CurateDocument>, cfg: &ConfigView<'_, SourcingCurateConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, CurateDocument>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, CurateDocument>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> UiNode {
         let document = doc.projection;
         let config = cfg.projection;
         let labels = sourcing_curate_labels(config);

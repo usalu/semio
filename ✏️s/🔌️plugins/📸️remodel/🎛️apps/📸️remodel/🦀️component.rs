@@ -19,10 +19,11 @@ use crate::artifacts::remodel::engine::decode_still_image;
 use crate::artifacts::remodel::op::RemodelOperation;
 use crate::artifacts::remodel::{default_remodel_scene, FrameRef, ImageAsset, MediaKind, MediaStream, RemodelScene, REMODEL_DOCUMENT_SCHEMA};
 use base64::Engine as _;
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, MeshExporter, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
+use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
 use store::{DocumentDsl, DocumentPack};
@@ -328,28 +329,26 @@ impl DocumentApp for RemodelPlayApp {
     type Operation = RemodelOperation;
     type Config = RemodelConfig;
     type ConfigOperation = RemodelConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = RemodelCommand;
 
-    fn app_id(&self) -> &str {
-        REMODEL_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = REMODEL_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = REMODEL_DOCUMENT_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        REMODEL_DOCUMENT_SCHEMA
-    }
-
-    fn initial_projection(&self) -> RemodelScene {
+    fn initial_projection() -> RemodelScene {
         default_remodel_scene()
     }
 
-    fn io(&self) -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(crate::artifacts::remodel::engine::remodel_io())
     }
 
     /// 🎞️ `mesh:out` (the current reconstructed mesh, GLB-encoded) plus the inherited `document:out`
     /// default (the pack of `doc.projection`, replicated inline — overriding `export_media` shadows the
     /// trait's provided body for every port, not just the new one).
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, RemodelScene>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, RemodelScene>) -> Result<Media, MediaError> {
         match port {
             "mesh:out" => {
                 let mesh = &doc.projection.results.mesh.mesh;
@@ -357,9 +356,9 @@ impl DocumentApp for RemodelPlayApp {
                 Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "3d.mesh".into(), json: base64::engine::general_purpose::STANDARD.encode(bytes) } })
             }
             "document:out" => {
-                let media_type = self.io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.projection.encode_pack();
-                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -370,7 +369,7 @@ impl DocumentApp for RemodelPlayApp {
     /// `document:in` stays `MediaError::NotImplemented`, unchanged from the inherited default: remodel
     /// has no whole-document-replace `Operation` variant to satisfy `whole_document_operation`
     /// (`RemodelOperation` is deliberately field-granular — see that enum's doc comment).
-    fn import_media(&self, port: &str, media: &Media, doc: &DocumentView<'_, RemodelScene>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RemodelScene>) -> Result<Emit<RemodelOperation, RemodelConfigOperation, Self::DraftOperation>, MediaError> {
         match port {
             "photos:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -405,7 +404,7 @@ impl DocumentApp for RemodelPlayApp {
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(&self, command: &RemodelCommand) -> &str {
+    fn command_id(command: &RemodelCommand) -> &str {
         command.command_id()
     }
 
@@ -416,15 +415,15 @@ impl DocumentApp for RemodelPlayApp {
     /// i.e. the whole manifest surface was dead from the host's side. Arg keys are the camelCase ids
     /// declared in `🔖️Manifest`; each is read leniently (missing → the manifest's own default) because
     /// `effective_action_args` stages defaults before dispatch and select-typed args arrive as strings.
-    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<RemodelCommand, Fault> {
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<RemodelCommand, Fault> {
         args_bridge::command_from_action(action, args)
     }
 
-    fn handle(&self, command: &RemodelCommand, doc: &DocumentView<'_, RemodelScene>, cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    fn handle(command: &RemodelCommand, doc: &DocumentView<'_, RemodelScene>, cfg: &ConfigView<'_, RemodelConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RemodelOperation, RemodelConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, RemodelScene>, cfg: &ConfigView<'_, RemodelConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, RemodelScene>, cfg: &ConfigView<'_, RemodelConfig>) -> UiNode {
         let scene = doc.projection;
         let config = cfg.projection;
         let labels = remodel_labels(config);
@@ -445,7 +444,7 @@ impl DocumentApp for RemodelPlayApp {
 
     /// 👁️ Dynamic per-render window measures — the Model window's layer toggles must reflect the LIVE
     /// config, so they are supplied here rather than frozen into the manifest.
-    fn window_measures(&self, _doc: &DocumentView<'_, RemodelScene>, cfg: &ConfigView<'_, RemodelConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &DocumentView<'_, RemodelScene>, cfg: &ConfigView<'_, RemodelConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(model::windows::model::REMODEL_PLAY_WINDOW_MAIN.to_string(), model::windows::model::window_measures(cfg.projection, remodel_labels(cfg.projection)))])
     }
 }

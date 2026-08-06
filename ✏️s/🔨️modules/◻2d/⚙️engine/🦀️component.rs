@@ -61,25 +61,11 @@ pub enum DrawingKind {
     Group,
 }
 
-/// 🧭️ Opaque drawing handle (`drawing-3`, …).
+/// 🧭️ Opaque content-addressed drawing handle (hex-encoded OS engine key).
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct DrawingHandle(pub String);
 
 impl DrawingHandle {
-    pub fn new(kind: DrawingKind, id: u32) -> Self {
-        let prefix = match kind {
-            DrawingKind::Rect => "rect",
-            DrawingKind::Ellipse => "ellipse",
-            DrawingKind::Circle => "circle",
-            DrawingKind::Line => "line",
-            DrawingKind::Polygon => "polygon",
-            DrawingKind::Path => "path",
-            DrawingKind::Text => "text",
-            DrawingKind::Group => "group",
-        };
-        Self(format!("drawing-{prefix}-{id}"))
-    }
-
     pub fn as_str(&self) -> &str {
         &self.0
     }

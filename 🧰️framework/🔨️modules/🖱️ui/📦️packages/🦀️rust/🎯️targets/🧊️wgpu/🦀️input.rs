@@ -6,6 +6,8 @@ use std::rc::Rc;
 
 use std::collections::HashMap;
 
+type TreeDragPayload = HashMap<String, String>;
+
 #[derive(Clone, Debug)]
 pub struct HitTarget<E> {
     pub rect: Rect,
@@ -34,7 +36,7 @@ pub enum TreeDropPosition {
 #[derive(Clone, Debug)]
 pub struct TreeDragState {
     pub source_id: String,
-    pub drag_data: HashMap<String, String>,
+    pub drag_data: TreeDragPayload,
     pub x: f32,
     pub y: f32,
     pub drop_target_id: Option<String>,

@@ -21,10 +21,11 @@ use crate::apps::sequence::panels::{catalogue as catalogue_panel, document as do
 use crate::apps::sequence::terminology::sequence_play_labels;
 use crate::artifacts::sequence::op::SequenceOperation;
 use crate::artifacts::sequence::{SequenceFixture, StepParams, SEQUENCE_FIXTURE_SCHEMA};
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppIo, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, DslValue, Emit,
     Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode,
 };
+use store::EngineHandles;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
@@ -88,21 +89,19 @@ impl DocumentApp for SequencePlayApp {
     type Operation = SequenceOperation;
     type Config = SequenceConfig;
     type ConfigOperation = SequenceConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = SequenceCommand;
 
-    fn app_id(&self) -> &str {
-        SEQUENCE_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = SEQUENCE_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = SEQUENCE_FIXTURE_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        SEQUENCE_FIXTURE_SCHEMA
-    }
-
-    fn initial_projection(&self) -> SequenceFixture {
+    fn initial_projection() -> SequenceFixture {
         crate::artifacts::sequence::default_fixture()
     }
 
-    fn io(&self) -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(crate::artifacts::sequence::engine::sequence_io())
     }
 
@@ -111,7 +110,7 @@ impl DocumentApp for SequencePlayApp {
     /// scalar/array is wrapped under a single `"value"` key. Never mutates anything directly (matches
     /// every other `import_media` override): the caller (a headless runner or the UI) applies the
     /// returned `StepsAdd` through the ordinary, undoable document store.
-    fn import_media(&self, port: &str, media: &Media, doc: &DocumentView<'_, SequenceFixture>) -> Result<Emit<SequenceOperation, SequenceConfigOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, SequenceFixture>) -> Result<Emit<SequenceOperation, SequenceConfigOperation, Self::DraftOperation>, MediaError> {
         if port != "steps:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -130,22 +129,22 @@ impl DocumentApp for SequencePlayApp {
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(&self, command: &SequenceCommand) -> &str {
+    fn command_id(command: &SequenceCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &SequenceCommand, doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceOperation, SequenceConfigOperation>, Fault> {
+    fn handle(command: &SequenceCommand, doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SequenceOperation, SequenceConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
     /// 🧮️ This app's typed configuration spec — the layout orientation `reorganize` reads.
-    fn config_spec(&self) -> ConfigSpec {
+    fn config_spec() -> ConfigSpec {
         ConfigSpec {
             fields: vec![ConfigFieldSpec { key: "orientation".into(), label: "Layout Orientation".into(), shape: ConfigFieldShape::Select { options: vec!["leftRight".into(), "topBottom".into()] }, default: Some(DslValue::String("leftRight".into())) }],
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>) -> UiNode {
         let fixture = doc.projection;
         let config = cfg.projection;
         let labels = sequence_play_labels(config);
@@ -166,7 +165,7 @@ impl DocumentApp for SequencePlayApp {
     /// `organize_context_menu` (applied automatically at the `VcsDocumentApp::context_menu` funnel)
     /// sorts the groups into `RIBBON_PARENT_CATEGORIES` order and inserts the pre-destructive
     /// separator itself.
-    fn context_menu(&self, request: &ContextMenuRequest, _doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let is_de = cfg.projection.locale.starts_with("de");
@@ -254,7 +253,7 @@ pub fn create_sequence_app() -> App {
             ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            .config(SequencePlayApp.config_spec())
+            .config(SequencePlayApp::config_spec())
             .io(crate::artifacts::sequence::engine::sequence_io()),
     )
     .example("demo", LocalizedLabel::native("Demo", "Demo"), crate::artifacts::sequence::engine::sequence_example_json(), "cylinder")
@@ -375,7 +374,7 @@ mod tests {
     //#region 🔖️PortTests
     #[test]
     fn sequence_io_declares_steps_in_and_document_ports() {
-        let ports = SequencePlayApp.io().expect("io").all_ports();
+        let ports = SequencePlayApp::io().expect("io").all_ports();
         assert!(ports.iter().any(|port| port.id == "document:in"));
         assert!(ports.iter().any(|port| port.id == "document:out"));
         assert!(ports.iter().any(|port| port.id == "steps:in"));

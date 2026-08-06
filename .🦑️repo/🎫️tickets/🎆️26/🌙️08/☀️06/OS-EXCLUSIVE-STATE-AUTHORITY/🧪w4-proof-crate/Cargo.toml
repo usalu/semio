@@ -1,0 +1,6 @@
+[package]
+name = "os_state_authority_engine_proof"
+version = "0.0.0"
+edition = "2021"
+[dependencies]
+semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️products/�튜os/📦️packages/🦀️rust" }

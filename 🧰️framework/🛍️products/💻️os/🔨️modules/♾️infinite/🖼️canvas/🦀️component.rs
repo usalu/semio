@@ -1212,10 +1212,10 @@ pub mod gpu_session {
 // #endregion 🔖️GpuSession
 
 // #region 🔖️IconCodec
-#[path = "../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🤖️generated/🦀️metabolism_icon_name.rs"]
+#[path = "../../../../../🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🤖️generated/🦀️metabolism_icon_name.rs"]
 mod metabolism_icon_name_gen;
 
-#[path = "../../../../../../../🔨️modules/🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs"]
+#[path = "../../../../../🔨️modules/🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs"]
 mod catalog_icon_name_gen;
 
 pub use catalog_icon_name_gen::IconName;

@@ -305,13 +305,18 @@ fn apply_blur_box(rgba: &mut [u8], width: u32, height: u32, radius: u32) {
 // #endregion 🔖️Pixels
 
 // #region 🔖️Host
+#[derive(Default)]
+struct RasterLayerBuffers {
+    paint: HashMap<String, Vec<u8>>,
+    mask: HashMap<String, Vec<u8>>,
+}
+
 pub struct RasterHost {
     camera: Camera,
     viewport: Viewport,
     document: RasterDocument,
     images: canvas::raster::RasterImageCache,
-    paint_buffers: HashMap<String, Vec<u8>>,
-    mask_buffers: HashMap<String, Vec<u8>>,
+    buffers: RasterLayerBuffers,
     active_utility: String,
     brush_size: f32,
     brush_opacity: f32,
@@ -342,8 +347,7 @@ impl RasterHost {
             viewport: Viewport { width: 800, height: 600, dpr: 1.0 },
             document: RasterDocument { layers: vec![] },
             images: canvas::raster::RasterImageCache::default(),
-            paint_buffers: HashMap::new(),
-            mask_buffers: HashMap::new(),
+            buffers: RasterLayerBuffers::default(),
             active_utility: "selectMarquee".into(),
             brush_size: 24.0,
             brush_opacity: 1.0,
@@ -443,7 +447,7 @@ impl RasterHost {
         let len = (width * height * 4) as usize;
         let checkerboard_light_cell = self.checkerboard_light_cell;
         let checkerboard_dark_cell = self.checkerboard_dark_cell;
-        let buf = self.paint_buffers.entry(key).or_insert_with(|| checkerboard_rgba(width, height, checkerboard_light_cell, checkerboard_dark_cell));
+        let buf = self.buffers.paint.entry(key).or_insert_with(|| checkerboard_rgba(width, height, checkerboard_light_cell, checkerboard_dark_cell));
         if buf.len() != len {
             *buf = checkerboard_rgba(width, height, checkerboard_light_cell, checkerboard_dark_cell);
         }
@@ -508,7 +512,7 @@ impl RasterHost {
         let height = rgba.height();
         let key = Self::layer_pixel_buffer_key(layer_id);
         let raw = rgba.into_raw();
-        self.paint_buffers.insert(key.clone(), raw.clone());
+        self.buffers.paint.insert(key.clone(), raw.clone());
         let image = image_from_rgba(width, height, raw);
         self.images.insert(key, image);
         Ok(())
@@ -520,7 +524,7 @@ impl RasterHost {
         let width = rgba.width();
         let height = rgba.height();
         let raw = rgba.into_raw();
-        self.paint_buffers.insert(key.to_string(), raw.clone());
+        self.buffers.paint.insert(key.to_string(), raw.clone());
         let image = image_from_rgba(width, height, raw);
         self.images.insert(key.to_string(), image);
         Ok(())
@@ -557,12 +561,12 @@ impl RasterHost {
         if let Some(img) = self.images.get(&key) {
             return img;
         }
-        if let Some(buf) = self.paint_buffers.get(&key).cloned() {
+        if let Some(buf) = self.buffers.paint.get(&key).cloned() {
             let image = image_from_rgba(width, height, buf);
             return self.images.insert(key, image);
         }
         let rgba = checkerboard_rgba(width, height, self.checkerboard_light_cell, self.checkerboard_dark_cell);
-        self.paint_buffers.insert(key.clone(), rgba.clone());
+        self.buffers.paint.insert(key.clone(), rgba.clone());
         self.images.insert(key, image_from_rgba(width, height, rgba))
     }
 
@@ -584,7 +588,7 @@ impl RasterHost {
                 if let Some(mask_state) = mask {
                     if mask_state.enabled {
                         let mask_key = format!("mask:{id}");
-                        let mut mask_rgba = self.mask_buffers.entry(mask_key.clone()).or_insert_with(|| vec![255u8; (mask_state.width * mask_state.height * 4) as usize]).clone();
+                        let mut mask_rgba = self.buffers.mask.entry(mask_key.clone()).or_insert_with(|| vec![255u8; (mask_state.width * mask_state.height * 4) as usize]).clone();
                         if mask_state.invert {
                             for a in mask_rgba.chunks_exact_mut(4) {
                                 a[3] = 255 - a[3];
@@ -646,7 +650,7 @@ impl RasterHost {
         let mut scene = Scene::new();
         let cam = canvas::camera::camera_content_affine(&self.camera, &self.viewport);
         let key = format!("mask:{layer_id}");
-        let rgba = self.mask_buffers.entry(key.clone()).or_insert_with(|| vec![255u8; 512 * 512 * 4]).clone();
+        let rgba = self.buffers.mask.entry(key.clone()).or_insert_with(|| vec![255u8; 512 * 512 * 4]).clone();
         let img = self.images.insert(key, image_from_rgba(512, 512, rgba));
         canvas::raster::draw_image_arc(&mut scene, &img, cam);
         scene
@@ -1516,7 +1520,7 @@ mod tests {
         host.pointer_down_screen(400.0, 400.0, 0);
         assert!(host.painting);
         let key = RasterHost::layer_pixel_buffer_key("back");
-        let buf = host.paint_buffers.get(&key).expect("buffer created");
+        let buf = host.buffers.paint.get(&key).expect("buffer created");
         let painted = buf.chunks_exact(4).any(|px| px[0] == 40 && px[1] == 120 && px[2] == 220);
         assert!(painted, "brush color should appear in buffer");
     }
@@ -1530,7 +1534,7 @@ mod tests {
         host.pointer_down_screen(350.0, 400.0, 0);
         host.pointer_move_screen(450.0, 400.0);
         let key = RasterHost::layer_pixel_buffer_key("back");
-        let buf = host.paint_buffers.get(&key).expect("buffer created");
+        let buf = host.buffers.paint.get(&key).expect("buffer created");
         let painted_count = buf.chunks_exact(4).filter(|px| px[0] == 40 && px[2] == 220).count();
         assert!(painted_count > 20, "stroke across two points should paint more than a single dab, got {painted_count}");
     }
@@ -1544,7 +1548,7 @@ mod tests {
         host.set_selection_ids_json(r#"["back"]"#).expect("selection");
         host.pointer_down_screen(400.0, 400.0, 0);
         let key = RasterHost::layer_pixel_buffer_key("back");
-        let buf = host.paint_buffers.get(&key).expect("buffer created");
+        let buf = host.buffers.paint.get(&key).expect("buffer created");
         let center_idx = ((200usize * 512) + 200) * 4;
         assert_eq!(buf[center_idx + 3], 0, "fully-opaque erase should zero alpha");
     }
@@ -1564,7 +1568,7 @@ mod tests {
         let bytes = png_bytes(4, 4);
         host.upload_layer_image("layer1", &bytes).expect("decode");
         let key = RasterHost::layer_pixel_buffer_key("layer1");
-        let buf = host.paint_buffers.get(&key).expect("buffer stored");
+        let buf = host.buffers.paint.get(&key).expect("buffer stored");
         assert_eq!(buf.len(), 4 * 4 * 4);
         assert_eq!(&buf[0..4], &[10, 20, 30, 255]);
         assert!(host.images.get(&key).is_some());
@@ -1582,7 +1586,7 @@ mod tests {
         let mut host = RasterHost::new();
         let bytes = png_bytes(2, 2);
         host.upload_raster_image_key("custom:key", &bytes).expect("decode");
-        assert!(host.paint_buffers.contains_key("custom:key"));
+        assert!(host.buffers.paint.contains_key("custom:key"));
         assert!(host.images.get("custom:key").is_some());
     }
     // #endregion 📤️ Image uploads

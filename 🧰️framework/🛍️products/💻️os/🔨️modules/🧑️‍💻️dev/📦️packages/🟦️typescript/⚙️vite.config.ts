@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import {readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
@@ -31,7 +31,9 @@ const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = ["@semio-tech/framework-surface-n
  * npm package name — read from the crate's own sibling `package.json`, not derived from its path, so a
  * crate keeps optimizing correctly across restructures/moves without touching this file. */
 function engineNpmPackage(cratePath: string): string {
-  const manifestPath = path.join(repoRoot, cratePath, "package.json");
+  const direct = path.join(repoRoot, cratePath, "package.json");
+  const nested = path.join(repoRoot, cratePath, "pkg", "package.json");
+  const manifestPath = existsSync(direct) ? direct : nested;
   const name = JSON.parse(readFileSync(manifestPath, "utf8")).name as string | undefined;
   if (!name) throw new Error(`missing "name" in ${manifestPath}`);
   return name;

@@ -214,8 +214,8 @@ fn bundle() -> semio_framework_plugin::PluginBundle {
     register_s_exports();
     semio_framework_plugin::PluginBundle::new("s", "S Studio", "0.1.0")
         .local_backbone_storage()
-        .register_document_app(apps::home::create_home_app(), || apps::home::HomeApp)
-        .register_document_app(apps::space::create_space_app(), || apps::space::SpaceApp)
+        .register_document_app(apps::home::create_home_app(), || apps::home::HomeApp::default())
+        .register_document_app(apps::space::create_space_app(), || apps::space::SpaceApp::default())
 }
 semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖️Manifest

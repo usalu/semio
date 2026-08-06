@@ -10,7 +10,6 @@ use crate::apps::puzzle2d::{fixture_edges, fixture_nodes, puzzle2d_action, runti
 use crate::artifacts::puzzle2d::engine::{BoardHost, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
 use semio_framework_plugin::{build_board2d_scene, create_default_layout, Board2dScene, LocalizedLabel, ModeDefinition, ToolRef, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowLayout};
 use serde_json::{json, Value};
-use std::sync::LazyLock;
 
 pub const PUZZLE2D_PLAY_MODE_EDIT: &str = "edit";
 
@@ -108,28 +107,8 @@ pub fn puzzle2d_pane_camera(fixture: &Value, runtime: &Puzzle2dPlayRuntime, pane
 /// 🗄️ Caches the last serialized fixture keyed by an fnv1a hash of the raw `document_json` it came
 /// from, so the overview/detail/selection panes of the same `refreshUi` tick reuse one `String`
 /// instead of each re-serializing the whole fixture graph.
-static PUZZLE2D_FIXTURE_JSON_CACHE: LazyLock<std::sync::Mutex<Option<(u64, String)>>> = LazyLock::new(|| std::sync::Mutex::new(None));
-
-fn fnv1a_hash(bytes: &[u8]) -> u64 {
-    let mut hash: u64 = 0xcbf29ce484222325;
-    for byte in bytes {
-        hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(0x100000001b3);
-    }
-    hash
-}
-
-fn cached_fixture_json(document_json: &str, fixture: &Value) -> String {
-    let key = fnv1a_hash(document_json.as_bytes());
-    let mut cache = PUZZLE2D_FIXTURE_JSON_CACHE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    if let Some((cached_key, cached_json)) = cache.as_ref() {
-        if *cached_key == key {
-            return cached_json.clone();
-        }
-    }
-    let json = fixture.to_string();
-    *cache = Some((key, json.clone()));
-    json
+fn cached_fixture_json(_document_json: &str, fixture: &Value) -> String {
+    fixture.to_string()
 }
 
 fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> Board2dScene {

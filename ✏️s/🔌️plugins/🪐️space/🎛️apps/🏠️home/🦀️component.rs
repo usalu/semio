@@ -20,10 +20,11 @@ use semio_framework_os::{
 };
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os::{document_backbone_ref, VcsError};
-use semio_framework_plugin::{app_commands, create_tab_stack_layout, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultOrigin, Label, LocalizedLabel, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, app_commands, create_tab_stack_layout, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultOrigin, Label, LocalizedLabel, UiNode};
+use store::EngineHandles;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
-use std::sync::{Arc, LazyLock, Mutex};
+use std::sync::{Arc, LazyLock, Mutex, OnceLock};
 use store::LocalStorageBackbonePort;
 
 //#region 🔖️Constants
@@ -65,7 +66,10 @@ static CATALOG_PORT_CONCRETE: LazyLock<Arc<LocalStorageBackbonePort>> = LazyLock
 /// file or a real catalog), matching the "never persisted" semantics of a pure ephemeral registry.
 static TEMP_CATALOG_PORT_CONCRETE: LazyLock<Arc<MemoryBackbonePort>> = LazyLock::new(|| Arc::new(MemoryBackbonePort::new()));
 
-static STUDIO_PORTS: LazyLock<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+fn shared_studio_ports() -> Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>> {
+    static REGISTRY: OnceLock<Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>>> = OnceLock::new();
+    REGISTRY.get_or_init(|| Arc::new(Mutex::new(HashMap::new()))).clone()
+}
 
 /// 🌉️ `pub` (not `pub(crate)`): `apps::space` resolves studios through the Home launcher's own catalog
 /// port — see `apps::space`'s `openSpace`/`exportStudioPack`/`exportStudioDsl`/`importSpacePackPayload`
@@ -100,7 +104,11 @@ fn now_ms() -> u64 {
 }
 
 pub(crate) fn register_studio_port(space_id: &str, port: Arc<dyn OsBackbonePort>) {
-    if let Ok(mut guard) = STUDIO_PORTS.lock() {
+    register_studio_port_for(&HomeApp::default(), space_id, port)
+}
+
+pub(crate) fn register_studio_port_for(app: &HomeApp, space_id: &str, port: Arc<dyn OsBackbonePort>) {
+    if let Ok(mut guard) = app.studio_ports.lock() {
         guard.insert(space_id.into(), port);
     }
 }
@@ -125,6 +133,10 @@ pub(crate) fn create_and_register_ephemeral_studio(name: &str) -> String {
 /// 🌉️ `pub` (not `pub(crate)`): `apps::space` resolves the studio it is asked to open through this same
 /// lookup — see the note on {@link catalog_port}.
 pub fn resolve_studio_document(space_id: &str) -> Option<OsSpaceDocument> {
+    resolve_studio_document_for(&HomeApp::default(), space_id)
+}
+
+pub fn resolve_studio_document_for(app: &HomeApp, space_id: &str) -> Option<OsSpaceDocument> {
     let draft_port = draft_backbone_port();
     if let Ok(payload) = SpaceBackbonePort::read(draft_port.as_ref(), &draft_uri(space_id)) {
         if !payload.is_empty() {
@@ -133,7 +145,7 @@ pub fn resolve_studio_document(space_id: &str) -> Option<OsSpaceDocument> {
             }
         }
     }
-    if let Ok(guard) = STUDIO_PORTS.lock() {
+    if let Ok(guard) = app.studio_ports.lock() {
         if let Some(port) = guard.get(space_id) {
             if let Ok(document) = load_os_space_document(space_id, port.clone()) {
                 return Some(document);
@@ -162,14 +174,14 @@ pub fn space_document_envelope_pack(document: &OsSpaceDocument) -> Option<store:
 /// `CollectionEntry` inside one of the space's collections. Searches every collection the resolved
 /// space manifest references, through the SAME port search order `resolve_studio_document` uses, for
 /// the first `CollectionEntry` whose body is an `s.workflow` document.
-fn resolve_backbone_bytes(uri: &str) -> Option<Vec<u8>> {
+fn resolve_backbone_bytes(app: &HomeApp, uri: &str) -> Option<Vec<u8>> {
     let draft_port = draft_backbone_port();
     if let Ok(payload) = SpaceBackbonePort::read(draft_port.as_ref(), uri) {
         if !payload.is_empty() {
             return Some(payload);
         }
     }
-    if let Ok(guard) = STUDIO_PORTS.lock() {
+    if let Ok(guard) = app.studio_ports.lock() {
         for port in guard.values() {
             if let Ok(payload) = port.read(uri) {
                 if !payload.is_empty() {
@@ -189,10 +201,14 @@ fn resolve_backbone_bytes(uri: &str) -> Option<Vec<u8>> {
 }
 
 pub fn resolve_workflow_artifact_document(space_id: &str, space_document: &OsSpaceDocument) -> Option<OsWorkflowArtifactDocument> {
+    resolve_workflow_artifact_document_for(&HomeApp::default(), space_id, space_document)
+}
+
+pub fn resolve_workflow_artifact_document_for(app: &HomeApp, space_id: &str, space_document: &OsSpaceDocument) -> Option<OsWorkflowArtifactDocument> {
     let projection = materialize_backbone_projection(space_document, &space_document.applied_edit_ids).ok()?;
     for collection_ref in &projection.collections {
         let collection_uri = collection_backbone_uri(space_id, &collection_ref.id);
-        let Some(collection_payload) = resolve_backbone_bytes(&collection_uri) else { continue };
+        let Some(collection_payload) = resolve_backbone_bytes(app, &collection_uri) else { continue };
         let Ok(collection_document) = decode_backbone_payload::<CollectionProjection, CollectionOperation>(&collection_payload, S_COLLECTION_SCHEMA) else { continue };
         let Ok(collection_projection) = materialize_backbone_projection(&collection_document, &collection_document.applied_edit_ids) else { continue };
         for entry in &collection_projection.entries {
@@ -201,7 +217,7 @@ pub fn resolve_workflow_artifact_document(space_id: &str, space_document: &OsSpa
                 continue;
             }
             let artifact_uri = artifact_backbone_uri(space_id, document_id);
-            let Some(artifact_payload) = resolve_backbone_bytes(&artifact_uri) else { continue };
+            let Some(artifact_payload) = resolve_backbone_bytes(app, &artifact_uri) else { continue };
             if let Ok(workflow_document) = decode_backbone_payload::<WorkflowDocument, WorkflowOperation>(&artifact_payload, S_WORKFLOW_SCHEMA) {
                 return Some(workflow_document);
             }
@@ -233,7 +249,7 @@ pub fn workflow_artifact_envelope_pack(document: &OsWorkflowArtifactDocument) ->
 /// in as `apps::space`'s ordinary (non-dev) dependency, since `#[cfg(test)]` only activates for the
 /// crate under test itself, not its dependencies.
 pub fn register_studio_port_for_test(space_id: &str, port: Arc<dyn OsBackbonePort>) {
-    register_studio_port(space_id, port);
+    register_studio_port_for(&HomeApp::default(), space_id, port);
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -301,36 +317,41 @@ app_commands! {
 //#endregion 🔖️HomeCommand
 
 //#region 🔖️HomeApp
-/// 🧪️ Unit struct — the Home launcher holds no runtime state; `HomeConfig` carries `locale`/
-/// `active_panel_tab`.
-#[derive(Default)]
-pub struct HomeApp;
+/// 🧪️ Unit struct — the Home launcher holds catalog bootstrap ports plus per-session studio port
+/// bindings for folder/file-backed studios.
+pub struct HomeApp {
+    studio_ports: Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>>,
+}
+
+impl Default for HomeApp {
+    fn default() -> Self {
+        Self { studio_ports: shared_studio_ports() }
+    }
+}
 
 impl DocumentApp for HomeApp {
     type Projection = SHomeDocument;
     type Operation = crate::artifacts::home::op::SHomeOperation;
     type Config = HomeConfig;
     type ConfigOperation = crate::apps::home::config::HomeConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = HomeCommand;
 
-    fn app_id(&self) -> &str {
-        S_HOME_APP_ID
-    }
+    const APP_ID: &'static str = S_HOME_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = "s.home";
 
-    fn document_schema(&self) -> &str {
-        "s.home"
-    }
-
-    fn initial_projection(&self) -> SHomeDocument {
+    fn initial_projection() -> SHomeDocument {
         SHomeDocument { schema: "s.home".into(), catalog_generation: 0 }
     }
 
-    fn command_id(&self, command: &HomeCommand) -> &str {
+    fn command_id(command: &HomeCommand) -> &str {
         command.command_id()
     }
 
     /// 🎯️ Bridges shell `{action,args}` JSON onto typed `HomeCommand` until every call site speaks OpBinary.
-    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<HomeCommand, Fault> {
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<HomeCommand, Fault> {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         match action {
             "createStudio" => Ok(HomeCommand::CreateStudio(create_studio::CreateStudio {
@@ -364,11 +385,11 @@ impl DocumentApp for HomeApp {
         }
     }
 
-    fn handle(&self, command: &HomeCommand, doc: &DocumentView<'_, SHomeDocument>, cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<crate::artifacts::home::op::SHomeOperation, crate::apps::home::config::HomeConfigOperation>, Fault> {
+    fn handle(command: &HomeCommand, doc: &DocumentView<'_, SHomeDocument>, cfg: &ConfigView<'_, HomeConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<crate::artifacts::home::op::SHomeOperation, crate::apps::home::config::HomeConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(&self, body_key: &str, _doc: &DocumentView<'_, SHomeDocument>, cfg: &ConfigView<'_, HomeConfig>) -> UiNode {
+    fn render(body_key: &str, _doc: &DocumentView<'_, SHomeDocument>, cfg: &ConfigView<'_, HomeConfig>) -> UiNode {
         let labels = semio_framework_plugin::resolve_labels_for_locale::<SHomeLabels>(&cfg.projection.locale);
         // 🪟 `VcsDocumentApp::render` appends `:{windowInstanceId}` when `view_state.window_id` is set —
         // strip it so Home's single body key still matches.

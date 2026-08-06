@@ -1,0 +1,6 @@
+{
+  "plugin": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
+  "host": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️component.rs",
+  "channel": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️component.rs",
+  "wit": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📜️wit/📜️world.wit"
+}

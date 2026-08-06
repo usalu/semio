@@ -21,10 +21,11 @@ use crate::apps::process3d::terminology::process3d_labels;
 use crate::artifacts::process3d::op::Process3dOperation;
 use crate::artifacts::process3d::Process3dDocument;
 use semio_framework_core::kernel::HostEffect;
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability,
     OsMediaFormat, UiNode, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
+use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
 use store::DocumentPack;
@@ -142,21 +143,20 @@ impl DocumentApp for Process3dPlayApp {
     type Operation = Process3dOperation;
     type Config = Process3dConfig;
     type ConfigOperation = Process3dConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = Process3dCommand;
 
-    fn app_id(&self) -> &str {
-        PROCESS_3D_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = PROCESS_3D_PLAY_APP_ID;
 
-    fn document_schema(&self) -> &str {
-        crate::artifacts::process3d::PROCESS_3D_SCHEMA
-    }
+    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::process3d::PROCESS_3D_SCHEMA;
 
-    fn initial_projection(&self) -> Process3dDocument {
+    fn initial_projection() -> Process3dDocument {
         crate::artifacts::process3d::engine::default_document()
     }
 
-    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(crate::artifacts::process3d::engine::process3d_io())
     }
 
@@ -164,7 +164,7 @@ impl DocumentApp for Process3dPlayApp {
     /// 🎞️ `brep:out` (see the artifact engine's `export_process3d_model`, STEP text) plus the inherited
     /// `document:out` default (the pack of `doc.projection`, replicated inline — overriding `export_media`
     /// shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, Process3dDocument>) -> Result<semio_framework_plugin::Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, Process3dDocument>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
             "brep:out" => match crate::artifacts::process3d::engine::export_process3d_model(doc.projection, "step") {
                 Some(export) => {
@@ -177,22 +177,22 @@ impl DocumentApp for Process3dPlayApp {
                 None => Err(MediaError::Payload("brep:out".into(), "kernel replay failed".into())),
             },
             "document:out" => {
-                let media_type = self.io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.projection.encode_pack();
-                Ok(semio_framework_plugin::Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                Ok(semio_framework_plugin::Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
     }
 
-    fn whole_document_operation(&self, projection: Process3dDocument) -> Option<Process3dOperation> {
+    fn whole_document_operation(projection: Process3dDocument) -> Option<Process3dOperation> {
         Some(Process3dOperation::SetDocument { document: projection })
     }
 
     /// 📥️ `geometry:in` (best-effort STEP-text import) plus the inherited `document:in` default (base64
     /// pack via `whole_document_operation`, replicated inline — overriding `import_media` shadows the
     /// trait's provided body for every port).
-    fn import_media(&self, port: &str, media: &semio_framework_plugin::Media, _doc: &DocumentView<'_, Process3dDocument>) -> Result<Emit<Process3dOperation, Process3dConfigOperation>, MediaError> {
+    fn import_media(port: &str, media: &semio_framework_plugin::Media, _doc: &DocumentView<'_, Process3dDocument>) -> Result<Emit<Process3dOperation, Process3dConfigOperation, Self::DraftOperation>, MediaError> {
         match port {
             "geometry:in" => {
                 let MediaPayload::Structured { schema, json } = &media.payload else {
@@ -229,21 +229,21 @@ impl DocumentApp for Process3dPlayApp {
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(&self, command: &Process3dCommand) -> &str {
+    fn command_id(command: &Process3dCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &Process3dCommand, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dOperation, Process3dConfigOperation>, Fault> {
+    fn handle(command: &Process3dCommand, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Process3dOperation, Process3dConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
     /// 🧮️ process3d exposes no genuinely settings-like sticky defaults — every `Process3dConfig` field
     /// is session-only view state, so this stays at the trait default.
-    fn config_spec(&self) -> semio_framework_plugin::ConfigSpec {
+    fn config_spec() -> semio_framework_plugin::ConfigSpec {
         semio_framework_plugin::ConfigSpec::empty()
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> UiNode {
         let config = cfg.projection;
         let labels = process3d_labels(config);
         match body_key {
@@ -256,11 +256,11 @@ impl DocumentApp for Process3dPlayApp {
         }
     }
 
-    fn window_engagements(&self, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
+    fn window_engagements(doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
         HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::engagement(doc.projection, cfg.projection, process3d_labels(cfg.projection)))])
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::window_measures(cfg.projection))])
     }
 }
@@ -380,7 +380,7 @@ pub fn create_process3d_app() -> App {
             .keybinding("escape", "engagementAbort")
             .keybinding("delete", "removeSelectedStep")
             .keybinding("backspace", "removeSelectedStep")
-            .config(Process3dPlayApp.config_spec())
+            .config(Process3dPlayApp::config_spec())
             .io(crate::artifacts::process3d::engine::process3d_io()),
     )
     .example(PROCESS3D_EXAMPLE_TIMBER, LocalizedLabel::native("Timber Beam Joinery", "Holzbalkenverbindung"), crate::artifacts::process3d::engine::TIMBER_EXAMPLE_DSL, "file-text")

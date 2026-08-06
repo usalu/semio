@@ -25,11 +25,12 @@ use crate::artifacts::puzzle3d::op::{puzzle3d_document_delta_operations, Puzzle3
 use crate::artifacts::puzzle3d::Puzzle3dProjection;
 use semio_framework_core::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::HostEffect;
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     mesh_from_kind, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, App, AppIo, ConfigView, DialogDefinition,
     DocumentApp, DocumentView, Emit, Fault, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec,
     MediaType, PortMultiplicity, SelectionSet, ToolRef, UiNode, UiTreeSectionNode, WindowEngagement, WindowMeasure, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
 };
+use store::EngineHandles;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
@@ -65,11 +66,7 @@ pub static PUZZLE3D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 pub type Puzzle3dMeshBuffers = (Vec<f32>, Vec<u32>);
 
 /// 🗃️ Real GLB geometry the browser round-tripped via `registerBrushMesh` this session, keyed by mesh
-/// url; anything not yet loaded falls back to a box. `fn` pointers can't capture state, so this backs
-/// the export handlers' plain-function-pointer signature.
-pub static PUZZLE3D_MESH_REGISTRY: LazyLock<Mutex<HashMap<String, Puzzle3dMeshBuffers>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
-
-/// 🌉️ This app's own `Puzzle3dScene.fixture: Puzzle3dFixture` (and `DocumentApp::Projection`) stays a
+/// url; anything not yet loaded falls back to a box.
 /// local structural-twin mirror of `crate::artifacts::puzzle3d::Puzzle3dProjection`, so the DSL-text
 /// example fixtures are parsed once into the typed projection and re-serialized to the JSON string
 /// this module's `serde_json::from_str::<Puzzle3dFixture>`/`.example(...)` call sites expect.
@@ -1859,11 +1856,11 @@ pub struct Puzzle3dPlayApp {
     pub(crate) transform_drag_active: std::cell::RefCell<bool>,
     pub(crate) transform_base: std::cell::RefCell<Option<Puzzle3dFixture>>,
     pub(crate) transform_scratch: std::cell::RefCell<Option<Puzzle3dFixture>>,
-    /// 👻️ Per-`key` monotone counter for `gesture_preview` — see `//#region 🔖️GesturePreview`.
     preview_seq: std::cell::RefCell<u64>,
     fill_display_memo: Mutex<Option<FillDisplayMemo>>,
     geometry_cache: Mutex<Option<(u64, String, String)>>,
     document_sections_cache: Mutex<Option<(u64, Vec<UiTreeSectionNode>)>>,
+    mesh_registry: Mutex<HashMap<String, Puzzle3dMeshBuffers>>,
 }
 
 impl Default for Puzzle3dPlayApp {
@@ -1877,6 +1874,7 @@ impl Default for Puzzle3dPlayApp {
             fill_display_memo: Mutex::new(None),
             geometry_cache: Mutex::new(None),
             document_sections_cache: Mutex::new(None),
+            mesh_registry: Mutex::new(HashMap::new()),
         }
     }
 }
@@ -2183,35 +2181,33 @@ impl DocumentApp for Puzzle3dPlayApp {
     type Operation = Puzzle3dOperation;
     type Config = Puzzle3dConfig;
     type ConfigOperation = Puzzle3dConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = Puzzle3dCommand;
 
-    fn app_id(&self) -> &str {
-        PUZZLE3D_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = PUZZLE3D_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = PUZZLE3D_FIXTURE_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        PUZZLE3D_FIXTURE_SCHEMA
-    }
-
-    fn initial_projection(&self) -> Puzzle3dPlayProjection {
+    fn initial_projection() -> Puzzle3dPlayProjection {
         Puzzle3dPlayProjection(serde_json::to_value(default_fixture()).unwrap_or_else(|_| serde_json::to_value(empty_fixture()).unwrap_or(Value::Null)))
     }
 
     /// 🏷️ Maps each `Puzzle3dCommand` variant back to the action id it was declared under.
-    fn command_id(&self, command: &Puzzle3dCommand) -> &str {
+    fn command_id(command: &Puzzle3dCommand) -> &'static str {
         command.action_id()
     }
 
     /// @emoji 🧩️ Thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
     /// triple `handle_action_impl` expects from the typed `Puzzle3dCommand`.
-    fn handle(&self, command: &Puzzle3dCommand, doc: &DocumentView<'_, Puzzle3dPlayProjection>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> Result<Emit<Puzzle3dOperation, Puzzle3dConfigOperation>, Fault> {
+    fn handle(command: &Puzzle3dCommand, doc: &DocumentView<'_, Puzzle3dPlayProjection>, cfg: &ConfigView<'_, Puzzle3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle3dOperation, Puzzle3dConfigOperation, Self::DraftOperation>, Fault> {
         Ok(self.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, cfg.projection))
     }
 
     /// 🔌️ Declares puzzle3d's typed media I/O surface — the implicit document ports plus the flagship
     /// `kit:in` seam: an input port accepting `Kit×Type` media tagged `kit.catalog`, fanning IN from
     /// potentially many producers (`multiplicity: Many`).
-    fn io(&self) -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(
             AppIo::from_document(
                 "puzzle.3d",
@@ -2236,7 +2232,7 @@ impl DocumentApp for Puzzle3dPlayApp {
     /// deterministic/order-independent — safe for `multiplicity: Many` fan-in) via the same
     /// `puzzle3d_operations_from_fixture_change` delta bridge every other fixture-mutating action
     /// already uses, so this never mutates anything directly — only real, undoable operations.
-    fn import_media(&self, port: &str, media: &Media, doc: &DocumentView<'_, Puzzle3dPlayProjection>) -> Result<Emit<Puzzle3dOperation, Puzzle3dConfigOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, Puzzle3dPlayProjection>) -> Result<Emit<Puzzle3dOperation, Puzzle3dConfigOperation, Self::DraftOperation>, MediaError> {
         if port != "kit:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -2270,7 +2266,7 @@ impl DocumentApp for Puzzle3dPlayApp {
         Ok(Emit::operations(operations))
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Puzzle3dPlayProjection>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, Puzzle3dPlayProjection>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> UiNode {
         let (base_body_key, window_id_from_key) = body_key.split_once(':').map_or((body_key, None), |(b, w)| (b, Some(w)));
         let config = cfg.projection;
         let wid = window_id_from_key.or_else(|| config.window_ids.first().map(String::as_str)).unwrap_or(main::WINDOW_KIND_ID);
@@ -2300,7 +2296,7 @@ impl DocumentApp for Puzzle3dPlayApp {
         }
     }
 
-    fn window_engagements(&self, doc: &DocumentView<'_, Puzzle3dPlayProjection>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &DocumentView<'_, Puzzle3dPlayProjection>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.projection;
         let labels = puzzle3d_labels(config);
         // 🪟️ One entry per live window INSTANCE (split top/perspective panes are two instances of the
@@ -2314,7 +2310,7 @@ impl DocumentApp for Puzzle3dPlayApp {
             .collect()
     }
 
-    fn window_measures(&self, doc: &DocumentView<'_, Puzzle3dPlayProjection>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &DocumentView<'_, Puzzle3dPlayProjection>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.projection;
         let labels = puzzle3d_labels(config);
         window_instance_ids(config, main::WINDOW_KIND_ID)
@@ -2326,7 +2322,7 @@ impl DocumentApp for Puzzle3dPlayApp {
             .collect()
     }
 
-    fn tool_measures(&self, doc: &DocumentView<'_, Puzzle3dPlayProjection>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn tool_measures(doc: &DocumentView<'_, Puzzle3dPlayProjection>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.projection;
         let wid = config.window_ids.first().map_or(main::WINDOW_KIND_ID, String::as_str);
         let labels = puzzle3d_labels(config);
@@ -2590,8 +2586,11 @@ fn quat_rotate_point(point: [f32; 3], quat: [f64; 4]) -> [f32; 3] {
 /// single merged mesh for OBJ/GLB export; objects whose GLB hasn't round-tripped through
 /// `registerBrushMesh` this session fall back to a box.
 fn puzzle3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
+    puzzle3d_mesh_from_document_with_registry(doc, &HashMap::new())
+}
+
+fn puzzle3d_mesh_from_document_with_registry(doc: &Value, registry: &HashMap<String, Puzzle3dMeshBuffers>) -> Result<semio_framework_plugin::MeshData, String> {
     let fixture: Puzzle3dFixture = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
-    let registry = PUZZLE3D_MESH_REGISTRY.lock().map_err(|_| "puzzle3d mesh registry poisoned".to_string())?;
     let fallback = mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND);
     let mut merged = semio_framework_plugin::MeshData::default();
     for object in fixture.objects.iter().filter(|object| !object.hidden) {

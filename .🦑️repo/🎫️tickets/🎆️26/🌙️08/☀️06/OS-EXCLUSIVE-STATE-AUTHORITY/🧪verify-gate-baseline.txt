@@ -344,3 +344,45 @@ $ bun nx run @semio-tech/plugin-registry:check
 $ bun nx run @semio-tech/plugin-registry:check
 > nx run @semio-tech/plugin-registry:check
 $ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+
+--- wave0 baseline note 2026-08-06T14:00:39Z ---
+verify_gate_exit: (not obtained — command exceeded 10m; killed after nx recursion loop on @semio-tech/plugin-registry:check)
+partial: dependency-cruiser passed; catalog freshness step never completed

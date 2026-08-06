@@ -3,7 +3,13 @@
 #[path = "🧮️compute/🦀️component.rs"]
 pub mod compute;
 
+#[cfg(feature = "brep")]
+#[path = "🖥️host/🦀️component.rs"]
+pub mod host;
+
 pub use crate::brep::engine::compute::block_on;
+#[cfg(feature = "brep")]
+pub use crate::brep::engine::host::{BrepEngineHost, BREP_ENGINE_ID};
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -41,26 +47,11 @@ pub enum GeometryKind {
     Surface,
 }
 
-/// 🧭️ Opaque geometry handle (`solid-3`, `curve-7`, …).
+/// 🧭️ Opaque content-addressed geometry handle (hex-encoded OS engine key).
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct GeometryHandle(pub String);
 
 impl GeometryHandle {
-    pub fn new(kind: GeometryKind, id: u32) -> Self {
-        let prefix = match kind {
-            GeometryKind::Vertex => "vertex",
-            GeometryKind::Edge => "edge",
-            GeometryKind::Wire => "wire",
-            GeometryKind::Face => "face",
-            GeometryKind::Shell => "shell",
-            GeometryKind::Solid => "solid",
-            GeometryKind::Compound => "compound",
-            GeometryKind::Curve => "curve",
-            GeometryKind::Surface => "surface",
-        };
-        Self(format!("{prefix}-{id}"))
-    }
-
     pub fn as_str(&self) -> &str {
         &self.0
     }

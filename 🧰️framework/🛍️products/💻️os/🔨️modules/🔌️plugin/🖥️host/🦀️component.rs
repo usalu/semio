@@ -16,7 +16,7 @@ const PLUGIN_FUEL_BUDGET: u64 = 50_000_000;
 
 bindgen!({
     world: "plugin-world",
-    path: "../../../⚡️implementations/🦀️rust/📜️wit",
+    path: "../../../📦️packages/🦀️rust/📜️wit",
     async: false,
 });
 
@@ -45,6 +45,27 @@ fn host_fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<
     dsl_core::encode_fault_bytes(&dsl_core::Fault::new(dsl_core::FaultOrigin::Os, dsl_core::FaultCode::new(code), message))
 }
 
+//#region 🔖️DocumentSession
+/// 🧾 Host-owned per-instance document authority. Typed `DocumentStore` / `ConfigStore` / `DraftStore`
+/// and the command log still live in guest `VcsDocumentApp` until CHANNEL_VERSION 5 moves packs onto
+/// the host; this session already owns the engine cache and generation counters so the ownership seam
+/// exists in-tree (`store` / `config_store` / `draft_store` / `command_log` land here next).
+pub struct DocumentSession {
+    pub generation: u64,
+    pub command_log_len: u64,
+    pub engines: store::EngineCache,
+}
+
+impl DocumentSession {
+    /// 🏗️ Empty session with a fresh engine cache under `budget_bytes`.
+    pub fn new(budget_bytes: usize) -> Self {
+        Self { generation: 0, command_log_len: 0, engines: store::EngineCache::new(budget_bytes) }
+    }
+}
+
+const DEFAULT_ENGINE_CACHE_BUDGET_BYTES: usize = 64 * 1024 * 1024;
+//#endregion 🔖️DocumentSession
+
 //#region 🔖️HostState
 struct HostState {
     wasi: WasiCtx,
@@ -56,6 +77,8 @@ struct HostState {
     /// {@link WasmPluginRuntime::register_host_blob_store} — `None` until a caller registers one
     /// (mirrors `backbones`' explicit-registration convention, not a stub-forever like `read-asset`).
     blob_store: Option<Arc<dyn store::BlobStore>>,
+    /// @emoji 🧾 Host-authoritative document session (generation + engine cache).
+    session: DocumentSession,
 }
 
 impl WasiView for HostState {
@@ -71,6 +94,10 @@ impl WasiView for HostState {
 impl HostState {
     fn has_backbone_access(&self, rights: Rights) -> bool {
         self.granted_capabilities.iter().any(|cap| cap.artifact == ArtifactKind::Backbone && cap.rights == rights && matches!(cap.scope, Scope::Plugin | Scope::Global))
+    }
+
+    fn has_engine_access(&self, rights: Rights) -> bool {
+        self.granted_capabilities.iter().any(|cap| cap.artifact == ArtifactKind::Engine && cap.rights == rights && matches!(cap.scope, Scope::Plugin | Scope::Global))
     }
 
     /// @emoji 🔌️ Looks up the real, native-side backbone for a plugin-attached uri — the plugin only
@@ -145,6 +172,36 @@ impl semio::framework::host::Host for HostState {
     fn backbone_status(&mut self, uri: String) -> Result<String, Vec<u8>> {
         Ok(if self.backbones.contains_key(&uri) { "attached".into() } else { "detached".into() })
     }
+
+    fn engine_derive(&mut self, engine_id: String, input: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
+        if !self.has_engine_access(Rights::Invoke) {
+            return Err(host_fault_bytes("os.host.engine-derive", "engine invoke capability missing"));
+        }
+        let handle = self
+            .session
+            .engines
+            .derive(&engine_id, &input)
+            .map_err(|error| host_fault_bytes("os.host.engine-derive", error.to_string()))?;
+        Ok(handle.key.0.to_vec())
+    }
+
+    fn engine_read(&mut self, engine_id: String, key: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
+        if !self.has_engine_access(Rights::Read) {
+            return Err(host_fault_bytes("os.host.engine-read", "engine read capability missing"));
+        }
+        let key_bytes: [u8; 32] = key
+            .as_slice()
+            .try_into()
+            .map_err(|_| host_fault_bytes("os.host.engine-read", format!("engine key must be 32 bytes, got {}", key.len())))?;
+        let handle = store::EngineHandle {
+            key: store::EngineKey(key_bytes),
+            engine_id,
+        };
+        self.session
+            .engines
+            .read(&handle)
+            .map_err(|error| host_fault_bytes("os.host.engine-read", error.to_string()))
+    }
 }
 //#endregion 🔖️HostState
 
@@ -205,7 +262,15 @@ impl WasmPluginRuntime {
     }
 
     fn host_state(plugin_id: &str, manifest: &PluginManifest) -> HostState {
-        HostState { wasi: WasiCtxBuilder::new().build(), table: ResourceTable::new(), granted_capabilities: manifest.capabilities.clone(), plugin_id: plugin_id.to_string(), backbones: HashMap::new(), blob_store: None }
+        HostState {
+            wasi: WasiCtxBuilder::new().build(),
+            table: ResourceTable::new(),
+            granted_capabilities: manifest.capabilities.clone(),
+            plugin_id: plugin_id.to_string(),
+            backbones: HashMap::new(),
+            blob_store: None,
+            session: DocumentSession::new(DEFAULT_ENGINE_CACHE_BUDGET_BYTES),
+        }
     }
 
     pub fn load(path: impl AsRef<Path>) -> Result<Self, PluginHostError> {
@@ -287,6 +352,13 @@ impl WasmPluginRuntime {
     pub fn deregister_host_blob_store(&self) -> Result<(), PluginHostError> {
         let mut plugin_store = self.store_guard()?;
         plugin_store.data_mut().blob_store = None;
+        Ok(())
+    }
+
+    /// @emoji ⚙️ Registers a compute kernel on the host `EngineCache` under its `ENGINE_ID`.
+    pub fn register_engine<E: store::Engine>(&self, engine: E) -> Result<(), PluginHostError> {
+        let mut plugin_store = self.store_guard()?;
+        plugin_store.data_mut().session.engines.register(engine);
         Ok(())
     }
 

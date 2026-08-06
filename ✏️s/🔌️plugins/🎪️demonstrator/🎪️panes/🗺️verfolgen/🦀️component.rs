@@ -23,5 +23,5 @@ pub fn register_exports() {
 
 /// 🎪️ Adds the pane's app to the shared demonstrator bundle.
 pub fn register_app(bundle: PluginBundle) -> PluginBundle {
-    bundle.register_document_app(create_gis2d_app(), || Gis2dPlayApp)
+    bundle.register_document_app::<Gis2dPlayApp>(create_gis2d_app())
 }

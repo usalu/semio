@@ -28,7 +28,8 @@ use crate::apps::note::terminology::note_play_labels;
 use crate::artifacts::note::engine::empty_note_document;
 use crate::artifacts::note::op::NoteOperation;
 use crate::artifacts::note::{NoteDocument, NOTE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID};
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID};
+use store::EngineHandles;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -126,32 +127,30 @@ impl DocumentApp for NotePlayApp {
     type Operation = NoteOperation;
     type Config = NoteConfig;
     type ConfigOperation = NoteConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = NoteCommand;
 
-    fn app_id(&self) -> &str {
-        NOTE_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = NOTE_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = NOTE_DOCUMENT_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        NOTE_DOCUMENT_SCHEMA
-    }
-
-    fn initial_projection(&self) -> NoteDocument {
+    fn initial_projection() -> NoteDocument {
         empty_note_document()
     }
 
     /// 🏷️ Maps each `NoteCommand` variant back to the action id it was declared under in
     /// `create_note_app` — used by `VcsDocumentApp` for command-log labeling and the registry's
     /// View/Shell kind-discipline check.
-    fn command_id(&self, command: &NoteCommand) -> &str {
+    fn command_id(command: &NoteCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &NoteCommand, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
+    fn handle(command: &NoteCommand, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<NoteOperation, NoteConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> UiNode {
         let document = doc.projection;
         let config = cfg.projection;
         let labels = note_play_labels(config);
@@ -165,7 +164,7 @@ impl DocumentApp for NotePlayApp {
         }
     }
 
-    fn window_engagements(&self, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.projection;
         HashMap::from([
             (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::engagement(doc.projection, &config.camera, &config.selected_block_ids, &config.engagement_input)),
@@ -173,7 +172,7 @@ impl DocumentApp for NotePlayApp {
         ])
     }
 
-    fn window_measures(&self, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.projection;
         let labels = note_play_labels(config);
         HashMap::from([(NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::window_measures(doc.projection, &config.camera, labels)), (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), navigator::window_measures(doc.projection, &config.camera, labels))])
@@ -305,7 +304,7 @@ pub fn create_note_app() -> App {
             // note has no user-visible sticky config defaults (unlike shooting's default shot/asset
             // format), so `config_spec()` stays the trait default (`ConfigSpec::empty()`); registering it
             // here still declares the config schema for the manifest.
-            .config(NotePlayApp.config_spec()),
+            .config(NotePlayApp::config_spec()),
     );
     for window in app.definition.window_kinds.iter_mut() {
         if window.id == NOTE_PLAY_WINDOW_COMPOSITE {

@@ -26,9 +26,10 @@ use crate::apps::dag::terminology::{dag_play_labels, is_de_locale};
 use crate::artifacts::dag::op::DagOperation;
 use crate::artifacts::dag::{DagDocument, DAG_DOCUMENT_SCHEMA};
 use infinite_board_port_directed_dag::default_dag_document;
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode,
 };
+use store::EngineHandles;
 use serde_json::Value;
 
 //#region 🔖️Constants
@@ -115,35 +116,33 @@ impl DocumentApp for DagPlayApp {
     type Operation = DagOperation;
     type Config = DagConfig;
     type ConfigOperation = DagConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = DagCommand;
 
-    fn app_id(&self) -> &str {
-        DAG_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = DAG_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = DAG_DOCUMENT_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        DAG_DOCUMENT_SCHEMA
-    }
-
-    fn initial_projection(&self) -> DagDocument {
+    fn initial_projection() -> DagDocument {
         default_dag_document()
     }
 
-    fn whole_document_operation(&self, projection: DagDocument) -> Option<DagOperation> {
+    fn whole_document_operation(projection: DagDocument) -> Option<DagOperation> {
         Some(DagOperation::SetDocument { document: projection })
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(&self, command: &DagCommand) -> &str {
+    fn command_id(command: &DagCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &DagCommand, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
+    fn handle(command: &DagCommand, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DagOperation, DagConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> UiNode {
         let document = doc.projection;
         let config = cfg.projection;
         let selected = &config.selected_node_ids;
@@ -159,7 +158,7 @@ impl DocumentApp for DagPlayApp {
         }
     }
 
-    fn context_menu(&self, request: &ContextMenuRequest, _doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let labels = dag_play_labels(cfg.projection);
         let is_de = is_de_locale(cfg.projection);
         let selected = &cfg.projection.selected_node_ids;
@@ -221,7 +220,7 @@ pub fn create_dag_app() -> App {
             // dag has no user-visible config defaults to expose, so `config_spec()` stays the trait
             // default `ConfigSpec::empty()`; declaring it explicitly here still keeps this app's typed
             // channel surface consistent with `shooting_ui::create_shooting_app`'s convention.
-            .config(DagPlayApp.config_spec()),
+            .config(DagPlayApp::config_spec()),
     )
     .example("demo", LocalizedLabel::native("Demo", "Demo"), serde_json::to_string(&default_dag_document()).expect("default DAG document has no non-string map keys or non-finite floats, so JSON serialization is infallible"), "cylinder")
     .workflow("dag", "DAG", "graph")

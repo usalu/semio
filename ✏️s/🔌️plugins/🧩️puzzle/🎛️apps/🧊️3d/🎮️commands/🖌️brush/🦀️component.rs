@@ -5,7 +5,7 @@
 
 use crate::apps::puzzle3d::{
     drive_precompute, fixture_from_engine_fixture, puzzle3d_brush_target_vortex, puzzle3d_clear_selection, puzzle3d_rederive_all_attractions, puzzle3d_suggestions_tick_scope, resolve_puzzle3d_attractions, sync_precompute_session,
-    Puzzle3dActionCtx, PUZZLE3D_MESH_REGISTRY,
+    Puzzle3dActionCtx,
 };
 use crate::apps::puzzle3d::config::Puzzle3dSuggestionMenu;
 use crate::artifacts::puzzle3d::engine::{BrushPlacePayload, Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
@@ -129,7 +129,7 @@ pub fn register_brush_mesh(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>
     let positions: Vec<f32> = positions.iter().filter_map(|v| v.as_f64().map(|n| n as f32)).collect();
     let indices: Vec<u32> = indices.iter().filter_map(|v| v.as_u64().map(|n| n as u32)).collect();
     ctx.app.precompute.borrow_mut().register_mesh(url, &positions, &indices);
-    if let Ok(mut registry) = PUZZLE3D_MESH_REGISTRY.lock() {
+    if let Ok(mut registry) = ctx.app.mesh_registry.lock() {
         registry.insert(url.to_string(), (positions, indices));
     }
 }

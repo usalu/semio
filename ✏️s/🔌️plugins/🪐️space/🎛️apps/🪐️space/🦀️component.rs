@@ -30,10 +30,11 @@ use crate::apps::space::config::SpaceConfig;
 use crate::apps::space::terminology::SStudioLabels;
 use crate::core::parse_demo_space_document;
 use semio_framework_os::{create_os_id, empty_workflow_document, MediaContract, WorkflowDocument, WorkflowEdge, WorkflowOperation};
-use semio_framework_plugin::{app_commands, create_default_layout, host_now_ms, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultOrigin, HostEffect, Label, LocalizedLabel, UiNode, WindowLayout};
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, app_commands, create_default_layout, host_now_ms, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultOrigin, HostEffect, Label, LocalizedLabel, UiNode, WindowLayout};
+use store::EngineHandles;
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use std::sync::{LazyLock, Mutex};
+use std::sync::Mutex;
 
 //#region 🔖️Constants
 pub const S_PLAY_APP_ID: &str = "studio";
@@ -96,17 +97,26 @@ struct SPresencePeerLocal {
 
 const S_PRESENCE_STALE_MS: f64 = 15_000.0;
 
-static PRESENCE_PEERS: LazyLock<Mutex<HashMap<String, HashMap<String, SPresencePeerLocal>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+fn presence_refresh_needed(operations: &[crate::apps::space::config::SpaceConfigOperation]) -> bool {
+    use crate::apps::space::config::SpaceConfigOperation;
+    operations.iter().any(|operation| {
+        matches!(
+            operation,
+            SpaceConfigOperation::SetClient { .. } | SpaceConfigOperation::SetSelection { .. } | SpaceConfigOperation::Snapshot { .. }
+        )
+    })
+}
 
 pub(crate) fn config_space_id(config: &SpaceConfig) -> String {
     config.space_id.clone().unwrap_or_else(|| "default".into())
 }
 
-pub(crate) fn presence_peers_json(config: &SpaceConfig) -> String {
+pub(crate) fn presence_peers_json(app: &SpaceApp, config: &SpaceConfig) -> String {
     let space_id = config_space_id(config);
     let self_client_id = config.client_id.clone().unwrap_or_default();
     let now_ms = host_now_ms();
-    let peers: Vec<Value> = PRESENCE_PEERS
+    let peers: Vec<Value> = app
+        .presence_peers
         .lock()
         .ok()
         .and_then(|registry| registry.get(&space_id).cloned())
@@ -118,13 +128,13 @@ pub(crate) fn presence_peers_json(config: &SpaceConfig) -> String {
     serde_json::to_string(&peers).unwrap_or_else(|_| "[]".into())
 }
 
-pub(crate) fn publish_presence(config: &SpaceConfig) {
+pub(crate) fn publish_presence(app: &SpaceApp, config: &SpaceConfig) {
     let (Some(client_id), Some(client_name)) = (&config.client_id, &config.client_name) else {
         return;
     };
     let space_id = config_space_id(config);
     let now_ms = host_now_ms();
-    if let Ok(mut registry) = PRESENCE_PEERS.lock() {
+    if let Ok(mut registry) = app.presence_peers.lock() {
         let peers = registry.entry(space_id).or_default();
         peers.retain(|_, entry| now_ms - entry.updated_at_ms <= S_PRESENCE_STALE_MS);
         peers.insert(client_id.clone(), SPresencePeerLocal { client_id: client_id.clone(), name: client_name.clone(), selection: config.selected_node_ids.clone(), updated_at_ms: now_ms });
@@ -247,35 +257,36 @@ app_commands! {
 
 //#region 🔖️SpaceApp
 /// 🧪️ Unit struct — every former `StudioRuntimeState`/`self.config` field now lives in `SpaceConfig`,
-/// written through `SpaceConfigOperation`s.
+/// written through `SpaceConfigOperation`s. Ephemeral presence heartbeats live on the app instance.
 #[derive(Default)]
-pub struct SpaceApp;
+pub struct SpaceApp {
+    presence_peers: Mutex<HashMap<String, HashMap<String, SPresencePeerLocal>>>,
+}
 
 impl DocumentApp for SpaceApp {
     type Projection = WorkflowDocument;
     type Operation = WorkflowOperation;
     type Config = SpaceConfig;
     type ConfigOperation = crate::apps::space::config::SpaceConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = SpaceCommand;
 
-    fn app_id(&self) -> &str {
-        S_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = S_PLAY_APP_ID;
 
-    fn document_schema(&self) -> &str {
-        semio_framework_os::S_WORKFLOW_SCHEMA
-    }
+    const DOCUMENT_SCHEMA: &'static str = semio_framework_os::S_WORKFLOW_SCHEMA;
 
-    fn initial_projection(&self) -> WorkflowDocument {
+    fn initial_projection() -> WorkflowDocument {
         empty_workflow_document()
     }
 
-    fn command_id(&self, command: &SpaceCommand) -> &str {
+    fn command_id(command: &SpaceCommand) -> &str {
         command.command_id()
     }
 
     /// 🎯️ Bridges shell `{action,args}` JSON onto typed `SpaceCommand` until every call site speaks OpBinary.
-    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<SpaceCommand, Fault> {
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<SpaceCommand, Fault> {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(|raw| raw.as_f64().or_else(|| raw.as_i64().map(|n| n as f64)).or_else(|| raw.as_u64().map(|n| n as f64)));
         let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_bool);
@@ -374,11 +385,16 @@ impl DocumentApp for SpaceApp {
         }
     }
 
-    fn handle(&self, command: &SpaceCommand, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowOperation, crate::apps::space::config::SpaceConfigOperation>, Fault> {
-        command.dispatch(doc, cfg)
+    fn handle(command: &SpaceCommand, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WorkflowOperation, crate::apps::space::config::SpaceConfigOperation, Self::DraftOperation>, Fault> {
+        let emit = command.dispatch(doc, cfg)?;
+        if presence_refresh_needed(&emit.config_operations) {
+            let next_config = apply_config_operations(cfg.projection, &emit.config_operations);
+            publish_presence(self, &next_config);
+        }
+        Ok(emit)
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> UiNode {
         let projection = doc.projection;
         let config = cfg.projection;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale);
@@ -386,7 +402,7 @@ impl DocumentApp for SpaceApp {
         // strip it so Space body keys still match.
         let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
         match base_body_key {
-            crate::apps::space::modes::main::windows::workflow::S_PLAY_BODY_WORKFLOW => crate::apps::space::modes::main::windows::workflow::render(projection, config),
+            crate::apps::space::modes::main::windows::workflow::S_PLAY_BODY_WORKFLOW => crate::apps::space::modes::main::windows::workflow::render(self, projection, config),
             crate::apps::space::modes::main::windows::media_vfs::S_PLAY_BODY_MEDIA_VFS => crate::apps::space::modes::main::windows::media_vfs::render(projection, &config.locale),
             crate::apps::space::modes::main::windows::compiled_dag::S_PLAY_BODY_COMPILED_DAG => crate::apps::space::modes::main::windows::compiled_dag::render(projection),
             S_PLAY_CATALOGUE_BODY_KEY => crate::apps::space::panels::catalogue::build_catalogue_tree(labels, semio_framework_plugin::locale_from_str(&config.locale)),
@@ -396,11 +412,11 @@ impl DocumentApp for SpaceApp {
         }
     }
 
-    fn window_measures(&self, doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
+    fn window_measures(doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
         HashMap::from([(crate::apps::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), crate::apps::space::modes::main::windows::workflow::window_measures(cfg.projection, &doc.projection.graph.nodes))])
     }
 
-    fn context_menu(&self, request: &semio_framework_plugin::ContextMenuRequest, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &DocumentView<'_, WorkflowDocument>, cfg: &ConfigView<'_, SpaceConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&cfg.projection.locale);
         let is_de = cfg.projection.locale.starts_with("de");
         space_workflow_context_menu_items(registry, labels, is_de, request.surface.as_ref(), &cfg.projection.selected_node_ids)
@@ -543,12 +559,23 @@ pub(crate) mod testkit {
         HistoryView::empty()
     }
 
-    /// 🎛️ Drives the typed `SpaceApp::handle` against a projection/config snapshot, returning its emit.
+    use std::cell::RefCell;
+
+    thread_local! {
+        static STUDIO_TEST_APP: RefCell<SpaceApp> = RefCell::new(SpaceApp::default());
+    }
+
     pub(crate) fn studio_emit(projection: &WorkflowDocument, config: &SpaceConfig, command: &SpaceCommand) -> Result<Emit<WorkflowOperation, crate::apps::space::config::SpaceConfigOperation>, Fault> {
-        let history = empty_history();
-        let doc = DocumentView { projection, history: &history };
-        let cfg = ConfigView { projection: config };
-        SpaceApp.handle(command, &doc, &cfg)
+        STUDIO_TEST_APP.with(|app| {
+            let history = empty_history();
+            let doc = DocumentView { projection, history: &history };
+            let cfg = ConfigView { projection: config };
+            app.borrow().handle(command, &doc, &cfg)
+        })
+    }
+
+    pub(crate) fn studio_presence_peers_json(config: &SpaceConfig) -> String {
+        STUDIO_TEST_APP.with(|app| crate::apps::space::presence_peers_json(&app.borrow(), config))
     }
 
     /// 📽️ Folds studio document operations onto a projection the way the store would (minus history).

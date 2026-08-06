@@ -13,9 +13,10 @@ use crate::apps::gis3d::modes::view::windows::terrain;
 use crate::artifacts::gisterrain::engine::{default_terrain_document, gis3d_io, gis3d_map_in_port, gis3d_scene_media, gis3d_scene_out_port};
 use crate::artifacts::gisterrain::op::Gis3dTerrainOperation;
 use crate::artifacts::gisterrain::{mesh_artifact_kind, Gis3dTerrainDocument, GIS_3D_TERRAIN_SCHEMA};
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ui_text, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
+use store::EngineHandles;
 use serde_json::Value;
 use store::DocumentPack;
 
@@ -55,40 +56,38 @@ impl DocumentApp for Gis3dPlayApp {
     type Operation = Gis3dTerrainOperation;
     type Config = Gis3dConfig;
     type ConfigOperation = Gis3dConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = Gis3dCommand;
 
-    fn app_id(&self) -> &str {
-        GIS3D_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = GIS3D_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        GIS_3D_TERRAIN_SCHEMA
-    }
-
-    fn initial_projection(&self) -> Gis3dTerrainDocument {
+    fn initial_projection() -> Gis3dTerrainDocument {
         default_terrain_document()
     }
 
     /// 🔌️ `map:in`/`scene:out` (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) plus the implicit
     /// document ports.
-    fn io(&self) -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(gis3d_io())
     }
 
-    fn whole_document_operation(&self, projection: Gis3dTerrainDocument) -> Option<Gis3dTerrainOperation> {
+    fn whole_document_operation(projection: Gis3dTerrainDocument) -> Option<Gis3dTerrainOperation> {
         Some(Gis3dTerrainOperation::SetDocument { document: projection })
     }
 
     /// 🎞️ `scene:out` (see `crate::artifacts::gisterrain::engine::gis3d_scene_media`) plus the inherited
     /// `document:out` default (the pack of `doc.projection`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, Gis3dTerrainDocument>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, Gis3dTerrainDocument>) -> Result<Media, MediaError> {
         match port {
             "scene:out" => Ok(gis3d_scene_media(doc.projection)),
             "document:out" => {
-                let media_type = self.io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.projection.encode_pack();
-                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -98,7 +97,7 @@ impl DocumentApp for Gis3dPlayApp {
     /// `Gis3dTerrainDocument::imported_features_json` (rendered as an extra pin layer, see the
     /// 🏔️terrain window) plus the inherited `document:in` default (replicated inline for the same
     /// reason as `export_media`).
-    fn import_media(&self, port: &str, media: &Media, _doc: &DocumentView<'_, Gis3dTerrainDocument>) -> Result<Emit<Gis3dTerrainOperation, Gis3dConfigOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Gis3dTerrainDocument>) -> Result<Emit<Gis3dTerrainOperation, Gis3dConfigOperation, Self::DraftOperation>, MediaError> {
         match port {
             "map:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -121,7 +120,7 @@ impl DocumentApp for Gis3dPlayApp {
         }
     }
 
-    fn command_id(&self, command: &Gis3dCommand) -> &str {
+    fn command_id(command: &Gis3dCommand) -> &str {
         command.command_id()
     }
 
@@ -129,7 +128,7 @@ impl DocumentApp for Gis3dPlayApp {
     /// `{action,args}` wire; this is the typed-command bridge until those call sites send `OpBinary`
     /// bytes directly. Mirrors `crate::apps::gis2d`'s arg-key tolerance (camelCase + snake_case + the
     /// nested `camera` object form).
-    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let args = args.cloned().unwrap_or(Value::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
@@ -161,17 +160,17 @@ impl DocumentApp for Gis3dPlayApp {
         }
     }
 
-    fn handle(&self, command: &Gis3dCommand, doc: &DocumentView<'_, Gis3dTerrainDocument>, cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<Gis3dTerrainOperation, Gis3dConfigOperation>, Fault> {
+    fn handle(command: &Gis3dCommand, doc: &DocumentView<'_, Gis3dTerrainDocument>, cfg: &ConfigView<'_, Gis3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Gis3dTerrainOperation, Gis3dConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
     /// 🧮️ Empty — gis3d's `Config` is session view state (camera/selection), not a user-facing
     /// settings record; `ConfigSpec::empty()` (the trait default) is correct as-is.
-    fn config_spec(&self) -> semio_framework_plugin::ConfigSpec {
+    fn config_spec() -> semio_framework_plugin::ConfigSpec {
         semio_framework_plugin::ConfigSpec::empty()
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Gis3dTerrainDocument>, cfg: &ConfigView<'_, Gis3dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, Gis3dTerrainDocument>, cfg: &ConfigView<'_, Gis3dConfig>) -> UiNode {
         match body_key {
             terrain::GIS3D_PLAY_BODY_COMPOSITE => terrain::render(doc.projection, cfg.projection),
             _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -203,7 +202,7 @@ pub fn create_gis3d_app() -> App {
             .operation("setExaggeration", LocalizedLabel::native("Set Exaggeration", "Überhöhung festlegen"))
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            .config(Gis3dPlayApp.config_spec())
+            .config(Gis3dPlayApp::config_spec())
             .io(gis3d_io()),
     )
     .example("reuse-terrain", LocalizedLabel::native("Reuse Terrain", "Gelände wiederverwenden"), serde_json::to_string(&default_terrain_document()).unwrap_or_default(), "file-text")

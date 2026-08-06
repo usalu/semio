@@ -1,7 +1,6 @@
 //! 📜️ Operation provenance: a [`PersistentLabel`] assigned once at an entity's birth and never
-//! reused, plus the [`OpDelta`] every mutating operation in [`crate::brep::euler`] returns. This is what
-//! lets the document layer (a later phase) build exact `generated`/`modified`/`deleted` maps for
-//! `backwards()` inversion without needing to diff whole-body snapshots.
+//! reused, plus the [`OpDelta`] every mutating operation in [`crate::brep::euler`] returns.
+//! **Host authority:** `LabelSource` lives only inside a `Body` owned by engine compute or cache.
 
 // #region 🔖️Labels
 

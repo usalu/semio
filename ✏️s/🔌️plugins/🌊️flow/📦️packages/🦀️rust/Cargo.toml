@@ -17,7 +17,7 @@ role = "plugin"
 [[package.metadata.semio.playground]]
 variant = "flow"
 ports = { react = 6016, wgpu = 6116 }
-engines = ["./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core"]
+engines = ["./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]

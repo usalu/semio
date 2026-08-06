@@ -1,0 +1,370 @@
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:7:1
+  |
+7 | extern crate self as dsl_grammar;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+7 - extern crate self as dsl_grammar;
+  |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1
+   |
+11 | extern crate self as pack;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+11 - extern crate self as pack;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1
+   |
+12 | extern crate self as spr;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+12 - extern crate self as spr;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:13:1
+   |
+13 | extern crate self as vcs;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+13 - extern crate self as vcs;
+   |
+
+warning: private item shadows public glob re-export
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:14:1
+    |
+ 14 | extern crate self as semio_format;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+note: the name `semio_format` in the type namespace is supposed to be publicly re-exported here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:186:9
+    |
+186 | pub use crate::os_store::*;
+    |         ^^^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:14:1
+    |
+ 14 | extern crate self as semio_format;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(hidden_glob_reexports)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:345:11
+    |
+345 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:351:11
+    |
+351 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `canonicalize` in the value namespace is first re-exported here
+...
+198 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `canonicalize` in the value namespace is also re-exported here
+    |
+    = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `test_support` in the type namespace is first re-exported here
+186 | pub use crate::os_store::*;
+    |         ------------------ but the name `test_support` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `core` in the type namespace is first re-exported here
+...
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `core` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Symbol` in the type namespace is first re-exported here
+...
+198 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `Symbol` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `apply_collection_operation` in the value namespace is first re-exported here
+...
+192 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `apply_collection_operation` in the value namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `collection_diff_from_operation` in the value namespace is first re-exported here
+...
+192 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `collection_diff_from_operation` in the value namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `invert_collection_operation` in the value namespace is first re-exported here
+...
+192 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `invert_collection_operation` in the value namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Identified` in the type namespace is first re-exported here
+...
+192 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `Identified` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Patchable` in the type namespace is first re-exported here
+...
+192 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `Patchable` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `cli` in the type namespace is first re-exported here
+...
+194 | pub use crate::os_semio::*;
+    |         ------------------ but the name `cli` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `format` in the type namespace is first re-exported here
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `format` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `io` in the type namespace is first re-exported here
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `io` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `testkit` in the type namespace is first re-exported here
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `testkit` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `read_varint_u64` in the value namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `read_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `write_varint_u64` in the value namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `write_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `recover_file` in the value namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `recover_file` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `RecoveryReport` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `RecoveryReport` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `VerificationLevel` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `VerificationLevel` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `WriteOptions` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `WriteOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `DecodeOptions` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `DecodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `EncodeOptions` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `EncodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `ItemPatch` in the type namespace is also re-exported here
+...
+192 | pub use crate::os_vcs::*;
+    |         ^^^^^^^^^^^^^^^^ the name `ItemPatch` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `CollectionDiff` in the type namespace is also re-exported here
+...
+192 | pub use crate::os_vcs::*;
+    |         ^^^^^^^^^^^^^^^^ the name `CollectionDiff` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `CollectionOperation` in the type namespace is also re-exported here
+...
+192 | pub use crate::os_vcs::*;
+    |         ^^^^^^^^^^^^^^^^ the name `CollectionOperation` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:198:9
+    |
+186 | pub use crate::os_store::*;
+    |         ------------------ but the name `Alternative` in the type namespace is also re-exported here
+...
+198 | pub use crate::os_dsl::grammar::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^ the name `Alternative` in the type namespace is first re-exported here
+
+warning: unused import: `crate::os_dsl::core::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:199:9
+    |
+199 | pub use crate::os_dsl::core::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `len`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:1083:21
+     |
+1083 |                 let len = end_j - i;
+     |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `print_edge_label` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2075:19
+     |
+1969 | / impl<P, Operation> DocumentStore<P, Operation>
+1970 | | where
+1971 | |     P: Clone + Serialize + DeserializeOwned + DocumentPack,
+1972 | |     Operation: Clone + Serialize + DeserializeOwned + self::Operation<P> + OpBinary + OpText,
+     | |_____________________________________________________________________________________________- method in this implementation
+...
+2075 |       pub(crate) fn set_envelope(&mut self, envelope: DocumentEnvelope<P, Operation>, applied_edit_ids: Vec<String>) {
+     |                     ^^^^^^^^^^^^
+
+warning: `semio-framework-os-kernel` (lib) generated 36 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+    Checking semio-s-3d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust)
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:281:21: error[E0559]: variant `StoredEntity::CurveNurbs` has no field named `weights`: `StoredEntity::CurveNurbs` does not have this field
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:952:12: error[E0308]: mismatched types: expected `GeometryHandle`, found `Result<GeometryHandle, BrepError>`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:185:11: error[E0277]: the trait bound `KernelCurve: Clone` is not satisfied: the trait `Clone` is not implemented for `KernelCurve`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:1687:119: error[E0277]: a value of type `Vec<GeometryHandle>` cannot be built from an iterator over elements of type `Result<GeometryHandle, BrepError>`: value of type `Vec<GeometryHandle>` cannot be built from `std::iter::Iterator<Item=Result<GeometryHandle, BrepError>>`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:1223:104: error[E0277]: a value of type `Vec<GeometryHandle>` cannot be built from an iterator over elements of type `Result<GeometryHandle, BrepError>`: value of type `Vec<GeometryHandle>` cannot be built from `std::iter::Iterator<Item=Result<GeometryHandle, BrepError>>`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:1688:110: error[E0277]: a value of type `Vec<GeometryHandle>` cannot be built from an iterator over elements of type `Result<GeometryHandle, BrepError>`: value of type `Vec<GeometryHandle>` cannot be built from `std::iter::Iterator<Item=Result<GeometryHandle, BrepError>>`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:1229:13: error[E0308]: mismatched types: expected `GeometryHandle`, found `Result<GeometryHandle, BrepError>`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:1229:51: error[E0308]: mismatched types: expected `GeometryHandle`, found `Result<GeometryHandle, BrepError>`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:1319:128: error[E0277]: a value of type `Vec<GeometryHandle>` cannot be built from an iterator over elements of type `Result<GeometryHandle, BrepError>`: value of type `Vec<GeometryHandle>` cannot be built from `std::iter::Iterator<Item=Result<GeometryHandle, BrepError>>`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:1689:110: error[E0277]: a value of type `Vec<GeometryHandle>` cannot be built from an iterator over elements of type `Result<GeometryHandle, BrepError>`: value of type `Vec<GeometryHandle>` cannot be built from `std::iter::Iterator<Item=Result<GeometryHandle, BrepError>>`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:296:34: error[E0599]: no method named `semi_angle` found for reference `&ConicalSurface` in the current scope: method not found in `&ConicalSurface`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:297:30: error[E0599]: no method named `ref_radius` found for reference `&ConicalSurface` in the current scope: method not found in `&ConicalSurface`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:304:39: error[E0599]: no method named `origin` found for reference `&ToroidalSurface` in the current scope: method not found in `&ToroidalSurface`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:305:37: error[E0599]: no method named `axis` found for reference `&ToroidalSurface` in the current scope
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:328:94: error[E0308]: mismatched types: expected `Id<Vertex>`, found `u32`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:328:51: error[E0308]: `?` operator has incompatible types: expected `Id<Vertex>`, found `&Vertex`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:329:88: error[E0308]: mismatched types: expected `Id<Edge>`, found `u32`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:329:47: error[E0308]: `?` operator has incompatible types: expected `Id<Edge>`, found `&Edge`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:330:88: error[E0308]: mismatched types: expected `Id<Wire>`, found `u32`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:330:47: error[E0308]: `?` operator has incompatible types: expected `Id<Wire>`, found `&Wire`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:331:88: error[E0308]: mismatched types: expected `Id<Face>`, found `u32`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:331:47: error[E0308]: `?` operator has incompatible types: expected `Id<Face>`, found `&Face`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:332:91: error[E0308]: mismatched types: expected `Id<Solid>`, found `u32`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:332:49: error[E0308]: `?` operator has incompatible types: expected `Id<Solid>`, found `&Solid`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:333:100: error[E0308]: mismatched types: expected `Id<Compound>`, found `u32`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:333:55: error[E0308]: `?` operator has incompatible types: expected `Id<Compound>`, found `&Compound`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:335:36: error[E0599]: no associated function or constant named `from_point_direction` found for struct `Line3D` in the current scope: associated function or constant not found in `Line3D`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:348:41: error[E0599]: no associated function or constant named `from_knots_control_points` found for struct `brepkit_math::nurbs::NurbsCurve` in the current scope: associated function or constant not found in `brepkit_math::nurbs::NurbsCurve`
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:357:28: error[E0061]: this function takes 3 arguments but 4 arguments were supplied
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:365:29: error[E0061]: this function takes 3 arguments but 4 arguments were supplied
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:370:45: error[E0599]: no associated function or constant named `from_knots_control_points` found for struct `NurbsSurface` in the current scope: associated function or constant not found in `NurbsSurface`
+error: could not compile `semio-s-3d` (lib) due to 31 previous errors

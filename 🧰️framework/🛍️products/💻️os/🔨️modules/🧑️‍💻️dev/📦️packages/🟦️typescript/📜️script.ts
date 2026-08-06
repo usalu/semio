@@ -829,7 +829,7 @@ function ensureGuestSlimTypstFontsAsset(): void {
   const outPath = join(vendorDir, "guestslim-typst-fonts.bin");
   if (existsSync(outPath)) return;
   mkdirSync(vendorDir, { recursive: true });
-  const canvasCrateDir = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas");
+  const canvasCrateDir = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust");
   if (
     runCmdStatus("cargo", ["run", "--quiet", "--bin", "dump-guestslim-typst-fonts", "--features", "render", "--", outPath], { cwd: canvasCrateDir, budgetMs: buildBudgetMs() }) !== 0
   ) {

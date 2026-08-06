@@ -17,7 +17,7 @@
 /// @emoji 🔢️ The channel wire format's own version, advertised by `AppCommand::Hello` and echoed
 /// back by `AppFrame::Welcome` so either side can detect a mismatched build before exchanging any
 /// other frame.
-pub const CHANNEL_VERSION: u32 = 4;
+pub const CHANNEL_VERSION: u32 = 5;
 //#endregion 🔖️Version
 
 //#region 🔖️SectionProbe

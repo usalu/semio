@@ -15,7 +15,7 @@ mod wasm_session {
     use web_sys::HtmlCanvasElement;
 
     use crate::artifacts::layout::engine::parse_layout_document;
-    use crate::artifacts::layout::engine::scene::{build_scene_from_document_json, export_document_pdf, export_document_png_cpu, export_document_svg, export_package_zip, hit_test_document_json, screen_to_world_json, LayoutDropPreview, SceneQuery};
+    use crate::artifacts::layout::engine::scene::{build_scene_from_document_json, export_document_pdf, export_document_png_cpu, export_document_svg, export_package_zip, hit_test_document_json, screen_to_world_json, LayoutDropPreview, LayoutEngine, SceneQuery};
 
     #[derive(Clone, Debug)]
     enum LayoutInteraction {
@@ -33,6 +33,7 @@ mod wasm_session {
         viewport: Viewport,
         interaction: LayoutInteraction,
         drop_preview: Option<LayoutDropPreview>,
+        layout_engine: LayoutEngine,
         gpu: infinite_canvas::gpu_session::CanvasGpuSession,
     }
 
@@ -56,6 +57,7 @@ mod wasm_session {
                     viewport: Viewport::default(),
                     interaction: LayoutInteraction::None,
                     drop_preview: None,
+                    layout_engine: LayoutEngine::new(),
                     gpu: infinite_canvas::gpu_session::CanvasGpuSession::default(),
                 })),
             }
@@ -194,17 +196,17 @@ mod wasm_session {
             let hovered = inner.hovered_id.as_deref();
             let drop_preview = inner.drop_preview.clone();
             let query = SceneQuery { page_id: &inner.page_id, selected_ids: &inner.selected_ids, hovered_id: hovered, chrome_blueprint: inner.chrome_blueprint, camera: &inner.camera, viewport: &inner.viewport };
-            let scene = build_scene_from_document_json(&inner.document_json, &query, drop_preview.as_ref()).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let scene = build_scene_from_document_json(&mut inner.layout_engine, &inner.document_json, &query, drop_preview.as_ref()).map_err(|e| JsValue::from_str(&e.to_string()))?;
             let clear = infinite_canvas::theme::default_raster_clear();
             inner.gpu.render_frame(&scene, clear).map_err(|e| e)
         }
 
         #[wasm_bindgen(js_name = hitTest)]
         pub fn hit_test(&self, sx: f32, sy: f32) -> Result<JsValue, JsValue> {
-            let inner = self.state.borrow();
+            let mut inner = self.state.borrow_mut();
             let hovered = inner.hovered_id.as_deref();
             let query = SceneQuery { page_id: &inner.page_id, selected_ids: &inner.selected_ids, hovered_id: hovered, chrome_blueprint: true, camera: &inner.camera, viewport: &inner.viewport };
-            let hit = hit_test_document_json(&inner.document_json, sx as f64, sy as f64, &query).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let hit = hit_test_document_json(&mut inner.layout_engine, &inner.document_json, sx as f64, sy as f64, &query).map_err(|e| JsValue::from_str(&e.to_string()))?;
             Ok(hit.map(|id| JsValue::from_str(&id)).unwrap_or(JsValue::NULL))
         }
 

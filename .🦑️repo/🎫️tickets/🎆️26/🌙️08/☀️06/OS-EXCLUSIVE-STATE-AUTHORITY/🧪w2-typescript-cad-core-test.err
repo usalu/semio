@@ -1,0 +1,14 @@
+bun test v1.3.14 (0d9b296a)
+
+🟦️component.ts:
+
+# Unhandled error between tests
+-------------------------------
+error: ENOENT reading "/Users/ueli/Documents/semio/node_modules/@semio-tech/kernel-3d-js"
+-------------------------------
+
+
+ 0 pass
+ 1 fail
+ 1 error
+Ran 1 test across 1 file. [32.00ms]

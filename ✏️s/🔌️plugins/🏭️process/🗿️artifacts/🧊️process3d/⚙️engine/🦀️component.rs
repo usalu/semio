@@ -6,7 +6,7 @@ use crate::artifacts::process3d::{
     Capability, MachineCatalog, MeasureKind, MeasureRecipe, Pose, Process3dDocument, ProcessMeasure, ProcessStep, SolidSpec, Stock, StockQuantity, Workshop, WorkshopMachine,
 };
 use semio_s_3d::brep::kernel::{BrepkitKernel, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
-use semio_s_3d::brep::engine::{BrepKernel, GeometryHandle};
+use semio_s_3d::brep::engine::{block_on, BrepEngineHost, BrepKernel, GeometryHandle};
 use semio_framework_plugin::{MeshData, MeshExporter, MeshImporter};
 use serde::Serialize;
 use serde_json::Value;
@@ -14,7 +14,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::{Mutex, OnceLock};
+use std::sync::Mutex;
 use store::DocumentDsl;
 
 /// 🕳️ Tessellation tolerance for kernel replay/export.
@@ -310,21 +310,23 @@ fn hash_value<T: Serialize>(value: &T) -> u64 {
 /// can borrow `&BrepkitKernel`/`&mut BrepkitKernel` directly; `&mut BrepkitKernel` still coerces to
 /// `&mut dyn BrepKernel` at every existing call site below, so the CSG replay path is unaffected.
 struct ProcessKernelSession {
-    kernel: BrepkitKernel,
+    host: BrepEngineHost,
     memo: HashMap<u64, GeometryHandle>,
     stock_signature: u64,
 }
 
 impl ProcessKernelSession {
     fn new() -> Self {
-        Self { kernel: BrepkitKernel::new(), memo: HashMap::new(), stock_signature: 0 }
+        Self {
+            host: BrepEngineHost::new(64 * 1024 * 1024),
+            memo: HashMap::new(),
+            stock_signature: 0,
+        }
     }
-}
 
-static PROCESS_BREP_KERNEL: OnceLock<Mutex<ProcessKernelSession>> = OnceLock::new();
-
-fn process_kernel_session() -> &'static Mutex<ProcessKernelSession> {
-    PROCESS_BREP_KERNEL.get_or_init(|| Mutex::new(ProcessKernelSession::new()))
+    fn kernel(&self) -> &std::sync::Mutex<BrepkitKernel> {
+        self.host.kernel()
+    }
 }
 
 fn prefix_signature(stock_signature: u64, steps: &[&ProcessStep]) -> u64 {
@@ -395,6 +397,7 @@ fn replay_process(session: &mut ProcessKernelSession, doc: &Process3dDocument) -
     let enabled_steps: Vec<&ProcessStep> = doc.steps[..limit].iter().filter(|step| step.enabled).collect();
 
     let mut start = enabled_steps.len();
+    let mut kernel = session.kernel().lock().ok()?;
     let mut current: Option<GeometryHandle> = loop {
         let signature = prefix_signature(stock_signature, &enabled_steps[..start]);
         if let Some(handle) = session.memo.get(&signature) {
@@ -406,17 +409,17 @@ fn replay_process(session: &mut ProcessKernelSession, doc: &Process3dDocument) -
         start -= 1;
     };
     if current.is_none() {
-        current = solid_for_spec(&mut session.kernel, &doc.stock.solid, &doc.stock.pose);
+        current = solid_for_spec(&mut *kernel, &doc.stock.solid, &doc.stock.pose);
         if let Some(handle) = &current {
             session.memo.insert(prefix_signature(stock_signature, &[]), handle.clone());
         }
     }
     let mut handle = current?;
     for (index, step) in enabled_steps.iter().enumerate().skip(start) {
-        let tool = tool_solid_for_measure(&mut session.kernel, &step.measure)?;
+        let tool = tool_solid_for_measure(&mut *kernel, &step.measure)?;
         handle = match step.measure {
-            ProcessMeasure::Attach { .. } => semio_s_3d::brep::engine::block_on(session.kernel.fuse(&handle, &tool)).ok()?,
-            _ => semio_s_3d::brep::engine::block_on(session.kernel.cut(&handle, &tool)).ok()?,
+            ProcessMeasure::Attach { .. } => semio_s_3d::brep::engine::block_on(kernel.fuse(&handle, &tool)).ok()?,
+            _ => semio_s_3d::brep::engine::block_on(kernel.cut(&handle, &tool)).ok()?,
         };
         session.memo.insert(prefix_signature(stock_signature, &enabled_steps[..=index]), handle.clone());
     }
@@ -429,17 +432,17 @@ fn replay_process(session: &mut ProcessKernelSession, doc: &Process3dDocument) -
 }
 
 pub fn processed_mesh(doc: &Process3dDocument) -> Option<MeshData> {
-    let mut session = process_kernel_session().lock().ok()?;
+    let mut session = ProcessKernelSession::new();
     let handle = replay_process(&mut session, doc)?;
-    let mesh = semio_s_3d::brep::engine::block_on(session.kernel.tessellate(&handle, PROCESS3D_TESSELLATION_TOLERANCE)).ok()?;
+    let mesh = semio_s_3d::brep::engine::block_on(session.kernel().lock().ok()?.tessellate(&handle, PROCESS3D_TESSELLATION_TOLERANCE)).ok()?;
     let face_groups: Vec<(u32, u32, u32)> = mesh.face_groups.iter().map(|group| (group.entity_id.parse().unwrap_or(0), group.start, group.count)).collect();
     Some(semio_framework_plugin::mesh_from_indexed_with_face_groups(&mesh.position, &mesh.normal, &mesh.index, &face_groups))
 }
 
 pub fn processed_volume(doc: &Process3dDocument) -> Option<f64> {
-    let mut session = process_kernel_session().lock().ok()?;
+    let mut session = ProcessKernelSession::new();
     let handle = replay_process(&mut session, doc)?;
-    semio_s_3d::brep::engine::block_on(session.kernel.volume(&handle)).ok()
+    semio_s_3d::brep::engine::block_on(session.kernel().lock().ok()?.volume(&handle)).ok()
 }
 //#endregion 🔖️KernelReplay
 
@@ -473,9 +476,9 @@ pub fn export_process3d_model(fixture: &Process3dDocument, format: &str) -> Opti
         "stl" => Box::new(StlSolidExporter),
         _ => Box::new(StepSolidExporter),
     };
-    let mut session = process_kernel_session().lock().ok()?;
+    let mut session = ProcessKernelSession::new();
     let handle = replay_process(&mut session, fixture)?;
-    let bytes = exporter.export(&session.kernel, &[handle], PROCESS3D_TESSELLATION_TOLERANCE).ok()?;
+    let bytes = exporter.export(&*session.kernel().lock().ok()?, &[handle], PROCESS3D_TESSELLATION_TOLERANCE).ok()?;
     let media_format = exporter.format();
     let binary = media_format.is_binary();
     let data = if binary { Value::String(base64::engine::general_purpose::STANDARD.encode(&bytes)) } else { Value::String(String::from_utf8(bytes).ok()?) };
@@ -514,8 +517,8 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dDoc
     } else {
         return None;
     };
-    let mut session = process_kernel_session().lock().ok()?;
-    let handle = importer.import(&mut session.kernel, &bytes, PROCESS3D_TESSELLATION_TOLERANCE).ok()?.into_iter().next()?;
+    let mut session = ProcessKernelSession::new();
+    let handle = importer.import(&mut *session.kernel().lock().ok()?, &bytes, PROCESS3D_TESSELLATION_TOLERANCE).ok()?.into_iter().next()?;
     session.memo.clear();
     session.stock_signature = 0;
     fixture.stock = Stock { id: "stock".into(), label: label.into(), solid: SolidSpec::ImportedSolid { solid_handle: handle.0 }, pose: Pose::default() };
@@ -558,7 +561,7 @@ mod tests {
 
     fn session_volume(session: &mut ProcessKernelSession, fixture: &Process3dDocument) -> f64 {
         let handle = replay_process(session, fixture).expect("replayed handle");
-        semio_s_3d::brep::engine::block_on(session.kernel.volume(&handle)).expect("replayed volume")
+        semio_s_3d::brep::engine::block_on(session.kernel().lock().expect("kernel lock").volume(&handle)).expect("replayed volume")
     }
 
     //#region 🔖️ConfigCoverage

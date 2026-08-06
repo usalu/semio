@@ -5,18 +5,18 @@
 
 ## Rust — ✏️s modules
 
-- [ ] `✏️s/🔨️modules/◻2d/🗄️store/🦀️component.rs` — `DrawingStore` — 2D drawing document/session store outside OS `DocumentStore`
-- [ ] `✏️s/🔨️modules/🧊️3d/📐️brep/🧰️kernel/🦀️component.rs` — `BrepkitKernel` — authoritative B-rep kernel with embedded topology state
-- [ ] `✏️s/🔨️modules/🧊️3d/📐️brep/🏟️arena/🦀️component.rs` — `Store` — generational arena backing brep handles
-- [ ] `✏️s/🔨️modules/🧊️3d/📐️brep/🕸️topology/🦀️component.rs` — `Body` — solid body graph owned by module-local kernel
-- [ ] `✏️s/🔨️modules/🧊️3d/📐️brep/📜️history/🦀️component.rs` — `LabelSource` — stable label map for brep history
-- [ ] `✏️s/🔨️modules/🧊️3d/🥽️mesh/🦀️component.rs` — `HalfedgeMesh` — mesh topology store parallel to OS geometry authority
+- [x] `✏️s/🔨️modules/◻2d/🗄️store/🦀️component.rs` — `DrawingStore` — 2D drawing document/session store outside OS `DocumentStore`
+- [ ] `✏️s/🔨️modules/🧊️3d/📐️brep/🧰️kernel/🦀️component.rs` — `BrepkitKernel` — registry inside host-owned session only (seq minting removed Wave 2 🧊3d; document-op derive pending)
+- [ ] `✏️s/🔨️modules/🧊️3d/📐️brep/🏟️arena/🦀️component.rs` — `Store` — generational arena OK inside engine compute / cache entry (documented Wave 2 🧊3d)
+- [ ] `✏️s/🔨️modules/🧊️3d/📐️brep/🕸️topology/🦀️component.rs` — `Body` — compute-scoped topology payload (documented Wave 2 🧊3d)
+- [ ] `✏️s/🔨️modules/🧊️3d/📐️brep/📜️history/🦀️component.rs` — `LabelSource` — lives only inside `Body` (documented Wave 2 🧊3d)
+- [ ] `✏️s/🔨️modules/🧊️3d/🥽️mesh/🦀️component.rs` — `HalfedgeMesh` — value payload, not global mesh authority (documented Wave 2 🧊3d)
 - [ ] `✏️s/🔨️modules/💭️mindmap/🧩️extension/🦀️component.rs` — `DefaultMindmapExtension` — mindmap graph/canvas extension holding document-adjacent state
 
 ## Rust — ✏️s plugins (engines / globals / hosts)
 
-- [ ] `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🦀️component.rs` — `CAD_BREP_KERNEL` — process-wide `OnceLock` B-rep kernel session
-- [ ] `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs` — `PROCESS_BREP_KERNEL` — static process B-rep kernel mutex
+- [x] `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🦀️component.rs` — `CAD_BREP_HOST` — `BrepEngineHost` replaces `CAD_BREP_KERNEL` (Wave 2 🧊3d; `OnceLock` until M3 injection)
+- [x] `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs` — `PROCESS_BREP_HOST` — `BrepEngineHost` replaces `PROCESS_BREP_KERNEL` (Wave 2 🧊3d)
 - [ ] `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/⚙️engine/⏳️session/🦀️component.rs` — `Puzzle3dEngine` — headless 3D puzzle engine session state
 - [ ] `✏️s/🔌️plugins/🔋️energy/⚙️engine/🦀️kernel.rs` — `SimulationState` — building energy simulation timestep state
 - [ ] `✏️s/🔌️plugins/🔋️energy/⚙️engine/🦀️meters.rs` — `MeterStore` — utility meter readings store
@@ -25,14 +25,14 @@
 - [ ] `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/⚙️engine/🦀️component.rs` — `SequenceHost` — sequence/timeline host JSON state
 - [ ] `✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🌍️world/🦀️component.rs` — `TrinityHost` — trinity rewrite world host state
 - [ ] `✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🦀️component.rs` — `FlowPlayApp::eval_session` — off-main-thread flow eval session mutex
-- [ ] `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/⚙️engine/🦀️component.rs` — `FLOW_PLAY_NEURAL_CACHE` — static neural cache for flow play
+- [x] `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/⚙️engine/🦀️component.rs` — `FLOW_PLAY_NEURAL_CACHE` — static neural cache for flow play (removed; per-`FlowEvalSession` cache only)
 - [ ] `✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🦀️component.rs` — `Procedural2dPlayApp::eval_session` — procedural 2D eval session (shared pattern with flow)
 - [ ] `✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🦀️component.rs` — `Procedural3dPlayApp::eval_session` — procedural 3D eval session
 - [ ] `✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas/🦀️component.rs` — `DrawSession` — draw app transient canvas/session state
 - [ ] `✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🌉️wasm/🦀️component.rs` — `LayoutSession` — WASM layout play session owned by plugin
 - [ ] `✏️s/🔌️plugins/📕️norm/🫀️core/🦀️component.rs` — `NormHost` — norm evaluation host over projection state
-- [ ] `✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🦀️component.rs` — `PRESENCE_PEERS` — static presence peer registry
-- [ ] `✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🦀️component.rs` — `STUDIO_PORTS` — static OS backbone port map for studio
+- [x] `✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🦀️component.rs` — `PRESENCE_PEERS` — static presence peer registry (moved to `SpaceApp::presence_peers`)
+- [x] `✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🦀️component.rs` — `STUDIO_PORTS` — static OS backbone port map for studio (moved to `HomeApp::studio_ports`)
 - [ ] `✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs` — `BasicScene` — animate/present scene graph state
 - [ ] `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/🏃️motion/🦀️component.rs` — `MultiObjectTracker` — remodel motion tracker internal state
 

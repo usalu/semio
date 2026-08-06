@@ -18,10 +18,11 @@ use crate::apps::lowpoly::terminology::LowpolyLabels;
 use crate::apps::lowpoly::view::{format_selection_targets_label, selection_targets_from_config, utility_param_f64, LowpolyView};
 use crate::artifacts::lowpoly::op::LowpolyOperation;
 use crate::artifacts::lowpoly::{artifact_kind, mesh_artifact_kind, LowpolyProjection, LOWPOLY_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, LabelText, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode, UtilityCategory,
     UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure,
 };
+use store::EngineHandles;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use store::DocumentPack;
@@ -247,32 +248,30 @@ impl DocumentApp for LowpolyPlayApp {
     type Operation = LowpolyOperation;
     type Config = LowpolyConfig;
     type ConfigOperation = LowpolyConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = LowpolyCommand;
 
-    fn app_id(&self) -> &str {
-        LOWPOLY_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = LOWPOLY_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        LOWPOLY_DOCUMENT_SCHEMA
-    }
-
-    fn initial_projection(&self) -> LowpolyProjection {
+    fn initial_projection() -> LowpolyProjection {
         crate::artifacts::lowpoly::engine::default_projection()
     }
 
-    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(crate::artifacts::lowpoly::engine::lowpoly_io())
     }
 
-    fn whole_document_operation(&self, projection: LowpolyProjection) -> Option<LowpolyOperation> {
+    fn whole_document_operation(projection: LowpolyProjection) -> Option<LowpolyOperation> {
         Some(LowpolyOperation::SetProjection { projection })
     }
 
     /// 🎞️ `mesh:out` plus the inherited `document:out` default (the pack of `doc.projection`, replicated
     /// inline — overriding `export_media` shadows the trait's provided body for every port on this app,
     /// not just the new one).
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, LowpolyProjection>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, LowpolyProjection>) -> Result<Media, MediaError> {
         match port {
             "mesh:out" => {
                 let document_json = serde_json::to_value(doc.projection).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
@@ -282,9 +281,9 @@ impl DocumentApp for LowpolyPlayApp {
                 Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "mesh.document".into(), json } })
             }
             "document:out" => {
-                let media_type = self.io().map_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, |io| io.document_media_type);
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, |io| io.document_media_type);
                 let bytes = doc.projection.encode_pack();
-                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -293,7 +292,7 @@ impl DocumentApp for LowpolyPlayApp {
     /// 🎞️ `mesh:in` round-trips a `mesh.document` payload into a `SetProjection` op; `document:in`
     /// replicates the trait's default whole-pack import inline (overriding `import_media` shadows the
     /// default for every port on this app, not just the new one).
-    fn import_media(&self, port: &str, media: &Media, _doc: &DocumentView<'_, LowpolyProjection>) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, LowpolyProjection>) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation, Self::DraftOperation>, MediaError> {
         match port {
             "mesh:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -320,16 +319,16 @@ impl DocumentApp for LowpolyPlayApp {
         }
     }
 
-    fn command_id(&self, command: &LowpolyCommand) -> &str {
+    fn command_id(command: &LowpolyCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &LowpolyCommand, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
+    fn handle(command: &LowpolyCommand, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation, Self::DraftOperation>, Fault> {
         let mut scratch = self.scratch.borrow_mut();
         command.dispatch(doc, cfg, &mut scratch)
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>) -> UiNode {
         let projection = doc.projection;
         let config = cfg.projection;
         let labels = crate::apps::lowpoly::terminology::lowpoly_play_labels(config);
@@ -356,7 +355,7 @@ impl DocumentApp for LowpolyPlayApp {
         }
     }
 
-    fn window_engagements(&self, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.projection;
         let active_utility = config.active_utility_id.as_str();
         let labels = crate::apps::lowpoly::terminology::lowpoly_play_labels(config);
@@ -364,7 +363,7 @@ impl DocumentApp for LowpolyPlayApp {
         HashMap::from([(edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN.into(), engagement.clone()), (paint_mode::windows::uv::LOWPOLY_PLAY_WINDOW_UV.into(), engagement)])
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.projection;
         let labels = crate::apps::lowpoly::terminology::lowpoly_play_labels(config);
         let measures = lowpoly_window_measures(config, labels);
@@ -495,7 +494,7 @@ pub fn create_lowpoly_app() -> App {
             .utility(lowpoly_utility("eyedropper", LocalizedLabel::native("Eyedropper", "Pipette"), "pipette", "paint"))
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            .config(LowpolyPlayApp::default().config_spec())
+            .config(LowpolyPlayApp::config_spec())
             .io(crate::artifacts::lowpoly::engine::lowpoly_io()),
     )
     .example("default", LocalizedLabel::native("Default", "Standard"), &default_example, "file")

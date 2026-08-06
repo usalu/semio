@@ -1,4 +1,5 @@
 extern crate flow_extension_draw as flow_core;
+extern crate flow_extension_draw as flow_extension_brep;
 //! 🌀️ Procedural plugin — 2D and 3D flow apps bundled as one hot-swappable WASM component.
 //!
 //! WIRING ONLY. Every `mod` below points at exactly one taxonomy component file with a `#[path]` that is

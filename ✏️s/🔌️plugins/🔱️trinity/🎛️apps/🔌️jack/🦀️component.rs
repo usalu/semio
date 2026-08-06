@@ -10,12 +10,13 @@
 use crate::apps::jack::config::{JackConfig, JackConfigOperation};
 use crate::artifacts::jack::op::TrinityGraphOperation;
 use crate::artifacts::jack::{GraphFixture, Node, PortDirection, TRINITY_GRAPH_SCHEMA};
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, App, AppActionRegistry, ArtifactKindSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass,
     MediaError, MediaForm, MediaPayload, MediaType, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphViewport, PanelGroup, SurfaceKind, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
     WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
+use store::EngineHandles;
 use std::collections::HashMap;
 use store::{DocumentDsl, DocumentPack};
 
@@ -188,35 +189,33 @@ impl DocumentApp for TrinityJackPlayApp {
     type Operation = TrinityGraphOperation;
     type Config = JackConfig;
     type ConfigOperation = JackConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = TrinityJackCommand;
 
-    fn app_id(&self) -> &str {
-        TRINITY_JACK_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = TRINITY_JACK_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        TRINITY_GRAPH_SCHEMA
-    }
-
-    fn initial_projection(&self) -> GraphFixture {
+    fn initial_projection() -> GraphFixture {
         default_fixture()
     }
 
-    fn initial_config(&self) -> JackConfig {
+    fn initial_config() -> JackConfig {
         seeded_jack_config(&self.initial_projection())
     }
 
-    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(jack_io())
     }
 
-    fn whole_document_operation(&self, projection: GraphFixture) -> Option<TrinityGraphOperation> {
+    fn whole_document_operation(projection: GraphFixture) -> Option<TrinityGraphOperation> {
         Some(TrinityGraphOperation::SetFixture { fixture: projection })
     }
 
     /// 🔌️ `"graph:out"` fans the live query-graph projection out to other graph-consuming workflow
     /// nodes, in addition to the implicit `"document:out"` — both encode the same `GraphFixture` pack.
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, GraphFixture>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, GraphFixture>) -> Result<Media, MediaError> {
         match port {
             "graph:out" | "document:out" => {
                 let bytes = doc.projection.encode_pack();
@@ -228,7 +227,7 @@ impl DocumentApp for TrinityJackPlayApp {
 
     /// 🏷️ Maps each `TrinityJackCommand` variant back to the action id it was declared under in
     /// `create_trinity_jack_app`.
-    fn command_id(&self, command: &TrinityJackCommand) -> &str {
+    fn command_id(command: &TrinityJackCommand) -> &'static str {
         match command {
             TrinityJackCommand::SetFixtureJson { .. } => "setFixtureJson",
             TrinityJackCommand::DeleteSelection => "deleteSelection",
@@ -252,7 +251,7 @@ impl DocumentApp for TrinityJackPlayApp {
         }
     }
 
-    fn handle(&self, command: &TrinityJackCommand, doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>) -> Result<Emit<TrinityGraphOperation, JackConfigOperation>, Fault> {
+    fn handle(command: &TrinityJackCommand, doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<TrinityGraphOperation, JackConfigOperation, Self::DraftOperation>, Fault> {
         let fixture = doc.projection;
         let config = cfg.projection;
         match command {
@@ -278,7 +277,7 @@ impl DocumentApp for TrinityJackPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>) -> semio_framework_plugin::UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>) -> semio_framework_plugin::UiNode {
         let fixture = doc.projection;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::apps::jack::terminology::TrinityJackLabels>(&cfg.projection.locale);
         match body_key {
@@ -292,12 +291,12 @@ impl DocumentApp for TrinityJackPlayApp {
         }
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let mode = cfg.projection.lod_mode_by_window.get(TRINITY_JACK_PLAY_WINDOW_GRAPH).map_or(crate::apps::jack::windows::graph::TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
         HashMap::from([(TRINITY_JACK_PLAY_WINDOW_GRAPH.to_string(), vec![crate::apps::jack::windows::graph::trinity_lod_measure(TRINITY_JACK_PLAY_WINDOW_GRAPH, mode, jack_action)])])
     }
 
-    fn context_menu(&self, request: &ContextMenuRequest, _doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let is_de = cfg.projection.locale.starts_with("de");

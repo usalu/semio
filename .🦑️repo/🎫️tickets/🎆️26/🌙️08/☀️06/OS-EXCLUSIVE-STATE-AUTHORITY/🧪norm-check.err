@@ -1,0 +1,80 @@
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `SpaceHistoryDiff` implements `OperationDiff<SpaceHistoryProjection>`
+note: required by a bound in `dsl::Operation::Diff`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:30:16
+     |
+  30 |     type Diff: OperationDiff<P>;
+     |                ^^^^^^^^^^^^^^^^ required by this bound in `Operation::Diff`
+
+error[E0277]: the trait bound `apps::fem3d::config::Fem3dConfig: OperationDiff<apps::fem3d::config::Fem3dConfig>` is not satisfied
+    --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🎚️config/🦀️component.rs:72:17
+     |
+  72 |     type Diff = Fem3dConfig;
+     |                 ^^^^^^^^^^^ unsatisfied trait bound
+     |
+help: the trait `OperationDiff<apps::fem3d::config::Fem3dConfig>` is not implemented for `apps::fem3d::config::Fem3dConfig`
+    --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🎚️config/🦀️component.rs:19:1
+     |
+  19 | pub struct Fem3dConfig {
+     | ^^^^^^^^^^^^^^^^^^^^^^
+help: the following other types implement trait `OperationDiff<P>`
+    --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🔺️diff/🦀️component.rs:162:1
+     |
+ 162 | impl OperationDiff<Fem2dDocument> for Fem2dDiff {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Fem2dDiff` implements `OperationDiff<artifacts::fem2d::component::Fem2dDocument>`
+     |
+    ::: ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:154:1
+     |
+ 154 | impl OperationDiff<Fem3dDocument> for Fem3dDiff {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Fem3dDiff` implements `OperationDiff<artifacts::fem3d::component::Fem3dDocument>`
+     |
+    ::: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2582:5
+     |
+2582 |     impl ::protocol::OperationDiff<NoConfig> for NoConfig {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `NoConfig` implements `OperationDiff<NoConfig>`
+     |
+    ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3281:1
+     |
+3281 | impl OperationDiff<SpaceHistoryProjection> for SpaceHistoryDiff {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `SpaceHistoryDiff` implements `OperationDiff<SpaceHistoryProjection>`
+note: required by a bound in `dsl::Operation::Diff`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:30:16
+     |
+  30 |     type Diff: OperationDiff<P>;
+     |                ^^^^^^^^^^^^^^^^ required by this bound in `Operation::Diff`
+
+error: `impl` item signature doesn't match `trait` item signature
+    --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🦀️component.rs:229:5
+     |
+ 229 |     fn command_id(command: &Fem3dCommand) -> &str {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ found `fn(&'1 Fem3dCommand) -> &'1 str`
+     |
+    ::: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3320:9
+     |
+3320 |         fn command_id(_command: &Self::Command) -> &'static str {
+     |         ------------------------------------------------------- expected `fn(&'1 Fem3dCommand) -> &'static str`
+     |
+     = note: expected signature `fn(&'1 Fem3dCommand) -> &'static str`
+                found signature `fn(&'1 Fem3dCommand) -> &'1 str`
+     = help: the lifetime requirements from the `impl` do not correspond to the requirements in the `trait`
+     = help: verify the lifetime relationships in the `trait` and `impl` between the `self` argument, the other inputs and its output
+
+error: `impl` item signature doesn't match `trait` item signature
+    --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🎛️apps/◻2d/🦀️component.rs:236:5
+     |
+ 236 |     fn command_id(command: &Fem2dCommand) -> &str {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ found `fn(&'1 Fem2dCommand) -> &'1 str`
+     |
+    ::: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3320:9
+     |
+3320 |         fn command_id(_command: &Self::Command) -> &'static str {
+     |         ------------------------------------------------------- expected `fn(&'1 Fem2dCommand) -> &'static str`
+     |
+     = note: expected signature `fn(&'1 Fem2dCommand) -> &'static str`
+                found signature `fn(&'1 Fem2dCommand) -> &'1 str`
+     = help: the lifetime requirements from the `impl` do not correspond to the requirements in the `trait`
+     = help: verify the lifetime relationships in the `trait` and `impl` between the `self` argument, the other inputs and its output
+
+Some errors have detailed explanations: E0277, E0424, E0603.
+For more information about an error, try `rustc --explain E0277`.
+warning: `semio-s-plugin-fem` (lib) generated 2 warnings
+error: could not compile `semio-s-plugin-fem` (lib) due to 15 previous errors; 2 warnings emitted

@@ -1,4 +1,7 @@
 //! ✍️ Text editor engine on the infinite canvas.
+//!
+//! `EditorHost` mirrors projection text and LSP adornments for WASM play surfaces only; authoritative
+//! packs and edits belong in the OS `DocumentStore` (see `sync_from_scene_json` / pack apply paths).
 
 use canvas::camera::{Camera, Viewport};
 use canvas::text as canvas_text;

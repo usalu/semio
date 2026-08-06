@@ -21,10 +21,11 @@ use crate::apps::writer::panels::{catalogue as catalogue_panel, document as docu
 use crate::apps::writer::terminology::writer_play_labels;
 use crate::artifacts::writer::op::WriterOperation;
 use crate::artifacts::writer::{WriterProjection, WRITER_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, App, AppActionRegistry, AppIo, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, DocumentApp, DocumentView, Emit, Fault, Label,
     LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, UiNode, WindowMeasure,
 };
+use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
 use store::DocumentPack;
@@ -183,35 +184,33 @@ impl DocumentApp for WriterPlayApp {
     type Operation = WriterOperation;
     type Config = WriterConfig;
     type ConfigOperation = WriterConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = WriterCommand;
 
-    fn app_id(&self) -> &str {
-        WRITER_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = WRITER_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        WRITER_DOCUMENT_SCHEMA
-    }
-
-    fn initial_projection(&self) -> WriterProjection {
+    fn initial_projection() -> WriterProjection {
         crate::artifacts::writer::engine::empty_writer_projection()
     }
 
-    fn io(&self) -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(crate::artifacts::writer::engine::writer_io())
     }
 
-    fn whole_document_operation(&self, projection: WriterProjection) -> Option<WriterOperation> {
+    fn whole_document_operation(projection: WriterProjection) -> Option<WriterOperation> {
         Some(WriterOperation::SetDocument { document: projection })
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(&self, command: &WriterCommand) -> &str {
+    fn command_id(command: &WriterCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &WriterCommand, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterOperation, WriterConfigOperation>, Fault> {
+    fn handle(command: &WriterCommand, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WriterOperation, WriterConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -219,7 +218,7 @@ impl DocumentApp for WriterPlayApp {
     /// `crate::artifacts::writer::engine::writer_chapter_payload`) — `playbook`'s `"chapters:in"` is the
     /// intended consumer. Falls through to the default whole-document-pack export for `"document:out"`
     /// (duplicated inline, not delegated — Rust traits have no `super` call for an overridden default).
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, WriterProjection>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, WriterProjection>) -> Result<Media, MediaError> {
         if port == "text:out" {
             let payload = crate::artifacts::writer::engine::writer_chapter_payload(doc.projection);
             let json = serde_json::to_string(&payload).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
@@ -229,10 +228,10 @@ impl DocumentApp for WriterPlayApp {
             return Err(MediaError::NotImplemented);
         }
         let bytes = doc.projection.encode_pack();
-        Ok(Media { media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+        Ok(Media { media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> UiNode {
         let document = doc.projection;
         let config = cfg.projection;
         let labels = writer_play_labels(config);
@@ -245,7 +244,7 @@ impl DocumentApp for WriterPlayApp {
         }
     }
 
-    fn window_engagements(&self, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
+    fn window_engagements(_doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
         use semio_framework_plugin::{WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus};
 
         let config = cfg.projection;
@@ -282,12 +281,12 @@ impl DocumentApp for WriterPlayApp {
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), engagement)])
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.projection;
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), main::window_measures(config, writer_play_labels(config)))])
     }
 
-    fn context_menu(&self, request: &ContextMenuRequest, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let is_de = cfg.projection.locale.starts_with("de");
         let text = request.surface.as_ref().and_then(|surface| surface.text.as_ref());
         writer_context_menu_items(registry, text, is_de)
@@ -354,7 +353,7 @@ pub fn create_writer_app() -> App {
             // 🎯️ Typed channel surface (mirrors `shooting_ui::create_shooting_app`'s identical wiring) —
             // `crate::artifacts::writer::engine::writer_io()` is the single source of truth for both the
             // trait's `io()` override and this manifest declaration.
-            .config(WriterPlayApp.config_spec())
+            .config(WriterPlayApp::config_spec())
             .io(crate::artifacts::writer::engine::writer_io()),
     )
     .example("jack", LocalizedLabel::native("Jack", "Jack"), crate::artifacts::writer::engine::jack_example_json(), "file-text")

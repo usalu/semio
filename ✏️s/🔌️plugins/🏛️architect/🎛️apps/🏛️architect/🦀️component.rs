@@ -23,7 +23,8 @@ use crate::apps::architect::modes::{report as report_mode, review as review_mode
 use crate::apps::architect::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::artifacts::program::op::ProgramOperation;
 use crate::artifacts::program::{empty_plugin, sample_plugin, Program, ARCHITECT_PROGRAM_SCHEMA};
-use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode};
+use store::EngineHandles;
 use serde_json::Value;
 
 //#region 🔖️Constants
@@ -85,32 +86,30 @@ impl DocumentApp for ArchitectPlayApp {
     type Operation = ProgramOperation;
     type Config = ArchitectConfig;
     type ConfigOperation = ArchitectConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = ArchitectCommand;
 
-    fn app_id(&self) -> &str {
-        ARCHITECT_APP_ID
-    }
+    const APP_ID: &'static str = ARCHITECT_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        ARCHITECT_PROGRAM_SCHEMA
-    }
-
-    fn initial_projection(&self) -> Program {
+    fn initial_projection() -> Program {
         sample_plugin()
     }
 
-    fn initial_config(&self) -> ArchitectConfig {
+    fn initial_config() -> ArchitectConfig {
         ArchitectConfig { active_register: "elements".into(), ..ArchitectConfig::default() }
     }
 
-    fn command_id(&self, command: &ArchitectCommand) -> &str {
+    fn command_id(command: &ArchitectCommand) -> &str {
         command.command_id()
     }
 
     /// 🎯️ Maps host action id + JSON args onto `ArchitectCommand` — React/wgpu still speak the
     /// stringly `{action,args}` wire; this is the typed-command bridge until those call sites send
     /// `OpBinary` bytes directly (mirrors `gis2d`'s `command_from_action`).
-    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<ArchitectCommand, Fault> {
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<ArchitectCommand, Fault> {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_bool);
         match action {
@@ -167,11 +166,11 @@ impl DocumentApp for ArchitectPlayApp {
         }
     }
 
-    fn handle(&self, command: &ArchitectCommand, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramOperation, ArchitectConfigOperation>, Fault> {
+    fn handle(command: &ArchitectCommand, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ProgramOperation, ArchitectConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> UiNode {
         let program = doc.projection;
         let config = cfg.projection;
         match body_key {

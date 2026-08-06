@@ -12,12 +12,10 @@ use crate::artifacts::flow::FlowFixture;
 use flow_core::{
     dag::{DagDrawLod, DagFixture},
     flow_fixture_operations, flow_host_with_session,
-    neural::NeuralCache,
     CameraJson, FlowEvalSession, FlowHost, Widget, FLOW_LOD_MODE_AUTOMATIC,
 };
 use semio_framework_plugin::HostEffect;
 use serde_json::{json, Value};
-use std::sync::{Arc, OnceLock};
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Constants
@@ -41,15 +39,6 @@ pub fn register() {
 //#endregion 🔖️Register
 
 //#region 🔖️Host
-/// 🧠️ Process-wide [`flow_core::neural::NeuralCache`] shared across `FlowHost` reconstructions — lets a
-/// `flowEvalTick` chain's per-tick host rebuild pick up earlier ticks' cached node outputs instead of
-/// recomputing the whole graph from scratch every tick.
-static FLOW_PLAY_NEURAL_CACHE: OnceLock<Arc<NeuralCache>> = OnceLock::new();
-
-pub fn flow_play_neural_cache() -> Arc<NeuralCache> {
-    FLOW_PLAY_NEURAL_CACHE.get_or_init(|| Arc::new(NeuralCache::new())).clone()
-}
-
 pub fn seed_host_catalogue(host: &mut FlowHost, extra_sections_json: &str) {
     let mut sections = flow_core::flow_catalogue_sections();
     if let Ok(extra) = serde_json::from_str::<Vec<flow_core::CatalogueSection>>(extra_sections_json) {
@@ -237,8 +226,10 @@ mod tests {
     }
 
     #[test]
-    fn flow_play_neural_cache_returns_the_same_process_wide_instance() {
-        assert!(Arc::ptr_eq(&flow_play_neural_cache(), &flow_play_neural_cache()));
+    fn flow_eval_session_neural_cache_is_per_instance_not_process_wide() {
+        let a = FlowEvalSession::new();
+        let b = FlowEvalSession::new();
+        assert!(!std::sync::Arc::ptr_eq(&a.neural_cache(), &b.neural_cache()));
     }
 
     #[test]

@@ -1,0 +1,541 @@
+
+===== 2530-2580 =====
+2530|            self
+2531|        }
+2532|    }
+2533|
+2534|    //#region 🔖️DocumentContract
+2535|    /// @emoji 🧾️ Read-only view of an app's document handed to `DocumentApp::handle_action`/`render`:
+2536|    /// the materialized projection plus the history metadata (checkpoints/alternatives/undo state)
+2537|    /// derived from the owning {@link VcsDocumentApp}'s persistent {@link DocumentStore}.
+2538|    pub struct DocumentView<'a, P> {
+2539|        pub projection: &'a P,
+2540|        pub history: &'a HistoryView,
+2541|    }
+2542|
+2543|    /// @emoji 🧮️ Read-only view of an app's config projection — same role as {@link DocumentView} for the
+2544|    /// config {@link ConfigStore} owned by {@link VcsDocumentApp}.
+2545|    pub struct ConfigView<'a, C> {
+2546|        pub projection: &'a C,
+2547|    }
+2548|
+2549|    //#region 🔖️NoConfig
+2550|    /// @emoji 🧮️ Default `DocumentApp::Config` for apps with no config artifact yet.
+2551|    #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+2552|    #[serde(rename_all = "camelCase")]
+2553|    pub struct NoConfig {}
+2554|
+2555|    impl store::DocumentDsl for NoConfig {
+2556|        const EXTENSION: &'static str = "nocfg";
+2557|        fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+2558|            if text.trim().is_empty() {
+2559|                return Ok(Self::default());
+2560|            }
+2561|            Err(store::TextError::new("no config", store::TextSpan::at(1, 1)))
+2562|        }
+2563|        fn print_dsl(&self) -> String {
+2564|            String::new()
+2565|        }
+2566|    }
+2567|
+2568|    impl DocumentPack for NoConfig {
+2569|        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+2570|            Ok(Vec::new())
+2571|        }
+2572|        fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+2573|            Ok(Self::default())
+2574|        }
+2575|    }
+2576|
+2577|    impl store::ConfigRecord for NoConfig {}
+2578|
+2579|    impl ::protocol::OperationDiff<NoConfig> for NoConfig {
+2580|        fn apply(&self, base: &NoConfig) -> NoConfig {
+
+===== 2830-2910 =====
+2830|    /// @emoji 📤️ What a pure `DocumentApp::handle` emits: zero-or-more typed document operations (applied
+2831|    /// through the document store with a true inverse) and zero-or-more typed config operations (applied
+2832|    /// through the config store, also with a true inverse via `ConfigOperation::backwards` — the config-op
+2833|    /// twin of a document op, replacing the old `ActionEmit::inverse`/`InverseAction` ad hoc self-computed
+2834|    /// inverse: a former "View"-kind action now just emits a `ConfigOperation` and gets a real backwards
+2835|    /// for free), plus an optional description/coalesce key for the resulting edit(s), host effects
+2836|    /// (navigate/export/spawn…), and app events. `B1` rename: was `ActionEmit`, `operations` renamed
+2837|    /// `document_operations` to sit next to `config_operations` unambiguously.
+2838|    pub struct Emit<Operation, ConfigOperation = NoConfigOperation> {
+2839|        pub document_operations: Vec<Operation>,
+2840|        pub config_operations: Vec<ConfigOperation>,
+2841|        pub description: Option<String>,
+2842|        pub coalesce_key: Option<String>,
+2843|        pub effects: Vec<HostEffect>,
+2844|        pub events: Vec<AppEvent>,
+2845|        /// 🐢️ Which rendered UI sections this action actually invalidates — `Full` (the default) preserves
+2846|        /// today's whole-shell-refresh behavior for every app that doesn't opt in to narrower scopes.
+2847|        pub ui_scope: semio_framework_core::kernel::UiDirtyScope,
+2848|    }
+2849|
+2850|    impl<Operation, ConfigOperation> Default for Emit<Operation, ConfigOperation> {
+2851|        fn default() -> Self {
+2852|            Self { document_operations: Vec::new(), config_operations: Vec::new(), description: None, coalesce_key: None, effects: Vec::new(), events: Vec::new(), ui_scope: semio_framework_core::kernel::UiDirtyScope::default() }
+2853|        }
+2854|    }
+2855|
+2856|    impl<Operation, ConfigOperation> Emit<Operation, ConfigOperation> {
+2857|        /// @emoji ✏️ A document-operation emission carrying `document_operations` and nothing else.
+2858|        pub fn operations(document_operations: Vec<Operation>) -> Self {
+2859|            Self { document_operations, ..Default::default() }
+2860|        }
+2861|
+2862|        /// @emoji 🔁️ Preview pattern (a): a per-tick coalesced DOCUMENT emission. The `coalesce_key` folds
+2863|        /// every tick of one live gesture (drag/scrub) into a single amendable edit, so the whole gesture is
+2864|        /// one undo. Use for cheap per-tick document operations. See `🔖️UtilityPreviewContract`.
+2865|        pub fn amend(document_operations: Vec<Operation>, coalesce_key: impl Into<String>) -> Self {
+2866|            Self { document_operations, coalesce_key: Some(coalesce_key.into()), ..Default::default() }
+2867|        }
+2868|
+2869|        /// @emoji 📌️ Preview pattern (b): the gesture-end commit of an app-runtime scratch draft as one
+2870|        /// described DOCUMENT edit (`coalesce_key: None`). Use for megabyte-scale content where per-tick
+2871|        /// amending would be O(N²) (draw drafts, lowpoly strokes). See `🔖️UtilityPreviewContract`.
+2872|        pub fn commit(document_operations: Vec<Operation>, description: impl Into<String>) -> Self {
+2873|            Self { document_operations, description: Some(description.into()), ..Default::default() }
+2874|        }
+2875|
+2876|        /// @emoji 🧮️ A config-operation emission carrying `config_operations` and nothing else — the
+2877|        /// replacement for a former "View"-kind `ActionEmit::view_with_inverse`: selection/camera/hover/…
+2878|        /// changes now flow through the config store, which computes their real `backwards` itself.
+2879|        pub fn config(config_operations: Vec<ConfigOperation>) -> Self {
+2880|            Self { config_operations, ..Default::default() }
+2881|        }
+2882|
+2883|        /// @emoji 🔁️ `amend`'s CONFIG-targeted twin — coalesces one live gesture's ticks into a single
+2884|        /// amendable config edit (e.g. a live camera drag).
+2885|        pub fn amend_config(config_operations: Vec<ConfigOperation>, coalesce_key: impl Into<String>) -> Self {
+2886|            Self { config_operations, coalesce_key: Some(coalesce_key.into()), ..Default::default() }
+2887|        }
+2888|
+2889|        /// @emoji 📌️ `commit`'s CONFIG-targeted twin — a described, non-coalesced config edit.
+2890|        pub fn commit_config(config_operations: Vec<ConfigOperation>, description: impl Into<String>) -> Self {
+2891|            Self { config_operations, description: Some(description.into()), ..Default::default() }
+2892|        }
+2893|
+2894|        /// @emoji 🐚️ A single host effect and no operations (a shell action).
+2895|        pub fn effect(effect: HostEffect) -> Self {
+2896|            Self { effects: vec![effect], ..Default::default() }
+2897|        }
+2898|
+2899|        /// @emoji 📣️ A single app event and no operations.
+2900|        pub fn event(event: AppEvent) -> Self {
+2901|            Self { events: vec![event], ..Default::default() }
+2902|        }
+2903|    }
+2904|
+2905|    /// @emoji 🪪️ Per-invocation runtime metadata handed to the object-safe {@link PluginApp} — the local
+2906|    /// actor id (author of resulting operations, drives `UndoPolicy` foreign-edit classification) and
+2907|    /// the instance id used to stamp operation/document handles.
+2908|    #[derive(Clone, Debug, Default)]
+2909|    pub struct ActionMeta {
+2910|        pub actor: String,
+
+===== 3250-3450 =====
+3250|    ///      end emit {@link ActionEmit::commit} once; use for megabyte-scale content where per-tick
+3251|    ///      amending is O(N²) (draw drafts, lowpoly strokes).
+3252|    /// - The pointer vocabulary (`canvasPointerDown/Move/Up`, `worldPointerDown/Move/Up`,
+3253|    ///   `paintStrokeBegin/End`) are `View`-kind internal action ids driving the above.
+3254|    pub trait DocumentApp: Send + 'static {
+3255|        type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + DocumentPack;
+3256|        type Operation: ::protocol::Operation<Self::Projection> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+3257|        type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ConfigRecord + DocumentPack;
+3258|        type ConfigOperation: ::protocol::Operation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+3259|        /// @emoji 🎯️ B1: this app's closed, typed command enum — the SOLE dispatch surface for
+3260|        /// `handle` below, replacing the deleted stringly-typed `handle_action`/`handle_command`/
+3261|        /// `handle_typed_command` trio. Decoded off the wire once, by `VcsDocumentApp::dispatch_typed_command`,
+3262|        /// via `OpBinary::decode_op`; framework-reserved verbs (undo/redo/checkpoint/alternative/clipboard/
+3263|        /// revert/history-filter/noteShellCommand) never reach here — the wrapper intercepts those itself
+3264|        /// (see `VcsDocumentApp::dispatch_framework_action`) since they are host mechanics, not app behavior.
+3265|        type Command: ::protocol::OpBinary + Send;
+3266|
+3267|        fn app_id(&self) -> &str;
+3268|        fn document_schema(&self) -> &str;
+3269|        fn config_schema(&self) -> &str {
+3270|            "config.empty"
+3271|        }
+3272|        fn initial_projection(&self) -> Self::Projection;
+3273|        fn initial_config(&self) -> Self::Config {
+3274|            Self::Config::default()
+3275|        }
+3276|        /// @emoji 🧩️ B1: the pure heart of the app — a total, side-effect-free function from
+3277|        /// `(command, document, config)` to an {@link Emit}. No `&mut self`, no `ViewState` (ephemeral
+3278|        /// per-window/locale/selection state now lives in `Self::Config`, keyed by window-instance id where
+3279|        /// it varies per window). `View`-kind interactions from the pre-B1 world (camera/selection/hover/…)
+3280|        /// emit `config_operations` here instead of mutating an app-struct field — the config store computes
+3281|        /// their real `backwards`, so undo/redo works without any ad hoc `InverseAction`.
+3282|        fn handle(&self, command: &Self::Command, doc: &DocumentView<'_, Self::Projection>, cfg: &ConfigView<'_, Self::Config>) -> Result<Emit<Self::Operation, Self::ConfigOperation>, Fault>;
+3283|        /// @emoji 🏷️ `command`'s action/command id string — used for command-log labeling and
+3284|        /// `AppActionRegistry` kind-discipline lookup (`View`/`Shell`-kind must not emit
+3285|        /// `document_operations`; `VcsDocumentApp::dispatch_typed_command_inner` enforces this when the
+3286|        /// registry has a matching declaration). Default: `"typed-command"` for every command (correct but
+3287|        /// generic — an app that wants per-command labels/kind-discipline overrides this to match the id
+3288|        /// the command was declared under in its `AppDefinition`, e.g. via `.operation`/`.view_action`).
+3289|        fn command_id(&self, _command: &Self::Command) -> &str {
+3290|            "typed-command"
+3291|        }
+3292|        /// @emoji 🎯️ Builds this app's typed `Command` from a host action id + JSON args — the bridge
+3293|        /// the React/wgpu shells still speak (`{action,args}`) until every call site sends `OpBinary`
+3294|        /// bytes directly. Default rejects (same error as the pre-bridge `dispatch_action` arm); apps
+3295|        /// that the shells drive must override this so chrome actions reach `handle`.
+3296|        fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3297|            Err(Fault::new(
+3298|                FaultOrigin::App,
+3299|                FaultCode::new("app.command.unsupported"),
+3300|                format!(
+3301|                    "action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+3302|                ),
+3303|            ))
+3304|        }
+3305|        /// 🧮️ This app's typed configuration spec — empty (the default) means "no configuration options."
+3306|        fn config_spec(&self) -> ConfigSpec {
+3307|            ConfigSpec::empty()
+3308|        }
+3309|        /// 📋️ The `MediaType` this app copies fragments as and accepts pastes of by default — `None` (the
+3310|        /// default) means this app doesn't participate in the clipboard mechanism, and `VcsDocumentApp`'s
+3311|        /// injected `copy`/`cut`/`paste` actions silently no-op. Override alongside `copy_fragment`/
+3312|        /// `cut_operations`/`paste_operations`.
+3313|        fn clipboard_media_type(&self) -> Option<MediaType> {
+3314|            None
+3315|        }
+3316|        /// 📋️ Every `MediaType` this app accepts a paste of — defaults to just `clipboard_media_type()`.
+3317|        /// Override to additionally accept fragments copied from a compatible sibling app (e.g. puzzle
+3318|        /// accepting a block kind-definition fragment as a catalog merge).
+3319|        fn clipboard_accepts(&self) -> Vec<MediaType> {
+3320|            self.clipboard_media_type().into_iter().collect()
+3321|        }
+3322|        /// 📋️ Builds a `ClipboardFragment` from the current selection. Called by `VcsDocumentApp`'s
+3323|        /// injected `copy` and `cut` actions; `cut` additionally calls `cut_operations`. Default: always
+3324|        /// empty (apps that don't override `clipboard_media_type` never reach here in practice, since the
+3325|        /// interception only calls this when a media type is declared).
+3326|        fn copy_fragment(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Result<ClipboardFragment, ClipboardError> {
+3327|            Err(ClipboardError::EmptySelection)
+3328|        }
+3329|        fn cut_operations(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Self::Operation> {
+3330|            Vec::new()
+3331|        }
+3332|        fn paste_operations(&self, _doc: &DocumentView<'_, Self::Projection>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Operation>, ClipboardError> {
+3333|            Ok(Vec::new())
+3334|        }
+3335|        fn pending_effects(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<HostEffect> {
+3336|            Vec::new()
+3337|        }
+3338|        fn render(&self, body_key: &str, doc: &DocumentView<'_, Self::Projection>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
+3339|        /// 🪟️ Keyed by window INSTANCE id — an app with two open instances of the same kind (e.g. split
+3340|        /// panes) returns one entry per instance so their chrome/options never collapse together. Apps with
+3341|        /// a single window kind and no splitting return `vec![kind_id]`-worth of entries either way.
+3342|        fn window_engagements(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
+3343|            HashMap::new()
+3344|        }
+3345|        /// 🪟️ See `window_engagements` — same per-window-instance keying.
+3346|        fn window_measures(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+3347|            HashMap::new()
+3348|        }
+3349|        /// 🛠️ Keyed by TOOL id (`AppDefinition.tools[].id`), not window instance — a tool's live options
+3350|        /// (e.g. puzzle3d fill's count slider) rendered in the mode-level tool panel rather than a
+3351|        /// window's utility-options rail. Reuses `WindowMeasure` as the shared control vocabulary; the
+3352|        /// `Group.active_utility_id` tag is simply unused for tool measures.
+3353|        fn tool_measures(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+3354|            HashMap::new()
+3355|        }
+3356|        /// 🖱️ Answers an on-demand right-click menu request — the WIT `context-menu` export's SDK
+3357|        /// counterpart. Called fresh at right-click time (never cached, never part of `refreshUi`);
+3358|        /// `request.menu.id` names the target the host resolved (a `UiMenuRef` a plugin attached to a
+3359|        /// `UiNode`, or a scene-surface convention id like `"world3d"`/`"nodeGraph"`/`"window"`).
+3360|        /// Default: empty — the host falls through to the next outer menu layer (window/OS chrome),
+3361|        /// so apps that never attach a `menu` never need to override this. `registry` is this app's
+3362|        /// `AppActionRegistry` (the same one `VcsDocumentApp` enforces the actions contract with) —
+3363|        /// pass it to `Menu::of(registry)` to resolve labels/icons from declared `ActionDefinition`s
+3364|        /// instead of hand-building rows.
+3365|        fn context_menu(&self, _request: &ContextMenuRequest, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+3366|            Vec::new()
+3367|        }
+3368|        /// 🌱️ One-time hook for seeding the store's history (checkpoints/alternatives) beyond the bare
+3369|        /// `initial_projection` — called once from `VcsDocumentApp::new`, right after the store is
+3370|        /// constructed, via direct `store.dispatch(...)` calls. Default no-operation; only apps whose fixture is
+3371|        /// itself a rich history (e.g. a history-UI demo/exerciser) need this — every program driven purely
+3372|        /// by user actions leaves it untouched.
+3373|        fn seed(&self, _store: &mut DocumentStore<Self::Projection, Self::Operation>) {}
+3374|
+3375|        /// 🔌️ This app's typed media I/O surface — `None` (the default) means "declares no ports beyond
+3376|        /// the implicit document ports" (`media_ports` below still returns those two). Override to return
+3377|        /// a real `AppIo` (e.g. `shooting_engine::shooting_io()`) to declare extra workflow ports.
+3378|        fn io(&self) -> Option<AppIo> {
+3379|            None
+3380|        }
+3381|        /// 🎞️ Declares this app's workflow ports — delegates to `self.io().all_ports()` (implicit
+3382|        /// `document:in`/`document:out` plus any app-specific ports) when `io()` is overridden; an app that
+3383|        /// never overrides `io()` still gets no ports (matches the old `Vec::new()` default) since there is
+3384|        /// no document media type to synthesize the implicit pair from.
+3385|        fn media_ports(&self) -> Vec<MediaPortSpec> {
+3386|            self.io().map(|io| io.all_ports()).unwrap_or_default()
+3387|        }
+3388|        /// 🎞️ Pure projection of the current document onto one declared output port — must not mutate
+3389|        /// anything. Called by both the UI (preview/export) and a headless runner (moving media along a
+3390|        /// workflow edge). Default: the whole document pack, base64-wrapped, for `"document:out"`;
+3391|        /// `MediaError::NotImplemented` for any other port (apps declaring extra output ports override
+3392|        /// this to handle them, falling through to `DocumentApp::export_media`'s default via `_ =>` for
+3393|        /// `"document:out"` if desired).
+3394|        fn export_media(&self, port: &str, doc: &DocumentView<'_, Self::Projection>) -> Result<Media, MediaError> {
+3395|            if port != "document:out" {
+3396|                return Err(MediaError::NotImplemented);
+3397|            }
+3398|            let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+3399|            let bytes = doc.projection.encode_pack();
+3400|            Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+3401|        }
+3402|        /// 🎞️ Builds the operation that replaces the whole document with `projection` — the seam the
+3403|        /// default `import_media("document:in")` below needs to turn a decoded document pack into a real,
+3404|        /// undoable operation. `None` (the default) means "not implemented" (there is no generic "replace
+3405|        /// whole projection" operation); an app whose `Operation` enum has such a variant (e.g.
+3406|        /// `SetFixture`/`SetDocument`) overrides this one-liner to unlock the default `import_media`.
+3407|        fn whole_document_operation(&self, _projection: Self::Projection) -> Option<Self::Operation> {
+3408|            None
+3409|        }
+3410|        /// 🎞️ Translates an incoming media value on one declared input port into operations — never mutates
+3411|        /// state directly, so a headless import is exactly as undoable/syncable as a UI edit. Default:
+3412|        /// decodes a `"document:in"` structured (base64 pack) payload via `whole_document_operation`;
+3413|        /// `MediaError::NotImplemented` for any other port or when `whole_document_operation` is `None`.
+3414|        fn import_media(&self, port: &str, media: &Media, _doc: &DocumentView<'_, Self::Projection>) -> Result<Emit<Self::Operation, Self::ConfigOperation>, MediaError> {
+3415|            if port != "document:in" {
+3416|                return Err(MediaError::NotImplemented);
+3417|            }
+3418|            let MediaPayload::Structured { json, .. } = &media.payload else {
+3419|                return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
+3420|            };
+3421|            let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+3422|            let projection = <Self::Projection as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+3423|            match self.whole_document_operation(projection) {
+3424|                Some(operation) => Ok(Emit::operations(vec![operation])),
+3425|                None => Err(MediaError::NotImplemented),
+3426|            }
+3427|        }
+3428|        /// 🎞️ Cheap identity for one output port's current value, without serializing the payload.
+3429|        /// Default re-derives it from `export_media`; override when a fingerprint is derivable without
+3430|        /// materializing the full export (e.g. from a cached head edit id).
+3431|        fn media_fingerprint(&self, port: &str, doc: &DocumentView<'_, Self::Projection>) -> Result<MediaFingerprint, MediaError> {
+3432|            self.export_media(port, doc).map(|media| MediaFingerprint::of(&media))
+3433|        }
+3434|    }
+3435|
+3436|    /// 🎞️ Rust mirror of WIT's `media-artifact` record (`framework/wit/📜️world.wit`): `descriptor` is the
+3437|    /// parsed `descriptor-json`, `data` the sibling raw-bytes field. Deliberately separate from
+3438|    /// `mesh::Media` (which pairs a `MediaType` with a `MediaPayload` for the declared-port workflow
+3439|    /// via `export_media`/`import_media`) — `consume-media`/`produce-media` operate at the whole-document
+3440|    /// level, not a specific `MediaPortSpec`, so `PluginApp::{consume_media, produce_media}` below default
+3441|    /// to a document passthrough rather than requiring any `media_ports()` declaration at all.
+3442|    #[derive(Clone, Debug)]
+3443|    pub struct MediaArtifact {
+3444|        pub descriptor: MediaArtifactDescriptor,
+3445|        pub data: Vec<u8>,
+3446|    }
+3447|
+3448|    /// 🎞️ Rust mirror of WIT's `media-artifact.descriptor-json` JSON shape. `edge_id`/`port_id`/`kind_id`
+3449|    /// are dataflow-driver bookkeeping the SDK default below leaves untouched (opaque pass-through for the
+3450|    /// caller); `media_type` is the declared `MediaType` the wire claims to satisfy; `wire` is the actual
+
+===== 3870-3930 =====
+3870|    /// {@link PluginApp}. Owns a persistent `DocumentStore<Projection, Operation>` — the single source of
+3871|    /// truth for the app's document across every call — intercepts the six injected history actions into
+3872|    /// `DocumentCommand`s, dispatches `Apply`/`AmendLast` for typed operations, and builds an
+3873|    /// `InvocationResult` whose inverses come from the just-recorded `Edit.backwards`. A projection+history
+3874|    /// cache keyed on `(store generation, log generation, history filter)` keeps renders O(1). Holds an
+3875|    /// {@link AppActionRegistry} to enforce the actions contract before/after delegating to the app.
+3876|    pub struct VcsDocumentApp<A: DocumentApp> {
+3877|        app: A,
+3878|        store: DocumentStore<A::Projection, A::Operation>,
+3879|        config_store: ConfigStore<A::Config, A::ConfigOperation>,
+3880|        /// @emoji 🗂️ Keyed on `(store.generation(), log_generation, history_filter)` — any of the three
+3881|        /// changing invalidates the cached projection/`HistoryView` pair.
+3882|        cache: Option<((u64, u64, u64, HistoryCommandFilter), A::Projection, A::Config, HistoryView)>,
+3883|        registry: AppActionRegistry,
+3884|        /// @emoji 🧾️ Append-only session command log — see `🔖️CommandLog`. Never persisted, never
+3885|        /// truncated: undo/redo/revert push entries, they never remove any.
+3886|        command_log: Vec<CommandLogEntry>,
+3887|        next_command_seq: u64,
+3888|        /// @emoji 🗂️ Bumped by `push_log_entry`/`record_command` on every log mutation (a push OR a fold)
+3889|        /// — part of the cache key so a folded ×count bump alone (no store-generation change) still
+3890|        /// invalidates a stale render.
+3891|        log_generation: u64,
+3892|        history_filter: HistoryCommandFilter,
+3893|    }
+3894|
+3895|    const HISTORY_ACTION_IDS: [&str; 6] = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint"];
+3896|
+3897|    const CLIPBOARD_ACTION_IDS: [&str; 3] = ["copy", "cut", "paste"];
+3898|
+3899|    impl<A: DocumentApp> VcsDocumentApp<A> {
+3900|        /// @emoji 🧬️ Constructs a wrapper with an empty registry — contract enforcement is skipped. Used by
+3901|        /// tests and any registry-less construction path.
+3902|        pub fn new(app: A) -> Self {
+3903|            Self::with_registry(app, AppActionRegistry::default())
+3904|        }
+3905|
+3906|        /// @emoji 🧬️ Constructs a wrapper carrying the app's {@link AppActionRegistry} so `handle_action`
+3907|        /// enforces default materialization, required-arg validation, and kind discipline.
+3908|        pub fn with_registry(app: A, registry: AppActionRegistry) -> Self {
+3909|            let envelope = create_document_envelope::<A::Projection, A::Operation>(app.document_schema(), app.app_id(), app.initial_projection(), None);
+3910|            let config_id = format!("{}-config", app.app_id());
+3911|            let config_envelope = create_config_envelope::<A::Config, A::ConfigOperation>(app.config_schema(), &config_id, app.initial_config(), None);
+3912|            let mut store = DocumentStore::new(envelope);
+3913|            let config_store = ConfigStore::new(config_envelope);
+3914|            app.seed(&mut store);
+3915|            Self { app, store, config_store, cache: None, registry, command_log: Vec::new(), next_command_seq: 0, log_generation: 0, history_filter: HistoryCommandFilter::default() }
+3916|        }
+3917|
+3918|        #[cfg(test)]
+3919|        pub(crate) fn test_projection(&self) -> A::Projection {
+3920|            self.store.projection().expect("materialize projection")
+3921|        }
+3922|
+3923|        /// @emoji 🧪️ The config-store twin of `test_projection`.
+3924|        #[cfg(test)]
+3925|        pub(crate) fn test_config(&self) -> A::Config {
+3926|            self.config_store.projection().expect("materialize config projection")
+3927|        }
+3928|
+3929|        /// @emoji 🧪️ Direct access to the wrapped app — used to assert on app-private test fixtures (e.g.
+3930|        /// `TestApp::received_actions`) that a framework-owned interception must never populate.
+
+===== 4230-4260 =====
+4230|        /// `verb` is the action/command id, used to resolve the registry kind/label and to synthesize the
+4231|        /// `InvocationId`.
+4232|        /// @emoji 🧬️ B1: the single dispatch tail for BOTH `dispatch_typed_command` (the app's own
+4233|        /// `Emit`) and the framework-reserved clipboard actions below — commits `document_operations` to
+4234|        /// the document store and `config_operations` to the config store (independently, each its own
+4235|        /// undo stack), records exactly one command-log row carrying whichever edit id(s) were produced,
+4236|        /// and builds the resulting `InvocationResult` from the document side (config-only dispatches
+4237|        /// never touch `KernelOperation`/space-sync — see `🔖️CommandLog`'s doc region for why).
+4238|        fn dispatch_emit(&mut self, verb: &str, emit: Emit<A::Operation, A::ConfigOperation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+4239|            let Emit { document_operations, config_operations, description, coalesce_key, effects, events, ui_scope } = emit;
+4240|
+4241|            // 🧮️ Config side dispatches first, independent of whether this verb ALSO touches the document
+4242|            // — captures the resulting (possibly amended) config edit id for the command-log row below.
+4243|            let mut config_edit_id: Option<String> = None;
+4244|            if !config_operations.is_empty() {
+4245|                self.config_store.set_local_actor_id(Some(meta.actor.clone()));
+4246|                let before_config_edit_id = self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
+4247|                let config_command = match &coalesce_key {
+4248|                    Some(key) => DocumentCommand::AmendLast { operations: config_operations, coalesce_key: Some(format!("config:{key}")) },
+4249|                    None => DocumentCommand::Apply { operations: config_operations, description: description.clone() },
+4250|                };
+4251|                self.config_store.dispatch(config_command).map_err(|error| error.into_fault())?;
+4252|                self.cache = None;
+4253|                let amended_same_config_edit = before_config_edit_id.is_some() && self.config_store.envelope().vcs.edits.last().map(|edit| &edit.id) == before_config_edit_id.as_ref();
+4254|                config_edit_id = if amended_same_config_edit { before_config_edit_id } else { self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone()) };
+4255|            }
+4256|
+4257|            if document_operations.is_empty() {
+4258|                // 🧾️ An app-declared action logs under its declared kind (so an `Operation`-kind action
+4259|                // that happened to produce zero document operations — e.g. paste with no clipboard
+4260|                // fragment, or a pure config-op dispatch — still gets a real row, `edit_id: None`,
+
+===== 4885-4960 =====
+4885|            for mut example in app.examples {
+4886|                example.app_id = app_id.clone();
+4887|                self.manifest.examples.push(example);
+4888|            }
+4889|            self.apps.insert(self.manifest.apps.last().unwrap().id.clone(), Box::new(factory));
+4890|            self
+4891|        }
+4892|
+4893|        /// @emoji 🧬️ Registers a typed {@link DocumentApp}, wrapping each instance in a
+4894|        /// {@link VcsDocumentApp} so it satisfies the object-safe runtime {@link PluginApp} contract with
+4895|        /// a persistent operation store. The only public app-registration entry point — this structurally
+4896|        /// guarantees every app's state lives in a `DocumentStore`.
+4897|        pub fn register_document_app<A>(self, app: App, factory: impl Fn() -> A + Send + 'static) -> Self
+4898|        where
+4899|            A: DocumentApp,
+4900|        {
+4901|            let registry = AppActionRegistry::from_definition(&app.definition);
+4902|            self.register_app(app, move || Box::new(VcsDocumentApp::with_registry(factory(), registry.clone())))
+4903|        }
+4904|
+4905|        pub fn create_app(&self, app_id: &str) -> Option<Box<dyn PluginApp>> {
+4906|            self.apps.get(app_id).map(|factory| factory())
+4907|        }
+4908|    }
+4909|
+4910|    impl Plugin for PluginBundle {
+4911|        fn manifest(&self) -> PluginManifest {
+4912|            self.manifest.clone()
+4913|        }
+4914|
+4915|        fn create_app(&self, app_id: &str) -> Option<Box<dyn PluginApp>> {
+4916|            PluginBundle::create_app(self, app_id)
+4917|        }
+4918|    }
+4919|    // #endregion app
+4920|}
+4921|
+4922|pub mod plugin_runtime {
+4923|    // #region plugin_runtime
+4924|    //! 📤️ WASM component export glue for plugin bundles.
+4925|
+4926|    use crate::app::{ActionMeta, AppInstance, MediaArtifact, MediaArtifactDescriptor, Plugin, PluginBundle};
+4927|    use crate::DocumentApp;
+4928|    use dsl::{from_dsl_value, to_dsl_value};
+4929|    use semio_framework_core::{
+4930|        kernel::{HostEffect, InvocationResult},
+4931|        Fault, FaultCode, FaultFrom, FaultOrigin, PluginManifest, ViewState,
+4932|    };
+4933|    use serde::de::DeserializeOwned;
+4934|    use serde::{Deserialize, Serialize};
+4935|    use serde_json::Value;
+4936|    use std::cell::{Cell, RefCell};
+4937|    use std::sync::atomic::{AtomicU32, Ordering};
+4938|    use ui_wgpu::wgpu::{ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef, UiNode};
+4939|
+4940|    thread_local! {
+4941|        static PLUGIN: RefCell<Option<PluginBundle>> = const { RefCell::new(None) };
+4942|        // 🔓️ `UnsafeCell` (not `RefCell`): a wasm trap skips `RefMut::drop` and permanently poisons
+4943|        // `RefCell`'s borrow flag. Exclusive access is enforced by `InstanceGuard` + the host's
+4944|        // serialized plugin bridge instead.
+4945|        static INSTANCES: std::cell::UnsafeCell<Vec<AppInstance>> = const { std::cell::UnsafeCell::new(Vec::new()) };
+4946|        static INSTANCE_GUARD: Cell<u32> = const { Cell::new(0) };
+4947|        /// 🪪️ Per-instance local actor id, set by `AppCommand::Hello` and read back by every `Command`
+4948|        /// frame's `ActionMeta` — see `plugin_exchange`. Never cleared on `Bye`/instance destruction (Wave
+4949|        /// 1 scope: a destroyed instance id is never reused within one plugin's lifetime today).
+4950|        static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+4951|        /// 🪟️ Per-instance last-seen `ViewState`, updated by every `AppCommand::Command` and read back by
+4952|        /// `AppCommand::RefreshUi`/`AppCommand::DocumentCommand` (`RefreshUi` carries `view_state`; DocumentCommand still
+4953|        /// the new channel) — see `plugin_exchange`'s doc comment for this Wave 1 scoping.
+4954|        static INSTANCE_VIEW_STATES: RefCell<std::collections::HashMap<u32, ViewState>> = RefCell::new(std::collections::HashMap::new());
+4955|    }
+4956|
+4957|    fn encode_wire_serialized<T: Serialize>(value: &T) -> Vec<u8> {
+4958|        store::pack_rt::encode_wire_value(&to_dsl_value(value).expect("wire payload must serialize to DslValue"))
+4959|    }
+4960|
+
+===== 5845-5870 =====
+5845|    /// `PluginBundle`'s manifest.
+5846|    #[macro_export]
+5847|    macro_rules! semio_plugin {
+5848|    (
+5849|        id: $id:literal,
+5850|        label: $label:literal,
+5851|        version: $version:literal,
+5852|        setup: $setup:path,
+5853|        apps: [ $( $app_fn:path => $app_ty:path ),+ $(,)? ] $(,)?
+5854|    ) => {
+5855|        fn __semio_plugin_bundle() -> $crate::PluginBundle {
+5856|            ($setup)();
+5857|            $crate::PluginBundle::new($id, $label, $version)
+5858|                $( .register_document_app(($app_fn)(), || <$app_ty as ::std::default::Default>::default()) )+
+5859|        }
+5860|
+5861|        $crate::plugin_exports!(__semio_plugin_bundle);
+5862|
+5863|        #[cfg(test)]
+5864|        #[test]
+5865|        fn __semio_plugin_sanity_declared_apps_appear_in_bundle_manifest() {
+5866|            let manifest = __semio_plugin_bundle().manifest;
+5867|            $(
+5868|                let expected_id = ($app_fn)().definition.id;
+5869|                assert!(
+5870|                    manifest.apps.iter().any(|app| app.id == expected_id),

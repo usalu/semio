@@ -1,7 +1,7 @@
 // #region gpu
 //! 🖥️ WebGPU device, surface, and frame loop.
 
-use crate::wgpu::draw::{DrawList, FrameBuffers, MeshGpuStore, RasterTextureStore, SceneColorTarget, UiPipelines};
+use crate::wgpu::draw::{DrawList, FrameBuffers, MeshGpuTable, RasterTextureTable, SceneColorTarget, UiPipelines};
 use crate::wgpu::text::FontAtlas;
 use wgpu::Surface;
 
@@ -15,8 +15,8 @@ pub struct GpuContext {
     frame_buffers: FrameBuffers,
     depth_texture: Option<wgpu::Texture>,
     depth_view: Option<wgpu::TextureView>,
-    mesh_store: MeshGpuStore,
-    raster_store: RasterTextureStore,
+    mesh_store: MeshGpuTable,
+    raster_store: RasterTextureTable,
     scene_color: Option<SceneColorTarget>,
     width: u32,
     height: u32,
@@ -63,7 +63,7 @@ impl GpuContext {
         };
         surface.configure(&device, &config);
         let pipelines = UiPipelines::new(&device, &queue, color_target_format);
-        let raster_store = RasterTextureStore::new(&device, pipelines.bind_group_layout());
+        let raster_store = RasterTextureTable::new(&device, pipelines.bind_group_layout());
         let mut gpu = Self {
             device,
             queue,
@@ -74,7 +74,7 @@ impl GpuContext {
             frame_buffers: FrameBuffers::default(),
             depth_texture: None,
             depth_view: None,
-            mesh_store: MeshGpuStore::default(),
+            mesh_store: MeshGpuTable::default(),
             raster_store,
             scene_color: None,
             width,
@@ -121,7 +121,7 @@ impl GpuContext {
         SceneColorTarget::ensure(&self.device, &mut self.scene_color, self.width, self.height, self.color_target_format);
     }
 
-    pub fn mesh_store_mut(&mut self) -> &mut MeshGpuStore {
+    pub fn mesh_store_mut(&mut self) -> &mut MeshGpuTable {
         &mut self.mesh_store
     }
 

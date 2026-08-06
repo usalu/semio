@@ -134,17 +134,22 @@ fn leaf_context(node: &UiNode) -> LeafContext {
     }
 }
 
+/// 🧮️ `taffy::NodeId` lookup for one retained `UiTree` (not authoritative UI state).
+struct TaffyNodeMapping {
+    by_ui: HashMap<NodeId, taffy::NodeId>,
+}
+
 /// 🧮️ Owns a taffy flexbox tree mirroring one retained `UiTree` and the `NodeId -> taffy::NodeId`
 /// mapping between them. Used only by the `engine` façade (a later milestone); never exposed
 /// outside the crate.
 pub(crate) struct LayoutEngine {
     taffy: TaffyTree<LeafContext>,
-    mapping: HashMap<NodeId, taffy::NodeId>,
+    nodes: TaffyNodeMapping,
 }
 
 impl Default for LayoutEngine {
     fn default() -> Self {
-        Self { taffy: TaffyTree::new(), mapping: HashMap::new() }
+        Self { taffy: TaffyTree::new(), nodes: TaffyNodeMapping { by_ui: HashMap::new() } }
     }
 }
 
@@ -193,9 +198,9 @@ impl LayoutEngine {
     /// 🧹️ Drops taffy-side nodes whose retained counterpart no longer exists (removed by
     /// `reconcile`), so the mapping doesn't grow unbounded across the tree's lifetime.
     fn prune_removed(&mut self, tree: &UiTree) {
-        let stale: Vec<NodeId> = self.mapping.keys().copied().filter(|id| !tree.contains(*id)).collect();
+        let stale: Vec<NodeId> = self.nodes.by_ui.keys().copied().filter(|id| !tree.contains(*id)).collect();
         for id in stale {
-            if let Some(taffy_id) = self.mapping.remove(&id) {
+            if let Some(taffy_id) = self.nodes.by_ui.remove(&id) {
                 let _ = self.taffy.remove(taffy_id);
             }
         }
@@ -211,7 +216,7 @@ impl LayoutEngine {
         let node = tree.node(id).expect("sync called with a live NodeId");
         let grows_children = matches!(node.spec.0, UiNode::Stack(_) | UiNode::Field(_));
         let dirty = node.flags.contains(NodeFlags::DIRTY_LAYOUT);
-        let existing = self.mapping.get(&id).copied();
+        let existing = self.nodes.by_ui.get(&id).copied();
 
         let children: Vec<NodeId> = tree.children(id).collect();
         let child_taffy_ids: Vec<taffy::NodeId> = children.iter().map(|&child_id| self.sync(tree, theme, child_id, grows_children)).collect();
@@ -231,7 +236,7 @@ impl LayoutEngine {
         if existing.is_none() || dirty {
             let _ = self.taffy.set_children(taffy_id, &child_taffy_ids);
         }
-        self.mapping.insert(id, taffy_id);
+        self.nodes.by_ui.insert(id, taffy_id);
         taffy_id
     }
 
@@ -254,7 +259,7 @@ impl LayoutEngine {
     /// `DIRTY_LAYOUT`. Text nodes also get their `cached_text_measure` refreshed at the node's final
     /// resolved width, so a following unchanged-constraint measurement is a cache hit.
     fn write_back(&mut self, tree: &mut UiTree, atlas: &mut FontAtlas, id: NodeId) {
-        if let Some(&taffy_id) = self.mapping.get(&id) {
+        if let Some(&taffy_id) = self.nodes.by_ui.get(&id) {
             if let Ok(layout) = self.taffy.layout(taffy_id) {
                 let (x, y, width, height) = (layout.location.x, layout.location.y, layout.size.width, layout.size.height);
                 let text_value = match tree.node(id).map(|n| &n.spec.0) {

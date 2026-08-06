@@ -24,10 +24,11 @@ use crate::artifacts::forms::op::FormOperation;
 // artifact's `⚙️engine/🦀️component.rs`).
 use crate::artifacts::forms::dsl as forms_dsl;
 use crate::artifacts::forms::{FormQuestion, FormSpec, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, Contribution, DocumentApp, DocumentView, ConfigView, Emit, Fault, IconName, Label, LocalizedLabel, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, OsMediaCapability, UiNode,
 };
+use store::EngineHandles;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 
@@ -243,32 +244,30 @@ impl DocumentApp for FormsPlayApp {
     type Operation = FormOperation;
     type Config = FormsConfig;
     type ConfigOperation = FormsConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = FormsCommand;
 
-    fn app_id(&self) -> &str {
-        FORMS_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = FORMS_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        FORMS_DOCUMENT_SCHEMA
-    }
-
-    fn initial_projection(&self) -> FormSpec {
+    fn initial_projection() -> FormSpec {
         crate::artifacts::forms::engine::building_component_spec()
     }
 
-    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(forms_io())
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`. `setLocale`/`setContributions` have no manifest
     /// declaration (host-pushed, not user-facing actions).
-    fn command_id(&self, command: &FormsCommand) -> &str {
+    fn command_id(command: &FormsCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &FormsCommand, doc: &DocumentView<'_, FormSpec>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormOperation, FormsConfigOperation>, Fault> {
+    fn handle(command: &FormsCommand, doc: &DocumentView<'_, FormSpec>, cfg: &ConfigView<'_, FormsConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FormOperation, FormsConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -279,7 +278,7 @@ impl DocumentApp for FormsPlayApp {
     /// `form.dictionary` JSON object keyed by question id — no `cfg` parameter reaches this method, so
     /// this is the form's authored defaults, not a live in-progress Try-wizard session (that lives in
     /// `Self::Config`).
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, FormSpec>) -> Result<semio_framework_plugin::Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, FormSpec>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
             "document:out" => {
                 let bytes = store::DocumentPack::encode_pack(doc.projection);
@@ -295,7 +294,7 @@ impl DocumentApp for FormsPlayApp {
     }
     //#endregion 🔖️Media
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, FormSpec>, cfg: &ConfigView<'_, FormsConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, FormSpec>, cfg: &ConfigView<'_, FormsConfig>) -> UiNode {
         let spec = doc.projection;
         let config = cfg.projection;
         let labels = forms_play_labels(config);
@@ -389,7 +388,7 @@ pub fn create_forms_app() -> App {
             .keybinding("mod+shift+z", "redo")
             // 🎯️ Typed channel surface (WORKFLOWS-END-TO-END-TYPED-PORTS) — `config_spec()`/`forms_io()`
             // are this same information's single source of truth, reused here rather than duplicated.
-            .config(FormsPlayApp.config_spec())
+            .config(FormsPlayApp::config_spec())
             .io(forms_io()),
     )
     .example("default", LocalizedLabel::native("Contact", "Kontakt"), default_example_json(), "file")
@@ -651,7 +650,7 @@ mod tests {
 
     #[test]
     fn forms_io_exposes_dictionary_out_port() {
-        let io = FormsPlayApp.io().expect("forms declares io");
+        let io = FormsPlayApp::io().expect("forms declares io");
         assert!(io.ports.iter().any(|port| port.id == "dictionary:out"));
     }
     //#endregion 🔖️MediaPorts

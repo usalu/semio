@@ -6,7 +6,9 @@
 import { CstParser, createToken, Lexer } from "chevrotain";
 import type { CstNode, IToken } from "chevrotain";
 import {
-  ActionRegistry,
+  type ActionRegistry,
+  runRegisteredAction,
+  modelDefinitionActionRegistry,
   type ActionResult,
   Model,
   applyModelDiff,
@@ -1304,7 +1306,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
         }
         const res = transformation
           ? runTransformationCall(st.actionId, ctx)
-          : await ctx.actions.run(st.actionId, paramBag, {
+          : await runRegisteredAction(ctx.actions, st.actionId, paramBag, {
               kernel: ctx.kernel,
               preview: ctx.kernel,
               model: ctx.model,
@@ -1493,7 +1495,7 @@ if (import.meta.vitest) {
       const res = await runConstruct(q, {
         model: model,
         kernel: mkKernelStub(),
-        actions: ActionRegistry.withModelDefinitionActions(),
+        actions: modelDefinitionActionRegistry(),
       });
       const ids = res.rows.map((r) => r.c0).sort();
       expect(ids).toEqual(["f0", "f1"]);
@@ -1512,7 +1514,7 @@ if (import.meta.vitest) {
       const res = await runConstruct("MATCH (a:Object {typology: 'spatial.shape.kernel.solid'})-[:ADJACENT_TO]-(b:Object {typology: 'spatial.shape.kernel.solid'}) RETURN a.id, b.id", {
         model: model,
         kernel: mkKernelStub(),
-        actions: ActionRegistry.withModelDefinitionActions(),
+        actions: modelDefinitionActionRegistry(),
       });
       expect(res.rows.length).toBeGreaterThan(0);
       const pair = res.rows.find((r) => String(r.c0) === "c0" && String(r.c1) === "c1");
@@ -1525,7 +1527,7 @@ if (import.meta.vitest) {
         runConstruct("CALL view.energy.energy.hull({}) YIELD data", {
           model: model,
           kernel: new QueryTestKernel(),
-          actions: ActionRegistry.withModelDefinitionActions(),
+          actions: modelDefinitionActionRegistry(),
         }),
       ).rejects.toThrow(/unknown action/i);
     });
@@ -1536,7 +1538,7 @@ if (import.meta.vitest) {
         runConstruct("CALL no.such.action({}) YIELD data", {
           model: model,
           kernel: new QueryTestKernel(),
-          actions: ActionRegistry.withModelDefinitionActions(),
+          actions: modelDefinitionActionRegistry(),
         }),
       ).rejects.toThrow(/unknown action/i);
     });
@@ -1546,7 +1548,7 @@ if (import.meta.vitest) {
       const res = await runConstruct("CALL primitive.createBoxFromCorners({ cornerA: [0,0,0], cornerB: [2,3,0], height: 4 }) YIELD diff, data.solid AS solid", {
         model: model,
         kernel: new QueryTestKernel(),
-        actions: ActionRegistry.withModelDefinitionActions(),
+        actions: modelDefinitionActionRegistry(),
       });
       expect(res.diff).toBeDefined();
       expect(res.diff?.solids?.added?.length).toBeGreaterThan(0);
@@ -1556,7 +1558,7 @@ if (import.meta.vitest) {
     it("CALL selection.selectAll YIELD targets returns every box model kind", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
-      const actions = ActionRegistry.withModelDefinitionActions();
+      const actions = modelDefinitionActionRegistry();
       expect(actions.get("selection.selectAll")).not.toBeNull();
       const res = await runConstruct("CALL selection.selectAll({}) YIELD targets", {
         model: model,
@@ -1576,7 +1578,7 @@ if (import.meta.vitest) {
       const res = await runConstruct("CALL selection.apply({ operation: 'invert' }) YIELD data.targets AS targets", {
         model: model,
         kernel: new QueryTestKernel(),
-        actions: ActionRegistry.withModelDefinitionActions(),
+        actions: modelDefinitionActionRegistry(),
         selectionTargets: seed,
       });
       const targets = res.rows[0]?.targets as { kind: string; id: string }[] | undefined;
@@ -1590,7 +1592,7 @@ if (import.meta.vitest) {
       const res = await runConstruct("CALL selection.selectVertices({}) YIELD targets", {
         model: model,
         kernel: new QueryTestKernel(),
-        actions: ActionRegistry.withModelDefinitionActions(),
+        actions: modelDefinitionActionRegistry(),
       });
       const targets = res.rows[0]?.targets as { kind: string; id: string }[] | undefined;
       expect(targets?.length).toBe(8);
@@ -1603,7 +1605,7 @@ if (import.meta.vitest) {
         runConstruct("CALL primitive.createBoxFromCorners({ cornerA: [0,0,0], cornerB: [1,1,0], height: 1 })", {
           model: model,
           kernel: new QueryTestKernel(),
-          actions: ActionRegistry.withModelDefinitionActions(),
+          actions: modelDefinitionActionRegistry(),
           activeModelDefinitionId: "aec.building.energy",
         }),
       ).rejects.toThrow(/not available in model definition aec\.building\.energy/);
@@ -1616,7 +1618,7 @@ if (import.meta.vitest) {
         runConstruct("CALL selection.selectVertices({}) YIELD targets", {
           model: model,
           kernel: new QueryTestKernel(),
-          actions: ActionRegistry.withModelDefinitionActions(),
+          actions: modelDefinitionActionRegistry(),
           activeModelDefinitionId: "aec.building.energy",
         }),
       ).rejects.toThrow(/not available in model definition aec\.building\.energy/);
@@ -1628,7 +1630,7 @@ if (import.meta.vitest) {
         runConstruct("MATCH (o:Object {typology: 'spatial.shape.primitive.box'}) RETURN o.id", {
           model: model,
           kernel: mkKernelStub(),
-          actions: ActionRegistry.withModelDefinitionActions(),
+          actions: modelDefinitionActionRegistry(),
           activeModelDefinitionId: "aec.building.energy",
         }),
       ).rejects.toThrow(/unknown typology spatial\.shape\.primitive\.box for model definition aec\.building\.energy/);
@@ -1646,7 +1648,7 @@ if (import.meta.vitest) {
       const res = await runConstruct("MATCH (o:Object {typology: 'energy.energy.hull'}) RETURN o.id AS id", {
         model: model,
         kernel: mkKernelStub(),
-        actions: ActionRegistry.withModelDefinitionActions(),
+        actions: modelDefinitionActionRegistry(),
         activeModelDefinitionId: "aec.building.energy",
       });
       expect(res.rows.some((row) => row.id === "energy-hull")).toBe(true);
@@ -1658,7 +1660,7 @@ if (import.meta.vitest) {
       const res = await runConstruct("MATCH (s:Object {typology: 'spatial.shape.primitive.box'}) RETURN s.id", {
         model: model,
         kernel: mkKernelStub(),
-        actions: ActionRegistry.withModelDefinitionActions(),
+        actions: modelDefinitionActionRegistry(),
       });
       expect(res.rows.length).toBeGreaterThanOrEqual(1);
       expect(res.rows.some((r) => typeof r.c0 === "string")).toBe(true);
@@ -1677,7 +1679,7 @@ if (import.meta.vitest) {
       const res = await runConstruct("CALL selection.selectObjects({}) YIELD targets", {
         model: model,
         kernel,
-        actions: ActionRegistry.withModelDefinitionActions(),
+        actions: modelDefinitionActionRegistry(),
       });
       const targets = res.rows[0]?.targets as { kind: string }[] | undefined;
       expect(targets!.length).toBeGreaterThan(0);

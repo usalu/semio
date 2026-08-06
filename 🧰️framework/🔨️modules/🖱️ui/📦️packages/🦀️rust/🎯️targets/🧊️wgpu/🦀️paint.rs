@@ -853,7 +853,7 @@ fn paint_control(control: &UiControlNode, bounds: Rect, theme: &Theme, atlas: &m
 /// tick — a real `scene_slots::SceneHost` paints the actual image content instead (see `paint_node`'s
 /// `UiNode::Image` arm). No host-side texture-upload queue exists in `ui_wgpu` itself even so (that
 /// lives in the renderer's `program_bridge`/`engine_canvas`, outside this crate's scope); paints a
-/// raster quad keyed by `src` on the chance a caller-owned `RasterTextureStore` already has that key
+/// raster quad keyed by `src` on the chance a caller-owned `RasterTextureTable` already has that key
 /// uploaded, falling back to `alt` text when there's nothing to show yet.
 fn paint_image(node: &UiImageNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     if node.src.is_empty() {

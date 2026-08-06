@@ -1818,7 +1818,7 @@ export function writeStoredUiCustomThemes(storage: StoragePort, themes: Record<s
   storage.set(UI_CUSTOM_THEMES_STORAGE_KEY, JSON.stringify(themes));
 }
 
-/** @emoji 🧵️ localStorage key for WASM compute worker thread count. */
+/** @emoji 🧵️ Storage key for WASM compute worker thread count (`ui.chrome.*` namespace). */
 export const UI_COMPUTE_WORKER_COUNT_STORAGE_KEY = "ui.compute.workerCount";
 
 /** @emoji 🧵️ Default compute workers: `navigator.hardwareConcurrency` or 1. */
@@ -1829,20 +1829,18 @@ export function defaultComputeWorkerCount(): number {
   return 1;
 }
 
-/** @emoji 🧵️ Reads persisted compute worker count from localStorage. */
-export function readStoredComputeWorkerCount(): number {
-  if (typeof localStorage === "undefined") return defaultComputeWorkerCount();
-  const raw = localStorage.getItem(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY);
+/** @emoji 🧵️ Reads persisted compute worker count from the given shell's storage. */
+export function readStoredComputeWorkerCount(storage: StoragePort): number {
+  const raw = storage.get(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY);
   if (raw == null || raw === "") return defaultComputeWorkerCount();
   const parsed = Number.parseInt(raw, 10);
   if (!Number.isFinite(parsed) || parsed < 1) return defaultComputeWorkerCount();
   return parsed;
 }
 
-/** @emoji 🧵️ Persists compute worker count to localStorage. */
-export function writeStoredComputeWorkerCount(count: number): void {
-  if (typeof localStorage === "undefined") return;
-  localStorage.setItem(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY, String(Math.max(1, Math.floor(count))));
+/** @emoji 🧵️ Persists compute worker count to the given shell's storage. */
+export function writeStoredComputeWorkerCount(storage: StoragePort, count: number): void {
+  storage.set(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY, String(Math.max(1, Math.floor(count))));
 }
 
 /** @emoji 🧵️ True when SharedArrayBuffer thread pools are available. */
@@ -1851,25 +1849,25 @@ export function isCrossOriginIsolatedRuntime(): boolean {
 }
 
 /** @emoji 🧵️ Effective worker count after cross-origin isolation fallback. */
-export function effectiveComputeWorkerCount(requested = readStoredComputeWorkerCount()): number {
+export function effectiveComputeWorkerCount(storage: StoragePort, requested = readStoredComputeWorkerCount(storage)): number {
   if (!isCrossOriginIsolatedRuntime()) return 1;
   return Math.max(1, Math.floor(requested));
 }
 
-/** @emoji 🎓️ localStorage key prefix for whether an app's introduction has already been shown on this device. */
+/** @emoji 🎓️ Storage key prefix for whether an app's introduction has already been shown on this device. */
 export const UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX = "ui.introduction.seen.";
 
 /** @emoji 🎓️ Reads whether `appId`'s introduction has already been shown — auto-start checks this once
  * per app; replaying stays available via the `startIntroduction` action regardless of this flag. */
-export function readStoredIntroductionSeen(appId: string): boolean {
-  if (typeof localStorage === "undefined") return false;
-  return localStorage.getItem(`${UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}${appId}`) === "true";
+export function readStoredIntroductionSeen(storage: StoragePort, appId: string): boolean {
+  if (!appId) return false;
+  return storage.get(`${UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}${appId}`) === "true";
 }
 
 /** @emoji 🎓️ Marks `appId`'s introduction as shown so it stops auto-starting on future launches. */
-export function writeStoredIntroductionSeen(appId: string): void {
-  if (typeof localStorage === "undefined") return;
-  localStorage.setItem(`${UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}${appId}`, "true");
+export function writeStoredIntroductionSeen(storage: StoragePort, appId: string): void {
+  if (!appId) return;
+  storage.set(`${UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}${appId}`, "true");
 }
 
 import { ChromeControlHint } from "../../../../🧱️elements/🫀️core/🎛️Chrome/🟦️component.tsx";
@@ -19105,7 +19103,7 @@ if (treeVitest) {
     const storage = createBrowserStoragePort();
 
     it("defaults to desktop when nothing is stored", () => {
-      localStorage.removeItem(UI_CHROME_LAYOUT_STORAGE_KEY);
+      storage.remove(UI_CHROME_LAYOUT_STORAGE_KEY);
       expect(readStoredUiChromeLayout(storage)).toBe("desktop");
     });
 
@@ -19117,9 +19115,9 @@ if (treeVitest) {
     });
 
     it("falls back to desktop for a garbage stored value", () => {
-      localStorage.setItem(UI_CHROME_LAYOUT_STORAGE_KEY, "giant-monitor");
+      storage.set(UI_CHROME_LAYOUT_STORAGE_KEY, "giant-monitor");
       expect(readStoredUiChromeLayout(storage)).toBe("desktop");
-      localStorage.removeItem(UI_CHROME_LAYOUT_STORAGE_KEY);
+      storage.remove(UI_CHROME_LAYOUT_STORAGE_KEY);
     });
   });
 

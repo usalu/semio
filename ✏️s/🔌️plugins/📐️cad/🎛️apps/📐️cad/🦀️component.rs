@@ -33,10 +33,11 @@ use crate::artifacts::cad::{artifact_kind, cad_all_objects, cad_find_object_pane
 use base64::Engine as _;
 use semio_s_3d::brep::engine::{BrepKernel, GeometryHandle};
 use semio_framework_core::kernel::HostEffect;
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView,
     Emit, Fault, IconName, Label, WorldSunConfig, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, OsMediaFormat, SelectionSet, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure,
 };
+use store::EngineHandles;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -374,7 +375,7 @@ pub fn apply_transformation_operations(document: &CadScene, qid: &str) -> Vec<Ca
     };
     let objects = {
         let source_objects: Vec<CadObject> = cad_pane_objects(document, source_pane).to_vec();
-        let Ok(mut kernel) = cad_brep_kernel().lock() else {
+        let Ok(mut kernel) = cad_brep_kernel() else {
             return Vec::new();
         };
         let mut prepared = source_objects;
@@ -405,7 +406,7 @@ pub fn collect_modelspace_solids(kernel: &mut dyn BrepKernel, envelope: &CadPlay
 }
 
 pub fn export_solid_for_pane(envelope: &CadPlayView, pane: CadPaneId, format: OsMediaFormat) -> Option<CadSolidExport> {
-    let Ok(mut kernel) = cad_brep_kernel().lock() else {
+    let Ok(mut kernel) = cad_brep_kernel() else {
         return None;
     };
     let solids = collect_pane_solids(&mut **kernel, envelope, pane);
@@ -417,7 +418,7 @@ pub fn export_solid_for_pane(envelope: &CadPlayView, pane: CadPaneId, format: Os
 }
 
 pub fn export_solid_modelspace(envelope: &CadPlayView, format: OsMediaFormat) -> Option<CadSolidExport> {
-    let Ok(mut kernel) = cad_brep_kernel().lock() else {
+    let Ok(mut kernel) = cad_brep_kernel() else {
         return None;
     };
     let solids = collect_modelspace_solids(&mut **kernel, envelope);
@@ -676,7 +677,7 @@ pub fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPan
         solid_handle: None,
         primitives: Vec::new(),
     };
-    if let Ok(mut kernel) = cad_brep_kernel().lock() {
+    if let Ok(mut kernel) = cad_brep_kernel() {
         ensure_object_solid_handle(&mut **kernel, &mut object);
     }
     let _ = pane;
@@ -693,7 +694,7 @@ pub fn try_commit_session_operations(document: &CadScene, runtime: &mut CadPlayR
         return Vec::new();
     }
     let label_count = cad_pane_objects(document, pane).len();
-    let Ok(mut kernel) = cad_brep_kernel().lock() else {
+    let Ok(mut kernel) = cad_brep_kernel() else {
         return Vec::new();
     };
     let Some(object) = commit_object(&mut **kernel, session, label_count, next_cad_id) else {
@@ -938,25 +939,23 @@ impl DocumentApp for CadPlayApp {
     type Operation = CadOperation;
     type Config = CadConfig;
     type ConfigOperation = CadConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = CadCommand;
 
-    fn app_id(&self) -> &str {
-        CAD_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = CAD_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        CAD_DOCUMENT_SCHEMA
-    }
-
-    fn initial_projection(&self) -> CadScene {
+    fn initial_projection() -> CadScene {
         forest_play_scene()
     }
 
-    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(cad_io())
     }
 
-    fn whole_document_operation(&self, projection: CadScene) -> Option<CadOperation> {
+    fn whole_document_operation(projection: CadScene) -> Option<CadOperation> {
         Some(CadOperation::SetScene { scene: Box::new(projection) })
     }
 
@@ -964,7 +963,7 @@ impl DocumentApp for CadPlayApp {
     /// geometry from any upstream 3D producer and inserts it as a new `CadObject` in the Shape pane,
     /// through the same brep kernel every other import path shares. Falls through to the default
     /// `document:in` importer for any other port.
-    fn import_media(&self, port: &str, media: &Media, _doc: &DocumentView<'_, CadScene>) -> Result<Emit<CadOperation, CadConfigOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, CadScene>) -> Result<Emit<CadOperation, CadConfigOperation, Self::DraftOperation>, MediaError> {
         if port != "geometry:in" {
             if port != "document:in" {
                 return Err(MediaError::NotImplemented);
@@ -996,17 +995,17 @@ impl DocumentApp for CadPlayApp {
     /// 🎞️ `brep:out` (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe): exports the cad document's current
     /// brep geometry (every pane's solids fused into one modelspace, same as `saveInPlay`'s STEP export)
     /// wrapped as `Media`. Falls through to the default whole-document `document:out` for any other port.
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, CadScene>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, CadScene>) -> Result<Media, MediaError> {
         if port != "brep:out" {
             if port != "document:out" {
                 return Err(MediaError::NotImplemented);
             }
-            let media_type = self.io().map_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, |io| io.document_media_type);
+            let media_type = Self::io().map_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, |io| io.document_media_type);
             let bytes = <CadScene as store::DocumentPack>::encode_pack(doc.projection);
-            return Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
+            return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let view = CadPlayView { document: doc.projection.clone(), runtime: CadPlayRuntime::default() };
-        let Ok(mut kernel) = cad_brep_kernel().lock() else {
+        let Ok(mut kernel) = cad_brep_kernel() else {
             return Err(MediaError::Payload(port.to_string(), "brep kernel unavailable".into()));
         };
         let solids = collect_modelspace_solids(&mut **kernel, &view);
@@ -1023,16 +1022,16 @@ impl DocumentApp for CadPlayApp {
         Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "3d.cad".into(), json: base64::engine::general_purpose::STANDARD.encode(text.as_bytes()) } })
     }
 
-    fn command_id(&self, command: &CadCommand) -> &str {
+    fn command_id(command: &CadCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &CadCommand, doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    fn handle(command: &CadCommand, doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<CadOperation, CadConfigOperation, Self::DraftOperation>, Fault> {
         let mut ctx = CadDispatchCtx { preview_seq: &self.preview_seq };
         command.dispatch(doc, cfg, &mut ctx)
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>) -> UiNode {
         let view = CadPlayView { document: doc.projection.clone(), runtime: cad_runtime_from_config(cfg.projection) };
         let labels = cad_labels(cfg.projection);
         let window_kind_id = match body_key {
@@ -1056,7 +1055,7 @@ impl DocumentApp for CadPlayApp {
         }
     }
 
-    fn window_engagements(&self, doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>) -> HashMap<String, WindowEngagement> {
         let view = CadPlayView { document: doc.projection.clone(), runtime: cad_runtime_from_config(cfg.projection) };
         let labels = cad_labels(cfg.projection);
         HashMap::from([
@@ -1069,7 +1068,7 @@ impl DocumentApp for CadPlayApp {
 
     /// 🪟️ Keyed by the 4 fixed window-KIND ids; each window collects its own measures from the edit
     /// mode's `🎚️options/*` components.
-    fn window_measures(&self, _doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let runtime = cad_runtime_from_config(cfg.projection);
         let is_de = cad_is_de_locale(cfg.projection);
         HashMap::from([
@@ -1083,7 +1082,7 @@ impl DocumentApp for CadPlayApp {
     /// 🖱️ Selection-gated menu: transform/duplicate/delete only once something is selected — a bare
     /// right-click on empty World3d background (nothing selected) falls through to the shell's
     /// window-level menu (undo/redo/view actions) instead of showing an empty CAD-specific section.
-    fn context_menu(&self, _request: &ContextMenuRequest, _doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(_request: &ContextMenuRequest, _doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         if cfg.projection.selected_object_ids.is_empty() {
             return Vec::new();
         }
@@ -1188,7 +1187,7 @@ pub fn create_cad_app() -> App {
             // this same `3d.cad`/Brep information's single source of truth, reused here rather than
             // duplicated; `config_spec()` stays empty (cad has no sticky-default settings analogous to
             // shooting's format defaults — every `CadConfig` field is session view-state, not a setting).
-            .config(CadPlayApp::default().config_spec())
+            .config(CadPlayApp::config_spec())
             .io(cad_io()),
     )
     .example(CAD_EXAMPLE_FOREST_LEFT, LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Sechseckig geschnittener Betonwald links"), serde_json::to_string(&forest_play_scene()).unwrap(), "list-tree")

@@ -23,10 +23,11 @@ use crate::apps::block3d::terminology::block3d_labels;
 use crate::artifacts::block3d::op::Block3dOperation;
 use crate::artifacts::block3d::{artifact_kind, Block3dDefinition, BLOCK_3D_SCHEMA};
 use crate::core::BlockCamera3d;
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionDescriptor, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultCode, FaultOrigin, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     UiNode, UtilityDefinition,
 };
+use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -121,32 +122,30 @@ impl DocumentApp for Block3dPlayApp {
     type Operation = Block3dOperation;
     type Config = Block3dConfig;
     type ConfigOperation = Block3dConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = Block3dCommand;
 
-    fn app_id(&self) -> &str {
-        BLOCK3D_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = BLOCK3D_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = BLOCK_3D_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        BLOCK_3D_SCHEMA
-    }
-
-    fn initial_projection(&self) -> Block3dDefinition {
+    fn initial_projection() -> Block3dDefinition {
         crate::artifacts::block3d::engine::empty_block3d_definition()
     }
 
-    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(crate::artifacts::block3d::engine::block3d_io())
     }
 
-    fn command_id(&self, command: &Block3dCommand) -> &str {
+    fn command_id(command: &Block3dCommand) -> &str {
         command.command_id()
     }
 
     /// 🎯️ Maps host action id + JSON args onto `Block3dCommand` — React/wgpu still speak the stringly
     /// `{action,args}` wire; this is the typed-command bridge until those call sites send `OpBinary`
     /// bytes directly.
-    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         let str_vec_field = |key: &str| -> Vec<String> {
             args.and_then(|value| value.get(key))
@@ -225,18 +224,18 @@ impl DocumentApp for Block3dPlayApp {
         }
     }
 
-    fn handle(&self, command: &Block3dCommand, doc: &DocumentView<'_, Block3dDefinition>, cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dOperation, Block3dConfigOperation>, Fault> {
+    fn handle(command: &Block3dCommand, doc: &DocumentView<'_, Block3dDefinition>, cfg: &ConfigView<'_, Block3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block3dOperation, Block3dConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn window_measures(&self, doc: &DocumentView<'_, Block3dDefinition>, cfg: &ConfigView<'_, Block3dConfig>) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
+    fn window_measures(doc: &DocumentView<'_, Block3dDefinition>, cfg: &ConfigView<'_, Block3dConfig>) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
         let labels = block3d_labels(cfg.projection);
         let mut measures = HashMap::new();
         measures.insert(BLOCK3D_DEFAULT_WINDOW_ID.into(), world::window_measures(doc.projection, cfg.projection, BLOCK3D_DEFAULT_WINDOW_ID, labels));
         measures
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Block3dDefinition>, cfg: &ConfigView<'_, Block3dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, Block3dDefinition>, cfg: &ConfigView<'_, Block3dConfig>) -> UiNode {
         let labels = block3d_labels(cfg.projection);
         let active_representation_id = cfg.projection.active_representation_id.as_deref();
         let (base_body, window_id) = block3d_resolve_world_body(body_key);
@@ -255,7 +254,7 @@ impl DocumentApp for Block3dPlayApp {
     /// thread `ConfigView` through yet — see `Block3dConfig::wanted_tags`'s doc — so this always
     /// resolves the active representation with an empty (all-tags) filter until that lands. Falls
     /// through to the default whole-document pack export for every other port (`"document:out"`).
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, Block3dDefinition>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, Block3dDefinition>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
             // 🌉️ Reimplements `DocumentApp::export_media`'s default `"document:out"` behavior
             // verbatim — overriding the trait method forfeits the ability to delegate back to its
@@ -264,9 +263,9 @@ impl DocumentApp for Block3dPlayApp {
             if port != "document:out" {
                 return Err(MediaError::NotImplemented);
             }
-            let media_type = self.io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.document_media_type);
+            let media_type = Self::io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.document_media_type);
             let bytes = store::DocumentPack::encode_pack(doc.projection);
-            return Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
+            return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let fragment = crate::artifacts::block3d::engine::puzzle3d_catalog_fragment(doc.projection, &[]);
         Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() } })

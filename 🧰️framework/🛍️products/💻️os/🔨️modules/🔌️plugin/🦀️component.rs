@@ -97,7 +97,7 @@ pub mod app {
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
     use std::collections::{HashMap, HashSet};
-    use store::{build_history_columns, create_config_envelope, create_document_envelope, ConfigStore, DocumentCommand, DocumentPack, DocumentStore, HistoryColumn, SpaceConflict};
+    use store::{build_history_columns, create_config_envelope, create_document_envelope, ConfigStore, DocumentCommand, DocumentPack, DocumentStore, EngineHandles, HistoryColumn, SpaceConflict};
     use ui_wgpu::wgpu::{
         collect_window_kind_ids_from_layout, ui_control_to_node, ui_stack_vertical, ui_text, ui_tree_stamp_presence, ActionDescriptor, ContextMenuItemSpec, ContextMenuRequest, ContextMenuSurfaceTarget, Label, Locale, LocalizedLabel, NamedLayout,
         SurfaceKind, Terminology, UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiState, UiTreeActionPlacement, UiTreeItemAction,
@@ -1702,8 +1702,8 @@ pub mod app {
                 }
                 let staged = effective_action_args(&action.args, &DslValue::Object(Vec::new()));
                 let args_json = dsl_value_to_json(staged);
-                let command = app.command_from_action(&action.id, Some(&args_json)).unwrap_or_else(|error| panic!("action {} failed to bridge: {}", action.id, error.message));
-                assert_eq!(app.command_id(&command), action.id.as_str(), "command_id mismatch for action {}", action.id);
+                let command = A::command_from_action(&action.id, Some(&args_json)).unwrap_or_else(|error| panic!("action {} failed to bridge: {}", action.id, error.message));
+                assert_eq!(A::command_id(&command), action.id.as_str(), "command_id mismatch for action {}", action.id);
             }
         }
 
@@ -1780,9 +1780,10 @@ pub mod app {
         mod testkit_tests {
             //! 🧪️ Proves each `testkit` primitive against a minimal dummy `DocumentApp` before any real app
             //! adopts them.
-            use super::super::{ConfigView, NoConfig, NoConfigOperation};
+            use super::super::{ConfigView, DraftView, NoConfig, NoConfigOperation, NoDraft, NoDraftOperation};
             use super::*;
             use crate::app::{DocumentView, Emit};
+            use store::EngineHandles;
             use crate::{ui_text, UiNode};
             use protocol::{Operation, OperationDiff};
             use serde::{Deserialize, Serialize};
@@ -1841,31 +1842,27 @@ pub mod app {
             struct DummyApp;
 
             impl DocumentApp for DummyApp {
+                const APP_ID: &'static str = "testkit-dummy";
+                const DOCUMENT_SCHEMA: &'static str = "semio.testkit/v1";
                 type Projection = DummyProjection;
                 type Operation = DummyOperation;
                 type Config = NoConfig;
                 type ConfigOperation = NoConfigOperation;
+                type Draft = NoDraft;
+                type DraftOperation = NoDraftOperation;
                 type Command = DummyCommand;
 
-                fn app_id(&self) -> &str {
-                    "testkit-dummy"
-                }
-
-                fn document_schema(&self) -> &str {
-                    "semio.testkit/v1"
-                }
-
-                fn initial_projection(&self) -> DummyProjection {
+                fn initial_projection() -> DummyProjection {
                     DummyProjection::default()
                 }
 
-                fn handle(&self, command: &DummyCommand, doc: &DocumentView<'_, DummyProjection>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<DummyOperation>, Fault> {
+                fn handle(command: &DummyCommand, doc: &DocumentView<'_, DummyProjection>, _cfg: &ConfigView<'_, NoConfig>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<DummyOperation>, Fault> {
                     match command {
                         DummyCommand::Increment => Ok(Emit { document_operations: vec![DummyOperation::SetCount { value: doc.projection.count + 1 }], description: Some("increment".into()), ..Default::default() }),
                     }
                 }
 
-                fn render(&self, _body_key: &str, doc: &DocumentView<'_, DummyProjection>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
+                fn render(_body_key: &str, doc: &DocumentView<'_, DummyProjection>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
                     ui_text(format!("count={}", doc.projection.count))
                 }
             }
@@ -2546,6 +2543,12 @@ pub mod app {
         pub projection: &'a C,
     }
 
+    /// @emoji 📝️ Read-only view of an app's volatile draft projection — same role as {@link ConfigView}
+    /// for the draft {@link store::DraftStore} (ephemeral; never checkpoints).
+    pub struct DraftView<'a, D> {
+        pub projection: &'a D,
+    }
+
     //#region 🔖️NoConfig
     /// @emoji 🧮️ Default `DocumentApp::Config` for apps with no config artifact yet.
     #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
@@ -2601,6 +2604,13 @@ pub mod app {
         }
     }
     //#endregion 🔖️NoConfig
+
+    //#region 🔖️NoDraft
+    /// @emoji 📝️ Default `DocumentApp::Draft` for apps with no draft lane yet.
+    pub type NoDraft = NoConfig;
+    /// @emoji 📝️ Default `DocumentApp::DraftOperation` twin of {@link NoDraft}.
+    pub type NoDraftOperation = NoConfigOperation;
+    //#endregion 🔖️NoDraft
 
     //#region 🔖️CommandLog
     /// @emoji 🎚️ Tri-state operations filter of the framework history panel — `All` is the default.
@@ -2835,9 +2845,10 @@ pub mod app {
     /// for free), plus an optional description/coalesce key for the resulting edit(s), host effects
     /// (navigate/export/spawn…), and app events. `B1` rename: was `ActionEmit`, `operations` renamed
     /// `document_operations` to sit next to `config_operations` unambiguously.
-    pub struct Emit<Operation, ConfigOperation = NoConfigOperation> {
+    pub struct Emit<Operation, ConfigOperation = NoConfigOperation, DraftOperation = NoDraftOperation> {
         pub document_operations: Vec<Operation>,
         pub config_operations: Vec<ConfigOperation>,
+        pub draft_operations: Vec<DraftOperation>,
         pub description: Option<String>,
         pub coalesce_key: Option<String>,
         pub effects: Vec<HostEffect>,
@@ -2847,13 +2858,13 @@ pub mod app {
         pub ui_scope: semio_framework_core::kernel::UiDirtyScope,
     }
 
-    impl<Operation, ConfigOperation> Default for Emit<Operation, ConfigOperation> {
+    impl<Operation, ConfigOperation, DraftOperation> Default for Emit<Operation, ConfigOperation, DraftOperation> {
         fn default() -> Self {
-            Self { document_operations: Vec::new(), config_operations: Vec::new(), description: None, coalesce_key: None, effects: Vec::new(), events: Vec::new(), ui_scope: semio_framework_core::kernel::UiDirtyScope::default() }
+            Self { document_operations: Vec::new(), config_operations: Vec::new(), draft_operations: Vec::new(), description: None, coalesce_key: None, effects: Vec::new(), events: Vec::new(), ui_scope: semio_framework_core::kernel::UiDirtyScope::default() }
         }
     }
 
-    impl<Operation, ConfigOperation> Emit<Operation, ConfigOperation> {
+    impl<Operation, ConfigOperation, DraftOperation> Emit<Operation, ConfigOperation, DraftOperation> {
         /// @emoji ✏️ A document-operation emission carrying `document_operations` and nothing else.
         pub fn operations(document_operations: Vec<Operation>) -> Self {
             Self { document_operations, ..Default::default() }
@@ -2878,6 +2889,11 @@ pub mod app {
         /// changes now flow through the config store, which computes their real `backwards` itself.
         pub fn config(config_operations: Vec<ConfigOperation>) -> Self {
             Self { config_operations, ..Default::default() }
+        }
+
+        /// @emoji 📝️ A draft-operation emission carrying `draft_operations` and nothing else.
+        pub fn draft(draft_operations: Vec<DraftOperation>) -> Self {
+            Self { draft_operations, ..Default::default() }
         }
 
         /// @emoji 🔁️ `amend`'s CONFIG-targeted twin — coalesces one live gesture's ticks into a single
@@ -3251,11 +3267,19 @@ pub mod app {
     ///      amending is O(N²) (draw drafts, lowpoly strokes).
     /// - The pointer vocabulary (`canvasPointerDown/Move/Up`, `worldPointerDown/Move/Up`,
     ///   `paintStrokeBegin/End`) are `View`-kind internal action ids driving the above.
-    pub trait DocumentApp: Send + 'static {
+    pub trait DocumentApp: Default + Send + 'static {
+        /// @emoji 🪪 Stable app id — prefer this over `app_id(&self)` on the path to receiverless ZSTs.
+        const APP_ID: &'static str;
+        /// @emoji 📜️ Stable document schema id — prefer this over `document_schema(&self)`.
+        const DOCUMENT_SCHEMA: &'static str;
         type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + DocumentPack;
         type Operation: ::protocol::Operation<Self::Projection> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
         type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ConfigRecord + DocumentPack;
         type ConfigOperation: ::protocol::Operation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        /// @emoji 📝️ Volatile draft projection — use {@link NoDraft} when the app has no draft lane.
+        type Draft: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + DocumentPack;
+        /// @emoji 📝️ Draft-lane operations applied to {@link store::DraftStore}.
+        type DraftOperation: ::protocol::Operation<Self::Draft> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
         /// @emoji 🎯️ B1: this app's closed, typed command enum — the SOLE dispatch surface for
         /// `handle` below, replacing the deleted stringly-typed `handle_action`/`handle_command`/
         /// `handle_typed_command` trio. Decoded off the wire once, by `VcsDocumentApp::dispatch_typed_command`,
@@ -3264,36 +3288,43 @@ pub mod app {
         /// (see `VcsDocumentApp::dispatch_framework_action`) since they are host mechanics, not app behavior.
         type Command: ::protocol::OpBinary + Send;
 
-        fn app_id(&self) -> &str;
-        fn document_schema(&self) -> &str;
-        fn config_schema(&self) -> &str {
+        
+        
+        fn config_schema() -> &'static str {
             "config.empty"
         }
-        fn initial_projection(&self) -> Self::Projection;
-        fn initial_config(&self) -> Self::Config {
+        fn initial_projection() -> Self::Projection;
+        fn initial_config() -> Self::Config {
             Self::Config::default()
         }
+        fn initial_draft() -> Self::Draft {
+            Self::Draft::default()
+        }
         /// @emoji 🧩️ B1: the pure heart of the app — a total, side-effect-free function from
-        /// `(command, document, config)` to an {@link Emit}. No `&mut self`, no `ViewState` (ephemeral
-        /// per-window/locale/selection state now lives in `Self::Config`, keyed by window-instance id where
-        /// it varies per window). `View`-kind interactions from the pre-B1 world (camera/selection/hover/…)
-        /// emit `config_operations` here instead of mutating an app-struct field — the config store computes
-        /// their real `backwards`, so undo/redo works without any ad hoc `InverseAction`.
-        fn handle(&self, command: &Self::Command, doc: &DocumentView<'_, Self::Projection>, cfg: &ConfigView<'_, Self::Config>) -> Result<Emit<Self::Operation, Self::ConfigOperation>, Fault>;
+        /// `(command, document, config, draft, engines)` to an {@link Emit}. No `&mut self`.
+        /// `engines` is the host-owned {@link EngineHandles} bag (empty until WIT engine-derive/read
+        /// is threaded through exchange).
+        fn handle(
+            command: &Self::Command,
+            doc: &DocumentView<'_, Self::Projection>,
+            cfg: &ConfigView<'_, Self::Config>,
+            draft: &DraftView<'_, Self::Draft>,
+            engines: &EngineHandles,
+        ) -> Result<Emit<Self::Operation, Self::ConfigOperation, Self::DraftOperation>, Fault>;
         /// @emoji 🏷️ `command`'s action/command id string — used for command-log labeling and
         /// `AppActionRegistry` kind-discipline lookup (`View`/`Shell`-kind must not emit
         /// `document_operations`; `VcsDocumentApp::dispatch_typed_command_inner` enforces this when the
         /// registry has a matching declaration). Default: `"typed-command"` for every command (correct but
         /// generic — an app that wants per-command labels/kind-discipline overrides this to match the id
         /// the command was declared under in its `AppDefinition`, e.g. via `.operation`/`.view_action`).
-        fn command_id(&self, _command: &Self::Command) -> &str {
+        fn command_id(_command: &Self::Command) -> &'static str {
             "typed-command"
         }
         /// @emoji 🎯️ Builds this app's typed `Command` from a host action id + JSON args — the bridge
         /// the React/wgpu shells still speak (`{action,args}`) until every call site sends `OpBinary`
         /// bytes directly. Default rejects (same error as the pre-bridge `dispatch_action` arm); apps
         /// that the shells drive must override this so chrome actions reach `handle`.
-        fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+        fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
             Err(Fault::new(
                 FaultOrigin::App,
                 FaultCode::new("app.command.unsupported"),
@@ -3303,54 +3334,54 @@ pub mod app {
             ))
         }
         /// 🧮️ This app's typed configuration spec — empty (the default) means "no configuration options."
-        fn config_spec(&self) -> ConfigSpec {
+        fn config_spec() -> ConfigSpec {
             ConfigSpec::empty()
         }
         /// 📋️ The `MediaType` this app copies fragments as and accepts pastes of by default — `None` (the
         /// default) means this app doesn't participate in the clipboard mechanism, and `VcsDocumentApp`'s
         /// injected `copy`/`cut`/`paste` actions silently no-op. Override alongside `copy_fragment`/
         /// `cut_operations`/`paste_operations`.
-        fn clipboard_media_type(&self) -> Option<MediaType> {
+        fn clipboard_media_type() -> Option<MediaType> {
             None
         }
         /// 📋️ Every `MediaType` this app accepts a paste of — defaults to just `clipboard_media_type()`.
         /// Override to additionally accept fragments copied from a compatible sibling app (e.g. puzzle
         /// accepting a block kind-definition fragment as a catalog merge).
-        fn clipboard_accepts(&self) -> Vec<MediaType> {
-            self.clipboard_media_type().into_iter().collect()
+        fn clipboard_accepts() -> Vec<MediaType> {
+            Self::clipboard_media_type().into_iter().collect()
         }
         /// 📋️ Builds a `ClipboardFragment` from the current selection. Called by `VcsDocumentApp`'s
         /// injected `copy` and `cut` actions; `cut` additionally calls `cut_operations`. Default: always
         /// empty (apps that don't override `clipboard_media_type` never reach here in practice, since the
         /// interception only calls this when a media type is declared).
-        fn copy_fragment(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Result<ClipboardFragment, ClipboardError> {
+        fn copy_fragment( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Result<ClipboardFragment, ClipboardError> {
             Err(ClipboardError::EmptySelection)
         }
-        fn cut_operations(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Self::Operation> {
+        fn cut_operations( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Self::Operation> {
             Vec::new()
         }
-        fn paste_operations(&self, _doc: &DocumentView<'_, Self::Projection>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Operation>, ClipboardError> {
+        fn paste_operations( _doc: &DocumentView<'_, Self::Projection>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Operation>, ClipboardError> {
             Ok(Vec::new())
         }
-        fn pending_effects(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<HostEffect> {
+        fn pending_effects( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<HostEffect> {
             Vec::new()
         }
-        fn render(&self, body_key: &str, doc: &DocumentView<'_, Self::Projection>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
+        fn render(body_key: &str, doc: &DocumentView<'_, Self::Projection>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
         /// 🪟️ Keyed by window INSTANCE id — an app with two open instances of the same kind (e.g. split
         /// panes) returns one entry per instance so their chrome/options never collapse together. Apps with
         /// a single window kind and no splitting return `vec![kind_id]`-worth of entries either way.
-        fn window_engagements(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
+        fn window_engagements( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
         /// 🪟️ See `window_engagements` — same per-window-instance keying.
-        fn window_measures(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        fn window_measures( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
         /// 🛠️ Keyed by TOOL id (`AppDefinition.tools[].id`), not window instance — a tool's live options
         /// (e.g. puzzle3d fill's count slider) rendered in the mode-level tool panel rather than a
         /// window's utility-options rail. Reuses `WindowMeasure` as the shared control vocabulary; the
         /// `Group.active_utility_id` tag is simply unused for tool measures.
-        fn tool_measures(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        fn tool_measures( _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
         /// 🖱️ Answers an on-demand right-click menu request — the WIT `context-menu` export's SDK
@@ -3362,7 +3393,7 @@ pub mod app {
         /// `AppActionRegistry` (the same one `VcsDocumentApp` enforces the actions contract with) —
         /// pass it to `Menu::of(registry)` to resolve labels/icons from declared `ActionDefinition`s
         /// instead of hand-building rows.
-        fn context_menu(&self, _request: &ContextMenuRequest, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        fn context_menu( _request: &ContextMenuRequest, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
             Vec::new()
         }
         /// 🌱️ One-time hook for seeding the store's history (checkpoints/alternatives) beyond the bare
@@ -3370,20 +3401,20 @@ pub mod app {
         /// constructed, via direct `store.dispatch(...)` calls. Default no-operation; only apps whose fixture is
         /// itself a rich history (e.g. a history-UI demo/exerciser) need this — every program driven purely
         /// by user actions leaves it untouched.
-        fn seed(&self, _store: &mut DocumentStore<Self::Projection, Self::Operation>) {}
+        fn seed( _store: &mut DocumentStore<Self::Projection, Self::Operation>) {}
 
         /// 🔌️ This app's typed media I/O surface — `None` (the default) means "declares no ports beyond
         /// the implicit document ports" (`media_ports` below still returns those two). Override to return
         /// a real `AppIo` (e.g. `shooting_engine::shooting_io()`) to declare extra workflow ports.
-        fn io(&self) -> Option<AppIo> {
+        fn io() -> Option<AppIo> {
             None
         }
-        /// 🎞️ Declares this app's workflow ports — delegates to `self.io().all_ports()` (implicit
+        /// 🎞️ Declares this app's workflow ports — delegates to `Self::io().all_ports()` (implicit
         /// `document:in`/`document:out` plus any app-specific ports) when `io()` is overridden; an app that
         /// never overrides `io()` still gets no ports (matches the old `Vec::new()` default) since there is
         /// no document media type to synthesize the implicit pair from.
-        fn media_ports(&self) -> Vec<MediaPortSpec> {
-            self.io().map(|io| io.all_ports()).unwrap_or_default()
+        fn media_ports() -> Vec<MediaPortSpec> {
+            Self::io().map(|io| io.all_ports()).unwrap_or_default()
         }
         /// 🎞️ Pure projection of the current document onto one declared output port — must not mutate
         /// anything. Called by both the UI (preview/export) and a headless runner (moving media along a
@@ -3391,27 +3422,27 @@ pub mod app {
         /// `MediaError::NotImplemented` for any other port (apps declaring extra output ports override
         /// this to handle them, falling through to `DocumentApp::export_media`'s default via `_ =>` for
         /// `"document:out"` if desired).
-        fn export_media(&self, port: &str, doc: &DocumentView<'_, Self::Projection>) -> Result<Media, MediaError> {
+        fn export_media(port: &str, doc: &DocumentView<'_, Self::Projection>) -> Result<Media, MediaError> {
             if port != "document:out" {
                 return Err(MediaError::NotImplemented);
             }
-            let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+            let media_type = Self::io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
             let bytes = doc.projection.encode_pack();
-            Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+            Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
         }
         /// 🎞️ Builds the operation that replaces the whole document with `projection` — the seam the
         /// default `import_media("document:in")` below needs to turn a decoded document pack into a real,
         /// undoable operation. `None` (the default) means "not implemented" (there is no generic "replace
         /// whole projection" operation); an app whose `Operation` enum has such a variant (e.g.
         /// `SetFixture`/`SetDocument`) overrides this one-liner to unlock the default `import_media`.
-        fn whole_document_operation(&self, _projection: Self::Projection) -> Option<Self::Operation> {
+        fn whole_document_operation( _projection: Self::Projection) -> Option<Self::Operation> {
             None
         }
         /// 🎞️ Translates an incoming media value on one declared input port into operations — never mutates
         /// state directly, so a headless import is exactly as undoable/syncable as a UI edit. Default:
         /// decodes a `"document:in"` structured (base64 pack) payload via `whole_document_operation`;
         /// `MediaError::NotImplemented` for any other port or when `whole_document_operation` is `None`.
-        fn import_media(&self, port: &str, media: &Media, _doc: &DocumentView<'_, Self::Projection>) -> Result<Emit<Self::Operation, Self::ConfigOperation>, MediaError> {
+        fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Self::Projection>) -> Result<Emit<Self::Operation, Self::ConfigOperation, Self::DraftOperation>, MediaError> {
             if port != "document:in" {
                 return Err(MediaError::NotImplemented);
             }
@@ -3420,7 +3451,7 @@ pub mod app {
             };
             let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
             let projection = <Self::Projection as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-            match self.whole_document_operation(projection) {
+            match Self::whole_document_operation(projection) {
                 Some(operation) => Ok(Emit::operations(vec![operation])),
                 None => Err(MediaError::NotImplemented),
             }
@@ -3428,8 +3459,8 @@ pub mod app {
         /// 🎞️ Cheap identity for one output port's current value, without serializing the payload.
         /// Default re-derives it from `export_media`; override when a fingerprint is derivable without
         /// materializing the full export (e.g. from a cached head edit id).
-        fn media_fingerprint(&self, port: &str, doc: &DocumentView<'_, Self::Projection>) -> Result<MediaFingerprint, MediaError> {
-            self.export_media(port, doc).map(|media| MediaFingerprint::of(&media))
+        fn media_fingerprint(port: &str, doc: &DocumentView<'_, Self::Projection>) -> Result<MediaFingerprint, MediaError> {
+            Self::export_media(port, doc).map(|media| MediaFingerprint::of(&media))
         }
     }
 
@@ -3877,6 +3908,9 @@ pub mod app {
         app: A,
         store: DocumentStore<A::Projection, A::Operation>,
         config_store: ConfigStore<A::Config, A::ConfigOperation>,
+        /// @emoji 📝️ Volatile draft lane — never checkpoints; prune via `DocumentCommand::PruneDrafts`.
+        /// Moves to host `DocumentSession` when CHANNEL_VERSION 5 exchange lands.
+        draft_store: store::DraftStore<A::Draft, A::DraftOperation>,
         /// @emoji 🗂️ Keyed on `(store.generation(), log_generation, history_filter)` — any of the three
         /// changing invalidates the cached projection/`HistoryView` pair.
         cache: Option<((u64, u64, u64, HistoryCommandFilter), A::Projection, A::Config, HistoryView)>,
@@ -3906,13 +3940,16 @@ pub mod app {
         /// @emoji 🧬️ Constructs a wrapper carrying the app's {@link AppActionRegistry} so `handle_action`
         /// enforces default materialization, required-arg validation, and kind discipline.
         pub fn with_registry(app: A, registry: AppActionRegistry) -> Self {
-            let envelope = create_document_envelope::<A::Projection, A::Operation>(app.document_schema(), app.app_id(), app.initial_projection(), None);
-            let config_id = format!("{}-config", app.app_id());
-            let config_envelope = create_config_envelope::<A::Config, A::ConfigOperation>(app.config_schema(), &config_id, app.initial_config(), None);
+            let envelope = create_document_envelope::<A::Projection, A::Operation>(A::DOCUMENT_SCHEMA, A::APP_ID, A::initial_projection(), None);
+            let config_id = format!("{}-config", A::APP_ID);
+            let config_envelope = create_config_envelope::<A::Config, A::ConfigOperation>(A::config_schema(), &config_id, A::initial_config(), None);
+            let draft_id = format!("{}-draft", A::APP_ID);
+            let draft_envelope = create_document_envelope::<A::Draft, A::DraftOperation>("draft.empty", &draft_id, A::initial_draft(), None);
             let mut store = DocumentStore::new(envelope);
             let config_store = ConfigStore::new(config_envelope);
-            app.seed(&mut store);
-            Self { app, store, config_store, cache: None, registry, command_log: Vec::new(), next_command_seq: 0, log_generation: 0, history_filter: HistoryCommandFilter::default() }
+            let draft_store = store::DraftStore::new(draft_envelope);
+            A::seed(&mut store);
+            Self { app, store, config_store, draft_store, cache: None, registry, command_log: Vec::new(), next_command_seq: 0, log_generation: 0, history_filter: HistoryCommandFilter::default() }
         }
 
         #[cfg(test)]
@@ -4163,7 +4200,7 @@ pub mod app {
         /// serialize every `KernelOperation` since the gesture started (O(edit-size) per dispatch, O(edit-
         /// size²) over the whole gesture) purely to report operations the caller already knows about.
         fn result_from_last_edit(&self, verb: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework_core::kernel::UiDirtyScope, tail_offset: (usize, usize)) -> InvocationResult {
-            let schema = self.app.document_schema().to_string();
+            let schema = A::DOCUMENT_SCHEMA.to_string();
             let invocation_id = InvocationId(format!("{verb}:{}:{}", meta.instance_id, self.store.generation()));
             let document = DocumentHandle(meta.instance_id as u128);
             let mut operations: Vec<KernelOperation> = Vec::new();
@@ -4235,8 +4272,17 @@ pub mod app {
         /// undo stack), records exactly one command-log row carrying whichever edit id(s) were produced,
         /// and builds the resulting `InvocationResult` from the document side (config-only dispatches
         /// never touch `KernelOperation`/space-sync — see `🔖️CommandLog`'s doc region for why).
-        fn dispatch_emit(&mut self, verb: &str, emit: Emit<A::Operation, A::ConfigOperation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
-            let Emit { document_operations, config_operations, description, coalesce_key, effects, events, ui_scope } = emit;
+        fn dispatch_emit(&mut self, verb: &str, emit: Emit<A::Operation, A::ConfigOperation, A::DraftOperation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            let Emit { document_operations, config_operations, draft_operations, description, coalesce_key, effects, events, ui_scope } = emit;
+            eprintln!("[DEBUG] dispatch_emit doc_ops={} cfg_ops={} draft_ops={}", document_operations.len(), config_operations.len(), draft_operations.len());
+
+            // 📝️ Draft lane — ephemeral; applied without command-log rows (never checkpoints).
+            if !draft_operations.is_empty() {
+                self.draft_store.set_local_actor_id(Some(meta.actor.clone()));
+                self.draft_store
+                    .dispatch(DocumentCommand::Apply { operations: draft_operations, description: None })
+                    .map_err(|error| error.into_fault())?;
+            }
 
             // 🧮️ Config side dispatches first, independent of whether this verb ALSO touches the document
             // — captures the resulting (possibly amended) config edit id for the command-log row below.
@@ -4309,7 +4355,7 @@ pub mod app {
             if HISTORY_ACTION_IDS.contains(&action) {
                 let command = Self::history_command(action, args).ok_or_else(|| format!("history action {action} missing required argument"))?;
                 match self.store.dispatch(command) {
-                    Ok(()) => {
+                    Ok(_) => {
                         self.cache = None;
                         // 🧾️ Undo/redo/checkpoint/alternative are pure cursor motion (`edit_id: None`) —
                         // append-only: this NEVER removes a prior entry, including undo's.
@@ -4342,7 +4388,7 @@ pub mod app {
                                 let undo_count = self.store.applied_edit_ids().len() - (position + 1);
                                 for _ in 0..undo_count {
                                     match self.store.dispatch(DocumentCommand::Undo) {
-                                        Ok(()) => {}
+                    Ok(_) => {}
                                         // 🛑️ Stop early rather than error — a foreign edit further up the stack
                                         // still leaves the revert partially applied, which is the best this can do.
                                         Err(vcs::VcsError::NothingToUndo) | Err(vcs::VcsError::ForeignEdit(_)) => break,
@@ -4366,7 +4412,7 @@ pub mod app {
                                 let undo_count = self.config_store.applied_edit_ids().len() - (position + 1);
                                 for _ in 0..undo_count {
                                     match self.config_store.dispatch(DocumentCommand::Undo) {
-                                        Ok(()) => {}
+                        Ok(_) => {}
                                         Err(vcs::VcsError::NothingToUndo) | Err(vcs::VcsError::ForeignEdit(_)) => break,
                                         Err(error) => return Err(error.into_fault()),
                                     }
@@ -4434,13 +4480,13 @@ pub mod app {
                     let doc = DocumentView { projection, history };
                     let cfg = ConfigView { projection: config };
                     match action {
-                        "copy" => match app.copy_fragment(&doc, &cfg) {
+                        "copy" => match A::copy_fragment(&doc, &cfg) {
                             Ok(fragment) => Emit { effects: vec![HostEffect::ClipboardWrite { fragment }], ..Default::default() },
                             Err(_) => Emit::default(),
                         },
                         "cut" => {
-                            let fragment = app.copy_fragment(&doc, &cfg).ok();
-                            let operations = app.cut_operations(&doc, &cfg);
+                            let fragment = A::copy_fragment(&doc, &cfg).ok();
+                            let operations = A::cut_operations(&doc, &cfg);
                             let mut emit = Emit::operations(operations);
                             emit.description = Some("Cut".into());
                             if let Some(fragment) = fragment {
@@ -4452,7 +4498,7 @@ pub mod app {
                             let fragment = args.and_then(|value| value.get("fragment")).and_then(|value| serde_json::from_value::<ClipboardFragment>(value.clone()).ok());
                             let placement = args.and_then(|value| serde_json::from_value::<PastePlacement>(value.clone()).ok()).unwrap_or_default();
                             match fragment {
-                                Some(fragment) => match app.paste_operations(&doc, &fragment, &placement) {
+                                Some(fragment) => match A::paste_operations(&doc, &fragment, &placement) {
                                     Ok(operations) => {
                                         let mut emit = Emit::operations(operations);
                                         emit.description = Some("Paste".into());
@@ -4468,7 +4514,7 @@ pub mod app {
                 };
                 self.dispatch_emit(action, emit, meta)
             } else {
-                let command = self.app.command_from_action(action, args)?;
+                let command = A::command_from_action(action, args)?;
                 self.dispatch_typed_command_inner(command, meta)
             }
         }
@@ -4511,13 +4557,16 @@ pub mod app {
         /// and `dispatch_typed` (an already-typed value, for direct Rust callers — see `testkit`).
         fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             self.refresh_cache()?;
+            let draft_projection = self.draft_store.projection().map_err(|error| error.into_fault())?;
                 let (verb, emit) = {
                 let VcsDocumentApp { app, cache, .. } = self;
                 let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
                 let doc = DocumentView { projection, history };
                 let cfg = ConfigView { projection: config };
-                let verb = app.command_id(&command).to_string();
-                let emit = app.handle(&command, &doc, &cfg)?;
+                let draft = DraftView { projection: &draft_projection };
+                let engines = EngineHandles::empty();
+                let verb = A::command_id(&command).to_string();
+                let emit = A::handle(&command, &doc, &cfg, &draft, &engines)?;
                 (verb, emit)
             };
             // 🛂️ Kind discipline: a `View`/`Shell`-kind command must not emit document operations — mirrors
@@ -4550,7 +4599,7 @@ pub mod app {
                 let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
                 let doc = DocumentView { projection, history };
                 let _cfg = ConfigView { projection: config };
-                app.import_media(port, media, &doc).map_err(|error| plugin_sdk_fault(error.to_string()))?
+                A::import_media(port, media, &doc).map_err(|error| plugin_sdk_fault(error.to_string()))?
             };
             self.dispatch_emit(&format!("import-media:{port}"), emit, meta)
         }
@@ -4607,11 +4656,11 @@ pub mod app {
 
     impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         fn app_id(&self) -> &str {
-            self.app.app_id()
+            A::APP_ID
         }
 
         fn document_schema(&self) -> &str {
-            self.app.document_schema()
+            A::DOCUMENT_SCHEMA
         }
 
         fn handle_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
@@ -4656,7 +4705,7 @@ pub mod app {
         fn ingest_operations(&mut self, operations: &[u8]) -> Result<(), Fault> {
             let envelopes = protocol::decode_envelopes(operations).map_err(|error| error.into_fault())?;
             for envelope in envelopes {
-                self.store.dispatch(store::DocumentCommand::IngestRemote { envelope }).map_err(|error| error.into_fault())?;
+                self.store.dispatch(DocumentCommand::IngestRemote { envelope }).map_err(|error| error.into_fault())?;
             }
             self.cache = None;
             Ok(())
@@ -4735,35 +4784,33 @@ pub mod app {
                 let doc = DocumentView { projection: &projection, history: &history };
                 let config = self.config_store.projection().unwrap_or_else(|_| A::Config::default());
                 let cfg = ConfigView { projection: &config };
-                return Ok(self.app.render(&effective_body_key, &doc, &cfg));
+                return Ok(A::render(&effective_body_key, &doc, &cfg));
             }
             let VcsDocumentApp { app, cache, .. } = self;
             let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = DocumentView { projection, history };
             let cfg = ConfigView { projection: config };
-            Ok(app.render(&effective_body_key, &doc, &cfg))
+            Ok(A::render(&effective_body_key, &doc, &cfg))
         }
 
         fn window_engagements(&mut self) -> HashMap<String, WindowEngagement> {
             if self.refresh_cache().is_err() {
                 return HashMap::new();
             }
-            let VcsDocumentApp { app, cache, .. } = self;
-            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+            let (_, projection, config, history) = self.cache.as_ref().expect("cache refreshed above");
             let doc = DocumentView { projection, history };
             let cfg = ConfigView { projection: config };
-            app.window_engagements(&doc, &cfg)
+            A::window_engagements(&doc, &cfg)
         }
 
         fn window_measures(&mut self) -> HashMap<String, Vec<WindowMeasure>> {
             if self.refresh_cache().is_err() {
                 return HashMap::new();
             }
-            let VcsDocumentApp { app, cache, .. } = self;
-            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+            let (_, projection, config, history) = self.cache.as_ref().expect("cache refreshed above");
             let doc = DocumentView { projection, history };
             let cfg = ConfigView { projection: config };
-            app.window_measures(&doc, &cfg)
+            A::window_measures(&doc, &cfg)
         }
 
         fn tool_measures(&mut self) -> HashMap<String, Vec<WindowMeasure>> {
@@ -4774,7 +4821,7 @@ pub mod app {
             let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = DocumentView { projection, history };
             let cfg = ConfigView { projection: config };
-            app.tool_measures(&doc, &cfg)
+            A::tool_measures(&doc, &cfg)
         }
 
         fn pending_effects(&mut self) -> Vec<HostEffect> {
@@ -4785,7 +4832,7 @@ pub mod app {
             let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = DocumentView { projection, history };
             let cfg = ConfigView { projection: config };
-            app.pending_effects(&doc, &cfg)
+            A::pending_effects(&doc, &cfg)
         }
 
         /// 🗂️ Every context menu is organized (D2 of the grouped-context-menu mechanism design) at this
@@ -4799,7 +4846,7 @@ pub mod app {
             let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = DocumentView { projection, history };
             let cfg = ConfigView { projection: config };
-            let items = app.context_menu(request, &doc, &cfg, registry);
+            let items = A::context_menu(request, &doc, &cfg, registry);
             ui_wgpu::wgpu::organize_context_menu(items, &|id| registry.category_of(id))
         }
 
@@ -4809,7 +4856,7 @@ pub mod app {
             let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = DocumentView { projection, history };
             let _cfg = ConfigView { projection: config };
-            app.export_media(port, &doc)
+            A::export_media(port, &doc)
         }
 
         fn import_media(&mut self, port: &str, media: &Media, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
@@ -4824,7 +4871,7 @@ pub mod app {
             let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = DocumentView { projection, history };
             let _cfg = ConfigView { projection: config };
-            app.media_fingerprint(port, &doc)
+            A::media_fingerprint(port, &doc)
         }
     }
 
@@ -4890,16 +4937,11 @@ pub mod app {
             self
         }
 
-        /// @emoji 🧬️ Registers a typed {@link DocumentApp}, wrapping each instance in a
-        /// {@link VcsDocumentApp} so it satisfies the object-safe runtime {@link PluginApp} contract with
-        /// a persistent operation store. The only public app-registration entry point — this structurally
-        /// guarantees every app's state lives in a `DocumentStore`.
-        pub fn register_document_app<A>(self, app: App, factory: impl Fn() -> A + Send + 'static) -> Self
-        where
-            A: DocumentApp,
-        {
+        /// @emoji 🧬️ Registers a typed {@link DocumentApp} as a ZST — turbofish-only, no factory closure.
+        /// Wraps each instance in {@link VcsDocumentApp}. Stateful app structs are unrepresentable.
+        pub fn register_document_app<A: DocumentApp>(self, app: App) -> Self {
             let registry = AppActionRegistry::from_definition(&app.definition);
-            self.register_app(app, move || Box::new(VcsDocumentApp::with_registry(factory(), registry.clone())))
+            self.register_app(app, move || Box::new(VcsDocumentApp::with_registry(A::default(), registry.clone())))
         }
 
         pub fn create_app(&self, app_id: &str) -> Option<Box<dyn PluginApp>> {
@@ -5855,7 +5897,7 @@ pub mod plugin_runtime {
         fn __semio_plugin_bundle() -> $crate::PluginBundle {
             ($setup)();
             $crate::PluginBundle::new($id, $label, $version)
-                $( .register_document_app(($app_fn)(), || <$app_ty as ::std::default::Default>::default()) )+
+                $( .register_document_app::<$app_ty>(($app_fn)()) )+
         }
 
         $crate::plugin_exports!(__semio_plugin_bundle);
@@ -5894,7 +5936,8 @@ pub mod plugin_runtime {
         //! `handle_command` — everything app-specific dispatches via `dispatch_typed`.
 
         use super::ContextMenuWireRequest;
-        use crate::app::{ui_history_panel, ActionMeta, App, AppActionRegistry, CommandView, ConfigView, DocumentApp, DocumentView, Emit, HistoryCommandFilter, HistoryView, Menu, PluginApp, VcsDocumentApp};
+        use crate::app::{ui_history_panel, ActionMeta, App, AppActionRegistry, CommandView, ConfigView, DocumentApp, DocumentView, DraftView, Emit, HistoryCommandFilter, HistoryView, Menu, NoDraft, NoDraftOperation, PluginApp, VcsDocumentApp};
+        use store::EngineHandles;
         use crate::{selection_count_phrase, ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewState};
         use protocol::{Operation, OperationDiff};
         use semio_framework_core::kernel::{AppEvent, ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement, UiDirtyScope};
@@ -6045,21 +6088,17 @@ pub mod plugin_runtime {
         }
 
         impl DocumentApp for TestApp {
+            const APP_ID: &'static str = "synthetic-play";
+            const DOCUMENT_SCHEMA: &'static str = "semio.test/v1";
             type Projection = TestProjection;
             type Operation = TestOperation;
             type Config = TestConfig;
             type ConfigOperation = TestConfigOperation;
+            type Draft = NoDraft;
+            type DraftOperation = NoDraftOperation;
             type Command = TestCommand;
 
-            fn app_id(&self) -> &str {
-                "synthetic-play"
-            }
-
-            fn document_schema(&self) -> &str {
-                "semio.test/v1"
-            }
-
-            fn initial_projection(&self) -> TestProjection {
+            fn initial_projection() -> TestProjection {
                 TestProjection::default()
             }
 
@@ -6081,7 +6120,7 @@ pub mod plugin_runtime {
                 }
             }
 
-            fn handle(&self, command: &TestCommand, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> Result<Emit<TestOperation, TestConfigOperation>, Fault> {
+            fn handle(command: &TestCommand, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<TestOperation, TestConfigOperation>, Fault> {
                 self.received_actions.borrow_mut().push(self.command_id(command).to_string());
                 match command {
                     TestCommand::Increment | TestCommand::IncrementViaCommand => Ok(Emit { document_operations: vec![TestOperation::SetCount { value: doc.projection.count + 1 }], description: Some("increment".into()), ..Default::default() }),
@@ -6102,7 +6141,7 @@ pub mod plugin_runtime {
                 }
             }
 
-            fn render(&self, _body_key: &str, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> UiNode {
+            fn render(_body_key: &str, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> UiNode {
                 ui_text(format!("count={}", doc.projection.count))
             }
 
@@ -6110,7 +6149,7 @@ pub mod plugin_runtime {
                 Some(MediaType { class: MediaClass::Data, form: MediaForm::Value })
             }
 
-            fn copy_fragment(&self, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> Result<ClipboardFragment, ClipboardError> {
+            fn copy_fragment(doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> Result<ClipboardFragment, ClipboardError> {
                 if doc.projection.label.is_empty() {
                     return Err(ClipboardError::EmptySelection);
                 }
@@ -6149,7 +6188,7 @@ pub mod plugin_runtime {
             /// `contract_registry`-backed tests, which never set that label, are untouched) — a flat >9-row
             /// menu fixture for `context_menu_funnel_organizes_a_synthetic_apps_flat_overflow_menu` below,
             /// proving `VcsDocumentApp::context_menu` runs every emitter through `organize_context_menu`.
-            fn context_menu(&self, _request: &ContextMenuRequest, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+            fn context_menu(_request: &ContextMenuRequest, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
                 Menu::of(registry)
                     .action("setLabelRequired")
                     .when(!doc.projection.label.is_empty() && doc.projection.label != "flat-menu-test", |m| m.command("incrementViaCommand"))
@@ -7915,8 +7954,8 @@ pub mod engagement {
 pub use app::testkit;
 pub use app::ActionFactory;
 pub use app::{
-    node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, HistoryView, KeybindingSpec,
-    MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigOperation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBundle, VcsDocumentApp, WindowKindSpec,
+    node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, DraftView, Emit, HistoryView, KeybindingSpec,
+    MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigOperation, NoDraft, NoDraftOperation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBundle, VcsDocumentApp, WindowKindSpec,
 };
 pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};

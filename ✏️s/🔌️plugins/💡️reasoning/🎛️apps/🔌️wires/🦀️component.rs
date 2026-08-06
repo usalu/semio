@@ -25,7 +25,8 @@ use crate::apps::wires::modes::edit;
 use crate::apps::wires::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::artifacts::wires::op::MindmapWiresOperation;
 use crate::artifacts::wires::MindmapWiresDocument;
-use semio_framework_plugin::{ui_text, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ui_text, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode};
+use store::EngineHandles;
 use serde_json::Value;
 
 //#region 🔖️Constants
@@ -78,30 +79,29 @@ impl DocumentApp for ReasoningWiresPlayApp {
     type Operation = MindmapWiresOperation;
     type Config = WiresConfig;
     type ConfigOperation = WiresConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = WiresCommand;
 
-    fn app_id(&self) -> &str {
-        WIRES_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = WIRES_PLAY_APP_ID;
 
-    fn document_schema(&self) -> &str {
-        crate::artifacts::wires::MINDMAP_WIRES_SCHEMA
-    }
+    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::wires::MINDMAP_WIRES_SCHEMA;
 
-    fn initial_projection(&self) -> MindmapWiresDocument {
+    fn initial_projection() -> MindmapWiresDocument {
         crate::artifacts::wires::empty_mindmap_wires_document()
     }
 
     /// 🏷️ Supplied wholesale by `app_commands!`'s generated `command_id()`.
-    fn command_id(&self, command: &WiresCommand) -> &str {
+    fn command_id(command: &WiresCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &WiresCommand, doc: &DocumentView<'_, MindmapWiresDocument>, cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresOperation, WiresConfigOperation>, Fault> {
+    fn handle(command: &WiresCommand, doc: &DocumentView<'_, MindmapWiresDocument>, cfg: &ConfigView<'_, WiresConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<MindmapWiresOperation, WiresConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, MindmapWiresDocument>, cfg: &ConfigView<'_, WiresConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, MindmapWiresDocument>, cfg: &ConfigView<'_, WiresConfig>) -> UiNode {
         let document = doc.projection;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::apps::wires::terminology::WiresLabels>(&cfg.projection.locale);
         match body_key {
@@ -146,7 +146,7 @@ pub fn create_wires_app() -> App {
             // 🎯️ Typed channel surface (B1 pure-trait conversion) — `config_spec()`'s single source of
             // truth (the trait default `ConfigSpec::empty()`: none of `WiresConfig`'s fields are
             // user-visible settings, they're ephemeral view state) reused here rather than duplicated.
-            .config(ReasoningWiresPlayApp.config_spec()),
+            .config(ReasoningWiresPlayApp::config_spec()),
     )
     .example(WIRES_PLAY_EXAMPLE_METABOLISM_ID, LocalizedLabel::native("Metabolism", "Stoffwechsel"), serde_json::to_string(&crate::artifacts::wires::engine::metabolism_wires_example_document()).unwrap(), "network")
     .workflow("reasoning-wires", "Mindmap Wires", "graph")

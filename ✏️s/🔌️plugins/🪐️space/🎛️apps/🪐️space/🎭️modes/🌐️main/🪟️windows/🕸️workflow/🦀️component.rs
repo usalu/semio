@@ -92,7 +92,7 @@ fn workflow_camera(config: &SpaceConfig) -> OsWorkflowCamera {
     config.camera.get(S_PLAY_WINDOW_WORKFLOW).copied().map(Into::into).unwrap_or_default()
 }
 
-pub fn render(projection: &WorkflowDocument, config: &SpaceConfig) -> UiNode {
+pub fn render(app: &crate::apps::space::SpaceApp, projection: &WorkflowDocument, config: &SpaceConfig) -> UiNode {
     let graph_payload = os_workflow_to_node_graph_payload(&projection.graph);
     let camera = workflow_camera(config);
     let fixture = os_workflow_to_flow_fixture(&projection.graph, &camera);
@@ -110,7 +110,7 @@ pub fn render(projection: &WorkflowDocument, config: &SpaceConfig) -> UiNode {
             hover,
             capabilities_json: Some(r#"{"engine":"flow","spotlight":false,"noteEdit":false,"clusters":false}"#.into()),
             fixture_json: Some(fixture.to_string()),
-            presence_peers_json: Some(crate::apps::space::presence_peers_json(config)),
+            presence_peers_json: Some(crate::apps::space::presence_peers_json(app, config)),
             ..NodeGraphScene::base(json_array_to_node_graph_nodes(&graph_payload.nodes_json), json_array_to_node_graph_edges(&graph_payload.edges_json), NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom })
         },
     )

@@ -13,6 +13,7 @@ extern crate semio_framework_os_kernel as pack;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
+extern crate framework_surface_tiled_map as framework_surface_terrain;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<...Operation, ...ConfigOperation>, Fault>`, the exact signature `DocumentApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it

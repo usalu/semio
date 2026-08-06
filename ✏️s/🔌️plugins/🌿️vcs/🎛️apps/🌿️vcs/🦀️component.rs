@@ -14,7 +14,8 @@ use crate::apps::vcs::modes::edit::windows::{editor, history};
 use crate::apps::vcs::panels::{document as document_panel, inspection as inspection_panel};
 use crate::apps::vcs::terminology::vcs_play_labels;
 use crate::artifacts::vcs::{op::VcsDemoOperation, VcsDemoProjection, VCS_DEMO_SCHEMA};
-use semio_framework_plugin::{ui_text, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ui_text, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, UiNode};
+use store::EngineHandles;
 use serde_json::Value;
 use store::{DocumentCommand, DocumentStore};
 
@@ -164,36 +165,34 @@ impl DocumentApp for VcsPlayApp {
     type Operation = VcsDemoOperation;
     type Config = VcsDemoConfig;
     type ConfigOperation = VcsDemoConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = VcsCommand;
 
-    fn app_id(&self) -> &str {
-        VCS_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = VCS_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = VCS_DEMO_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        VCS_DEMO_SCHEMA
-    }
-
-    fn initial_projection(&self) -> VcsDemoProjection {
+    fn initial_projection() -> VcsDemoProjection {
         crate::artifacts::vcs::engine::empty_vcs_demo_projection()
     }
 
-    fn seed(&self, store: &mut DocumentStore<VcsDemoProjection, VcsDemoOperation>) {
+    fn seed(store: &mut DocumentStore<VcsDemoProjection, VcsDemoOperation>) {
         seed_vcs_demo_history(store);
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`. `setLocale` isn't declared in the manifest (mirrors
     /// `ShootingCommand::SetLocale` — see `shooting_ui`'s identical doc), so it skips enforcement.
-    fn command_id(&self, command: &VcsCommand) -> &str {
+    fn command_id(command: &VcsCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &VcsCommand, doc: &DocumentView<'_, VcsDemoProjection>, cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoOperation, VcsDemoConfigOperation>, Fault> {
+    fn handle(command: &VcsCommand, doc: &DocumentView<'_, VcsDemoProjection>, cfg: &ConfigView<'_, VcsDemoConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<VcsDemoOperation, VcsDemoConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, VcsDemoProjection>, cfg: &ConfigView<'_, VcsDemoConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, VcsDemoProjection>, cfg: &ConfigView<'_, VcsDemoConfig>) -> UiNode {
         let labels = vcs_play_labels(cfg.projection);
         match body_key {
             VCS_PLAY_BODY_EDITOR => editor::render(doc.projection, labels),
@@ -237,7 +236,7 @@ pub fn create_vcs_app() -> App {
             // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS Wave 1) —
             // this app has no user-visible sticky defaults, so `config_spec()` stays the trait default
             // `ConfigSpec::empty()`; declared anyway for parity with every other converted app.
-            .config(VcsPlayApp.config_spec()),
+            .config(VcsPlayApp::config_spec()),
     )
 }
 //#endregion 🔖️Manifest

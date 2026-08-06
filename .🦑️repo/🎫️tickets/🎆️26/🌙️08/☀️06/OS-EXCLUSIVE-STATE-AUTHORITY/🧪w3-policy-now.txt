@@ -1,0 +1,26 @@
+[DEBUG] invoking policy (SEMIO_OS_STATE_AUTHORITY=1)
+[DEBUG] policy probe failed: 22 |     osStateAuthority: breaches.filter((b) => String(b.kind).startsWith("os-state-authority")).length,
+23 |     byKind: Object.fromEntries([...kinds.entries()].sort((a, b) => b[1] - a[1])),
+24 |     osByKind: Object.fromEntries(osKinds),
+25 |     osSamples: breaches.filter((b) => String(b.kind).startsWith("os-state-authority")).slice(0, 40).map((b) => ({ id: b.id, kind: b.kind, scope: b.scope, line: b.line, summary: b.summary })),
+26 |   };
+27 |   writeFileSync(join(ticket, withFlag ? "🧪w3-policy-flag-on-summary.json" : "🧪w3-policy-default-summary.json"), JSON.stringify(summary, null, 2));
+                     ^
+TypeError: The "paths[0]" property must be of type string, got undefined
+ code: "ERR_INVALID_ARG_TYPE"
+
+      at /Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/OS-EXCLUSIVE-STATE-AUTHORITY/🧪w3-run-policies.ts:27:17
+
+26 |   };
+27 |   writeFileSync(join(ticket, withFlag ? "🧪w3-policy-flag-on-summary.json" : "🧪w3-policy-default-summary.json"), JSON.stringify(summary, null, 2));
+28 |   console.log(JSON.stringify({ total: summary.total, high: summary.high, osStateAuthority: summary.osStateAuthority, osByKind: summary.osByKind }, null, 2));
+29 | } catch (e) {
+30 |   console.error("[DEBUG] policy probe failed:", e);
+31 |   writeFileSync(join(ticket, "🧪w3-policy-probe-error.txt"), String(e?.stack ?? e));
+                     ^
+TypeError: The "paths[0]" property must be of type string, got undefined
+ code: "ERR_INVALID_ARG_TYPE"
+
+      at /Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/OS-EXCLUSIVE-STATE-AUTHORITY/🧪w3-run-policies.ts:31:17
+
+Bun v1.3.14 (macOS arm64)

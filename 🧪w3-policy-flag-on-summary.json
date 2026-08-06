@@ -1,0 +1,311 @@
+{
+  "flag": true,
+  "total": 595,
+  "high": 310,
+  "osStateAuthority": 102,
+  "byKind": {
+    "dsl-migration/ts-facade-completeness": 260,
+    "protocol-migration/command-envelope-completeness": 97,
+    "dsl-migration/diff-completeness": 48,
+    "pack-migration/completeness": 45,
+    "os-state-authority/authority-struct-map": 38,
+    "os-state-authority/id-minting": 32,
+    "os-state-authority/item-scope-global": 21,
+    "app-plugin/app-coupling": 16,
+    "dsl-migration/completeness": 12,
+    "os-state-authority/document-app-shape": 11,
+    "taxonomy/semio-examples": 5,
+    "budget/no-budget-null": 4,
+    "taxonomy/dirs": 3,
+    "taxonomy/lib-shape": 2,
+    "protocol-migration/db-server-only": 1
+  },
+  "osByKind": {
+    "os-state-authority/item-scope-global": 21,
+    "os-state-authority/id-minting": 32,
+    "os-state-authority/authority-struct-map": 38,
+    "os-state-authority/document-app-shape": 11
+  },
+  "osSamples": [
+    {
+      "id": "os-state-authority-static-Mutex-✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/⚙️engine/🦀️component.rs-564",
+      "kind": "os-state-authority/item-scope-global",
+      "scope": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/⚙️engine/🦀️component.rs",
+      "line": 564,
+      "summary": "\"✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/⚙️engine/🦀️component.rs:564\" declares item-scope Mutex<…> outside the OS product"
+    },
+    {
+      "id": "os-state-authority-id-mint-✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🦀️component.rs-27",
+      "kind": "os-state-authority/id-minting",
+      "scope": "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🦀️component.rs",
+      "line": 27,
+      "summary": "\"✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🦀️component.rs:27\" mints ids via AtomicU32/64 outside the OS product"
+    },
+    {
+      "id": "os-state-authority-id-mint-✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🦀️component.rs-36",
+      "kind": "os-state-authority/id-minting",
+      "scope": "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🦀️component.rs",
+      "line": 36,
+      "summary": "\"✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🦀️component.rs:36\" mints ids via AtomicU32/64 outside the OS product"
+    },
+    {
+      "id": "os-state-authority-map-field-✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎥️video/🦀️component.rs-13-PartialMovieCache",
+      "kind": "os-state-authority/authority-struct-map",
+      "scope": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎥️video/🦀️component.rs",
+      "line": 13,
+      "summary": "\"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎥️video/🦀️component.rs:13\" PartialMovieCache holds a HashMap/BTreeMap field outside the OS product"
+    },
+    {
+      "id": "os-state-authority-map-field-✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs-4791-BasicScene",
+      "kind": "os-state-authority/authority-struct-map",
+      "scope": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs",
+      "line": 4791,
+      "summary": "\"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs:4791\" BasicScene holds a HashMap/BTreeMap field outside the OS product"
+    },
+    {
+      "id": "os-state-authority-id-mint-✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs-5250",
+      "kind": "os-state-authority/id-minting",
+      "scope": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs",
+      "line": 5250,
+      "summary": "\"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs:5250\" mints ids via AtomicU32/64 outside the OS product"
+    },
+    {
+      "id": "os-state-authority-id-mint-✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs-5252",
+      "kind": "os-state-authority/id-minting",
+      "scope": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs",
+      "line": 5252,
+      "summary": "\"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs:5252\" mints ids via AtomicU32/64 outside the OS product"
+    },
+    {
+      "id": "os-state-authority-static-OnceLock-✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs-6409",
+      "kind": "os-state-authority/item-scope-global",
+      "scope": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs",
+      "line": 6409,
+      "summary": "\"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs:6409\" declares item-scope OnceLock<…> outside the OS product"
+    },
+    {
+      "id": "os-state-authority-static-OnceLock-✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs-6410",
+      "kind": "os-state-authority/item-scope-global",
+      "scope": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs",
+      "line": 6410,
+      "summary": "\"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs:6410\" declares item-scope OnceLock<…> outside the OS product"
+    },
+    {
+      "id": "os-state-authority-id-mint-✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs-6762",
+      "kind": "os-state-authority/id-minting",
+      "scope": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs",
+      "line": 6762,
+      "summary": "\"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs:6762\" mints ids via AtomicU32/64 outside the OS product"
+    },
+    {
+      "id": "os-state-authority-id-mint-✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/⚙️engine/🦀️component.rs-8",
+      "kind": "os-state-authority/id-minting",
+      "scope": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/⚙️engine/🦀️component.rs",
+      "line": 8,
+      "summary": "\"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/⚙️engine/🦀️component.rs:8\" mints ids via AtomicU32/64 outside the OS product"
+    },
+    {
+      "id": "os-state-authority-id-mint-✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/⚙️engine/🦀️component.rs-11",
+      "kind": "os-state-authority/id-minting",
+      "scope": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/⚙️engine/🦀️component.rs",
+      "line": 11,
+      "summary": "\"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/⚙️engine/🦀️component.rs:11\" mints ids via AtomicU32/64 outside the OS product"
+    },
+    {
+      "id": "os-state-authority-id-mint-✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🧱️kernel/🦀️component.rs-9",
+      "kind": "os-state-authority/id-minting",
+      "scope": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🧱️kernel/🦀️component.rs",
+      "line": 9,
+      "summary": "\"✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🧱️kernel/🦀️component.rs:9\" mints ids via AtomicU32/64 outside the OS product"
+    },
+    {
+      "id": "os-state-authority-id-mint-✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🧱️kernel/🦀️component.rs-12",
+      "kind": "os-state-authority/id-minting",
+      "scope": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🧱️kernel/🦀️component.rs",
+      "line": 12,
+      "summary": "\"✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🧱️kernel/🦀️component.rs:12\" mints ids via AtomicU32/64 outside the OS product"
+    },
+    {
+      "id": "os-state-authority-static-OnceLock-✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🦀️component.rs-133",
+      "kind": "os-state-authority/item-scope-global",
+      "scope": "✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🦀️component.rs",
+      "line": 133,
+      "summary": "\"✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🦀️component.rs:133\" declares item-scope OnceLock<…> outside the OS product"
+    },
+    {
+      "id": "os-state-authority-id-mint-✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs-16",
+      "kind": "os-state-authority/id-minting",
+      "scope": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs",
+      "line": 16,
+      "summary": "\"✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs:16\" mints ids via AtomicU32/64 outside the OS product"
+    },
+    {
+      "id": "os-state-authority-id-mint-✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs-60",
+      "kind": "os-state-authority/id-minting",
+      "scope": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs",
+      "line": 60,
+      "summary": "\"✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs:60\" mints ids via AtomicU32/64 outside the OS product"
+    },
+    {
+      "id": "os-state-authority-map-field-✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs-314-ProcessKernelSession",
+      "kind": "os-state-authority/authority-struct-map",
+      "scope": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs",
+      "line": 314,
+      "summary": "\"✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs:314\" ProcessKernelSession holds a HashMap/BTreeMap field outside the OS product"
+    },
+    {
+      "id": "os-state-authority-static-OnceLock-✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs-332",
+      "kind": "os-state-authority/item-scope-global",
+      "scope": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs",
+      "line": 332,
+      "summary": "\"✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs:332\" declares item-scope OnceLock<…> outside the OS product"
+    },
+    {
+      "id": "os-state-authority-map-field-✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🖌️session/🦀️component.rs-44-PaintTextureCache",
+      "kind": "os-state-authority/authority-struct-map",
+      "scope": "✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🖌️session/🦀️component.rs",
+      "line": 44,
+      "summary": "\"✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🖌️session/🦀️component.rs:44\" PaintTextureCache holds a HashMap/BTreeMap field outside the OS product"
+    },
+    {
+      "id": "os-state-authority-id-mint-✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/⚙️engine/🦀️component.rs-17",
+      "kind": "os-state-authority/id-minting",
+      "scope": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/⚙️engine/🦀️component.rs",
+      "line": 17,
+      "summary": "\"✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/⚙️engine/🦀️component.rs:17\" mints ids via AtomicU32/64 outside the OS product"
+    },
+    {
+      "id": "os-state-authority-id-mint-✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/⚙️engine/🦀️component.rs-133",
+      "kind": "os-state-authority/id-minting",
+      "scope": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/⚙️engine/🦀️component.rs",
+      "line": 133,
+      "summary": "\"✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/⚙️engine/🦀️component.rs:133\" mints ids via AtomicU32/64 outside the OS product"
+    },
+    {
+      "id": "os-state-authority-map-field-✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🕹️interaction/🦀️component.rs-22-CadEngagementSession",
+      "kind": "os-state-authority/authority-struct-map",
+      "scope": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🕹️interaction/🦀️component.rs",
+      "line": 22,
+      "summary": "\"✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🕹️interaction/🦀️component.rs:22\" CadEngagementSession holds a HashMap/BTreeMap field outside the OS product"
+    },
+    {
+      "id": "os-state-authority-static-OnceLock-✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🕹️interaction/🦀️component.rs-106",
+      "kind": "os-state-authority/item-scope-global",
+      "scope": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🕹️interaction/🦀️component.rs",
+      "line": 106,
+      "summary": "\"✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🕹️interaction/🦀️component.rs:106\" declares item-scope OnceLock<…> outside the OS product"
+    },
+    {
+      "id": "os-state-authority-static-OnceLock-✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🕹️interaction/🦀️component.rs-116",
+      "kind": "os-state-authority/item-scope-global",
+      "scope": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🕹️interaction/🦀️component.rs",
+      "line": 116,
+      "summary": "\"✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🕹️interaction/🦀️component.rs:116\" declares item-scope OnceLock<…> outside the OS product"
+    },
+    {
+      "id": "os-state-authority-id-mint-✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🦀️component.rs-36",
+      "kind": "os-state-authority/id-minting",
+      "scope": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🦀️component.rs",
+      "line": 36,
+      "summary": "\"✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🦀️component.rs:36\" mints ids via AtomicU32/64 outside the OS product"
+    },
+    {
+      "id": "os-state-authority-static-OnceLock-✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🦀️component.rs-62",
+      "kind": "os-state-authority/item-scope-global",
+      "scope": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🦀️component.rs",
+      "line": 62,
+      "summary": "\"✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🦀️component.rs:62\" declares item-scope OnceLock<…> outside the OS product"
+    },
+    {
+      "id": "os-state-authority-map-field-✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️component.rs-310-CadScene",
+      "kind": "os-state-authority/authority-struct-map",
+      "scope": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️component.rs",
+      "line": 310,
+      "summary": "\"✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️component.rs:310\" CadScene holds a HashMap/BTreeMap field outside the OS product"
+    },
+    {
+      "id": "os-state-authority-id-mint-✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/🦀️component.rs-16",
+      "kind": "os-state-authority/id-minting",
+      "scope": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/🦀️component.rs",
+      "line": 16,
+      "summary": "\"✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/🦀️component.rs:16\" mints ids via AtomicU32/64 outside the OS product"
+    },
+    {
+      "id": "os-state-authority-id-mint-✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/🦀️component.rs-37",
+      "kind": "os-state-authority/id-minting",
+      "scope": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/🦀️component.rs",
+      "line": 37,
+      "summary": "\"✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/🦀️component.rs:37\" mints ids via AtomicU32/64 outside the OS product"
+    },
+    {
+      "id": "os-state-authority-map-field-✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs-934-RemodelScene",
+      "kind": "os-state-authority/authority-struct-map",
+      "scope": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs",
+      "line": 934,
+      "summary": "\"✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs:934\" RemodelScene holds a HashMap/BTreeMap field outside the OS product"
+    },
+    {
+      "id": "os-state-authority-map-field-✏️s/🔌️plugins/🔋️energy/⚙️engine/🦀️kernel.rs-146-SimulationState",
+      "kind": "os-state-authority/authority-struct-map",
+      "scope": "✏️s/🔌️plugins/🔋️energy/⚙️engine/🦀️kernel.rs",
+      "line": 146,
+      "summary": "\"✏️s/🔌️plugins/🔋️energy/⚙️engine/🦀️kernel.rs:146\" SimulationState holds a HashMap/BTreeMap field outside the OS product"
+    },
+    {
+      "id": "os-state-authority-map-field-✏️s/🔌️plugins/🔋️energy/⚙️engine/🦀️kernel.rs-147-SimulationState",
+      "kind": "os-state-authority/authority-struct-map",
+      "scope": "✏️s/🔌️plugins/🔋️energy/⚙️engine/🦀️kernel.rs",
+      "line": 147,
+      "summary": "\"✏️s/🔌️plugins/🔋️energy/⚙️engine/🦀️kernel.rs:147\" SimulationState holds a HashMap/BTreeMap field outside the OS product"
+    },
+    {
+      "id": "os-state-authority-map-field-✏️s/🔌️plugins/🔋️energy/⚙️engine/🦀️meters.rs-71-MeterStore",
+      "kind": "os-state-authority/authority-struct-map",
+      "scope": "✏️s/🔌️plugins/🔋️energy/⚙️engine/🦀️meters.rs",
+      "line": 71,
+      "summary": "\"✏️s/🔌️plugins/🔋️energy/⚙️engine/🦀️meters.rs:71\" MeterStore holds a HashMap/BTreeMap field outside the OS product"
+    },
+    {
+      "id": "os-state-authority-map-field-✏️s/🔌️plugins/🔋️energy/⚙️engine/🦀️output.rs-96-TimeSeriesStore",
+      "kind": "os-state-authority/authority-struct-map",
+      "scope": "✏️s/🔌️plugins/🔋️energy/⚙️engine/🦀️output.rs",
+      "line": 96,
+      "summary": "\"✏️s/🔌️plugins/🔋️energy/⚙️engine/🦀️output.rs:96\" TimeSeriesStore holds a HashMap/BTreeMap field outside the OS product"
+    },
+    {
+      "id": "os-state-authority-map-field-✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🌍️world/🦀️component.rs-285-TrinityHost",
+      "kind": "os-state-authority/authority-struct-map",
+      "scope": "✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🌍️world/🦀️component.rs",
+      "line": 285,
+      "summary": "\"✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🌍️world/🦀️component.rs:285\" TrinityHost holds a HashMap/BTreeMap field outside the OS product"
+    },
+    {
+      "id": "os-state-authority-map-field-✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🌍️world/🦀️component.rs-286-TrinityHost",
+      "kind": "os-state-authority/authority-struct-map",
+      "scope": "✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🌍️world/🦀️component.rs",
+      "line": 286,
+      "summary": "\"✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🌍️world/🦀️component.rs:286\" TrinityHost holds a HashMap/BTreeMap field outside the OS product"
+    },
+    {
+      "id": "os-state-authority-map-field-✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🌍️world/🦀️component.rs-287-TrinityHost",
+      "kind": "os-state-authority/authority-struct-map",
+      "scope": "✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🌍️world/🦀️component.rs",
+      "line": 287,
+      "summary": "\"✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🌍️world/🦀️component.rs:287\" TrinityHost holds a HashMap/BTreeMap field outside the OS product"
+    },
+    {
+      "id": "os-state-authority-map-field-✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🦀️component.rs-79-RewriteRuleState",
+      "kind": "os-state-authority/authority-struct-map",
+      "scope": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🦀️component.rs",
+      "line": 79,
+      "summary": "\"✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🦀️component.rs:79\" RewriteRuleState holds a HashMap/BTreeMap field outside the OS product"
+    },
+    {
+      "id": "os-state-authority-map-field-✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🦀️component.rs-81-RewriteRuleState",
+      "kind": "os-state-authority/authority-struct-map",
+      "scope": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🦀️component.rs",
+      "line": 81,
+      "summary": "\"✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🦀️component.rs:81\" RewriteRuleState holds a HashMap/BTreeMap field outside the OS product"
+    }
+  ]
+}

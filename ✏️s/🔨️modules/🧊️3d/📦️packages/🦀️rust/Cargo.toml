@@ -19,8 +19,10 @@ default = ["parallel", "brep"]
 parallel = ["dep:rayon", "dep:futures"]
 brep = [
     "dep:semio-framework-core",
+    "dep:semio-framework-os-kernel",
     "dep:async-trait",
     "dep:base64",
+    "dep:blake3",
     "dep:pollster",
     "dep:brepkit-check",
     "dep:brepkit-geometry",
@@ -41,6 +43,8 @@ serde_json.workspace = true
 thiserror.workspace = true
 semio-framework-math = { workspace = true }
 semio-framework-core = { workspace = true, optional = true }
+semio-framework-os-kernel = { workspace = true, optional = true }
+blake3 = { version = "1", optional = true }
 brepkit-check = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
 brepkit-geometry = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
 brepkit-io = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }

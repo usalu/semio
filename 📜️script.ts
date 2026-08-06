@@ -2874,9 +2874,9 @@ function policyAllRustFiles(repoRoot: string): string[] {
   return found.sort();
 }
 
-type PolicyDocumentAppUsage = { scope: string; line: number; projectionType: string; operationType: string };
+type PolicyDocumentAppUsage = { scope: string; line: number; appType: string; projectionType: string; operationType: string };
 
-const POLICY_DOCUMENT_APP_IMPL_RE = /impl\s+DocumentApp\s+for\s+\w+\s*\{/g;
+const POLICY_DOCUMENT_APP_IMPL_RE = /impl\s+DocumentApp\s+for\s+(\w+)\s*\{/g;
 
 /** 🔎️Extracts `type Projection = X;` / `type Operation = Y;` (generic args stripped) from every `impl DocumentApp for … { … }` block in one file's content. */
 function policyDocumentAppUsages(scope: string, content: string): PolicyDocumentAppUsage[] {
@@ -2891,6 +2891,7 @@ function policyDocumentAppUsages(scope: string, content: string): PolicyDocument
     usages.push({
       scope,
       line: policyLineOfIndex(content, m.index),
+      appType: m[1]!,
       projectionType: projectionMatch[1]!.split("::").pop()!.replace(/<.*$/, ""),
       operationType: operationMatch[1]!.split("::").pop()!.replace(/<.*$/, ""),
     });
@@ -3328,6 +3329,223 @@ function policyDbServerOnlyBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 //#endregion 🔧️PolicyRuleDbServerOnly
+
+//#region 🔧️PolicyRuleOsStateAuthority
+/** 🏛️OS product tree — the only place authoritative/session/host state may live after Wave 3 lands. */
+const POLICY_OS_STATE_AUTHORITY_ROOT = "🧰️framework/🛍️products/💻️os/";
+/** 🚫️Separate technologies excluded from OS-state scans (compose / mit-bestand / hub). */
+const POLICY_OS_STATE_AUTHORITY_EXCLUDED_PREFIXES = ["compose/", "♻️mit-bestand/", "🌎️hub/"] as const;
+const POLICY_OS_STATE_AUTHORITY_NAME_RE = /(Store|Registry|Host|Session|Engine|Kernel|World|Scene|State|Cache)$/;
+const POLICY_OS_STATE_INTERIOR_TY_RE = /\b(?:OnceLock|OnceCell|LazyLock|Mutex|RwLock|RefCell|Cell)\s*</;
+const POLICY_OS_STATE_STATIC_MUT_RE = /^\s*(?:pub(?:\s*\([^)]*\))?\s+)?static\s+mut\b/;
+const POLICY_OS_STATE_STATIC_CONST_RE = /^\s*(?:pub(?:\s*\([^)]*\))?\s+)?(?:static|const)\s+(?:mut\s+)?\w+\s*:\s*([^;=]+)/;
+const POLICY_OS_STATE_FN_ITEM_RE = /^\s*(?:pub(?:\s*\([^)]*\))?\s+)?(?:async\s+)?(?:unsafe\s+)?(?:const\s+)?fn\s+\w+/;
+const POLICY_OS_STATE_STRUCT_RE = /^\s*(?:pub(?:\s*\([^)]*\))?\s+)?struct\s+(\w+)\b/;
+const POLICY_OS_STATE_FIELD_MAP_RE = /^\s*(?:pub(?:\s*\([^)]*\))?\s+)?(?:r#)?\w+\s*:\s*[^=\n]*(?:\bHashMap\s*<|\bBTreeMap\s*<)/;
+const POLICY_OS_STATE_SEQ_U32_RE = /\bseq\s*:\s*u32\b/;
+const POLICY_OS_STATE_ATOMIC_ID_RE = /\bAtomicU(?:32|64)\b/;
+const POLICY_OS_STATE_THREAD_LOCAL_RE = /\bthread_local!\s*(?:\{|\()/;
+const POLICY_OS_STATE_LAZY_STATIC_RE = /\blazy_static!\s*\{/;
+
+/** 🛡️True when `relPath` is in scope for OS-exclusive state authority (outside OS product; not compose/mit-bestand/hub). */
+function policyOsStateAuthorityPathInScope(relPath: string): boolean {
+  const n = relPath.replace(/^\.\//, "");
+  if (n.startsWith(POLICY_OS_STATE_AUTHORITY_ROOT)) return false;
+  if (POLICY_OS_STATE_AUTHORITY_EXCLUDED_PREFIXES.some((p) => n.startsWith(p))) return false;
+  return true;
+}
+
+/** 🏷️True when `lineNo` sits inside a `#[cfg(test)] mod …` / `mod tests` brace span. */
+function policyLineInTestMod(testSpans: readonly PolicyModSpan[], lineNo: number): boolean {
+  return testSpans.some((s) => s.startLine <= lineNo && lineNo <= s.endLine);
+}
+
+/**
+ * 📏️OS-exclusive state authority: outside `🧰️framework/🛍️products/💻️os/`, no item-scope interior
+ * mutability / TLS / lazy globals, no Store|Registry|Host|… types with HashMap/BTreeMap fields, and no
+ * `seq: u32` / `AtomicU32`/`AtomicU64` id minting. Skips test mods; excludes compose/mit-bestand/hub.
+ */
+function policyOsStateAuthorityBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    if (!policyOsStateAuthorityPathInScope(relPath)) continue;
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const lines = content.split(/\r?\n/);
+    const testSpans = policyTestModSpans(lines);
+    let depth = 0;
+    const fnBodyDepths: number[] = [];
+    const structStack: { name: string; depth: number; authority: boolean }[] = [];
+
+    lines.forEach((raw, i) => {
+      const lineNo = i + 1;
+      if (policyLineInTestMod(testSpans, lineNo)) {
+        const codeOnly = policyMaskLiterals(raw).replace(/\/\/.*$/, "");
+        depth += (codeOnly.match(/\{/g) ?? []).length - (codeOnly.match(/\}/g) ?? []).length;
+        while (fnBodyDepths.length > 0 && depth < fnBodyDepths[fnBodyDepths.length - 1]!) fnBodyDepths.pop();
+        while (structStack.length > 0 && depth <= structStack[structStack.length - 1]!.depth) structStack.pop();
+        return;
+      }
+
+      const codeOnly = policyMaskLiterals(raw).replace(/\/\/.*$/, "");
+      const inFn = fnBodyDepths.some((d) => depth >= d);
+      const opensFn = !inFn && POLICY_OS_STATE_FN_ITEM_RE.test(raw) && /\{/.test(codeOnly);
+      const structMatch = !inFn ? raw.match(POLICY_OS_STATE_STRUCT_RE) : null;
+
+      if (!inFn) {
+        if (POLICY_OS_STATE_STATIC_MUT_RE.test(raw)) {
+          breaches.push({
+            id: `os-state-authority-static-mut-${relPath}-${lineNo}`,
+            summary: `"${relPath}:${lineNo}" declares item-scope static mut outside the OS product`,
+            kind: "os-state-authority/item-scope-global",
+            scope: relPath,
+            line: lineNo,
+            priority: "high",
+            reason: "OS-exclusive state authority: item-scope static mut is forbidden outside 🧰️framework/🛍️products/💻️os/ — host DocumentStore / engine cache own authoritative state.",
+            solution: `Move the state behind an OS host API (DocumentStore dispatch, draft lane, or content-addressed engine), or relocate the item under ${POLICY_OS_STATE_AUTHORITY_ROOT}.`,
+          });
+        }
+        if (POLICY_OS_STATE_THREAD_LOCAL_RE.test(codeOnly)) {
+          breaches.push({
+            id: `os-state-authority-thread-local-${relPath}-${lineNo}`,
+            summary: `"${relPath}:${lineNo}" uses thread_local! outside the OS product`,
+            kind: "os-state-authority/item-scope-global",
+            scope: relPath,
+            line: lineNo,
+            priority: "high",
+            reason: "OS-exclusive state authority: thread_local! registries/caches are forbidden outside the OS product.",
+            solution: `Replace thread_local! with host-owned session/draft state under ${POLICY_OS_STATE_AUTHORITY_ROOT}.`,
+          });
+        }
+        if (POLICY_OS_STATE_LAZY_STATIC_RE.test(codeOnly)) {
+          breaches.push({
+            id: `os-state-authority-lazy-static-${relPath}-${lineNo}`,
+            summary: `"${relPath}:${lineNo}" uses lazy_static! outside the OS product`,
+            kind: "os-state-authority/item-scope-global",
+            scope: relPath,
+            line: lineNo,
+            priority: "high",
+            reason: "OS-exclusive state authority: lazy_static! process globals are forbidden outside the OS product.",
+            solution: `Replace lazy_static! with an OS host registry / engine cache under ${POLICY_OS_STATE_AUTHORITY_ROOT}.`,
+          });
+        }
+        const staticTy = raw.match(POLICY_OS_STATE_STATIC_CONST_RE)?.[1] ?? "";
+        if (staticTy && POLICY_OS_STATE_INTERIOR_TY_RE.test(staticTy)) {
+          const ty = staticTy.match(/\b(OnceLock|OnceCell|LazyLock|Mutex|RwLock|RefCell|Cell)\s*</)?.[1] ?? "interior";
+          breaches.push({
+            id: `os-state-authority-static-${ty}-${relPath}-${lineNo}`,
+            summary: `"${relPath}:${lineNo}" declares item-scope ${ty}<…> outside the OS product`,
+            kind: "os-state-authority/item-scope-global",
+            scope: relPath,
+            line: lineNo,
+            priority: "high",
+            reason: "OS-exclusive state authority: item-scope OnceLock/OnceCell/LazyLock/Mutex/RwLock/RefCell/Cell are forbidden outside the OS product.",
+            solution: `Delete the static/const and route ownership through the OS host (DocumentStore, draft lane, or EngineCache) under ${POLICY_OS_STATE_AUTHORITY_ROOT}.`,
+          });
+        }
+        if (POLICY_OS_STATE_SEQ_U32_RE.test(codeOnly) || POLICY_OS_STATE_ATOMIC_ID_RE.test(codeOnly)) {
+          const kind = POLICY_OS_STATE_SEQ_U32_RE.test(codeOnly) ? "seq: u32" : "AtomicU32/64";
+          breaches.push({
+            id: `os-state-authority-id-mint-${relPath}-${lineNo}`,
+            summary: `"${relPath}:${lineNo}" mints ids via ${kind} outside the OS product`,
+            kind: "os-state-authority/id-minting",
+            scope: relPath,
+            line: lineNo,
+            priority: "high",
+            reason: "OS-exclusive state authority: handle/id counters (seq: u32, AtomicU32/AtomicU64) must live in the OS host, not in plugins/s-modules/framework leaves.",
+            solution: `Replace local id minting with content-addressed handles or OS-issued ids under ${POLICY_OS_STATE_AUTHORITY_ROOT}.`,
+          });
+        }
+        const authorityStruct = structStack.length > 0 && depth > structStack[structStack.length - 1]!.depth ? structStack[structStack.length - 1] : undefined;
+        if (authorityStruct?.authority && POLICY_OS_STATE_FIELD_MAP_RE.test(raw)) {
+          breaches.push({
+            id: `os-state-authority-map-field-${relPath}-${lineNo}-${authorityStruct.name}`,
+            summary: `"${relPath}:${lineNo}" ${authorityStruct.name} holds a HashMap/BTreeMap field outside the OS product`,
+            kind: "os-state-authority/authority-struct-map",
+            scope: relPath,
+            line: lineNo,
+            priority: "high",
+            reason: "OS-exclusive state authority: types named *Store|*Registry|*Host|*Session|*Engine|*Kernel|*World|*Scene|*State|*Cache must not own HashMap/BTreeMap maps outside the OS product.",
+            solution: `Move ${authorityStruct.name}'s map ownership into OS DocumentStore / host session / engine cache, or rename if it is not authoritative state.`,
+          });
+        }
+      }
+
+      if (opensFn) fnBodyDepths.push(depth + 1);
+      if (structMatch && /\{/.test(codeOnly)) {
+        structStack.push({ name: structMatch[1]!, depth, authority: POLICY_OS_STATE_AUTHORITY_NAME_RE.test(structMatch[1]!) });
+      }
+
+      depth += (codeOnly.match(/\{/g) ?? []).length - (codeOnly.match(/\}/g) ?? []).length;
+      while (fnBodyDepths.length > 0 && depth < fnBodyDepths[fnBodyDepths.length - 1]!) fnBodyDepths.pop();
+      while (structStack.length > 0 && depth <= structStack[structStack.length - 1]!.depth) structStack.pop();
+    });
+  }
+  return breaches;
+}
+
+/** 🧬️True when `struct Name` in `content` declares at least one field (non-ZST unit/`{}` structs return false). */
+function policyStructDeclaresFields(content: string, structName: string): { line: number; hasFields: boolean } | undefined {
+  const re = new RegExp(String.raw`(?:pub(?:\s*\([^)]*\))?\s+)?struct\s+${structName}\b`, "g");
+  const m = re.exec(content);
+  if (!m) return undefined;
+  const line = policyLineOfIndex(content, m.index);
+  const rest = content.slice(m.index + m[0].length);
+  const open = rest.match(/^\s*([(;{])/);
+  if (!open) return { line, hasFields: false };
+  if (open[1] === ";") return { line, hasFields: false };
+  if (open[1] === "(") {
+    const tup = rest.match(/^\s*\(([^)]*)\)/);
+    const inner = (tup?.[1] ?? "").replace(/\/\/[^\n]*/g, "").trim();
+    return { line, hasFields: inner.length > 0 };
+  }
+  const body = policyExtractFnBody(content, m.index);
+  if (!body.startsWith("{")) return { line, hasFields: false };
+  const stripped = body
+    .slice(1, -1)
+    .replace(/\/\/[^\n]*/g, "")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .trim();
+  return { line, hasFields: stripped.length > 0 };
+}
+
+/**
+ * 📏️DocumentApp shape law: every `impl DocumentApp for X` app type must be a ZST (no fields).
+ * `register_document_app(` factory-closure args are checked only after the receiverless API lands —
+ * today `PluginBundle::register_document_app` still takes `factory: impl Fn() -> A`, so that arm is a
+ * deliberate no-op until Wave 1b deletes the factory.
+ */
+function policyDocumentAppShapeBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    const n = relPath.replace(/^\.\//, "");
+    if (POLICY_OS_STATE_AUTHORITY_EXCLUDED_PREFIXES.some((p) => n.startsWith(p))) continue;
+
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const lines = content.split(/\r?\n/);
+    const testSpans = policyTestModSpans(lines);
+
+    for (const usage of policyDocumentAppUsages(relPath, content)) {
+      if (policyLineInTestMod(testSpans, usage.line)) continue;
+      const decl = policyStructDeclaresFields(content, usage.appType);
+      if (!decl?.hasFields) continue;
+      breaches.push({
+        id: `document-app-shape-${relPath}-${usage.appType}`,
+        summary: `"${relPath}" impl DocumentApp for ${usage.appType} but ${usage.appType} declares fields (must be a ZST)`,
+        kind: "os-state-authority/document-app-shape",
+        scope: relPath,
+        line: decl.line,
+        priority: "high",
+        reason: "DocumentApp types must be receiverless ZSTs — fields become guest-owned state that bypasses the host DocumentStore.",
+        solution: `Strip fields from ${usage.appType} (move session/scratch into OS draft lane / host DocumentSession) so it is a unit struct.`,
+      });
+    }
+
+    // Receiverless register_document_app API not landed yet (`factory: impl Fn() -> A` still required) —
+    // factory-argument breach scanning stays a no-op until Wave 1b deletes the factory parameter.
+  }
+  return breaches;
+}
+//#endregion 🔧️PolicyRuleOsStateAuthority
 
 //#region 🔧️PolicyRuleNoPackFiles
 /** 🔎️Repo-wide `*.pack` file paths (repo-relative), same walker + `POLICY_SKIP_DIRS` as `policyDiscoverExampleJsonFiles`/`policyDiscoverOpsFiles`. */
@@ -4007,6 +4225,13 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyTsFacadeBreaches(repoRoot));
   breaches.push(...policyProtocolMigrationBreaches(repoRoot));
   breaches.push(...policyDbServerOnlyBreaches(repoRoot));
+  // Wave 3 OS-exclusive state authority — gated on SEMIO_OS_STATE_AUTHORITY=1 until Wave 2
+  // migrations clear all breaches (default verify/policy stays green). Flip to unconditional
+  // registration once `policyOsStateAuthorityBreaches` + `policyDocumentAppShapeBreaches` report zero.
+  if (process.env.SEMIO_OS_STATE_AUTHORITY === "1") {
+    breaches.push(...policyOsStateAuthorityBreaches(repoRoot));
+    breaches.push(...policyDocumentAppShapeBreaches(repoRoot));
+  }
   breaches.push(...policyNoPackFilesBreaches(repoRoot));
   breaches.push(...policyRawSpawnBreaches(repoRoot));
   breaches.push(...policyBudgetNullBreaches(repoRoot));

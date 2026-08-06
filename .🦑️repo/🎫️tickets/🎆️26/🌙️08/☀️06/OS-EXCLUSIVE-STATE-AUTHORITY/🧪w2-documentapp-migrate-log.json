@@ -1,0 +1,272 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🦀️component.rs",
+    "status": "migrated",
+    "structName": "WriterPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/🦀️component.rs",
+    "status": "migrated",
+    "structName": "MathematicalPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🦀️component.rs",
+    "status": "migrated",
+    "structName": "Procedural2dPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🦀️component.rs",
+    "status": "migrated",
+    "structName": "Procedural3dPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🦀️component.rs",
+    "status": "migrated",
+    "structName": "FlowPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🦀️component.rs",
+    "status": "migrated",
+    "structName": "Gis2dPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/🦀️component.rs",
+    "status": "migrated",
+    "structName": "Gis3dPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🦀️component.rs",
+    "status": "migrated",
+    "structName": "VcsPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🦀️component.rs",
+    "status": "migrated",
+    "structName": "AnimatePresentPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🦀️component.rs",
+    "status": "migrated",
+    "structName": "ShootingPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🦀️component.rs",
+    "status": "migrated",
+    "structName": "SequencePlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🦀️component.rs",
+    "status": "migrated",
+    "structName": "Fem2dPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🦀️component.rs",
+    "status": "migrated",
+    "structName": "Fem3dPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🦀️component.rs",
+    "status": "migrated",
+    "structName": "ArchitectPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🦀️component.rs",
+    "status": "migrated",
+    "structName": "Process3dPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🦀️component.rs",
+    "status": "migrated",
+    "structName": "LowpolyPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🦀️component.rs",
+    "status": "migrated",
+    "structName": "ReasoningWiresPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🦀️component.rs",
+    "status": "migrated",
+    "structName": "FormsPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🦀️component.rs",
+    "status": "migrated",
+    "structName": "LayoutPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🦀️component.rs",
+    "status": "migrated",
+    "structName": "CadPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🎛️apps/📓️iso16757/🦀️component.rs",
+    "status": "migrated",
+    "structName": "Iso16757PlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🎛️apps/📔️vdi3805/🦀️component.rs",
+    "status": "migrated",
+    "structName": "Vdi3805PlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🎛️apps/📕️din4108/🦀️component.rs",
+    "status": "migrated",
+    "structName": "Din4108PlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🎛️apps/📗️din16798/🦀️component.rs",
+    "status": "migrated",
+    "structName": "Din16798PlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1990/🦀️component.rs",
+    "status": "migrated",
+    "structName": "En1990PlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1991/🦀️component.rs",
+    "status": "migrated",
+    "structName": "En1991PlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1992/🦀️component.rs",
+    "status": "migrated",
+    "structName": "En1992PlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1993/🦀️component.rs",
+    "status": "migrated",
+    "structName": "En1993PlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1994/🦀️component.rs",
+    "status": "migrated",
+    "structName": "En1994PlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1995/🦀️component.rs",
+    "status": "migrated",
+    "structName": "En1995PlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1996/🦀️component.rs",
+    "status": "migrated",
+    "structName": "En1996PlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1997/🦀️component.rs",
+    "status": "migrated",
+    "structName": "En1997PlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1998/🦀️component.rs",
+    "status": "migrated",
+    "structName": "En1998PlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1999/🦀️component.rs",
+    "status": "migrated",
+    "structName": "En1999PlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🎛️apps/📙️din18599/🦀️component.rs",
+    "status": "migrated",
+    "structName": "Din18599PlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🦀️component.rs",
+    "status": "migrated",
+    "structName": "PlaybookPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️component.rs",
+    "status": "migrated",
+    "structName": "ModuleApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/🦀️component.rs",
+    "status": "migrated",
+    "structName": "ImperativePlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🦀️component.rs",
+    "status": "migrated",
+    "structName": "RemodelPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🦀️component.rs",
+    "status": "migrated",
+    "structName": "TrinityRewritePlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🦀️component.rs",
+    "status": "migrated",
+    "structName": "TrinityJackPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🦀️component.rs",
+    "status": "migrated",
+    "structName": "DagPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🦀️component.rs",
+    "status": "migrated",
+    "structName": "DrawPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🦀️component.rs",
+    "status": "migrated",
+    "structName": "RasterPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🦀️component.rs",
+    "status": "migrated",
+    "structName": "NotePlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🦀️component.rs",
+    "status": "migrated",
+    "structName": "Puzzle2dPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🦀️component.rs",
+    "status": "migrated",
+    "structName": "Puzzle5dPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs",
+    "status": "migrated",
+    "structName": "Puzzle3dPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🦀️component.rs",
+    "status": "migrated",
+    "structName": "Block2dPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🦀️component.rs",
+    "status": "migrated",
+    "structName": "Block5dPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🦀️component.rs",
+    "status": "migrated",
+    "structName": "Block3dPlayApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🦀️component.rs",
+    "status": "migrated",
+    "structName": "HomeApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🦀️component.rs",
+    "status": "migrated",
+    "structName": "SpaceApp"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🦀️component.rs",
+    "status": "migrated",
+    "structName": "SourcingCurateApp"
+  }
+]

@@ -4,6 +4,10 @@
 //! (`DocumentDsl`/`DocumentPack`/`pack_rt`/`DocumentCodec`) all live here — apps depend on
 //! `store`, never on `vcs`/`pack`/`dsl_core` directly (moved from `vcs/rs/lib.rs` by ticket
 //! `26/07/28/EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY`).
+//!
+//! Mutation of document state is sealed: public writes go through [`DocumentStore::dispatch`]
+//! (`Apply`/`IngestRemote`/`PruneDrafts`/…) or [`DocumentStore::reset`]. Envelope fields stay
+//! `pub` for serde/plugins; treat them as read-mostly and prefer [`DocumentEnvelopeView`].
 
 // The `crate::os_dsl::DslDocument`/`crate::os_dsl::DslOps` derive macros emit `::crate::os_store::DocumentDsl`/`::crate::os_store::OpText`
 // paths (see `dsl/derive/rs/lib.rs`), which only resolve for crates that depend on `store` as an
@@ -2345,6 +2349,10 @@ where
                     Ok(())
                 }
             }
+            DocumentCommand::IngestRemote { envelope } => {
+                let _receipt = self.ingest_remote(envelope)?;
+                Ok(())
+            }
             DocumentCommand::PruneDrafts => {
                 // Reserved for draft-lane stores ({@link DraftStore}): real prune lands with draft ops.
                 Ok(())
@@ -2387,7 +2395,7 @@ where
     /// @emoji 🕹️ Parses `command_text` via [`parse_command`] and dispatches it — the op-line
     /// textual entry point (op-efficient one-line-per-structural-field commands, indented op
     /// lines for `Apply`/`AmendLast`).
-    pub fn dispatch_text(&mut self, command_text: &str) -> Result<(), VcsError>
+    pub fn dispatch_text(&mut self, command_text: &str) -> Result<CommandReceipt, VcsError>
     where
         Operation: OpText,
     {
@@ -2397,7 +2405,7 @@ where
 
     /// @emoji 🕹️ Decodes `command_bytes` via [`decode_command`] and dispatches it — the binary
     /// entry point used for both communication (backbone/semio_hub) and storage (`.spr`).
-    pub fn dispatch_binary(&mut self, command_bytes: &[u8]) -> Result<(), VcsError>
+    pub fn dispatch_binary(&mut self, command_bytes: &[u8]) -> Result<CommandReceipt, VcsError>
     where
         Operation: OpBinary,
     {
@@ -2463,13 +2471,12 @@ where
     /// now-unblocked dependents) into the edit timeline. Closes the sync gap between
     /// `framework/sync`'s `OpDag` and the vcs edit history.
     /// @emoji 🕸️ Sole public remote write gate — parallel to `dispatch` for causal envelopes.
-    pub fn ingest_remote(&mut self, envelope: crate::os_spr::OperationEnvelope) -> Result<CommandReceipt, VcsError> {
-        let before = self.applied_edit_ids.len();
+    pub(crate) fn ingest_remote(&mut self, envelope: crate::os_spr::OperationEnvelope) -> Result<(), VcsError> {
         self.dag.insert(envelope).map_err(|error| VcsError::Backbone(error.to_string()))?;
         for envelope in self.dag.drain_applied_envelopes() {
             self.ingest_envelope(envelope)?;
         }
-        Ok(CommandReceipt { edit_ids: self.applied_edit_ids[before..].to_vec(), generation: self.generation() })
+        Ok(())
     }
 
     fn ingest_envelope(&mut self, envelope: crate::os_spr::OperationEnvelope) -> Result<(), VcsError> {

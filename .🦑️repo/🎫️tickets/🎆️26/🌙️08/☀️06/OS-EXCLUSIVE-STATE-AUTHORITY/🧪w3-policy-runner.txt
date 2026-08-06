@@ -1,0 +1,11 @@
+[DEBUG] runPolicyScript starting for ./📜️script.ts
+[DEBUG] runPolicyScript parsing policy file export
+[DEBUG] runPolicyScript resolving folder/bundle entity
+[DEBUG] runPolicyScript importing module dynamically from url /Users/ueli/Documents/semio/📜️script.ts
+[DEBUG] runPolicyScript imported module successfully
+[DEBUG] runPolicyScript invoking policy function for kind technology
+{
+  "total": 594,
+  "os": 101,
+  "cache": "/Users/ueli/Documents/semio/.🦑️repo/⚡️cache/breaches/compose.json"
+}

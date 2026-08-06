@@ -1036,7 +1036,7 @@ function FrameworkOsShellInner({
     if (!session || !activeIntroduction || shellState.tutorial.activeTutorialId != null) return;
     if (typeof window !== "undefined" && window.self !== window.top) return;
     if (suppressAutoIntroduction) return;
-    if (!replayIntroductionOnLoad && readStoredIntroductionSeen(introductionSeenKey)) return;
+    if (!replayIntroductionOnLoad && readStoredIntroductionSeen(scope.storage, introductionSeenKey)) return;
     dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
   }, [session?.app.id, activeIntroduction, introductionSeenKey, replayIntroductionOnLoad, shellState.tutorial.activeTutorialId, suppressAutoIntroduction]);
 
@@ -1116,7 +1116,7 @@ function FrameworkOsShellInner({
     (completed: boolean) => {
       if (completed && scope.rootRef.current) celebrateAllElements(CELEBRATE_STAMP_DURATION_MS, scope.rootRef.current);
       dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
-      if (persistIntroductionSeen) writeStoredIntroductionSeen(introductionSeenKey);
+      if (persistIntroductionSeen) writeStoredIntroductionSeen(scope.storage, introductionSeenKey);
     },
     [introductionSeenKey, persistIntroductionSeen],
   );

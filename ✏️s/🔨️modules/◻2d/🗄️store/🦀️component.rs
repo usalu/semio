@@ -1,10 +1,66 @@
-//! 🗄️ In-process [`crate::engine::DrawingKernel`] store with SVG/PDF/DWG export.
+//! 🗄️ [`DrawingKernel`] backed by OS engine derive — no plugin-owned `HashMap` registry.
 
 use crate::engine::{Affine2D, DrawingError, DrawingHandle, DrawingKernel, DrawingKind, DrawingNode, DrawingScene, FillStyle, GradientStop, PathSegment, SceneNode, StrokeStyle, Vec2};
 use async_trait::async_trait;
+use crate::os_engine::{Engine, EngineCache, EngineFault, EngineHandle as KernelEngineHandle, EngineKey};
+
+// #region 🔖️Engine
+/// ⚙️ Content-addressed drawing node engine (`ENGINE_ID = "s.2d.drawing"`).
+pub struct DrawingEngine;
+
+impl Engine for DrawingEngine {
+    const ENGINE_ID: &'static str = "s.2d.drawing";
+
+    fn compute(&self, input: &[u8]) -> Result<Vec<u8>, EngineFault> {
+        let node = StoredNode::decode_pack(input).map_err(|message| EngineFault::InvalidInput(message))?;
+        StoredNode::encode_pack(&node).map_err(|message| EngineFault::InvalidInput(message))
+    }
+}
+
+const ENGINE_CACHE_BUDGET_BYTES: usize = 64 * 1024 * 1024;
+
+fn map_engine_fault(fault: EngineFault) -> DrawingError {
+    match fault {
+        EngineFault::Evicted => DrawingError::MissingHandle("engine cache evicted handle".into()),
+        EngineFault::InvalidInput(message) => DrawingError::InvalidInput(message),
+        EngineFault::Compute(message) => DrawingError::Operation(message),
+        EngineFault::UnknownEngine(message) => DrawingError::Operation(message),
+    }
+}
+
+fn drawing_handle_from_key(key: EngineKey) -> DrawingHandle {
+    DrawingHandle(hex_encode(&key.0))
+}
+
+fn kernel_handle_for_drawing(handle: &DrawingHandle) -> Result<KernelEngineHandle, DrawingError> {
+    let bytes = hex_decode(handle.as_str()).map_err(|_| DrawingError::InvalidInput("invalid drawing handle hex".into()))?;
+    if bytes.len() != 32 {
+        return Err(DrawingError::InvalidInput("drawing handle length".into()));
+    }
+    let mut key = [0u8; 32];
+    key.copy_from_slice(&bytes);
+    Ok(KernelEngineHandle { key: EngineKey(key), engine_id: DrawingEngine::ENGINE_ID.to_string() })
+}
+
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+fn hex_decode(text: &str) -> Result<Vec<u8>, ()> {
+    if !text.len().is_multiple_of(2) {
+        return Err(());
+    }
+    let mut out = Vec::with_capacity(text.len() / 2);
+    for index in (0..text.len()).step_by(2) {
+        let byte = u8::from_str_radix(&text[index..index + 2], 16).map_err(|_| ())?;
+        out.push(byte);
+    }
+    Ok(out)
+}
+// #endregion 🔖️Engine
 
 // #region 🔖️Store
-#[derive(Clone)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 struct StoredNode {
     kind: DrawingKind,
     node: DrawingNode,
@@ -15,10 +71,20 @@ struct StoredNode {
     opacity: f64,
 }
 
-/// 🗄️ Scene-graph drawing store with `drawing-*` handles.
+impl StoredNode {
+    fn encode_pack(node: &StoredNode) -> Result<Vec<u8>, String> {
+        serde_json::to_vec(node).map_err(|error| error.to_string())
+    }
+
+    fn decode_pack(bytes: &[u8]) -> Result<StoredNode, String> {
+        serde_json::from_slice(bytes).map_err(|error| error.to_string())
+    }
+}
+
+/// 🗄️ [`DrawingKernel`] using engine derive (process-local [`EngineCache`] stand-in until the OS host wires [`EngineHost`]).
 pub struct DrawingStore {
-    seq: u32,
-    registry: std::collections::HashMap<String, StoredNode>,
+    cache: EngineCache,
+    live: std::collections::HashSet<String>,
 }
 
 impl Default for DrawingStore {
@@ -29,42 +95,67 @@ impl Default for DrawingStore {
 
 impl DrawingStore {
     pub fn new() -> Self {
-        Self { seq: 0, registry: std::collections::HashMap::new() }
+        let mut cache = EngineCache::new(ENGINE_CACHE_BUDGET_BYTES);
+        cache.register(DrawingEngine);
+        Self { cache, live: std::collections::HashSet::new() }
     }
 
-    fn register(&mut self, kind: DrawingKind, node: DrawingNode) -> DrawingHandle {
-        self.seq += 1;
-        let handle = DrawingHandle::new(kind, self.seq);
-        self.registry.insert(handle.as_str().to_string(), StoredNode { kind, node, transform: Affine2D::identity(), fill: None, stroke: None, clip: None, opacity: 1.0 });
-        handle
+    /// 🧩 Attach to an existing host-owned cache (registers [`DrawingEngine`]).
+    pub fn with_engine_cache(mut cache: EngineCache) -> Self {
+        cache.register(DrawingEngine);
+        Self { cache, live: std::collections::HashSet::new() }
+    }
+
+    /// 🧠 Mutable engine cache (stand-in host surface for WASM guests until real [`EngineHost`] injection).
+    pub fn engine_cache_mut(&mut self) -> &mut EngineCache {
+        &mut self.cache
+    }
+
+    fn derive_node(&mut self, node: StoredNode) -> Result<DrawingHandle, DrawingError> {
+        let pack = StoredNode::encode_pack(&node).map_err(DrawingError::InvalidInput)?;
+        let kernel_handle = self.cache.derive(DrawingEngine::ENGINE_ID, &pack).map_err(map_engine_fault)?;
+        let drawing = drawing_handle_from_key(kernel_handle.key);
+        self.live.insert(drawing.as_str().to_string());
+        Ok(drawing)
+    }
+
+    fn register(&mut self, kind: DrawingKind, node: DrawingNode) -> Result<DrawingHandle, DrawingError> {
+        self.derive_node(StoredNode { kind, node, transform: Affine2D::identity(), fill: None, stroke: None, clip: None, opacity: 1.0 })
     }
 
     fn fork(&mut self, source: &DrawingHandle) -> Result<DrawingHandle, DrawingError> {
         let entry = self.entry(source)?.clone();
-        self.seq += 1;
-        let handle = DrawingHandle::new(entry.kind, self.seq);
-        self.registry.insert(handle.as_str().to_string(), entry);
-        Ok(handle)
+        self.derive_node(entry)
     }
 
-    fn entry(&self, handle: &DrawingHandle) -> Result<&StoredNode, DrawingError> {
-        self.registry.get(handle.as_str()).ok_or_else(|| DrawingError::MissingHandle(handle.as_str().to_string()))
+    fn with_mutated<F>(&mut self, source: &DrawingHandle, mutate: F) -> Result<DrawingHandle, DrawingError>
+    where
+        F: FnOnce(&mut StoredNode),
+    {
+        let mut entry = self.entry(source)?.clone();
+        mutate(&mut entry);
+        self.derive_node(entry)
     }
 
-    fn entry_mut(&mut self, handle: &DrawingHandle) -> Result<&mut StoredNode, DrawingError> {
-        self.registry.get_mut(handle.as_str()).ok_or_else(|| DrawingError::MissingHandle(handle.as_str().to_string()))
+    fn entry(&self, handle: &DrawingHandle) -> Result<StoredNode, DrawingError> {
+        if !self.live.contains(handle.as_str()) {
+            return Err(DrawingError::MissingHandle(handle.as_str().to_string()));
+        }
+        let kernel_handle = kernel_handle_for_drawing(handle)?;
+        let pack = self.cache.read(&kernel_handle).map_err(map_engine_fault)?;
+        StoredNode::decode_pack(&pack).map_err(DrawingError::InvalidInput)
     }
 
     pub fn registry_len(&self) -> usize {
-        self.registry.len()
+        self.live.len()
     }
 
     pub fn dispose_sync(&mut self, handle: &DrawingHandle) {
-        self.registry.remove(handle.as_str());
+        self.live.remove(handle.as_str());
     }
 
     pub fn retain_sync(&mut self, live: &std::collections::HashSet<String>) {
-        self.registry.retain(|handle, _| live.contains(handle));
+        self.live.retain(|handle| live.contains(handle));
     }
 
     fn node_to_segments(node: &DrawingNode) -> Vec<PathSegment> {
@@ -152,20 +243,20 @@ impl DrawingStore {
             if segments.len() < 2 {
                 continue;
             }
-            children.push(self.register(DrawingKind::Path, DrawingNode::Path { segments }));
+            children.push(self.register(DrawingKind::Path, DrawingNode::Path { segments })?);
         }
         for entity in &drawing.entities {
             if let semio_framework_core::DwgGeometry::Text { at, height, content, .. } = &entity.geometry {
-                children.push(self.register(DrawingKind::Text, DrawingNode::Text { x: at[0], y: at[1], content: content.clone(), size: *height }));
+                children.push(self.register(DrawingKind::Text, DrawingNode::Text { x: at[0], y: at[1], content: content.clone(), size: *height })?);
             }
         }
         if children.is_empty() {
-            return Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [0.0, 0.0] }] }));
+            return Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [0.0, 0.0] }] })?);
         }
         if children.len() == 1 {
             return Ok(children.into_iter().next().expect("children.len() == 1 checked above"));
         }
-        Ok(self.register(DrawingKind::Group, DrawingNode::Group { children: children.iter().map(|h| h.as_str().to_string()).collect() }))
+        Ok(self.register(DrawingKind::Group, DrawingNode::Group { children: children.iter().map(|h| h.as_str().to_string()).collect() })?)
     }
 }
 // #endregion 🔖️Store
@@ -458,49 +549,45 @@ fn serialize_pdf(scene: &DrawingScene) -> Vec<u8> {
 #[async_trait(?Send)]
 impl DrawingKernel for DrawingStore {
     async fn rect(&mut self, x: f64, y: f64, width: f64, height: f64) -> Result<DrawingHandle, DrawingError> {
-        Ok(self.register(DrawingKind::Rect, DrawingNode::Rect { x, y, width, height }))
+        Ok(self.register(DrawingKind::Rect, DrawingNode::Rect { x, y, width, height })?)
     }
 
     async fn ellipse(&mut self, cx: f64, cy: f64, rx: f64, ry: f64) -> Result<DrawingHandle, DrawingError> {
-        Ok(self.register(DrawingKind::Ellipse, DrawingNode::Ellipse { cx, cy, rx, ry }))
+        Ok(self.register(DrawingKind::Ellipse, DrawingNode::Ellipse { cx, cy, rx, ry })?)
     }
 
     async fn circle(&mut self, cx: f64, cy: f64, r: f64) -> Result<DrawingHandle, DrawingError> {
-        Ok(self.register(DrawingKind::Circle, DrawingNode::Circle { cx, cy, r }))
+        Ok(self.register(DrawingKind::Circle, DrawingNode::Circle { cx, cy, r })?)
     }
 
     async fn line(&mut self, x1: f64, y1: f64, x2: f64, y2: f64) -> Result<DrawingHandle, DrawingError> {
-        Ok(self.register(DrawingKind::Line, DrawingNode::Line { x1, y1, x2, y2 }))
+        Ok(self.register(DrawingKind::Line, DrawingNode::Line { x1, y1, x2, y2 })?)
     }
 
     async fn polygon(&mut self, points: &[Vec2]) -> Result<DrawingHandle, DrawingError> {
         if points.len() < 3 {
             return Err(DrawingError::InvalidInput("polygon needs at least 3 points".into()));
         }
-        Ok(self.register(DrawingKind::Polygon, DrawingNode::Polygon { points: points.to_vec() }))
+        Ok(self.register(DrawingKind::Polygon, DrawingNode::Polygon { points: points.to_vec() })?)
     }
 
     async fn polyline_path(&mut self, points: &[Vec2]) -> Result<DrawingHandle, DrawingError> {
         if points.len() < 2 {
             return Err(DrawingError::InvalidInput("polyline needs at least 2 points".into()));
         }
-        Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: polyline_segments(points) }))
+        Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: polyline_segments(points) })?)
     }
 
     async fn rect_path(&mut self, x: f64, y: f64, width: f64, height: f64) -> Result<DrawingHandle, DrawingError> {
-        Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: rect_segments(x, y, width, height) }))
+        Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: rect_segments(x, y, width, height) })?)
     }
 
     async fn set_fill(&mut self, handle: &DrawingHandle, fill: FillStyle) -> Result<DrawingHandle, DrawingError> {
-        let next = self.fork(handle)?;
-        self.entry_mut(&next)?.fill = Some(fill);
-        Ok(next)
+        self.with_mutated(handle, |entry| entry.fill = Some(fill))
     }
 
     async fn set_stroke(&mut self, handle: &DrawingHandle, stroke: StrokeStyle) -> Result<DrawingHandle, DrawingError> {
-        let next = self.fork(handle)?;
-        self.entry_mut(&next)?.stroke = Some(stroke);
-        Ok(next)
+        self.with_mutated(handle, |entry| entry.stroke = Some(stroke))
     }
 
     async fn linear_gradient_fill(&mut self, handle: &DrawingHandle, x1: f64, y1: f64, x2: f64, y2: f64, stops: &[GradientStop]) -> Result<DrawingHandle, DrawingError> {
@@ -508,24 +595,15 @@ impl DrawingKernel for DrawingStore {
     }
 
     async fn translate(&mut self, handle: &DrawingHandle, dx: f64, dy: f64) -> Result<DrawingHandle, DrawingError> {
-        let next = self.fork(handle)?;
-        let transform = self.entry(&next)?.transform;
-        self.entry_mut(&next)?.transform = transform.multiply(Affine2D::translate(dx, dy));
-        Ok(next)
+        self.with_mutated(handle, |entry| entry.transform = entry.transform.multiply(Affine2D::translate(dx, dy)))
     }
 
     async fn rotate(&mut self, handle: &DrawingHandle, angle: f64) -> Result<DrawingHandle, DrawingError> {
-        let next = self.fork(handle)?;
-        let transform = self.entry(&next)?.transform;
-        self.entry_mut(&next)?.transform = transform.multiply(Affine2D::rotate(angle));
-        Ok(next)
+        self.with_mutated(handle, |entry| entry.transform = entry.transform.multiply(Affine2D::rotate(angle)))
     }
 
     async fn scale(&mut self, handle: &DrawingHandle, sx: f64, sy: f64) -> Result<DrawingHandle, DrawingError> {
-        let next = self.fork(handle)?;
-        let transform = self.entry(&next)?.transform;
-        self.entry_mut(&next)?.transform = transform.multiply(Affine2D::scale(sx, sy));
-        Ok(next)
+        self.with_mutated(handle, |entry| entry.transform = entry.transform.multiply(Affine2D::scale(sx, sy)))
     }
 
     async fn group(&mut self, children: &[DrawingHandle]) -> Result<DrawingHandle, DrawingError> {
@@ -533,7 +611,7 @@ impl DrawingKernel for DrawingStore {
             return Err(DrawingError::InvalidInput("group needs children".into()));
         }
         let handles: Vec<String> = children.iter().map(|h| h.as_str().to_string()).collect();
-        Ok(self.register(DrawingKind::Group, DrawingNode::Group { children: handles }))
+        Ok(self.register(DrawingKind::Group, DrawingNode::Group { children: handles })?)
     }
 
     async fn bool_union(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, DrawingError> {
@@ -566,7 +644,7 @@ impl DrawingKernel for DrawingStore {
         #[cfg(feature = "booleans")]
         {
             let merged = crate::booleans::boolean_paths_many(&segments_list, operation)?;
-            return Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: merged }));
+            return Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: merged })?);
         }
         #[cfg(not(feature = "booleans"))]
         {
@@ -591,7 +669,7 @@ impl DrawingKernel for DrawingStore {
         #[cfg(feature = "trace")]
         {
             let segments = crate::trace::trace_bitmap_paths(width, height, mask_or_luma, threshold, simplify_epsilon)?;
-            return Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments }));
+            return Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments })?);
         }
         #[cfg(not(feature = "trace"))]
         {
@@ -601,14 +679,12 @@ impl DrawingKernel for DrawingStore {
     }
 
     async fn text(&mut self, x: f64, y: f64, content: &str, size: f64) -> Result<DrawingHandle, DrawingError> {
-        Ok(self.register(DrawingKind::Text, DrawingNode::Text { x, y, content: content.to_string(), size }))
+        Ok(self.register(DrawingKind::Text, DrawingNode::Text { x, y, content: content.to_string(), size })?)
     }
 
     async fn apply_clip(&mut self, target: &DrawingHandle, clip: &DrawingHandle) -> Result<DrawingHandle, DrawingError> {
         let clip_segments = DrawingStore::node_to_segments(&self.entry(clip)?.node);
-        let next = self.fork(target)?;
-        self.entry_mut(&next)?.clip = Some(clip_segments);
-        Ok(next)
+        self.with_mutated(target, |entry| entry.clip = Some(clip_segments))
     }
 
     async fn flatten_scene(&self, handle: &DrawingHandle) -> Result<DrawingScene, DrawingError> {
@@ -651,7 +727,7 @@ impl DrawingStore {
         #[cfg(feature = "booleans")]
         {
             let merged = crate::booleans::boolean_paths(&a_segments, &b_segments, operation)?;
-            Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: merged }))
+            Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: merged })?)
         }
         #[cfg(not(feature = "booleans"))]
         {
@@ -926,11 +1002,11 @@ mod tests {
     }
 
     #[test]
-    fn bool_op_many_forks_single_handle() {
+    fn bool_op_many_single_handle_is_content_addressed() {
         let mut store = DrawingStore::new();
         let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
         let forked = block_on(store.bool_op_many("union", std::slice::from_ref(&rect))).unwrap();
-        assert_ne!(forked.as_str(), rect.as_str());
+        assert_eq!(forked.as_str(), rect.as_str());
         assert_eq!(block_on(store.kind(&forked)).unwrap(), DrawingKind::Rect);
     }
 
@@ -1013,7 +1089,7 @@ mod tests {
     #[test]
     fn missing_handle_errors_on_set_fill_and_translate() {
         let mut store = DrawingStore::new();
-        let bogus = DrawingHandle("drawing-rect-999".to_string());
+        let bogus = DrawingHandle("not-valid-hex".to_string());
         let fill_err = block_on(store.set_fill(&bogus, FillStyle::Solid { color: [0.0, 0.0, 0.0, 1.0] })).unwrap_err();
         assert!(matches!(fill_err, DrawingError::MissingHandle(_)));
         let translate_err = block_on(store.translate(&bogus, 1.0, 1.0)).unwrap_err();
@@ -1023,7 +1099,7 @@ mod tests {
     #[test]
     fn flatten_scene_errors_on_missing_handle() {
         let store = DrawingStore::new();
-        let bogus = DrawingHandle("drawing-rect-999".to_string());
+        let bogus = DrawingHandle("not-valid-hex".to_string());
         let err = block_on(store.flatten_scene(&bogus)).unwrap_err();
         assert!(matches!(err, DrawingError::MissingHandle(_)));
     }
@@ -1073,5 +1149,29 @@ mod tests {
         assert!(scene.height >= 720.0);
     }
     // #endregion Scene bounds
+
+    // #region Engine derive
+    #[test]
+    fn drawing_engine_id_matches_os_contract() {
+        assert_eq!(DrawingEngine::ENGINE_ID, "s.2d.drawing");
+    }
+
+    #[test]
+    fn derive_twice_same_node_is_same_handle() {
+        let mut store = DrawingStore::new();
+        let first = block_on(store.rect(1.0, 2.0, 3.0, 4.0)).unwrap();
+        let second = block_on(store.rect(1.0, 2.0, 3.0, 4.0)).unwrap();
+        assert_eq!(first.as_str(), second.as_str());
+        assert_eq!(store.registry_len(), 2);
+    }
+
+    #[test]
+    fn handles_are_hex_engine_keys() {
+        let mut store = DrawingStore::new();
+        let rect = block_on(store.rect(0.0, 0.0, 1.0, 1.0)).unwrap();
+        assert_eq!(rect.as_str().len(), 64);
+        assert!(rect.as_str().chars().all(|ch| ch.is_ascii_hexdigit()));
+    }
+    // #endregion Engine derive
 }
 // #endregion 🔖️Tests

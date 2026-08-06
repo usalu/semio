@@ -223,6 +223,8 @@ impl Domain {
 
 // #region 🔖️Store
 /// 📦️ One [`Domain`] per solver variable, stored contiguously (struct-of-arrays friendly).
+///
+/// Algorithm-local scratch during WFC search — caller-owned, not OS document authority (`Vec` only).
 #[derive(Clone, Debug)]
 pub struct DomainStore {
     domains: Vec<Domain>,

@@ -1,0 +1,20 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling serde v1.0.229
+   Compiling thiserror v2.0.19
+   Compiling blake3 v1.8.6
+   Compiling syn v3.0.3
+   Compiling thiserror-impl v2.0.19
+   Compiling serde_derive v1.0.229
+   Compiling m2-engine-harness v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/OS-EXCLUSIVE-STATE-AUTHORITY/🧪m2-engine-harness)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.51s
+     Running unittests src/lib.rs (target/debug/deps/m2_engine_harness-272c8bef73435879)
+[DEBUG] engine cache MISS engine_id=echo
+[DEBUG] engine cache MISS engine_id=echo
+[DEBUG] engine cache MISS engine_id=echo
+[DEBUG] engine cache MISS engine_id=missing
+[DEBUG] engine cache MISS engine_id=echo
+[DEBUG] engine cache HIT engine_id=echo key=EngineKey([18, 134, 168, 229, 44, 246, 95, 93, 82, 174, 125, 226, 53, 9, 156, 129, 184, 136, 217, 103, 58, 69, 250, 221, 110, 252, 237, 252, 143, 233, 22, 67])
+[DEBUG] engine cache HIT engine_id=echo key=EngineKey([162, 124, 195, 25, 93, 40, 98, 82, 168, 229, 109, 248, 40, 87, 13, 111, 223, 248, 225, 68, 81, 194, 112, 228, 12, 230, 129, 211, 33, 22, 151, 119])
+   Doc-tests m2_engine_harness

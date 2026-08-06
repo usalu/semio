@@ -3,7 +3,6 @@
 
 use crate::action_bus::ActionBus;
 use crate::ui::AppDefinition;
-use std::sync::atomic::{AtomicU64, Ordering};
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct PanelVisibility {
@@ -29,8 +28,6 @@ pub struct Platform {
     pub panel_visibility: PanelVisibility,
     pub id: String,
     pub name: String,
-    generation_counter: AtomicU64,
-    chrome_generation_counter: AtomicU64,
 }
 
 impl Platform {
@@ -47,8 +44,6 @@ impl Platform {
             panel_visibility,
             id: spec.id,
             name: spec.name,
-            generation_counter: AtomicU64::new(0),
-            chrome_generation_counter: AtomicU64::new(0),
         }
     }
 
@@ -84,11 +79,11 @@ impl Platform {
     }
 
     pub fn notify(&mut self) {
-        self.generation = self.generation_counter.fetch_add(1, Ordering::SeqCst) + 1;
+        self.generation = self.generation.saturating_add(1);
     }
 
     pub fn notify_chrome(&mut self) {
-        self.chrome_generation = self.chrome_generation_counter.fetch_add(1, Ordering::SeqCst) + 1;
+        self.chrome_generation = self.chrome_generation.saturating_add(1);
     }
 }
 

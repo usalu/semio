@@ -22,12 +22,16 @@ use crate::apps::layout::panels::{catalogue as catalogue_panel, document as docu
 use crate::apps::layout::terminology::{layout_labels, LayoutLabels};
 use crate::artifacts::layout::op::LayoutOperation;
 use crate::artifacts::layout::LayoutDocument;
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     OsMediaCapability, OsMediaFormat, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
 };
+use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
+use std::sync::Mutex;
+
+use crate::artifacts::layout::engine::scene::LayoutEngine;
 
 //#region 🔖️Constants
 pub const LAYOUT_PLAY_APP_ID: &str = "layout-play";
@@ -120,7 +124,7 @@ fn layout_window_engagement(config: &LayoutConfig, label: &str, labels: &LayoutL
 
 //#region 🔖️LayoutPlayApp
 /// 🧪️ B1: unit struct — every former `LayoutPlayRuntime` field now lives in [`LayoutConfig`], written
-/// through [`LayoutConfigOperation`]s.
+/// through [`LayoutConfigOperation`]s. Parley/font layout state stays on the app instance.
 #[derive(Default)]
 pub struct LayoutPlayApp;
 
@@ -129,30 +133,28 @@ impl DocumentApp for LayoutPlayApp {
     type Operation = LayoutOperation;
     type Config = LayoutConfig;
     type ConfigOperation = LayoutConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = LayoutCommand;
 
-    fn app_id(&self) -> &str {
-        LAYOUT_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = LAYOUT_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::layout::LAYOUT_FIXTURE_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        crate::artifacts::layout::LAYOUT_FIXTURE_SCHEMA
-    }
-
-    fn initial_projection(&self) -> LayoutDocument {
+    fn initial_projection() -> LayoutDocument {
         crate::artifacts::layout::engine::default_document()
     }
 
-    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(crate::artifacts::layout::engine::layout_io())
     }
 
     /// 🏷️ Supplied wholesale by `app_commands!`'s generated `command_id()`.
-    fn command_id(&self, command: &LayoutCommand) -> &str {
+    fn command_id(command: &LayoutCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &LayoutCommand, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutOperation, LayoutConfigOperation>, Fault> {
+    fn handle(command: &LayoutCommand, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LayoutOperation, LayoutConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -163,7 +165,7 @@ impl DocumentApp for LayoutPlayApp {
     /// `export_document_svg` (the same exporter `exportSvg`/`LayoutCommand::ExportSvg` use). No `cfg`
     /// parameter reaches this method, so there is no config-carried "active page" to prefer over the
     /// first page.
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, LayoutDocument>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, LayoutDocument>) -> Result<Media, MediaError> {
         match port {
             "document:out" => {
                 let bytes = store::DocumentPack::encode_pack(doc.projection);
@@ -184,7 +186,7 @@ impl DocumentApp for LayoutPlayApp {
     /// field-binding concept for frames/stories yet, so this stores the dictionary verbatim as a new
     /// named data source (see `crate::artifacts::layout::LayoutDocument::data_fields_json`'s doc) rather
     /// than wiring it into rendering today.
-    fn import_media(&self, port: &str, media: &Media, _doc: &DocumentView<'_, LayoutDocument>) -> Result<Emit<LayoutOperation, LayoutConfigOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, LayoutDocument>) -> Result<Emit<LayoutOperation, LayoutConfigOperation, Self::DraftOperation>, MediaError> {
         match port {
             "fields:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -197,13 +199,14 @@ impl DocumentApp for LayoutPlayApp {
     }
     //#endregion 🔖️Media
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> UiNode {
         let document = doc.projection;
         let config = cfg.projection;
         let labels = layout_labels(config);
+        let mut engine = LayoutEngine::new();
         match body_key {
-            LAYOUT_PLAY_BODY_BLUEPRINT => blueprint::render(document, config),
-            LAYOUT_PLAY_BODY_PREVIEW => preview::render(document, config),
+            LAYOUT_PLAY_BODY_BLUEPRINT => blueprint::render(&mut engine, document, config),
+            LAYOUT_PLAY_BODY_PREVIEW => preview::render(&mut engine, document, config),
             LAYOUT_PLAY_BODY_DOCUMENT => document_panel::render(document, config, labels),
             LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             LAYOUT_PLAY_BODY_INSPECTION => inspection_panel::render(document, config, labels),
@@ -212,7 +215,7 @@ impl DocumentApp for LayoutPlayApp {
         }
     }
 
-    fn window_engagements(&self, _doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(_doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.projection;
         let labels = layout_labels(config);
         HashMap::from([(LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(config, "blueprint", labels)), (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), layout_window_engagement(config, "preview", labels))])
@@ -295,7 +298,7 @@ pub fn create_layout_app() -> App {
             ])
             // 🎯️ Typed channel surface (WORKFLOWS-END-TO-END-TYPED-PORTS) — `config_spec()`/`layout_io()`
             // are this same information's single source of truth, reused here rather than duplicated.
-            .config(LayoutPlayApp.config_spec())
+            .config(LayoutPlayApp::config_spec())
             .io(crate::artifacts::layout::engine::layout_io()),
     )
     .example("sample", LocalizedLabel::native("Sample", "Beispiel"), crate::artifacts::layout::engine::layout_sample_document_json(), "cylinder")
@@ -564,7 +567,8 @@ mod tests {
         let document = app.projection().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = DocumentView { projection: &document, history: &history };
-        let media = LayoutPlayApp.export_media("layout:out", &doc).expect("export layout:out");
+        let app = LayoutPlayApp::default();
+        let media = app.export_media("layout:out", &doc).expect("export layout:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector });
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "2d.layout");
@@ -577,7 +581,8 @@ mod tests {
         let document = app.projection().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = DocumentView { projection: &document, history: &history };
-        let media = LayoutPlayApp.export_media("document:out", &doc).expect("export document:out");
+        let app = LayoutPlayApp::default();
+        let media = app.export_media("document:out", &doc).expect("export document:out");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, crate::artifacts::layout::LAYOUT_FIXTURE_SCHEMA);
         let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64 pack");
@@ -596,7 +601,7 @@ mod tests {
 
     #[test]
     fn layout_io_exposes_declared_ports() {
-        let io = LayoutPlayApp.io().expect("layout declares io");
+        let io = LayoutPlayApp::default().io().expect("layout declares io");
         assert!(io.ports.iter().any(|port| port.id == "fields:in"));
         assert!(io.ports.iter().any(|port| port.id == "layout:out"));
     }

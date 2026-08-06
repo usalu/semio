@@ -184,7 +184,7 @@ pub use cursor::apply_canvas_cursor;
 #[cfg(feature = "wgpu-engine")]
 pub use cursor::{apply_window_cursor, resolve_semio_cursor, CursorDragState, SemioCursor};
 #[cfg(feature = "wgpu-engine")]
-pub use draw::{ear_clip_polygon, mesh_content_version, paint_selection_marquee, DrawList, IconAtlas, MeshGpuStore, RasterTextureStore};
+pub use draw::{ear_clip_polygon, mesh_content_version, paint_selection_marquee, DrawList, IconAtlas, MeshGpuTable, RasterTextureTable};
 #[cfg(feature = "wgpu-engine")]
 pub use tree::{EditState, LayoutBucket, Node, NodeFlags, NodeKey, PaintBucket, UiTree, WidgetSpec, WidgetState};
 // 🪟️🫳️🖱️ W2 wiring: `w1d-events-overlay`'s overlay/drag-drop/scroll types, previously reachable only

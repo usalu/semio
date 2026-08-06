@@ -467,7 +467,7 @@ pub fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlaceP
     let Some(mesh_url) = resolve_object_kind_mesh_url(&payload.object_kind_id, catalogs, fixture) else {
         return fixture.clone();
     };
-    let object_id = format!("puzzle3d.brush.{}", uuid_simple());
+    let object_id = brush_object_id(fixture, payload);
     let vortices: Vec<VortexProps> = kind.vortices.iter().enumerate().map(|(index, entry)| VortexProps { id: format!("{object_id}:v{index}"), vortex_kind: entry.vortex_kind.clone(), position: entry.position, direction: entry.direction }).collect();
     // 🌲️ The new object attaches as `attracted`: the pre-existing target vortex it's docking onto stays the
     // resolution root. Params start at zero (a bare port-to-port docking); the app's
@@ -494,29 +494,21 @@ pub fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlaceP
     next
 }
 
-/// 🔢️ Guarantees uniqueness across calls even when `js_sys_time_now()` is frozen (native/test builds
-/// always return `0.0`) or two calls land in the same millisecond (rapid-fire suggestion acceptance) —
-/// without this, brush-placed objects collided on `object_id` and therefore on every derived vortex id,
-/// so hover/suggestion-target lookups (keyed on those ids) silently applied to the wrong object.
-static PUZZLE3D_UUID_COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-
-fn uuid_simple() -> String {
-    let counter = PUZZLE3D_UUID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let mut state = (js_sys_time_now() as u64) ^ 0xdead_beef_cafe_babe ^ counter.wrapping_mul(0x9e37_79b9_7f4a_7c15).wrapping_add(1);
-    let mut out = String::with_capacity(36);
-    for (i, _) in (0..16).enumerate() {
-        state = state.wrapping_mul(6364136223846793005).wrapping_add(1);
-        let byte = (state >> 33) as u8;
-        if i == 4 || i == 6 || i == 8 || i == 10 {
-            out.push('-');
-        }
-        out.push_str(&format!("{byte:02x}"));
+/// 🪪️ Content-addressed brush object id — keyed by fixture size and placement payload (no global counter).
+fn brush_object_id(fixture: &Fixture, payload: &BrushPlacePayload) -> String {
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+    let mut hasher = DefaultHasher::new();
+    fixture.objects.len().hash(&mut hasher);
+    payload.target_vortex_full_id.hash(&mut hasher);
+    payload.object_kind_id.hash(&mut hasher);
+    payload.source_vortex_index.hash(&mut hasher);
+    payload.origin.hash(&mut hasher);
+    payload.orientation.hash(&mut hasher);
+    if let Some(scale) = &payload.scale {
+        scale.hash(&mut hasher);
     }
-    out
-}
-
-fn js_sys_time_now() -> f64 {
-    0.0
+    format!("puzzle3d.brush.{:016x}", hasher.finish())
 }
 //#endregion 🔖️Placement
 
@@ -583,9 +575,7 @@ mod tests {
         assert_eq!(attraction.rotation, 0.0);
     }
 
-    /// 🪪️ Regression: `uuid_simple()` used to seed only from the (frozen-in-native-builds) clock, so two
-    /// brush placements in a row minted the *same* object id — colliding vortex ids then made hover and
-    /// suggestion-target lookups (keyed on those ids) silently apply to the wrong object.
+    /// 🪪️ Regression: successive brush placements must mint distinct object ids when the fixture grows.
     #[test]
     fn successive_brush_placements_never_collide_on_object_id() {
         let catalogs = KindCatalogBundle {

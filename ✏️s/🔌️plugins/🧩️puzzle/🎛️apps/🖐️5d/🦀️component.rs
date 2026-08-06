@@ -22,10 +22,11 @@ use crate::artifacts::puzzle5d::engine::{BrushPlacePayload, Puzzle5dPrecomputeSe
 use crate::artifacts::puzzle5d::op::{puzzle5d_document_delta_operations, Puzzle5dOperation, Puzzle5dPlayProjection};
 use crate::artifacts::puzzle5d::Puzzle5dProjection;
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement};
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ArtifactPresentation, ConfigView, DocumentApp, DocumentView, Emit, Fault, IconName, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, SelectionSet, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
 };
+use store::EngineHandles;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::cell::RefCell;
@@ -1532,25 +1533,23 @@ impl DocumentApp for Puzzle5dPlayApp {
     type Operation = Puzzle5dOperation;
     type Config = Puzzle5dConfig;
     type ConfigOperation = Puzzle5dConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = Puzzle5dCommand;
 
-    fn app_id(&self) -> &str {
-        PUZZLE5D_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = PUZZLE5D_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        PUZZLE5D_SCHEMA
-    }
-
-    fn initial_projection(&self) -> Puzzle5dPlayProjection {
+    fn initial_projection() -> Puzzle5dPlayProjection {
         Puzzle5dPlayProjection(serde_json::to_value(default_document()).unwrap_or(Value::Null))
     }
 
-    fn clipboard_media_type(&self) -> Option<MediaType> {
+    fn clipboard_media_type() -> Option<MediaType> {
         Some(MediaType { class: MediaClass::Kit, form: MediaForm::Design })
     }
 
-    fn copy_fragment(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Result<ClipboardFragment, ClipboardError> {
+    fn copy_fragment(doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Result<ClipboardFragment, ClipboardError> {
         let document: Puzzle5dDocument = serde_json::from_value(doc.projection.0.clone()).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
         let selection = &cfg.projection.selection;
         let (parts, fasteners) = copy_selection_local(&document, selection.part_ids.as_slice(), selection.fastener_ids.as_slice());
@@ -1573,7 +1572,7 @@ impl DocumentApp for Puzzle5dPlayApp {
     /// removal; clearing the selection is left to the framework's own post-cut selection reconciliation
     /// (the cut parts/fasteners are gone from the document either way, so a stale selection referencing
     /// them is inert until the next real selection action overwrites it).
-    fn cut_operations(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Vec<Puzzle5dOperation> {
+    fn cut_operations(doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Vec<Puzzle5dOperation> {
         let before = doc.projection.0.clone();
         let Ok(document) = serde_json::from_value::<Puzzle5dDocument>(before.clone()) else {
             return Vec::new();
@@ -1595,7 +1594,7 @@ impl DocumentApp for Puzzle5dPlayApp {
     /// `fragment`/`placement`), so the new selection can't be threaded through this call; a following
     /// `setSelection` command (which the host already issues after a paste in practice) is what
     /// actually selects the pasted parts now.
-    fn paste_operations(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle5dOperation>, ClipboardError> {
+    fn paste_operations(doc: &DocumentView<'_, Puzzle5dPlayProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle5dOperation>, ClipboardError> {
         let expected = self.clipboard_media_type().unwrap_or(MediaType { class: MediaClass::Kit, form: MediaForm::Design });
         if fragment.media_type != expected {
             return Err(ClipboardError::IncompatibleMediaType(fragment.media_type));
@@ -1614,13 +1613,13 @@ impl DocumentApp for Puzzle5dPlayApp {
     }
 
     /// 🏷️ Maps each `Puzzle5dCommand` variant back to the action id it was declared under.
-    fn command_id(&self, command: &Puzzle5dCommand) -> &str {
+    fn command_id(command: &Puzzle5dCommand) -> &'static str {
         command.action_id()
     }
 
     /// @emoji 🧩️ Thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
     /// triple `handle_action_impl` expects from the typed `Puzzle5dCommand`.
-    fn handle(&self, command: &Puzzle5dCommand, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Result<Emit<Puzzle5dOperation, Puzzle5dConfigOperation>, Fault> {
+    fn handle(command: &Puzzle5dCommand, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle5dOperation, Puzzle5dConfigOperation, Self::DraftOperation>, Fault> {
         Ok(self.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, cfg.projection))
     }
 
@@ -1629,7 +1628,7 @@ impl DocumentApp for Puzzle5dPlayApp {
     /// `kit.catalog` fragment shaped like block3d's `puzzle3d_catalog_fragment`, fanning IN from
     /// potentially many producers) and `design:out` (this app's own `5d.puzzle` design artifact, fanning
     /// OUT to potentially many consumers).
-    fn io(&self) -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(
             AppIo::from_document("puzzle.5d", MediaType { class: MediaClass::Kit, form: MediaForm::Design }, ArtifactPresentation { id: "5d.puzzle".into(), name: "5D Puzzle".into(), dimension: "5d".into(), component_kind: "puzzle5d".into() })
                 .with_ports(vec![
@@ -1665,7 +1664,7 @@ impl DocumentApp for Puzzle5dPlayApp {
     /// fan-in from several producers), then bridges the before/after document through
     /// `puzzle5d_operations_from_document_change` exactly like every other document-mutating action —
     /// this never mutates anything directly, only real, undoable operations.
-    fn import_media(&self, port: &str, media: &Media, doc: &DocumentView<'_, Puzzle5dPlayProjection>) -> Result<Emit<Puzzle5dOperation, Puzzle5dConfigOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, Puzzle5dPlayProjection>) -> Result<Emit<Puzzle5dOperation, Puzzle5dConfigOperation, Self::DraftOperation>, MediaError> {
         if port != "kit:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -1729,7 +1728,7 @@ impl DocumentApp for Puzzle5dPlayApp {
         Ok(Emit::operations(operations))
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> UiNode {
         let config = cfg.projection;
         let window_for_body = if body_key == board2d::BODY_KEY { board2d::WINDOW_KIND_ID } else { world3d::WINDOW_KIND_ID };
         let active_utility = puzzle5d_scene_active_utility(config, Some(window_for_body));
@@ -1745,7 +1744,7 @@ impl DocumentApp for Puzzle5dPlayApp {
         }
     }
 
-    fn window_engagements(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.projection;
         let labels = puzzle5d_labels(config);
         // 🪟️ One entry per live window INSTANCE of each of the 2D/3D window kinds — see
@@ -1763,7 +1762,7 @@ impl DocumentApp for Puzzle5dPlayApp {
             .collect()
     }
 
-    fn window_measures(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.projection;
         let labels = puzzle5d_labels(config);
         PUZZLE5D_PLAY_WINDOWS

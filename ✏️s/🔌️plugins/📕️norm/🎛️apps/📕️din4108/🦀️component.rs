@@ -14,7 +14,8 @@ use crate::artifacts::din4108::engine::Din4108Family;
 use crate::artifacts::din4108::op::Operation;
 use crate::artifacts::din4108::Document;
 use crate::core::{NormConfig, NormConfigOperation, NormHost};
-use semio_framework_plugin::{App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, LocalizedLabel, Media, MediaError, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, LocalizedLabel, Media, MediaError, UiNode};
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const APP_ID: &str = "norm-din-4108-play";
@@ -50,37 +51,35 @@ impl DocumentApp for Din4108PlayApp {
     type Operation = Operation;
     type Config = NormConfig;
     type ConfigOperation = NormConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = Din4108Command;
 
-    fn app_id(&self) -> &str {
-        APP_ID
-    }
+    const APP_ID: &'static str = "norm-din-4108-play";
+    const DOCUMENT_SCHEMA: &'static str = "semio.norm.din4108/v1";
 
-    fn document_schema(&self) -> &str {
-        DOCUMENT_SCHEMA
-    }
-
-    fn config_schema(&self) -> &str {
+    fn config_schema() -> &'static str {
         CONFIG_SCHEMA
     }
 
-    fn initial_projection(&self) -> Document {
+    fn initial_projection() -> Document {
         Document::default()
     }
 
-    fn io(&self) -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(crate::core::app::norm_io(VARIANT, DOCUMENT_SCHEMA))
     }
 
-    fn command_id(&self, command: &Din4108Command) -> &str {
+    fn command_id(command: &Din4108Command) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &Din4108Command, doc: &DocumentView<'_, Document>, cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Operation, NormConfigOperation>, Fault> {
+    fn handle(command: &Din4108Command, doc: &DocumentView<'_, Document>, cfg: &ConfigView<'_, NormConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Operation, NormConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Document>, cfg: &ConfigView<'_, NormConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, Document>, cfg: &ConfigView<'_, NormConfig>) -> UiNode {
         let host = NormHost::<Din4108Family>::from_document(doc.projection.clone());
         match body_key {
             inputs::BODY_INPUTS => inputs::render(doc.projection),
@@ -96,12 +95,12 @@ impl DocumentApp for Din4108PlayApp {
     /// 🎞️ `"report:out"`/`"document:out"` — see `crate::core::app::export_media`, which all fifteen apps
     /// share (overriding this method shadows the SDK default entirely, so `"document:out"` is
     /// re-implemented there rather than left unreachable).
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, Document>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, Document>) -> Result<Media, MediaError> {
         crate::core::app::export_media::<Din4108Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.projection)
     }
 
     /// 🎞️ `"model:in"`/`"document:in"` — see `crate::core::app::import_media`.
-    fn import_media(&self, port: &str, media: &Media, _doc: &DocumentView<'_, Document>) -> Result<Emit<Operation, NormConfigOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &DocumentView<'_, Document>) -> Result<Emit<Operation, NormConfigOperation, Self::DraftOperation>, MediaError> {
         crate::core::app::import_media::<Document>(port, media)
     }
     //#endregion 🔖️MediaPorts

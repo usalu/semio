@@ -1,0 +1,71 @@
+2550|    /// @emoji 🧮️ Default `DocumentApp::Config` for apps with no config artifact yet.
+2551|    #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+2552|    #[serde(rename_all = "camelCase")]
+2553|    pub struct NoConfig {}
+2554|
+2555|    impl store::DocumentDsl for NoConfig {
+2556|        const EXTENSION: &'static str = "nocfg";
+2557|        fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+2558|            if text.trim().is_empty() {
+2559|                return Ok(Self::default());
+2560|            }
+2561|            Err(store::TextError::new("no config", store::TextSpan::at(1, 1)))
+2562|        }
+2563|        fn print_dsl(&self) -> String {
+2564|            String::new()
+2565|        }
+2566|    }
+2567|
+2568|    impl DocumentPack for NoConfig {
+2569|        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+2570|            Ok(Vec::new())
+2571|        }
+2572|        fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+2573|            Ok(Self::default())
+2574|        }
+2575|    }
+2576|
+2577|    impl store::ConfigRecord for NoConfig {}
+2578|
+2579|    impl ::protocol::OperationDiff<NoConfig> for NoConfig {
+2580|        fn apply(&self, base: &NoConfig) -> NoConfig {
+2581|            base.clone()
+2582|        }
+2583|        fn absorb(&mut self, _other: Self) {}
+2584|    }
+2585|
+2586|    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+2587|    #[serde(rename_all = "camelCase")]
+2588|    pub enum NoConfigOperation {
+2589|        Noop,
+2590|    }
+2591|
+2592|    impl ::protocol::Operation<NoConfig> for NoConfigOperation {
+2593|        type Diff = NoConfig;
+2594|
+2595|        fn diff(&self, _base: &NoConfig) -> NoConfig {
+2596|            NoConfig::default()
+2597|        }
+2598|
+2599|        fn backwards(&self, _base: &NoConfig) -> Vec<Self> {
+2600|            vec![NoConfigOperation::Noop]
+2601|        }
+2602|    }
+2603|    //#endregion 🔖️NoConfig
+2604|
+2605|    //#region 🔖️CommandLog
+2606|    /// @emoji 🎚️ Tri-state operations filter of the framework history panel — `All` is the default.
+2607|    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+2608|    pub enum HistoryCommandFilter {
+2609|        #[default]
+2610|        All,
+2611|        WithoutOperations,
+2612|        OnlyOperations,
+2613|    }
+2614|
+2615|    /// @emoji ⏪️ A stored, replayable inverse for a `View`/`Shell`-kind command — the memory-only
+2616|    /// counterpart to a VCS edit's `Operation::backwards`. `action_id` is a plugin action id (`View` rows —
+2617|    /// replayed locally via `dispatch_action`) or a shell command id (`Shell` rows — bubbled out as
+2618|    /// `HostEffect::ReplayShellCommand` since the plugin has no access to shell-owned state). Never
+2619|    /// persisted: it lives only on the in-memory `CommandLogEntry`/`CommandView`.
+2620|    #[derive(Clone, Debug, PartialEq)]

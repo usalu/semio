@@ -16,10 +16,11 @@ use crate::apps::shooting::panels::{catalogue as catalogue_panel, document as do
 use crate::apps::shooting::terminology::shooting_play_labels;
 use crate::artifacts::shooting::op::ShootingOperation;
 use crate::artifacts::shooting::{ShootingFixture, SHOOTING_FIXTURE_SCHEMA};
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, DocumentApp, DocumentView, DslValue, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, UiNode, UiTreeItemNode, UtilityDefinition, WindowEngagement, WindowMeasure,
 };
+use store::EngineHandles;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -130,21 +131,19 @@ impl DocumentApp for ShootingPlayApp {
     type Operation = ShootingOperation;
     type Config = ShootingConfig;
     type ConfigOperation = ShootingConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = ShootingCommand;
 
-    fn app_id(&self) -> &str {
-        SHOOTING_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = SHOOTING_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = SHOOTING_FIXTURE_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        SHOOTING_FIXTURE_SCHEMA
-    }
-
-    fn initial_projection(&self) -> ShootingFixture {
+    fn initial_projection() -> ShootingFixture {
         crate::artifacts::shooting::engine::default_fixture()
     }
 
-    fn io(&self) -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(crate::artifacts::shooting::engine::shooting_io())
     }
 
@@ -152,19 +151,19 @@ impl DocumentApp for ShootingPlayApp {
     /// inherited `document:out` default (the pack of `doc.projection`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new
     /// one).
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, ShootingFixture>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, ShootingFixture>) -> Result<Media, MediaError> {
         match port {
             "photos:out" => crate::artifacts::shooting::engine::shooting_photo_media(doc.projection),
             "document:out" => {
-                let media_type = self.io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = store::DocumentPack::encode_pack(doc.projection);
-                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
     }
 
-    fn whole_document_operation(&self, projection: ShootingFixture) -> Option<ShootingOperation> {
+    fn whole_document_operation(projection: ShootingFixture) -> Option<ShootingOperation> {
         Some(ShootingOperation::SetFixture { fixture: projection })
     }
 
@@ -175,7 +174,7 @@ impl DocumentApp for ShootingPlayApp {
     /// `all == false`, `exportAllShots` when `all == true`) — `app_commands!`'s generated method is a
     /// static 1:1 row→literal mapping with no per-payload escape hatch, so this is the one case that
     /// needs a manual override.
-    fn command_id(&self, command: &ShootingCommand) -> &str {
+    fn command_id(command: &ShootingCommand) -> &'static str {
         match command {
             ShootingCommand::ExportShots(export_shots::ExportShots { all }) => {
                 if *all {
@@ -188,13 +187,13 @@ impl DocumentApp for ShootingPlayApp {
         }
     }
 
-    fn handle(&self, command: &ShootingCommand, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingOperation, ShootingConfigOperation>, Fault> {
+    fn handle(command: &ShootingCommand, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ShootingOperation, ShootingConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
     /// 🧮️ This app's typed configuration spec — mirrors `ShootingConfig`'s three sticky-default fields,
     /// each grounded in an existing `.action_args` default (see that struct's doc).
-    fn config_spec(&self) -> semio_framework_plugin::ConfigSpec {
+    fn config_spec() -> semio_framework_plugin::ConfigSpec {
         semio_framework_plugin::ConfigSpec {
             fields: vec![
                 semio_framework_plugin::ConfigFieldSpec {
@@ -219,7 +218,7 @@ impl DocumentApp for ShootingPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> UiNode {
         let fixture = doc.projection;
         let labels = shooting_play_labels(cfg.projection);
         match body_key {
@@ -232,12 +231,12 @@ impl DocumentApp for ShootingPlayApp {
         }
     }
 
-    fn window_engagements(&self, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, WindowEngagement> {
         let labels = shooting_play_labels(cfg.projection);
         HashMap::from([(SHOOTING_PLAY_WINDOW_SCENE.into(), scene_window::engagement(doc.projection, cfg.projection, labels)), (SHOOTING_PLAY_WINDOW_ICON.into(), icon_window::engagement(doc.projection, labels))])
     }
 
-    fn window_measures(&self, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = shooting_play_labels(cfg.projection);
         HashMap::from([(SHOOTING_PLAY_WINDOW_SCENE.into(), scene_window::window_measures(doc.projection, labels)), (SHOOTING_PLAY_WINDOW_ICON.into(), icon_window::window_measures(doc.projection, labels))])
     }
@@ -346,7 +345,7 @@ pub fn create_shooting_app() -> App {
             // here rather than duplicated (`command_grammar` stays `CommandGrammar::empty()`: this app's
             // typed commands are dispatched via `ShootingCommand`'s `OpBinary` codec directly, not a
             // keyword-parsed text grammar).
-            .config(ShootingPlayApp.config_spec())
+            .config(ShootingPlayApp::config_spec())
             .io(crate::artifacts::shooting::engine::shooting_io()),
     )
     .example(SHOOTING_EXAMPLE_DEFAULT_ID, LocalizedLabel::native("Default Base Icon", "Standard-Basissymbol"), crate::artifacts::shooting::engine::default_fixture_json(), "camera")

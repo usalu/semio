@@ -14,7 +14,8 @@ use crate::apps::playbook::modes::builder::windows::builder as builder_window;
 use crate::artifacts::playbook::engine::{default_block, flatten_playbook_blocks, playbook_io, PlaybookChapterPayload};
 use crate::artifacts::playbook::op::PlaybookOperation;
 use crate::artifacts::playbook::{artifact_kind, PlaybookSpec, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ActionArgDef, ActionArgOption, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef, ActionArgOption, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const PLAYBOOK_PLAY_APP_ID: &str = "playbook-play";
@@ -65,31 +66,29 @@ impl DocumentApp for PlaybookPlayApp {
     type Operation = PlaybookOperation;
     type Config = PlaybookConfig;
     type ConfigOperation = PlaybookConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = PlaybookCommand;
 
-    fn app_id(&self) -> &str {
-        PLAYBOOK_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = PLAYBOOK_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = PLAYBOOK_DOCUMENT_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        PLAYBOOK_DOCUMENT_SCHEMA
-    }
-
-    fn initial_projection(&self) -> PlaybookSpec {
+    fn initial_projection() -> PlaybookSpec {
         crate::artifacts::playbook::engine::empty_playbook_projection()
     }
 
-    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(playbook_io())
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(&self, command: &PlaybookCommand) -> &str {
+    fn command_id(command: &PlaybookCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &PlaybookCommand, doc: &DocumentView<'_, PlaybookSpec>, cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookOperation, PlaybookConfigOperation>, Fault> {
+    fn handle(command: &PlaybookCommand, doc: &DocumentView<'_, PlaybookSpec>, cfg: &ConfigView<'_, PlaybookConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PlaybookOperation, PlaybookConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -97,7 +96,7 @@ impl DocumentApp for PlaybookPlayApp {
     /// `writer_engine::WriterChapterPayload`/`PlaybookChapterPayload`) and inserts it as a `"note"` block
     /// (free-form `text` field, non-interactive) into a dedicated `"imported"` step, created on first
     /// import and reused on every later one (idempotent step creation).
-    fn import_media(&self, port: &str, media: &Media, doc: &DocumentView<'_, PlaybookSpec>) -> Result<Emit<PlaybookOperation, PlaybookConfigOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, PlaybookSpec>) -> Result<Emit<PlaybookOperation, PlaybookConfigOperation, Self::DraftOperation>, MediaError> {
         if port != "chapters:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -118,7 +117,7 @@ impl DocumentApp for PlaybookPlayApp {
         Ok(Emit::operations(operations))
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, PlaybookSpec>, cfg: &ConfigView<'_, PlaybookConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, PlaybookSpec>, cfg: &ConfigView<'_, PlaybookConfig>) -> UiNode {
         match body_key {
             PLAYBOOK_PLAY_BODY_BUILDER => builder_window::render(doc.projection, cfg.projection),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -160,7 +159,7 @@ pub fn create_playbook_play_app() -> App {
             // 🎯️ Typed channel surface (mirrors `writer_ui::create_writer_app`'s identical wiring) —
             // `crate::artifacts::playbook::engine::playbook_io()` is the single source of truth for both
             // the trait's `io()` override and this manifest declaration.
-            .config(PlaybookPlayApp.config_spec())
+            .config(PlaybookPlayApp::config_spec())
             .io(playbook_io()),
     )
 }

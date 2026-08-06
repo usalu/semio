@@ -11,11 +11,12 @@ use crate::artifacts::rewrite::engine::{ParameterKind, Rhs};
 use crate::artifacts::rewrite::op::RewriteRuleOperation;
 use crate::artifacts::rewrite::{LayoutPoint, RewriteRuleState, REWRITE_RULE_SCHEMA};
 use crate::apps::rewrite::config::{RewriteConfig, RewriteConfigOperation};
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionArgDef, ActionArgOption, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
     MediaType, NodeGraphViewport, PanelGroup, SurfaceKind, UiNode, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
+use store::EngineHandles;
 use std::collections::{BTreeMap, HashMap};
 use store::{DocumentDsl, DocumentPack};
 
@@ -410,37 +411,35 @@ impl DocumentApp for TrinityRewritePlayApp {
     type Operation = RewriteRuleOperation;
     type Config = RewriteConfig;
     type ConfigOperation = RewriteConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = TrinityRewriteCommand;
 
-    fn app_id(&self) -> &str {
-        TRINITY_REWRITE_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = TRINITY_REWRITE_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        REWRITE_RULE_SCHEMA
-    }
-
-    fn initial_projection(&self) -> RewriteRuleState {
+    fn initial_projection() -> RewriteRuleState {
         default_rule_state()
     }
 
-    fn initial_config(&self) -> RewriteConfig {
+    fn initial_config() -> RewriteConfig {
         let projection = self.initial_projection();
         RewriteConfig { before_pane_camera: seed_before_pane_camera(&projection), ..RewriteConfig::default() }
     }
 
-    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(rewrite_io())
     }
 
-    fn whole_document_operation(&self, projection: RewriteRuleState) -> Option<RewriteRuleOperation> {
+    fn whole_document_operation(projection: RewriteRuleState) -> Option<RewriteRuleOperation> {
         Some(RewriteRuleOperation::SetState { state: projection })
     }
 
     /// 🔌️ `"graph:in"` loads an incoming `trinity.graph` pack as this rule's `before_fixture_json`
     /// working graph. `"document:in"` reimplements the default `DocumentApp::import_media` body for
     /// the rule document itself.
-    fn import_media(&self, port: &str, media: &Media, doc: &DocumentView<'_, RewriteRuleState>) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RewriteRuleState>) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation, Self::DraftOperation>, MediaError> {
         match port {
             "graph:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -469,7 +468,7 @@ impl DocumentApp for TrinityRewritePlayApp {
     }
 
     /// 🔌️ `"graph:out"` re-emits the rule-applied result graph, alongside the implicit `"document:out"`.
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, RewriteRuleState>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, RewriteRuleState>) -> Result<Media, MediaError> {
         match port {
             "graph:out" => {
                 let fixture_json = after_fixture_json(doc.projection);
@@ -478,9 +477,9 @@ impl DocumentApp for TrinityRewritePlayApp {
                 Ok(Media { media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity }, payload: MediaPayload::Structured { schema: crate::artifacts::jack::TRINITY_GRAPH_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "document:out" => {
-                let media_type = self.io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.projection.encode_pack();
-                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -488,7 +487,7 @@ impl DocumentApp for TrinityRewritePlayApp {
 
     /// 🏷️ Maps each `TrinityRewriteCommand` variant back to the action id it was declared under in
     /// `create_rewrite_app`.
-    fn command_id(&self, command: &TrinityRewriteCommand) -> &str {
+    fn command_id(command: &TrinityRewriteCommand) -> &'static str {
         match command {
             TrinityRewriteCommand::NodeGraphEdit { .. } => "nodeGraphEdit",
             TrinityRewriteCommand::SetLhsJson { .. } => "setLhsJson",
@@ -509,7 +508,7 @@ impl DocumentApp for TrinityRewritePlayApp {
         }
     }
 
-    fn handle(&self, command: &TrinityRewriteCommand, doc: &DocumentView<'_, RewriteRuleState>, cfg: &ConfigView<'_, RewriteConfig>) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation>, Fault> {
+    fn handle(command: &TrinityRewriteCommand, doc: &DocumentView<'_, RewriteRuleState>, cfg: &ConfigView<'_, RewriteConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation, Self::DraftOperation>, Fault> {
         let state = doc.projection;
         let config = cfg.projection;
         match command {
@@ -532,7 +531,7 @@ impl DocumentApp for TrinityRewritePlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, RewriteRuleState>, cfg: &ConfigView<'_, RewriteConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, RewriteRuleState>, cfg: &ConfigView<'_, RewriteConfig>) -> UiNode {
         let state = doc.projection;
         let config = cfg.projection;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::apps::rewrite::terminology::TrinityRewriteLabels>(&config.locale);
@@ -550,7 +549,7 @@ impl DocumentApp for TrinityRewritePlayApp {
         }
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, RewriteRuleState>, cfg: &ConfigView<'_, RewriteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &DocumentView<'_, RewriteRuleState>, cfg: &ConfigView<'_, RewriteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.projection;
         let mode_for = |window_id: &str| config.lod_mode_by_window.get(window_id).map_or(TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
         HashMap::from([
@@ -561,7 +560,7 @@ impl DocumentApp for TrinityRewritePlayApp {
         ])
     }
 
-    fn context_menu(&self, request: &ContextMenuRequest, _doc: &DocumentView<'_, RewriteRuleState>, cfg: &ConfigView<'_, RewriteConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, RewriteRuleState>, cfg: &ConfigView<'_, RewriteConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let is_de = cfg.projection.locale.starts_with("de");

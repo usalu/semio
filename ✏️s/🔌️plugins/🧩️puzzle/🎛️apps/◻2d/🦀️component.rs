@@ -26,10 +26,11 @@ use crate::artifacts::puzzle2d::op::{puzzle2d_document_delta_operations, Puzzle2
 use crate::artifacts::puzzle2d::Puzzle2dProjection;
 use semio_framework_core::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::HostEffect;
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels, ArtifactPresentation, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, UiNode, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
 };
+use store::EngineHandles;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::cell::RefCell;
@@ -846,29 +847,27 @@ impl DocumentApp for Puzzle2dPlayApp {
     type Operation = Puzzle2dOperation;
     type Config = Puzzle2dConfig;
     type ConfigOperation = Puzzle2dConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = Puzzle2dCommand;
 
-    fn app_id(&self) -> &str {
-        PUZZLE2D_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = PUZZLE2D_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_FIXTURE_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        PUZZLE2D_FIXTURE_SCHEMA
-    }
-
-    fn initial_projection(&self) -> Puzzle2dPlayProjection {
+    fn initial_projection() -> Puzzle2dPlayProjection {
         Puzzle2dPlayProjection(default_empty_fixture())
     }
 
     /// 🏷️ Maps each `Puzzle2dCommand` variant back to the action id it was declared under.
-    fn command_id(&self, command: &Puzzle2dCommand) -> &str {
+    fn command_id(command: &Puzzle2dCommand) -> &'static str {
         command.action_id()
     }
 
     /// 🎬️ Dispatch only: sync the board host, delegate to the owning `🎮️commands/*` arm, then replay
     /// the host's own events and turn the mutated scene into the granular operation delta plus a
     /// config snapshot. No behaviour lives in this match.
-    fn handle(&self, command: &Puzzle2dCommand, doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> Result<Emit<Puzzle2dOperation, Puzzle2dConfigOperation>, Fault> {
+    fn handle(command: &Puzzle2dCommand, doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle2dOperation, Puzzle2dConfigOperation, Self::DraftOperation>, Fault> {
         let config = cfg.projection;
         let (action, args, window_id) = (command.action_id(), command.args(), command.window_id());
         let before = doc.projection.0.clone();
@@ -955,7 +954,7 @@ impl DocumentApp for Puzzle2dPlayApp {
 
     /// 🔌️ Declares puzzle2d's typed media I/O surface — the implicit document ports plus `kit:in`
     /// (see `import_media` below for why it stays `NotImplemented`) and `design:out`.
-    fn io(&self) -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(
             AppIo::from_document("puzzle.2d", MediaType { class: MediaClass::TwoD, form: MediaForm::Design }, ArtifactPresentation { id: "2d.puzzle".into(), name: "2D Puzzle".into(), dimension: "2d".into(), component_kind: "puzzle2d".into() })
                 .with_ports(vec![
@@ -987,11 +986,11 @@ impl DocumentApp for Puzzle2dPlayApp {
     /// vocabulary — meshes, 3D vortex positions, cable/attraction kinds), unlike puzzle3d's `kit:in`,
     /// which DOES share block3d's object-kind vocabulary. There is no honest mapping to fabricate, so
     /// this always reports `NotImplemented` — no normalization is attempted.
-    fn import_media(&self, _port: &str, _media: &Media, _doc: &DocumentView<'_, Puzzle2dPlayProjection>) -> Result<Emit<Puzzle2dOperation, Puzzle2dConfigOperation>, MediaError> {
+    fn import_media(_port: &str, _media: &Media, _doc: &DocumentView<'_, Puzzle2dPlayProjection>) -> Result<Emit<Puzzle2dOperation, Puzzle2dConfigOperation, Self::DraftOperation>, MediaError> {
         Err(MediaError::NotImplemented)
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> UiNode {
         let config = cfg.projection;
         let document_json = doc.projection.0.to_string();
         // 🪟️ `body_key` already determines the pane deterministically, so the active utility resolves
@@ -1015,7 +1014,7 @@ impl DocumentApp for Puzzle2dPlayApp {
         }
     }
 
-    fn window_engagements(&self, doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.projection;
         let labels = puzzle2d_labels(config);
         // 🪟️ One entry per live window INSTANCE of each pane kind — see `window_instance_ids`'s
@@ -1031,7 +1030,7 @@ impl DocumentApp for Puzzle2dPlayApp {
             .collect()
     }
 
-    fn window_measures(&self, doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.projection;
         let labels = puzzle2d_labels(config);
         PUZZLE2D_PANES
@@ -1050,7 +1049,7 @@ impl DocumentApp for Puzzle2dPlayApp {
             .collect()
     }
 
-    fn tool_measures(&self, doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn tool_measures(doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.projection;
         let envelope = self.scene_for(doc.projection.0.clone(), config, None);
         let labels = puzzle2d_labels(config);

@@ -15,5 +15,5 @@ pub fn register_exports() {
 
 /// 🎪️ Adds the pane's app to the shared demonstrator bundle.
 pub fn register_app(bundle: PluginBundle) -> PluginBundle {
-    bundle.register_document_app(create_puzzle3d_app(), Puzzle3dPlayApp::default)
+    bundle.register_document_app::<Puzzle3dPlayApp>(create_puzzle3d_app())
 }

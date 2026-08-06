@@ -15,10 +15,11 @@ use crate::apps::gis2d::terminology::gis2d_labels;
 use crate::artifacts::gismap::engine::{gis2d_features_in_port, gis2d_io, gis2d_map_media, gis2d_map_out_port, gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
 use crate::artifacts::gismap::op::GisMapOperation;
 use crate::artifacts::gismap::{artifact_kind, GisMapDocument, GIS_MAP_SCHEMA};
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     tree_item_with_action, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass,
     MediaError, MediaForm, MediaPayload, MediaType, Menu, UiNode, UiTreeItemNode, WindowMeasure,
 };
+use store::EngineHandles;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use store::DocumentPack;
@@ -139,40 +140,38 @@ impl DocumentApp for Gis2dPlayApp {
     type Operation = GisMapOperation;
     type Config = Gis2dConfig;
     type ConfigOperation = Gis2dConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = Gis2dCommand;
 
-    fn app_id(&self) -> &str {
-        GIS2D_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = GIS2D_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = GIS_MAP_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        GIS_MAP_SCHEMA
-    }
-
-    fn initial_projection(&self) -> GisMapDocument {
+    fn initial_projection() -> GisMapDocument {
         crate::artifacts::gismap::engine::default_document()
     }
 
     /// 🔌️ `features:in`/`map:out` (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) plus the
     /// implicit document ports.
-    fn io(&self) -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(gis2d_io())
     }
 
-    fn whole_document_operation(&self, projection: GisMapDocument) -> Option<GisMapOperation> {
+    fn whole_document_operation(projection: GisMapDocument) -> Option<GisMapOperation> {
         Some(GisMapOperation::SetDocument { document: projection })
     }
 
     /// 🎞️ `map:out` (see `crate::artifacts::gismap::engine::gis2d_map_media`) plus the inherited
     /// `document:out` default (the pack of `doc.projection`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(&self, port: &str, doc: &DocumentView<'_, GisMapDocument>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, GisMapDocument>) -> Result<Media, MediaError> {
         match port {
             "map:out" => Ok(gis2d_map_media(doc.projection)),
             "document:out" => {
-                let media_type = self.io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.projection.encode_pack();
-                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -182,7 +181,7 @@ impl DocumentApp for Gis2dPlayApp {
     /// add/patch/remove operations against every collection (a generic vector-features sink — not
     /// pinned to `2d.map`, so a `draw`/another `gis2d`'s producer both work) plus the inherited
     /// `document:in` default (replicated inline for the same reason as `export_media`).
-    fn import_media(&self, port: &str, media: &Media, doc: &DocumentView<'_, GisMapDocument>) -> Result<Emit<GisMapOperation, Gis2dConfigOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, GisMapDocument>) -> Result<Emit<GisMapOperation, Gis2dConfigOperation, Self::DraftOperation>, MediaError> {
         match port {
             "features:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -210,14 +209,14 @@ impl DocumentApp for Gis2dPlayApp {
         }
     }
 
-    fn command_id(&self, command: &Gis2dCommand) -> &str {
+    fn command_id(command: &Gis2dCommand) -> &str {
         command.command_id()
     }
 
     /// 🎯️ Maps host action id + JSON args onto `Gis2dCommand` — React/wgpu still speak the
     /// stringly `{action,args}` wire; this is the typed-command bridge until those call sites send
     /// `OpBinary` bytes directly.
-    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let args = args.cloned().unwrap_or(Value::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
@@ -296,17 +295,17 @@ impl DocumentApp for Gis2dPlayApp {
         }
     }
 
-    fn handle(&self, command: &Gis2dCommand, doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapOperation, Gis2dConfigOperation>, Fault> {
+    fn handle(command: &Gis2dCommand, doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<GisMapOperation, Gis2dConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
     /// 🧮️ Empty — gis2d's `Config` is session view state (camera/selection/layer visibility/…), not a
     /// user-facing settings record; `ConfigSpec::empty()` (the trait default) is correct as-is.
-    fn config_spec(&self) -> semio_framework_plugin::ConfigSpec {
+    fn config_spec() -> semio_framework_plugin::ConfigSpec {
         semio_framework_plugin::ConfigSpec::empty()
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> UiNode {
         let config = cfg.projection;
         let labels = gis2d_labels(config);
         match body_key {
@@ -318,7 +317,7 @@ impl DocumentApp for Gis2dPlayApp {
         }
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.projection;
         HashMap::from([(map::GIS2D_PLAY_WINDOW_MAIN.into(), map::window_measures(config, gis2d_labels(config)))])
     }
@@ -411,7 +410,7 @@ pub fn create_gis2d_app() -> App {
             ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            .config(Gis2dPlayApp.config_spec())
+            .config(Gis2dPlayApp::config_spec())
             .io(gis2d_io()),
     )
     .example("reuse-map", LocalizedLabel::native("Reuse Map", "Karte wiederverwenden"), serde_json::to_string(&crate::artifacts::gismap::engine::default_document()).unwrap_or_default(), "file-text")

@@ -65,6 +65,10 @@ interface host {
   backbone-send: func(uri: string, message: list<u8>) -> result<_, list<u8>>;
   backbone-poll: func(uri: string) -> result<list<list<u8>>, list<u8>>;
   backbone-status: func(uri: string) -> result<string, list<u8>>;
+  /// Content-addressed engine derive — returns 32-byte EngineKey.
+  engine-derive: func(engine-id: string, input: list<u8>) -> result<list<u8>, list<u8>>;
+  /// Read engine cache output by engine-id + key bytes from engine-derive.
+  engine-read: func(engine-id: string, key: list<u8>) -> result<list<u8>, list<u8>>;
 }
 
 world plugin-world {

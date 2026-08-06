@@ -18,10 +18,11 @@ use crate::apps::flow::panels::{catalogue as catalogue_panel, document as docume
 use crate::apps::flow::terminology::{flow_play_labels, FlowPlayLabels};
 use crate::artifacts::flow::{op::FlowOperation, FlowFixture, FLOW_DOCUMENT_SCHEMA};
 use flow_core::{FlowEvalSession, Widget};
-use semio_framework_plugin::{
+use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel,
     UiNode, WindowMeasure,
 };
+use store::EngineHandles;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::sync::Mutex;
@@ -203,12 +204,12 @@ fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowFixture, 
 /// nor view — it is the off-main-thread evaluation driver, threaded into every command handler as the
 /// `app_commands!` dispatch context.
 #[derive(Default)]
-pub struct FlowPlayApp {
-    eval_session: Mutex<FlowEvalSession>,
-}
+pub struct FlowPlayApp;
 
-fn eval_session_lock(app: &FlowPlayApp) -> std::sync::MutexGuard<'_, FlowEvalSession> {
-    app.eval_session.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+static FLOWPLAYAPP_EVAL_SESSION: std::sync::LazyLock<std::sync::Mutex<FlowEvalSession>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(<FlowEvalSession>::default()));
+
+fn eval_session_lock() -> std::sync::MutexGuard<'static, FlowEvalSession> {
+    FLOWPLAYAPP_EVAL_SESSION.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
 impl DocumentApp for FlowPlayApp {
@@ -216,45 +217,43 @@ impl DocumentApp for FlowPlayApp {
     type Operation = FlowOperation;
     type Config = FlowConfig;
     type ConfigOperation = FlowConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
     type Command = FlowCommand;
 
-    fn app_id(&self) -> &str {
-        FLOW_PLAY_APP_ID
-    }
+    const APP_ID: &'static str = FLOW_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
 
-    fn document_schema(&self) -> &str {
-        FLOW_DOCUMENT_SCHEMA
-    }
-
-    fn initial_projection(&self) -> FlowFixture {
+    fn initial_projection() -> FlowFixture {
         FlowFixture::default()
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`. `setLocale`/`flowEvalTick`/`flowEvalResolve` have no
     /// manifest declaration (host-pushed/internally-chained, not user-facing actions).
-    fn command_id(&self, command: &FlowCommand) -> &str {
+    fn command_id(command: &FlowCommand) -> &str {
         command.command_id()
     }
 
-    fn handle(&self, command: &FlowCommand, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
-        let mut session = eval_session_lock(self);
+    fn handle(command: &FlowCommand, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FlowOperation, FlowConfigOperation, Self::DraftOperation>, Fault> {
+        let mut session = eval_session_lock();
         command.dispatch(doc, cfg, &mut session)
     }
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes — covers
     /// every mutation path (edits, undo/redo, example load, remote operations) in one place. Pure:
     /// recomputes the probe fresh from the fixture and the driver's persisted baseline each call.
-    fn pending_effects(&self, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> Vec<HostEffect> {
-        let mut session = eval_session_lock(self);
+    fn pending_effects(doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> Vec<HostEffect> {
+        let mut session = eval_session_lock();
         eval::evaluate_result(doc.projection, cfg.projection, &mut session).effects
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> UiNode {
         let fixture = doc.projection;
         let config = cfg.projection;
         let labels = flow_play_labels(config);
-        let session = eval_session_lock(self);
+        let session = eval_session_lock();
         match body_key {
             FLOW_PLAY_BODY_MAIN => main::render(fixture, config, &session),
             FLOW_PLAY_BODY_COMPILED => compiled::render(fixture, config, &session),
@@ -268,12 +267,12 @@ impl DocumentApp for FlowPlayApp {
         }
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.projection;
         HashMap::from([(main::FLOW_PLAY_WINDOW_MAIN.to_string(), main::window_measures(config, flow_play_labels(config)))])
     }
 
-    fn context_menu(&self, request: &ContextMenuRequest, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let config = cfg.projection;
         let is_de = config.locale.starts_with("de");
         flow_context_menu_items(registry, doc.projection, config, flow_play_labels(config), is_de, request.surface.as_ref())
@@ -359,7 +358,7 @@ pub fn create_flow_app() -> App {
             // 🎯️ Flow has no user-visible config defaults to expose, so `config_spec()` stays the trait
             // default `ConfigSpec::empty()`; declaring it explicitly keeps the typed channel surface
             // consistent with the sibling apps' convention.
-            .config(FlowPlayApp::default().config_spec()),
+            .config(FlowPlayApp::config_spec()),
     )
     .example("demo", LocalizedLabel::native("Demo", "Demo"), serde_json::to_string(&FlowFixture::default()).expect("FlowFixture::default() has no non-finite floats or non-string map keys, so serialization cannot fail"), "cylinder")
     .workflow("flow", "Flow", "graph")

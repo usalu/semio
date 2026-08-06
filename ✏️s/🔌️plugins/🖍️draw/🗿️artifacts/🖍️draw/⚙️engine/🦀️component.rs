@@ -6,7 +6,6 @@ use crate::artifacts::draw::{
     DrawPathBody, DrawPolygon, DrawRect, DrawShapeBody, DrawTextBody, DrawTraceBody, DrawTransform, FillStyle, PathSegment, StrokeStyle, DRAW_DOCUMENT_SCHEMA,
 };
 use serde::{Deserialize, Serialize};
-use std::sync::atomic::{AtomicU64, Ordering};
 
 //#region 🔖️Register
 /// 🗂️ Registers `DrawDocument`'s pack<->dsl codec under its real `document_schema()` string so
@@ -36,8 +35,6 @@ pub fn register() {
 /// 📄️ The `semio` example document, handcrafted in the `.draw` DSL — {@link semio_draw_example_document}/
 /// {@link semio_draw_example_json} are the only ways it should be consumed.
 const SEMIO_DRAW_EXAMPLE_TEXT: &str = crate::artifacts::draw::dsl::SEMIO_DRAW_EXAMPLE_TEXT;
-
-static DRAW_ID_COUNTER: AtomicU64 = AtomicU64::new(0);
 //#endregion 🔖️Constants
 
 //#region 🔖️SceneTypes
@@ -95,9 +92,18 @@ pub struct DrawCanvasLayerRecord {
 //#endregion 🔖️SceneTypes
 
 //#region 🔖️DocumentHelpers
-pub fn create_draw_id(prefix: &str) -> String {
-    let next = DRAW_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
-    format!("{prefix}-{next}")
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
+
+fn draw_id_hex(material: &[u8]) -> String {
+    let mut hasher = DefaultHasher::new();
+    material.hash(&mut hasher);
+    format!("{:016x}", hasher.finish())
+}
+
+/// 🪪️ Content-addressed layer/object id — no process-wide counter.
+pub fn create_draw_id(prefix: &str, material: &[u8]) -> String {
+    format!("{prefix}-{}", draw_id_hex(material))
 }
 
 /// 📄️ Parses the handcrafted DSL fixture once per call — used both for `setActiveExample`'s in-plugin
@@ -116,26 +122,26 @@ pub fn semio_draw_example_json() -> String {
 }
 
 pub fn default_layer_base(name: &str) -> DrawLayerBase {
-    DrawLayerBase { id: create_draw_id("layer"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() }
+    DrawLayerBase { id: create_draw_id("layer", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() }
 }
 
 pub fn create_draw_path_layer(name: &str, segments: Vec<PathSegment>) -> DrawLayerNode {
     DrawLayerNode::Path(DrawPathBody {
-        base: DrawLayerBase { id: create_draw_id("path"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
+        base: DrawLayerBase { id: create_draw_id("path", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
         segments,
     })
 }
 
 pub fn create_draw_group_layer(name: &str) -> DrawLayerNode {
     DrawLayerNode::Group(DrawGroupBody {
-        base: DrawLayerBase { id: create_draw_id("group"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
+        base: DrawLayerBase { id: create_draw_id("group", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
         children: Vec::new(),
     })
 }
 
 pub fn create_draw_boolean_layer(name: &str, operation: &str, children: Vec<String>) -> DrawLayerNode {
     DrawLayerNode::Boolean(DrawBooleanBody {
-        base: DrawLayerBase { id: create_draw_id("boolean"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
+        base: DrawLayerBase { id: create_draw_id("boolean", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
         operation: operation.into(),
         children,
     })
@@ -143,7 +149,7 @@ pub fn create_draw_boolean_layer(name: &str, operation: &str, children: Vec<Stri
 
 pub fn create_draw_trace_layer(name: &str, source_key: &str) -> DrawLayerNode {
     DrawLayerNode::Trace(DrawTraceBody {
-        base: DrawLayerBase { id: create_draw_id("trace"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
+        base: DrawLayerBase { id: create_draw_id("trace", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
         source_key: source_key.into(),
         params: default_draw_trace_params(),
     })
@@ -151,7 +157,7 @@ pub fn create_draw_trace_layer(name: &str, source_key: &str) -> DrawLayerNode {
 
 pub fn create_draw_shape_layer_rect(name: &str) -> DrawLayerNode {
     DrawLayerNode::Shape(DrawShapeBody {
-        base: DrawLayerBase { id: create_draw_id("shape"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
+        base: DrawLayerBase { id: create_draw_id("shape", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
         shape_kind: "rect".into(),
         rect: Some(DrawRect { x: 0.0, y: 0.0, width: 128.0, height: 96.0 }),
         ellipse: None,
@@ -164,7 +170,7 @@ pub fn create_draw_shape_layer_rect(name: &str) -> DrawLayerNode {
 pub fn create_draw_text_layer(name: &str) -> DrawLayerNode {
     DrawLayerNode::Text(DrawTextBody {
         base: DrawLayerBase {
-            id: create_draw_id("text"),
+            id: create_draw_id("text", name.as_bytes()),
             name: name.into(),
             visible: true,
             locked: false,
@@ -182,7 +188,7 @@ pub fn create_draw_text_layer(name: &str) -> DrawLayerNode {
 
 pub fn create_draw_image_layer(name: &str, image_key: &str) -> DrawLayerNode {
     DrawLayerNode::Image(DrawImageBody {
-        base: DrawLayerBase { id: create_draw_id("image"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
+        base: DrawLayerBase { id: create_draw_id("image", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
         image_key: image_key.into(),
         width: 256.0,
         height: 256.0,
@@ -535,34 +541,35 @@ pub fn canvas_layer_records(doc: &DrawDocument) -> Vec<DrawCanvasLayerRecord> {
 
 pub fn clone_draw_layer_node(node: &DrawLayerNode, name_suffix: &str) -> DrawLayerNode {
     let mut cloned = node.clone();
+    let id_material = |base: &DrawLayerBase| format!("{}{name_suffix}{}", base.id, base.name).into_bytes();
     match &mut cloned {
         DrawLayerNode::Shape(shape) => {
-            shape.base.id = create_draw_id("shape");
+            shape.base.id = create_draw_id("shape", &id_material(&shape.base));
             shape.base.name = format!("{}{name_suffix}", shape.base.name);
         }
         DrawLayerNode::Path(path) => {
-            path.base.id = create_draw_id("path");
+            path.base.id = create_draw_id("path", &id_material(&path.base));
             path.base.name = format!("{}{name_suffix}", path.base.name);
         }
         DrawLayerNode::Text(text) => {
-            text.base.id = create_draw_id("text");
+            text.base.id = create_draw_id("text", &id_material(&text.base));
             text.base.name = format!("{}{name_suffix}", text.base.name);
         }
         DrawLayerNode::Image(image) => {
-            image.base.id = create_draw_id("image");
+            image.base.id = create_draw_id("image", &id_material(&image.base));
             image.base.name = format!("{}{name_suffix}", image.base.name);
         }
         DrawLayerNode::Group(group) => {
-            group.base.id = create_draw_id("group");
+            group.base.id = create_draw_id("group", &id_material(&group.base));
             group.base.name = format!("{}{name_suffix}", group.base.name);
             group.children = group.children.iter().map(|child| clone_draw_layer_node(child, "")).collect();
         }
         DrawLayerNode::Boolean(boolean) => {
-            boolean.base.id = create_draw_id("boolean");
+            boolean.base.id = create_draw_id("boolean", &id_material(&boolean.base));
             boolean.base.name = format!("{}{name_suffix}", boolean.base.name);
         }
         DrawLayerNode::Trace(trace) => {
-            trace.base.id = create_draw_id("trace");
+            trace.base.id = create_draw_id("trace", &id_material(&trace.base));
             trace.base.name = format!("{}{name_suffix}", trace.base.name);
         }
     }

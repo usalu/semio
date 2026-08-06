@@ -16,5 +16,5 @@ pub fn register_exports() {
 
 /// 🎪️ Adds the pane's app to the shared demonstrator bundle.
 pub fn register_app(bundle: PluginBundle) -> PluginBundle {
-    bundle.register_document_app(create_sourcing_curate_app(), || SourcingCurateApp)
+    bundle.register_document_app::<SourcingCurateApp>(create_sourcing_curate_app())
 }

@@ -37,4 +37,91 @@
 
 **Depends on:** Wave 1b WIT imports (`engine-derive` / `engine-read`)
 
-**Status:** open — M2 engine module shipped without editing framework core (Wave 2 / integrator ownership).
+**Status:** applied — ArtifactKind::Engine added 2026-08-06; WIT engine-derive/engine-read added.
+
+## 2026-08-06 — Wave 3 Integrator — Policy functions landed (flag-gated)
+
+**Why:** Prepare Wave 3 enforcement without failing the default verify/policy gate while Wave 2 migrations remain open.
+
+**Files / globs:**
+- `📜️script.ts` — `policyOsStateAuthorityBreaches`, `policyDocumentAppShapeBreaches`, gated registration
+- `$TICKET/🧪w3-enforcement-draft.md` — dep-cruiser / eslint / launch.json / verify-gate snippets (not applied)
+
+**Exact ask:**
+- [x] Implement both policy functions fully in root `📜️script.ts`
+- [x] Register behind `SEMIO_OS_STATE_AUTHORITY=1` (102 OS breaches today — would fail CI if unconditional)
+- [ ] After Wave 2 clears breaches: remove the env gate and apply snippets from `🧪w3-enforcement-draft.md`
+- [ ] Wire `VerifyScript.gate` + launch.json only after zero-breach flip
+
+**Depends on:** Wave 2 migrations complete (zero `os-state-authority/*` breaches)
+
+**Status:** applied — policy functions + flag gate in `📜️script.ts`; root dep-cruiser/eslint/launch/verify snippets drafted only
+
+## 2026-08-06 — Wave 2 🧊3d — Brep document ops + host injection
+
+**Why:** `BrepDocumentOpEngine` is a stub; CAD/process still use `OnceLock<BrepEngineHost>` until `DocumentApp::handle` receives `EngineHost`.
+
+**Files / globs:**
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**` — M3 `EngineHandles` / `EngineHost` injection into guest `handle`
+- `✏️s/🔨️modules/🧊️3d/📐️brep/⚙️engine/🖥️host/🦀️component.rs` — implement opcode pack in `BrepDocumentOpEngine::compute`
+
+**Exact ask:**
+- [ ] Pass `&dyn EngineHost` (or `EngineHandles`) into CAD/process compute paths; delete `CAD_BREP_HOST` / `PROCESS_BREP_HOST` `OnceLock`s
+- [ ] Incremental brep: `derive(BREP_ENGINE_ID, pack(parent_engine_handle, op))` with serialized kernel snapshot in cache value
+
+**Depends on:** Wave 1b WIT `engine-derive` / `engine-read` (status: applied per prior entry)
+
+**Status:** open — Wave 2 🧊3d landed host wrapper + content-addressed handles; see `🧪w2-3d-engine.md`
+
+## 2026-08-06 — Wave 2 TypeScript — OS chrome document + ui-react vitest
+
+**Why:** Wave 2 TS moved chrome compute/intro prefs to `StoragePort`; durable chrome should eventually live in OS config document, not browser storage. `ui-react` vitest is blocked by a duplicate `Cursor` export.
+
+**Files / globs:**
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs` — `ChromePrefsState` / chrome persistence
+- `🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx` — duplicate `export { Cursor }` (~7937)
+
+**Exact ask:**
+- [ ] Wire `scope.storage` chrome reads/writes to OS chrome document projection (replace long-term `StoragePort` → `localStorage` for `ui.chrome.*` / `ui.compute.*` / `ui.introduction.seen.*`)
+- [ ] Remove duplicate `Cursor` re-export so `@semio-tech/ui-react:test-quick` can run
+
+**Depends on:** `🧪w2-typescript.md`
+
+**Status:** open
+
+## 2026-08-06 — Wave 2 plugins — Home studio port registry + play-app session lanes
+
+**Why:** `HomeApp` still uses process-wide `OnceLock<Arc<Mutex<studio_ports>>>`; draw/flow/procedural play apps keep `Mutex` session fields instead of config/host lanes.
+
+**Files / globs:**
+- `✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/**` — `SHomeDocument` / `SHomeOperation` for `space_id → folder_path` bindings
+- `✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/**` — remove `shared_studio_ports`; ZST `HomeApp`; resolve ports from document bindings
+- `✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/**` — pass home projection into `resolve_studio_document` (or read bindings from `SpaceConfig`)
+- `✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎚️config/**` — `gesture_session_json` + ops; ZST `DrawPlayApp`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/**` — `FlowEvalSession` host ownership / remove `FLOW_SESSION_GEOMETRY` process mutex
+
+**Exact ask:**
+- [ ] Persist folder-backed studio ports in home document ops, not `HomeApp::default()` + global registry
+- [ ] Host injects `FlowEvalSession` (or serializable eval baseline) per document session; delete `Mutex<FlowEvalSession>` on flow/procedural play apps
+- [ ] `presence_peers` on `SpaceApp` → `SpaceConfig` registry ops
+
+**Depends on:** `26/08/06/OS-EXCLUSIVE-STATE-AUTHORITY` Wave 1b `DocumentSession`
+
+**Status:** open — see `🧪w2-plugins-globals.md`
+
+
+## 2026-08-06 — Wave 2 framework — MapHost feature tables + surface cargo
+
+**Why:** `MapHost` GIS tables moved to `host.features` (`MapFeatureTables`); integrators must not assume flat `host.positions` fields.
+
+**Files / globs:**
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/**` — any direct `MapHost` field access
+- Root `Cargo.toml` / workspace — unblock `cargo check -p semio-framework-surface` after `semio-s-3d` brep handle fix
+
+**Exact ask:**
+- [ ] Use `MapHost::sync_*` / `host.features.positions` (not removed flat fields) in EngineCanvas / Scenes if any call sites still use old shape
+- [ ] Restore `GeometryHandle::content_addressed` (or align kernel) so `semio-s-3d` compiles and surface crate checks in CI
+
+**Depends on:** `🧪w2-framework.md`, Wave 2 🧊3d engine ticket
+
+**Status:** open

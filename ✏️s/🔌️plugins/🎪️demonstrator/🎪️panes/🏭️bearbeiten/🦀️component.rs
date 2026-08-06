@@ -41,7 +41,7 @@ pub fn register_exports() {
 
 /// 🎪️ Adds the pane's app to the shared demonstrator bundle.
 pub fn register_app(bundle: PluginBundle) -> PluginBundle {
-    bundle.register_document_app(create_process3d_app(), || Process3dPlayApp)
+    bundle.register_document_app::<Process3dPlayApp>(create_process3d_app())
 }
 
 //#region 🧪️Tests
