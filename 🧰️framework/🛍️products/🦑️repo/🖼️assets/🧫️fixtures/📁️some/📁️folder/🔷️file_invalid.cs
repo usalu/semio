@@ -1,6 +1,6 @@
 #region 📱️Header
 
-// 💻️compose/asset/repo/some/folder/🔷️file_invalid.cs
+// 💻️framework/products/repo/assets/fixtures/some/folder/🔷️file_invalid.cs
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

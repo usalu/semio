@@ -57,7 +57,7 @@ const storyPresentation: Presentation = {
               slides: [
                 textSlide(1, ["Semio Storybook"], ["A composable, data-driven scope registry covering the monorepo."], "title"),
                 textSlide(2, ["Reveal.js Decks"], ["PresentationDeck renders a declarative Presentation → Chapter → Sequence → Thought → Slide tree."]),
-                textSlide(3, ["Thank You"], ["cad · coda · animate · compose/algorithm"]),
+                textSlide(3, ["Thank You"], ["cad · coda · animate · puzzle/algorithm"]),
               ],
             },
           ],

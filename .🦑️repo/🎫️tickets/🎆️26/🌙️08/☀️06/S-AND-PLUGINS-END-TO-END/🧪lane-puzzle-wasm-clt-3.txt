@@ -1,0 +1,13 @@
+error: unquoted keys cannot be empty, expected letters, numbers, `-`, `_`
+  --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml:67:40
+   |
+67 | [target.'cfg(not(target_os = "wasi"))'..dependencies]
+   |                                        ^
+error: failed to load manifest for workspace member `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust`
+referenced by workspace at `/Users/ueli/Documents/semio/Cargo.toml`
+
+Caused by:
+  failed to load manifest for dependency `semio-framework-core`
+
+Caused by:
+  failed to load manifest for dependency `semio-framework-ui`

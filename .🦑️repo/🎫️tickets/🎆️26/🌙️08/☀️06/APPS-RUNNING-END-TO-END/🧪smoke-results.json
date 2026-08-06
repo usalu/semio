@@ -1,0 +1,489 @@
+[
+  {
+    "variant": "procedural3d",
+    "segments": [
+      "procedural",
+      "3d"
+    ],
+    "port": 6018,
+    "url": "http://127.0.0.1:6018/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 8156,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev procedural3d\n\n> bun ./📜️script.ts dev procedural3d\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1723 ms\n\n  ➜  Local:   http://127.0.0.1:6018/\n"
+  },
+  {
+    "variant": "procedural2d",
+    "segments": [
+      "procedural",
+      "2d"
+    ],
+    "port": 6021,
+    "url": "http://127.0.0.1:6021/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 7067,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev procedural2d\n\n> bun ./📜️script.ts dev procedural2d\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1513 ms\n\n  ➜  Local:   http://127.0.0.1:6021/\n"
+  },
+  {
+    "variant": "puzzle3d",
+    "segments": [
+      "3d"
+    ],
+    "port": 6013,
+    "url": "http://127.0.0.1:6013/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 8344,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev puzzle3d\n\n> bun ./📜️script.ts dev puzzle3d\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1962 ms\n\n  ➜  Local:   http://127.0.0.1:6013/\n"
+  },
+  {
+    "variant": "puzzle2d",
+    "segments": [
+      "2d"
+    ],
+    "port": 6012,
+    "url": "http://127.0.0.1:6012/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 6118,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev puzzle2d\n\n> bun ./📜️script.ts dev puzzle2d\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1205 ms\n\n  ➜  Local:   http://127.0.0.1:6012/\n"
+  },
+  {
+    "variant": "cad",
+    "segments": [
+      "cad"
+    ],
+    "port": 6020,
+    "url": "http://127.0.0.1:6020/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 5051,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev cad\n\n> bun ./📜️script.ts dev cad\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1407 ms\n\n  ➜  Local:   http://127.0.0.1:6020/\n"
+  },
+  {
+    "variant": "flow",
+    "segments": [
+      "flow"
+    ],
+    "port": 6016,
+    "url": "http://127.0.0.1:6016/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 7210,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev flow\n\n> bun ./📜️script.ts dev flow\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n6:25:20 PM [vite] (client) Re-optimizing dependencies because lockfile has changed\n\n  VITE v7.3.6  ready in 1346 ms\n\n  ➜  Local:   http://127.0.0.1:6016/\n"
+  },
+  {
+    "variant": "s",
+    "segments": [
+      "s"
+    ],
+    "port": 6070,
+    "url": "http://127.0.0.1:6070/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 5072,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev s\n\n> bun ./📜️script.ts dev s\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1679 ms\n\n  ➜  Local:   http://127.0.0.1:6070/\n"
+  },
+  {
+    "variant": "animate",
+    "segments": [
+      "animate"
+    ],
+    "port": 6051,
+    "url": "http://127.0.0.1:6051/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 6093,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev animate\n\n> bun ./📜️script.ts dev animate\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1537 ms\n\n  ➜  Local:   http://127.0.0.1:6051/\n"
+  },
+  {
+    "variant": "dag",
+    "segments": [
+      "dag"
+    ],
+    "port": 6017,
+    "url": "http://127.0.0.1:6017/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 7130,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev dag\n\n> bun ./📜️script.ts dev dag\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1470 ms\n\n  ➜  Local:   http://127.0.0.1:6017/\n"
+  },
+  {
+    "variant": "draw",
+    "segments": [
+      "draw"
+    ],
+    "port": 6064,
+    "url": "http://127.0.0.1:6064/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 9507,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev draw\n\n> bun ./📜️script.ts dev draw\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 2096 ms\n\n  ➜  Local:   http://127.0.0.1:6064/\n"
+  },
+  {
+    "variant": "forms",
+    "segments": [
+      "forms"
+    ],
+    "port": 6058,
+    "url": "http://127.0.0.1:6058/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 8132,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev forms\n\n> bun ./📜️script.ts dev forms\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 2166 ms\n\n  ➜  Local:   http://127.0.0.1:6058/\n"
+  },
+  {
+    "variant": "raster",
+    "segments": [
+      "raster"
+    ],
+    "port": 6060,
+    "url": "http://127.0.0.1:6060/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 8143,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev raster\n\n> bun ./📜️script.ts dev raster\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 2063 ms\n\n  ➜  Local:   http://127.0.0.1:6060/\n"
+  },
+  {
+    "variant": "note",
+    "segments": [
+      "note"
+    ],
+    "port": 6080,
+    "url": "http://127.0.0.1:6080/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 6477,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev note\n\n> bun ./📜️script.ts dev note\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1816 ms\n\n  ➜  Local:   http://127.0.0.1:6080/\n"
+  },
+  {
+    "variant": "vcs",
+    "segments": [
+      "vcs"
+    ],
+    "port": 6075,
+    "url": "http://127.0.0.1:6075/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 6085,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev vcs\n\n> bun ./📜️script.ts dev vcs\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1358 ms\n\n  ➜  Local:   http://127.0.0.1:6075/\n"
+  },
+  {
+    "variant": "writer",
+    "segments": [
+      "writer"
+    ],
+    "port": 6062,
+    "url": "http://127.0.0.1:6062/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 6158,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev writer\n\n> bun ./📜️script.ts dev writer\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1463 ms\n\n  ➜  Local:   http://127.0.0.1:6062/\n"
+  },
+  {
+    "variant": "aggregator",
+    "segments": [
+      "aggregator"
+    ],
+    "port": 6023,
+    "url": "http://127.0.0.1:6023/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 6059,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev aggregator\n\n> bun ./📜️script.ts dev aggregator\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n6:27:09 PM [vite] (client) Re-optimizing dependencies because lockfile has changed\n\n  VITE v7.3.6  ready in 1278 ms\n\n  ➜  Local:   http://127.0.0.1:6023/\n"
+  },
+  {
+    "variant": "sourcing",
+    "segments": [
+      "sourcing"
+    ],
+    "port": 6081,
+    "url": "http://127.0.0.1:6081/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 6136,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev sourcing\n\n> bun ./📜️script.ts dev sourcing\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n6:27:19 PM [vite] (client) Re-optimizing dependencies because lockfile has changed\n\n  VITE v7.3.6  ready in 1310 ms\n\n  ➜  Local:   http://127.0.0.1:6081/\n"
+  },
+  {
+    "variant": "architect",
+    "segments": [
+      "architect"
+    ],
+    "port": 6090,
+    "url": "http://127.0.0.1:6090/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 5066,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev architect\n\n> bun ./📜️script.ts dev architect\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1064 ms\n\n  ➜  Local:   http://127.0.0.1:6090/\n"
+  },
+  {
+    "variant": "imperative",
+    "segments": [
+      "imperative"
+    ],
+    "port": 6076,
+    "url": "http://127.0.0.1:6076/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 5296,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev imperative\n\n> bun ./📜️script.ts dev imperative\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1169 ms\n\n  ➜  Local:   http://127.0.0.1:6076/\n"
+  },
+  {
+    "variant": "sequence",
+    "segments": [
+      "sequence"
+    ],
+    "port": 6077,
+    "url": "http://127.0.0.1:6077/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 6101,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev sequence\n\n> bun ./📜️script.ts dev sequence\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1452 ms\n\n  ➜  Local:   http://127.0.0.1:6077/\n"
+  },
+  {
+    "variant": "layout",
+    "segments": [
+      "layout"
+    ],
+    "port": 6079,
+    "url": "http://127.0.0.1:6079/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 5202,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev layout\n\n> bun ./📜️script.ts dev layout\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1467 ms\n\n  ➜  Local:   http://127.0.0.1:6079/\n"
+  },
+  {
+    "variant": "process3d",
+    "segments": [
+      "process",
+      "3d"
+    ],
+    "port": 6022,
+    "url": "http://127.0.0.1:6022/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 6060,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev process3d\n\n> bun ./📜️script.ts dev process3d\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 854 ms\n\n  ➜  Local:   http://127.0.0.1:6022/\n"
+  },
+  {
+    "variant": "gis2d",
+    "segments": [
+      "gis",
+      "2d"
+    ],
+    "port": 6040,
+    "url": "http://127.0.0.1:6040/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 4077,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev gis2d\n\n> bun ./📜️script.ts dev gis2d\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n6:28:16 PM [vite] (client) Re-optimizing dependencies because lockfile has changed\n\n  VITE v7.3.6  ready in 1079 ms\n\n  ➜  Local:   http://127.0.0.1:6040/\n"
+  },
+  {
+    "variant": "fem2d",
+    "segments": [
+      "fem",
+      "2d"
+    ],
+    "port": 6086,
+    "url": "http://127.0.0.1:6086/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 5048,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev fem2d\n\n> bun ./📜️script.ts dev fem2d\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1082 ms\n\n  ➜  Local:   http://127.0.0.1:6086/\n"
+  },
+  {
+    "variant": "block2d",
+    "segments": [
+      "block",
+      "2d"
+    ],
+    "port": 6024,
+    "url": "http://127.0.0.1:6024/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 6090,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev block2d\n\n> bun ./📜️script.ts dev block2d\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n6:28:34 PM [vite] (client) Re-optimizing dependencies because lockfile has changed\n\n  VITE v7.3.6  ready in 1520 ms\n\n  ➜  Local:   http://127.0.0.1:6024/\n"
+  },
+  {
+    "variant": "trinity-jack",
+    "segments": [
+      "trinity",
+      "jack"
+    ],
+    "port": 6054,
+    "url": "http://127.0.0.1:6054/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 4041,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev trinity-jack\n\n> bun ./📜️script.ts dev trinity-jack\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 798 ms\n\n  ➜  Local:   http://127.0.0.1:6054/\n"
+  },
+  {
+    "variant": "reasoning-wires",
+    "segments": [
+      "wires"
+    ],
+    "port": 6015,
+    "url": "http://127.0.0.1:6015/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 5204,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev reasoning-wires\n\n> bun ./📜️script.ts dev reasoning-wires\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1238 ms\n\n  ➜  Local:   http://127.0.0.1:6015/\n"
+  },
+  {
+    "variant": "playbook",
+    "segments": [
+      "playbook"
+    ],
+    "port": 6085,
+    "url": "http://127.0.0.1:6085/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 5085,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev playbook\n\n> bun ./📜️script.ts dev playbook\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1014 ms\n\n  ➜  Local:   http://127.0.0.1:6085/\n"
+  },
+  {
+    "variant": "shooting",
+    "segments": [
+      "shooting"
+    ],
+    "port": 6019,
+    "url": "http://127.0.0.1:6019/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 5056,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev shooting\n\n> bun ./📜️script.ts dev shooting\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1266 ms\n\n  ➜  Local:   http://127.0.0.1:6019/\n"
+  },
+  {
+    "variant": "remodel",
+    "segments": [
+      "remodel"
+    ],
+    "port": 6063,
+    "url": "http://127.0.0.1:6063/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 6066,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev remodel\n\n> bun ./📜️script.ts dev remodel\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1947 ms\n\n  ➜  Local:   http://127.0.0.1:6063/\n"
+  },
+  {
+    "variant": "mathematical",
+    "segments": [
+      "mathematical"
+    ],
+    "port": 6084,
+    "url": "http://127.0.0.1:6084/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 5150,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev mathematical\n\n> bun ./📜️script.ts dev mathematical\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 1053 ms\n\n  ➜  Local:   http://127.0.0.1:6084/\n"
+  },
+  {
+    "variant": "lowpoly",
+    "segments": [
+      "lowpoly"
+    ],
+    "port": 6078,
+    "url": "http://127.0.0.1:6078/",
+    "fetchOk": true,
+    "fetchStatus": 200,
+    "logReady": true,
+    "failedHard": false,
+    "exitCode": null,
+    "ms": 5064,
+    "logTail": "\n> nx run @semio-tech/framework-os-dev:dev lowpoly\n\n> bun ./📜️script.ts dev lowpoly\r\n\r\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)\nplugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n6:29:38 PM [vite] (client) Re-optimizing dependencies because lockfile has changed\n\n  VITE v7.3.6  ready in 936 ms\n\n  ➜  Local:   http://127.0.0.1:6078/\n"
+  }
+]

@@ -1,7 +1,7 @@
 //! 🏷️ Point-in-loop (UV) and point-in-solid (ray cast) classification.
 //!
 //! Face trimming uses robust winding in surface `(u, v)`; solids use BVH-culled rays with
-//! interval-certified roots and a retry table of irrational directions (brepkit-style consensus).
+//! interval-certified roots and a retry table of irrational directions (consensus consensus).
 //! Returns [`crate::brep::engine::PointClassification`] for solid queries.
 
 use crate::brep::arena::{FaceId, LoopId, SolidId};

@@ -3,7 +3,7 @@
 //! `GraphHost` diffs `NodeGraphScenePayload` into a retained `DagHost` for hit-testing and layout;
 //! the OS infinite-board projection remains authoritative — this host is a render-session cache.
 
-pub use infinite_board_port_directed_dag as dag;
+pub use infinite_canvas::board::ports::directed_dag as dag;
 pub use infinite_canvas as canvas;
 
 use dag::{dag_screen_to_world, dag_take_pending_open_instance_id, fit_node_size, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, IoPortSpec};

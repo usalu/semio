@@ -552,4 +552,58 @@ mod tests {
         let vol_cut = solid_volume(&body, cut, 1e-6).unwrap();
         assert!((vol_cut - vol_a).abs() < 1e-3, "cut volume {vol_cut} vs A {vol_a}");
     }
+
+    #[test]
+    fn adversarial_scale_sweep_determinism() {
+        let mut body = Body::new();
+        for scale in [0.1_f64, 1.0, 10.0, 100.0] {
+            let a = make_box(&mut body, scale, scale, scale).unwrap();
+            let o = Pnt3::new(scale * 2.0, 0.0, 0.0);
+            let corners = [
+                o,
+                Pnt3::new(o.x + scale, o.y, o.z),
+                Pnt3::new(o.x + scale, o.y + scale, o.z),
+                Pnt3::new(o.x, o.y + scale, o.z),
+                Pnt3::new(o.x, o.y, o.z + scale),
+                Pnt3::new(o.x + scale, o.y, o.z + scale),
+                Pnt3::new(o.x + scale, o.y + scale, o.z + scale),
+                Pnt3::new(o.x, o.y + scale, o.z + scale),
+            ];
+            let b = crate::brep::primitives::make_convex_hull(&mut body, &corners).unwrap();
+            let u0 = boolean_solid(&mut body, a, b, BooleanOp::Unite, 1e-6).unwrap();
+            let u1 = boolean_solid(&mut body, a, b, BooleanOp::Unite, 1e-6).unwrap();
+            assert_eq!(body.solid_faces(u0).len(), body.solid_faces(u1).len());
+            let v = solid_volume(&body, u0, scale * 1e-4).unwrap();
+            assert!((v - 2.0 * scale.powi(3)).abs() < scale.powi(3) * 1e-2, "scale={scale} v={v}");
+        }
+    }
+
+    #[test]
+    fn fuzz_random_aabb_intersect_volume_nonnegative() {
+        let mut body = Body::new();
+        let mut seed = 1u64;
+        for _ in 0..32 {
+            seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1);
+            let w = 0.5 + (seed % 50) as f64 * 0.1;
+            seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1);
+            let ox = (seed % 20) as f64 * 0.25;
+            let a = make_box(&mut body, 2.0, 2.0, 2.0).unwrap();
+            let o = Pnt3::new(ox, ox * 0.5, 0.0);
+            let corners = [
+                o,
+                Pnt3::new(o.x + w, o.y, o.z),
+                Pnt3::new(o.x + w, o.y + w, o.z),
+                Pnt3::new(o.x, o.y + w, o.z),
+                Pnt3::new(o.x, o.y, o.z + w),
+                Pnt3::new(o.x + w, o.y, o.z + w),
+                Pnt3::new(o.x + w, o.y + w, o.z + w),
+                Pnt3::new(o.x, o.y + w, o.z + w),
+            ];
+            let b = crate::brep::primitives::make_convex_hull(&mut body, &corners).unwrap();
+            if let Ok(inter) = boolean_solid(&mut body, a, b, BooleanOp::Intersect, 1e-6) {
+                assert!(solid_volume(&body, inter, 1e-3).unwrap() >= -1e-9);
+            }
+        }
+    }
+
 }

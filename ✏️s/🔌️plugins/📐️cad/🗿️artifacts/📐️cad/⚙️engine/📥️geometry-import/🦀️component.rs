@@ -416,7 +416,7 @@ fn primitives_from_json(entry: &Value) -> Vec<CadPrimitiveSlot> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_s_3d::brep::kernel::BrepkitKernel;
+    use semio_s_3d::brep::kernel::Brep;
 
     fn mesh_triangle_area(mesh: &MeshData, triangle_index: usize) -> f32 {
         let i0 = mesh.indices[triangle_index * 3] as usize;
@@ -457,7 +457,7 @@ mod tests {
         let root: Value = serde_json::from_str(source).expect("fixture");
         let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
         let objects = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
         assert_eq!(imported.len(), 1);
         assert!(imported[0].solid_handle.is_some());
@@ -476,7 +476,7 @@ mod tests {
         let root: Value = serde_json::from_str(source).expect("fixture");
         let geometry = parse_geometry(root.pointer("/models/2/model/geometry"));
         let objects = root.pointer("/models/2/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
         assert_eq!(imported.len(), 1);
         assert!(imported[0].solid_handle.is_some(), "energy face handle");
@@ -494,7 +494,7 @@ mod tests {
         let root: Value = serde_json::from_str(source).expect("fixture");
         let geometry = parse_geometry(root.pointer("/models/3/model/geometry"));
         let objects = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
         let slab = imported.iter().find(|object| object.primitives.iter().any(|primitive| primitive.kind == "surface")).expect("surface object");
         let mesh = tessellate_geometry_handle(&mut kernel, slab.solid_handle.as_ref().expect("handle"), "surface").expect("surface mesh");
@@ -508,7 +508,7 @@ mod tests {
         let root: Value = serde_json::from_str(source).expect("fixture");
         let geometry = parse_geometry(root.pointer("/models/3/model/geometry"));
         let objects = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
         assert!(!imported.is_empty());
         let curve_object = imported.iter().find(|object| object.primitives.iter().any(|primitive| primitive.kind == "curve")).expect("curve object");

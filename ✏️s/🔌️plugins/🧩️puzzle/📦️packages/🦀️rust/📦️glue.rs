@@ -1,5 +1,3 @@
-extern crate infinite_canvas as infinite_board_port_directed_normal;
-extern crate infinite_canvas as infinite_board_port_directed;
 //! 🧩️ Puzzle plugin — the 2d/3d/5d play apps bundled as one hot-swappable WASM component.
 //!
 //! WIRING ONLY. Every `mod` below points at exactly one taxonomy component file with a `#[path]` that
@@ -11,6 +9,9 @@ extern crate infinite_canvas as infinite_board_port_directed;
 //! into this one: the taxonomy validator and the `TaxonomyLibShape` policy lint both fail on it (see
 //! master ticket `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard
 //! ruling).
+
+extern crate infinite_canvas as infinite_board_port_directed_normal;
+extern crate infinite_canvas as infinite_board_port_directed;
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as pack;

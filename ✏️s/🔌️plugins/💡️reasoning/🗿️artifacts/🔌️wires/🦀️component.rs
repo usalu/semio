@@ -226,14 +226,15 @@ pub struct RelationshipDsl {
     pub edge_id: String,
 }
 
-/// 📦️ `wires_fixture.source` — provenance of the compose kit this fixture was generated from;
+/// 📦️ `wires_fixture.source` — provenance of the kit this fixture was generated from;
 /// absent for hand-authored fixtures with no kit origin.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct SourceDsl {
     pub kit_id: String,
     pub kit_name: String,
-    pub kit_path: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kit_path: Option<String>,
 }
 
 /// 🧠️ The `reasoning.wires.fixture` semantic layer — schema/identities/relationships, its own

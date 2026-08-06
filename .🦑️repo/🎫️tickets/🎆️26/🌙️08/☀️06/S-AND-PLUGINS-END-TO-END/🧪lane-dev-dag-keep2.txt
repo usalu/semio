@@ -1,0 +1,23 @@
+
+> nx run @semio-tech/framework-os-dev:dev dag
+
+> bun ./📜️script.ts dev dag
+
+plugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated
+.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json
+[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)
+
+  VITE v7.3.6  ready in 1059 ms
+
+  ➜  Local:   http://127.0.0.1:6017/
+Warning: command "bun ./📜️script.ts dev dag" exited with non-zero status code
+
+
+ NX   Running target dev for project @semio-tech/framework-os-dev failed
+
+Failed tasks:
+
+- @semio-tech/framework-os-dev:dev
+
+Hint: run the command with --verbose for more details.
+

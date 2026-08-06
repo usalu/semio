@@ -1,0 +1,6 @@
+ok true {
+  ignored: [ "**/📇️registry/🤖️generated/**", "**/🤖️generated/**",
+    "**/.vscode/launch.json"
+  ],
+}
+undefined

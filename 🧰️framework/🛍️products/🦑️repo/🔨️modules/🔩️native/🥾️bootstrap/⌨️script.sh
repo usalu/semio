@@ -485,7 +485,7 @@ install_neo4j_desktop_linux_appimage() {
   install_linux_fuse_deps
   local ver="$NEO4J_DESKTOP_INSTALLER_VERSION"
   local url="https://dist.neo4j.org/neo4j-desktop/linux/neo4j-desktop-${ver}-x86_64.AppImage"
-  local dest_dir="${HOME}/.local/share/compose/neo4j-desktop"
+  local dest_dir="${HOME}/.local/share/semio/neo4j-desktop"
   local dest="${dest_dir}/neo4j-desktop-${ver}-x86_64.AppImage"
   mkdir -p "$dest_dir"
   if [ -f "$dest" ]; then

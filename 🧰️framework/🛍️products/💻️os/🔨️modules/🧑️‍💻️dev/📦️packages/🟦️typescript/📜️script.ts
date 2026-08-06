@@ -1518,7 +1518,7 @@ class DevScript extends BundleScript {
       // if their `🔌️plugin-modules/` output is missing or stale. Leaving `SEMIO_PLUGIN` unset makes the
       // vite config fall back to its studio ("s") default, which serves the whole unfiltered
       // `plugin-modules/` directory — exactly what hosting several distinct plugins at once needs.
-      runViteBunxDev(this.root, segments.slice(1), {
+      await runViteBunxDev(this.root, segments.slice(1), {
         portEnv: "S_OS_PORT",
         defaultPort: FRAMEWORK_OS_MULTI_HARNESS_PORT,
         fixedPort: true,
@@ -1589,7 +1589,9 @@ class DevScript extends BundleScript {
       return;
     }
     const resolvedFilter = resolvePlaygroundFilter(plugin);
-    runViteBunxDev(this.root, viteSegments, {
+    // 🐚️ Start Vite without awaiting so plugin builds can stream in while the browser already has a
+    // listening shell; then await the Vite child so this process stays alive for the session.
+    const viteDone = runViteBunxDev(this.root, viteSegments, {
       portEnv: "S_OS_PORT",
       defaultPort,
       fixedPort: true,
@@ -1604,16 +1606,13 @@ class DevScript extends BundleScript {
       },
     });
     if (streamPluginBuilds) {
-      // 🌊️ Vite is already listening at this point (`runViteBunxDev` spawns it as a detached child and
-      // returns immediately) — the shell's `createDevPluginSource` SSE subscription picks up each crate
-      // as `buildPluginsStreaming` finishes it, installing the host plugin first and everything else as
-      // it lands, instead of the browser waiting on this whole loop before it can even connect.
       await buildPluginsStreaming(filterPlugin);
       const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
       const catalogEntries = generatePluginRegistry(repoRoot, filterPluginId ? { filterPlaygroundPlugin: filterPluginId } : {});
       const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin);
       watchPluginRebuilds(targets);
     }
+    await viteDone;
   }
 }
 

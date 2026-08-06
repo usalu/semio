@@ -1,0 +1,89 @@
+{
+  "fem": [
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs",
+      "sig": "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n        }"
+    },
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🌉️wasm/🦀️component.rs",
+      "sig": "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n        }"
+    }
+  ],
+  "puzzle": [
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs",
+      "sig": "    pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n        self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n    }"
+    },
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🌉️wasm/🦀️component.rs",
+      "sig": "    pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n        self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n    }"
+    }
+  ],
+  "allCount": 16,
+  "sample": [
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🌉️wasm/🦀️component.rs",
+      "sig": "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n        }"
+    },
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🌍️world/🦀️component.rs",
+      "sig": "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n        }"
+    },
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🌉️wasm/🦀️component.rs",
+      "sig": "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n        }"
+    },
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs",
+      "sig": "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n        }"
+    },
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🕸️wasm/🦀️component.rs",
+      "sig": "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n        }"
+    },
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🌉️wasm/🦀️component.rs",
+      "sig": "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n        }"
+    },
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🌉️wasm/🦀️component.rs",
+      "sig": "    pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n        self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n    }"
+    },
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs",
+      "sig": "    pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n        self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n    }"
+    },
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🌉️wasm/🦀️component.rs",
+      "sig": "    pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n        self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n    }"
+    },
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🌉️wasm/🦀️component.rs",
+      "sig": "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n        }"
+    },
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🌉️wasm/🦀️component.rs",
+      "sig": "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n        }"
+    },
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs",
+      "sig": "    pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n        self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n    }"
+    },
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🌉️wasm/🦀️component.rs",
+      "sig": "    pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n        self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n    }"
+    },
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs",
+      "sig": "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n        }"
+    },
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🌉️wasm/🦀️component.rs",
+      "sig": "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n        }"
+    },
+    {
+      "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🦀️component.rs",
+      "sig": "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {\n            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))\n        }"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+19 |     SEMIO_PLUGIN: "demonstrator",,
+                                      ^
+error: Expected identifier but found ","
+    at /Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/FRAMEWORK-OS-HOST-AND-DEV-CRATE-CONSOLIDATION/scratch-verify-os-dev-demo.mjs:19:34
+
+Bun v1.3.14 (macOS arm64)

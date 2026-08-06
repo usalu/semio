@@ -1,9 +1,13 @@
 {
-  "url": "http://127.0.0.1:6070/",
-  "title": "",
-  "bodyPreview": "",
+  "url": "http://127.0.0.1:6066/",
+  "title": "semio · os",
+  "bodyPreview": "Fullscreen\nDisplay\nSync\nSettings\nKeybindings\nTheme\nPlugins\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view",
+  "rootChildCount": 1,
   "errors": [
-    "goto:Error: goto: net::ERR_CONNECTION_RESET at http://127.0.0.1:6070/\nCall log:\n  - navigating to \"http://127.0.0.1:6070/\", waiting until \"domcontentloaded\"\n"
+    "console:[DEBUG] program worker s crashed Event",
+    "console:Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console:[DEBUG] program load failed s TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6066/plugin-modules/s/semio_s_plugin_space.js?import"
   ],
-  "htmlLen": 39
+  "fetchOk": true,
+  "logTail": "plugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated\n.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json\n\n  VITE v7.3.6  ready in 629 ms\n\n  ➜  Local:   http://127.0.0.1:6066/\n[BABEL] Note: The code generator has deoptimised the styling of /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx as it exceeds the max of 500KB.\n"
 }

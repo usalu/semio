@@ -821,18 +821,21 @@ fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegis
 //#region 🔖️PlayApp
 /// 🧩️ Puzzle-2d play app. Owns the `BoardHost` engine; the persisted document (the bare fixture json)
 /// lives in the wrapping `VcsDocumentApp`'s operation store and the view state in `Puzzle2dConfig`.
-pub #[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy)]
 struct Puzzle2dPlayApp;
 
-impl Default for Puzzle2dPlayApp
-}
-
-impl Puzzle2dPlayApp
+impl Puzzle2dPlayApp {
+    fn scene_for(fixture: serde_json::Value, config: &Puzzle2dConfig, window_id: Option<&str>) -> Puzzle2dScene {
+        let active_utility = puzzle2d_active_utility(config, window_id);
+        Puzzle2dScene {
+            fixture,
+            runtime: config.runtime.clone(),
+            active_utility,
+        }
     }
 }
 
-impl DocumentApp for Puzzle2dPlayApp
-
+impl DocumentApp for Puzzle2dPlayApp {
     /// 🏷️ Maps each `Puzzle2dCommand` variant back to the action id it was declared under.
     fn command_id(command: &Puzzle2dCommand) -> &'static str {
         command.action_id()
@@ -846,28 +849,26 @@ impl DocumentApp for Puzzle2dPlayApp
         let (action, args, window_id) = (command.action_id(), command.args(), command.window_id());
         let before = doc.projection.0.clone();
         let active_utility = puzzle2d_active_utility(config, window_id);
-        let mut scene = self.scene_for(before.clone(), config, window_id);
-        // 🐢️ `sync_host_fixture_content` (`parse_fixture_v1`) does a full `clear_scene()` + rebuild of
-        // every node/handle/edge — skip it when the fixture content is byte-identical to what `host`
-        // already has (the common case: select/camera/utility/… actions never touch fixture content).
-        if (std::cell::RefCell::new(None)).borrow().as_ref() != Some(&scene.fixture) {
-            sync_host_fixture_content(&mut (std::cell::RefCell::new(BoardHost::default())).borrow_mut(), &scene);
+        let mut scene = Self::scene_for(before.clone(), config, window_id);
+        // 🐚️ DocumentApp::handle is pure (no &self) — rebuild a fresh BoardHost from the document
+        // each call. The previous last_synced_fixture cache lived on &self and cannot return.
+        let host = RefCell::new(BoardHost::default());
+        {
+            let mut host_mut = host.borrow_mut();
+            sync_host_fixture_content(&mut host_mut, &scene);
             // 🧹️ `parse_fixture_v1` always `clear_scene()`s then rebuilds, so it unconditionally emits
             // an `edgeCreate` for every edge as a side effect of parsing — not a real structural
             // change. Discard that parse-induced noise now so `apply_host_events` below only sees
-            // events genuinely produced by *this* action's own engine calls; otherwise those spurious
-            // edgeCreate events get replayed into the fixture on the *next* action, duplicating every
-            // edge every action.
-            let _ = (std::cell::RefCell::new(BoardHost::default())).borrow_mut().drain_events_json();
-            *(std::cell::RefCell::new(None)).borrow_mut() = Some(scene.fixture.clone());
+            // events genuinely produced by *this* action's own engine calls.
+            let _ = host_mut.drain_events_json();
+            sync_host_runtime_state(&mut host_mut, &scene);
         }
-        sync_host_runtime_state(&mut (std::cell::RefCell::new(BoardHost::default())).borrow_mut(), &scene);
         let mut effects: Vec<HostEffect> = Vec::new();
         // 🐢️ Default to Full (safe: every unrecognized/rare action re-renders everything); the
         // narrow-tier arms below override it to the smallest scope that actually covers what they touch.
         let mut ui_scope = UiDirtyScope::Full;
         {
-            let ctx = &mut Puzzle2dActionCtx { host: &(std::cell::RefCell::new(BoardHost::default())), scene: &mut scene, window_id, active_utility, effects: &mut effects, ui_scope: &mut ui_scope };
+            let ctx = &mut Puzzle2dActionCtx { host: &host, scene: &mut scene, window_id, active_utility, effects: &mut effects, ui_scope: &mut ui_scope };
             match action {
                 "setSelection" | "documentSelect" => selection_commands::set_selection(ctx, args),
                 "selectAll" => selection_commands::select_all(ctx),
@@ -911,7 +912,7 @@ impl DocumentApp for Puzzle2dPlayApp
                 _ => {}
             }
         }
-        apply_host_events(&mut (std::cell::RefCell::new(BoardHost::default())).borrow_mut(), &mut scene);
+        apply_host_events(&mut host.borrow_mut(), &mut scene);
         let operations = puzzle2d_document_delta_operations(&before, &scene.fixture);
         // 🐢️ Safety net: a `None` scope claims nothing needs re-rendering — never pair that with an
         // actual document mutation (would silently desync remote clients' UI from the committed operation).
@@ -975,7 +976,7 @@ impl DocumentApp for Puzzle2dPlayApp
             selection::BODY_KEY => Some(selection::WINDOW_KIND_ID),
             _ => None,
         };
-        let envelope = self.scene_for(doc.projection.0.clone(), config, pane);
+        let envelope = Self::scene_for(doc.projection.0.clone(), config, pane);
         let labels = puzzle2d_labels(config);
         match body_key {
             overview::BODY_KEY => overview::render(&document_json, &envelope),
@@ -997,8 +998,8 @@ impl DocumentApp for Puzzle2dPlayApp
             .iter()
             .flat_map(|pane| {
                 window_instance_ids(pane).into_iter().map(|wid| {
-                    let envelope = self.scene_for(doc.projection.0.clone(), config, Some(&wid));
-                    (wid, edit::puzzle2d_engagement(&envelope, &(std::cell::RefCell::new(BoardHost::default())).borrow(), pane, labels))
+                    let envelope = Self::scene_for(doc.projection.0.clone(), config, Some(&wid));
+                    (wid, edit::puzzle2d_engagement(&envelope, &host, pane, labels))
                 })
             })
             .collect()
@@ -1011,7 +1012,7 @@ impl DocumentApp for Puzzle2dPlayApp
             .iter()
             .flat_map(|pane| {
                 window_instance_ids(pane).into_iter().map(|wid| {
-                    let envelope = self.scene_for(doc.projection.0.clone(), config, Some(&wid));
+                    let envelope = Self::scene_for(doc.projection.0.clone(), config, Some(&wid));
                     let measures = match *pane {
                         detail::WINDOW_KIND_ID => detail::window_measures(&envelope, labels),
                         selection::WINDOW_KIND_ID => selection::window_measures(&envelope, labels),
@@ -1025,7 +1026,7 @@ impl DocumentApp for Puzzle2dPlayApp
 
     fn tool_measures(doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.projection;
-        let envelope = self.scene_for(doc.projection.0.clone(), config, None);
+        let envelope = Self::scene_for(doc.projection.0.clone(), config, None);
         let labels = puzzle2d_labels(config);
         HashMap::from([(fill::TOOL_ID.to_string(), vec![fill::measures(&envelope, labels)])])
     }

@@ -21,7 +21,7 @@ pub mod open_source {
 
     pub fn handle(payload: &OpenSource, doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapOperation, Gis2dConfigOperation>, Fault> {
         let host = map_host_from(doc.projection, cfg.projection);
-        match host.positions.get(&payload.feature_id).and_then(|row| row.source_url.clone()) {
+        match host.features.positions.get(&payload.feature_id).and_then(|row| row.source_url.clone()) {
             Some(url) => Ok(Emit::effect(HostEffect::OpenExternalUrl { url })),
             None => Ok(Emit::default()),
         }

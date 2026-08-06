@@ -1,0 +1,19 @@
+{
+  "scanned": 14,
+  "changed": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🌉️wasm/🦀️component.rs",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🌉️wasm/🦀️component.rs",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🕸️wasm/🦀️component.rs",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🌉️wasm/🦀️component.rs",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🌉️wasm/🦀️component.rs",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🌉️wasm/🦀️component.rs",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🌉️wasm/🦀️component.rs",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🌉️wasm/🦀️component.rs",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🌉️wasm/🦀️component.rs",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🌉️wasm/🦀️component.rs"
+  ]
+}

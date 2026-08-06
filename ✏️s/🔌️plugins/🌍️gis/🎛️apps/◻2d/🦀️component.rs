@@ -323,7 +323,6 @@ impl DocumentApp for Gis2dPlayApp {
     }
 
     fn context_menu(
-        &self,
         request: &semio_framework_plugin::ContextMenuRequest,
         _doc: &DocumentView<'_, GisMapDocument>,
         cfg: &ConfigView<'_, Gis2dConfig>,
@@ -400,7 +399,7 @@ pub fn create_gis2d_app() -> App {
                 ]).default_value("colored"),
             ])
             .action_args("setLodMode", vec![
-                ActionArgDef::select("value", LocalizedLabel::native("LOD Mode", "LOD-Modus"), map::options::lod_mode::lod_arg_options()).default_value(framework_surface_tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC),
+                ActionArgDef::select("value", LocalizedLabel::native("LOD Mode", "LOD-Modus"), map::options::lod_mode::lod_arg_options()).default_value(framework_surface::tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC),
             ])
             .action_args("setSelectionMethod", vec![
                 ActionArgDef::select("value", LocalizedLabel::native("Selection Method", "Auswahlmethode"), vec![

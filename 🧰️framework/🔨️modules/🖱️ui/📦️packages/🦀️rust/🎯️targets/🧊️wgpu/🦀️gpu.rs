@@ -24,6 +24,7 @@ pub struct GpuContext {
 }
 
 impl GpuContext {
+    #[cfg(not(target_os = "wasi"))]
     pub async fn from_window(window: std::sync::Arc<winit::window::Window>) -> Result<Self, String> {
         let dpr = window.scale_factor() as f32;
         let size = window.inner_size();
@@ -202,7 +203,7 @@ impl GpuContext {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_os = "wasi")))]
 pub fn schedule_frame(window: &winit::window::Window, callback: impl FnMut() + 'static) {
     use wasm_bindgen::closure::Closure;
     use wasm_bindgen::JsCast;
@@ -216,7 +217,7 @@ pub fn schedule_frame(window: &winit::window::Window, callback: impl FnMut() + '
     let _ = window;
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "wasi")))]
 pub fn schedule_frame(window: &winit::window::Window, _callback: impl FnMut() + 'static) {
     window.request_redraw();
 }

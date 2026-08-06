@@ -157,7 +157,7 @@ mod tree_element;
 #[path = "🦀️widgets.rs"]
 pub mod widgets;
 
-#[cfg(feature = "wgpu-engine")]
+#[cfg(all(feature = "wgpu-engine", not(target_os = "wasi")))]
 #[path = "🦀️host.rs"]
 pub mod host;
 
@@ -182,7 +182,9 @@ pub use arena::{Arena, NodeId};
 #[cfg(all(feature = "wgpu-engine", target_arch = "wasm32"))]
 pub use cursor::apply_canvas_cursor;
 #[cfg(feature = "wgpu-engine")]
-pub use cursor::{apply_window_cursor, resolve_semio_cursor, CursorDragState, SemioCursor};
+pub use cursor::{resolve_semio_cursor, CursorDragState, SemioCursor};
+#[cfg(all(feature = "wgpu-engine", not(target_os = "wasi")))]
+pub use cursor::apply_window_cursor;
 #[cfg(feature = "wgpu-engine")]
 pub use draw::{ear_clip_polygon, mesh_content_version, paint_selection_marquee, DrawList, IconAtlas, MeshGpuTable, RasterTextureTable};
 #[cfg(feature = "wgpu-engine")]
@@ -206,11 +208,11 @@ pub use shell::{Shell, ShellEvent};
 pub use chrome::{chrome_item_bg, chrome_item_text, item_bg, item_text, measure_action_item, push_chrome_border, push_chrome_group_border, push_control_border, push_icon, push_window_cap_border, ICON_TINY};
 #[cfg(feature = "wgpu-engine")]
 pub use engine::Ui;
-#[cfg(feature = "wgpu-engine")]
+#[cfg(all(feature = "wgpu-engine", not(target_os = "wasi")))]
 pub use gpu::schedule_frame;
 #[cfg(feature = "wgpu-engine")]
 pub use gpu::GpuContext;
-#[cfg(feature = "wgpu-engine")]
+#[cfg(all(feature = "wgpu-engine", not(target_os = "wasi")))]
 pub use host::{clipboard_read_text, clipboard_write_text, dispatch_window_event, modifiers_from_winit, pointer_coords, WindowInputState};
 #[cfg(feature = "wgpu-engine")]
 pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};

@@ -1,0 +1,25 @@
+.storybook/compose/ (deleted)
+.storybook/stories/compose/ (deleted)
+.storybook/coda-trees.spec.ts (deleted)
+.storybook/globals.css
+.storybook/main.ts
+.storybook/scopes.ts
+.storybook/preview.tsx
+.storybook/framework-hosts-wasm.spec.ts
+framework/.../styling/.../script.ts
+framework/.../styling/.../vite-elements-assets.ts
+framework/.../ui/.../react/script.ts
+framework/.../ui/.../Band/story.tsx
+framework/.../ui/.../UiDriver/component.tsx
+framework/.../ui/.../Label/component.tsx
+framework/.../ui/.../Breadcrumb/story.tsx
+framework/products/os/component.ts
+framework/products/repo/.../workspaces/component.ts
+framework/products/repo/.../lib/.../index.ts
+framework/products/repo/.../vscode/.../extension.ts
+framework/products/repo/.../fixtures/** (path comments)
+framework/modules/assets/🏛️compose (deleted)
+framework/modules/assets logos/images compose brand (deleted)
+framework/modules/assets/metabolism/.compose (deleted)
+s/.../reasoning/.../wires.dsl.semio
+s/.../reasoning/.../wires/component.rs

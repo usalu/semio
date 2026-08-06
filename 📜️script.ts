@@ -78,8 +78,20 @@ process.env.NX_ISOLATE_PLUGINS ??= "false";
 
 export { Script };
 
+function ensureFrameworkOsPlaygroundCatalog() {
+  let catalog = loadFrameworkOsPlaygroundCatalog();
+  if (catalog.length > 0) return catalog;
+  runCmdStatus("bun", ["nx", "run", "@semio-tech/plugin-registry:generate"], { cwd: WORKSPACE_ROOT, ...orchestratorBudgetOpts() });
+  catalog = loadFrameworkOsPlaygroundCatalog();
+  if (catalog.length === 0) {
+    console.error("[dev] playground catalog is empty after registry generate — check @semio-tech/plugin-registry.");
+    process.exit(1);
+  }
+  return catalog;
+}
+
 function resolvePlaygroundDevApp(segments: string[]): { readonly app: string; readonly rest: string[] } | null {
-  const resolved = resolveFrameworkOsPlaygroundPlugin(loadFrameworkOsPlaygroundCatalog(), segments);
+  const resolved = resolveFrameworkOsPlaygroundPlugin(ensureFrameworkOsPlaygroundCatalog(), segments);
   if (!resolved) return null;
   return { app: resolved.plugin, rest: [...resolved.rest] };
 }
@@ -87,7 +99,7 @@ function resolvePlaygroundDevApp(segments: string[]): { readonly app: string; re
 function runFrameworkOsPlaygroundDev(plugin: string, rest: string[] = []): void {
   runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", "--", plugin, ...rest], {
     cwd: WORKSPACE_ROOT,
-    env: frameworkOsPlaygroundDevEnv(loadFrameworkOsPlaygroundCatalog(), plugin),
+    env: frameworkOsPlaygroundDevEnv(ensureFrameworkOsPlaygroundCatalog(), plugin),
     ...daemonBudgetOpts(),
   });
 }

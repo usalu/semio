@@ -62,7 +62,7 @@ pub fn mesh_from_mesh_document(doc: &Value) -> Result<MeshData, String> {
 #[cfg(test)]
 mod export_concrete_forest_mesh_tests {
     use cad_plugin::artifacts::cad::engine::geometry_import::{objects_from_fixture_model, parse_geometry};
-    use semio_s_3d::brep::kernel::BrepkitKernel;
+    use semio_s_3d::brep::kernel::Brep;
     use semio_s_3d::brep::engine::GeometryHandle;
     use semio_s_3d::mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};
     use serde_json::Value;
@@ -127,7 +127,7 @@ mod export_concrete_forest_mesh_tests {
         let root: Value = serde_json::from_str(source).expect("fixture");
         let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
         let objects = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
         let handle = GeometryHandle(imported[0].solid_handle.clone().expect("handle"));
         let (positions, face_loops) = kernel.solid_face_loops_sync(&handle).expect("CAD face loops");

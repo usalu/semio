@@ -1657,11 +1657,13 @@ const ephemeralBoxes = new Map<string, EphemeralBox<unknown>>();
 const ephemeralMaps = new Map<string, Map<unknown, unknown>>();
 const ephemeralSets = new Map<string, Set<unknown>>();
 
-/** 🫧 Get-or-create a mutable box keyed for OS draft projection. */
-export function ephemeralBox<T>(key: string, init: T | (() => T)): EphemeralBox<T> {
+/** 🫧 Get-or-create a mutable box keyed for OS draft projection.
+ * Init is stored as-is — never treat a function-typed `T` as a lazy factory (that would
+ * invoke identity/no-op resolvers and leave `.current` undefined). */
+export function ephemeralBox<T>(key: string, init: T): EphemeralBox<T> {
   let box = ephemeralBoxes.get(key) as EphemeralBox<T> | undefined;
   if (!box) {
-    box = { current: typeof init === "function" ? (init as () => T)() : init };
+    box = { current: init };
     ephemeralBoxes.set(key, box as EphemeralBox<unknown>);
   }
   return box;
@@ -3887,6 +3889,27 @@ if (import.meta.vitest) {
       const unsubscribe = source.subscribe((event) => events.push(event));
       expect(() => unsubscribe()).not.toThrow();
       expect(events).toEqual([]);
+    });
+  });
+
+  describe("ephemeralBox", () => {
+    it("stores a function-typed init as the current value (not as a lazy factory)", () => {
+      const identity = (id: string) => id;
+      const box = ephemeralBox<(id: string) => string>(`test.ephemeralBox.fn.${Math.random()}`, identity);
+      expect(typeof box.current).toBe("function");
+      expect(box.current("ui.nav.back")).toBe("ui.nav.back");
+    });
+
+    it("stores a no-op function init without invoking it", () => {
+      let calls = 0;
+      const noop = () => {
+        calls += 1;
+      };
+      const box = ephemeralBox<() => void>(`test.ephemeralBox.noop.${Math.random()}`, noop);
+      expect(typeof box.current).toBe("function");
+      expect(calls).toBe(0);
+      box.current();
+      expect(calls).toBe(1);
     });
   });
 

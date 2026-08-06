@@ -12,6 +12,14 @@ role = "framework"
 [lints]
 workspace = true
 
+[features]
+default = ["board-2d", "session-bindgen"]
+# 🧩 board-2d session needs the puzzle plugin crate; tiled-map/terrain/paint/node-graph do not.
+board-2d = ["dep:puzzle"]
+# 🌉️ wasm-bindgen session wrappers (Map/Terrain/…) — disabled when this file is path-mounted into
+# infinite (avoids duplicate TerrainSession symbols linking surface+infinite into one cdylib).
+session-bindgen = []
+
 [package.metadata.wasm-pack.profile.dev]
 wasm-opt = false
 
@@ -34,7 +42,7 @@ path = "📦️glue.rs"
 math = { path = "../../../🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 ui_styling = { path = "../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 infinite_canvas = { path = "../../../../🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
-puzzle = { path = "../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle" }
+puzzle = { path = "../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle", optional = true }
 semio-framework-os-kernel = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

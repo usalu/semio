@@ -33,9 +33,7 @@ semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", 
 semio-framework-core = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-core" }
 math = { path = "../../../../../../🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-# 🧊️ Declarative wgpu component types only — never `wgpu-engine` (winit/parley/swash),
-# so wasm32-wasip2 plugin guests that depend on infinite stay linkable.
-ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
 semio_s_3d = { path = "../../../../../../../✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust", package = "semio-s-3d" }
 compiler = { path = "../../../../../../🔨️modules/📚️compiler/📦️packages/🦀️rust", package = "semio-framework-compiler" }
 serde = { version = "1.0.219", features = ["derive"] }

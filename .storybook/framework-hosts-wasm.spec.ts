@@ -6,7 +6,7 @@
 // Summary: Loads each story's `iframe.html?id=...`, asserts a clean boot (no page/console errors, storybook-root
 // populated) and a host-specific marker element/text. Tile/DEM fetches against intentionally-missing storybook
 // paths produce benign `Failed to load resource … 404` console entries, which `significantConsoleErrors` filters
-// out (mirrors `puzzle-2d.spec.ts`/`coda-trees.spec.ts`).
+// out (mirrors `puzzle-2d.spec.ts`).
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 

@@ -1,0 +1,5 @@
+❯ Checking your system
+❯ Checking package manager version
+✔ Found npm@11.16.0
+✔ Checking your system
+[?25herror: unknown option '--dir'

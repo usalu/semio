@@ -4,7 +4,7 @@ use std::sync::Mutex;
 
 use semio_framework_os_kernel::{Engine, EngineCache, EngineFault, EngineHandle, EngineHost};
 
-use crate::brep::kernel::BrepkitKernel;
+use crate::brep::kernel::Brep;
 
 /// 🔑 Registered brep compute engine id (document ops and replay derive land here).
 pub const BREP_ENGINE_ID: &str = "s.3d.brep";
@@ -29,10 +29,10 @@ impl Engine for BrepDocumentOpEngine {
 //#endregion 🔖️DocumentOpEngine
 
 //#region 🔖️Host
-/// 🧠 Host-owned brep session: LRU engine cache plus one compute-scoped `BrepkitKernel` registry.
+/// 🧠 Host-owned brep session: LRU engine cache plus one compute-scoped `Brep` registry.
 pub struct BrepEngineHost {
     cache: Mutex<EngineCache>,
-    kernel: Mutex<BrepkitKernel>,
+    kernel: Mutex<Brep>,
 }
 
 impl BrepEngineHost {
@@ -42,17 +42,17 @@ impl BrepEngineHost {
         cache.register(BrepDocumentOpEngine);
         Self {
             cache: Mutex::new(cache),
-            kernel: Mutex::new(BrepkitKernel::new()),
+            kernel: Mutex::new(Brep::new()),
         }
     }
 
     /// 🔩 Synchronous `BrepKernel` session mutex (host-owned, not a process-global kernel).
-    pub fn kernel(&self) -> &Mutex<BrepkitKernel> {
+    pub fn kernel(&self) -> &Mutex<Brep> {
         &self.kernel
     }
 
-    /// 🔩 Run a closure against the brepkit kernel.
-    pub fn with_kernel<R>(&self, f: impl FnOnce(&mut BrepkitKernel) -> R) -> Result<R, EngineFault> {
+    /// 🔩 Run a closure against the brep kernel.
+    pub fn with_kernel<R>(&self, f: impl FnOnce(&mut Brep) -> R) -> Result<R, EngineFault> {
         let mut guard = self.kernel.lock().map_err(|_| EngineFault::Compute("brep kernel lock poisoned".into()))?;
         Ok(f(&mut guard))
     }

@@ -5140,10 +5140,13 @@ pub mod plugin_runtime {
         let _ = PLUGIN_BUNDLE_INSTALLER.set(install);
     }
 
+    /// 🔗️ Weak default so intermediate `cdylib` links (e.g. `semio-framework-os` pulled into a
+    /// wasip2 plugin build via feature unification of `component-guest`) succeed; the embedding
+    /// plugin's `plugin_exports!` / `semio_plugin!` provides the strong installer override.
     #[cfg(feature = "component-guest")]
-    extern "C" {
-        fn semio_plugin_bundle_installer_link_shim();
-    }
+    #[unsafe(no_mangle)]
+    #[linkage = "weak"]
+    pub extern "C" fn semio_plugin_bundle_installer_link_shim() {}
 
     /// Ensures the embedding plugin crate's bundle installer ran before any WIT export is served.
     pub fn ensure_plugin_initialized() {

@@ -286,7 +286,7 @@ pub struct Pose {
     pub angle: f64,
 }
 
-/// 📦️ Primitive solid spec resolvable via `BrepkitKernel::*_prim_sync`, or a non-parametric imported
+/// 📦️ Primitive solid spec resolvable via `Brep::*_prim_sync`, or a non-parametric imported
 /// reference (mesh or real B-Rep solid) resolved by the app's own kernel session instead of a primitive.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]

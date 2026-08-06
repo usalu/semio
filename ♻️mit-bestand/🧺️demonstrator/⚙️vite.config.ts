@@ -58,6 +58,10 @@ export default defineConfig({
     port: Number(process.env.MIT_BESTAND_DEMONSTRATOR_PORT ?? 6029),
     strictPort: true,
     fs: { allow: [repoRoot, pluginModulesDir] },
+    watch: {
+      // Generated registry/session rewrites must not bounce Vite.
+      ignored: ["**/📇️registry/🤖️generated/**", "**/🤖️generated/**", "**/.vscode/launch.json"],
+    },
   },
   plugins: [
     ...semioHostHtmlVitePlugin(repoRoot, {

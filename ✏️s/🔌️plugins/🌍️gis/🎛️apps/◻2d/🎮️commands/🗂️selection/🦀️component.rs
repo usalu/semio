@@ -120,8 +120,8 @@ pub mod select_all {
     pub fn handle(_payload: &SelectAll, doc: &DocumentView<'_, GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapOperation, Gis2dConfigOperation>, Fault> {
         let host = map_host_from(doc.projection, cfg.projection);
         let selection = json!({
-            "positions": host.positions.keys().cloned().collect::<Vec<_>>(),
-            "routes": host.routes.keys().cloned().collect::<Vec<_>>(),
+            "positions": host.features.positions.keys().cloned().collect::<Vec<_>>(),
+            "routes": host.features.routes.keys().cloned().collect::<Vec<_>>(),
         });
         Ok(Emit::config(vec![Gis2dConfigOperation::SetFeatureSelection { value_json: selection.to_string() }]))
     }

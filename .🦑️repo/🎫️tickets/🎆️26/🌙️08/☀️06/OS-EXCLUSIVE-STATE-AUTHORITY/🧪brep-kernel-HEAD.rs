@@ -114,20 +114,20 @@ struct Entry {
     entity: Entity,
 }
 
-pub struct BrepkitKernel {
+pub struct Brep {
     topo: Topology,
     seq: u32,
     registry: std::collections::HashMap<String, Entry>,
     mesh_boolean_cache: std::collections::HashMap<(SolidId, u64), brepkit_operations::tessellate::TriangleMesh>,
 }
 
-impl Default for BrepkitKernel {
+impl Default for Brep {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl BrepkitKernel {
+impl Brep {
     pub fn new() -> Self {
         Self { topo: Topology::new(), seq: 0, registry: std::collections::HashMap::new(), mesh_boolean_cache: std::collections::HashMap::new() }
     }
@@ -479,7 +479,7 @@ impl BrepkitKernel {
 }
 // #endregion 🔖️Registry
 
-impl BrepkitKernel {
+impl Brep {
     pub fn box_prim_sync(&mut self, width: f64, depth: f64, height: f64) -> Result<GeometryHandle, BrepError> {
         let solid = make_box(&mut self.topo, width, depth, height).map_err(Self::map_err)?;
         Ok(self.register_solid(solid))
@@ -1637,7 +1637,7 @@ impl BrepkitKernel {
 }
 
 #[async_trait(?Send)]
-impl BrepKernel for BrepkitKernel {
+impl BrepKernel for Brep {
     async fn box_prim(&mut self, width: f64, depth: f64, height: f64) -> Result<GeometryHandle, BrepError> {
         self.box_prim_sync(width, depth, height)
     }
@@ -1931,16 +1931,16 @@ pub fn mesh_data_from_mesh_transfer(transfer: &MeshTransfer) -> semio_framework_
     mesh
 }
 
-/// 🔌️ Format-keyed solid export codec operating on `GeometryHandle`s directly (not tessellated `MeshData`) — thin wrappers around `BrepkitKernel`'s own STEP/STL/OBJ/GLB writers; no codec logic lives here.
+/// 🔌️ Format-keyed solid export codec operating on `GeometryHandle`s directly (not tessellated `MeshData`) — thin wrappers around `Brep`'s own STEP/STL/OBJ/GLB writers; no codec logic lives here.
 pub trait SolidExporter: Send + Sync {
     fn format(&self) -> semio_framework_core::OsMediaFormat;
-    fn export(&self, kernel: &BrepkitKernel, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError>;
+    fn export(&self, kernel: &Brep, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError>;
 }
 
 /// 🔌️ Format-keyed solid import codec; see `SolidExporter`. Returns every solid the payload contained (STEP files may hold more than one).
 pub trait SolidImporter: Send + Sync {
     fn format(&self) -> semio_framework_core::OsMediaFormat;
-    fn import(&self, kernel: &mut BrepkitKernel, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError>;
+    fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError>;
 }
 
 pub struct StepSolidExporter;
@@ -1948,7 +1948,7 @@ impl SolidExporter for StepSolidExporter {
     fn format(&self) -> semio_framework_core::OsMediaFormat {
         semio_framework_core::OsMediaFormat::Step
     }
-    fn export(&self, kernel: &BrepkitKernel, shapes: &[GeometryHandle], _deflection: f64) -> Result<Vec<u8>, BrepError> {
+    fn export(&self, kernel: &Brep, shapes: &[GeometryHandle], _deflection: f64) -> Result<Vec<u8>, BrepError> {
         kernel.export_step_sync(shapes).map(|text| text.into_bytes())
     }
 }
@@ -1958,7 +1958,7 @@ impl SolidImporter for StepSolidImporter {
     fn format(&self) -> semio_framework_core::OsMediaFormat {
         semio_framework_core::OsMediaFormat::Step
     }
-    fn import(&self, kernel: &mut BrepkitKernel, bytes: &[u8], _tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
+    fn import(&self, kernel: &mut Brep, bytes: &[u8], _tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
         let text = std::str::from_utf8(bytes).map_err(|error| BrepError::InvalidInput(error.to_string()))?;
         kernel.import_step_sync(text)
     }
@@ -1969,7 +1969,7 @@ impl SolidExporter for StlSolidExporter {
     fn format(&self) -> semio_framework_core::OsMediaFormat {
         semio_framework_core::OsMediaFormat::Stl
     }
-    fn export(&self, kernel: &BrepkitKernel, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
+    fn export(&self, kernel: &Brep, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
         kernel.export_stl_sync(shapes, deflection)
     }
 }
@@ -1979,7 +1979,7 @@ impl SolidImporter for StlSolidImporter {
     fn format(&self) -> semio_framework_core::OsMediaFormat {
         semio_framework_core::OsMediaFormat::Stl
     }
-    fn import(&self, kernel: &mut BrepkitKernel, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
+    fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
         kernel.import_stl_sync(bytes, tolerance).map(|handle| vec![handle])
     }
 }
@@ -1989,7 +1989,7 @@ impl SolidExporter for ObjSolidExporter {
     fn format(&self) -> semio_framework_core::OsMediaFormat {
         semio_framework_core::OsMediaFormat::Obj
     }
-    fn export(&self, kernel: &BrepkitKernel, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
+    fn export(&self, kernel: &Brep, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
         kernel.export_obj_sync(shapes, deflection).map(|text| text.into_bytes())
     }
 }
@@ -1999,7 +1999,7 @@ impl SolidImporter for ObjSolidImporter {
     fn format(&self) -> semio_framework_core::OsMediaFormat {
         semio_framework_core::OsMediaFormat::Obj
     }
-    fn import(&self, kernel: &mut BrepkitKernel, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
+    fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
         let text = std::str::from_utf8(bytes).map_err(|error| BrepError::InvalidInput(error.to_string()))?;
         kernel.import_obj_sync(text, tolerance).map(|handle| vec![handle])
     }
@@ -2010,7 +2010,7 @@ impl SolidExporter for GlbSolidExporter {
     fn format(&self) -> semio_framework_core::OsMediaFormat {
         semio_framework_core::OsMediaFormat::Glb
     }
-    fn export(&self, kernel: &BrepkitKernel, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
+    fn export(&self, kernel: &Brep, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
         kernel.export_glb_sync(shapes, deflection)
     }
 }
@@ -2020,7 +2020,7 @@ impl SolidImporter for GlbSolidImporter {
     fn format(&self) -> semio_framework_core::OsMediaFormat {
         semio_framework_core::OsMediaFormat::Glb
     }
-    fn import(&self, kernel: &mut BrepkitKernel, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
+    fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
         kernel.import_glb_sync(bytes, tolerance).map(|handle| vec![handle])
     }
 }
@@ -2033,7 +2033,7 @@ mod tests {
 
     #[test]
     fn box_and_tessellate() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
         let mesh = kernel.tessellate_sync(&solid, 0.1).unwrap();
         assert!(!mesh.position.is_empty());
@@ -2043,7 +2043,7 @@ mod tests {
 
     #[test]
     fn box_tessellation_emits_one_face_group_per_topological_face() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
         let mesh = kernel.tessellate_sync(&solid, 0.1).unwrap();
         assert_eq!(mesh.face_groups.len(), 6, "a box has 6 planar faces");
@@ -2063,7 +2063,7 @@ mod tests {
 
     #[test]
     fn dwg_export_import_round_trips_a_box() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
         let bytes = kernel.export_dwg_sync(&[solid], 0.1).unwrap();
         assert!(!bytes.is_empty());
@@ -2075,7 +2075,7 @@ mod tests {
 
     #[test]
     fn glb_export_import_round_trips_a_box_through_the_mesh_codec() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
         let original_volume = kernel.volume_sync(&solid).unwrap();
         let bytes = kernel.export_glb_sync(&[solid], 0.1).unwrap();
@@ -2092,7 +2092,7 @@ mod tests {
 
     #[test]
     fn glb_tessellation_bridge_produces_reasonable_mesh_data() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
         let mesh_data = kernel.tessellate_to_mesh_data_sync(&solid, 0.1).unwrap();
         assert!(!mesh_data.positions.is_empty(), "tessellation bridge must produce vertex positions");
@@ -2111,7 +2111,7 @@ mod tests {
 
     #[test]
     fn tessellate_to_mesh_data_carries_face_ids() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
         let mesh = kernel.tessellate_to_mesh_data_sync(&solid, 0.1).unwrap();
         assert_eq!(mesh.face_ids.len(), mesh.triangle_count());
@@ -2122,7 +2122,7 @@ mod tests {
 
     #[test]
     fn tessellate_face_carries_boundary_edge_positions() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let wire = kernel.polyline_wire_sync(&[[0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [2.0, 2.0, 0.0], [0.0, 0.0, 0.0]]).unwrap();
         let face = kernel.planar_face_from_wire_sync(&wire).unwrap();
         let mesh = kernel.tessellate_to_mesh_data_sync(&face, 0.1).unwrap();
@@ -2135,7 +2135,7 @@ mod tests {
 
     #[test]
     fn solid_exporters_and_importers_round_trip_a_box_per_format() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
         let original_volume = kernel.volume_sync(&solid).unwrap();
         // 🔩️ STEP is exact NURBS round-trip; STL/OBJ/GLB reimport a re-tessellated mesh, so allow a
@@ -2168,7 +2168,7 @@ mod tests {
 
     #[test]
     fn fillet_and_translate() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
         let filleted = kernel.fillet_sync(&solid, 0.1).unwrap();
         let moved = kernel.translate_sync(&filleted, [1.0, 0.0, 0.0]).unwrap();
@@ -2178,7 +2178,7 @@ mod tests {
 
     #[test]
     fn sphere_cut_cylinder_completes() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let sphere = kernel.sphere_prim_sync(2.8).unwrap();
         let cylinder = kernel.cylinder_prim_sync(0.5, 4.0).unwrap();
         let cut = kernel.cut_sync(&sphere, &cylinder).unwrap();
@@ -2189,7 +2189,7 @@ mod tests {
 
     #[test]
     fn sphere_cut_disjoint_torus_completes() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let sphere = kernel.sphere_prim_sync(2.8).unwrap();
         let torus = kernel.torus_prim_sync(2.0, 0.5).unwrap();
         let moved = kernel.translate_sync(&torus, [20.0, 0.0, 0.0]).unwrap();
@@ -2200,7 +2200,7 @@ mod tests {
 
     #[test]
     fn sphere_cut_intersecting_torus_completes() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let sphere = kernel.sphere_prim_sync(2.8).unwrap();
         let torus = kernel.torus_prim_sync(2.0, 0.5).unwrap();
         let cut = kernel.cut_sync(&sphere, &torus).unwrap();
@@ -2214,7 +2214,7 @@ mod tests {
 
     #[test]
     fn fixture_sphere_cut_torus_volume_is_less_than_sphere() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let sphere = kernel.sphere_prim_sync(2.2).unwrap();
         let torus = kernel.torus_prim_sync(2.0, 0.5).unwrap();
         let sphere_vol = kernel.volume_sync(&sphere).unwrap();
@@ -2231,7 +2231,7 @@ mod tests {
 
     #[test]
     fn fixture_sphere_cut_torus_at_slider_max_completes() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let sphere = kernel.sphere_prim_sync(10.0).unwrap();
         let torus = kernel.torus_prim_sync(2.0, 0.5).unwrap();
         let cut = kernel.cut_sync(&sphere, &torus).unwrap();
@@ -2244,7 +2244,7 @@ mod tests {
 
     #[test]
     fn sphere_solid_tessellation_normals_are_unit_and_not_all_axis_aligned() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let sphere = kernel.sphere_prim_sync(1.0).unwrap();
         let transfer = kernel.tessellate_sync(&sphere, 0.05).unwrap();
         assert!(transfer.normal.len() >= 9);
@@ -2261,7 +2261,7 @@ mod tests {
 
     #[test]
     fn retain_sync_drops_unreferenced_handles() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let kept = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
         let orphan = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
         assert_eq!(kernel.registry_len(), 2);
@@ -2274,7 +2274,7 @@ mod tests {
 
     #[test]
     fn line_curve_evaluate() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let line = kernel.line_curve_sync([0.0, 0.0, 0.0], [2.0, 0.0, 0.0]).unwrap();
         let mid = kernel.curve_point_sync(&line, 1.0).unwrap();
         assert!((mid[0] - 1.0).abs() < 1e-5);
@@ -2282,7 +2282,7 @@ mod tests {
 
     #[test]
     fn extrude_rectangle_volume() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let wire = kernel.rectangle_wire_sync(2.0, 2.0).unwrap();
         let face = kernel.planar_face_from_wire_sync(&wire).unwrap();
         let solid = kernel.extrude_sync(&face, [0.0, 0.0, 1.0], 3.0).unwrap();
@@ -2292,7 +2292,7 @@ mod tests {
 
     #[test]
     fn section_box_returns_faces() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
         let faces = kernel.section_sync(&solid, [0.0, 0.0, 0.0], [0.0, 0.0, 1.0]).unwrap();
         assert!(!faces.is_empty());
@@ -2300,7 +2300,7 @@ mod tests {
 
     #[test]
     fn box_surface_area() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
         let area = kernel.area_sync(&solid).unwrap();
         assert!((area - 52.0).abs() < 1.0);
@@ -2308,7 +2308,7 @@ mod tests {
 
     #[test]
     fn step_export_import_roundtrip_stub() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
         let step = kernel.export_step_sync(std::slice::from_ref(&solid)).unwrap();
         assert!(step.contains("ISO-10303"));
@@ -2319,7 +2319,7 @@ mod tests {
 
     #[test]
     fn curve_tessellation_produces_edges() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let curve = kernel.line_curve_sync([0.0, 0.0, 0.0], [10.0, 0.0, 0.0]).unwrap();
         let mesh = kernel.tessellate_sync(&curve, 0.1).unwrap();
         assert!(!mesh.edges.is_empty());
@@ -2327,7 +2327,7 @@ mod tests {
 
     #[test]
     fn sweep_wire_profile_produces_tube_mesh() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let path_wire = kernel.polyline_wire_sync(&[[0.0, 0.0, 0.0], [4.0, 0.0, 0.0]]).unwrap();
         let profile_wire = kernel.regular_polygon_wire_sync(0.08, 8).unwrap();
         let profile_face = kernel.planar_face_from_wire_sync(&profile_wire).unwrap();
@@ -2340,56 +2340,56 @@ mod tests {
     // #region Validation error paths
     #[test]
     fn convex_hull_rejects_fewer_than_four_points() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let err = kernel.convex_hull_sync(&[[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]).unwrap_err();
         assert!(matches!(err, BrepError::InvalidInput(_)));
     }
 
     #[test]
     fn line_curve_rejects_coincident_endpoints() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let err = kernel.line_curve_sync([1.0, 2.0, 3.0], [1.0, 2.0, 3.0]).unwrap_err();
         assert!(matches!(err, BrepError::InvalidInput(_)));
     }
 
     #[test]
     fn polyline_wire_rejects_fewer_than_two_points() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let err = kernel.polyline_wire_sync(&[[0.0, 0.0, 0.0]]).unwrap_err();
         assert!(matches!(err, BrepError::InvalidInput(_)));
     }
 
     #[test]
     fn regular_polygon_wire_rejects_fewer_than_three_sides() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let err = kernel.regular_polygon_wire_sync(1.0, 2).unwrap_err();
         assert!(matches!(err, BrepError::InvalidInput(_)));
     }
 
     #[test]
     fn interpolate_curve_rejects_fewer_than_two_points() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let err = kernel.interpolate_curve_sync(&[[0.0, 0.0, 0.0]], 3).unwrap_err();
         assert!(matches!(err, BrepError::InvalidInput(_)));
     }
 
     #[test]
     fn planar_face_from_points_rejects_fewer_than_three_points() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let err = kernel.planar_face_from_points_sync(&[[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]]).unwrap_err();
         assert!(matches!(err, BrepError::InvalidInput(_)));
     }
 
     #[test]
     fn coons_patch_rejects_fewer_than_four_curves() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let err = kernel.coons_patch_sync(&[vec![[0.0, 0.0, 0.0]]]).unwrap_err();
         assert!(matches!(err, BrepError::InvalidInput(_)));
     }
 
     #[test]
     fn extrude_wire_rejects_zero_length_vector() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let wire = kernel.rectangle_wire_sync(1.0, 1.0).unwrap();
         let err = kernel.extrude_wire_sync(&wire, [0.0, 0.0, 0.0]).unwrap_err();
         assert!(matches!(err, BrepError::InvalidInput(_)));
@@ -2397,7 +2397,7 @@ mod tests {
 
     #[test]
     fn rotate_rejects_zero_length_axis() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
         let err = kernel.rotate_sync(&solid, [0.0, 0.0, 0.0], 1.0).unwrap_err();
         assert!(matches!(err, BrepError::InvalidInput(_)));
@@ -2405,7 +2405,7 @@ mod tests {
 
     #[test]
     fn missing_handle_returns_missing_handle_error() {
-        let kernel = BrepkitKernel::new();
+        let kernel = Brep::new();
         let bogus = GeometryHandle::new(GeometryKind::Solid, 999);
         let err = kernel.volume_sync(&bogus).unwrap_err();
         assert!(matches!(err, BrepError::MissingHandle(_)));
@@ -2413,7 +2413,7 @@ mod tests {
 
     #[test]
     fn wrong_entity_type_errors_are_invalid_input() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let curve = kernel.line_curve_sync([0.0, 0.0, 0.0], [1.0, 0.0, 0.0]).unwrap();
         let err = kernel.fillet_sync(&curve, 0.1).unwrap_err();
         assert!(matches!(err, BrepError::InvalidInput(_)));
@@ -2426,7 +2426,7 @@ mod tests {
     // #region Curve evaluation branches
     #[test]
     fn arc_curve_domain_point_tangent_and_curvature() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let arc = kernel.arc_curve_sync([0.0, 0.0, 0.0], [0.0, 0.0, 1.0], 2.0, 0.0, std::f64::consts::PI).unwrap();
         let domain = kernel.curve_domain_sync(&arc).unwrap();
         assert!((domain.min - 0.0).abs() < 1e-9);
@@ -2443,7 +2443,7 @@ mod tests {
 
     #[test]
     fn ellipse_curve_domain_point_and_curvature() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let ellipse = kernel.ellipse_curve_sync([0.0, 0.0, 0.0], [0.0, 0.0, 1.0], 3.0, 1.0).unwrap();
         let domain = kernel.curve_domain_sync(&ellipse).unwrap();
         assert!((domain.max - TAU).abs() < 1e-9);
@@ -2459,7 +2459,7 @@ mod tests {
 
     #[test]
     fn approximate_curve_builds_a_fitted_nurbs_curve() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let points = vec![[0.0, 0.0, 0.0], [1.0, 1.0, 0.0], [2.0, 0.0, 0.0], [3.0, 1.0, 0.0], [4.0, 0.0, 0.0]];
         let curve = kernel.approximate_curve_sync(&points, 3, 4).unwrap();
         let domain = kernel.curve_domain_sync(&curve).unwrap();
@@ -2473,7 +2473,7 @@ mod tests {
 
     #[test]
     fn box_edge_curve_queries_use_line_branch() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
         let topo = kernel.deconstruct_sync(&solid).unwrap();
         let edge = &topo.edges[0];
@@ -2492,7 +2492,7 @@ mod tests {
 
     #[test]
     fn curve_curve_intersect_finds_crossing_point() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let a = kernel.line_curve_sync([-5.0, 0.0, 0.0], [5.0, 0.0, 0.0]).unwrap();
         let b = kernel.line_curve_sync([0.0, -5.0, 0.0], [0.0, 5.0, 0.0]).unwrap();
         let hits = kernel.curve_curve_intersect_sync(&a, &b, 1e-4).unwrap();
@@ -2502,7 +2502,7 @@ mod tests {
 
     #[test]
     fn curve_surface_intersect_pierces_a_flat_nurbs_patch() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let grid = vec![vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], vec![[0.0, 1.0, 0.0], [1.0, 1.0, 0.0]]];
         let surface = kernel.nurbs_surface_from_grid_sync(&grid, 1, 1).unwrap();
         let line = kernel.line_curve_sync([0.5, 0.5, -5.0], [0.5, 0.5, 5.0]).unwrap();
@@ -2513,7 +2513,7 @@ mod tests {
 
     #[test]
     fn surface_surface_intersect_of_two_flat_nurbs_patches_returns_a_curve() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let grid_a = vec![vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], vec![[0.0, 1.0, 0.0], [1.0, 1.0, 0.0]]];
         let grid_b = vec![vec![[0.0, 0.0, -0.5], [1.0, 0.0, 0.5]], vec![[0.0, 1.0, -0.5], [1.0, 1.0, 0.5]]];
         let surface_a = kernel.nurbs_surface_from_grid_sync(&grid_a, 1, 1).unwrap();
@@ -2529,7 +2529,7 @@ mod tests {
     // #region Surface evaluation branches
     #[test]
     fn plane_surface_point_and_normal_match_frame() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let plane = kernel.plane_surface_sync([0.0, 0.0, 5.0], [0.0, 0.0, 1.0]).unwrap();
         let point = kernel.surface_point_sync(&plane, 0.0, 0.0).unwrap();
         assert!((point[2] - 5.0).abs() < 1e-9);
@@ -2539,7 +2539,7 @@ mod tests {
 
     #[test]
     fn nurbs_surface_from_grid_point_and_normal() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let grid = vec![vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], vec![[0.0, 1.0, 0.0], [1.0, 1.0, 0.0]]];
         let surface = kernel.nurbs_surface_from_grid_sync(&grid, 1, 1).unwrap();
         let point = kernel.surface_point_sync(&surface, 0.5, 0.5).unwrap();
@@ -2551,7 +2551,7 @@ mod tests {
 
     #[test]
     fn face_surfaces_of_curved_primitives_evaluate_without_error() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let cylinder = kernel.cylinder_prim_sync(1.0, 2.0).unwrap();
         let cone = kernel.cone_prim_sync(1.0, 2.0).unwrap();
         let sphere = kernel.sphere_prim_sync(1.0).unwrap();
@@ -2573,7 +2573,7 @@ mod tests {
     // #region Transform, pattern, and measurement branches
     #[test]
     fn distance_closest_point_and_classify_point() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let a = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
         let b = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
         kernel.translate_sync(&b, [5.0, 0.0, 0.0]).unwrap();
@@ -2591,7 +2591,7 @@ mod tests {
 
     #[test]
     fn mirror_and_copy_preserve_volume() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
         let original_volume = kernel.volume_sync(&solid).unwrap();
         let mirrored = kernel.mirror_sync(&solid, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]).unwrap();
@@ -2603,7 +2603,7 @@ mod tests {
 
     #[test]
     fn scale_sync_scales_about_a_center() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
         let scaled = kernel.scale_sync(&solid, 2.0, [1.0, 1.0, 1.0]).unwrap();
         let volume = kernel.volume_sync(&scaled).unwrap();
@@ -2612,7 +2612,7 @@ mod tests {
 
     #[test]
     fn linear_circular_and_grid_patterns_build_compounds() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
         let linear = kernel.linear_pattern_sync(&solid, [2.0, 0.0, 0.0], 2.0, 3).unwrap();
         assert_eq!(kernel.kind_sync(&linear).unwrap(), GeometryKind::Compound);
@@ -2632,7 +2632,7 @@ mod tests {
 
     #[test]
     fn compound_cut_removes_multiple_tools_from_a_target() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let target = kernel.box_prim_sync(4.0, 4.0, 4.0).unwrap();
         let tool_a = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
         let tool_b = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
@@ -2644,7 +2644,7 @@ mod tests {
 
     #[test]
     fn bounding_box_of_a_compound_covers_every_member_solid() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
         let compound = kernel.linear_pattern_sync(&solid, [1.0, 0.0, 0.0], 5.0, 2).unwrap();
         let bbox = kernel.bounding_box_sync(&compound).unwrap();
@@ -2654,14 +2654,14 @@ mod tests {
 
     #[test]
     fn validate_reports_valid_for_a_clean_box() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
         assert_eq!(kernel.validate_sync(&solid).unwrap(), "valid");
     }
 
     #[test]
     fn deconstruct_box_returns_topology_counts() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
         let topo = kernel.deconstruct_sync(&solid).unwrap();
         assert_eq!(topo.vertices.len(), 8);
@@ -2673,7 +2673,7 @@ mod tests {
     // #region Feature operations
     #[test]
     fn fillet_variable_and_chamfer_asymmetric_produce_valid_solids() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
         let filleted = kernel.fillet_variable_sync(&solid, 0.1, 0.3).unwrap();
         assert!(kernel.volume_sync(&filleted).unwrap() > 0.0);
@@ -2686,7 +2686,7 @@ mod tests {
 
     #[test]
     fn fillet_edges_and_chamfer_edges_target_a_single_edge() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
         let topo = kernel.deconstruct_sync(&solid).unwrap();
         let filleted = kernel.fillet_edges_sync(&solid, std::slice::from_ref(&topo.edges[0]), 0.5).unwrap();
@@ -2702,7 +2702,7 @@ mod tests {
 
     #[test]
     fn shell_hollows_out_a_box() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
         let topo = kernel.deconstruct_sync(&solid).unwrap();
         let shelled = kernel.shell_sync(&solid, 0.2, std::slice::from_ref(&topo.faces[0])).unwrap();
@@ -2712,7 +2712,7 @@ mod tests {
 
     #[test]
     fn draft_applies_pull_direction_taper() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
         let topo = kernel.deconstruct_sync(&solid).unwrap();
         let drafted = kernel.draft_sync(&solid, std::slice::from_ref(&topo.faces[0]), [0.0, 0.0, 1.0], [1.0, 1.0, 0.0], 5.0_f64.to_radians()).unwrap();
@@ -2721,7 +2721,7 @@ mod tests {
 
     #[test]
     fn offset_solid_produces_a_larger_solid_for_positive_distance() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
         let original_volume = kernel.volume_sync(&solid).unwrap();
         let offset = kernel.offset_solid_sync(&solid, 0.2).unwrap();
@@ -2731,7 +2731,7 @@ mod tests {
 
     #[test]
     fn defeature_removes_a_face_and_returns_a_solid() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
         let topo = kernel.deconstruct_sync(&solid).unwrap();
         let defeatured = kernel.defeature_sync(&solid, std::slice::from_ref(&topo.faces[0])).unwrap();
@@ -2740,7 +2740,7 @@ mod tests {
 
     #[test]
     fn split_box_returns_two_solids_that_sum_to_original_volume() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
         let original_volume = kernel.volume_sync(&solid).unwrap();
         let (positive, negative) = kernel.split_sync(&solid, [1.0, 1.0, 1.0], [1.0, 0.0, 0.0]).unwrap();
@@ -2752,7 +2752,7 @@ mod tests {
 
     #[test]
     fn heal_solid_and_convert_to_nurbs_return_the_same_handle() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
         let healed = kernel.heal_solid_sync(&solid, 1e-4).unwrap();
         assert_eq!(healed.as_str(), solid.as_str());
@@ -2767,7 +2767,7 @@ mod tests {
     // #region Registry and topology utilities
     #[test]
     fn vertex_and_face_from_wire_register_expected_kinds() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let vertex = kernel.vertex_sync([1.0, 2.0, 3.0]).unwrap();
         assert_eq!(kernel.kind_sync(&vertex).unwrap(), GeometryKind::Vertex);
         let wire = kernel.rectangle_wire_sync(2.0, 2.0).unwrap();
@@ -2778,7 +2778,7 @@ mod tests {
 
     #[test]
     fn solid_face_loops_returns_a_quad_per_box_face() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
         let (positions, face_loops) = kernel.solid_face_loops_sync(&solid).unwrap();
         assert_eq!(positions.len(), 8, "a box has 8 distinct vertices");
@@ -2791,7 +2791,7 @@ mod tests {
 
     #[test]
     fn dispose_sync_removes_the_handle_from_the_registry() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
         assert_eq!(kernel.registry_len(), 1);
         kernel.dispose_sync(&solid);

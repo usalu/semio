@@ -1,0 +1,32 @@
+{
+  "title": "Entwerfen mit Bestand · Demonstrator",
+  "navError": null,
+  "pageErrors": [
+    "ReferenceError: cn is not defined",
+    "ReferenceError: cn is not defined",
+    "ReferenceError: cn is not defined",
+    "ReferenceError: cn is not defined",
+    "ReferenceError: cn is not defined",
+    "ReferenceError: cn is not defined"
+  ],
+  "consoleErrorCount": 1,
+  "consoleErrors": [
+    {
+      "type": "error",
+      "text": "You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it."
+    }
+  ],
+  "reqFailedCount": 2,
+  "reqFailed": [
+    {
+      "url": "http://127.0.0.1:6029/",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "http://127.0.0.1:6029/",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "bodyTextSample": "",
+  "debugCount": 0
+}

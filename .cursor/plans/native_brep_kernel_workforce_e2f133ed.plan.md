@@ -22,13 +22,13 @@ todos:
     status: completed
   - id: wave6-flip
     content: "Wave 6 (the flip, sequential): rewrite 🧰️kernel/🦀️component.rs as native Brep delegating to modules; drop six brepkit deps from Cargo.toml and Cargo.lock; rename BrepkitKernel->Brep across 12 consumer files; rewrite benches; delete differential harness"
-    status: in_progress
+    status: completed
   - id: wave7-hardening
     content: "Wave 7 (3 parallel lanes): exhaustive-tier fuzz and adversarial scale sweeps; consumer + wasm verification (flow_extension_brep, TS vitest, cargo build --workspace); runtime end-to-end confirmation of procedural-3d and CAD with [DEBUG] logs and Playwright screenshots in the ticket folder"
-    status: pending
+    status: completed
   - id: close-ticket
     content: Confirm no brepkit reference remains outside ticket artifacts, run the full repo verify gate, then ticket_close with summary and full file list; record deferred VCS .brep document layer and missing 📐️brep/AGENTS.md as dev follow-ups
-    status: pending
+    status: completed
 isProject: false
 ---
 

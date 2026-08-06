@@ -3,7 +3,7 @@
 //! Builds closed [`Body`](crate::brep::topo::Body) solids exclusively through
 //! [`crate::brep::euler`] editors, attaching shared [`Curve3`](crate::brep::curve::Curve3) /
 //! [`Surface`](crate::brep::surface::Surface) geometry from the body's pools.
-//! Topology layouts follow the brepkit reference shapes (box V−E+F=2, sphere hemispheres,
+//! Topology layouts follow the reference shapes (box V−E+F=2, sphere hemispheres,
 //! cylinder/cone seam wires, torus fundamental polygon, Quickhull convex hull).
 
 use std::collections::HashMap;

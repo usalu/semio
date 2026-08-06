@@ -1,6 +1,6 @@
 // #region 🧲️Header
 //
-// 💻️compose/asset/repo/some/folder/🐹️file_invalid.go
+// 💻️framework/products/repo/assets/fixtures/some/folder/🐹️file_invalid.go
 //
 // 2025 Test User <test@test.com>
 //

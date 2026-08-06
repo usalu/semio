@@ -457,7 +457,7 @@ const ADAPTER_MARKERS = [
   "mod adapters ",
 ];
 
-const INTERNAL_PREFIXES = ["@compose/", "@ui/", "@cad/", "@puzzle/", "@framework/", "@repo/", "@coda/"];
+const INTERNAL_PREFIXES = ["@ui/", "@cad/", "@puzzle/", "@framework/", "@repo/", "@coda/"];
 
 /** 🔌️Returns true when the file path or content marks an adapter boundary. */
 export function isAdapterBoundaryFile(filePath: string, content: string): boolean {
@@ -1784,12 +1784,18 @@ export function runBunx(args: string[], cwd: string, env: NodeJS.ProcessEnv = pr
 }
 
 /** 🥖️Spawns `bunx` asynchronously; exits with child code. */
-export function spawnBunx(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
-  const child = spawn(process.execPath, bunxCmdArgs(args, cwd), { cwd, env, shell: false, stdio: "inherit" });
-  child.on("exit", (code) => process.exit(code ?? 0));
-  child.on("error", (error) => {
-    console.error(error);
-    process.exit(1);
+export function spawnBunx(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, bunxCmdArgs(args, cwd), { cwd, env, shell: false, stdio: "inherit" });
+    child.on("exit", (code) => {
+      if ((code ?? 0) === 0) resolve();
+      else process.exit(code ?? 0);
+    });
+    child.on("error", (error) => {
+      console.error(error);
+      reject(error);
+      process.exit(1);
+    });
   });
 }
 
@@ -2194,7 +2200,7 @@ export function runViteBunxDev(
     /** When set with `fixedPort`, only reuse an existing listener serving this play entry. */
     expectedPlayEntry?: string;
   } = {},
-): void {
+): Promise<void> {
   const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
   const preferredPort = Number(process.env[opts.portEnv ?? "VITE_PORT"] ?? opts.defaultPort ?? "5173");
   const spawnEnv = playPollingEnv(opts.env);
@@ -2202,7 +2208,7 @@ export function runViteBunxDev(
     const url = devServerUrl(host, preferredPort);
     if (canReuseDevPort(host, preferredPort, opts.expectedPlayEntry)) {
       console.log(`[dev] Port ${preferredPort} is already in use — dev server appears to be running at ${url}`);
-      return;
+      return Promise.resolve();
     }
     const occupant = describeDevPortOccupant(preferredPort);
     const servedEntry = devServerPlayEntry(host, preferredPort);
@@ -2234,7 +2240,7 @@ export function runViteBunxDev(
   if (wantStrictPort && !segments.includes("--strictPort") && !segments.includes("--no-strictPort")) {
     viteArgs.push("--strictPort");
   }
-  spawnBunx([...viteArgs, ...segments], bundleRoot, spawnEnv);
+  return spawnBunx([...viteArgs, ...segments], bundleRoot, spawnEnv);
 }
 
 /** ▶️Vite dev via `bunx` without a fixed config path (extra args only). */

@@ -1,0 +1,262 @@
+{
+  "title": "Entwerfen mit Bestand · Demonstrator",
+  "navError": null,
+  "bodyTextSample": "",
+  "rootHtmlSample": "\n    <div id=\"root\"></div>\n    <script>(function(){function reveal(){document.documentElement.dataset.semioStyled=\"ready\"}var link=document.getElementById(\"semio-play-styles\");if(link){if(link.sheet)reveal();else link.addEventListener(\"load\",reveal,{once:true})}else{reveal()}setTimeout(reveal,8000)})();</script>\n    <script type=\"module\" src=\"./📦️index.tsx?t=1786033463136\"></script>\n  \n\n",
+  "pageErrors": [
+    "ReferenceError: cn is not defined",
+    "ReferenceError: cn is not defined",
+    "ReferenceError: cn is not defined",
+    "ReferenceError: cn is not defined",
+    "ReferenceError: cn is not defined",
+    "ReferenceError: cn is not defined"
+  ],
+  "reqFailed": [
+    {
+      "url": "http://127.0.0.1:6029/",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "http://127.0.0.1:6029/",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "consoleErrorCount": 1,
+  "consoleErrors": [
+    {
+      "type": "error",
+      "text": "You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it."
+    }
+  ],
+  "consoleWarningCount": 6,
+  "consoleWarnings": [
+    {
+      "type": "warning",
+      "text": "%s\n\n%s\n An error occurred in the <DemonstratorPane> component. Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to learn more about error boundaries."
+    },
+    {
+      "type": "warning",
+      "text": "%s\n\n%s\n An error occurred in the <DemonstratorPane> component. Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to learn more about error boundaries."
+    },
+    {
+      "type": "warning",
+      "text": "%s\n\n%s\n An error occurred in the <DemonstratorPane> component. Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to learn more about error boundaries."
+    },
+    {
+      "type": "warning",
+      "text": "%s\n\n%s\n An error occurred in the <DemonstratorPane> component. Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to learn more about error boundaries."
+    },
+    {
+      "type": "warning",
+      "text": "%s\n\n%s\n An error occurred in the <DemonstratorPane> component. Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to learn more about error boundaries."
+    },
+    {
+      "type": "warning",
+      "text": "%s\n\n%s\n An error occurred in the <DemonstratorPane> component. Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to learn more about error boundaries."
+    }
+  ],
+  "debugLogs": [],
+  "consoleSample": [
+    {
+      "type": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "warning",
+      "text": "%s\n\n%s\n An error occurred in the <DemonstratorPane> component. Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to learn more about error boundaries."
+    },
+    {
+      "type": "error",
+      "text": "You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /📦️index.tsx: Could not Fast Refresh (\"true\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /📦️index.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx: Could not Fast Refresh (\"SetWindowIconContext\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx: Could not Fast Refresh (\"ANCHORS\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/NodeGraph/🟦️component.tsx: Could not Fast Refresh (\"alignModeToDag\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/NodeGraph/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/InkCanvasHost/🟦️component.tsx: Could not Fast Refresh (\"applyInkCanvasEventLocal\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/InkCanvasHost/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/UtilityTree/🟦️component.tsx: Could not Fast Refresh (\"UTILITY_CATEGORIES\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/UtilityTree/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx: Could not Fast Refresh (\"NULL_SHELL_ROOT_REF\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx: Could not Fast Refresh (\"EMPTY_APP_LABELS_OVERLAY\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🚗️UiDriver/🟦️component.tsx: Could not Fast Refresh (\"COMPACT_UI_DRIVER\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🚗️UiDriver/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣Icons/🟦️component.tsx: Could not Fast Refresh (\"classifyIconSelectorMode\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣Icons/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵Tree/🟦️component.tsx: Could not Fast Refresh (\"PropertyValueColumnContext\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵Tree/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx: Could not Fast Refresh (\"createFrameworkDisplayPanelTabs\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬UIDialog/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel/🟦️component.tsx: Could not Fast Refresh (\"staticTreePanelDefinition\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx: Could not Fast Refresh (\"UI_INSPECTOR_MIXED_PLACEHOLDER\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx: Could not Fast Refresh (\"PluginSurfaceActionsContext\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TextEditor/🟦️component.tsx: Could not Fast Refresh (\"hostLabel\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TextEditor/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬Scene/🟦️component.tsx: Could not Fast Refresh (\"DEFAULT_GUMBALL_CONFIG\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬Scene/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/📱MobilePanel/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨Canvas/🟦️component.tsx: Could not Fast Refresh (\"applyAxisGroupLayoutDelta\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨Canvas/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx: Could not Fast Refresh (\"WindowInstanceIdContext\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🌈️Surface/🟦️component.tsx: Could not Fast Refresh (\"LEVELS\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🌈️Surface/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🎛️Chrome/🟦️component.tsx: Could not Fast Refresh (\"isWindowContentDeadLineHost\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] hot updated: /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🎛️Chrome/🟦️component.tsx"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] invalidate /@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🏷️Label/🟦️component.tsx: Could not Fast Refresh (\"resolveTranslationLabel\" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports"
+    }
+  ],
+  "screenshotPath": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/FRAMEWORK-OS-HOST-AND-DEV-CRATE-CONSOLIDATION/🧪demonstrator-e2e-screenshot.png"
+}

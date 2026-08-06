@@ -1,0 +1,14 @@
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🌉️wasm/🦀️component.rs
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs
+✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🌉️wasm/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🌉️wasm/🦀️component.rs
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🌉️wasm/🦀️component.rs
+✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🕸️wasm/🦀️component.rs
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs
+✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🌉️wasm/🦀️component.rs
+✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🌉️wasm/🦀️component.rs
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🌉️wasm/🦀️component.rs
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs
+✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🌉️wasm/🦀️component.rs
+✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🌉️wasm/🦀️component.rs

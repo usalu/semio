@@ -128,7 +128,7 @@ export const PageNavigationDefault: Story = {
   render: () => (
     <MemoryRouter>
       <div className="w-[600px]">
-        <PageNavigation prev={{ path: "getting-started", title: "Getting Started", section: "Basics" }} next={{ path: "tutorials/hello-compose", title: "Hello Compose", section: "Tutorials" }} />
+        <PageNavigation prev={{ path: "getting-started", title: "Getting Started", section: "Basics" }} next={{ path: "tutorials", title: "Tutorials", section: "Basics" }} />
       </div>
     </MemoryRouter>
   ),

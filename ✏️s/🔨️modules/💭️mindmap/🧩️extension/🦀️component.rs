@@ -7,18 +7,18 @@
 //! moved into `s/plugin/reasoning/app/wires/{rs,op}` — see that split's `dsl`/`engine` crates for the
 //! `MindmapWiresDocument`/`MindmapWiresOperation` types this trait no longer bundles.
 
-pub use infinite_board_normal_directed as graph;
 pub use infinite_canvas as canvas;
+pub use canvas::board::{EdgeId, GraphExtension, NodeId};
 
 // #region 🔖️MindmapExtension
 /// 🧠️ Mindmap semantics over a property graph canvas.
-pub trait MindmapExtension: graph::GraphExtension {
-    fn topic_label(&self, node_id: graph::NodeId) -> Option<&str>;
+pub trait MindmapExtension: GraphExtension {
+    fn topic_label(&self, node_id: NodeId) -> Option<&str>;
 }
 
 /// 🧩️ Topic is a graph node; relationship is a graph edge.
-pub type TopicId = graph::NodeId;
-pub type RelationshipId = graph::EdgeId;
+pub type TopicId = NodeId;
+pub type RelationshipId = EdgeId;
 
 /// 🧭️ Default mindmap extension stub (projection mirror — OS graph packs own topic authority).
 #[derive(Clone, Debug, Default)]
@@ -32,7 +32,7 @@ impl canvas::CanvasExtension for DefaultMindmapExtension {
     }
 }
 
-impl graph::GraphExtension for DefaultMindmapExtension {}
+impl GraphExtension for DefaultMindmapExtension {}
 
 impl MindmapExtension for DefaultMindmapExtension {
     fn topic_label(&self, node_id: TopicId) -> Option<&str> {

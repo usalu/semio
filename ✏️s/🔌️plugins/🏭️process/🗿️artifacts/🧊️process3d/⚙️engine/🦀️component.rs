@@ -5,7 +5,7 @@ use base64::Engine;
 use crate::artifacts::process3d::{
     Capability, MachineCatalog, MeasureKind, MeasureRecipe, Pose, Process3dDocument, ProcessMeasure, ProcessStep, SolidSpec, Stock, StockQuantity, Workshop, WorkshopMachine,
 };
-use semio_s_3d::brep::kernel::{BrepkitKernel, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
+use semio_s_3d::brep::kernel::{Brep, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
 use semio_s_3d::brep::engine::{block_on, BrepEngineHost, BrepKernel, GeometryHandle};
 use semio_framework_plugin::{MeshData, MeshExporter, MeshImporter};
 use serde::Serialize;
@@ -305,7 +305,7 @@ fn hash_value<T: Serialize>(value: &T) -> u64 {
 /// 🧠️ Kernel + prefix memo: `hash(stock, enabled steps[0..i])` → solid handle, so cursor scrubbing and
 /// step edits only recompute the suffix that actually changed.
 /// 🧊️ Concrete (not boxed-trait) so `SolidExporter`/`SolidImporter` (STEP/OBJ/STL/GLB import+export)
-/// can borrow `&BrepkitKernel`/`&mut BrepkitKernel` directly; `&mut BrepkitKernel` still coerces to
+/// can borrow `&Brep`/`&mut Brep` directly; `&mut Brep` still coerces to
 /// `&mut dyn BrepKernel` at every existing call site below, so the CSG replay path is unaffected.
 struct ProcessKernelReplay {
     host: BrepEngineHost,
@@ -326,7 +326,7 @@ impl ProcessKernelReplay {
         }
     }
 
-    fn kernel(&self) -> &std::sync::Mutex<BrepkitKernel> {
+    fn kernel(&self) -> &std::sync::Mutex<Brep> {
         self.host.kernel()
     }
 }
@@ -685,7 +685,7 @@ mod tests {
 
     #[test]
     fn box_primitive_spans_from_local_origin_corner() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let handle = semio_s_3d::brep::engine::block_on(kernel.box_prim(2.0, 3.0, 4.0)).expect("box prim");
         let mesh = semio_s_3d::brep::engine::block_on(kernel.tessellate(&handle, 0.1)).expect("tessellate");
         let axis_bounds = |offset: usize| -> (f32, f32) {

@@ -6,7 +6,7 @@ use crate::apps::gis2d::config::{layer_visible, Gis2dConfig, Gis2dConfigOperatio
 use crate::apps::gis2d::maphost::map_host_from;
 use crate::artifacts::gismap::op::GisMapOperation;
 use crate::artifacts::gismap::GisMapDocument;
-use framework_surface_tiled_map::clamp_map_layer_weight;
+use framework_surface::tiled_map::clamp_map_layer_weight;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

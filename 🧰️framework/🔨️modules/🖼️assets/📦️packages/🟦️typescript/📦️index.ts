@@ -9,10 +9,10 @@
 // #endregion 🧲️Header
 
 //#region 🗃️Exports
-// Builtin UI icons only — the Metabolism kit fixture (and its derived MetabolismKit* exports) moved
-// to `@semio-tech/compose-fixture` (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT): it had zero runtime
-// consumers outside `.storybook/stories/compose/**`, yet this barrel is imported by every document
-// through `ui-react`, so the 7.3MB JSON was being parsed+flattened for nothing on every boot.
+// Builtin UI icons only — heavy kit fixture JSON is not re-exported here
+// (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT): this barrel is imported by every document through
+// `ui-react`, so shipping multi-MB fixtures through it would parse+flatten on every boot for no
+// runtime consumer of these icon exports.
 
 //#region 🔖️Icons
 export type { IconName } from "../../🔣️icons/🤖️generated/🟦️icons.ts";

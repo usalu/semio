@@ -6,7 +6,7 @@
 use crate::apps::gis2d::config::Gis2dConfig;
 use crate::apps::gis2d::gis2d_action;
 use crate::apps::gis2d::terminology::{gis2d_layer_label, Gis2dPlayLabels};
-use framework_surface_tiled_map::{clamp_map_layer_weight, gis_map_layer_weight_slider_ids_json};
+use framework_surface::tiled_map::{clamp_map_layer_weight, gis_map_layer_weight_slider_ids_json};
 use semio_framework_plugin::WindowMeasure;
 use serde_json::json;
 

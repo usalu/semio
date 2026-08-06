@@ -798,133 +798,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc0b364ead1874514c8c2855ab558056ebfeb775653e7ae45ff72f28f8f3166c"
 
 [[package]]
-name = "brepkit-algo"
-version = "0.1.0"
-source = "git+https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e"
-dependencies = [
- "brepkit-math",
- "brepkit-topology",
- "log",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "brepkit-blend"
-version = "0.1.0"
-source = "git+https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e"
-dependencies = [
- "brepkit-math",
- "brepkit-topology",
- "log",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "brepkit-check"
-version = "0.1.0"
-source = "git+https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e"
-dependencies = [
- "brepkit-geometry",
- "brepkit-math",
- "brepkit-topology",
- "smallvec",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "brepkit-geometry"
-version = "0.1.0"
-source = "git+https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e"
-dependencies = [
- "brepkit-math",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "brepkit-heal"
-version = "0.1.0"
-source = "git+https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e"
-dependencies = [
- "bitflags 2.11.1",
- "brepkit-geometry",
- "brepkit-math",
- "brepkit-topology",
- "log",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "brepkit-io"
-version = "0.1.0"
-source = "git+https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e"
-dependencies = [
- "brepkit-math",
- "brepkit-operations",
- "brepkit-topology",
- "quick-xml 0.40.1",
- "thiserror 2.0.18",
- "zip 8.6.0",
-]
-
-[[package]]
-name = "brepkit-math"
-version = "0.1.0"
-source = "git+https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e"
-dependencies = [
- "log",
- "robust",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "brepkit-offset"
-version = "0.1.0"
-source = "git+https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e"
-dependencies = [
- "brepkit-geometry",
- "brepkit-math",
- "brepkit-topology",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "brepkit-operations"
-version = "0.1.0"
-source = "git+https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e"
-dependencies = [
- "brepkit-algo",
- "brepkit-blend",
- "brepkit-check",
- "brepkit-geometry",
- "brepkit-heal",
- "brepkit-math",
- "brepkit-offset",
- "brepkit-sketch",
- "brepkit-topology",
- "log",
- "rayon",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "brepkit-sketch"
-version = "0.1.0"
-source = "git+https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e"
-dependencies = [
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "brepkit-topology"
-version = "0.1.0"
-source = "git+https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e"
-dependencies = [
- "brepkit-math",
- "smallvec",
- "thiserror 2.0.18",
-]
-
-[[package]]
 name = "bs58"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5786,15 +5659,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "quick-xml"
-version = "0.40.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2474bd2e5029e7ccb6abb2ba48cf2383a333851dedf495901544281590c7da7f"
-dependencies = [
- "memchr",
-]
-
-[[package]]
 name = "quinn"
 version = "0.11.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7089,12 +6953,6 @@ dependencies = [
  "async-trait",
  "base64 0.22.1",
  "blake3",
- "brepkit-check",
- "brepkit-geometry",
- "brepkit-io",
- "brepkit-math",
- "brepkit-operations",
- "brepkit-topology",
  "criterion",
  "futures",
  "pollster",
@@ -7127,7 +6985,6 @@ name = "semio-s-mindmap"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-infinite",
- "semio-framework-os-kernel",
  "wasm-bindgen",
 ]
 
@@ -11664,20 +11521,6 @@ name = "zip"
 version = "7.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c42e33efc22a0650c311c2ef19115ce232583abbe80850bc8b66509ebef02de0"
-dependencies = [
- "crc32fast",
- "flate2",
- "indexmap 2.14.0",
- "memchr",
- "typed-path",
- "zopfli",
-]
-
-[[package]]
-name = "zip"
-version = "8.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d04a6b5381502aa6087c94c669499eb1602eb9c5e8198e534de571f7154809b"
 dependencies = [
  "crc32fast",
  "flate2",

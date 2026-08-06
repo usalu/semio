@@ -1,4 +1,4 @@
-//! 🔄️ CAD derive-transformation engine — ports premigration `runDeriveTransformation` onto `kernel_3d_brepkit`.
+//! 🔄️ CAD derive-transformation engine — ports premigration `runDeriveTransformation` onto `kernel_3d_brep`.
 
 use crate::artifacts::cad::{CadObject, CadPrimitiveSlot};
 
@@ -352,11 +352,11 @@ pub fn energy_typologies() -> &'static [&'static str] {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_s_3d::brep::kernel::BrepkitKernel;
+    use semio_s_3d::brep::kernel::Brep;
 
     #[test]
     fn derive_from_geometry_classifies_box() {
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let solid = semio_s_3d::brep::engine::block_on(kernel.box_prim(2.0, 2.0, 3.0)).expect("box");
         let source = vec![CadObject {
             id: "object-box".into(),

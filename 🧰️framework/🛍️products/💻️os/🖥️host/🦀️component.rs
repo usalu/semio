@@ -2796,7 +2796,7 @@ pub mod media_export_raster {
         format!("{}:{}", artifact_kind, format.as_str())
     }
 
-    /// @emoji 🧊️ Registers a B-Rep solid exporter (STEP/STL/OBJ/GLB, operating on `GeometryHandle` via `semio_s_3d::brep::kernel::BrepkitKernel` rather than a tessellated `MeshData`) for a resource kind; call once per format.
+    /// @emoji 🧊️ Registers a B-Rep solid exporter (STEP/STL/OBJ/GLB, operating on `GeometryHandle` via `semio_s_3d::brep::kernel::Brep` rather than a tessellated `MeshData`) for a resource kind; call once per format.
     pub fn register_solid_exporter(artifact_kind: &str, exporter: Box<dyn semio_s_3d::brep::kernel::SolidExporter>) {
         let key = solid_registry_key(artifact_kind, &exporter.format());
         solid_exporters().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(key, exporter);
@@ -2814,7 +2814,7 @@ pub mod media_export_raster {
     }
 
     /// @emoji 🧊️ Exports `shapes` from `kernel` through the solid exporter registered for `artifact_kind` + `format`.
-    pub fn export_registered_solid(artifact_kind: &str, format: &OsMediaFormat, kernel: &semio_s_3d::brep::kernel::BrepkitKernel, shapes: &[semio_s_3d::brep::engine::GeometryHandle], deflection: f64) -> Result<Vec<u8>, String> {
+    pub fn export_registered_solid(artifact_kind: &str, format: &OsMediaFormat, kernel: &semio_s_3d::brep::kernel::Brep, shapes: &[semio_s_3d::brep::engine::GeometryHandle], deflection: f64) -> Result<Vec<u8>, String> {
         let key = solid_registry_key(artifact_kind, format);
         let handlers = solid_exporters().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let exporter = handlers.get(&key).ok_or_else(|| format!("no solid export handler for {key}"))?;
@@ -2822,7 +2822,7 @@ pub mod media_export_raster {
     }
 
     /// @emoji 🧊️ Imports bytes into `kernel` through the solid importer registered for `artifact_kind` + `format`.
-    pub fn import_registered_solid(artifact_kind: &str, format: &OsMediaFormat, kernel: &mut semio_s_3d::brep::kernel::BrepkitKernel, data: &[u8], tolerance: f64) -> Result<Vec<semio_s_3d::brep::engine::GeometryHandle>, String> {
+    pub fn import_registered_solid(artifact_kind: &str, format: &OsMediaFormat, kernel: &mut semio_s_3d::brep::kernel::Brep, data: &[u8], tolerance: f64) -> Result<Vec<semio_s_3d::brep::engine::GeometryHandle>, String> {
         let key = solid_registry_key(artifact_kind, format);
         let handlers = solid_importers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let importer = handlers.get(&key).ok_or_else(|| format!("no solid import handler for {key}"))?;
@@ -3519,7 +3519,7 @@ pub use crate::workflow_kernel::{
 
         #[test]
         fn solid_exporter_and_importer_registrars_round_trip_a_box_through_step() {
-            let mut kernel = semio_s_3d::brep::kernel::BrepkitKernel::new();
+            let mut kernel = semio_s_3d::brep::kernel::Brep::new();
             let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).expect("box");
             crate::media_export_raster::register_solid_exporter("3d.__solid_test", Box::new(semio_s_3d::brep::kernel::StepSolidExporter));
             crate::media_export_raster::register_solid_importer("3d.__solid_test", Box::new(semio_s_3d::brep::kernel::StepSolidImporter));
@@ -3816,7 +3816,9 @@ pub use crate::workflow_kernel::{
 /// 🌉️ Wasm bindings so the TS twin (`framework/product/os/core/js/index.ts`) decodes the shared
 /// `WorkflowFixture` corpus through the same `dsl`/`pack` codepaths Rust uses, instead of `JSON.parse`.
 /// Built via `bun ./📜️script.ts wasm` (`s/kernel/store/rs/script.ts`'s `runWasmPackWebBuild` pattern).
-#[cfg(target_arch = "wasm32")]
+/// Gated on `os-host-full` because `WorkflowFixture` lives in `workflow`, which is behind that feature —
+/// wasip2 plugin guests depend on this crate without `os-host-full` and must not pull the fixture bindings.
+#[cfg(all(target_arch = "wasm32", feature = "os-host-full"))]
 pub mod wasm_exports {
     // #region wasm_exports
     use crate::workflow::WorkflowFixture;

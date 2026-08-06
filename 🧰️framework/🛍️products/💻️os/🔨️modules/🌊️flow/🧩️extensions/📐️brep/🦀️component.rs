@@ -1,7 +1,7 @@
-//! 🔷️ Flow brep module: brepkit-backed geometry operators.
+//! 🔷️ Flow brep module: native geometry operators.
 
 use base64::Engine;
-use semio_s_3d::brep::kernel::BrepkitKernel;
+use semio_s_3d::brep::kernel::Brep;
 use semio_s_3d::brep::engine::{block_on, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
 use neural_engine::{channel_output, Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
 use std::collections::{HashMap, HashSet};
@@ -11,7 +11,7 @@ static KERNEL: OnceLock<RwLock<Box<dyn BrepKernel + Send + Sync>>> = OnceLock::n
 static MESH_CACHE: OnceLock<Mutex<HashMap<(String, u64), semio_framework_core::MeshData>>> = OnceLock::new();
 
 fn kernel() -> &'static RwLock<Box<dyn BrepKernel + Send + Sync>> {
-    KERNEL.get_or_init(|| RwLock::new(Box::new(BrepkitKernel::new())))
+    KERNEL.get_or_init(|| RwLock::new(Box::new(Brep::new())))
 }
 
 fn mesh_cache() -> &'static Mutex<HashMap<(String, u64), semio_framework_core::MeshData>> {
@@ -1906,7 +1906,7 @@ mod tests {
 
     fn reset_test_kernel() {
         if let Ok(mut guard) = kernel().write() {
-            *guard = Box::new(BrepkitKernel::new());
+            *guard = Box::new(Brep::new());
         }
         if let Ok(mut cache) = mesh_cache().lock() {
             cache.clear();

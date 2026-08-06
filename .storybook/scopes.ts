@@ -73,8 +73,6 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
     aliases: {
       "@semio-tech/infinite-canvas-react-renderer": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementations/🟦️typescript/📦️index.tsx",
       "@elements/ui/globals.css": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️globals.css",
-      "@semio-tech/coda-desktop/renderer": "compose/client/ui/desktop/js/renderer.tsx",
-      "@semio-tech/compose-rs-wasm": "compose/client/lib/rs/pkg/compose.js",
     },
     // 🎫️ 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE W7: most stories moved to co-locate with their
     // component (🧱️elements/<Element>/🧪️story.tsx); the legacy glob stays for stories whose component
@@ -102,31 +100,6 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
     id: "puzzle/5d",
     titlePrefix: "🧩️puzzle🕐️5d",
     sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d")],
-  },
-  {
-    id: "compose",
-    titlePrefix: "🏘️compose",
-    sourceRoots: [repoRelative("compose/client/lib/js"), repoRelative("compose/client/lib/rs"), repoRelative("🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript"), repoRelative("compose/fixture"), repoRelative("compose/dev/algorithm")],
-    aliases: {
-      "@semio-tech/ui-react/globals.css": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️globals.css",
-      "@semio-tech/compose-rs-wasm": "compose/client/lib/rs/pkg/compose.js",
-    },
-    optimizeDepsExclude: ["@semio-tech/compose-react", "@semio-tech/compose-js", "@semio-tech/assets"],
-  },
-  {
-    id: "compose/ui",
-    titlePrefix: "🏘️compose⚛️react",
-    sourceRoots: [repoRelative("compose/client/lib/js"), repoRelative("compose/client/lib/rs"), repoRelative("🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript"), repoRelative("compose/fixture")],
-  },
-  {
-    // Directory is singular (`stories/compose/algorithm/`) though the story `title`s read "algorithms" (plural) —
-    // the id must match the real directory (glob-matched), the titlePrefix documents the human-facing title.
-    id: "compose/algorithm",
-    titlePrefix: "🏘️compose🧪️algorithms",
-    sourceRoots: [repoRelative("compose/dev/algorithm"), repoRelative("compose/client/lib/rs"), repoRelative("compose/fixture")],
-    aliases: {
-      "@semio-tech/compose-algorithm": "compose/dev/algorithm/js/index.ts",
-    },
   },
   {
     id: "framework",
@@ -185,15 +158,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
     aliases: {
       "@semio-tech/infinite-canvas-react-renderer": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementations/🟦️typescript/📦️index.tsx",
     },
-  },
-  {
-    id: "coda",
-    titlePrefix: "🧠️coda",
-    sourceRoots: [repoRelative("compose/client/ui/desktop")],
-    aliases: {
-      "@semio-tech/coda-desktop/renderer": "compose/client/ui/desktop/js/renderer.tsx",
-    },
-  },
+  }
 ];
 // #endregion 🔖️ScopeRegistry
 
@@ -276,7 +241,7 @@ export const STORY_SCOPES: readonly StoryScope[] = (() => {
 // #endregion 🔖️ScopeMerge
 
 // #region 🔖️ScopeResolution
-/** @emoji 🎯️ A scope token matches a registered scope's id or any of its descendants (`compose` matches `compose/ui`). */
+/** @emoji 🎯️ A scope token matches a registered scope's id or any of its descendants (`puzzle` matches `puzzle/2d`). */
 function scopeTokenMatches(token: string, scopeId: string): boolean {
   return scopeId === token || scopeId.startsWith(`${token}/`);
 }
@@ -341,16 +306,16 @@ if (import.meta.vitest) {
     });
 
     it("resolves a hierarchical prefix to itself and its descendants", () => {
-      const ids = resolveActiveScopes("compose").map((s) => s.id);
-      expect(ids).toContain("compose");
-      expect(ids).toContain("compose/ui");
-      expect(ids).toContain("compose/algorithm");
+      const ids = resolveActiveScopes("puzzle").map((s) => s.id);
+      expect(ids).toContain("puzzle");
+      expect(ids).toContain("puzzle/2d");
+      expect(ids).toContain("puzzle/3d");
       expect(ids).not.toContain("ui");
     });
 
     it("composes multiple comma-separated scopes", () => {
-      const ids = resolveActiveScopes("ui,compose/algorithm").map((s) => s.id);
-      expect(ids).toEqual(["ui", "compose/algorithm"]);
+      const ids = resolveActiveScopes("ui,puzzle/2d").map((s) => s.id);
+      expect(ids).toEqual(["ui", "puzzle/2d"]);
     });
 
     it("throws on an unknown scope, listing registered ids", () => {
@@ -360,8 +325,8 @@ if (import.meta.vitest) {
 
   describe("buildScopeStoryGlobs", () => {
     it("dedupes a child glob subsumed by an active parent", () => {
-      const globs = buildScopeStoryGlobs(resolveActiveScopes("compose"));
-      expect(globs).toEqual(["./stories/compose/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)"]);
+      const globs = buildScopeStoryGlobs(resolveActiveScopes("puzzle"));
+      expect(globs).toEqual(["./stories/puzzle/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)"]);
     });
   });
 
@@ -388,7 +353,7 @@ if (import.meta.vitest) {
   describe("buildScopeWatchIgnores", () => {
     it("ignores inactive scopes' source roots", () => {
       const ignores = buildScopeWatchIgnores(resolveActiveScopes("ui"));
-      expect(ignores).toContain("**/compose/client/lib/js/**");
+      expect(ignores).toContain("**/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/**");
       expect(ignores.some((g) => g.includes("🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"))).toBe(false);
     });
 
@@ -399,9 +364,9 @@ if (import.meta.vitest) {
 
   describe("scopeActive", () => {
     it("matches an active scope's own prefix and ancestors", () => {
-      const ids = resolveActiveScopes("compose/algorithm").map((s) => s.id);
-      expect(scopeActive(ids, "compose")).toBe(true);
-      expect(scopeActive(ids, "compose/algorithm")).toBe(true);
+      const ids = resolveActiveScopes("puzzle/2d").map((s) => s.id);
+      expect(scopeActive(ids, "puzzle")).toBe(true);
+      expect(scopeActive(ids, "puzzle/2d")).toBe(true);
       expect(scopeActive(ids, "ui")).toBe(false);
     });
   });

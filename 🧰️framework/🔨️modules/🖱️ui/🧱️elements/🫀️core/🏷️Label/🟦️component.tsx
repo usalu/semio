@@ -192,7 +192,6 @@ interface LabelProps {
   labelLayoutKind?: "property" | "treeGroupHeader";
   children?: React.ReactNode;
 }
-// [🏘️compose📚️js🗃️sketchpad💻️elements🔖️basecomponents🪨️label](repo://p/u/compose/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components/d/i/Label)
 export function Label({ id, rowId, label, labelElementId, className, children, labelLayoutKind = "property" }: LabelProps) {
   const localizedLabel = useIdLabel(id);
   const resolvedLabel = label ?? localizedLabel;

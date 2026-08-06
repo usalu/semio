@@ -1,6 +1,6 @@
 # #region 📊️Header
 
-# 💻️compose/asset/repo/some/folder/🐍️file.py
+# 💻️framework/products/repo/assets/fixtures/some/folder/🐍️file.py
 
 # 2025 Test User <test@test.com>
 

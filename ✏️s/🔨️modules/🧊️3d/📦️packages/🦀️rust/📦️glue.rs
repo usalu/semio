@@ -1,7 +1,7 @@
 //! 🌐️ Shared 3D s-module: B-Rep kernel, half-edge mesh, scene math, and BVH spatial index.
 
 //#region 🔖️Brep
-/// @emoji 📐️ Boundary-representation kernel (native modules + brepkit backend + engine contracts).
+/// @emoji 📐️ Boundary-representation kernel (native modules + native backend + engine contracts).
 #[cfg(feature = "brep")]
 #[path = "."]
 pub mod brep {

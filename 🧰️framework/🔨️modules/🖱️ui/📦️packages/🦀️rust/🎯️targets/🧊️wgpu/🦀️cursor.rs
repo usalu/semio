@@ -186,6 +186,7 @@ pub fn apply_canvas_cursor(canvas: &web_sys::HtmlCanvasElement, cursor: SemioCur
     }
 }
 
+#[cfg(not(target_os = "wasi"))]
 pub fn apply_window_cursor(window: &winit::window::Window, cursor: SemioCursor, dark: bool, last: &mut Option<(SemioCursor, bool)>) {
     let key = (cursor, dark);
     if last.as_ref() == Some(&key) {
@@ -196,6 +197,7 @@ pub fn apply_window_cursor(window: &winit::window::Window, cursor: SemioCursor, 
     window.set_cursor(winit_cursor_icon(cursor));
 }
 
+#[cfg(not(target_os = "wasi"))]
 fn winit_cursor_icon(cursor: SemioCursor) -> winit::window::CursorIcon {
     use winit::window::CursorIcon;
     match cursor {

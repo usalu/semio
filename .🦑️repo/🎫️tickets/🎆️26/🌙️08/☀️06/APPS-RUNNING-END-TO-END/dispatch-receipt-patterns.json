@@ -1,0 +1,172 @@
+[
+  {
+    "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🌉️wasm/🦀️component.rs",
+    "snip": [
+      "                    let envelope: TrinityGraphEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;",
+      "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {",
+      "            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {",
+      "            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))",
+      "            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))"
+    ]
+  },
+  {
+    "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🌉️wasm/🦀️component.rs",
+    "snip": [
+      "            let envelope: RasterEnvelope = serde_json::from_str(envelope_json).map_err(|e| JsValue::from_str(&e.to_string()))?;",
+      "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {",
+      "            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {",
+      "            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))",
+      "            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))"
+    ]
+  },
+  {
+    "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs",
+    "snip": [
+      "                    let envelope: Process3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;",
+      "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {",
+      "            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {",
+      "            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))",
+      "            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))"
+    ]
+  },
+  {
+    "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🕸️wasm/🦀️component.rs",
+    "snip": [
+      "                    let envelope: CadEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;",
+      "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {",
+      "            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {",
+      "            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))"
+    ]
+  },
+  {
+    "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🌉️wasm/🦀️component.rs",
+    "snip": [
+      "            let envelope: WriterEnvelope = serde_json::from_str(envelope_json).map_err(|e| JsValue::from_str(&e.to_string()))?;",
+      "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {",
+      "            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {",
+      "            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))",
+      "            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))"
+    ]
+  },
+  {
+    "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🌉️wasm/🦀️component.rs",
+    "snip": [
+      "    serde_json::to_string(&create_present_envelope(id)).map_err(|error| JsValue::from_str(&error.to_string()))",
+      "    let deck = materialize_present_projection_json(envelope_json).map_err(|error| JsValue::from_str(&error.to_string()))?;",
+      "    serde_json::to_string(&deck).map_err(|error| JsValue::from_str(&error.to_string()))",
+      "                let envelope: PresentEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;",
+      "    pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {",
+      "        self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "    pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {",
+      "        self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "        self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))"
+    ]
+  },
+  {
+    "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs",
+    "snip": [
+      "                let envelope: Procedural3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;",
+      "    pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {",
+      "        self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "    pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {",
+      "        self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "        self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))",
+      "        self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))"
+    ]
+  },
+  {
+    "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🌉️wasm/🦀️component.rs",
+    "snip": [
+      "                let envelope: Procedural2dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;",
+      "    pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {",
+      "        self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "    pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {",
+      "        self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "        self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))",
+      "        self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))"
+    ]
+  },
+  {
+    "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🌉️wasm/🦀️component.rs",
+    "snip": [
+      "                    let envelope: GisMapEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;",
+      "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {",
+      "            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {",
+      "            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))",
+      "            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))"
+    ]
+  },
+  {
+    "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🌉️wasm/🦀️component.rs",
+    "snip": [
+      "                    let envelope: ShootingEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;",
+      "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {",
+      "            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {",
+      "            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))"
+    ]
+  },
+  {
+    "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs",
+    "snip": [
+      "                let envelope: Puzzle3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;",
+      "    pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {",
+      "        self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "    pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {",
+      "        self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "        self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))",
+      "        self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))",
+      "    let projection = Puzzle3dProjection::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;",
+      "    serde_json::to_string(&projection).map_err(|error| JsValue::from_str(&error.to_string()))"
+    ]
+  },
+  {
+    "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🌉️wasm/🦀️component.rs",
+    "snip": [
+      "                let envelope: Puzzle5dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;",
+      "    pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {",
+      "        self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "    pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {",
+      "        self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "        self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))",
+      "        self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))"
+    ]
+  },
+  {
+    "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs",
+    "snip": [
+      "                    let envelope: Fem3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;",
+      "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {",
+      "            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {",
+      "            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))",
+      "            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))"
+    ]
+  },
+  {
+    "p": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🌉️wasm/🦀️component.rs",
+    "snip": [
+      "                    let envelope: Fem2dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;",
+      "        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {",
+      "            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {",
+      "            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))",
+      "            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))",
+      "            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))"
+    ]
+  }
+]

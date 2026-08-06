@@ -6,19 +6,19 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use semio_s_3d::brep::engine::{GeometryHandle, Vec3};
-use semio_s_3d::brep::kernel::BrepkitKernel;
+use semio_s_3d::brep::kernel::Brep;
 
 // #region 🔖️Fixtures
 
-fn box_solid(kernel: &mut BrepkitKernel) -> GeometryHandle {
+fn box_solid(kernel: &mut Brep) -> GeometryHandle {
     kernel.box_prim_sync(1.0, 1.0, 1.0).expect("box_prim_sync")
 }
 
-fn sphere_solid(kernel: &mut BrepkitKernel) -> GeometryHandle {
+fn sphere_solid(kernel: &mut Brep) -> GeometryHandle {
     kernel.sphere_prim_sync(1.0).expect("sphere_prim_sync")
 }
 
-fn torus_solid(kernel: &mut BrepkitKernel) -> GeometryHandle {
+fn torus_solid(kernel: &mut Brep) -> GeometryHandle {
     kernel.torus_prim_sync(2.0, 0.5).expect("torus_prim_sync")
 }
 
@@ -26,7 +26,7 @@ fn torus_solid(kernel: &mut BrepkitKernel) -> GeometryHandle {
 /// overlapping fuses — used to reveal per-face-count scaling for tessellation,
 /// fillet, and closest-point queries (which all require a single `SolidId`, not
 /// a compound, ruling out `linear_pattern_sync` as a many-face fixture).
-fn multi_box_solid(kernel: &mut BrepkitKernel, boxes: usize) -> GeometryHandle {
+fn multi_box_solid(kernel: &mut Brep, boxes: usize) -> GeometryHandle {
     let mut current = box_solid(kernel);
     for i in 1..boxes {
         let next = box_solid(kernel);
@@ -36,16 +36,16 @@ fn multi_box_solid(kernel: &mut BrepkitKernel, boxes: usize) -> GeometryHandle {
     current
 }
 
-fn profile_face(kernel: &mut BrepkitKernel) -> GeometryHandle {
+fn profile_face(kernel: &mut Brep) -> GeometryHandle {
     let wire = kernel.rectangle_wire_sync(1.0, 1.0).expect("rectangle_wire_sync");
     kernel.planar_face_from_wire_sync(&wire).expect("planar_face_from_wire_sync")
 }
 
-fn straight_path(kernel: &mut BrepkitKernel) -> GeometryHandle {
+fn straight_path(kernel: &mut Brep) -> GeometryHandle {
     kernel.line_curve_sync([0.0, 0.0, 0.0], [0.0, 0.0, 5.0]).expect("line_curve_sync")
 }
 
-fn polyline_path(kernel: &mut BrepkitKernel, segments: usize) -> GeometryHandle {
+fn polyline_path(kernel: &mut Brep, segments: usize) -> GeometryHandle {
     let points: Vec<Vec3> = (0..=segments).map(|i| [0.3 * (i as f64 * 0.7).sin(), 0.3 * (i as f64 * 0.7).cos(), i as f64 * (5.0 / segments as f64)]).collect();
     kernel.polyline_wire_sync(&points).expect("polyline_wire_sync")
 }
@@ -64,13 +64,13 @@ fn bench_primitives(c: &mut Criterion) {
     let mut group = c.benchmark_group("primitives");
     group.bench_function("box", |b| {
         b.iter(|| {
-            let mut kernel = BrepkitKernel::new();
+            let mut kernel = Brep::new();
             black_box(box_solid(&mut kernel));
         })
     });
     group.bench_function("sphere", |b| {
         b.iter(|| {
-            let mut kernel = BrepkitKernel::new();
+            let mut kernel = Brep::new();
             black_box(sphere_solid(&mut kernel));
         })
     });
@@ -85,7 +85,7 @@ fn bench_curves_surfaces(c: &mut Criterion) {
         let points = point_cloud(n);
         group.bench_with_input(BenchmarkId::new("interpolate_curve", n), &points, |b, points| {
             b.iter(|| {
-                let mut kernel = BrepkitKernel::new();
+                let mut kernel = Brep::new();
                 black_box(kernel.interpolate_curve_sync(points, 3).expect("interpolate_curve_sync"));
             })
         });
@@ -94,7 +94,7 @@ fn bench_curves_surfaces(c: &mut Criterion) {
         let grid = surface_grid(rows, cols);
         group.bench_with_input(BenchmarkId::new("nurbs_surface_from_grid", rows * cols), &grid, |b, grid| {
             b.iter(|| {
-                let mut kernel = BrepkitKernel::new();
+                let mut kernel = Brep::new();
                 black_box(kernel.nurbs_surface_from_grid_sync(grid, 3, 3).expect("nurbs_surface_from_grid_sync"));
             })
         });
@@ -108,7 +108,7 @@ fn bench_sweeps(c: &mut Criterion) {
     let mut group = c.benchmark_group("sweeps");
     group.bench_function("sweep_straight", |b| {
         b.iter(|| {
-            let mut kernel = BrepkitKernel::new();
+            let mut kernel = Brep::new();
             let profile = profile_face(&mut kernel);
             let path = straight_path(&mut kernel);
             black_box(kernel.sweep_sync(&profile, &path).expect("sweep_sync"));
@@ -117,7 +117,7 @@ fn bench_sweeps(c: &mut Criterion) {
     for &segments in &[5usize, 20, 50] {
         group.bench_with_input(BenchmarkId::new("sweep_polyline", segments), &segments, |b, &segments| {
             b.iter(|| {
-                let mut kernel = BrepkitKernel::new();
+                let mut kernel = Brep::new();
                 let profile = profile_face(&mut kernel);
                 let path = polyline_path(&mut kernel, segments);
                 black_box(kernel.sweep_sync(&profile, &path).expect("sweep_sync"));
@@ -127,7 +127,7 @@ fn bench_sweeps(c: &mut Criterion) {
     for &turns in &[1.0f64, 10.0, 50.0] {
         group.bench_with_input(BenchmarkId::new("helical_sweep", turns as u64), &turns, |b, &turns| {
             b.iter(|| {
-                let mut kernel = BrepkitKernel::new();
+                let mut kernel = Brep::new();
                 let profile = profile_face(&mut kernel);
                 black_box(kernel.helical_sweep_sync(&profile, [0.0, 0.0, 0.0], [0.0, 0.0, 1.0], 2.0, 0.5, turns).expect("helical_sweep_sync"));
             })
@@ -148,7 +148,7 @@ fn bench_booleans(c: &mut Criterion) {
     let mut group = c.benchmark_group("booleans");
     group.bench_function("fuse_box_box", |b| {
         b.iter(|| {
-            let mut kernel = BrepkitKernel::new();
+            let mut kernel = Brep::new();
             let a = box_solid(&mut kernel);
             let b_solid = box_solid(&mut kernel);
             let b_solid = kernel.translate_sync(&b_solid, [0.5, 0.0, 0.0]).expect("translate_sync");
@@ -157,7 +157,7 @@ fn bench_booleans(c: &mut Criterion) {
     });
     group.bench_function("cut_box_sphere", |b| {
         b.iter(|| {
-            let mut kernel = BrepkitKernel::new();
+            let mut kernel = Brep::new();
             let a = box_solid(&mut kernel);
             let s = sphere_solid(&mut kernel);
             black_box(kernel.cut_sync(&a, &s).expect("cut_sync"));
@@ -165,7 +165,7 @@ fn bench_booleans(c: &mut Criterion) {
     });
     group.bench_function("fuse_box_torus_mesh_fallback", |b| {
         b.iter(|| {
-            let mut kernel = BrepkitKernel::new();
+            let mut kernel = Brep::new();
             let a = box_solid(&mut kernel);
             let t = torus_solid(&mut kernel);
             black_box(kernel.fuse_sync(&a, &t).expect("fuse_sync"));
@@ -173,7 +173,7 @@ fn bench_booleans(c: &mut Criterion) {
     });
     group.bench_function("repeated_cut_same_torus_x10", |b| {
         b.iter(|| {
-            let mut kernel = BrepkitKernel::new();
+            let mut kernel = Brep::new();
             let t = torus_solid(&mut kernel);
             for i in 0..10 {
                 let a = box_solid(&mut kernel);
@@ -192,7 +192,7 @@ fn bench_transforms(c: &mut Criterion) {
     for &boxes in &[1usize, 20, 60] {
         group.bench_with_input(BenchmarkId::new("translate", boxes), &boxes, |b, &boxes| {
             b.iter(|| {
-                let mut kernel = BrepkitKernel::new();
+                let mut kernel = Brep::new();
                 let shape = multi_box_solid(&mut kernel, boxes);
                 black_box(kernel.translate_sync(&shape, [1.0, 2.0, 3.0]).expect("translate_sync"));
             })
@@ -208,14 +208,14 @@ fn bench_features(c: &mut Criterion) {
     for &boxes in &[1usize, 5, 15] {
         group.bench_with_input(BenchmarkId::new("fillet_all_edges", boxes), &boxes, |b, &boxes| {
             b.iter(|| {
-                let mut kernel = BrepkitKernel::new();
+                let mut kernel = Brep::new();
                 let shape = multi_box_solid(&mut kernel, boxes);
                 black_box(kernel.fillet_sync(&shape, 0.05).expect("fillet_sync"));
             })
         });
         group.bench_with_input(BenchmarkId::new("chamfer_all_edges", boxes), &boxes, |b, &boxes| {
             b.iter(|| {
-                let mut kernel = BrepkitKernel::new();
+                let mut kernel = Brep::new();
                 let shape = multi_box_solid(&mut kernel, boxes);
                 black_box(kernel.chamfer_sync(&shape, 0.05).expect("chamfer_sync"));
             })
@@ -231,14 +231,14 @@ fn bench_intersect_measure(c: &mut Criterion) {
     for &boxes in &[1usize, 20, 60] {
         group.bench_with_input(BenchmarkId::new("closest_point", boxes), &boxes, |b, &boxes| {
             b.iter(|| {
-                let mut kernel = BrepkitKernel::new();
+                let mut kernel = Brep::new();
                 let shape = multi_box_solid(&mut kernel, boxes);
                 black_box(kernel.closest_point_sync(&shape, [100.0, 100.0, 100.0]).expect("closest_point_sync"));
             })
         });
         group.bench_with_input(BenchmarkId::new("classify_point", boxes), &boxes, |b, &boxes| {
             b.iter(|| {
-                let mut kernel = BrepkitKernel::new();
+                let mut kernel = Brep::new();
                 let shape = multi_box_solid(&mut kernel, boxes);
                 black_box(kernel.classify_point_sync(&shape, [0.5, 0.5, 0.5]).expect("classify_point_sync"));
             })
@@ -248,7 +248,7 @@ fn bench_intersect_measure(c: &mut Criterion) {
         let points = point_cloud(control_points);
         group.bench_with_input(BenchmarkId::new("curve_curve_intersect", control_points), &points, |b, points| {
             b.iter(|| {
-                let mut kernel = BrepkitKernel::new();
+                let mut kernel = Brep::new();
                 let a = kernel.interpolate_curve_sync(points, 3).expect("interpolate_curve_sync");
                 let shifted: Vec<Vec3> = points.iter().map(|p| [p[0] + 0.05, p[1], p[2]]).collect();
                 let bcurve = kernel.interpolate_curve_sync(&shifted, 3).expect("interpolate_curve_sync");
@@ -265,19 +265,19 @@ fn bench_tessellation(c: &mut Criterion) {
     let mut group = c.benchmark_group("tessellation");
     for &tolerance in &[0.5f64, 0.1, 0.01] {
         group.bench_with_input(BenchmarkId::new("box_tolerance", format!("{tolerance}")), &tolerance, |b, &tolerance| {
-            let mut kernel = BrepkitKernel::new();
+            let mut kernel = Brep::new();
             let shape = box_solid(&mut kernel);
             b.iter(|| black_box(kernel.tessellate_sync(&shape, tolerance).expect("tessellate_sync")))
         });
         group.bench_with_input(BenchmarkId::new("sphere_tolerance", format!("{tolerance}")), &tolerance, |b, &tolerance| {
-            let mut kernel = BrepkitKernel::new();
+            let mut kernel = Brep::new();
             let shape = sphere_solid(&mut kernel);
             b.iter(|| black_box(kernel.tessellate_sync(&shape, tolerance).expect("tessellate_sync")))
         });
     }
     for &boxes in &[1usize, 20, 60] {
         group.bench_with_input(BenchmarkId::new("multi_box_faces", boxes), &boxes, |b, &boxes| {
-            let mut kernel = BrepkitKernel::new();
+            let mut kernel = Brep::new();
             let shape = multi_box_solid(&mut kernel, boxes);
             b.iter(|| black_box(kernel.tessellate_sync(&shape, 0.1).expect("tessellate_sync")))
         });
@@ -292,14 +292,14 @@ fn bench_patterns(c: &mut Criterion) {
     for &count in &[5usize, 50, 200] {
         group.bench_with_input(BenchmarkId::new("linear_pattern", count), &count, |b, &count| {
             b.iter(|| {
-                let mut kernel = BrepkitKernel::new();
+                let mut kernel = Brep::new();
                 let shape = box_solid(&mut kernel);
                 black_box(kernel.linear_pattern_sync(&shape, [2.0, 0.0, 0.0], 2.0, count).expect("linear_pattern_sync"));
             })
         });
         group.bench_with_input(BenchmarkId::new("circular_pattern", count), &count, |b, &count| {
             b.iter(|| {
-                let mut kernel = BrepkitKernel::new();
+                let mut kernel = Brep::new();
                 let shape = box_solid(&mut kernel);
                 black_box(kernel.circular_pattern_sync(&shape, [0.0, 0.0, 1.0], count).expect("circular_pattern_sync"));
             })

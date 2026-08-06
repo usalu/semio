@@ -1,6 +1,6 @@
 # #region 📊️Header
 
-# 💻️compose/asset/repo/some/folder/🐍️file_invalid.py
+# 💻️framework/products/repo/assets/fixtures/some/folder/🐍️file_invalid.py
 
 # 2026 Ueli Saluz <ueli@compose-tech.de>
 

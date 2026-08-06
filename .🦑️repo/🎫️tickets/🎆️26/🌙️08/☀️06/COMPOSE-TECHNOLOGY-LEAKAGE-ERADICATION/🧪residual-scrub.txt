@@ -1,0 +1,35 @@
+Compose residual scrub — framework + ✏️s + .storybook
+Date: 2026-08-06
+
+Patterns: compose/{client,fixture,dev,asset,example}, @semio-tech/compose, @compose/, 🏘️compose,
+ensureComposeWasm, compose-sketchpad, compose.sketchpad, compose/
+Excludes: node_modules, .git, AGENTS.md, puzzle 🌉️compose tree, client/client_bin binaries
+
+## Fixed this pass
+- ui-react README: removed compose/js/sketchpad path mention
+- .storybook PresentationDeck: compose/algorithm → puzzle/algorithm
+- repo coordinator .env.example: /srv/compose/blob → /srv/semio/blob
+- vscode extension.ts: removed dead @semio-tech/compose-js/compose import comment
+- repo bootstrap script.sh: ~/.local/share/compose/neo4j-desktop → .../semio/neo4j-desktop
+
+## Already clean / kept (prior or intentional)
+- assets package index: no compose-fixture comments (AGENTS.md still mentions it; not edited per rule)
+- workspaces: compose is in WORKSPACE_SCAN_SKIP_DIR_NAMES as isolated legacy (comment already correct)
+- Band story / UiDriver: already retargeted off compose.sketchpad (demo.* / ui.panelToggle.*)
+- Label breadcrumb compose link: already gone
+- OS product: 0 path-pattern hits
+- puzzle glue.rs 🌉️compose path attribute: KEEP (domain composition engine)
+- draw compose/decompose docstring: KEEP (verb)
+
+## Remaining path-level hits after pass: 219
+- keep-puzzle: 1
+- keep-verb: 1
+- repo-product (non-CLI): 66
+- repo-cli (Go CLI + tests; deferred): 151
+- other: 0
+
+See 🧾repo-product-residual.md for repo-product follow-up inventory.
+
+## Non-repo remaining detail
+✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/📦️glue.rs:125:             #[path = "../../🗿️artifacts/🖐️5d/⚙️engine/🌉️compose/🦀️component.rs"]
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🦀️component.rs:42:     /// 📐️ Radians — `engine`'s compose/decompose matrix helpers call `.cos()`/`.sin()`

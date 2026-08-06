@@ -235,7 +235,7 @@ export function resolveControlLabelId(id: string): string {
 export function panelKindFromPanelToggleControlId(id: string): string | undefined {
   if (id.startsWith("ui.panelToggle.")) return id.slice("ui.panelToggle.".length);
   if (id.startsWith("playground.panel.")) return id.slice("playground.panel.".length);
-  if (id.startsWith("compose.sketchpad.navbar.panelToggle.")) return id.slice("compose.sketchpad.navbar.panelToggle.".length);
+  if (id.startsWith("demo.navbar.panelToggle.")) return id.slice("demo.navbar.panelToggle.".length);
   return undefined;
 }
 

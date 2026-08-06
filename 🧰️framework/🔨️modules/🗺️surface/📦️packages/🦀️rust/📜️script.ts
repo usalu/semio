@@ -4,12 +4,16 @@ import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, 
 
 class WasmScript extends BundleScript {
   run(): void {
+    // 🧩 `board-2d` (default feature) depends on the puzzle plugin crate; keep the browser pkg
+    // buildable for GIS/terrain/node-graph/paint while puzzle 3d play-app sources are repaired.
     runWasmPackWebBuild({
       rsDir: this.root,
       skipEnvVar: "FRAMEWORK_SURFACE_RS_SKIP_WASM_BUILD",
       logPrefix: "framework/surface/rs",
       wasmBaseName: "framework_surface",
       shipProfile: "wasm-release",
+      noDefaultFeatures: true,
+      cargoFeatures: ["session-bindgen"],
       pkg: {
         name: "@semio-tech/framework-surface-rs",
         files: ["framework_surface_bg.wasm", "framework_surface.js", "framework_surface.d.ts", "framework_surface_bg.wasm.d.ts"],

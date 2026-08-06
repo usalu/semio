@@ -82,7 +82,7 @@ impl Default for Gis2dConfig {
             camera_json: default_gis2d_camera_json(),
             render_mode: default_gis2d_render_mode(),
             vector_style: default_gis2d_vector_style(),
-            // 🔽️ Mirrors `framework_surface_tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC`, spelled out here so
+            // 🔽️ Mirrors `framework_surface::tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC`, spelled out here so
             // the config type stays independent of the tiled-map surface crate.
             lod_mode: "automatic".into(),
             feature_selection_json: default_gis2d_feature_selection_json(),
@@ -199,7 +199,7 @@ mod tests {
 
     #[test]
     fn gis2d_config_default_lod_mode_matches_the_tiled_map_surface_constant() {
-        assert_eq!(Gis2dConfig::default().lod_mode, framework_surface_tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC);
+        assert_eq!(Gis2dConfig::default().lod_mode, framework_surface::tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC);
     }
 
     #[test]

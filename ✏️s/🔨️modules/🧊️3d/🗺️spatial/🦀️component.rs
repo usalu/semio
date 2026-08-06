@@ -2,7 +2,7 @@
 //!
 //! Kernel-agnostic: works with any leaf payload (`crate::brep::kernel` instantiates
 //! `Bvh<FaceId>`/`Bvh<EdgeId>` internally) using only [`crate::brep::engine`]'s `Vec3`/`Aabb`
-//! types, so this crate never depends on brepkit and stays reusable by other 3D kernels.
+//! types, so this crate never depends on brep and stays reusable by other 3D kernels.
 
 use crate::brep::engine::{Aabb, Vec3};
 

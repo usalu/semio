@@ -3,7 +3,7 @@ name = "semio-s-3d"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Shared 3D s-module - one crate for the B-Rep kernel (native geometry modules, the BrepKernel interface and its brepkit-backed implementation), the half-edge mesh kernel, generic scene math and the BVH spatial index"
+description = "Shared 3D s-module - native B-Rep kernel, half-edge mesh, scene math, and BVH spatial index"
 
 [lints]
 workspace = true
@@ -24,12 +24,6 @@ brep = [
     "dep:base64",
     "dep:blake3",
     "dep:pollster",
-    "dep:brepkit-check",
-    "dep:brepkit-geometry",
-    "dep:brepkit-io",
-    "dep:brepkit-math",
-    "dep:brepkit-operations",
-    "dep:brepkit-topology",
 ]
 
 [dependencies]
@@ -45,12 +39,6 @@ semio-framework-math = { workspace = true }
 semio-framework-core = { workspace = true, optional = true }
 semio-framework-os-kernel = { workspace = true, optional = true }
 blake3 = { version = "1", optional = true }
-brepkit-check = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
-brepkit-geometry = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
-brepkit-io = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
-brepkit-math = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
-brepkit-operations = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
-brepkit-topology = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
 [dev-dependencies]
 criterion = { version = "0.5", default-features = false, features = ["html_reports"] }
 [[bench]]

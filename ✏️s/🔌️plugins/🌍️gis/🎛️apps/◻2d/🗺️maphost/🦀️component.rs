@@ -7,7 +7,7 @@
 use crate::apps::gis2d::config::Gis2dConfig;
 use crate::artifacts::gismap::engine::gis_map_descriptor_json;
 use crate::artifacts::gismap::GisMapDocument;
-use framework_surface_tiled_map::MapHost;
+use framework_surface::tiled_map::MapHost;
 use serde_json::Value;
 
 //#region 🔖️MapHost

@@ -1,7 +1,7 @@
 //! 🎮️ CAD interaction statechart — a generic interpreter over `spatial.interaction` JSON assets
 //! (`cad/asset/modelDefinition/*/interaction/*.json`, mirroring `cad/schema/json/🔣️inter🔣️action.json`),
 //! plus a small commit-action runner mapping each spec's `commit.operation.action` onto real
-//! `kernel_3d_brepkit` calls. Four "building.building.*" ids have no JSON asset (aec.building has
+//! `kernel_3d_brep` calls. Four "building.building.*" ids have no JSON asset (aec.building has
 //! no interaction directory) and keep a bespoke hand-written statechart (`legacy_*` functions)
 //! identical to the pre-engine behavior.
 
@@ -139,7 +139,7 @@ fn catalog() -> Vec<InteractionCatalogEntry> {
             });
         }
         entries
-    })
+    }
 }
 //#endregion 🔖️Registry
 
@@ -804,7 +804,7 @@ pub fn preview_display_items(session: &CadEngagementScratch) -> Vec<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_s_3d::brep::kernel::BrepkitKernel;
+    use semio_s_3d::brep::kernel::Brep;
 
     #[test]
     fn catalog_includes_json_driven_and_legacy_building_entries() {
@@ -826,7 +826,7 @@ mod tests {
         assert!(apply_event(&mut session, "set.height", Some(&json!(2.5))));
         assert!(apply_event(&mut session, "confirm", None));
         assert!(can_commit(&session));
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let object = commit_object(&mut kernel, &session, 0, |prefix| format!("{prefix}-1"));
         assert!(object.is_some());
         assert_eq!(object.unwrap().typology, "spatial.shape.primitive.box");
@@ -849,7 +849,7 @@ mod tests {
         assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [0.0, 0.0, 0.0] }))));
         assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [2.0, 0.0, 0.0] }))));
         assert!(can_commit(&session));
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let object = commit_object(&mut kernel, &session, 0, |prefix| format!("{prefix}-1"));
         let object = object.expect("sphere commits");
         assert_eq!(object.typology, "spatial.shape.solid.sphere");
@@ -865,7 +865,7 @@ mod tests {
         assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [4.0, 0.0, 0.0] }))));
         assert!(apply_event(&mut session, "set.height", Some(&json!({ "value": 3.0 }))));
         assert!(can_commit(&session));
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let object = commit_object(&mut kernel, &session, 0, |prefix| format!("{prefix}-1"));
         let object = object.expect("wall commits");
         assert_eq!(object.typology, "energy.energy.externalwall");
@@ -878,7 +878,7 @@ mod tests {
         assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [1.0, 1.0, 0.0] }))));
         assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [1.5, 1.0, 0.0] }))));
         assert!(apply_event(&mut session, "set.height", Some(&json!({ "value": 3.0 }))));
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let object = commit_object(&mut kernel, &session, 0, |prefix| format!("{prefix}-1"));
         let object = object.expect("column commits");
         assert_eq!(object.typology, "structure.structure.reinforcedconcretecolumn");
@@ -892,7 +892,7 @@ mod tests {
         assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [0.0, 0.0, 0.0] }))));
         assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [4.0, 5.0, 0.0] }))));
         assert!(apply_event(&mut session, "set.height", Some(&json!({ "value": 0.3 }))));
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let object = commit_object(&mut kernel, &session, 0, |prefix| format!("{prefix}-1"));
         assert!(object.is_some());
     }
@@ -923,7 +923,7 @@ mod tests {
         assert!(apply_event(&mut session, "pointer.down", Some(&json!([4.0, 0.0, 0.0]))));
         assert!(apply_event(&mut session, "set.height", Some(&json!(3.0))));
         assert!(can_commit(&session));
-        let mut kernel = BrepkitKernel::new();
+        let mut kernel = Brep::new();
         let object = commit_object(&mut kernel, &session, 0, |prefix| format!("{prefix}-1"));
         assert!(object.is_some());
         assert_eq!(object.unwrap().typology, "building.building.wall");

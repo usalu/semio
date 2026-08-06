@@ -1,0 +1,107 @@
+=== path/package coupling (framework + s + storybook) ===
+🧰️framework/🛍️products/🦑️repo/🖼️assets/🧫️fixtures/📁️some/📁️folder/🐹️file_invalid.go:3:// 💻️compose/asset/repo/some/folder/🐹️file_invalid.go
+🧰️framework/🛍️products/🦑️repo/🖼️assets/🧫️fixtures/📁️some/📁️folder/🐍️file_invalid.py:3:# 💻️compose/asset/repo/some/folder/🐍️file_invalid.py
+🧰️framework/🛍️products/🦑️repo/🖼️assets/🧫️fixtures/📁️some/📁️folder/🔷️file_invalid.cs:3:// 💻️compose/asset/repo/some/folder/🔷️file_invalid.cs
+🧰️framework/🛍️products/🦑️repo/🖼️assets/🧫️fixtures/📁️some/📁️folder/🐍️file.py:3:# 💻️compose/asset/repo/some/folder/🐍️file.py
+🧰️framework/🛍️products/🦑️repo/🖼️assets/🧫️fixtures/📁️some/📁️folder/🔷️file.cs:4:// 💻️compose/asset/repo/some/folder/🔷️file.cs
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:151:    expect(isAdapterBoundaryFile("compose/client/lib/js/index.ts", "//#region 🌐️RsWasmTransport\nexport async function x() {}")).toBe(true);
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:152:    expect(isAdapterBoundaryFile("compose/client/lib/js/kit-store.🟦️worker.ts", "export async function x() {}")).toBe(true);
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:153:    expect(isAdapterBoundaryFile("compose/client/bin/assistant/mcp-app.tsx", "// #region 🔌️Adapters\nimport x from 'react'")).toBe(true);
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:164:    const file = "compose/client/lib/js/boundary-probe.ts";
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:396:    expect(shouldSkipPathForUloc(root, "compose/client/ui/LICENSE.md")).toBe(true);
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:665:    const result = spawnSync("rg", ["-l", "@compose/ui|@ui/react|@elements/", "--glob", "*.{ts,tsx}", "--glob", "!**/.🦑️repo/**", "--glob", "!**/🧪️index.test.ts"], {
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:751:    const prefixSets = [[], ["compose/fixture"]];
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:752:    expect(pathMatchesBundleIndex("compose/fixture/a.json", 0, prefixSets, bundles)).toBe(false);
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/🧪️index.test.ts:753:    expect(pathMatchesBundleIndex("compose/fixture/a.json", 1, prefixSets, bundles)).toBe(true);
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts:460:const INTERNAL_PREFIXES = ["@compose/", "@ui/", "@cad/", "@puzzle/", "@framework/", "@repo/", "@coda/"];
+🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🐹️component.go:20594:	if strings.HasPrefix(name, "@compose/") || strings.HasPrefix(name, "@ui/") || strings.HasPrefix(name, "@cad/") ||
+🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts:14:// import { deserializeKit, Problem, validateKit } from "@semio-tech/compose-js/compose";
+🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts:2319:  if (cleanScope.startsWith("@compose/breachs/")) {
+🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts:2320:    cleanScope = cleanScope.replace("@compose/breachs/", "");
+🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts:2347:  if (cleanScope.startsWith("@compose/") || cleanScope.startsWith("@repo/") || cleanScope.startsWith("@semio-tech/")) {
+🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts:2510:    if (kindId.startsWith("@compose/policies//breachs/")) {
+🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts:2511:      kindId = kindId.replace("@compose/policies//breachs/", "");
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:39:        id="compose.sketchpad.app.kit.kitApp.showDesigns"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:40:        actionId="compose.sketchpad.app.kit.kitApp.createDesign"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:50:        id="compose.sketchpad.app.kit.kitApp.showTypes"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:51:        actionId="compose.sketchpad.app.kit.kitApp.createType"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:61:        id="compose.sketchpad.app.kit.kitApp.showQualities"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:62:        actionId="compose.sketchpad.app.kit.kitApp.createQuality"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:72:        id="compose.sketchpad.app.kit.kitApp.showFiles"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:73:        actionId="compose.sketchpad.app.kit.kitApp.createFile"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:83:        id="compose.sketchpad.app.kit.kitApp.showFolders"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:84:        actionId="compose.sketchpad.app.kit.kitApp.createFolder"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:94:        id="compose.sketchpad.app.kit.kitApp.showAuthors"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:95:        actionId="compose.sketchpad.app.kit.kitApp.createAuthor"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:138:        id="compose.sketchpad.app.kit.kitApp.showDesigns"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:139:        actionId="compose.sketchpad.app.kit.kitApp.createDesign"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:149:        id="compose.sketchpad.app.kit.kitApp.showTypes"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:150:        actionId="compose.sketchpad.app.kit.kitApp.createType"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:160:        id="compose.sketchpad.app.kit.kitApp.showQualities"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:161:        actionId="compose.sketchpad.app.kit.kitApp.createQuality"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:171:        id="compose.sketchpad.app.kit.kitApp.showFiles"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx:172:        actionId="compose.sketchpad.app.kit.kitApp.createFile"
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🚗️UiDriver/🟦️component.tsx:238:  if (id.startsWith("compose.sketchpad.navbar.panelToggle.")) return id.slice("compose.sketchpad.navbar.panelToggle.".length);
+=== puzzle domain compose (expected keep) ===
+✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/📦️glue.rs
+=== file counts mentioning compose word in FW modules+os (excl repo product) ===
+.storybook/scopes.ts
+🧰️framework/🔨️modules/🧩core/🧩️ui/🧠️kernel/🦀️component.rs
+🧰️framework/🔨️modules/🧩core/🧩️ui/🦀️component.rs
+🧰️framework/🔨️modules/🧩core/🟦️component.ts
+✏️s/🔨️modules/📜️imperative/📇️registry/🦀️component.rs
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts
+.storybook/stories/infinite/WorldR3f.stories.tsx
+.storybook/stories/puzzle/5d/Timeline.stories.tsx
+.storybook/stories/animate/PresentationDeck.stories.tsx
+.storybook/stories/ui/🌳OntologyTree.stories.tsx
+.storybook/stories/ui/✅ValidationTree.stories.tsx
+.storybook/preview.tsx
+🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🔗️causal/🦀️component.rs
+🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🔀️crdt/🦀️component.rs
+🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs
+✏️s/🔨️modules/◻2d/🗄️store/🦀️component.rs
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/📁VirtualFileSystem/🟦️component.tsx
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/📁VirtualFileSystem/🧪️story.tsx
+✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/📦️glue.rs
+✏️s/🔨️modules/🧊️3d/📐️brep/🔢️matrix/🦀️component.rs
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️Band/🧪️story.tsx
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️eslint.config.ts
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/README.md
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📜️script.ts
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵Tree/🧪️story.tsx
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️globals-ui.css
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔍️query/🦀️component.rs
+🧰️framework/🔨️modules/🖱️ui/⌨️tui/🦀️component.rs
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🧪️index.test.ts
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨Canvas/🟦️component.tsx
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📄️document/🦀️component.rs
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🎨️ui.css
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🗣️dsl/🦀️component.rs
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️component.rs
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🦀️component.rs
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐Layout/🧪️story.tsx
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/🦀️component.rs
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/↕️Collapsible/🧪️story.tsx
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🚗️UiDriver/🟦️component.tsx
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🏷️Label/🟦️component.tsx
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/📚️I18n/🟦️component.tsx
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🏷️ClassNames/🟦️component.tsx
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🦀️component.rs
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/↕️Resizable/🟦️component.tsx
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️component.rs

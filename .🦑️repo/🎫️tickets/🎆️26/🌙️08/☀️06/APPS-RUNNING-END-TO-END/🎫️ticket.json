@@ -4,5 +4,16 @@
   "status": "open",
   "description": "After the heavy monorepo restructure, get all apps running end to end: fix playground catalog path, electron-forge bun.lock discovery, verify each bun run dev:* boots.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": []
+  "sessions": [],
+  "summary": "Unblocked apps after restructure:\n1. Patched @electron-forge/core-utils to recognize bun.lock so compose-desktop finds hoisted electron.\n2. Added puzzle 2d/3d/5d aliases (\"puzzle Nd\") so package.json scripts resolve.\n3. Set plugin-registry nx.includedScripts=[] so generate uses project.json (was infinite nx recursion).\n4. Unknown `dev <app>` no longer silently falls through to compose-desktop.\n5. Smoke: 32/32 priority playgrounds HTTP-ready; process3d routes to framework-os-dev and serves :6022.",
+  "files": [
+    "package.json",
+    "patches/@electron-forge%2Fcore-utils@7.11.2.patch",
+    "bun.lock",
+    "📜️script.ts",
+    "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/package.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🔣️playgrounds.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts"
+  ]
 }

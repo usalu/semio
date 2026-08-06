@@ -382,7 +382,7 @@ impl TerrainSessionCore {
 //#endregion TerrainSession
 
 //#region WasmBindings
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", feature = "session-bindgen"))]
 mod wasm_bridge {
     use super::TerrainSessionCore;
     use wasm_bindgen::prelude::*;
@@ -431,7 +431,7 @@ mod wasm_bridge {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", feature = "session-bindgen"))]
 pub use wasm_bridge::TerrainSession;
 //#endregion WasmBindings
 

@@ -36,8 +36,8 @@ export const HorizontalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="compose.sketchpad.app.kit.kitApp.showDesigns"
-        actionId="compose.sketchpad.app.kit.kitApp.createDesign"
+        id="demo.app.kit.showDesigns"
+        actionId="demo.app.kit.createDesign"
         icon={<LayoutIcon className="size-tiny" />}
       />,
       <Toggle
@@ -47,8 +47,8 @@ export const HorizontalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="compose.sketchpad.app.kit.kitApp.showTypes"
-        actionId="compose.sketchpad.app.kit.kitApp.createType"
+        id="demo.app.kit.showTypes"
+        actionId="demo.app.kit.createType"
         icon={<TypeIcon className="size-tiny" />}
       />,
       <Toggle
@@ -58,8 +58,8 @@ export const HorizontalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="compose.sketchpad.app.kit.kitApp.showQualities"
-        actionId="compose.sketchpad.app.kit.kitApp.createQuality"
+        id="demo.app.kit.showQualities"
+        actionId="demo.app.kit.createQuality"
         icon={<AwardIcon className="size-tiny" />}
       />,
       <Toggle
@@ -69,8 +69,8 @@ export const HorizontalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="compose.sketchpad.app.kit.kitApp.showFiles"
-        actionId="compose.sketchpad.app.kit.kitApp.createFile"
+        id="demo.app.kit.showFiles"
+        actionId="demo.app.kit.createFile"
         icon={<DocumentIcon className="size-tiny" />}
       />,
       <Toggle
@@ -80,8 +80,8 @@ export const HorizontalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="compose.sketchpad.app.kit.kitApp.showFolders"
-        actionId="compose.sketchpad.app.kit.kitApp.createFolder"
+        id="demo.app.kit.showFolders"
+        actionId="demo.app.kit.createFolder"
         icon={<FolderIcon className="size-tiny" />}
       />,
       <Toggle
@@ -91,8 +91,8 @@ export const HorizontalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="compose.sketchpad.app.kit.kitApp.showAuthors"
-        actionId="compose.sketchpad.app.kit.kitApp.createAuthor"
+        id="demo.app.kit.showAuthors"
+        actionId="demo.app.kit.createAuthor"
         icon={<UserIcon className="size-tiny" />}
       />,
     ].map((content) => ({ content })),
@@ -135,8 +135,8 @@ export const VerticalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="compose.sketchpad.app.kit.kitApp.showDesigns"
-        actionId="compose.sketchpad.app.kit.kitApp.createDesign"
+        id="demo.app.kit.showDesigns"
+        actionId="demo.app.kit.createDesign"
         icon={<LayoutIcon className="size-tiny" />}
       />,
       <Toggle
@@ -146,8 +146,8 @@ export const VerticalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="compose.sketchpad.app.kit.kitApp.showTypes"
-        actionId="compose.sketchpad.app.kit.kitApp.createType"
+        id="demo.app.kit.showTypes"
+        actionId="demo.app.kit.createType"
         icon={<TypeIcon className="size-tiny" />}
       />,
       <Toggle
@@ -157,8 +157,8 @@ export const VerticalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="compose.sketchpad.app.kit.kitApp.showQualities"
-        actionId="compose.sketchpad.app.kit.kitApp.createQuality"
+        id="demo.app.kit.showQualities"
+        actionId="demo.app.kit.createQuality"
         icon={<AwardIcon className="size-tiny" />}
       />,
       <Toggle
@@ -168,8 +168,8 @@ export const VerticalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="compose.sketchpad.app.kit.kitApp.showFiles"
-        actionId="compose.sketchpad.app.kit.kitApp.createFile"
+        id="demo.app.kit.showFiles"
+        actionId="demo.app.kit.createFile"
         icon={<DocumentIcon className="size-tiny" />}
       />,
     ].map((content) => ({ content })),

@@ -1,0 +1,34 @@
+Storybook compose scrub — 2026-08-06
+
+DELETED (directories, recursive):
+- .storybook/compose/  (incl. algorithm/kit-store)
+- .storybook/stories/compose/  (ui + algorithm stories)
+
+DELETED (files):
+- .storybook/coda-trees.spec.ts
+  (Playwright e2e for compose-hosted coda OntologyTree/ValidationTree only)
+
+EDITED:
+- .storybook/globals.css
+  Removed @source lines for ../compose/client/lib/js and ../compose/dev/algorithm
+
+- .storybook/main.ts
+  Removed composeJsDir / composeFixturesDir
+  Renamed composeAssetsDir → assetsDir; @semio-tech/assets → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript
+  Removed aliases: @semio-tech/compose-js, compose-react, compose-fixture, @compose/ui
+  Kept other non-compose baseline / framework aliases
+
+- .storybook/scopes.ts
+  Removed HAND_CURATED_SCOPES: compose, compose/ui, compose/algorithm, coda
+  From ui aliases: removed @semio-tech/coda-desktop/renderer, @semio-tech/compose-rs-wasm
+  Vitest hierarchical tests retargeted to puzzle / puzzle/2d / puzzle/3d
+  buildScopeWatchIgnores now asserts **/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/** when ui-only
+  Doc comments updated (puzzle examples instead of compose)
+
+- .storybook/framework-hosts-wasm.spec.ts
+  Dropped stale coda-trees.spec.ts mention in header comment
+
+OUT OF SCOPE (left for other scrub lanes):
+- .storybook/preview.tsx still references deleted compose kit-store loader
+- .storybook/stories/coda/* still present (coda scope removed; stories orphaned until coda lane)
+- UI stories that import @semio-tech/coda-desktop/renderer

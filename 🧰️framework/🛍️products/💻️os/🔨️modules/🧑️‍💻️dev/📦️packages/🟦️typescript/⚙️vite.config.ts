@@ -94,6 +94,10 @@ export default defineConfig({
     port: Number(process.env.S_OS_PORT ?? 6066),
     strictPort: true,
     fs: { allow: [repoRoot, pluginModulesDir, rendererModulesDir] },
+    watch: {
+      // Generated registry rewrites must not bounce Vite (write playgrounds.ts → restart → rewrite…).
+      ignored: ["**/📇️registry/🤖️generated/**", "**/🤖️generated/**", "**/.vscode/launch.json"],
+    },
   },
   plugins: [
     ...semioHostHtmlVitePlugin(repoRoot, {

@@ -17,9 +17,9 @@ const MANIFEST_FILENAME = "package.json";
 const CARGO_MANIFEST_FILENAME = "Cargo.toml";
 
 /** 🧺️ Directory names never descended into — build/vendor/scratch trees, never real workspace source.
- * Deliberately broader than `🟦️discovery.ts`'s `DISCOVERY_SKIP_DIRS` (which also skips `compose` — this
- * scan must NOT, since `compose/**` genuinely ships real workspace packages today). */
-const WORKSPACE_SCAN_SKIP_DIR_NAMES = new Set(["node_modules", "target", "dist", "build", "🤖️generated", "storybook-static", "temp", "coverage", "🔌️plugin-modules", ".🦑️repo"]);
+ * Includes legacy `compose` (same isolation as `DISCOVERY_SKIP_DIRS`) so workspace generation never
+ * re-integrates the legacy technology island. */
+const WORKSPACE_SCAN_SKIP_DIR_NAMES = new Set(["node_modules", "target", "dist", "build", "🤖️generated", "storybook-static", "temp", "coverage", "🔌️plugin-modules", ".🦑️repo", "compose"]);
 
 /** 🧻️ wasm-pack's generated npm-wrapper dir name — gitignored, present only once built, handled
  * specially by `resolvePkgDir` and never generically recursed into (see its docstring for why). */

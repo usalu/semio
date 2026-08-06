@@ -8,6 +8,7 @@ extern crate semio_framework_os_kernel as dsl;
 #[path = "../../🎨️paint/🦀️component.rs"]
 pub mod paint;
 
+#[cfg(feature = "board-2d")]
 #[path = "../../🎲️board-2d/🦀️component.rs"]
 pub mod board_2d;
 

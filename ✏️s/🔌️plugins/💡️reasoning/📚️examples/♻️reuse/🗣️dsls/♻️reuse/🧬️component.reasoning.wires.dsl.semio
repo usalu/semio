@@ -9,11 +9,11 @@ wires {
     meta {
       kind-catalogs {
         identity-kinds [id:TEXT name:TEXT shape:TEXT color:TEXT] {
-          compose.metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80 Capsule circle "var(--color-light)"
-          compose.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 Base rectangle "var(--color-light-8-9)"
-          compose.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35 Bridge rectangle "var(--color-light-6-7)"
-          compose.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e Capital rectangle "var(--color-gray-700)"
-          compose.metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571 Tambour circle "var(--color-gray)"
+          metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80 Capsule circle "var(--color-light)"
+          metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 Base rectangle "var(--color-light-8-9)"
+          metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35 Bridge rectangle "var(--color-light-6-7)"
+          metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e Capital rectangle "var(--color-gray-700)"
+          metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571 Tambour circle "var(--color-gray)"
         }
         relationship-kinds [id:TEXT name:TEXT directed:BOOL pattern:TEXT stroke:TEXT target-tip:TEXT color:TEXT] {
           wires.owns Owns false solid "2.5" filled-diamond "var(--color-muted-foreground)"
@@ -28,13 +28,13 @@ wires {
     }
     wires=[ ]
     nodes [id:TEXT node-kind:TEXT shape:TEXT x:NUM y:NUM radius:NUM width:NUM height:NUM text:TEXT root:BOOL handles:LIST] {
-      f042c2a4-3ba5-44b0-b22c-0ae8f568aacc compose.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 rectangle 0 0 _ 48 48 Metabolism true [ ]
-      "71749140-9db9-43f6-bd81-d89011667b80" compose.metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80 circle 280 0 22 _ _ Capsule _ [ ]
-      "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4" compose.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 rectangle 140 243 _ 40 40 Base _ [ ]
-      "0e240cd2-7f98-42b6-af39-34e7ee4fad35" compose.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35 rectangle -140 243 _ 40 40 Bridge _ [ ]
-      "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e" compose.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e rectangle -280 0 _ 40 40 Capital _ [ ]
-      "1b1fcf80-0acc-4456-bc16-71f69c5df571" compose.metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571 circle -140 -243 22 _ _ Tambour _ [ ]
-      wires-identity-tower compose.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 rectangle 140 -243 _ 40 40 Tower _ [ ]
+      f042c2a4-3ba5-44b0-b22c-0ae8f568aacc metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 rectangle 0 0 _ 48 48 Metabolism true [ ]
+      "71749140-9db9-43f6-bd81-d89011667b80" metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80 circle 280 0 22 _ _ Capsule _ [ ]
+      "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4" metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 rectangle 140 243 _ 40 40 Base _ [ ]
+      "0e240cd2-7f98-42b6-af39-34e7ee4fad35" metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35 rectangle -140 243 _ 40 40 Bridge _ [ ]
+      "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e" metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e rectangle -280 0 _ 40 40 Capital _ [ ]
+      "1b1fcf80-0acc-4456-bc16-71f69c5df571" metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571 circle -140 -243 22 _ _ Tambour _ [ ]
+      wires-identity-tower metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 rectangle 140 -243 _ 40 40 Tower _ [ ]
     }
     edges [id:TEXT source:REF target:REF] {
       wires-rel-owns-capsule f042c2a4-3ba5-44b0-b22c-0ae8f568aacc "71749140-9db9-43f6-bd81-d89011667b80"
@@ -49,16 +49,16 @@ wires {
     }
   }
   source {
-    kit-id=f042c2a4-3ba5-44b0-b22c-0ae8f568aacc kit-name=Metabolism kit-path=compose/fixture/metabolism.kit.light.compose.json
+    kit-id=f042c2a4-3ba5-44b0-b22c-0ae8f568aacc kit-name=Metabolism
   }
   identities [identity-id:UINT identity-kind:TEXT label:TEXT node-id:TEXT] {
-    1 compose.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 Metabolism f042c2a4-3ba5-44b0-b22c-0ae8f568aacc
-    2 compose.metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80 Capsule "71749140-9db9-43f6-bd81-d89011667b80"
-    3 compose.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 Base "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4"
-    4 compose.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35 Bridge "0e240cd2-7f98-42b6-af39-34e7ee4fad35"
-    5 compose.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e Capital "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e"
-    6 compose.metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571 Tambour "1b1fcf80-0acc-4456-bc16-71f69c5df571"
-    7 compose.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 Tower wires-identity-tower
+    1 metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 Metabolism f042c2a4-3ba5-44b0-b22c-0ae8f568aacc
+    2 metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80 Capsule "71749140-9db9-43f6-bd81-d89011667b80"
+    3 metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 Base "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4"
+    4 metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35 Bridge "0e240cd2-7f98-42b6-af39-34e7ee4fad35"
+    5 metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e Capital "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e"
+    6 metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571 Tambour "1b1fcf80-0acc-4456-bc16-71f69c5df571"
+    7 metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 Tower wires-identity-tower
   }
   relationships [relationship-id:UINT kind:TEXT source-identity-id:UINT target-identity-id:UINT edge-id:TEXT] {
     1 owns 1 2 wires-rel-owns-capsule
@@ -80,11 +80,11 @@ board {
   meta {
     kind-catalogs {
       identity-kinds [id:TEXT name:TEXT shape:TEXT color:TEXT] {
-        compose.metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80 Capsule circle "var(--color-light)"
-        compose.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 Base rectangle "var(--color-light-8-9)"
-        compose.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35 Bridge rectangle "var(--color-light-6-7)"
-        compose.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e Capital rectangle "var(--color-gray-700)"
-        compose.metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571 Tambour circle "var(--color-gray)"
+        metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80 Capsule circle "var(--color-light)"
+        metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 Base rectangle "var(--color-light-8-9)"
+        metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35 Bridge rectangle "var(--color-light-6-7)"
+        metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e Capital rectangle "var(--color-gray-700)"
+        metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571 Tambour circle "var(--color-gray)"
       }
       relationship-kinds [id:TEXT name:TEXT directed:BOOL pattern:TEXT stroke:TEXT target-tip:TEXT color:TEXT] {
         wires.owns Owns false solid "2.5" filled-diamond "var(--color-muted-foreground)"
@@ -99,13 +99,13 @@ board {
   }
   wires=[ ]
   nodes [id:TEXT node-kind:TEXT shape:TEXT x:NUM y:NUM radius:NUM width:NUM height:NUM text:TEXT root:BOOL handles:LIST] {
-    f042c2a4-3ba5-44b0-b22c-0ae8f568aacc compose.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 rectangle 0 0 _ 48 48 Metabolism true [ ]
-    "71749140-9db9-43f6-bd81-d89011667b80" compose.metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80 circle 280 0 22 _ _ Capsule _ [ ]
-    "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4" compose.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 rectangle 140 243 _ 40 40 Base _ [ ]
-    "0e240cd2-7f98-42b6-af39-34e7ee4fad35" compose.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35 rectangle -140 243 _ 40 40 Bridge _ [ ]
-    "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e" compose.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e rectangle -280 0 _ 40 40 Capital _ [ ]
-    "1b1fcf80-0acc-4456-bc16-71f69c5df571" compose.metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571 circle -140 -243 22 _ _ Tambour _ [ ]
-    wires-identity-tower compose.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 rectangle 140 -243 _ 40 40 Tower _ [ ]
+    f042c2a4-3ba5-44b0-b22c-0ae8f568aacc metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 rectangle 0 0 _ 48 48 Metabolism true [ ]
+    "71749140-9db9-43f6-bd81-d89011667b80" metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80 circle 280 0 22 _ _ Capsule _ [ ]
+    "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4" metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 rectangle 140 243 _ 40 40 Base _ [ ]
+    "0e240cd2-7f98-42b6-af39-34e7ee4fad35" metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35 rectangle -140 243 _ 40 40 Bridge _ [ ]
+    "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e" metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e rectangle -280 0 _ 40 40 Capital _ [ ]
+    "1b1fcf80-0acc-4456-bc16-71f69c5df571" metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571 circle -140 -243 22 _ _ Tambour _ [ ]
+    wires-identity-tower metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4 rectangle 140 -243 _ 40 40 Tower _ [ ]
   }
   edges [id:TEXT source:REF target:REF] {
     wires-rel-owns-capsule f042c2a4-3ba5-44b0-b22c-0ae8f568aacc "71749140-9db9-43f6-bd81-d89011667b80"

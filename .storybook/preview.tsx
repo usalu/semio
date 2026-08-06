@@ -191,7 +191,7 @@ import type { Decorator } from "@storybook/react-vite";
 import React from "react";
 
 // #region 🧩️LevelWrapper
-/** Border + min width used when a story sets `level` via args (compose UI / algorithms). */
+/** Border + min width used when a story sets `level` via args. */
 export const LevelWrapper: React.FC<{ level: UiLevel; children: React.ReactNode }> = ({ level, children }) => {
   return (
     <div className={`p-4 ${surfaceClass} border min-w-[200px]`} data-level={level}>
@@ -339,10 +339,9 @@ export const withRenderer: Decorator = (Story, context) => {
 //#endregion 🔖️withRenderer
 
 //#region 🔖️withWasm
-/** @emoji 🧱️ Single-flight dynamic-import loader registry, generalizing `ensureComposeWasm`
- * (`.storybook/compose/algorithm/kit-store/index.tsx`). Dynamic imports code-split per loader, so a
- * scoped Storybook boot never pulls in another scope's wasm graph until a story actually requests it
- * via `parameters.wasm`. */
+/** @emoji 🧱️ Single-flight dynamic-import loader registry for scope wasm graphs. Dynamic imports
+ * code-split per loader, so a scoped Storybook boot never pulls in another scope's wasm graph until a
+ * story actually requests it via `parameters.wasm`. */
 
 // #region 🔌️FrameworkHostsWasmLoaders
 /** 🧵️ Wraps a `framework/os/renderer/js/react/index.tsx`-style wasm-bindgen module import (bare workspace
@@ -371,7 +370,6 @@ function singleFlightWasmInit(id: string, load: () => Promise<{ readonly default
 // #endregion 🔌️FrameworkHostsWasmLoaders
 
 const WASM_LOADERS: Record<string, () => Promise<void>> = {
-  compose: () => import("./compose/algorithm/kit-store/index.tsx").then((m) => m.ensureComposeWasm()),
   "node-graph": singleFlightWasmInit("node-graph", () => import("@semio-tech/framework-surface-node-graph-rs/pkg/framework_surface_node_graph.js")),
   editor: singleFlightWasmInit("editor", () => import("@semio-tech/framework-editor-rs/pkg/framework_editor.js")),
   "paint-2d": singleFlightWasmInit("paint-2d", () => import("@semio-tech/framework-surface-paint-rs/pkg/framework_surface_paint.js")),

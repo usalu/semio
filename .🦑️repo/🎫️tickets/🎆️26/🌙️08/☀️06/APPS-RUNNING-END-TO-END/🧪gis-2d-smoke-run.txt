@@ -1,0 +1,26 @@
+{
+  "engine": "playwright",
+  "title": "semio · gis · 2d",
+  "styled": "ready",
+  "childCount": 1,
+  "rootHTML": "<div class=\"semio-scope\" data-shell-id=\"shell-1\" style=\"height: 100%; width: 100%; isolation: isolate; background-color: var(--base); color: var(--foreground); color-scheme: light;\" data-ui-appearance=\"light\" data-ui-device=\"desktop\" data-ui-driver=\"default\" data-ui-labels=\"full\" data-ui-drag=\"handle\" data-ui-chrome-reveal=\"always\" data-ui-gumball-reveal=\"always\" data-ui-tooltips=\"full\"><div class=\"flex h-screen min-h-0 w-screen flex-col bg-transparent\" data-level=\"base\"><div data-slot=\"layout\" data-level=\"base\" class=\"relative flex flex-col overflow-hidden ui-surface h-screen w-screen\"><div class=\"flex-shrink-0\"><nav id=\"ui.navbar\" data-slot=\"navbar\" data-level=\"base\" data-ui-reveal-region=\"navbar\" data-elevation-root=\"\" class=\"relative h-large z-navbar bg-transparent\"><div class=\"p-single flex gap-single items-center min-w-0 h-full\"><div class=\"h-medium flex shrink-0 items-center min-w-0\"><div data-ghost-region=\"true\" class=\"flex shrink-0 items-center\" data-level=\"panel\" data-slot=\"panel-chrome-tab-bar\" data-anchor=\"top-left\"><div data-slot=\"window-chrome-stack\" data-window-silhouette=\"true\" data-level=\"panel\" class=\"relative inline-flex min-w-0 bg-transparent\"><svg data-slot=\"window-chrome-silhouette-border\" data-window-silhouette-border=\"true\" data-kind=\"normal\" class=\"pointer-events-none absolute inset-0 z-[40] overflow-visible\" width=\"153.4375\" height=\"693511.4375\" viewBox=\"0 0 153.4375 693511.4375\" aria-hidden=\"true\"><path d=\"M1,1 H152.4375 V693510.4375 H1 Z\" fill=\"non",
+  "bodyText": "Document\nCatalogue\nInspection\nFullscreen\nsemio · gis · 2d\nExample\nReuse Map\nMap\nClose\nWindow Options\nActions\nUtilities\nDisplay\nSync\nSettings\nKeybindings\nTheme\nPlugins\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view",
+  "errors": [
+    "pageerror: TypeError: this.session.setRenderMode is not a function"
+  ],
+  "logs": [
+    {
+      "type": "log",
+      "text": "[DEBUG] plugin worker + gis (1 live)"
+    },
+    {
+      "type": "warning",
+      "text": "[DEBUG] setContributions push skipped action 'setContributions' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+    },
+    {
+      "type": "warning",
+      "text": "[DEBUG] setAppRegistrations push skipped action 'setAppRegistrations' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+    }
+  ],
+  "ok": false
+}

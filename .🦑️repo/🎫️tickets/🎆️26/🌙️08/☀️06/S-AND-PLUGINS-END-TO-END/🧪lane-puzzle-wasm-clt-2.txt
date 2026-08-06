@@ -1,0 +1,1718 @@
+    Blocking waiting for file lock on build directory
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:7:1
+  |
+7 | extern crate self as dsl_grammar;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+7 - extern crate self as dsl_grammar;
+  |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1
+   |
+11 | extern crate self as pack;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+11 - extern crate self as pack;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1
+   |
+12 | extern crate self as spr;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+12 - extern crate self as spr;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:13:1
+   |
+13 | extern crate self as vcs;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+13 - extern crate self as vcs;
+   |
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:345:11
+    |
+345 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:351:11
+    |
+351 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `canonicalize` in the value namespace is first re-exported here
+...
+198 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `canonicalize` in the value namespace is also re-exported here
+    |
+    = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `test_support` in the type namespace is first re-exported here
+186 | pub use crate::os_store::*;
+    |         ------------------ but the name `test_support` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `core` in the type namespace is first re-exported here
+...
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `core` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Symbol` in the type namespace is first re-exported here
+...
+198 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `Symbol` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `format` in the type namespace is first re-exported here
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `format` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `testkit` in the type namespace is first re-exported here
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `testkit` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `read_varint_u64` in the value namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `read_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `write_varint_u64` in the value namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `write_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `RecoveryReport` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `RecoveryReport` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `VerificationLevel` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `VerificationLevel` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `WriteOptions` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `WriteOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `DecodeOptions` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `DecodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `EncodeOptions` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `EncodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:198:9
+    |
+186 | pub use crate::os_store::*;
+    |         ------------------ but the name `Alternative` in the type namespace is also re-exported here
+...
+198 | pub use crate::os_dsl::grammar::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^ the name `Alternative` in the type namespace is first re-exported here
+
+warning: unused import: `crate::os_dsl::core::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:199:9
+    |
+199 | pub use crate::os_dsl::core::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `len`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:1083:21
+     |
+1083 |                 let len = end_j - i;
+     |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `print_edge_label` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2125:19
+     |
+2019 | / impl<P, Operation> DocumentStore<P, Operation>
+2020 | | where
+2021 | |     P: Clone + Serialize + DeserializeOwned + DocumentPack,
+2022 | |     Operation: Clone + Serialize + DeserializeOwned + self::Operation<P> + OpBinary + OpText,
+     | |_____________________________________________________________________________________________- method in this implementation
+...
+2125 |       pub(crate) fn set_envelope(&mut self, envelope: DocumentEnvelope<P, Operation>, applied_edit_ids: Vec<String>) {
+     |                     ^^^^^^^^^^^^
+
+warning: `semio-framework-os-kernel` (lib) generated 24 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling semio-framework-math v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust)
+   Compiling semio-framework-compiler v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust)
+warning: unused import: `std::sync::OnceLock`
+  --> 🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust/../../🦀️component.rs:13:5
+   |
+13 | use std::sync::OnceLock;
+   |     ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-compiler` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-compiler` to apply 1 suggestion)
+   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:5:1
+  |
+5 | extern crate semio_framework_os_kernel as pack;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+5 - extern crate semio_framework_os_kernel as pack;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1
+  |
+6 | extern crate semio_framework_os_kernel as spr;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+6 - extern crate semio_framework_os_kernel as spr;
+  |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3327:61
+     |
+3327 |         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                             ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3327 -         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3327 +         fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7876:20
+     |
+7876 |             return crate::component::host_backbone_send(uri, message);
+     |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7876 -             return crate::component::host_backbone_send(uri, message);
+7876 +             return host_backbone_send(uri, message);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7889:20
+     |
+7889 |             return crate::component::host_backbone_poll(uri);
+     |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7889 -             return crate::component::host_backbone_poll(uri);
+7889 +             return host_backbone_poll(uri);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7899:20
+     |
+7899 |             return crate::component::host_backbone_status(uri);
+     |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7899 -             return crate::component::host_backbone_status(uri);
+7899 +             return host_backbone_status(uri);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7909:20
+     |
+7909 |             return crate::component::host_now_ms() as f64;
+     |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7909 -             return crate::component::host_now_ms() as f64;
+7909 +             return host_now_ms() as f64;
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7920:20
+     |
+7920 |             return crate::component::host_read_asset(handle);
+     |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7920 -             return crate::component::host_read_asset(handle);
+7920 +             return host_read_asset(handle);
+     |
+
+warning: function cannot return without recursing
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7873:5
+     |
+7873 |     pub fn host_backbone_send(uri: &str, message: &[u8]) -> Result<(), String> {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot return without recursing
+...
+7876 |             return crate::component::host_backbone_send(uri, message);
+     |                    -------------------------------------------------- recursive call site
+     |
+     = help: a `loop` may express intention better if this is on purpose
+     = note: `#[warn(unconditional_recursion)]` on by default
+
+warning: function cannot return without recursing
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7886:5
+     |
+7886 |     pub fn host_backbone_poll(uri: &str) -> Result<Vec<Vec<u8>>, String> {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot return without recursing
+...
+7889 |             return crate::component::host_backbone_poll(uri);
+     |                    ----------------------------------------- recursive call site
+     |
+     = help: a `loop` may express intention better if this is on purpose
+
+warning: function cannot return without recursing
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7896:5
+     |
+7896 |     pub fn host_backbone_status(uri: &str) -> Result<String, String> {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot return without recursing
+...
+7899 |             return crate::component::host_backbone_status(uri);
+     |                    ------------------------------------------- recursive call site
+     |
+     = help: a `loop` may express intention better if this is on purpose
+
+warning: function cannot return without recursing
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7906:5
+     |
+7906 |     pub fn host_now_ms() -> f64 {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot return without recursing
+...
+7909 |             return crate::component::host_now_ms() as f64;
+     |                    ------------------------------- recursive call site
+     |
+     = help: a `loop` may express intention better if this is on purpose
+
+warning: function cannot return without recursing
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7917:5
+     |
+7917 |     pub fn host_read_asset(handle: u64) -> Result<Vec<u8>, String> {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot return without recursing
+...
+7920 |             return crate::component::host_read_asset(handle);
+     |                    ----------------------------------------- recursive call site
+     |
+     = help: a `loop` may express intention better if this is on purpose
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4902:34
+     |
+4902 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4917:34
+     |
+4917 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4836:34
+     |
+4836 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4867:34
+     |
+4867 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4878:34
+     |
+4878 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4892:34
+     |
+4892 |             let VcsDocumentApp { app, cache, registry, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4578:38
+     |
+4578 |                 let VcsDocumentApp { app, cache, .. } = self;
+     |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4614:38
+     |
+4614 |                 let VcsDocumentApp { app, cache, .. } = self;
+     |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4494:42
+     |
+4494 |                     let VcsDocumentApp { app, cache, .. } = self;
+     |                                          ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1679:17
+     |
+1679 |             let app = A::default();
+     |                 ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: `semio-framework-plugin` (lib) generated 23 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 18 suggestions)
+   Compiling semio-s-3d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust)
+warning: unused imports: `CoedgeId` and `VertexId`
+ --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/📏measure/🦀️component.rs:3:26
+  |
+3 | use crate::brep::arena::{CoedgeId, EdgeId, FaceId, SolidId, VertexId};
+  |                          ^^^^^^^^                           ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::brep::curve::Curve3`
+ --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/📏measure/🦀️component.rs:4:5
+  |
+4 | use crate::brep::curve::Curve3;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Vec3`
+  --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🖋️imprint/🦀️component.rs:15:36
+   |
+15 | use crate::brep::vec::{Pnt2, Pnt3, Vec3};
+   |                                    ^^^^
+
+warning: unused import: `Vec3`
+  --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧵sew/🦀️component.rs:15:30
+   |
+15 | use crate::brep::vec::{Pnt3, Vec3};
+   |                              ^^^^
+
+warning: unused import: `solid_volume`
+  --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🎨️blend/🦀️component.rs:13:41
+   |
+13 | use crate::brep::measure::{edge_length, solid_volume};
+   |                                         ^^^^^^^^^^^^
+
+warning: unused import: `make_box`
+  --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🎨️blend/🦀️component.rs:14:31
+   |
+14 | use crate::brep::primitives::{make_box, make_convex_hull};
+   |                               ^^^^^^^^
+
+error[E0053]: method `convex_hull` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:805:45
+    |
+805 |     async fn convex_hull(&mut self, points: &[Vec3]) -> Result<GeometryHandle, BrepError> {
+    |                                             ^^^^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:131:45
+    |
+131 |     async fn convex_hull(&mut self, points: &[Vec3]) -> Result<GeometryHandle, BrepError>;
+    |                                             ^^^^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 [[f64; 3]]) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 [brep::vec::Vec3]) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+805 -     async fn convex_hull(&mut self, points: &[Vec3]) -> Result<GeometryHandle, BrepError> {
+805 +     async fn convex_hull(&mut self, points: &'life1 [[f64; 3]]) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `line_curve` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:808:43
+    |
+808 |     async fn line_curve(&mut self, start: Vec3, end: Vec3) -> Result<GeometryHandle, BrepError> {
+    |                                           ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:135:43
+    |
+135 |     async fn line_curve(&mut self, start: Vec3, end: Vec3) -> Result<GeometryHandle, BrepError>;
+    |                                           ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, [f64; 3], [f64; 3]) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, brep::vec::Vec3, brep::vec::Vec3) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+808 -     async fn line_curve(&mut self, start: Vec3, end: Vec3) -> Result<GeometryHandle, BrepError> {
+808 +     async fn line_curve(&mut self, start: [f64; 3], end: Vec3) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `circle_curve` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:811:46
+    |
+811 |     async fn circle_curve(&mut self, center: Vec3, normal: Vec3, radius: f64) -> Result<GeometryHandle, BrepError> {
+    |                                              ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:136:46
+    |
+136 |     async fn circle_curve(&mut self, center: Vec3, normal: Vec3, radius: f64) -> Result<GeometryHandle, BrepError>;
+    |                                              ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, [f64; 3], [f64; 3], _) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, brep::vec::Vec3, brep::vec::Vec3, _) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+811 -     async fn circle_curve(&mut self, center: Vec3, normal: Vec3, radius: f64) -> Result<GeometryHandle, BrepError> {
+811 +     async fn circle_curve(&mut self, center: [f64; 3], normal: Vec3, radius: f64) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `arc_curve` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:814:43
+    |
+814 |     async fn arc_curve(&mut self, center: Vec3, normal: Vec3, radius: f64, start_angle: f64, end_angle: f64) -> Result<GeometryHand...
+    |                                           ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:137:43
+    |
+137 |     async fn arc_curve(&mut self, center: Vec3, normal: Vec3, radius: f64, start_angle: f64, end_angle: f64) -> Result<GeometryHand...
+    |                                           ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, [f64; 3], [f64; 3], _, _, _) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, brep::vec::Vec3, brep::vec::Vec3, _, _, _) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+814 -     async fn arc_curve(&mut self, center: Vec3, normal: Vec3, radius: f64, start_angle: f64, end_angle: f64) -> Result<GeometryHandle, BrepError> {
+814 +     async fn arc_curve(&mut self, center: [f64; 3], normal: Vec3, radius: f64, start_angle: f64, end_angle: f64) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `ellipse_curve` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:817:47
+    |
+817 |     async fn ellipse_curve(&mut self, center: Vec3, normal: Vec3, semi_major: f64, semi_minor: f64) -> Result<GeometryHandle, BrepE...
+    |                                               ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:138:47
+    |
+138 |     async fn ellipse_curve(&mut self, center: Vec3, normal: Vec3, semi_major: f64, semi_minor: f64) -> Result<GeometryHandle, BrepE...
+    |                                               ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, [f64; 3], [f64; 3], _, _) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, brep::vec::Vec3, brep::vec::Vec3, _, _) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+817 -     async fn ellipse_curve(&mut self, center: Vec3, normal: Vec3, semi_major: f64, semi_minor: f64) -> Result<GeometryHandle, BrepError> {
+817 +     async fn ellipse_curve(&mut self, center: [f64; 3], normal: Vec3, semi_major: f64, semi_minor: f64) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `polyline_wire` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:820:47
+    |
+820 |     async fn polyline_wire(&mut self, points: &[Vec3]) -> Result<GeometryHandle, BrepError> {
+    |                                               ^^^^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:139:47
+    |
+139 |     async fn polyline_wire(&mut self, points: &[Vec3]) -> Result<GeometryHandle, BrepError>;
+    |                                               ^^^^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 [[f64; 3]]) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 [brep::vec::Vec3]) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+820 -     async fn polyline_wire(&mut self, points: &[Vec3]) -> Result<GeometryHandle, BrepError> {
+820 +     async fn polyline_wire(&mut self, points: &'life1 [[f64; 3]]) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `interpolate_curve` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:829:51
+    |
+829 |     async fn interpolate_curve(&mut self, points: &[Vec3], degree: usize) -> Result<GeometryHandle, BrepError> {
+    |                                                   ^^^^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:142:51
+    |
+142 |     async fn interpolate_curve(&mut self, points: &[Vec3], degree: usize) -> Result<GeometryHandle, BrepError>;
+    |                                                   ^^^^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 [[f64; 3]], _) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 [brep::vec::Vec3], _) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+829 -     async fn interpolate_curve(&mut self, points: &[Vec3], degree: usize) -> Result<GeometryHandle, BrepError> {
+829 +     async fn interpolate_curve(&mut self, points: &'life1 [[f64; 3]], degree: usize) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `approximate_curve` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:832:51
+    |
+832 |     async fn approximate_curve(&mut self, points: &[Vec3], degree: usize, control_points: usize) -> Result<GeometryHandle, BrepErro...
+    |                                                   ^^^^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:143:51
+    |
+143 |     async fn approximate_curve(&mut self, points: &[Vec3], degree: usize, control_points: usize) -> Result<GeometryHandle, BrepError>;
+    |                                                   ^^^^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 [[f64; 3]], _, _) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 [brep::vec::Vec3], _, _) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+832 -     async fn approximate_curve(&mut self, points: &[Vec3], degree: usize, control_points: usize) -> Result<GeometryHandle, BrepError> {
+832 +     async fn approximate_curve(&mut self, points: &'life1 [[f64; 3]], degree: usize, control_points: usize) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `helix_curve` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:835:45
+    |
+835 |     async fn helix_curve(&mut self, origin: Vec3, axis: Vec3, radius: f64, pitch: f64, turns: f64) -> Result<GeometryHandle, BrepEr...
+    |                                             ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:144:45
+    |
+144 |     async fn helix_curve(&mut self, origin: Vec3, axis: Vec3, radius: f64, pitch: f64, turns: f64) -> Result<GeometryHandle, BrepEr...
+    |                                             ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, [f64; 3], [f64; 3], _, _, _) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, brep::vec::Vec3, brep::vec::Vec3, _, _, _) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+835 -     async fn helix_curve(&mut self, origin: Vec3, axis: Vec3, radius: f64, pitch: f64, turns: f64) -> Result<GeometryHandle, BrepError> {
+835 +     async fn helix_curve(&mut self, origin: [f64; 3], axis: Vec3, radius: f64, pitch: f64, turns: f64) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `plane_surface` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:838:47
+    |
+838 |     async fn plane_surface(&mut self, origin: Vec3, normal: Vec3) -> Result<GeometryHandle, BrepError> {
+    |                                               ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:148:47
+    |
+148 |     async fn plane_surface(&mut self, origin: Vec3, normal: Vec3) -> Result<GeometryHandle, BrepError>;
+    |                                               ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, [f64; 3], [f64; 3]) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, brep::vec::Vec3, brep::vec::Vec3) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+838 -     async fn plane_surface(&mut self, origin: Vec3, normal: Vec3) -> Result<GeometryHandle, BrepError> {
+838 +     async fn plane_surface(&mut self, origin: [f64; 3], normal: Vec3) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `planar_face_from_points` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:841:57
+    |
+841 |     async fn planar_face_from_points(&mut self, points: &[Vec3]) -> Result<GeometryHandle, BrepError> {
+    |                                                         ^^^^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:149:57
+    |
+149 |     async fn planar_face_from_points(&mut self, points: &[Vec3]) -> Result<GeometryHandle, BrepError>;
+    |                                                         ^^^^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 [[f64; 3]]) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 [brep::vec::Vec3]) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+841 -     async fn planar_face_from_points(&mut self, points: &[Vec3]) -> Result<GeometryHandle, BrepError> {
+841 +     async fn planar_face_from_points(&mut self, points: &'life1 [[f64; 3]]) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `nurbs_surface_from_grid` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:847:57
+    |
+847 |     async fn nurbs_surface_from_grid(&mut self, points: &[Vec<Vec3>], degree_u: usize, degree_v: usize) -> Result<GeometryHandle, B...
+    |                                                         ^^^^^^^^^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:151:57
+    |
+151 |     async fn nurbs_surface_from_grid(&mut self, points: &[Vec<Vec3>], degree_u: usize, degree_v: usize) -> Result<GeometryHandle, B...
+    |                                                         ^^^^^^^^^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 [Vec<[f64; 3]>], _, _) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 [Vec<brep::vec::Vec3>], _, _) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+847 -     async fn nurbs_surface_from_grid(&mut self, points: &[Vec<Vec3>], degree_u: usize, degree_v: usize) -> Result<GeometryHandle, BrepError> {
+847 +     async fn nurbs_surface_from_grid(&mut self, points: &'life1 [Vec<[f64; 3]>], degree_u: usize, degree_v: usize) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `coons_patch` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:850:45
+    |
+850 |     async fn coons_patch(&mut self, curves: &[Vec<Vec3>]) -> Result<GeometryHandle, BrepError> {
+    |                                             ^^^^^^^^^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:152:45
+    |
+152 |     async fn coons_patch(&mut self, curves: &[Vec<Vec3>]) -> Result<GeometryHandle, BrepError>;
+    |                                             ^^^^^^^^^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 [Vec<[f64; 3]>]) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 [Vec<brep::vec::Vec3>]) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+850 -     async fn coons_patch(&mut self, curves: &[Vec<Vec3>]) -> Result<GeometryHandle, BrepError> {
+850 +     async fn coons_patch(&mut self, curves: &'life1 [Vec<[f64; 3]>]) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `extrude_wire` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:859:69
+    |
+859 |     async fn extrude_wire(&mut self, wire: &GeometryHandle, vector: Vec3) -> Result<GeometryHandle, BrepError> {
+    |                                                                     ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:158:69
+    |
+158 |     async fn extrude_wire(&mut self, wire: &GeometryHandle, vector: Vec3) -> Result<GeometryHandle, BrepError>;
+    |                                                                     ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, [f64; 3]) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, brep::vec::Vec3) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+859 -     async fn extrude_wire(&mut self, wire: &GeometryHandle, vector: Vec3) -> Result<GeometryHandle, BrepError> {
+859 +     async fn extrude_wire(&mut self, wire: &GeometryHandle, vector: [f64; 3]) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `extrude` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:862:67
+    |
+862 |     async fn extrude(&mut self, face: &GeometryHandle, direction: Vec3, distance: f64) -> Result<GeometryHandle, BrepError> {
+    |                                                                   ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:159:67
+    |
+159 |     async fn extrude(&mut self, face: &GeometryHandle, direction: Vec3, distance: f64) -> Result<GeometryHandle, BrepError>;
+    |                                                                   ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, [f64; 3], _) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, brep::vec::Vec3, _) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+862 -     async fn extrude(&mut self, face: &GeometryHandle, direction: Vec3, distance: f64) -> Result<GeometryHandle, BrepError> {
+862 +     async fn extrude(&mut self, face: &GeometryHandle, direction: [f64; 3], distance: f64) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `revolve` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:865:69
+    |
+865 |     async fn revolve(&mut self, face: &GeometryHandle, axis_origin: Vec3, axis_direction: Vec3, angle: f64) -> Result<GeometryHandl...
+    |                                                                     ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:160:69
+    |
+160 |     async fn revolve(&mut self, face: &GeometryHandle, axis_origin: Vec3, axis_direction: Vec3, angle: f64) -> Result<GeometryHandl...
+    |                                                                     ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, [f64; 3], [f64; 3], _) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, brep::vec::Vec3, brep::vec::Vec3, _) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+865 -     async fn revolve(&mut self, face: &GeometryHandle, axis_origin: Vec3, axis_direction: Vec3, angle: f64) -> Result<GeometryHandle, BrepError> {
+865 +     async fn revolve(&mut self, face: &GeometryHandle, axis_origin: [f64; 3], axis_direction: Vec3, angle: f64) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `helical_sweep` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:877:78
+    |
+877 |     async fn helical_sweep(&mut self, profile: &GeometryHandle, axis_origin: Vec3, axis_dir: Vec3, radius: f64, pitch: f64, turns: ...
+    |                                                                              ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:164:78
+    |
+164 |     async fn helical_sweep(&mut self, profile: &GeometryHandle, axis_origin: Vec3, axis_dir: Vec3, radius: f64, pitch: f64, turns: ...
+    |                                                                              ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, [f64; 3], [f64; 3], _, _, _) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, brep::vec::Vec3, brep::vec::Vec3, _, _, _) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+877 -     async fn helical_sweep(&mut self, profile: &GeometryHandle, axis_origin: Vec3, axis_dir: Vec3, radius: f64, pitch: f64, turns: f64) -> Result<GeometryHandle, BrepError> {
+877 +     async fn helical_sweep(&mut self, profile: &GeometryHandle, axis_origin: [f64; 3], axis_dir: Vec3, radius: f64, pitch: f64, turns: f64) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `translate` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:892:67
+    |
+892 |     async fn translate(&mut self, shape: &GeometryHandle, offset: Vec3) -> Result<GeometryHandle, BrepError> {
+    |                                                                   ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:175:67
+    |
+175 |     async fn translate(&mut self, shape: &GeometryHandle, offset: Vec3) -> Result<GeometryHandle, BrepError>;
+    |                                                                   ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, [f64; 3]) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, brep::vec::Vec3) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+892 -     async fn translate(&mut self, shape: &GeometryHandle, offset: Vec3) -> Result<GeometryHandle, BrepError> {
+892 +     async fn translate(&mut self, shape: &GeometryHandle, offset: [f64; 3]) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `rotate` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:895:62
+    |
+895 |     async fn rotate(&mut self, shape: &GeometryHandle, axis: Vec3, angle: f64) -> Result<GeometryHandle, BrepError> {
+    |                                                              ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:176:62
+    |
+176 |     async fn rotate(&mut self, shape: &GeometryHandle, axis: Vec3, angle: f64) -> Result<GeometryHandle, BrepError>;
+    |                                                              ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, [f64; 3], _) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, brep::vec::Vec3, _) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+895 -     async fn rotate(&mut self, shape: &GeometryHandle, axis: Vec3, angle: f64) -> Result<GeometryHandle, BrepError> {
+895 +     async fn rotate(&mut self, shape: &GeometryHandle, axis: [f64; 3], angle: f64) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `scale` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:898:76
+    |
+898 |     async fn scale(&mut self, shape: &GeometryHandle, factor: f64, center: Vec3) -> Result<GeometryHandle, BrepError> {
+    |                                                                            ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:177:76
+    |
+177 |     async fn scale(&mut self, shape: &GeometryHandle, factor: f64, center: Vec3) -> Result<GeometryHandle, BrepError>;
+    |                                                                            ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, _, [f64; 3]) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, _, brep::vec::Vec3) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+898 -     async fn scale(&mut self, shape: &GeometryHandle, factor: f64, center: Vec3) -> Result<GeometryHandle, BrepError> {
+898 +     async fn scale(&mut self, shape: &GeometryHandle, factor: f64, center: [f64; 3]) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `mirror` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:901:64
+    |
+901 |     async fn mirror(&mut self, shape: &GeometryHandle, origin: Vec3, normal: Vec3) -> Result<GeometryHandle, BrepError> {
+    |                                                                ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:178:64
+    |
+178 |     async fn mirror(&mut self, shape: &GeometryHandle, origin: Vec3, normal: Vec3) -> Result<GeometryHandle, BrepError>;
+    |                                                                ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, [f64; 3], [f64; 3]) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, brep::vec::Vec3, brep::vec::Vec3) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+901 -     async fn mirror(&mut self, shape: &GeometryHandle, origin: Vec3, normal: Vec3) -> Result<GeometryHandle, BrepError> {
+901 +     async fn mirror(&mut self, shape: &GeometryHandle, origin: [f64; 3], normal: Vec3) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `linear_pattern` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:907:75
+    |
+907 |     async fn linear_pattern(&mut self, shape: &GeometryHandle, direction: Vec3, spacing: f64, count: usize) -> Result<GeometryHandl...
+    |                                                                           ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:180:75
+    |
+180 |     async fn linear_pattern(&mut self, shape: &GeometryHandle, direction: Vec3, spacing: f64, count: usize) -> Result<GeometryHandl...
+    |                                                                           ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, [f64; 3], _, _) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, brep::vec::Vec3, _, _) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+907 -     async fn linear_pattern(&mut self, shape: &GeometryHandle, direction: Vec3, spacing: f64, count: usize) -> Result<GeometryHandle, BrepError> {
+907 +     async fn linear_pattern(&mut self, shape: &GeometryHandle, direction: [f64; 3], spacing: f64, count: usize) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `circular_pattern` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:910:72
+    |
+910 |     async fn circular_pattern(&mut self, shape: &GeometryHandle, axis: Vec3, count: usize) -> Result<GeometryHandle, BrepError> {
+    |                                                                        ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:181:72
+    |
+181 |     async fn circular_pattern(&mut self, shape: &GeometryHandle, axis: Vec3, count: usize) -> Result<GeometryHandle, BrepError>;
+    |                                                                        ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, [f64; 3], _) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, brep::vec::Vec3, _) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+910 -     async fn circular_pattern(&mut self, shape: &GeometryHandle, axis: Vec3, count: usize) -> Result<GeometryHandle, BrepError> {
+910 +     async fn circular_pattern(&mut self, shape: &GeometryHandle, axis: [f64; 3], count: usize) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `grid_pattern` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:913:69
+    |
+913 |     async fn grid_pattern(&mut self, shape: &GeometryHandle, dir_x: Vec3, dir_y: Vec3, spacing_x: f64, spacing_y: f64, count_x: usi...
+    |                                                                     ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:183:69
+    |
+183 |     async fn grid_pattern(&mut self, shape: &GeometryHandle, dir_x: Vec3, dir_y: Vec3, spacing_x: f64, spacing_y: f64, count_x: usi...
+    |                                                                     ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, [f64; 3], [f64; 3], _, _, _, _) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, brep::vec::Vec3, brep::vec::Vec3, _, _, _, _) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+913 -     async fn grid_pattern(&mut self, shape: &GeometryHandle, dir_x: Vec3, dir_y: Vec3, spacing_x: f64, spacing_y: f64, count_x: usize, count_y: usize) -> Result<GeometryHandle, BrepError> {
+913 +     async fn grid_pattern(&mut self, shape: &GeometryHandle, dir_x: [f64; 3], dir_y: Vec3, spacing_x: f64, spacing_y: f64, count_x: usize, count_y: usize) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `draft` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:937:97
+    |
+937 | ...es: &[GeometryHandle], pull_direction: Vec3, neutral_point: Vec3, angle: f64) -> Result<GeometryHandle, BrepError> {
+    |                                           ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:197:97
+    |
+197 |     async fn draft(&mut self, shape: &GeometryHandle, faces: &[GeometryHandle], pull_direction: Vec3, neutral_point: Vec3, angle: f...
+    |                                                                                                 ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, &'life2 _, [f64; 3], [f64; 3], _) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, &'life2 _, brep::vec::Vec3, brep::vec::Vec3, _) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+937 -     async fn draft(&mut self, shape: &GeometryHandle, faces: &[GeometryHandle], pull_direction: Vec3, neutral_point: Vec3, angle: f64) -> Result<GeometryHandle, BrepError> {
+937 +     async fn draft(&mut self, shape: &GeometryHandle, faces: &[GeometryHandle], pull_direction: [f64; 3], neutral_point: Vec3, angle: f64) -> Result<GeometryHandle, BrepError> {
+    |
+
+error[E0053]: method `section` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:946:71
+    |
+946 |     async fn section(&mut self, solid: &GeometryHandle, plane_origin: Vec3, plane_normal: Vec3) -> Result<Vec<GeometryHandle>, Brep...
+    |                                                                       ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:203:71
+    |
+203 |     async fn section(&mut self, solid: &GeometryHandle, plane_origin: Vec3, plane_normal: Vec3) -> Result<Vec<GeometryHandle>, Brep...
+    |                                                                       ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, [f64; 3], [f64; 3]) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, brep::vec::Vec3, brep::vec::Vec3) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+946 -     async fn section(&mut self, solid: &GeometryHandle, plane_origin: Vec3, plane_normal: Vec3) -> Result<Vec<GeometryHandle>, BrepError> {
+946 +     async fn section(&mut self, solid: &GeometryHandle, plane_origin: [f64; 3], plane_normal: Vec3) -> Result<Vec<GeometryHandle>, BrepError> {
+    |
+
+error[E0053]: method `split` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:949:69
+    |
+949 |     async fn split(&mut self, solid: &GeometryHandle, plane_origin: Vec3, plane_normal: Vec3) -> Result<(GeometryHandle, GeometryHa...
+    |                                                                     ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:204:69
+    |
+204 |     async fn split(&mut self, solid: &GeometryHandle, plane_origin: Vec3, plane_normal: Vec3) -> Result<(GeometryHandle, GeometryHa...
+    |                                                                     ^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, [f64; 3], [f64; 3]) -> Pin<_>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, brep::vec::Vec3, brep::vec::Vec3) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+949 -     async fn split(&mut self, solid: &GeometryHandle, plane_origin: Vec3, plane_normal: Vec3) -> Result<(GeometryHandle, GeometryHandle), BrepError> {
+949 +     async fn split(&mut self, solid: &GeometryHandle, plane_origin: [f64; 3], plane_normal: Vec3) -> Result<(GeometryHandle, GeometryHandle), BrepError> {
+    |
+
+error[E0053]: method `curve_curve_intersect` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:788:1
+    |
+788 | #[async_trait(?Send)]
+    | ^^^^^^^^^^^^^^^^^^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:123:1
+    |
+123 | #[async_trait(?Send)]
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, &'life2 GeometryHandle, _) -> Pin<std::boxed::Box<(dyn Future<Output = Result<Vec<[f64; 3]>, BrepError>> + 'async_trait)>>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, &'life2 GeometryHandle, _) -> Pin<std::boxed::Box<(dyn Future<Output = Result<Vec<brep::vec::Vec3>, BrepError>> + 'async_trait)>>`
+    = note: this error originates in the attribute macro `async_trait` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: change the output type to match the trait
+    |
+788 - #[async_trait(?Send)]
+788 + Pin<std::boxed::Box<(dyn Future<Output = Result<Vec<[f64; 3]>, BrepError>> + 'async_trait)>>
+    |
+
+error[E0053]: method `curve_surface_intersect` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:788:1
+    |
+788 | #[async_trait(?Send)]
+    | ^^^^^^^^^^^^^^^^^^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:123:1
+    |
+123 | #[async_trait(?Send)]
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: expected signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, &'life2 GeometryHandle, _) -> Pin<std::boxed::Box<(dyn Future<Output = Result<Vec<[f64; 3]>, BrepError>> + 'async_trait)>>`
+               found signature `fn(&'life0 mut brep::kernel::Brep, &'life1 GeometryHandle, &'life2 GeometryHandle, _) -> Pin<std::boxed::Box<(dyn Future<Output = Result<Vec<brep::vec::Vec3>, BrepError>> + 'async_trait)>>`
+    = note: this error originates in the attribute macro `async_trait` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: change the output type to match the trait
+    |
+788 - #[async_trait(?Send)]
+788 + Pin<std::boxed::Box<(dyn Future<Output = Result<Vec<[f64; 3]>, BrepError>> + 'async_trait)>>
+    |
+
+error[E0053]: method `curve_point` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:788:1
+    |
+788 | #[async_trait(?Send)]
+    | ^^^^^^^^^^^^^^^^^^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:123:1
+    |
+123 | #[async_trait(?Send)]
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: expected signature `fn(&'life0 brep::kernel::Brep, &'life1 GeometryHandle, _) -> Pin<std::boxed::Box<(dyn Future<Output = Result<[f64; 3], BrepError>> + 'async_trait)>>`
+               found signature `fn(&'life0 brep::kernel::Brep, &'life1 GeometryHandle, _) -> Pin<std::boxed::Box<(dyn Future<Output = Result<brep::vec::Vec3, BrepError>> + 'async_trait)>>`
+    = note: this error originates in the attribute macro `async_trait` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: change the output type to match the trait
+    |
+788 - #[async_trait(?Send)]
+788 + Pin<std::boxed::Box<(dyn Future<Output = Result<[f64; 3], BrepError>> + 'async_trait)>>
+    |
+
+error[E0053]: method `curve_tangent` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:788:1
+    |
+788 | #[async_trait(?Send)]
+    | ^^^^^^^^^^^^^^^^^^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:123:1
+    |
+123 | #[async_trait(?Send)]
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: expected signature `fn(&'life0 brep::kernel::Brep, &'life1 GeometryHandle, _) -> Pin<std::boxed::Box<(dyn Future<Output = Result<[f64; 3], BrepError>> + 'async_trait)>>`
+               found signature `fn(&'life0 brep::kernel::Brep, &'life1 GeometryHandle, _) -> Pin<std::boxed::Box<(dyn Future<Output = Result<brep::vec::Vec3, BrepError>> + 'async_trait)>>`
+    = note: this error originates in the attribute macro `async_trait` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: change the output type to match the trait
+    |
+788 - #[async_trait(?Send)]
+788 + Pin<std::boxed::Box<(dyn Future<Output = Result<[f64; 3], BrepError>> + 'async_trait)>>
+    |
+
+error[E0053]: method `surface_point` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:788:1
+    |
+788 | #[async_trait(?Send)]
+    | ^^^^^^^^^^^^^^^^^^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:123:1
+    |
+123 | #[async_trait(?Send)]
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: expected signature `fn(&'life0 brep::kernel::Brep, &'life1 GeometryHandle, _, _) -> Pin<std::boxed::Box<(dyn Future<Output = Result<[f64; 3], BrepError>> + 'async_trait)>>`
+               found signature `fn(&'life0 brep::kernel::Brep, &'life1 GeometryHandle, _, _) -> Pin<std::boxed::Box<(dyn Future<Output = Result<brep::vec::Vec3, BrepError>> + 'async_trait)>>`
+    = note: this error originates in the attribute macro `async_trait` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: change the output type to match the trait
+    |
+788 - #[async_trait(?Send)]
+788 + Pin<std::boxed::Box<(dyn Future<Output = Result<[f64; 3], BrepError>> + 'async_trait)>>
+    |
+
+error[E0053]: method `surface_normal` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:788:1
+    |
+788 | #[async_trait(?Send)]
+    | ^^^^^^^^^^^^^^^^^^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:123:1
+    |
+123 | #[async_trait(?Send)]
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: expected signature `fn(&'life0 brep::kernel::Brep, &'life1 GeometryHandle, _, _) -> Pin<std::boxed::Box<(dyn Future<Output = Result<[f64; 3], BrepError>> + 'async_trait)>>`
+               found signature `fn(&'life0 brep::kernel::Brep, &'life1 GeometryHandle, _, _) -> Pin<std::boxed::Box<(dyn Future<Output = Result<brep::vec::Vec3, BrepError>> + 'async_trait)>>`
+    = note: this error originates in the attribute macro `async_trait` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: change the output type to match the trait
+    |
+788 - #[async_trait(?Send)]
+788 + Pin<std::boxed::Box<(dyn Future<Output = Result<[f64; 3], BrepError>> + 'async_trait)>>
+    |
+
+error[E0053]: method `center_of_mass` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:788:1
+    |
+788 | #[async_trait(?Send)]
+    | ^^^^^^^^^^^^^^^^^^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:123:1
+    |
+123 | #[async_trait(?Send)]
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: expected signature `fn(&'life0 brep::kernel::Brep, &'life1 GeometryHandle) -> Pin<std::boxed::Box<(dyn Future<Output = Result<[f64; 3], BrepError>> + 'async_trait)>>`
+               found signature `fn(&'life0 brep::kernel::Brep, &'life1 GeometryHandle) -> Pin<std::boxed::Box<(dyn Future<Output = Result<brep::vec::Vec3, BrepError>> + 'async_trait)>>`
+    = note: this error originates in the attribute macro `async_trait` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: change the output type to match the trait
+    |
+788 - #[async_trait(?Send)]
+788 + Pin<std::boxed::Box<(dyn Future<Output = Result<[f64; 3], BrepError>> + 'async_trait)>>
+    |
+
+error[E0053]: method `closest_point` has an incompatible type for trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:997:66
+    |
+997 |     async fn closest_point(&self, shape: &GeometryHandle, point: Vec3) -> Result<ClosestPoint, BrepError> {
+    |                                                                  ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+    |
+note: type in trait
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:226:66
+    |
+226 |     async fn closest_point(&self, shape: &GeometryHandle, point: Vec3) -> Result<ClosestPoint, BrepError>;
+    |                                                                  ^^^^
+    = note: expected signature `fn(&'life0 brep::kernel::Brep, &'life1 GeometryHandle, [f64; 3]) -> Pin<_>`
+               found signature `fn(&'life0 brep::kernel::Brep, &'life1 GeometryHandle, brep::vec::Vec3) -> Pin<_>`
+help: change the parameter type to match the trait
+    |
+997 -     async fn closest_point(&self, shape: &GeometryHandle, point: Vec3) -> Result<ClosestPoint, BrepError> {
+997 +     async fn closest_point(&self, shape: &GeometryHandle, point: [f64; 3]) -> Result<ClosestPoint, BrepError> {
+    |
+
+error[E0053]: method `classify_point` has an incompatible type for trait
+    --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:1000:67
+     |
+1000 |     async fn classify_point(&self, solid: &GeometryHandle, point: Vec3) -> Result<PointClassification, BrepError> {
+     |                                                                   ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+     |
+note: type in trait
+    --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:227:67
+     |
+ 227 |     async fn classify_point(&self, solid: &GeometryHandle, point: Vec3) -> Result<PointClassification, BrepError>;
+     |                                                                   ^^^^
+     = note: expected signature `fn(&'life0 brep::kernel::Brep, &'life1 GeometryHandle, [f64; 3]) -> Pin<_>`
+                found signature `fn(&'life0 brep::kernel::Brep, &'life1 GeometryHandle, brep::vec::Vec3) -> Pin<_>`
+help: change the parameter type to match the trait
+     |
+1000 -     async fn classify_point(&self, solid: &GeometryHandle, point: Vec3) -> Result<PointClassification, BrepError> {
+1000 +     async fn classify_point(&self, solid: &GeometryHandle, point: [f64; 3]) -> Result<PointClassification, BrepError> {
+     |
+
+error[E0053]: method `vertex` has an incompatible type for trait
+    --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:1006:39
+     |
+1006 |     async fn vertex(&mut self, point: Vec3) -> Result<GeometryHandle, BrepError> {
+     |                                       ^^^^ expected `[f64; 3]`, found `brep::vec::Vec3`
+     |
+note: type in trait
+    --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/⚙️engine/🦀️component.rs:232:39
+     |
+ 232 |     async fn vertex(&mut self, point: Vec3) -> Result<GeometryHandle, BrepError>;
+     |                                       ^^^^
+     = note: expected signature `fn(&'life0 mut brep::kernel::Brep, [f64; 3]) -> Pin<_>`
+                found signature `fn(&'life0 mut brep::kernel::Brep, brep::vec::Vec3) -> Pin<_>`
+help: change the parameter type to match the trait
+     |
+1006 -     async fn vertex(&mut self, point: Vec3) -> Result<GeometryHandle, BrepError> {
+1006 +     async fn vertex(&mut self, point: [f64; 3]) -> Result<GeometryHandle, BrepError> {
+     |
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:974:9
+    |
+974 |         self.surface_point_sync(surface, u, v)
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<Vec3, BrepError>`, found `Result<[f64; 3], BrepError>`
+    |
+    = note: expected enum `Result<brep::vec::Vec3, _>`
+               found enum `Result<[f64; 3], _>`
+
+error[E0308]: arguments to this method are incorrect
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:866:14
+    |
+866 |         self.revolve_sync(face, axis_origin, axis_direction, angle)
+    |              ^^^^^^^^^^^^       -----------  -------------- expected `[f64; 3]`, found `Vec3`
+    |                                 |
+    |                                 expected `[f64; 3]`, found `Vec3`
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:321:12
+    |
+321 |     pub fn revolve_sync(&mut self, face: &GeometryHandle, axis_origin: EVec3, axis_direction: EVec3, angle: f64) -> Result<Geometry...
+    |            ^^^^^^^^^^^^                                   ------------------  ---------------------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:899:40
+    |
+899 |         self.scale_sync(shape, factor, center)
+    |              ----------                ^^^^^^ expected `[f64; 3]`, found `Vec3`
+    |              |
+    |              arguments to this method are incorrect
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:415:12
+    |
+415 |     pub fn scale_sync(&mut self, shape: &GeometryHandle, factor: f64, center: EVec3) -> Result<GeometryHandle, BrepError> {
+    |            ^^^^^^^^^^                                                 -------------
+
+error[E0308]: mismatched types
+    --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:1007:26
+     |
+1007 |         self.vertex_sync(point)
+     |              ----------- ^^^^^ expected `[f64; 3]`, found `Vec3`
+     |              |
+     |              arguments to this method are incorrect
+     |
+note: method defined here
+    --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:656:12
+     |
+ 656 |     pub fn vertex_sync(&mut self, point: EVec3) -> Result<GeometryHandle, BrepError> {
+     |            ^^^^^^^^^^^            ------------
+
+error[E0308]: arguments to this method are incorrect
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:878:14
+    |
+878 |         self.helical_sweep_sync(profile, axis_origin, axis_dir, radius, pitch, turns)
+    |              ^^^^^^^^^^^^^^^^^^          -----------  -------- expected `[f64; 3]`, found `Vec3`
+    |                                          |
+    |                                          expected `[f64; 3]`, found `Vec3`
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:350:12
+    |
+350 |     pub fn helical_sweep_sync(&mut self, profile: &GeometryHandle, axis_origin: EVec3, axis_dir: EVec3, radius: f64, pitch: f64, tu...
+    |            ^^^^^^^^^^^^^^^^^^                                      ------------------  ---------------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:806:31
+    |
+806 |         self.convex_hull_sync(points)
+    |              ---------------- ^^^^^^ expected `&[[f64; 3]]`, found `&[Vec3]`
+    |              |
+    |              arguments to this method are incorrect
+    |
+    = note: expected reference `&[[f64; 3]]`
+               found reference `&'life1 [brep::vec::Vec3]`
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:225:12
+    |
+225 |     pub fn convex_hull_sync(&mut self, points: &[EVec3]) -> Result<GeometryHandle, BrepError> {
+    |            ^^^^^^^^^^^^^^^^            ----------------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:977:9
+    |
+977 |         self.surface_normal_sync(surface, u, v)
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<Vec3, BrepError>`, found `Result<[f64; 3], BrepError>`
+    |
+    = note: expected enum `Result<brep::vec::Vec3, _>`
+               found enum `Result<[f64; 3], _>`
+
+error[E0308]: arguments to this method are incorrect
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:938:14
+    |
+938 |         self.draft_sync(shape, faces, pull_direction, neutral_point, angle)
+    |              ^^^^^^^^^^               --------------  ------------- expected `[f64; 3]`, found `Vec3`
+    |                                       |
+    |                                       expected `[f64; 3]`, found `Vec3`
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:530:12
+    |
+530 |     pub fn draft_sync(&mut self, shape: &GeometryHandle, faces: &[GeometryHandle], pull_direction: EVec3, _neutral_point: EVec3, an...
+    |            ^^^^^^^^^^                                                              ---------------------  ---------------------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:989:9
+    |
+989 |         self.center_of_mass_sync(shape)
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<Vec3, BrepError>`, found `Result<[f64; 3], BrepError>`
+    |
+    = note: expected enum `Result<brep::vec::Vec3, _>`
+               found enum `Result<[f64; 3], _>`
+
+error[E0308]: arguments to this method are incorrect
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:902:14
+    |
+902 |         self.mirror_sync(shape, origin, normal)
+    |              ^^^^^^^^^^^        ------  ------ expected `[f64; 3]`, found `Vec3`
+    |                                 |
+    |                                 expected `[f64; 3]`, found `Vec3`
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:431:12
+    |
+431 |     pub fn mirror_sync(&mut self, shape: &GeometryHandle, origin: EVec3, normal: EVec3) -> Result<GeometryHandle, BrepError> {
+    |            ^^^^^^^^^^^                                    -------------  -------------
+
+error[E0308]: arguments to this method are incorrect
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:947:14
+    |
+947 |         self.section_sync(solid, plane_origin, plane_normal)
+    |              ^^^^^^^^^^^^        ------------  ------------ expected `[f64; 3]`, found `Vec3`
+    |                                  |
+    |                                  expected `[f64; 3]`, found `Vec3`
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:550:12
+    |
+550 |     pub fn section_sync(&mut self, solid: &GeometryHandle, plane_origin: EVec3, plane_normal: EVec3) -> Result<Vec<GeometryHandle>,...
+    |            ^^^^^^^^^^^^                                    -------------------  -------------------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:893:36
+    |
+893 |         self.translate_sync(shape, offset)
+    |              --------------        ^^^^^^ expected `[f64; 3]`, found `Vec3`
+    |              |
+    |              arguments to this method are incorrect
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:380:12
+    |
+380 |     pub fn translate_sync(&mut self, shape: &GeometryHandle, offset: EVec3) -> Result<GeometryHandle, BrepError> {
+    |            ^^^^^^^^^^^^^^                                    -------------
+
+error[E0308]: arguments to this method are incorrect
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:809:14
+    |
+809 |         self.line_curve_sync(start, end)
+    |              ^^^^^^^^^^^^^^^ -----  --- expected `[f64; 3]`, found `Vec3`
+    |                              |
+    |                              expected `[f64; 3]`, found `Vec3`
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:230:12
+    |
+230 |     pub fn line_curve_sync(&mut self, start: EVec3, end: EVec3) -> Result<GeometryHandle, BrepError> {
+    |            ^^^^^^^^^^^^^^^            ------------  ----------
+
+error[E0308]: arguments to this method are incorrect
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:812:14
+    |
+812 |         self.circle_curve_sync(center, normal, radius)
+    |              ^^^^^^^^^^^^^^^^^ ------  ------ expected `[f64; 3]`, found `Vec3`
+    |                                |
+    |                                expected `[f64; 3]`, found `Vec3`
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:233:12
+    |
+233 |     pub fn circle_curve_sync(&mut self, center: EVec3, normal: EVec3, radius: f64) -> Result<GeometryHandle, BrepError> {
+    |            ^^^^^^^^^^^^^^^^^            -------------  -------------
+
+error[E0308]: arguments to this method are incorrect
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:950:14
+    |
+950 |         self.split_sync(solid, plane_origin, plane_normal)
+    |              ^^^^^^^^^^        ------------  ------------ expected `[f64; 3]`, found `Vec3`
+    |                                |
+    |                                expected `[f64; 3]`, found `Vec3`
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:555:12
+    |
+555 |     pub fn split_sync(&mut self, solid: &GeometryHandle, plane_origin: EVec3, plane_normal: EVec3) -> Result<(GeometryHandle, Geome...
+    |            ^^^^^^^^^^                                    -------------------  -------------------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:953:9
+    |
+953 |         self.curve_curve_intersect_sync(a, b, tolerance)
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<Vec<Vec3>, BrepError>`, found `Result<Vec<[f64; 3]>, BrepError>`
+    |
+    = note: expected enum `Result<Vec<brep::vec::Vec3>, _>`
+               found enum `Result<Vec<[f64; 3]>, _>`
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:896:33
+    |
+896 |         self.rotate_sync(shape, axis, angle)
+    |              -----------        ^^^^ expected `[f64; 3]`, found `Vec3`
+    |              |
+    |              arguments to this method are incorrect
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:394:12
+    |
+394 |     pub fn rotate_sync(&mut self, shape: &GeometryHandle, axis: EVec3, angle: f64) -> Result<GeometryHandle, BrepError> {
+    |            ^^^^^^^^^^^                                    -----------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:998:40
+    |
+998 |         self.closest_point_sync(shape, point)
+    |              ------------------        ^^^^^ expected `[f64; 3]`, found `Vec3`
+    |              |
+    |              arguments to this method are incorrect
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:642:12
+    |
+642 |     pub fn closest_point_sync(&self, shape: &GeometryHandle, point: EVec3) -> Result<ClosestPoint, BrepError> {
+    |            ^^^^^^^^^^^^^^^^^^                                ------------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:908:41
+    |
+908 |         self.linear_pattern_sync(shape, direction, spacing, count)
+    |              -------------------        ^^^^^^^^^ expected `[f64; 3]`, found `Vec3`
+    |              |
+    |              arguments to this method are incorrect
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:452:12
+    |
+452 |     pub fn linear_pattern_sync(&mut self, shape: &GeometryHandle, direction: EVec3, spacing: f64, count: usize) -> Result<GeometryH...
+    |            ^^^^^^^^^^^^^^^^^^^                                    ----------------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:830:37
+    |
+830 |         self.interpolate_curve_sync(points, degree)
+    |              ---------------------- ^^^^^^ expected `&[[f64; 3]]`, found `&[Vec3]`
+    |              |
+    |              arguments to this method are incorrect
+    |
+    = note: expected reference `&[[f64; 3]]`
+               found reference `&'life1 [brep::vec::Vec3]`
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:257:12
+    |
+257 |     pub fn interpolate_curve_sync(&mut self, points: &[EVec3], _degree: usize) -> Result<GeometryHandle, BrepError> {
+    |            ^^^^^^^^^^^^^^^^^^^^^^            ----------------
+
+error[E0308]: arguments to this method are incorrect
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:815:14
+    |
+815 |         self.arc_curve_sync(center, normal, radius, start_angle, end_angle)
+    |              ^^^^^^^^^^^^^^ ------  ------ expected `[f64; 3]`, found `Vec3`
+    |                             |
+    |                             expected `[f64; 3]`, found `Vec3`
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:237:12
+    |
+237 |     pub fn arc_curve_sync(&mut self, center: EVec3, normal: EVec3, radius: f64, _start_angle: f64, _end_angle: f64) -> Result<Geome...
+    |            ^^^^^^^^^^^^^^            -------------  -------------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:956:9
+    |
+956 |         self.curve_surface_intersect_sync(curve, surface, tolerance)
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<Vec<Vec3>, BrepError>`, found `Result<Vec<[f64; 3]>, BrepError>`
+    |
+    = note: expected enum `Result<Vec<brep::vec::Vec3>, _>`
+               found enum `Result<Vec<[f64; 3]>, _>`
+
+error[E0308]: mismatched types
+    --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:1001:41
+     |
+1001 |         self.classify_point_sync(solid, point)
+     |              -------------------        ^^^^^ expected `[f64; 3]`, found `Vec3`
+     |              |
+     |              arguments to this method are incorrect
+     |
+note: method defined here
+    --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:647:12
+     |
+ 647 |     pub fn classify_point_sync(&self, solid: &GeometryHandle, point: EVec3) -> Result<PointClassification, BrepError> {
+     |            ^^^^^^^^^^^^^^^^^^^                                ------------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:962:9
+    |
+962 |         self.curve_point_sync(curve, parameter)
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<Vec3, BrepError>`, found `Result<[f64; 3], BrepError>`
+    |
+    = note: expected enum `Result<brep::vec::Vec3, _>`
+               found enum `Result<[f64; 3], _>`
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:833:37
+    |
+833 |         self.approximate_curve_sync(points, degree, control_points)
+    |              ---------------------- ^^^^^^ expected `&[[f64; 3]]`, found `&[Vec3]`
+    |              |
+    |              arguments to this method are incorrect
+    |
+    = note: expected reference `&[[f64; 3]]`
+               found reference `&'life1 [brep::vec::Vec3]`
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:260:12
+    |
+260 |     pub fn approximate_curve_sync(&mut self, points: &[EVec3], degree: usize, _control_points: usize) -> Result<GeometryHandle, Bre...
+    |            ^^^^^^^^^^^^^^^^^^^^^^            ----------------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:911:43
+    |
+911 |         self.circular_pattern_sync(shape, axis, count)
+    |              ---------------------        ^^^^ expected `[f64; 3]`, found `Vec3`
+    |              |
+    |              arguments to this method are incorrect
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:461:12
+    |
+461 |     pub fn circular_pattern_sync(&mut self, shape: &GeometryHandle, axis: EVec3, count: usize) -> Result<GeometryHandle, BrepError> {
+    |            ^^^^^^^^^^^^^^^^^^^^^                                    -----------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:965:9
+    |
+965 |         self.curve_tangent_sync(curve, parameter)
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<Vec3, BrepError>`, found `Result<[f64; 3], BrepError>`
+    |
+    = note: expected enum `Result<brep::vec::Vec3, _>`
+               found enum `Result<[f64; 3], _>`
+
+error[E0308]: arguments to this method are incorrect
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:818:14
+    |
+818 |         self.ellipse_curve_sync(center, normal, semi_major, semi_minor)
+    |              ^^^^^^^^^^^^^^^^^^ ------  ------ expected `[f64; 3]`, found `Vec3`
+    |                                 |
+    |                                 expected `[f64; 3]`, found `Vec3`
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:240:12
+    |
+240 |     pub fn ellipse_curve_sync(&mut self, center: EVec3, normal: EVec3, semi_major: f64, semi_minor: f64) -> Result<GeometryHandle, ...
+    |            ^^^^^^^^^^^^^^^^^^            -------------  -------------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:821:33
+    |
+821 |         self.polyline_wire_sync(points)
+    |              ------------------ ^^^^^^ expected `&[[f64; 3]]`, found `&[Vec3]`
+    |              |
+    |              arguments to this method are incorrect
+    |
+    = note: expected reference `&[[f64; 3]]`
+               found reference `&'life1 [brep::vec::Vec3]`
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:244:12
+    |
+244 |     pub fn polyline_wire_sync(&mut self, points: &[EVec3]) -> Result<GeometryHandle, BrepError> {
+    |            ^^^^^^^^^^^^^^^^^^            ----------------
+
+error[E0308]: arguments to this method are incorrect
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:914:14
+    |
+914 |         self.grid_pattern_sync(shape, dir_x, dir_y, spacing_x, spacing_y, count_x, count_y)
+    |              ^^^^^^^^^^^^^^^^^        -----  ----- expected `[f64; 3]`, found `Vec3`
+    |                                       |
+    |                                       expected `[f64; 3]`, found `Vec3`
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:471:12
+    |
+471 |     pub fn grid_pattern_sync(&mut self, shape: &GeometryHandle, dir_x: EVec3, dir_y: EVec3, spacing_x: f64, spacing_y: f64, count_x...
+    |            ^^^^^^^^^^^^^^^^^                                    ------------  ------------
+
+error[E0308]: arguments to this method are incorrect
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:836:14
+    |
+836 |         self.helix_curve_sync(origin, axis, radius, pitch, turns)
+    |              ^^^^^^^^^^^^^^^^ ------  ---- expected `[f64; 3]`, found `Vec3`
+    |                               |
+    |                               expected `[f64; 3]`, found `Vec3`
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:263:12
+    |
+263 |     pub fn helix_curve_sync(&mut self, origin: EVec3, axis: EVec3, radius: f64, pitch: f64, turns: f64) -> Result<GeometryHandle, B...
+    |            ^^^^^^^^^^^^^^^^            -------------  -----------
+
+error[E0308]: arguments to this method are incorrect
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:839:14
+    |
+839 |         self.plane_surface_sync(origin, normal)
+    |              ^^^^^^^^^^^^^^^^^^ ------  ------ expected `[f64; 3]`, found `Vec3`
+    |                                 |
+    |                                 expected `[f64; 3]`, found `Vec3`
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:276:12
+    |
+276 |     pub fn plane_surface_sync(&mut self, origin: EVec3, normal: EVec3) -> Result<GeometryHandle, BrepError> {
+    |            ^^^^^^^^^^^^^^^^^^            -------------  -------------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:842:43
+    |
+842 |         self.planar_face_from_points_sync(points)
+    |              ---------------------------- ^^^^^^ expected `&[[f64; 3]]`, found `&[Vec3]`
+    |              |
+    |              arguments to this method are incorrect
+    |
+    = note: expected reference `&[[f64; 3]]`
+               found reference `&'life1 [brep::vec::Vec3]`
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:280:12
+    |
+280 |     pub fn planar_face_from_points_sync(&mut self, points: &[EVec3]) -> Result<GeometryHandle, BrepError> {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^            ----------------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:848:43
+    |
+848 |         self.nurbs_surface_from_grid_sync(points, degree_u, degree_v)
+    |              ---------------------------- ^^^^^^ expected `&[Vec<[f64; 3]>]`, found `&[Vec<Vec3>]`
+    |              |
+    |              arguments to this method are incorrect
+    |
+    = note: expected reference `&[Vec<[f64; 3]>]`
+               found reference `&'life1 [Vec<brep::vec::Vec3>]`
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:291:12
+    |
+291 |     pub fn nurbs_surface_from_grid_sync(&mut self, points: &[Vec<EVec3>], _degree_u: usize, _degree_v: usize) -> Result<GeometryHan...
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^            ---------------------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:851:31
+    |
+851 |         self.coons_patch_sync(curves)
+    |              ---------------- ^^^^^^ expected `&[Vec<[f64; 3]>]`, found `&[Vec<Vec3>]`
+    |              |
+    |              arguments to this method are incorrect
+    |
+    = note: expected reference `&[Vec<[f64; 3]>]`
+               found reference `&'life1 [Vec<brep::vec::Vec3>]`
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:296:12
+    |
+296 |     pub fn coons_patch_sync(&mut self, curves: &[Vec<EVec3>]) -> Result<GeometryHandle, BrepError> {
+    |            ^^^^^^^^^^^^^^^^            ---------------------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:860:38
+    |
+860 |         self.extrude_wire_sync(wire, vector)
+    |              -----------------       ^^^^^^ expected `[f64; 3]`, found `Vec3`
+    |              |
+    |              arguments to this method are incorrect
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:310:12
+    |
+310 |     pub fn extrude_wire_sync(&mut self, wire: &GeometryHandle, vector: EVec3) -> Result<GeometryHandle, BrepError> {
+    |            ^^^^^^^^^^^^^^^^^                                   -------------
+
+error[E0308]: mismatched types
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:863:33
+    |
+863 |         self.extrude_sync(face, direction, distance)
+    |              ------------       ^^^^^^^^^ expected `[f64; 3]`, found `Vec3`
+    |              |
+    |              arguments to this method are incorrect
+    |
+note: method defined here
+   --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:316:12
+    |
+316 |     pub fn extrude_sync(&mut self, face: &GeometryHandle, direction: EVec3, distance: f64) -> Result<GeometryHandle, BrepError> {
+    |            ^^^^^^^^^^^^                                   ----------------
+
+warning: unused import: `ArenaId`
+ --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🌳bvh/🦀️component.rs:3:26
+  |
+3 | use crate::brep::arena::{ArenaId, EdgeId, FaceId, SolidId};
+  |                          ^^^^^^^
+
+warning: unused variable: `tolerance`
+    --> ✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:1105:55
+     |
+1105 |     fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
+     |                                                       ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tolerance`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+Some errors have detailed explanations: E0053, E0308.
+For more information about an error, try `rustc --explain E0053`.
+warning: `semio-s-3d` (lib) generated 8 warnings
+error: could not compile `semio-s-3d` (lib) due to 74 previous errors; 8 warnings emitted
