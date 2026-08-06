@@ -17,3 +17,120 @@ warning: function `print_edge_label` is never used
 
 warning: `semio-framework-os-kernel-dsl-notation` (lib) generated 1 warning
    Compiling semio-framework-math v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust)
+       Fixed ./../../🕸️graph/🗣️dsl/🦀️component.rs (1 fix)
+       Fixed ../../📈️polynomial/🦀️component.rs (6 fixes)
+       Fixed ../../🧮️cas/🦀️component.rs (4 fixes)
+warning: digits grouped inconsistently by underscores
+   --> ../../🎲️entropy/🦀️component.rs:298:59
+    |
+298 | ...   [0.999_999_999_999_809_9, 676.520_368_121_885_1, -1259.139_216_722_402_8, 771.323_428_777_653_1, -176.615_029_162_140_6, 12.5...
+    |                                                         ^^^^^^^^^^^^^^^^^^^^^^ help: consider: `1_259.139_216_722_402_8`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#inconsistent_digit_grouping
+    = note: `-W clippy::inconsistent-digit-grouping` implied by `-W clippy::all`
+    = help: to override `-W clippy::all` add `#[allow(clippy::inconsistent_digit_grouping)]`
+
+warning: this argument is passed by value, but not consumed in the function body
+    --> ../../🧮️cas/🦀️component.rs:1048:27
+     |
+1048 |     fn fold_radical(base: Integer, exp: Rational) -> Option<Expr> {
+     |                           ^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+     = note: requested on the command line with `-W clippy::needless-pass-by-value`
+help: consider taking a reference instead
+     |
+1048 |     fn fold_radical(base: &Integer, exp: Rational) -> Option<Expr> {
+     |                           +
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+    --> ../../🧮️cas/🦀️component.rs:2431:15
+     |
+2431 |         cond: Option<Rc<dyn Fn(&Bindings) -> bool>>,
+     |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#type_complexity
+     = note: `-W clippy::type-complexity` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::type_complexity)]`
+
+warning: the loop variable `row` is used to index `rows`
+    --> ../../🧮️cas/🦀️component.rs:3270:24
+     |
+3270 |             for row in 0..deg_den {
+     |                        ^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_range_loop
+     = note: `-W clippy::needless-range-loop` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::needless_range_loop)]`
+help: consider using an iterator and enumerate()
+     |
+3270 -             for row in 0..deg_den {
+3270 +             for (row, <item>) in rows.iter_mut().enumerate().take(deg_den) {
+     |
+
+warning: this argument is passed by value, but not consumed in the function body
+    --> ../../🧮️cas/🦀️component.rs:4669:61
+     |
+4669 |     fn cramer_solutions(a: &[Vec<Expr>], b: &[Expr], det_a: Expr) -> Vec<Expr> {
+     |                                                             ^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+help: consider taking a reference instead
+     |
+4669 |     fn cramer_solutions(a: &[Vec<Expr>], b: &[Expr], det_a: &Expr) -> Vec<Expr> {
+     |                                                             +
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+    --> ../../📈️polynomial/🦀️component.rs:1504:23
+     |
+1504 |         let mut best: Option<(u64, Vec<(PolyU<ModInt>, u32)>)> = None;
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#type_complexity
+
+warning: this argument is passed by value, but not consumed in the function body
+    --> ../../📈️polynomial/🦀️component.rs:2204:51
+     |
+2204 |         fn combine(a: &Self, b: &Self, operation: Combine) -> Self {
+     |                                                   ^^^^^^^
+     |
+help: or consider marking this type as `Copy`
+    --> ../../📈️polynomial/🦀️component.rs:2276:5
+     |
+2276 |     enum Combine {
+     |     ^^^^^^^^^^^^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+help: consider taking a reference instead
+     |
+2204 |         fn combine(a: &Self, b: &Self, operation: &Combine) -> Self {
+     |                                                   +
+
+warning: `semio-framework-math` (lib) generated 7 warnings
+       Fixed ../../🧮️cas/🦀️component.rs (17 fixes)
+       Fixed ../../🌫️fuzzy/🦀️component.rs (2 fixes)
+       Fixed ./../../🕸️graph/🔧️operators/🦀️component.rs (1 fix)
+warning: this assertion has a constant value
+    --> ./../../🕸️graph/🦀️component.rs:2796:9
+     |
+2796 |         assert!(TOL_STRICT < TOL_LOOSE);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: consider moving this into a const block: `const { assert!(..) }`
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#assertions_on_constants
+     = note: `-W clippy::assertions-on-constants` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::assertions_on_constants)]`
+
+warning: unnecessary use of `get(&b).is_none()`
+   --> ././../../🕸️graph/➕️normal/➡️directed/🦀️component.rs:730:48
+    |
+730 |         assert!(g.get_node_attributes("color").get(&b).is_none());
+    |                 -------------------------------^^^^^^^^^^^^^^^^^
+    |                 |
+    |                 help: replace it with: `!g.get_node_attributes("color").contains_key(&b)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#unnecessary_get_then_check
+    = note: `-W clippy::unnecessary-get-then-check` implied by `-W clippy::all`
+    = help: to override `-W clippy::all` add `#[allow(clippy::unnecessary_get_then_check)]`
+
+warning: `semio-framework-math` (lib test) generated 9 warnings (7 duplicates)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 23.59s

@@ -1,7 +1,7 @@
 // #region 🧲️Header
 // 💻️ .storybook/stories/coda/CodaTrees.stories.tsx
 // Specs: `OntologyTree`/`ValidationTree` (from `@semio-tech/coda-desktop/renderer`) already have stories under
-// `.storybook/stories/ui/OntologyTree.stories.tsx` and `.storybook/stories/ui/ValidationTree.stories.tsx` —
+// `.storybook/stories/ui/🌳OntologyTree.stories.tsx` and `.storybook/stories/ui/✅ValidationTree.stories.tsx` —
 // read first. Those cover `OntologyNodeKind`s And/Or/Not/SomeValuesFrom/ExactCardinality/DataSomeValuesFrom/Class
 // and all three `TruthValue`s (true/false/unknown), so those are NOT repeated here.
 // Summary: `OntologyNodeKind` has 13 members (`AllValuesFrom` | `MinCardinality` | `MaxCardinality` |
@@ -21,7 +21,7 @@ import type { ComponentType, ReactNode } from "react";
 // #endregion 🔌️Adapters
 
 // #region 🎨️CodaThemeWrapper
-/** @emoji 🎨️ Coda-specific CSS variables the tree components read (mirrors `.storybook/stories/ui/OntologyTree.stories.tsx`). */
+/** @emoji 🎨️ Coda-specific CSS variables the tree components read (mirrors `.storybook/stories/ui/🌳OntologyTree.stories.tsx`). */
 const CodaThemeWrapper = ({ children }: { children: ReactNode }) => (
   <div
     style={{

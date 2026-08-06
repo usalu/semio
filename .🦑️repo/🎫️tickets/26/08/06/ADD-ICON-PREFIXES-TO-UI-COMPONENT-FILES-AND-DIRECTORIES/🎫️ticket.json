@@ -1,0 +1,17 @@
+{
+  "id": "26/08/06/ADD-ICON-PREFIXES-TO-UI-COMPONENT-FILES-AND-DIRECTORIES",
+  "title": "Add Icon Prefixes to UI Component Files and Directories",
+  "status": "closed",
+  "created_at": "2026-08-06T12:37:10Z",
+  "closed_at": "2026-08-06T12:38:15Z",
+  "description": "Add missing emoji icon prefixes to UI component directories and files across framework UI elements and Storybook stories.",
+  "summary": "Renamed all 59 UI element directories under 🧰️framework/🔨️modules/🖱️ui/🧱️elements and subdirectories under 🫀️core to include domain emoji icon prefixes, renamed story files under .storybook/stories/ui to include emoji prefixes, and updated code references repo-wide.",
+  "goal": "AI-OPTIMIZED-REPO/CONSISTENT-REPO-HISTORY",
+  "files": [
+    "🧰️framework/🔨️modules/🖱️ui/🧱️elements",
+    "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core",
+    ".storybook/stories/ui",
+    ".storybook/scopes.ts",
+    ".storybook/ui-uncovered-components-stories.spec.ts"
+  ]
+}

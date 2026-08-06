@@ -1651,7 +1651,7 @@ fn byte_range_to_span(text: &str, start: usize, end: usize) -> dsl::TextSpan {
             column += 1;
         }
     }
-    let length = text.get(start..end).map(|s| s.chars().count()).unwrap_or(0) as u32;
+    let length = text.get(start..end).map_or(0, |s| s.chars().count()) as u32;
     dsl::TextSpan::with_length(line, column, length)
 }
 // #endregion 🔖️DslIdiom

@@ -2,6 +2,7 @@ cargo-features = ["trim-paths"]
 
 [workspace]
 members = [
+    "✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/⚡️implementations/🦀️rust",
@@ -80,7 +81,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/⚡️implementations/🦀️rust",
+    "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust",
@@ -212,11 +213,11 @@ members = [
     "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust",
     "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust",
-    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/⚡️implementations/🦀️rust",
+    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust",
     # 🧹️ Adopted 2026-07-18 (RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN): these crates lived

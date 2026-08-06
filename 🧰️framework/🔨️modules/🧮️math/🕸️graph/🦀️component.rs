@@ -2793,7 +2793,7 @@ mod tests {
 
     #[test]
     fn tolerance_constants_are_ordered() {
-        assert!(TOL_STRICT < TOL_LOOSE);
+        const { assert!(TOL_STRICT < TOL_LOOSE) };
     }
 
     #[test]

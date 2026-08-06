@@ -21,6 +21,6 @@ export function validateGraphManifestDocument(raw: unknown): GraphManifestDocume
   if (typeof raw.id !== "string" || !raw.id.trim()) {
     throw new Error("graph manifest requires id");
   }
-  return raw as GraphManifestDocument;
+  return raw as unknown as GraphManifestDocument;
 }
 //#endregion 🔖️validate

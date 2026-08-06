@@ -1,8 +1,0 @@
-{
-  "name": "@semio-tech/math-spatial",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "test": "nx run math-spatialest"
-  }
-}

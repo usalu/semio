@@ -2192,7 +2192,7 @@ mod tests {
     fn mimo_infer_rejects_bad_input_and_empty_rules() {
         let system = temp_speed_system();
         assert_eq!(system.infer(&[1.0, 2.0]), Err(FuzzyError::DimensionMismatch("input count".into())));
-        let mut empty_system = system.clone();
+        let mut empty_system = system;
         empty_system.rules = RuleBase::new(vec![]);
         assert_eq!(empty_system.infer(&[20.0]), Err(FuzzyError::EmptyRuleBase));
     }
@@ -2228,7 +2228,7 @@ mod tests {
     #[test]
     fn soft_constraint_consequent_scales_by_preference() {
         let system = temp_speed_system();
-        let mut soft_system = system.clone();
+        let mut soft_system = system;
         soft_system.rules = RuleBase::new(vec![Rule { id: 0, antecedents: vec![AntecedentClause { input: 0, term: 1, hedge: None }], consequent: Consequent::SoftConstraint { output: 0, term: 1, preference: 0.5 }, weight: 1.0, confidence: 1.0 }]);
         let (out, explanation) = soft_system.infer(&[35.0]).unwrap();
         assert!(out[0] >= 0.0);

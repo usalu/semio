@@ -21,8 +21,8 @@ serde_json.workspace = true
 vcs = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
 store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
 protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
-imperative_module_core = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core/⚡️implementations/🦀️rust", package = "semio-s-plugin-imperative-core" }
-imperative_module_text = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/⚡️implementations/🦀️rust", package = "semio-s-plugin-imperative-text" }
-imperative_module_math = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/⚡️implementations/🦀️rust", package = "semio-s-plugin-imperative-math" }
-imperative_module_logic = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/⚡️implementations/🦀️rust", package = "semio-s-plugin-imperative-logic" }
-imperative_module_control = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/⚡️implementations/🦀️rust", package = "semio-s-plugin-imperative-control" }
+imperative_module_core = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core/📦️packages/🦀️rust", package = "semio-s-plugin-imperative-core" }
+imperative_module_text = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust", package = "semio-s-plugin-imperative-text" }
+imperative_module_math = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust", package = "semio-s-plugin-imperative-math" }
+imperative_module_logic = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust", package = "semio-s-plugin-imperative-logic" }
+imperative_module_control = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust", package = "semio-s-plugin-imperative-control" }

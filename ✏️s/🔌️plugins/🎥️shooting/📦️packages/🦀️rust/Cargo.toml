@@ -21,8 +21,8 @@ ports = { react = 6019, wgpu = 6119 }
 [[package.metadata.semio.assets]]
 kind = "mesh-collection"
 route = "/mesh"
-roots = ["🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🌱️metabolism/🎨️representation", "♻️mit-bestand/🖼️assets/🏚️abbau-aufbau"]
-placeholder = "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🥽️mesh/🧊️placeholder.glb"
+roots = ["🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation", "♻️mit-bestand/🖼️assets/🏚️abbau-aufbau"]
+placeholder = "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧊️placeholder.glb"
 filter_from_examples = true
 
 # 📦️ Carried over verbatim from the old `📡️protocol` sub-crate — the `wasm_bridge` module in

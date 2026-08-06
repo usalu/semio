@@ -727,7 +727,7 @@ mod tests {
         let (a, b) = (g.add_node(), g.add_node());
         g.add_edge(a, b);
         g.set_node_attributes("color", [(a, PropertyValue::String("red".to_string()))]);
-        assert!(g.get_node_attributes("color").get(&b).is_none());
+        assert!(!g.get_node_attributes("color").contains_key(&b));
         assert!(g.get_edge_attributes("weight").is_empty());
     }
 

@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 fn main() {
     let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR"));
-    let icons_src = manifest_dir.join("../../../../../🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🌱️metabolism/🔣️icons");
+    let icons_src = manifest_dir.join("../../../../../🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons");
     println!("cargo:rerun-if-changed={}", icons_src.display());
 
     let mut arms = String::new();

@@ -275,7 +275,7 @@ export class SetupScript extends Script {
     runNx("@semio-tech/framework-schema:generate");
     runNx("@semio-tech/ui-styling-tokens:generate");
     runCmd("bun", ["./📜️script.ts", "build"], {
-      cwd: join(this.root, "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript"),
+      cwd: join(this.root, "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript"),
       ...orchestratorBudgetOpts(),
     });
     runNx("@semio-tech/graph-manifest:generate");
@@ -665,8 +665,8 @@ export class VerifyScript extends Script {
     runCmd("bun", ["nx", "run", "@semio-tech/ui-styling-tokens:check-no-px"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] framework-core ts-rs binding freshness…");
     runCmd("bun", ["nx", "run", "@semio-tech/framework-core-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    console.log("[verify] ui-wgpu locale/terminology axes freshness…");
-    runCmd("bun", ["nx", "run", "@semio-tech/ui-wgpu-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    console.log("[verify] ui locale/terminology axes freshness…");
+    runCmd("bun", ["nx", "run", "@semio-tech/ui-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] chrome i18n literal scan…");
     runCmd("bun", ["nx", "run", "@semio-tech/ui-react:check-chrome-i18n"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] leveled test target coverage…");

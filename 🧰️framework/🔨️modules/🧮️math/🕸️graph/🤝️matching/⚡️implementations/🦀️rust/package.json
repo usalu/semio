@@ -1,8 +1,0 @@
-{
-  "name": "@semio-tech/math-graph-matching",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "test": "nx run @semio-tech/math-graph-matching:test"
-  }
-}

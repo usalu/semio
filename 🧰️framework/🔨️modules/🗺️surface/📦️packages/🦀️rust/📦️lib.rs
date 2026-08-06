@@ -11,9 +11,8 @@ pub mod board_2d;
 #[path = "../../🏔️terrain/🦀️component.rs"]
 pub mod terrain;
 
-// [DEBUG] temporarily disabled to isolate a pre-existing broken transitive dep (see registrar-handoff)
-// #[path = "../../🕸️node-graph/🦀️component.rs"]
-// pub mod node_graph;
+#[path = "../../🕸️node-graph/🦀️component.rs"]
+pub mod node_graph;
 
 #[path = "../../🗺️tiled-map/🦀️component.rs"]
 pub mod tiled_map;

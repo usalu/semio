@@ -1,0 +1,66 @@
+35:    "🧰️framework/🔨️modules/📚️compiler/🧮️math/⚡️implementations/🦀️rust",
+95:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust",
+96:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🖊️drawing/⚡️implementations/🦀️rust",
+97:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🗣️dsl/⚡️implementations/🦀️rust",
+98:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust",
+99:    "🧰️framework/🔨️modules/🧮️math/📐️geometry/⚡️implementations/🦀️rust",
+100:    "🧰️framework/🔨️modules/🧮️math/➕️algebra/⚡️implementations/🦀️rust",
+101:    "🧰️framework/🔨️modules/🧮️math/🎲️random/⚡️implementations/🦀️rust",
+102:    "🧰️framework/🔨️modules/🧮️math/🔷️lie/⚡️implementations/🦀️rust",
+103:    "🧰️framework/🔨️modules/🧮️math/🎯️optimize/⚡️implementations/🦀️rust",
+104:    "🧰️framework/🔨️modules/🧮️math/🗺️spatial/⚡️implementations/🦀️rust",
+105:    "🧰️framework/🔨️modules/🧮️math/📶️signal/⚡️implementations/🦀️rust",
+106:    "🧰️framework/🔨️modules/🧮️math/🔢️number/⚡️implementations/🦀️rust",
+107:    "🧰️framework/🔨️modules/🧮️math/📈️polynomial/⚡️implementations/🦀️rust",
+108:    "🧰️framework/🔨️modules/🧮️math/🧮️cas/⚡️implementations/🦀️rust",
+109:    "🧰️framework/🔨️modules/🧮️math/📋️tabular/⚡️implementations/🦀️rust",
+110:    "🧰️framework/🔨️modules/🧮️math/🎲️probability/⚡️implementations/🦀️rust",
+111:    "🧰️framework/🔨️modules/🧮️math/📊️statistics/⚡️implementations/🦀️rust",
+112:    "🧰️framework/🔨️modules/🧮️math/🔗️causal/⚡️implementations/🦀️rust",
+113:    "🧰️framework/🔨️modules/🧮️math/🌫️fuzzy/⚡️implementations/🦀️rust",
+114:    "🧰️framework/🔨️modules/🧮️math/🎯️sampling/⚡️implementations/🦀️rust",
+115:    "🧰️framework/🔨️modules/🧮️math/🎲️entropy/⚡️implementations/🦀️rust",
+116:    "🧰️framework/🔨️modules/🧮️math/🧩️wfc/⚡️implementations/🦀️rust",
+117:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🚶️traversal/⚡️implementations/🦀️rust",
+118:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🧩️components/⚡️implementations/🦀️rust",
+119:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🕸️dag/⚡️implementations/🦀️rust",
+120:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔄️cycles/⚡️implementations/🦀️rust",
+121:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🛤️paths/⚡️implementations/🦀️rust",
+122:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔧️operators/⚡️implementations/🦀️rust",
+123:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🎨️coloring/⚡️implementations/🦀️rust",
+124:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🎲️generate/⚡️implementations/🦀️rust",
+125:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🎲️generate/🎲️random/⚡️implementations/🦀️rust",
+126:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔌️io/⚡️implementations/🦀️rust",
+127:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🏗️structure/⚡️implementations/🦀️rust",
+128:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔺️cliques/⚡️implementations/🦀️rust",
+129:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🧩️clustering/⚡️implementations/🦀️rust",
+130:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🤝️matching/⚡️implementations/🦀️rust",
+131:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔀️bipartite/⚡️implementations/🦀️rust",
+132:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🌳️trees/⚡️implementations/🦀️rust",
+133:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🗺️planarity/⚡️implementations/🦀️rust",
+134:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🌊️flow/⚡️implementations/🦀️rust",
+135:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🎯️centrality/⚡️implementations/🦀️rust",
+136:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🎯️similarity/⚡️implementations/🦀️rust",
+137:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🪞️isomorphism/⚡️implementations/🦀️rust",
+138:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔗️connectivity/⚡️implementations/🦀️rust",
+139:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🏘️community/⚡️implementations/🦀️rust",
+140:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🎯️approximation/⚡️implementations/🦀️rust",
+141:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/📊️spectral/⚡️implementations/🦀️rust",
+142:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/➕️normal/↔undirected/⚡️implementations/🦀️rust",
+143:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/➕️normal/➡️directed/⚡️implementations/🦀️rust",
+144:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔌️ports/↔undirected/⚡️implementations/🦀️rust",
+145:    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔌️ports/➡️directed/➕️normal/⚡️implementations/🦀️rust",
+219:    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust",
+295:semio-framework-os-kernel-math-algebra = { path = "🧰️framework/🔨️modules/🧮️math/➕️algebra/⚡️implementations/🦀️rust" }  # 26 refs
+296:semio-framework-os-kernel-math-geometry = { path = "🧰️framework/🔨️modules/🧮️math/📐️geometry/⚡️implementations/🦀️rust" }  # 10 refs
+297:semio-framework-os-kernel-math-graph = { path = "🧰️framework/🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust" }  # 40 refs
+298:semio-framework-os-kernel-math-graph-cliques = { path = "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔺️cliques/⚡️implementations/🦀️rust" }  # 6 refs
+299:semio-framework-os-kernel-math-graph-components = { path = "🧰️framework/🔨️modules/🧮️math/🕸️graph/🧩️components/⚡️implementations/🦀️rust" }  # 9 refs
+300:semio-framework-os-kernel-math-graph-dsl = { path = "🧰️framework/🔨️modules/🧮️math/🕸️graph/🗣️dsl/⚡️implementations/🦀️rust" }  # 6 refs
+301:semio-framework-os-kernel-math-graph-manifest = { path = "🧰️framework/🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust" }  # 14 refs
+302:semio-framework-os-kernel-math-graph-matching = { path = "🧰️framework/🔨️modules/🧮️math/🕸️graph/🤝️matching/⚡️implementations/🦀️rust" }  # 6 refs
+303:semio-framework-os-kernel-math-graph-paths = { path = "🧰️framework/🔨️modules/🧮️math/🕸️graph/🛤️paths/⚡️implementations/🦀️rust" }  # 8 refs
+304:semio-framework-os-kernel-math-graph-traversal = { path = "🧰️framework/🔨️modules/🧮️math/🕸️graph/🚶️traversal/⚡️implementations/🦀️rust" }  # 12 refs
+305:semio-framework-os-kernel-math-lie = { path = "🧰️framework/🔨️modules/🧮️math/🔷️lie/⚡️implementations/🦀️rust" }  # 6 refs
+306:semio-framework-os-kernel-math-random = { path = "🧰️framework/🔨️modules/🧮️math/🎲️random/⚡️implementations/🦀️rust" }  # 27 refs
+307:semio-framework-os-kernel-math-spatial = { path = "🧰️framework/🔨️modules/🧮️math/🗺️spatial/⚡️implementations/🦀️rust" }  # 6 refs

@@ -759,7 +759,7 @@ mod tests {
 
         let dropped = contracted_nodes(&g, 0, 1, false);
         assert_eq!(dropped.node_count(), 2);
-        assert!(dropped.contains_node(1) == false);
+        assert!(!dropped.contains_node(1));
         assert!(dropped.edges_between(0, 0).next().is_none());
         assert!(dropped.edges_between(0, 2).next().is_some());
 

@@ -225,3 +225,24 @@ Landed in W0 (ticket `26/08/05/ROOT-WORKSPACE-DEPENDENCIES-AND-REGISTRAR-PROTOCO
 - W8b math (52 impls untouched), surface, singletons+core, assets, ui
 - W6 sourcing extensions, trinity jack tools
 Hub already member-swapped to `🌎️hub/📦️packages/🦀️rust`. Do not redispatch these names.
+
+**✅ W6 trinity jack tools DONE (2026-08-06 ~12:35, resuming agent).** Ticket
+`26/08/06/TRINITY-PLUGIN-RESIDUAL-MOP-UP-JACK-TOOLS` — file relocation (shell bin crate, lsp crate, TS
+worker→component.ts extraction, broken `./protocol.ts` import fix) was already done on disk + already
+registrar-processed (root Cargo.toml member lines + root package.json workspaces line both already
+present) before this resume — confirmed via a real `cargo check/clippy/test -p
+semio-s-plugin-trinity-jack-shell -p semio-s-plugin-trinity-jack-lsp`, both clean. **Found + fixed one real
+bug**: lsp's `📜️script.ts` had `rsDir: join(this.root, "rs")` (stale V1 copy-paste, no such nested `rs/`
+dir under Shape V2) blocking `bun ./📜️script.ts wasm` outright — fixed to `rsDir: this.root` (matches every
+other V2 wasm package in the repo), real wasm-pack build now succeeds. **Found, NOT fixed, flagging for a
+new ticket**: once the wasm `pkg/` exists, the worker's `JackLspSession` import has no matching export —
+the lsp crate's `📦️lib.rs` was cut down to a 3-line `dsl_lsp` re-export shim by an *earlier*, unrelated
+ticket (traced via `git log --follow`/`git show` to 2026-07-30 commit `53fc476b1e`, predates trinity's own
+crate-consolidation), deleting a real 749-line `JackLspSession` wasm wrapper without updating its still-live
+JS worker consumer. Needs a real design decision (port the old multi-domain board-fixture server onto new
+`trinity::core`/`trinity::artifacts::jack` paths, vs. rebuild on trinity's own grammar-only `core` functions)
+— too large/risky for a mop-up ticket, and non-trivial to verify safely mid-W7/W8 (hit 3 different unrelated
+transient root-workspace breaks while investigating, all from other sessions' concurrent in-flight edits,
+each cleared within ~30-60s on retry — did not chase further). Full writeup in that ticket's
+`📌️important.md`. Repo MCP unavailable this session too — ticket left `status: open` for the next
+session/dev to close via MCP; do not redispatch this name, it is fully done modulo the flagged follow-up.

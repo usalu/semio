@@ -431,6 +431,7 @@ async function runGenerateAll(): Promise<void> {
   await generateShortcodes(icons, generatedDir);
   console.log(`[asset] generated ${Object.keys(icons).length} icons + shortcodes → all`);
 }
+//#endregion 🚀️Commands
 
 //#endregion 🔖️CatalogUiCodegen
 

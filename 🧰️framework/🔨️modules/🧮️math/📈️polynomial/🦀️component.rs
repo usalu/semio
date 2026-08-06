@@ -266,7 +266,7 @@ pub mod univariate {
             let res = self.resultant(&self.derivative());
             let lc = self.leading_coeff().unwrap().clone();
             let quotient = res.exact_div(&lc).expect("discriminant: lc(f) divides resultant(f, f') exactly");
-            if (n * (n - 1) / 2) % 2 == 0 {
+            if (n * (n - 1) / 2).is_multiple_of(2) {
                 quotient
             } else {
                 quotient.neg()
@@ -1104,9 +1104,9 @@ pub mod finite {
         let mut n = n;
         let mut p = 2usize;
         while p * p <= n {
-            if n % p == 0 {
+            if n.is_multiple_of(p) {
                 factors.push(p);
-                while n % p == 0 {
+                while n.is_multiple_of(p) {
                     n /= p;
                 }
             }
@@ -1225,7 +1225,7 @@ pub mod finite {
     // #region 🔖️FactorModP
     /// 🧮️ Full factorization of `f` over `GF(p)`: `(leading_coeff, [(irreducible_factor, multiplicity), ...])`.
     pub fn factor_mod_p(f: &PolyU<ModInt>, rng: &mut Rng) -> (ModInt, Vec<(PolyU<ModInt>, u32)>) {
-        let lc = f.leading_coeff().expect("factor_mod_p: f must be nonzero").clone();
+        let lc = *f.leading_coeff().expect("factor_mod_p: f must be nonzero");
         let monic = f.make_monic();
         let squarefree = monic.squarefree_decomposition();
         let mut result = Vec::new();
@@ -1491,6 +1491,9 @@ pub mod factor {
     }
 
     /// 🔍️ Factors a squarefree monic integer polynomial: picks a good prime, factors mod p, lifts, recombines.
+    /// 🥇️ Best modular image found while prime-hunting: the prime and its squarefree factorization.
+    type BestFactorization = (u64, Vec<(PolyU<ModInt>, u32)>);
+
     fn factor_squarefree_monic(f: &PolyU<Integer>) -> Vec<PolyU<Integer>> {
         if f.degree() == Some(0) || f.degree() == Some(1) {
             return vec![f.clone()];
@@ -1501,7 +1504,7 @@ pub mod factor {
 
         // Try a handful of odd primes that don't divide the leading coefficient, picking the one giving a
         // squarefree image mod p (guarantees the mod-p factorization is separable).
-        let mut best: Option<(u64, Vec<(PolyU<ModInt>, u32)>)> = None;
+        let mut best: Option<BestFactorization> = None;
         let mut p = 100_003u64; // an odd prime comfortably away from tiny-degree coefficient collisions
         let mut attempts = 0;
         while attempts < 8 {
@@ -2025,7 +2028,7 @@ pub mod algebraic {
             if r.is_zero() {
                 return Some(Self::from_rational(&Rational::zero()));
             }
-            if n % 2 == 0 && r.numer().is_negative() {
+            if n.is_multiple_of(2) && r.numer().is_negative() {
                 return None;
             }
             let denom = Integer::from_natural(r.denom().clone());
@@ -2034,7 +2037,7 @@ pub mod algebraic {
             coeffs[n as usize] = denom;
             let poly = PolyU::from_coeffs(coeffs);
             let intervals = isolate_real_roots(&poly);
-            let index = if n % 2 == 0 { intervals.len() - 1 } else { 0 };
+            let index = if n.is_multiple_of(2) { intervals.len() - 1 } else { 0 };
             Self::root_of(&poly, index)
         }
 
@@ -2273,6 +2276,7 @@ pub mod algebraic {
         // #endregion 🔖️AlgebraicOperations
     }
 
+    #[derive(Clone, Copy)]
     enum Combine {
         Add,
         Mul,

@@ -6811,9 +6811,9 @@ dependencies = [
  "image",
  "js-sys",
  "semio-framework-core",
- "semio-framework-os-kernel-3d-scene",
  "semio-framework-os-kernel-surface-terrain",
  "semio-framework-ui-wgpu",
+ "semio-s-3d",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -6842,8 +6842,6 @@ dependencies = [
  "resvg",
  "rusqlite",
  "semio-framework-core",
- "semio-framework-os-kernel-3d-brep",
- "semio-framework-os-kernel-3d-brep-engine",
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-space",
@@ -6853,6 +6851,7 @@ dependencies = [
  "semio-framework-os-kernel-workflow",
  "semio-framework-plugin",
  "semio-framework-ui-wgpu",
+ "semio-s-3d",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -7387,7 +7386,6 @@ dependencies = [
  "js-sys",
  "semio-framework-core",
  "semio-framework-kernel-neural-dag",
- "semio-framework-os-kernel-3d-brep-engine",
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-infinite-board-port-directed-dag",
  "semio-framework-os-kernel-infinite-canvas",
@@ -8549,7 +8547,6 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-editor",
  "semio-framework-kernel-infinite-world",
- "semio-framework-os-kernel-3d-scene",
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-dsl-core",
  "semio-framework-os-kernel-flow-core",
@@ -8563,6 +8560,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-plugin-host",
  "semio-framework-ui-wgpu",
+ "semio-s-3d",
  "semio-s-plugin-puzzle",
  "serde",
  "serde_json",
@@ -8729,6 +8727,31 @@ dependencies = [
  "rayon",
  "semio-framework-core",
  "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-3d"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "base64 0.22.1",
+ "brepkit-check",
+ "brepkit-geometry",
+ "brepkit-io",
+ "brepkit-math",
+ "brepkit-operations",
+ "brepkit-topology",
+ "criterion",
+ "futures",
+ "pollster",
+ "rayon",
+ "semio-framework-core",
+ "semio-framework-os-kernel-math-algebra",
+ "semio-framework-os-kernel-math-number",
+ "semio-framework-os-kernel-math-random",
+ "serde",
+ "serde_json",
  "thiserror 2.0.18",
 ]
 
@@ -8935,9 +8958,8 @@ dependencies = [
  "getrandom 0.3.4",
  "js-sys",
  "semio-framework-core",
- "semio-framework-os-kernel-3d-brep",
- "semio-framework-os-kernel-3d-brep-engine",
  "semio-framework-os-kernel-neural-engine",
+ "semio-s-3d",
  "semio-s-kernel-flow-extension-wasm",
  "serde",
  "serde_json",
@@ -9044,6 +9066,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-mindmap"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel-infinite-board-normal-directed",
+ "semio-framework-os-kernel-infinite-canvas",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "semio-s-plugin-animate"
 version = "0.1.0"
 dependencies = [
@@ -9110,8 +9141,6 @@ dependencies = [
  "base64 0.22.1",
  "semio-framework-core",
  "semio-framework-os",
- "semio-framework-os-kernel-3d-brep",
- "semio-framework-os-kernel-3d-brep-engine",
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-math-graph-dsl",
  "semio-framework-os-kernel-math-graph-manifest",
@@ -9119,6 +9148,7 @@ dependencies = [
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-framework-ui-wgpu",
+ "semio-s-3d",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -9144,8 +9174,8 @@ name = "semio-s-plugin-demonstrator"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os",
- "semio-framework-os-kernel-3d-brep",
  "semio-framework-plugin",
+ "semio-s-3d",
  "semio-s-plugin-cad",
  "semio-s-plugin-gis",
  "semio-s-plugin-procedural",
@@ -9391,13 +9421,11 @@ dependencies = [
  "base64 0.22.1",
  "png 0.17.16",
  "semio-framework-os",
- "semio-framework-os-kernel-3d-brep",
- "semio-framework-os-kernel-3d-brep-engine",
- "semio-framework-os-kernel-3d-mesh",
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
+ "semio-s-3d",
  "semio-s-plugin-cad",
  "serde",
  "serde_json",
@@ -9467,7 +9495,6 @@ name = "semio-s-plugin-playbook-procedural"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
- "semio-framework-os-kernel-3d-brep-engine",
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-flow-core",
  "semio-framework-os-kernel-playbook",
@@ -9486,7 +9513,6 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-os",
- "semio-framework-os-kernel-3d-scene",
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-flow-core",
  "semio-framework-os-kernel-infinite-canvas",
@@ -9498,6 +9524,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-ui-styling",
  "semio-framework-ui-wgpu",
+ "semio-s-3d",
  "semio-s-kernel-flow-extension-brep",
  "semio-s-kernel-flow-extension-draw",
  "serde",
@@ -9512,14 +9539,13 @@ dependencies = [
  "base64 0.22.1",
  "semio-framework-core",
  "semio-framework-os",
- "semio-framework-os-kernel-3d-brep",
- "semio-framework-os-kernel-3d-brep-engine",
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-pack",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-vcs",
  "semio-framework-plugin",
+ "semio-s-3d",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -9541,7 +9567,7 @@ dependencies = [
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
- "semio-s-kernel-reasoning-mindmap",
+ "semio-s-mindmap",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -9576,7 +9602,7 @@ dependencies = [
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
- "semio-s-kernel-reasoning-mindmap",
+ "semio-s-mindmap",
  "serde",
  "serde_json",
  "thiserror 2.0.18",

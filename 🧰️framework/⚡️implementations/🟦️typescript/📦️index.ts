@@ -59,7 +59,7 @@ import type {
   IntroductionCursor as GeneratedIntroductionCursor,
   IntroductionDemonstration as GeneratedIntroductionDemonstration,
   DialogDefinition as GeneratedDialogDefinition,
-} from "./generated/manifest.ts";
+} from "../../🤖️generated/🟦️manifest.ts";
 // #endregion 🧬️GeneratedMirror
 
 //#region 🧭️UiPresence

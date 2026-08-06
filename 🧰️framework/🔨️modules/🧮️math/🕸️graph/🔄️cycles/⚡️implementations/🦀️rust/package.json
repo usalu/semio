@@ -1,8 +1,0 @@
-{
-  "name": "@semio-tech/math-graph-cycles",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "test": "nx run @semio-tech/math-graph-cycles:test"
-  }
-}

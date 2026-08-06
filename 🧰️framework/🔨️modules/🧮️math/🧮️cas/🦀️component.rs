@@ -1006,7 +1006,7 @@ mod canon {
         if let Kind::Pow(inner_base, inner_exp) = base.kind() {
             let b_is_integer = matches!(exp.kind(), Kind::Integer(_));
             if b_is_integer || is_positive(&inner_base.clone()) == Some(true) {
-                let combined_exp = make_mul(vec![inner_exp.clone(), exp.clone()]);
+                let combined_exp = make_mul(vec![inner_exp.clone(), exp]);
                 return make_pow(inner_base.clone(), combined_exp);
             }
         }
@@ -1021,7 +1021,7 @@ mod canon {
                 }
                 Expr::from_kind_unchecked(Kind::Pow(base, exp))
             }
-            (Kind::Integer(b), Kind::Rational(e)) => fold_radical(b.clone(), e.clone()).unwrap_or_else(|| Expr::from_kind_unchecked(Kind::Pow(base, exp))),
+            (Kind::Integer(b), Kind::Rational(e)) => fold_radical(b, e.clone()).unwrap_or_else(|| Expr::from_kind_unchecked(Kind::Pow(base, exp))),
             _ => Expr::from_kind_unchecked(Kind::Pow(base, exp)),
         }
     }
@@ -1045,14 +1045,14 @@ mod canon {
     /// `outside^q * inside` (via prime factorization) with `inside` free of `q`-th-power factors, giving
     /// `base^(1/q) = (+-outside) * inside^(1/q)`. Only the numerator-`1` case gets this partial extraction;
     /// other numerators only fold when `base` is an *exact* `q`-th power (documented simplification).
-    fn fold_radical(base: Integer, exp: Rational) -> Option<Expr> {
+    fn fold_radical(base: &Integer, exp: Rational) -> Option<Expr> {
         let q = exp.denom().to_u64()? as u32;
         let p = exp.numer().clone();
         if q < 2 {
             return None;
         }
         let is_neg = base.is_negative();
-        if q % 2 == 0 && is_neg {
+        if q.is_multiple_of(2) && is_neg {
             return None; // even root of a negative number: not real, leave symbolic
         }
         let bm = base.abs();
@@ -1187,7 +1187,7 @@ mod canon {
             let x = Expr::symbol("x");
             assert_eq!(make_pow(x.clone(), Expr::integer(0)), Expr::integer(1));
             assert_eq!(make_pow(x.clone(), Expr::integer(1)), x);
-            assert_eq!(make_pow(Expr::integer(1), x.clone()), Expr::integer(1));
+            assert_eq!(make_pow(Expr::integer(1), x), Expr::integer(1));
         }
 
         #[test]
@@ -1236,7 +1236,7 @@ mod canon {
             assert_eq!(make_pow(i.clone(), Expr::integer(0)), Expr::integer(1));
             assert_eq!(make_pow(i.clone(), Expr::integer(1)), i);
             assert_eq!(make_pow(i.clone(), Expr::integer(2)), Expr::integer(-1));
-            assert_eq!(make_pow(i.clone(), Expr::integer(4)), Expr::integer(1));
+            assert_eq!(make_pow(i, Expr::integer(4)), Expr::integer(1));
         }
 
         #[test]
@@ -1252,7 +1252,7 @@ mod canon {
             let y = Expr::symbol("y");
             let corpus = vec![
                 make_add(vec![x.clone(), y.clone(), Expr::integer(3)]),
-                make_mul(vec![x.clone(), y.clone(), Expr::integer(2)]),
+                make_mul(vec![x.clone(), y, Expr::integer(2)]),
                 make_pow(x.clone(), Expr::integer(5)),
                 make_add(vec![make_mul(vec![Expr::integer(2), x.clone()]), make_mul(vec![Expr::integer(3), x])]),
             ];
@@ -1759,7 +1759,7 @@ pub mod visit {
         fn free_symbols_deduplicates_and_sorts() {
             let x = Expr::symbol("x");
             let y = Expr::symbol("y");
-            let e = Expr::add(vec![x.clone(), x.clone(), y.clone()]);
+            let e = Expr::add(vec![x.clone(), x, y]);
             let symbols = free_symbols(&e);
             assert_eq!(symbols.len(), 2);
         }
@@ -2135,21 +2135,21 @@ pub mod fmt {
         #[test]
         fn display_simple_polynomial() {
             let x = Expr::symbol("x");
-            let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(2)), Expr::integer(1)]);
+            let e = Expr::add(vec![Expr::pow(x, Expr::integer(2)), Expr::integer(1)]);
             assert_eq!(display_string(&e), "x^2 + 1");
         }
 
         #[test]
         fn display_negative_term() {
             let x = Expr::symbol("x");
-            let e = x.clone() - Expr::integer(1);
+            let e = x - Expr::integer(1);
             assert_eq!(display_string(&e), "x - 1");
         }
 
         #[test]
         fn display_division() {
             let x = Expr::symbol("x");
-            let e = x.clone() / Expr::integer(2);
+            let e = x / Expr::integer(2);
             assert_eq!(display_string(&e), "x/2");
         }
 
@@ -2425,10 +2425,13 @@ pub mod pattern {
         Builder(Rc<dyn Fn(&Bindings) -> Expr>),
     }
 
+    /// 🔍️ Guard evaluated against a candidate match before a rewrite rule fires.
+    pub type RuleCondition = Rc<dyn Fn(&Bindings) -> bool>;
+
     pub struct Rule {
         lhs: Expr,
         rhs: RuleRhs,
-        cond: Option<Rc<dyn Fn(&Bindings) -> bool>>,
+        cond: Option<RuleCondition>,
     }
 
     impl Rule {
@@ -2436,7 +2439,7 @@ pub mod pattern {
             Self { lhs, rhs: RuleRhs::Template(rhs), cond: None }
         }
 
-        pub fn with_condition(lhs: Expr, rhs: Expr, cond: Rc<dyn Fn(&Bindings) -> bool>) -> Self {
+        pub fn with_condition(lhs: Expr, rhs: Expr, cond: RuleCondition) -> Self {
             Self { lhs, rhs: RuleRhs::Template(rhs), cond: Some(cond) }
         }
 
@@ -2938,7 +2941,7 @@ pub mod polybridge {
         #[test]
         fn as_poly_roundtrips_through_from_poly() {
             let x = Expr::symbol("x");
-            let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(2)), Expr::mul(vec![Expr::integer(3), x.clone()]), Expr::integer(1)]);
+            let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(2)), Expr::mul(vec![Expr::integer(3), x]), Expr::integer(1)]);
             let (poly, map) = as_poly_auto(&e).unwrap();
             let rebuilt = from_poly(&poly, &map);
             assert_eq!(rebuilt, e);
@@ -2986,7 +2989,7 @@ pub mod polybridge {
         #[test]
         fn build_ratio_folds_constant_denominator() {
             let x = Expr::symbol("x");
-            let (num, _map) = as_poly(&x, &[x.clone()]).unwrap();
+            let (num, _map) = as_poly(&x, std::slice::from_ref(&x)).unwrap();
             let den = PolyM::constant(Rational::from_i64(2, 1).unwrap(), 1, MonomialOrder::Lex);
             let map = PolyMap { gens: vec![x.clone()] };
             let result = build_ratio(&num, &den, &map);
@@ -3267,8 +3270,8 @@ pub mod simplify {
             let (factor, mult) = &factors[fi];
             let cofactor = base_cofactors[fi].mul(&factor.pow((*mult - j) as u64));
             let basis = cofactor.mul_scalar(&overall).shift_up(k);
-            for row in 0..deg_den {
-                rows[row][col] = basis.coeff(row);
+            for (row, cells) in rows.iter_mut().enumerate().take(deg_den) {
+                cells[col] = basis.coeff(row);
             }
         }
         let matrix = crate::algebra::MatG::from_rows(rows);
@@ -3406,7 +3409,7 @@ pub mod simplify {
         #[test]
         fn expand_distributes_over_function_argument_unchanged() {
             let x = Expr::symbol("x");
-            let e = Expr::func(crate::cas::fnkind::FnKind::Sin, vec![Expr::add(vec![x.clone(), Expr::integer(1)])]);
+            let e = Expr::func(crate::cas::fnkind::FnKind::Sin, vec![Expr::add(vec![x, Expr::integer(1)])]);
             assert_eq!(expand(&e), e);
         }
 
@@ -3423,7 +3426,7 @@ pub mod simplify {
         #[test]
         fn together_combines_fractions() {
             let x = Expr::symbol("x");
-            let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(-1)), Expr::integer(1)]);
+            let e = Expr::add(vec![Expr::pow(x, Expr::integer(-1)), Expr::integer(1)]);
             let combined = together(&e);
             // Verify numerically: (1/x + 1) at x=2 should equal the combined form evaluated the same way.
             assert_ne!(combined, e);
@@ -3444,7 +3447,7 @@ pub mod simplify {
         fn factor_recovers_linear_factors() {
             let x = Expr::symbol("x");
             // x^2 - 1 -> (x-1)(x+1) up to ordering/sign; check by expanding back.
-            let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(2)), Expr::integer(-1)]);
+            let e = Expr::add(vec![Expr::pow(x, Expr::integer(2)), Expr::integer(-1)]);
             let factored = factor(&e);
             assert_eq!(expand(&factored), e);
             assert_ne!(factored, e);
@@ -4044,7 +4047,7 @@ pub mod diff {
             let x = Expr::symbol("x");
             let e = Expr::pow(x.clone(), x.clone());
             let result = diff(&e, &x).unwrap();
-            let expected = Expr::mul(vec![Expr::pow(x.clone(), x.clone()), Expr::add(vec![Expr::func(FnKind::Ln, vec![x.clone()]), Expr::integer(1)])]);
+            let expected = Expr::mul(vec![Expr::pow(x.clone(), x.clone()), Expr::add(vec![Expr::func(FnKind::Ln, vec![x]), Expr::integer(1)])]);
             assert_eq!(result, expected);
         }
 
@@ -4059,7 +4062,7 @@ pub mod diff {
         fn bessel_j_recurrence_derivative() {
             let x = Expr::symbol("x");
             let n = Expr::integer(2);
-            let e = Expr::func(FnKind::BesselJ, vec![n.clone(), x.clone()]);
+            let e = Expr::func(FnKind::BesselJ, vec![n, x.clone()]);
             let expected = Expr::mul(vec![
                 Expr::from(Rational::from_i64(1, 2).unwrap()),
                 Expr::add(vec![Expr::func(FnKind::BesselJ, vec![Expr::integer(1), x.clone()]), Expr::mul(vec![Expr::integer(-1), Expr::func(FnKind::BesselJ, vec![Expr::integer(3), x.clone()])])]),
@@ -4613,7 +4616,7 @@ pub mod solve {
                 continue;
             }
             let a = p.terms().iter().find(|(m, _)| m.exps()[0] == 1).map(|(_, c)| c.clone());
-            let b = p.terms().iter().find(|(m, _)| m.exps()[0] == 0).map(|(_, c)| c.clone()).unwrap_or_else(Rational::zero);
+            let b = p.terms().iter().find(|(m, _)| m.exps()[0] == 0).map_or_else(Rational::zero, |(_, c)| c.clone());
             let Some(a) = a else { continue };
             let value = Expr::from(b.neg().div(&a).expect("nonzero coefficient of the matched generator"));
             return invert_generator(kind, x, &value);
@@ -4663,10 +4666,10 @@ pub mod solve {
         if det_a.is_zero_literal() {
             return SolutionSet::Unknown;
         }
-        SolutionSet::Finite(cramer_solutions(&a, &b, det_a))
+        SolutionSet::Finite(cramer_solutions(&a, &b, &det_a))
     }
 
-    fn cramer_solutions(a: &[Vec<Expr>], b: &[Expr], det_a: Expr) -> Vec<Expr> {
+    fn cramer_solutions(a: &[Vec<Expr>], b: &[Expr], det_a: &Expr) -> Vec<Expr> {
         let n = a.len();
         let mut sols = Vec::with_capacity(n);
         for i in 0..n {
@@ -5015,7 +5018,7 @@ pub mod matrix {
 
         fn cofactor(&self, skip_row: usize, skip_col: usize) -> Expr {
             let minor: Vec<Vec<Expr>> = self.rows_vec().into_iter().enumerate().filter(|&(r, _)| r != skip_row).map(|(_, row)| row.into_iter().enumerate().filter(|&(c, _)| c != skip_col).map(|(_, v)| v).collect()).collect();
-            let sign = if (skip_row + skip_col) % 2 == 0 { Expr::integer(1) } else { Expr::integer(-1) };
+            let sign = if (skip_row + skip_col).is_multiple_of(2) { Expr::integer(1) } else { Expr::integer(-1) };
             sign * det_expr(&minor)
         }
 
@@ -5616,7 +5619,7 @@ pub mod integrate {
             let x = Expr::symbol("x");
             // 2x * cos(x^2) -> sin(x^2)
             let inner = Expr::pow(x.clone(), Expr::integer(2));
-            let e = Expr::mul(vec![Expr::integer(2), x.clone(), Expr::func(FnKind::Cos, vec![inner.clone()])]);
+            let e = Expr::mul(vec![Expr::integer(2), x.clone(), Expr::func(FnKind::Cos, vec![inner])]);
             let result = integrate(&e, &x).unwrap();
             assert!(diff_matches(&e, &x, &result));
         }
@@ -5771,7 +5774,7 @@ pub mod sums {
             // sum_{k=1}^{n} k -- but sum_closed evaluates a polynomial in the SAME variable used for the
             // bound substitution, so pass `k` itself as both the summand's variable and the closed-form target.
             let result = sum_closed(&k, &k, &Expr::integer(1), &n).unwrap();
-            let expected = crate::cas::simplify::expand(&(n.clone() * (n.clone() + Expr::integer(1)) * Expr::from(Rational::from_i64(1, 2).unwrap())));
+            let expected = crate::cas::simplify::expand(&(n.clone() * (n + Expr::integer(1)) * Expr::from(Rational::from_i64(1, 2).unwrap())));
             assert_eq!(crate::cas::simplify::expand(&result), expected);
         }
 

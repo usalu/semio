@@ -1,8 +1,0 @@
-{
-  "name": "@semio-tech/math-graph-trees",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "test": "nx run @semio-tech/math-graph-trees:test"
-  }
-}

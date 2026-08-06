@@ -1,9 +1,9 @@
 // #region 🧲️Header
-// 💻️ .storybook/stories/coda/CodaValidationTree.stories.tsx
+// 💻️ .storybook/stories/coda/Coda✅ValidationTree.stories.tsx
 // Specs: Companion to `CodaTrees.stories.tsx` (read that file's header first) — same gap analysis, applied to
 // `ValidationTree` instead of `OntologyTree`. A CSF file may only have one default-exported `meta`, so the
 // two components get separate files even though they close the same coverage gap.
-// Summary: `.storybook/stories/ui/ValidationTree.stories.tsx` only ever gives `ExactCardinality` a `n/n` chip
+// Summary: `.storybook/stories/ui/✅ValidationTree.stories.tsx` only ever gives `ExactCardinality` a `n/n` chip
 // (`hasValidationCardinalityBadge` in renderer.tsx also lights up for `MinCardinality`/`MaxCardinality`, never
 // exercised) and never instantiates `AllValuesFrom` / `DataAllValuesFrom` / `DataHasValue` /
 // `DatatypeRestriction` at the instance (truth-annotated) level. This story evaluates the same
@@ -19,7 +19,7 @@ import type { ComponentType, ReactNode } from "react";
 // #endregion 🔌️Adapters
 
 // #region 🎨️CodaThemeWrapper
-/** @emoji 🎨️ Coda-specific CSS variables the tree components read (mirrors `.storybook/stories/ui/ValidationTree.stories.tsx`). */
+/** @emoji 🎨️ Coda-specific CSS variables the tree components read (mirrors `.storybook/stories/ui/✅ValidationTree.stories.tsx`). */
 const CodaThemeWrapper = ({ children }: { children: ReactNode }) => (
   <div
     style={{

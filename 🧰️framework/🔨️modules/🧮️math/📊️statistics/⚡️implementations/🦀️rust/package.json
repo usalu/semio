@@ -1,8 +1,0 @@
-{
-  "name": "@semio-tech/math-statistics",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "test": "nx run @semio-tech/math-statistics:test"
-  }
-}
