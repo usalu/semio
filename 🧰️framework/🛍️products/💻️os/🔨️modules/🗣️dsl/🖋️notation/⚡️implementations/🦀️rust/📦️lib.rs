@@ -130,6 +130,41 @@ fn parse_edge_node(cursor: &mut Cursor) -> Result<EdgeNode, TextError> {
     Ok(EdgeNode { id, kind, port })
 }
 
+fn decode_fused_edge_arrow(text: &str) -> Result<(bool, EdgeLabel), TextError> {
+    let body = text.strip_prefix('-').ok_or_else(|| TextError::new("fused edge must start with `-`", TextSpan::at(1, 1)))?;
+    let (core, directed) = if let Some(core) = body.strip_suffix('>') {
+        (core, true)
+    } else if let Some(core) = body.strip_suffix('-') {
+        (core, false)
+    } else {
+        return Err(TextError::new("fused edge must end with `>` or `-`", TextSpan::at(1, 1)));
+    };
+    if core.is_empty() {
+        return Err(TextError::new("fused edge label is empty", TextSpan::at(1, 1)));
+    }
+    let (id, kind) = if let Some(rest) = core.strip_prefix(':') {
+        (None, Some(rest.to_string()))
+    } else if let Some((id_part, kind_part)) = core.split_once(':') {
+        (Some(id_part.to_string()), Some(kind_part.to_string()))
+    } else {
+        (Some(core.to_string()), None)
+    };
+    Ok((directed, EdgeLabel { id, kind }))
+}
+
+fn print_fused_edge_arrow(label: &EdgeLabel, directed: bool) -> String {
+    let mut out = String::from('-');
+    if let Some(id) = &label.id {
+        out.push_str(id);
+    }
+    if let Some(kind) = &label.kind {
+        out.push(':');
+        out.push_str(kind);
+    }
+    out.push(if directed { '>' } else { '-' });
+    out
+}
+
 fn parse_edge_label(cursor: &mut Cursor) -> Result<EdgeLabel, TextError> {
     cursor.expect(TokenKind::LBracket)?;
     let id = if cursor.peek().kind == TokenKind::Ident {
@@ -195,6 +230,12 @@ fn parse_edge(cursor: &mut Cursor) -> Result<EdgeValue, TextError> {
             let to = parse_edge_node(cursor)?;
             Some(EdgeLink { directed, label, to })
         }
+        TokenKind::EdgeArrow => {
+            let token = cursor.advance();
+            let (directed, label) = decode_fused_edge_arrow(token.text.as_str())?;
+            let to = parse_edge_node(cursor)?;
+            Some(EdgeLink { directed, label, to })
+        }
         _ => None,
     };
     Ok(EdgeValue { from, link })
@@ -255,9 +296,7 @@ pub fn print_edge(edge: &EdgeValue) -> String {
             out.push_str(if link.directed { "->" } else { "--" });
         } else {
             out.push(' ');
-            out.push('-');
-            print_edge_label(&link.label, &mut out);
-            out.push_str(if link.directed { "->" } else { "-" });
+            out.push_str(&print_fused_edge_arrow(&link.label, link.directed));
         }
         print_edge_node(&link.to, &mut out);
     }
@@ -365,38 +404,40 @@ mod tests {
 
     #[test]
     fn parses_labeled_directed_edge_with_id_and_kind() {
-        // A space before the opening `-[` is required in hand-authored text too, not just in
-        // canonical output — see `print_edge`'s doc comment for why.
-        let value = parse_edge_text("a -[e1:Connection]->b").expect("parse_edge_text");
+        let value = parse_edge_text("a -e1:Connection>b").expect("parse_edge_text");
         let link = value.link.expect("link");
         assert_eq!(link.directed, true);
         assert_eq!(link.label, EdgeLabel { id: Some("e1".to_string()), kind: Some("Connection".to_string()) });
         assert_eq!(link.to, node("b"));
-        assert_eq!(print_edge(&EdgeValue { from: node("a"), link: Some(link) }), "a -[e1:Connection]->b");
+        assert_eq!(print_edge(&EdgeValue { from: node("a"), link: Some(link) }), "a -e1:Connection>b");
     }
 
     #[test]
     fn parses_labeled_undirected_edge_id_only() {
-        let value = parse_edge_text("a -[e1]-b").expect("parse_edge_text");
+        let value = parse_edge_text("a -e1-b").expect("parse_edge_text");
         let link = value.link.expect("link");
         assert_eq!(link.directed, false);
         assert_eq!(link.label, EdgeLabel { id: Some("e1".to_string()), kind: None });
-        assert_eq!(print_edge(&EdgeValue { from: node("a"), link: Some(link) }), "a -[e1]-b");
+        assert_eq!(print_edge(&EdgeValue { from: node("a"), link: Some(link) }), "a -e1-b");
     }
 
     #[test]
     fn parses_labeled_edge_kind_only() {
-        let value = parse_edge_text("a -[:Connection]->b").expect("parse_edge_text");
+        let value = parse_edge_text("a -:Connection>b").expect("parse_edge_text");
         let link = value.link.expect("link");
         assert_eq!(link.label, EdgeLabel { id: None, kind: Some("Connection".to_string()) });
-        assert_eq!(print_edge(&EdgeValue { from: node("a"), link: Some(link) }), "a -[:Connection]->b");
+        assert_eq!(print_edge(&EdgeValue { from: node("a"), link: Some(link) }), "a -:Connection>b");
+    }
+
+    #[test]
+    fn bracket_labeled_edge_still_parses() {
+        let value = parse_edge_text("a -[e1:Connection]->b").expect("parse_edge_text");
+        let link = value.link.expect("link");
+        assert_eq!(link.label.id.as_deref(), Some("e1"));
     }
 
     #[test]
     fn labeled_back_arrow_is_sugar_normalized_by_endpoint_swap() {
-        // The reversed spelling opens with `<-` (its own two-char token, checked before any
-        // ident-continue scanning even begins), so it never hits the same-run dash-fusion issue
-        // and needs no leading space.
         let value = parse_edge_text("b<-[e1:Connection]-a").expect("parse_edge_text");
         assert_eq!(value.from, node("a"));
         let printed = print_edge(&value);
@@ -404,12 +445,12 @@ mod tests {
         assert_eq!(link.to, node("b"));
         assert_eq!(link.directed, true);
         assert_eq!(link.label, EdgeLabel { id: Some("e1".to_string()), kind: Some("Connection".to_string()) });
-        assert_eq!(printed, "a -[e1:Connection]->b");
+        assert_eq!(printed, "a -e1:Connection>b");
     }
 
     #[test]
     fn endpoints_carry_kind_and_port() {
-        let value = parse_edge_text("capsule@in-a -[c1:Connection]->tower@out-b").expect("parse_edge_text");
+        let value = parse_edge_text("capsule@in-a -c1:Connection>tower@out-b").expect("parse_edge_text");
         assert_eq!(value.from, EdgeNode { id: "capsule".to_string(), kind: None, port: Some("in-a".to_string()) });
         let link = value.link.expect("link");
         assert_eq!(link.to, EdgeNode { id: "tower".to_string(), kind: None, port: Some("out-b".to_string()) });

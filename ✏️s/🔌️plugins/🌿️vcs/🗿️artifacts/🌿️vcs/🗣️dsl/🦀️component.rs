@@ -4,7 +4,7 @@ use crate::artifacts::vcs::VcsDemoProjection;
 
 /// 📄️ The `demo` example checkpoint, handcrafted in the `.vcsdemo` DSL — a mid-review structural
 /// change with a non-zero counter, freeform notes, an in-progress status, and a few tags.
-pub const VCS_DEMO_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🌿️demo.vcsdemo");
+pub const VCS_DEMO_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.vcs.vcsdemo.dsl.semio");
 
 /// 📖️ Parses `.vcsdemo` DSL text into a `VcsDemoProjection`.
 pub fn parse_dsl(text: &str) -> Result<VcsDemoProjection, store::TextError> {

@@ -6,7 +6,7 @@ use crate::artifacts::lowpoly::LowpolyProjection;
 /// `#[derive(dsl::DslDocument)]` on `LowpolyProjection`) instead of a raw mesh-only JSON fixture — every
 /// object, its full half-edge geometry and its paint layers are real textual DSL, not a JSON-shaped
 /// placeholder.
-pub const LOWPOLY_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/💠️concrete-forest-left.lowpoly");
+pub const LOWPOLY_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.lowpoly.lowpoly.dsl.semio");
 
 /// 📖️ Parses `.lowpoly` DSL text into a `LowpolyProjection`.
 pub fn parse_dsl(text: &str) -> Result<LowpolyProjection, store::TextError> {

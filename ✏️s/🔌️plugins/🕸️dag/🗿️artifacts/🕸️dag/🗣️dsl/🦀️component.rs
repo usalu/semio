@@ -10,7 +10,7 @@ use crate::artifacts::dag::DagDocument;
 /// 📄️ The canonical DAG fixture, handcrafted in the `.dag` DSL — the same file the DAG kernel's own
 /// tests parse.
 pub const DAG_EXAMPLE_TEXT: &str =
-    include_str!("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust/📚️examples/🕸️demo.dag");
+    include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.dag.dag.dsl.semio");
 
 /// 📖️ Parses `.dag` DSL text into a `DagDocument`.
 pub fn parse_dsl(text: &str) -> Result<DagDocument, store::TextError> {

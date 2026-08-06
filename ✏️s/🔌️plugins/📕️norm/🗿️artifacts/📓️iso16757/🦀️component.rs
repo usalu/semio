@@ -800,7 +800,7 @@ pub const ISO16757_EXTENSION: &str = "iso16757";
 /// 📋️ ISO 16757 evaluation session document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "iso16757", layout = "lines")]
+#[dsl(id = "norm.iso16757", layout = "lines")]
 pub struct Document {
     pub catalogue: part_1::Catalogue,
     pub dictionary: part_4::Dictionary,

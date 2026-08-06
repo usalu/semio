@@ -207,7 +207,7 @@ pub struct NoteImageAsset {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "note", layout = "lines")]
+#[dsl(id = "note.note", layout = "lines")]
 pub struct NoteDocument {
     pub schema: String,
     pub id: String,

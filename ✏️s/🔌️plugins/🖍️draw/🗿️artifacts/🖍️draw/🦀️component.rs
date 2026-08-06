@@ -363,7 +363,7 @@ pub struct DrawArtboard {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "draw", layout = "lines")]
+#[dsl(id = "draw.draw", layout = "lines")]
 pub struct DrawDocument {
     pub schema: String,
     pub id: String,

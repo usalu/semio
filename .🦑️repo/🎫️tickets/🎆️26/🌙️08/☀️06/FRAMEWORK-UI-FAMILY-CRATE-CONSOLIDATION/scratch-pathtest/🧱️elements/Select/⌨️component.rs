@@ -1,1 +1,1 @@
-pub fn hello() -> u32 { 7 }
+pub fn hello() -> crate::tui::theme::Rgb { crate::tui::theme::Rgb(7) }

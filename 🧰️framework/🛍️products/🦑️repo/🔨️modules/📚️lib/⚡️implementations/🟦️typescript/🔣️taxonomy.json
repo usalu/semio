@@ -20,7 +20,7 @@
       "moduleRootFilename": null,
       "marker": { "in": "manifest", "format": "json", "table": "semio", "roleKey": "role", "idKey": "id" },
       "entryFilenames": ["📦️index.tsx", "📦️index.ts"],
-      "leafFilename": "🟦️component.tsx",
+      "leafFilename": "🟦️component.ts",
       "sourceExtension": ".ts"
     },
     "🐹️go": {
@@ -99,11 +99,18 @@
   "appChildDirs": ["⚙️engine", "🎭️modes", "🎮️commands", "📌️panels", "🎚️config", "🗣️terminology", "🌉️wasm", "🧮️config"],
   "semioDataLeafPrefix": "🧬️component.",
   "semioFileExtension": "semio",
+  "artifactSpecFilenames": {
+    "🗣️dsl": "📖️component.grammar.semio",
+    "🔧️op": "📖️component.grammar.semio",
+    "🔺️diff": "📖️component.grammar.semio",
+    "🎒️pack": "📡️component.protocol.semio",
+    "📡️spr": "📡️component.protocol.semio"
+  },
   "windowChildDirs": ["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options"],
   "taxonomyLeafParentDirs": ["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr", "🎒️packs", "🗣️dsls", "🔧️ops", "📡️sprs", "🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options", "🎮️commands", "🛠️tools", "📌️panels"],
   "taxonomyLeafFilenames": {
     "🦀️rust": "🦀️component.rs",
-    "🟦️typescript": "🟦️component.tsx",
+    "🟦️typescript": "🟦️component.ts",
     "🐹️go": "🐹️component.go",
     "🐍️python": "🐍️component.py",
     "🔷️dotnet": "🔷️component.cs",

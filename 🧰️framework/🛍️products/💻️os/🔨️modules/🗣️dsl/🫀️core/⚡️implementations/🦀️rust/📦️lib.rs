@@ -463,6 +463,8 @@ pub enum TokenKind {
     Arrow,
     DashArrow,
     BackArrow,
+    /// Fused labeled edge operator: `-e1:Connection>` or `-e1-` (payload in `text`, includes leading `-`).
+    EdgeArrow,
     Caret,
     DotDot,
     /// Arithmetic operators, only ever produced in a position where they were previously an
@@ -761,6 +763,50 @@ fn is_ident_continue(c: char) -> bool {
     c.is_alphanumeric() || matches!(c, '_' | '-' | '.' | '/')
 }
 
+/// @emoji ➡️ Fused edge arrow `-id:Kind>` or `-id-` (not `->` / `--`).
+fn lex_fused_edge_arrow(chars: &[char], i: usize) -> Option<(usize, String)> {
+    if chars.get(i) != Some(&'-') {
+        return None;
+    }
+    let mut j = i + 1;
+    if j >= chars.len() {
+        return None;
+    }
+    if chars[j] == ':' {
+        j += 1;
+        if j >= chars.len() || !is_ident_start(chars[j]) {
+            return None;
+        }
+        while j < chars.len() && is_ident_continue(chars[j]) {
+            j += 1;
+        }
+    } else if is_ident_start(chars[j]) {
+        while j < chars.len() && is_ident_continue(chars[j]) {
+            j += 1;
+        }
+        if j < chars.len() && chars[j] == ':' {
+            j += 1;
+            if j >= chars.len() || !is_ident_start(chars[j]) {
+                return None;
+            }
+            while j < chars.len() && is_ident_continue(chars[j]) {
+                j += 1;
+            }
+        }
+    } else {
+        return None;
+    }
+    if j < chars.len() && chars[j] == '>' {
+        j += 1;
+        return Some((j, chars[i..j].iter().collect()));
+    }
+    if j < chars.len() && chars[j] == '-' && chars.get(j + 1) != Some(&'-') {
+        j += 1;
+        return Some((j, chars[i..j].iter().collect()));
+    }
+    None
+}
+
 /// @emoji 🔬️ Grammar-independent lexer for the fixed token alphabet shared by every DSL grammar
 /// declared on this engine. `forgiving = true` never fails (malformed regions become `Error`
 /// tokens instead), which is what editor/completion mode needs; `forgiving = false` is strict
@@ -1032,9 +1078,17 @@ pub fn lex(text: &str, limits: &Limits, forgiving: bool) -> Result<Vec<SpannedTo
             push!(TokenKind::DashArrow, start_line, start_col, start_byte, "--".to_string());
             continue;
         }
-        // A `-` that reaches here is neither a negative-number lead (handled above, earlier),
-        // nor `->`/`--` (just checked) — previously "unknown character"; now the Minus operator.
         if c == '-' {
+            if let Some((end_j, fused_text)) = lex_fused_edge_arrow(&chars, i) {
+                let len = end_j - i;
+                for k in i..end_j {
+                    byte_offset += chars[k].len_utf8() as u32;
+                    column += 1;
+                }
+                i = end_j;
+                push!(TokenKind::EdgeArrow, start_line, start_col, start_byte, fused_text);
+                continue;
+            }
             i += 1;
             byte_offset += 1;
             column += 1;
@@ -1118,6 +1172,7 @@ pub fn token_classes(tokens: &[SpannedToken], keywords: &[&str]) -> Vec<(TokenCl
                 | TokenKind::Arrow
                 | TokenKind::DashArrow
                 | TokenKind::BackArrow
+                | TokenKind::EdgeArrow
                 | TokenKind::At
                 | TokenKind::Colon
                 | TokenKind::Caret

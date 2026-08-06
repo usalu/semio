@@ -41,3 +41,10 @@ Purpose: identify plugins/trees with live concurrent work TODAY so fan-out waves
   WireValue/EdgeArrow change, coordinate explicitly (flag, don't silently edit)
   because of FIX-NUMERIC-TYPE-MISMATCH-IN-WIRES-DSL-FIXTURE-ROUND-TRIP above.
 - No git-mutating commands used to produce this map (git status --porcelain only).
+
+## Refresh 2026-08-06 (P0)
+
+- Total uncommitted paths: 533
+- Hot-plugin hits (procedural|flow|cad|wires): 96
+- Contracts filed: engine-seam, grammar-file, protocol-file, notation-style-guide, ts-facade, lsp-hook, verification-checklist
+- Plan: per-artifact `.semio` in facet dirs; ticket already open

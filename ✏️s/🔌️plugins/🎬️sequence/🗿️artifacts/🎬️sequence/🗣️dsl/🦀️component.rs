@@ -75,7 +75,7 @@ impl store::DocumentDsl for SequenceFixture {
 /// 📄️ The handcrafted `.sequence` DSL-text fixture (regenerated from `default_fixture()`'s canonical
 /// print form) — the permanent proof that the checked-in fixture still parses and round trips, not a
 /// one-time migration script.
-pub const SEQUENCE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️default.sequence");
+pub const SEQUENCE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.sequence.sequence.dsl.semio");
 
 /// 📖️ Parses `.sequence` DSL text into a `SequenceFixture`.
 pub fn parse_dsl(text: &str) -> Result<SequenceFixture, store::TextError> {

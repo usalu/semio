@@ -341,7 +341,7 @@ pub struct Puzzle3dMeta {
 /// field), owned by the app's `Puzzle3dWindowOptions` — see that crate's ticket-driven cutover.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "puzzle3d", layout = "lines")]
+#[dsl(id = "puzzle.puzzle3d", layout = "lines")]
 pub struct Puzzle3dProjection {
     pub schema: String,
     #[serde(default)]

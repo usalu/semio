@@ -5,9 +5,9 @@ use crate::artifacts::writer::WriterProjection;
 /// 📄️ The `jack` example document, handcrafted in the `.writer` DSL (see `store::DocumentDsl`) instead
 /// of JSON — {@link crate::artifacts::writer::engine::jack_example_document}/
 /// {@link crate::artifacts::writer::engine::jack_example_json} are the only ways it should be consumed.
-pub const JACK_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/✒️jack.writer");
+pub const JACK_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.writer.writer.jack-writer.dsl.semio");
 /// 📄️ The `dag.jack` example document, handcrafted in the `.writer` DSL — see {@link JACK_EXAMPLE_TEXT}.
-pub const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/✒️dag.jack.writer");
+pub const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.writer.writer.dag-jack-writer.dsl.semio");
 
 /// 📖️ Parses `.writer` DSL text into a `WriterProjection`.
 pub fn parse_dsl(text: &str) -> Result<WriterProjection, store::TextError> {

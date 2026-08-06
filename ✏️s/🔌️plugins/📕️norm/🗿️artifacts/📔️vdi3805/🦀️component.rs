@@ -1041,7 +1041,7 @@ pub const VDI3805_EXTENSION: &str = "vdi3805";
 
 /// 📋️ VDI 3805 evaluation document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
-#[dsl(extension = "vdi3805", layout = "lines")]
+#[dsl(id = "norm.vdi3805", layout = "lines")]
 pub struct Document {
     pub manufacturer_file: ManufacturerFile,
     pub catalog: ManufacturerCatalog,

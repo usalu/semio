@@ -55,7 +55,7 @@ pub struct Block2dHandleTemplate {
 /// 🩻️ The block-2d projection: a typed single-`NodeKind`-definition document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "block2d", layout = "lines")]
+#[dsl(id = "block.block2d", layout = "lines")]
 pub struct Block2dDefinition {
     pub schema: String,
     #[dsl(block)]

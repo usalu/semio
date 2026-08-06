@@ -1,0 +1,9 @@
+semio sequence.sequence.dsl v1
+schema=sequence.fixture
+steps [id:TEXT kind:TEXT params:TEXT x:NUM y:NUM slot:BLOCK collapsed:BOOL] {
+  step-1 state.set "{\"key\":\"counter\",\"value\":0.0}" 0 0 _ false
+  step-2 log.print "{\"message\":\"hello sequence\"}" 280 0 _ false
+}
+edges [id:TEXT link:WIRE] {
+  edge-1 step-1->step-2
+}

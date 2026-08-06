@@ -1117,6 +1117,9 @@ describe("loadTaxonomy", () => {
     expect(taxonomy.artifactComponentDirs).toEqual(["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr"]);
     expect(taxonomy.windowChildDirs).toEqual(["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options"]);
     expect(taxonomy.taxonomyLeafFilenames["🦀️rust"]).toBe("🦀️component.rs");
+    expect(taxonomy.taxonomyLeafFilenames["🟦️typescript"]).toBe("🟦️component.ts");
+    expect(taxonomy.artifactSpecFilenames["🗣️dsl"]).toBe("📖️component.grammar.semio");
+    expect(taxonomy.artifactSpecFilenames["📡️spr"]).toBe("📡️component.protocol.semio");
     expect(taxonomy.libWiringLineBudget).toBe(150);
     expect(taxonomy.packagesDirName).toBe("📦️packages");
     expect(Object.keys(taxonomy.areas).length).toBeGreaterThan(0);
@@ -1126,8 +1129,8 @@ describe("loadTaxonomy", () => {
     const taxonomy = loadTaxonomy();
     // ⚙️ The disagreement this vocabulary exists to settle: registry's validateTaxonomyTree requires 5
     // components, root script's POLICY_ARTIFACT_COMPONENT_DIRS allows 6. Both are right — different questions.
-    expect(taxonomy.artifactChildDirs).toEqual(["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr", "⚙️engine"]);
-    expect(taxonomy.artifactChildDirs.filter((dir) => !taxonomy.artifactComponentDirs.includes(dir))).toEqual(["⚙️engine"]);
+    expect(taxonomy.artifactChildDirs).toEqual(["🔺️diff", "🗣️dsl", "🎒️pack", "🔧️op", "📡️spr", "⚙️engine", "📚️examples"]);
+    expect(taxonomy.artifactChildDirs.filter((dir) => !taxonomy.artifactComponentDirs.includes(dir))).toEqual(["⚙️engine", "📚️examples"]);
   });
 
   test("forbids both the plural and singular implementations spellings", () => {

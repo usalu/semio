@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 // #region 🔖️Types
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "din16798", layout = "lines")]
+#[dsl(id = "norm.din16798", layout = "lines")]
 pub struct Document {
     pub annex: AnnexChoice,
     pub occupancy: String,

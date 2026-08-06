@@ -1,0 +1,117 @@
+semio norm.iso16757.dsl v1
+exchange-process=determineProduct catalogue=id=cat.demo metadata=edition-profile=fullPublished names=short-name=Demo preferred=locale=en text="Demo HVAC catalogue"
+alternatives [locale:TEXT text:TEXT] {
+}
+lifecycle=revision="1" status=published manufacturer=id=mfg.demo names=preferred=locale=en text="Demo Manufacturer"
+alternatives [locale:TEXT text:TEXT] {
+  de "Demo Hersteller"
+}
+dictionary=id=hvac-dict version="2025-01" accessories={
+}
+compositions={
+}
+extensions=fields={
+}
+product-groups [id:TEXT names:REC dictionary-subject-id:TEXT] {
+  group.valves {preferred=locale=en text=Valves
+  alternatives [locale:TEXT text:TEXT] {
+  }
+  } subject.valve
+}
+product-classes [id:TEXT group-id:TEXT parent-id:TEXT names:REC required-property-ids:LIST optional-property-ids:LIST] {
+  class.valve group.valves _ {preferred=locale=en text="Control valve"
+  alternatives [locale:TEXT text:TEXT] {
+  }
+  } [ prop.dn ] [ ]
+}
+product-series [id:TEXT class-id:TEXT names:REC shared-property-values:MAP geometry-id:TEXT] {
+  series.cv class.valve {preferred=locale=en text="CV series"
+  alternatives [locale:TEXT text:TEXT] {
+  }
+  } {
+  }
+  geom.valve.50
+}
+products [id:TEXT series-id:TEXT names:REC parameter-domains:LIST variants:LIST static-properties:LIST] {
+  product.cv series.cv {preferred=locale=en text=CV-50
+  alternatives [locale:TEXT text:TEXT] {
+  }
+  } [ parameter-id=dn allowed-values=[ {
+    kind="decimal" value=50
+  }
+  ] default-value={
+    kind="decimal" value=50
+  }
+  ] [ id=variant.50 article-number=CV-50 geometry-id=geom.valve.50 parameter-values={
+    dn={
+      kind="decimal" value=50
+    }
+  }
+  property-values=[ definition-id=prop.dn value={
+    kind="decimal" value=50
+  }
+  ] ] [ ]
+}
+product-indexes [id:TEXT product-id:TEXT variant-id:TEXT search-tags:LIST] {
+  index.cv50 product.cv variant.50 [ valve dn50 ]
+}
+property-definitions [id:TEXT names:REC data-type:TEXT unit:REC cardinality:REC kind:ENUM dictionary-property-id:TEXT] {
+  prop.dn {preferred=locale=en text="Nominal diameter"
+  alternatives [locale:TEXT text:TEXT] {
+  }
+  } decimal {symbol=mm si-factor=0.001 dimension=length=1 mass=0 time=0 temperature=0} {min=1 max=1} static prop.dn
+}
+descriptive-objects [id:TEXT media-type:TEXT uri:TEXT language:TEXT checksum:TEXT] {
+}
+dictionary=reference=id=hvac-dict version="2025-01"
+subjects [id:TEXT kind:ENUM names:REC definition:REC parent-id:TEXT] {
+  subject.valve productClass {short-name=Valve preferred=locale=en text="Control valve"
+  alternatives [locale:TEXT text:TEXT] {
+    de Regelventil
+    fr "Vanne de régulation"
+  }
+  } {locale=en text="Flow control valve"} _
+}
+relationships [id:TEXT kind:ENUM source-id:TEXT target-id:TEXT cardinality:REC] {
+}
+properties [id:TEXT names:REC kind:ENUM data-type:TEXT unit:REC applicable-subject-ids:LIST value-constraints:LIST] {
+  prop.dn {preferred=locale=en text="Nominal diameter"
+  alternatives [locale:TEXT text:TEXT] {
+  }
+  } static decimal {symbol=mm si-factor=0.001 dimension=length=1 mass=0 time=0 temperature=0} [ subject.valve ] [ min=15 max=300 allowed-values=[ ] ]
+}
+controlled-lists [id:TEXT values:LIST context-subject-ids:LIST] {
+  dn.list [ "50" "80" "100" ] [ subject.valve ]
+}
+meta-subjects [id:TEXT kind:ENUM names:REC definition:REC parent-id:TEXT] {
+}
+geometry=objects={
+  geom.valve.50=id=geom.valve.50
+  shape {
+    primitive kind=box parameters={
+      depth=0.1 height=0.2 width=0.15
+    }
+  }
+  symbolic {
+  }
+  spaces=[ kind=installation bounds=min=0,0,0 max=0.3,0.3,0.3 ] surfaces=[ ] ports=[ id=port.in medium=water position=0,0.1,0.05 direction=1,0,0 port-type=inlet ] parameter-bindings={
+    width=prop.dn
+  }
+}
+primitive-registry [id:TEXT parameters:LIST] {
+  box [ width height depth ]
+  cylinder [ radius height ]
+  sphere [ radius ]
+}
+selection=class-id=class.valve series-id=series.cv constraints=[ property-id=prop.dn operator=equal value={
+  kind="decimal" value=50
+}
+] part-number-rule={
+  function_id="partno" kind="script" source="dn * 10 + 50"
+}
+part-number-inputs={
+  dn={
+    kind="decimal" value=50
+  }
+}
+script-limits=max-steps=10000 max-recursion=64 timeout-ms=50

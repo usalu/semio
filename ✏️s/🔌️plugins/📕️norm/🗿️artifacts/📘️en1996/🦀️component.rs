@@ -68,7 +68,7 @@ pub mod part_2 {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "en1996", layout = "lines")]
+#[dsl(id = "norm.en1996", layout = "lines")]
 pub struct Document {
     pub m_ed_knm: f64,
     #[dsl(unit = "kN")]

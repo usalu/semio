@@ -17,7 +17,7 @@ pub struct QkEntry {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "en1990", layout = "lines")]
+#[dsl(id = "norm.en1990", layout = "lines")]
 pub struct Document {
     pub g_k: f64,
     #[dsl(table)]

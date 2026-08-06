@@ -1,0 +1,2 @@
+semio norm.en1997.dsl v1
+v-ed-kn=500kN h-ed-kn=80kN footing-area-m2=2m2 phi-deg=30 c-kpa=0kPa gamma-kn-m3=18 b-m=2m d-f-m=1.5m e-s-mpa=30000MPa nu=0.3 design-approach=da1str annex=de settlement-limit-mm=25mm n-pile-ed-kn=800kN alpha-s=0.7 pile-d-m=0.6m q-s-kpa=80kPa pile-l-m=12m q-b-kpa=2500kPa pile-base-area-m2=0.28m2 pile-n-profiles=1 z-investigated-m=8m

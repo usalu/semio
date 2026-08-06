@@ -101,6 +101,8 @@ export interface Taxonomy {
   readonly appChildDirs: readonly string[];
   readonly semioDataLeafPrefix: string;
   readonly semioFileExtension: string;
+  /** 📖️ Normative `.semio` spec filename per constitutional artifact facet (`artifactComponentDirs` keys only). */
+  readonly artifactSpecFilenames: Readonly<Record<string, string>>;
   readonly windowChildDirs: readonly string[];
   readonly taxonomyLeafParentDirs: readonly string[];
   /** 🍃️ Leaf component filename, keyed by target when a package has one (e.g. `"🧊️wgpu"`), else by lang (e.g. `"🦀️rust"` for plugins, which never have a target level). */
@@ -173,7 +175,20 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
   for (const key of Object.keys(taxonomy.taxonomyLeafFilenames)) {
     if (!taxonomy.ecosystems[key] && !taxonomy.targets[key]) problems.push(`taxonomyLeafFilenames key "${key}" is neither a lang nor a target.`);
   }
+  for (const [facet, specName] of Object.entries(taxonomy.artifactSpecFilenames ?? {})) {
+    if (!taxonomy.artifactComponentDirs.includes(facet)) {
+      problems.push(`artifactSpecFilenames key "${facet}" is not in artifactComponentDirs.`);
+    }
+    if (!specName.endsWith(`.${taxonomy.semioFileExtension}`)) {
+      problems.push(`artifactSpecFilenames["${facet}"] must end with .${taxonomy.semioFileExtension}.`);
+    }
+  }
   return problems;
+}
+
+/** 📖️ Normative spec filename for an artifact facet dir name, if any. */
+export function artifactSpecFilename(facetDirName: string, taxonomy: Taxonomy = loadTaxonomy()): string | undefined {
+  return taxonomy.artifactSpecFilenames?.[facetDirName];
 }
 
 /** 🧭️ Longest-prefix match of a repo-relative path against `taxonomy.areas` keys — `undefined` outside every declared area. */

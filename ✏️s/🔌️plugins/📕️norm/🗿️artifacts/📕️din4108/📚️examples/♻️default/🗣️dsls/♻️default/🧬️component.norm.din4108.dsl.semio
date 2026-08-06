@@ -1,0 +1,2 @@
+semio norm.din4108.dsl v1
+category=residential climate=zone2 airtightness-n50=2.5 psi-times-l-sum=0.02 rh-int=0.5 catalog-id=AW-01 material-id=mineral_wool airtightness-class=class2 t-int-c=20 solar-absorptance=0.6 irradiance-w-m2=600 moisture-mu-exterior=15 moisture-mu-interior=1.3 envelope-area-m2=100m2 bb2-details-conform=true application-type=DEO declared-application-class=dk layers [thickness-m:QTY lambda-w-mk:NUM] { 0.24m 0.81 0.14m 0.035 }

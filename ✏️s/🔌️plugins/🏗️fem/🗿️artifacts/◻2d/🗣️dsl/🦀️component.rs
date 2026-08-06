@@ -5,7 +5,7 @@ use crate::artifacts::fem2d::Fem2dDocument;
 /// 📦️ The `fem2d-play` "default" example, embedded at compile time as handcrafted `.fem2d` DSL text —
 /// shared by the manifest's `.example(...)` registration, the `setActiveExample` handler, and every
 /// test fixture.
-pub const FEM2D_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/◻2d/🏗️default.fem2d");
+pub const FEM2D_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.fem.fem2d.dsl.semio");
 
 /// 📖️ Parses `.fem2d` DSL text into a `Fem2dDocument`.
 pub fn parse_dsl(text: &str) -> Result<Fem2dDocument, store::TextError> {

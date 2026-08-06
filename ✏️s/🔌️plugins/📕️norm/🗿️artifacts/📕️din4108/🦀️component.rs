@@ -17,7 +17,7 @@ pub struct LayerDocument {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "din4108", layout = "lines")]
+#[dsl(id = "norm.din4108", layout = "lines")]
 pub struct Document {
     pub category: String,
     #[dsl(table)]

@@ -18,7 +18,7 @@ use std::collections::BTreeMap;
 /// 📦️ The `procedural2d-play` "default" example, embedded at compile time as handcrafted `.procedural2d`
 /// DSL text — shared by the manifest's `.example(...)` registration, the `default_projection` fallback,
 /// and every test fixture.
-pub const PROCEDURAL2D_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🌀️default.procedural2d");
+pub const PROCEDURAL2D_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.procedural.procedural2d.dsl.semio");
 
 //#region 🔖️DslMirror
 /// 🔒️ `ValueDsl` mirrors `flow_core::neural::Value`/`Atom` field-for-field rather than routing through
@@ -257,7 +257,7 @@ pub fn form_generation_from_dsl(generation: FormGenerationDsl) -> FormGeneration
 /// 🧾️ Local twin of `Procedural2dDocument`, flattening `FlowFixture`/`GenerationPlayState`'s fields
 /// into one top-level `#[derive(dsl::DslDocument)]` grammar.
 #[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
-#[dsl(extension = "procedural2d", layout = "lines")]
+#[dsl(id = "procedural.procedural2d", layout = "lines")]
 struct Procedural2dDocumentDsl {
     schema: String,
     #[dsl(block)]

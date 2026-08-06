@@ -484,7 +484,7 @@ mod tests {
         h.set_brush_node_size(40.0);
         
         let fixture: serde_json::Value = serde_json::to_value(
-            <crate::artifacts::puzzle2d::Puzzle2dProjection as store::DocumentDsl>::parse_dsl(include_str!("../../../../📚️examples/🧩️nakagin-capsule-tower.puzzle2d")).unwrap(),
+            <crate::artifacts::puzzle2d::Puzzle2dProjection as store::DocumentDsl>::parse_dsl(include_str!("../../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.puzzle.puzzle2d.dsl.semio")).unwrap(),
         )
         .unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());
@@ -568,7 +568,7 @@ mod tests {
         h.set_brush_node_size(40.0);
         
         let fixture: serde_json::Value = serde_json::to_value(
-            <crate::artifacts::puzzle2d::Puzzle2dProjection as store::DocumentDsl>::parse_dsl(include_str!("../../../../📚️examples/🧩️nakagin-capsule-tower.puzzle2d")).unwrap(),
+            <crate::artifacts::puzzle2d::Puzzle2dProjection as store::DocumentDsl>::parse_dsl(include_str!("../../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.puzzle.puzzle2d.dsl.semio")).unwrap(),
         )
         .unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());

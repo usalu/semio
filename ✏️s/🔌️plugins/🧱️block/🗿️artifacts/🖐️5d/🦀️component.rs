@@ -79,7 +79,7 @@ pub struct Block5dGripTemplate {
 /// presentations.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "block5d", layout = "lines")]
+#[dsl(id = "block.block5d", layout = "lines")]
 pub struct Block5dDefinition {
     pub schema: String,
     #[dsl(block)]

@@ -35,8 +35,8 @@ const TRINITY_JACK_PLAY_WINDOW_GRAPH: &str = "trinity-jack-graph";
 const TRINITY_JACK_PLAY_WINDOW_EDITOR: &str = "trinity-jack-editor";
 const TRINITY_JACK_PLAY_WINDOW_RESULTS: &str = "trinity-jack-results";
 
-pub(crate) const NAKAGIN_FIXTURE_DSL: &str = include_str!("../../📚️examples/🔱️nakagin-capsule-tower.trinity");
-pub(crate) const BRANCH_FIXTURE_DSL: &str = include_str!("../../📚️examples/🔱️branch-chain.trinity");
+pub(crate) const NAKAGIN_FIXTURE_DSL: &str = include_str!("../../🗿️artifacts/🔌️jack/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.trinity.jack.dsl.semio");
+pub(crate) const BRANCH_FIXTURE_DSL: &str = include_str!("../../🗿️artifacts/🔌️jack/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.trinity.jack.branch-chain-trinity.dsl.semio");
 
 pub(crate) const TRINITY_JACK_DEFAULT_QUERY: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' AND b.name != 'b' RETURN a.name, b.name, b.label";
 //#endregion 🔖️Constants

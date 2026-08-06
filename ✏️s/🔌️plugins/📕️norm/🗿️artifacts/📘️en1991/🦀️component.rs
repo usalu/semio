@@ -18,7 +18,7 @@ pub mod part_1_2 {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "en1991", layout = "lines")]
+#[dsl(id = "norm.en1991", layout = "lines")]
 pub struct Document {
     #[dsl(unit = "m2")]
     pub area_m2: f64,

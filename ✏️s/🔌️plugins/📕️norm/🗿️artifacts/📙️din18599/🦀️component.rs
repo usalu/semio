@@ -37,7 +37,7 @@ impl MonthlyClimate {
 
 /// 📋️ Inputs for annual energy balancing.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
-#[dsl(extension = "din18599", layout = "lines")]
+#[dsl(id = "norm.din18599", layout = "lines")]
 pub struct BalancingInputs {
     pub use_class: UseClass,
     #[dsl(unit = "m2")]

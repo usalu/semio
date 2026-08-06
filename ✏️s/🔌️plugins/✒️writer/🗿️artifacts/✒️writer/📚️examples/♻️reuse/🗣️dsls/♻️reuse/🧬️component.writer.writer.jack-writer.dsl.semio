@@ -1,0 +1,6 @@
+semio writer.writer.dsl v1
+schema=writer.document id=jack language-id=jack uri="writer://jack" text=```jack
+MATCH (a:Piece)-[r:Connection]->(b:Piece)
+WHERE a.name = "core"
+RETURN a.name, b.name
+```

@@ -31,7 +31,7 @@ pub mod part_3 {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "en1992", layout = "lines")]
+#[dsl(id = "norm.en1992", layout = "lines")]
 pub struct Document {
     pub annex: AnnexChoice,
     pub m_ed_knm: f64,

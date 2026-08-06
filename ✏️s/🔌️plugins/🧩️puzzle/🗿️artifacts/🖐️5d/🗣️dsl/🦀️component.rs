@@ -4,9 +4,9 @@
 use crate::artifacts::puzzle5d::Puzzle5dProjection;
 
 /// 📄️ The `concrete-forest` example fixture, handcrafted in the `.puzzle5d` DSL.
-pub const PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🧩️concrete-forest.puzzle5d");
+pub const PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.puzzle.puzzle5d.dsl.semio");
 /// 📄️ The `nakagin-capsule-tower` example fixture, handcrafted in the `.puzzle5d` DSL.
-pub const PUZZLE5D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🧩️nakagin-capsule-tower.puzzle5d");
+pub const PUZZLE5D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.puzzle.puzzle5d.dsl.semio");
 
 /// 📖️ Parses `.puzzle5d` DSL text into a `Puzzle5dProjection`.
 pub fn parse_dsl(text: &str) -> Result<Puzzle5dProjection, store::TextError> {

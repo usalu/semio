@@ -8,7 +8,7 @@ use crate::artifacts::en1992::Document;
 /// concrete, under the EN annex — distinct from `Document::default()`'s DE-annex/TC1/R60/uncracked
 /// values so the grammar's non-default branches (annex, fire rating, tightness class, `use_fem`,
 /// `anchor_cracked`) are exercised too.
-pub const EN1992_LIQUID_RETAINING_FEM_ANCHOR_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/📘️en1992/📕️liquid-retaining-fem-anchor.en1992");
+pub const EN1992_LIQUID_RETAINING_FEM_ANCHOR_EXAMPLE_TEXT: &str = include_str!("../../📚️examples/📕️liquid-retaining-fem-anchor/🗣️dsls/📕️liquid-retaining-fem-anchor/🧬️component.norm.en1992.dsl.semio");
 
 /// 📖️ Parses `.en1992` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {

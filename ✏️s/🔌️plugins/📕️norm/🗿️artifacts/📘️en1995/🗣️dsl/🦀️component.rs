@@ -6,7 +6,7 @@ use crate::artifacts::en1995::Document;
 /// an EN-annex EN 1995-2 glulam pedestrian footbridge beam under service class 2 and long-duration
 /// traffic loading, distinct from `Document::default()`'s DE-annex/SC1/medium-duration values so the
 /// grammar's non-default branches (annex, service class, load duration) are exercised too.
-pub const EN1995_GLULAM_FOOTBRIDGE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/📘️en1995/📕️glulam-footbridge.en1995");
+pub const EN1995_GLULAM_FOOTBRIDGE_EXAMPLE_TEXT: &str = include_str!("../../📚️examples/📕️glulam-footbridge/🗣️dsls/📕️glulam-footbridge/🧬️component.norm.en1995.dsl.semio");
 
 /// 📖️ Parses `.en1995` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {

@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 // #region 🔖️Types
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "en1999", layout = "lines")]
+#[dsl(id = "norm.en1999", layout = "lines")]
 pub struct Document {
     #[dsl(unit = "kN")]
     pub n_ed_kn: f64,

@@ -8,7 +8,7 @@
 use crate::artifacts::shooting::ShootingFixture;
 
 /// 🗄️ The base-icon example fixture, handcrafted in `shooting`'s DSL (`store::DocumentDsl`).
-pub const SHOOTING_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎥️base-icon.shooting");
+pub const SHOOTING_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.shooting.shooting.dsl.semio");
 
 /// 📖️ Parses `.shooting` DSL text into a `ShootingFixture`.
 pub fn parse_dsl(text: &str) -> Result<ShootingFixture, store::TextError> {

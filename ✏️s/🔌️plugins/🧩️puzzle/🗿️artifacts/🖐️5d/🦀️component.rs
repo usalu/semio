@@ -350,7 +350,7 @@ pub struct Puzzle5dKindCatalogs {
 /// VCS-tracked document — see `puzzle_5d_ui`'s `Puzzle5dRuntime`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "puzzle5d", layout = "lines")]
+#[dsl(id = "puzzle.puzzle5d", layout = "lines")]
 pub struct Puzzle5dProjection {
     pub schema: String,
     #[serde(default)]

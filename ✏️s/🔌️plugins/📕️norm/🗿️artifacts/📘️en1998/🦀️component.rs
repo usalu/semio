@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 // #region 🔖️Types
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "en1998", layout = "lines")]
+#[dsl(id = "norm.en1998", layout = "lines")]
 pub struct Document {
     pub seismic_zone: u8,
     pub ground_type: String,

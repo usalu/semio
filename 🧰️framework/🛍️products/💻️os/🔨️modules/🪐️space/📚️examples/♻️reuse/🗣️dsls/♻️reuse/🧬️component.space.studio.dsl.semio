@@ -1,0 +1,19 @@
+semio space.studio.dsl v1
+schema=s.workflow
+graph {
+  schema=workflow.graph nodes=[ id=node-app-draw-1 plugin-id=draw app-id=draw label="Semio Emblem" yields="2d.drawing" document-ref=documents/node-app-draw-1 config-ref=config/node-app-draw-1 x=40 y=80 width=160 height=72 inputs=[ id="node-app-draw-1:document:in" port_id=document label=Document direction=in class=data form=value required=false multiplicity=one ] outputs=[ id="node-app-draw-1:document:out" port_id=document label=Document direction=out class=data form=value kind_id=document required=false multiplicity=one ] id=node-app-draw-2 plugin-id=draw app-id=draw label="Emblem Copy" yields="2d.drawing" document-ref=documents/node-app-draw-2 config-ref=config/node-app-draw-2 x=220 y=80 width=160 height=72 inputs=[ id="node-app-draw-2:document:in" port_id=document label=Document direction=in class=data form=value kind_id=document required=false multiplicity=one ] outputs=[ id="node-app-draw-2:document:out" port_id=document label=Document direction=out class=data form=value required=false multiplicity=one ] id=node-app-writer-1 plugin-id=writer app-id=writer label="Jack Notes" yields=text.document document-ref=documents/node-app-writer-1 config-ref=config/node-app-writer-1 x=420 y=80 width=160 height=72 inputs=[ id="node-app-writer-1:document:in" port_id=document label=Document direction=in class=data form=value required=false multiplicity=one ] outputs=[ id="node-app-writer-1:document:out" port_id=document label=Document direction=out class=data form=value required=false multiplicity=one ] id=node-app-raster-1 plugin-id=raster app-id=raster label="Raster Board" yields="2d.raster" document-ref=documents/node-app-raster-1 config-ref=config/node-app-raster-1 x=40 y=200 width=160 height=72 inputs=[ id="node-app-raster-1:document:in" port_id=document label=Document direction=in class=data form=value required=false multiplicity=one id="node-app-raster-1:param.param-brush-size:in" port_id=param.param-brush-size label=Parameter direction=in class=data form=value kind_id=parameter.value required=false multiplicity=one ] outputs=[ id="node-app-raster-1:document:out" port_id=document label=Document direction=out class=data form=value required=false multiplicity=one ] id=node-app-note-2 plugin-id=note app-id=document label="Note Board" yields="2d.note" document-ref=documents/node-app-note-2 config-ref=config/node-app-note-2 x=220 y=220 width=160 height=72 inputs=[ id="node-app-note-2:document:in" port_id=document label=Document direction=in class=data form=value required=false multiplicity=one ] outputs=[ id="node-app-note-2:document:out" port_id=document label=Document direction=out class=data form=value required=false multiplicity=one ] ] edges=[ id=edge-draw-1-to-draw-2 source-node-id=node-app-draw-1 source-port-id="node-app-draw-1:document:out" target-node-id=node-app-draw-2 target-port-id="node-app-draw-2:document:in"
+  contract {
+    kind_id=document class=data form=value wire_kind=document wire_schema=document
+  }
+  ]
+}
+inputs=[ ]
+parameter-bindings [parameter-id:TEXT node-id:TEXT field-path:TEXT] {
+  param-brush-size node-app-raster-1 "/brushSize"
+}
+input-bindings [input-id:TEXT node-id:TEXT port-id:TEXT] {
+}
+output-bindings [node-id:TEXT port-id:TEXT path-template:TEXT] {
+}
+numeric id=param-brush-size name="Brush Size" value=32 min=1 max=128 step=1
+categorical id=param-quality name=Quality value=High options=[ Draft High ]

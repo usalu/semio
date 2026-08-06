@@ -1,0 +1,128 @@
+[
+  {
+    "file": "🧩️nakagin-capsule-tower.puzzle5d",
+    "artifactSlug": "puzzle5d",
+    "exampleSlug": "nakagin-capsule-tower",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📚️examples/nakagin-capsule-tower/🗣️dsls/♻️reuse/🧬️component.puzzle.puzzle5d.dsl.semio"
+  },
+  {
+    "file": "🧩️concrete-forest.puzzle3d",
+    "artifactSlug": "puzzle3d",
+    "exampleSlug": "concrete-forest",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📚️examples/concrete-forest/🗣️dsls/♻️reuse/🧬️component.puzzle.puzzle3d.dsl.semio"
+  },
+  {
+    "file": "🧩️nakagin-capsule-tower.puzzle2d",
+    "artifactSlug": "puzzle2d",
+    "exampleSlug": "nakagin-capsule-tower",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/📚️examples/nakagin-capsule-tower/🗣️dsls/♻️reuse/🧬️component.puzzle.puzzle2d.dsl.semio"
+  },
+  {
+    "file": "🧩️concrete-forest.puzzle2d",
+    "artifactSlug": "puzzle2d",
+    "exampleSlug": "concrete-forest",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/📚️examples/concrete-forest/🗣️dsls/♻️reuse/🧬️component.puzzle.puzzle2d.dsl.semio"
+  },
+  {
+    "file": "🧩️nakagin-capsule-tower.puzzle3d",
+    "artifactSlug": "puzzle3d",
+    "exampleSlug": "nakagin-capsule-tower",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📚️examples/nakagin-capsule-tower/🗣️dsls/♻️reuse/🧬️component.puzzle.puzzle3d.dsl.semio"
+  },
+  {
+    "file": "🧩️concrete-forest.puzzle5d",
+    "artifactSlug": "puzzle5d",
+    "exampleSlug": "concrete-forest",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📚️examples/concrete-forest/🗣️dsls/♻️reuse/🧬️component.puzzle.puzzle5d.dsl.semio"
+  },
+  {
+    "file": "🧱️hexagonal-cut-concrete-forest-left.block5d",
+    "artifactSlug": "block5d",
+    "exampleSlug": "hexagonal-cut-concrete-forest-left",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📚️examples/hexagonal-cut-concrete-forest-left/🗣️dsls/♻️reuse/🧬️component.block.block5d.dsl.semio"
+  },
+  {
+    "file": "🧱️hexagonal-cut-concrete-forest-right.block2d",
+    "artifactSlug": "block2d",
+    "exampleSlug": "hexagonal-cut-concrete-forest-right",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/📚️examples/hexagonal-cut-concrete-forest-right/🗣️dsls/♻️reuse/🧬️component.block.block2d.dsl.semio"
+  },
+  {
+    "file": "🧱️nakagin-capsule.block5d",
+    "artifactSlug": "block5d",
+    "exampleSlug": "nakagin-capsule",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📚️examples/nakagin-capsule/🗣️dsls/♻️reuse/🧬️component.block.block5d.dsl.semio"
+  },
+  {
+    "file": "🧱️hexagonal-cut-concrete-forest-left.block2d",
+    "artifactSlug": "block2d",
+    "exampleSlug": "hexagonal-cut-concrete-forest-left",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/📚️examples/hexagonal-cut-concrete-forest-left/🗣️dsls/♻️reuse/🧬️component.block.block2d.dsl.semio"
+  },
+  {
+    "file": "🧱️hexagonal-cut-concrete-forest-left.block3d",
+    "artifactSlug": "block3d",
+    "exampleSlug": "hexagonal-cut-concrete-forest-left",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📚️examples/hexagonal-cut-concrete-forest-left/🗣️dsls/♻️reuse/🧬️component.block.block3d.dsl.semio"
+  },
+  {
+    "file": "🧱️nakagin-capsule.block3d",
+    "artifactSlug": "block3d",
+    "exampleSlug": "nakagin-capsule",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📚️examples/nakagin-capsule/🗣️dsls/♻️reuse/🧬️component.block.block3d.dsl.semio"
+  },
+  {
+    "file": "🌀️rectangle-extrude-volume.procedural3d",
+    "artifactSlug": "procedural3d",
+    "exampleSlug": "rectangle-extrude-volume",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📚️examples/rectangle-extrude-volume/🗣️dsls/♻️reuse/🧬️component.procedural.procedural3d.dsl.semio"
+  },
+  {
+    "file": "🌀️sphere-box-fuse.procedural3d",
+    "artifactSlug": "procedural3d",
+    "exampleSlug": "sphere-box-fuse",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📚️examples/sphere-box-fuse/🗣️dsls/♻️reuse/🧬️component.procedural.procedural3d.dsl.semio"
+  },
+  {
+    "file": "🌀️sphere-cut-with-torus.procedural3d",
+    "artifactSlug": "procedural3d",
+    "exampleSlug": "sphere-cut-with-torus",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📚️examples/sphere-cut-with-torus/🗣️dsls/♻️reuse/🧬️component.procedural.procedural3d.dsl.semio"
+  },
+  {
+    "file": "🌀️hexagonal-mushroom-column.procedural3d",
+    "artifactSlug": "procedural3d",
+    "exampleSlug": "hexagonal-mushroom-column",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📚️examples/hexagonal-mushroom-column/🗣️dsls/♻️reuse/🧬️component.procedural.procedural3d.dsl.semio"
+  },
+  {
+    "file": "🌀️rectangle-wire-preview.procedural3d",
+    "artifactSlug": "procedural3d",
+    "exampleSlug": "rectangle-wire-preview",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📚️examples/rectangle-wire-preview/🗣️dsls/♻️reuse/🧬️component.procedural.procedural3d.dsl.semio"
+  },
+  {
+    "file": "🌀️box-shell-preview.procedural3d",
+    "artifactSlug": "procedural3d",
+    "exampleSlug": "box-shell-preview",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📚️examples/box-shell-preview/🗣️dsls/♻️reuse/🧬️component.procedural.procedural3d.dsl.semio"
+  },
+  {
+    "file": "🌀️default.procedural2d",
+    "artifactSlug": "procedural2d",
+    "exampleSlug": "default",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/📚️examples/default/🗣️dsls/♻️reuse/🧬️component.procedural.procedural2d.dsl.semio"
+  },
+  {
+    "file": "🌀️face-sweep-extrude.procedural3d",
+    "artifactSlug": "procedural3d",
+    "exampleSlug": "face-sweep-extrude",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📚️examples/face-sweep-extrude/🗣️dsls/♻️reuse/🧬️component.procedural.procedural3d.dsl.semio"
+  },
+  {
+    "file": "🌀️box-fillet-preview.procedural3d",
+    "artifactSlug": "procedural3d",
+    "exampleSlug": "box-fillet-preview",
+    "dslPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📚️examples/box-fillet-preview/🗣️dsls/♻️reuse/🧬️component.procedural.procedural3d.dsl.semio"
+  }
+]

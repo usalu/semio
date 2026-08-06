@@ -1,6 +1,0 @@
-g-k=250 resistance-kn=420kN consequence-class=3 annex=en seismic-a-ed-kn=0kN
-q-k [category:TEXT value:NUM] {
-  office 60
-  partition-walls 12
-  snow 18
-}

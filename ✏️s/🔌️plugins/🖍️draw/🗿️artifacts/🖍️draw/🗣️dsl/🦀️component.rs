@@ -3,7 +3,7 @@
 use crate::artifacts::draw::DrawDocument;
 
 /// 🗄️ The Semio emblem example fixture, handcrafted in `draw`'s DSL (`store::DocumentDsl`).
-pub const SEMIO_DRAW_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🖍️semio.draw");
+pub const SEMIO_DRAW_EXAMPLE_TEXT: &str = include_str!("../../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.draw.draw.dsl.semio");
 
 /// 📖️ Parses `.draw` DSL text into a `DrawDocument`.
 pub fn parse_dsl(text: &str) -> Result<DrawDocument, store::TextError> {

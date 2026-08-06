@@ -148,7 +148,7 @@ pub struct Puzzle2dMeta {
 /// through and the two example fixtures under `puzzle/2d/example/` for real-world shapes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "puzzle2d", layout = "lines")]
+#[dsl(id = "puzzle.puzzle2d", layout = "lines")]
 pub struct Puzzle2dProjection {
     pub schema: String,
     #[dsl(block)]

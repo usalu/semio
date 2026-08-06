@@ -1,0 +1,2 @@
+semio norm.en1999.dsl v1
+n-ed-kn=150kN m-ed-knm=9.5 a-mm2=1850mm2 w-el-mm3=42000 alloy=aw6082t6 chi=0.78 i-t-mm4=8200mm4 l-cr-mm=4000mm theta-c=230 delta-sigma-ed=50 delta-sigma-c=90 fatigue-m=5 n-cycles=1200000 v-weld-ed-kn=35kN weld-throat-mm=5mm weld-length-mm=150mm beta-w=0.7 sheet-b-mm=250mm sheet-t-mm=2.5mm sheet-k-sigma=4 sheet-w-el-mm3=10000 sheet-m-ed-knm=0.8 shell-t-mm=5mm shell-r-mm=600mm sigma-ed-shell-mpa=180MPa annex=en

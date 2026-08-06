@@ -1,0 +1,87 @@
+semio layout.layout.dsl v1
+schema=layout.fixture name=Untitled print-target=print
+grid {
+  baseline-grid=12 baseline-offset=0 snap-to-baseline=true
+}
+character-styles=[ ] parent-pages=[ id=parent-master name=Master width=595 height=842 layer-ids=[ layer-parent-bg ]
+frames {
+  rect id=frame-parent-header layer-id=layer-parent-bg fill=0.11999999731779099,0.14000000059604645,0.18000000715255737,1
+  bounds {
+    x=36 y=24 width=523 height=48 rotation=0
+  }
+}
+layers [id:TEXT name:TEXT visible:BOOL locked:BOOL object-ids:LIST] {
+  layer-parent-bg Background true false [ frame-parent-header ]
+}
+] pages=[ id=page-1 name="Page 1" spread-id=spread-1 parent-page-id=parent-master width=595 height=842
+margins {
+  top=48 right=36 bottom=48 left=36
+}
+columns {
+  count=2 gutter=12
+}
+layer-ids=[ layer-1 ]
+frames {
+  text id=frame-text-1 layer-id=layer-1 story-id=story-1 thread-next=frame-text-2 columns=1 wrap-mode=box
+  bounds {
+    x=36 y=120 width=240 height=200 rotation=0
+  }
+  inset {
+    x=4 y=4 width=232 height=192
+  }
+  text id=frame-text-2 layer-id=layer-1 story-id=story-1 columns=1 wrap-mode=box
+  bounds {
+    x=288 y=120 width=240 height=120 rotation=0
+  }
+  inset {
+    x=4 y=4 width=232 height=112
+  }
+  image id=frame-image-1 layer-id=layer-1 link-id=link-missing
+  bounds {
+    x=36 y=360 width=200 height=150 rotation=0
+  }
+}
+guides [x:NUM y:NUM width:NUM height:NUM] {
+}
+layers [id:TEXT name:TEXT visible:BOOL locked:BOOL object-ids:LIST] {
+  layer-1 Content true false [ frame-text-1 frame-text-2 frame-image-1 ]
+}
+overrides [object-id:REF bounds:BLOCK visible:BOOL locked:BOOL] {
+}
+id=page-2 name="Page 2" spread-id=spread-1 width=595 height=842
+margins {
+  top=48 right=36 bottom=48 left=36
+}
+columns {
+  count=1 gutter=0
+}
+layer-ids=[ layer-2 ]
+frames {
+  text id=frame-small-text layer-id=layer-2 story-id=story-1 columns=1 wrap-mode=box
+  bounds {
+    x=400 y=700 width=120 height=40 rotation=0
+  }
+  inset {
+    x=2 y=2 width=116 height=36
+  }
+}
+guides [x:NUM y:NUM width:NUM height:NUM] {
+}
+layers [id:TEXT name:TEXT visible:BOOL locked:BOOL object-ids:LIST] {
+  layer-2 Content true false [ frame-small-text ]
+}
+overrides [object-id:REF bounds:BLOCK visible:BOOL locked:BOOL] {
+}
+]
+paragraph-styles [id:TEXT name:TEXT font-family:TEXT font-size:NUM font-weight:UINT leading:NUM tracking:NUM alignment:TEXT] {
+  paragraph.body Body "Layout Sans" 12 400 14.4 0 left
+}
+stories [id:TEXT content:TEXT style-runs:TABLE] {
+  story-1 "Layout aggregates content from across the semio stack into exportable documents. This frame threads into the second column when overflow occurs." [ {start=0 end=120 paragraph-style-id=paragraph.body} ]
+}
+links [id:TEXT path:TEXT hash:TEXT width:UINT height:UINT dpi:UINT color-profile:TEXT state:TEXT proxy-data-url:TEXT] {
+  link-missing assets/site-plan.png "sha256:missing" 1200 800 72 RGB missing _
+}
+spreads [id:TEXT name:TEXT page-ids:LIST] {
+  spread-1 "Spread 1" [ page-1 page-2 ]
+}

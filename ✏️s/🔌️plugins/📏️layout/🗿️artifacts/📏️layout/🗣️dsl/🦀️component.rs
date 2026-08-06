@@ -3,7 +3,7 @@
 use crate::artifacts::layout::LayoutDocument;
 
 /// 📄️ The bundled sample fixture, handcrafted in the `.layout` DSL.
-pub const LAYOUT_SAMPLE_TEXT: &str = include_str!("../../../📚️examples/📏️sample.layout");
+pub const LAYOUT_SAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.layout.layout.dsl.semio");
 
 /// 📖️ Parses `.layout` DSL text into a `LayoutDocument`.
 pub fn parse_dsl(text: &str) -> Result<LayoutDocument, store::TextError> {

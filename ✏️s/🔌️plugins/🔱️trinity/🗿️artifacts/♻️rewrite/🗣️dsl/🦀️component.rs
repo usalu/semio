@@ -6,7 +6,7 @@ use store::DocumentDsl;
 /// 📄️ The bundled Nakagin `label-core` rewrite rule, handcrafted in the `.rewrite` DSL — mirrors the
 /// `trinity-rewrite` app's own real default rule over a trimmed two-node/one-edge slice of the
 /// bundled `🔱️nakagin-capsule-tower.trinity` before-fixture.
-pub const NAKAGIN_LABEL_CORE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🔱️nakagin-label-core.rewrite");
+pub const NAKAGIN_LABEL_CORE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.trinity.rewrite.dsl.semio");
 
 /// 📖️ Parses `.rewrite` DSL text into a `RewriteRuleState`.
 pub fn parse_dsl(text: &str) -> Result<RewriteRuleState, store::TextError> {

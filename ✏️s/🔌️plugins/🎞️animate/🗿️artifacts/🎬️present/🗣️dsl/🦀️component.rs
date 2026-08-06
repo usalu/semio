@@ -5,7 +5,7 @@ use crate::artifacts::present::PresentDeck;
 /// 📄️ The handcrafted `.present` DSL-text fixture — a multi-tile deck exercising every field
 /// (including the optional `source-aspect`), embedded at compile time as the permanent proof that
 /// the checked-in fixture still parses and round trips.
-pub const PRESENT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎞️default.present");
+pub const PRESENT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.animate.present.dsl.semio");
 
 /// 📖️ Parses `.present` DSL text into a `PresentDeck`.
 pub fn parse_dsl(text: &str) -> Result<PresentDeck, store::TextError> {

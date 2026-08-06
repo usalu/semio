@@ -1,13 +1,11 @@
 //! 📜️ VDI 3805 app — textual document grammar surface + laws (constitutional: dsl).
-//!
-//! 📌️ No `include_str!` fixture exists for this app (the original monolith exercised the DSL
-//! grammar purely against `crate::artifacts::vdi3805::reference_fixture()` — the same curated manufacturer-catalogue
-//! builder that backs `Document::default()` and every other module's tests/fixtures in this app),
-//! so these wrappers are the whole surface.
 
 use crate::artifacts::vdi3805::Document;
 
-/// 📖️ Parses `.vdi3805` DSL text into a `Document`.
+/// 📜️ Bundled reference-catalogue example (`.semio` envelope + DSL body).
+pub const REFERENCE_EXAMPLE_TEXT: &str = include_str!("../../📚️examples/♻️default/🗣️dsls/♻️default/🧬️component.norm.vdi3805.dsl.semio");
+
+/// 📖️ Parses VDI 3805 DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {
     <Document as store::DocumentDsl>::parse_dsl(text)
 }
@@ -19,8 +17,16 @@ pub fn print_dsl(document: &Document) -> String {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
     fn document_dsl_round_trips_the_reference_fixture() {
         store::test_support::assert_dsl_round_trip(&crate::artifacts::vdi3805::reference_fixture());
+    }
+
+    #[test]
+    fn bundled_example_fixture_parses_and_round_trips() {
+        let document = parse_dsl(REFERENCE_EXAMPLE_TEXT).expect("parse bundled example");
+        store::test_support::assert_dsl_round_trip(&document);
     }
 }

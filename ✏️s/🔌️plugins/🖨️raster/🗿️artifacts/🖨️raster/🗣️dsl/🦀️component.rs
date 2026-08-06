@@ -3,7 +3,7 @@
 use crate::artifacts::raster::RasterProjection;
 
 /// 📄️ The `semio` example document, handcrafted in the `.raster` DSL.
-pub const SEMIO_RASTER_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🖨️semio.raster");
+pub const SEMIO_RASTER_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.raster.raster.dsl.semio");
 
 /// 📖️ Parses `.raster` DSL text into a `RasterProjection`.
 pub fn parse_dsl(text: &str) -> Result<RasterProjection, store::TextError> {

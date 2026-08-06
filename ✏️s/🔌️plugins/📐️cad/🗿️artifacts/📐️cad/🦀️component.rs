@@ -290,7 +290,7 @@ pub struct CadNode {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "cad", layout = "lines")]
+#[dsl(id = "cad.cad", layout = "lines")]
 pub struct CadScene {
     pub schema: String,
     pub id: String,

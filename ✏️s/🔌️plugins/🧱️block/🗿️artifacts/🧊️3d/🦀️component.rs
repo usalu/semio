@@ -43,7 +43,7 @@ pub struct Block3dVortexTemplate {
 /// 🏙️ The block-3d projection: a typed single-`ObjectKind`-definition document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "block3d", layout = "lines")]
+#[dsl(id = "block.block3d", layout = "lines")]
 pub struct Block3dDefinition {
     pub schema: String,
     #[dsl(block)]
