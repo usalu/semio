@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, getWorkspaceRoot } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
-import { parseUiTheme, resolveThemeMetrics, resolveThemePaint, type ThemePaintRef, type UiTheme } from "../../../🎨️styling/⚡️implementations/🟦️typescript/📦️index.ts";
+import { parseUiTheme, resolveThemeMetrics, resolveThemePaint, type ThemePaintRef, type UiTheme } from "../🟦️typescript/📦️index.ts";
 
 /** @emoji 🧭️ `import.meta.dir` is a Bun-only extension; fall back to `import.meta.url` so this module loads
  * under Vitest (which transforms it outside the Bun runtime) for the inline 🌓️Levels generator tests. */

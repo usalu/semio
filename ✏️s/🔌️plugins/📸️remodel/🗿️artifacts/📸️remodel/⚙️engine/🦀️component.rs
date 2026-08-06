@@ -7,7 +7,9 @@
 //! view-state type (`RemodelConfig`) stays at app level, because artifacts must never depend on apps.
 
 use crate::artifacts::remodel::engine::{camera as remodel_camera, geo as remodel_geo, images as remodel_image, mesh as remodel_mesh, reconstruction as remodel_engine, sfm as remodel_sfm, video as remodel_video};
-use crate::artifacts::remodel::{CameraPosePreview, DenseResolution, ImageAsset, QcReportSnapshot, ReconstructionParams, ReconstructionStage, RemodelScene, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot, REMODEL_DOCUMENT_SCHEMA};
+use crate::artifacts::remodel::{
+    CameraPosePreview, DenseResolution, ImageAsset, QcReportSnapshot, ReconstructionParams, ReconstructionStage, RemodelScene, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot, REMODEL_DOCUMENT_SCHEMA,
+};
 use base64::Engine as _;
 use semio_framework_plugin::{MeshData, MeshExporter, OsMediaFormat};
 use serde_json::Value;
@@ -34,7 +36,7 @@ pub fn register() {
 //#region 🔖️Ids
 static REMODEL_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
-/// 🔢️ B1: replaces every former `RemodelPlayRuntime` id counter (`stream_counter`/`job_counter`/
+/// 🔢️ Replaces every former `RemodelPlayRuntime` id counter (`stream_counter`/`job_counter`/
 /// `gcp_counter`/`import_counter`) — mirrors `shooting_engine::next_shooting_id`'s precedent (a plain
 /// global monotonic counter, not VCS-tracked config state: uniqueness is all id generation needs, and
 /// the generated id itself becomes real, undoable document content the moment an operation stores it).

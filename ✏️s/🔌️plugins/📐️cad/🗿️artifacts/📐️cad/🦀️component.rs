@@ -1,6 +1,7 @@
 //! 📐️ CAD artifact — the `cad.scene` document schema: the `CadScene` projection, its object/
 //! reference/geometry/camera records, and the pane vocabulary every other cad node addresses them by.
-//! The declarative `spatial.interaction` spec types live beside this file in `🦀️interaction_spec.rs`.
+//! The declarative `spatial.interaction` spec types live beside this file in
+//! `🎬️interaction-spec/🦀️component.rs`.
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;

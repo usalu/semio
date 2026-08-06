@@ -1,8 +1,0 @@
-{
-  "name": "@semio-tech/fsm-rs",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./pkg/fsm.js"
-  }
-}

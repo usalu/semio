@@ -1,8 +1,3 @@
-# ⛔️ TEMPORARY (TEMPLATE.md §3): required by the verification-only `[workspace]` overlay at the bottom
-# of this file — the profiles it copies reference `trim-paths`, so the feature must be declared before
-# anything else. Removed together with the overlay at registrar handoff.
-cargo-features = ["trim-paths"]
-
 [package]
 name = "semio-s-plugin-architect"
 version.workspace = true
@@ -25,78 +20,15 @@ ports = { react = 6090, wgpu = 6190 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "../../📦️lib.rs"
+path = "📦️lib.rs"
 
 [dependencies]
-vcs = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
 store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
 protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 mathematical_graph = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
-semio-framework-core = { path = "../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
 serde.workspace = true
 serde_json.workspace = true
-thiserror = "2.0.12"
+thiserror.workspace = true
 
-# ⛔️ TEMPORARY verification-only workspace overlay (TEMPLATE.md §3) — deleted at registrar handoff,
-# together with the nested target/ and Cargo.lock it creates. Copied verbatim from root Cargo.toml so
-# artifact fingerprints match and the shared target/ stays warm.
-
-[workspace]
-
-[workspace.package]
-version = "0.1.0"
-edition = "2021"
-rust-version = "1.88"
-
-[workspace.dependencies]
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.149"
-
-[profile.dev]
-debug = false
-incremental = true
-
-[profile.dev.build-override]
-opt-level = 3
-
-[profile.dev.package.semio-framework-os-kernel-store]
-codegen-units = 1
-
-[profile.release]
-opt-level = 3
-lto = "thin"
-codegen-units = 1
-strip = "debuginfo"
-incremental = false
-trim-paths = "object"
-
-[profile.wasm-release]
-inherits = "release"
-opt-level = "s"
-lto = "thin"
-codegen-units = 1
-strip = "symbols"
-incremental = false
-trim-paths = "object"
-
-[profile.wasm-release.package.semio-framework-os-kernel-store]
-codegen-units = 1
-
-[workspace.lints.rust]
-future_incompatible = { level = "warn", priority = -1 }
-rust_2018_idioms = { level = "warn", priority = -1 }
-unsafe_op_in_unsafe_fn = "warn"
-unused_lifetimes = "warn"
-unused_qualifications = "warn"
-
-[workspace.lints.clippy]
-all = { level = "warn", priority = -1 }
-cloned_instead_of_copied = "warn"
-inefficient_to_string = "warn"
-map_unwrap_or = "warn"
-needless_pass_by_value = "warn"
-semicolon_if_nothing_returned = "warn"
-unnecessary_wraps = "warn"
-redundant_clone = "warn"

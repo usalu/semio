@@ -1,0 +1,36 @@
+Batch: wgpu extraction — render_icon_select, render_ring, render_tree cluster
+Crate: semio-framework-ui-wgpu
+File edited: 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️lib.rs
+
+Elements:
+- IconSelector (existing dir) -> wrote 🧱️elements/IconSelector/🧊️component.rs
+  mod name: icon_selector (element lowercase, snake_case — no collision)
+- Ring (existing dir) -> wrote 🧱️elements/Ring/🧊️component.rs (fresh, no prior 🧊️component.rs)
+  mod name: ring
+- Tree (existing dir) -> wrote 🧱️elements/Tree/🧊️component.rs, all 9 functions:
+  measure_tree_sections_width, measure_tree_sections_width_state, measure_tree_item_width,
+  measure_tree_sections, measure_tree_sections_state, measure_tree_item_height, render_tree,
+  render_tree_section_header, render_tree_item
+  mod name: tree_element (NOT "tree" — crate-root already has `pub mod tree` at lib.rs:5028,
+  the retained scene-graph arena/UiTree, unrelated. Disambiguated the same way `input_element`
+  disambiguates against `crate::input`.)
+
+Judgment calls:
+- Promoted 5 widgets-mod-private helpers to pub(crate) since tree_element now calls them from
+  outside widgets: tree_gutter_width, tree_icon_id, tree_row_collapsed, tree_draw_chevron,
+  tree_draw_guides. These stay in widgets mod (per template: shared per-widget helpers used by
+  more than the extracted cluster — tree_row_collapsed/tree_draw_chevron are also called
+  directly from render_widget's WidgetNode::Section arm, not just the Tree cluster).
+- Promoted the widgets-mod-local TREE_ROW_HEIGHT/TREE_INDENT_PER_LEVEL/TREE_TOGGLE_WIDTH/
+  TREE_ICON_SIZE/TREE_SECTION_GAP consts to pub(crate) for the same reason. (There is a second,
+  unrelated set of identically-named consts inside `pub mod paint` at lib.rs:11271 — left
+  untouched, different mod, not in scope.)
+- render_tree_item calls crate::widgets::render_widget (its `item.control` branch) — kept as a
+  cross-module call into widgets, same pattern as any other sibling leaf needing the dispatch fn.
+
+Verification: DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo check -p semio-framework-ui-wgpu --features engine
+Result: PASS (0 errors). Only pre-existing-pattern warnings: unused-import warnings on the
+`use crate::tree_element::{...}}` and `use crate::select::{render_select, render_select_menu}`
+style imports for functions that are only called internally within their own leaf file (not from
+widgets directly) — same class of warning the Select pilot already produced for
+render_select_menu; not treated as a defect.

@@ -191,25 +191,23 @@ pub mod part_2 {
                 Ok(acc)
             }
             GeometryNode::Reference { geometry_id } => {
-                catalogue.objects.get(geometry_id).and_then(|obj| obj.shape.as_ref()).map(|shape| evaluate_bounding_box(shape, catalogue)).unwrap_or(Err(NormError::InvalidValue { field: "geometry_id".into(), reason: "unresolved reference".into() }))
+                catalogue.objects.get(geometry_id).and_then(|obj| obj.shape.as_ref()).map_or_else(|| Err(NormError::InvalidValue { field: "geometry_id".into(), reason: "unresolved reference".into() }), |shape| evaluate_bounding_box(shape, catalogue))
             }
         }
     }
 
     pub fn validate_geometry_graph(object: &GeometryObject, catalogue: &GeometryCatalogue, visited: &mut HashSet<String>) -> Vec<String> {
         let mut issues = Vec::new();
-        if let Some(shape) = &object.shape {
-            if let GeometryNode::Reference { geometry_id } = shape {
-                if geometry_id == &object.id {
-                    issues.push(format!("self-reference in geometry {}", object.id));
-                }
-                if !visited.insert(geometry_id.clone()) {
-                    issues.push(format!("cycle in geometry reference {}", geometry_id));
-                } else if let Some(referenced) = catalogue.objects.get(geometry_id) {
-                    issues.extend(validate_geometry_graph(referenced, catalogue, visited));
-                }
-                visited.remove(geometry_id);
+        if let Some(GeometryNode::Reference { geometry_id }) = &object.shape {
+            if geometry_id == &object.id {
+                issues.push(format!("self-reference in geometry {}", object.id));
             }
+            if !visited.insert(geometry_id.clone()) {
+                issues.push(format!("cycle in geometry reference {}", geometry_id));
+            } else if let Some(referenced) = catalogue.objects.get(geometry_id) {
+                issues.extend(validate_geometry_graph(referenced, catalogue, visited));
+            }
+            visited.remove(geometry_id);
         }
         for binding in object.parameter_bindings.values() {
             if binding.is_empty() {
@@ -282,10 +280,8 @@ pub mod part_4 {
             issues.push("subtype cycle detected".into());
         }
         for rel in &dictionary.relationships {
-            if rel.kind == RelationshipKind::HasPart || rel.kind == RelationshipKind::HasBlock {
-                if !rel.cardinality.satisfies(1) && rel.cardinality.min > 0 {
-                    issues.push(format!("relationship {} requires cardinality review", rel.id));
-                }
+            if (rel.kind == RelationshipKind::HasPart || rel.kind == RelationshipKind::HasBlock) && !rel.cardinality.satisfies(1) && rel.cardinality.min > 0 {
+                issues.push(format!("relationship {} requires cardinality review", rel.id));
             }
             let source_exists = dictionary.subjects.iter().any(|s| s.id == rel.source_id);
             let target_exists = dictionary.subjects.iter().any(|s| s.id == rel.target_id);
@@ -1085,7 +1081,7 @@ mod tests {
     fn calculate_part_number_table_rule_paths() {
         let runtime = part_5::DefaultScriptRuntime;
         let rows = vec![BTreeMap::from([("dn".to_string(), "50".to_string()), ("code".to_string(), "CV50".to_string())])];
-        let rule = crate::artifacts::iso16757::part_5::PartNumberRule::Table { rows: rows.clone(), output_column: "code".into() };
+        let rule = crate::artifacts::iso16757::part_5::PartNumberRule::Table { rows, output_column: "code".into() };
         let inputs = BTreeMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]);
         assert_eq!(part_5::calculate_part_number(&rule, &inputs, &runtime).expect("match"), "CV50");
 

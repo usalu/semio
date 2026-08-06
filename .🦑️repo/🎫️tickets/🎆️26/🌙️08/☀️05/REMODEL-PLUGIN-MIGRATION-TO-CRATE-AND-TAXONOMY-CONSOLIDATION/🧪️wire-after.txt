@@ -1,0 +1,41 @@
+[DEBUG][WIRE] run-reconstruction | 4 | 01000000
+[DEBUG][WIRE] retry-stage stage=extracting-features | 27 | 0101011365787472616374696e672d666561747572657301000600
+[DEBUG][WIRE] run-stage stage=dense-stereo | 20 | 0102010c64656e73652d73746572656f01000600
+[DEBUG][WIRE] import-frame-payload payload="data:image/png;base64,abc" name=frame.png index=0 | 49 | 01030219646174613a696d6167652f706e673b6261736536342c616263096672616d652e706e6703000600010601020400
+[DEBUG][WIRE] import-video-frame-payload payload="data:image/jpeg;base64,abc" name=clip.mp4 index=1 frame-index=1 timestamp-ms=33.3 | 62 | 01040208636c69702e6d70341a646174613a696d6167652f6a7065673b6261736536342c6162630500060101060002040103040104056666666666a64040
+[DEBUG][WIRE] import-video-done name=clip.mp4 duration-ms=400 frame-count=4 width=24 height=24 codec=mjpeg | 44 | 01050208636c69702e6d7034056d6a7065670600060001050000000000007940020404030418040418050601
+[DEBUG][WIRE] import-video-bytes-payload payload="data:video/mp4;base64,abc" name=clip.mp4 | 45 | 01060208636c69702e6d703419646174613a766964656f2f6d70343b6261736536342c61626302000601010600
+[DEBUG][WIRE] add-stream name=Stream kind=video camera-id=cam-0 | 32 | 0107030653747265616d0563616d2d3005766964656f03000600010602020601
+[DEBUG][WIRE] remove-stream stream-id=stream-1 | 16 | 0108010873747265616d2d3101000600
+[DEBUG][WIRE] stream-sync stream-id=stream-1 sync-offset-ms=12.5 | 26 | 0109010873747265616d2d310200060001050000000000002940
+[DEBUG][WIRE] edit-calibration camera-id=cam-1 label=Front model=pinhole fx=1000 fy=1000 cx=0 cy=0 skew=0 k1=0 k2=0 k3=0 p1=0 p2=0 locked=false | 135 | 010a030546726f6e740563616d2d310770696e686f6c650e00060101060002060203050000000000408f4004050000000000408f4005050000000000000000060500000000000000000705000000000000000008050000000000000000090500000000000000000a0500000000000000000b0500000000000000000c0500000000000000000d01
+[DEBUG][WIRE] calibrate-cameras | 4 | 010b0000
+[DEBUG][WIRE] add-gcp name=GCP world-x=0 world-y=0 world-z=0 | 41 | 010c010347435004000600010500000000000000000205000000000000000003050000000000000000
+[DEBUG][WIRE] remove-gcp gcp-id=gcp-1 | 13 | 010d01056763702d3101000600
+[DEBUG][WIRE] place-gcp-observation gcp-id=gcp-1 stream-id=stream-1 frame-index=0 pixel-x=10 pixel-y=20 | 48 | 010e02056763702d310873747265616d2d31050006000106010204000305000000000000244004050000000000003440
+[DEBUG][WIRE] ingest-params frame-sample-stride=5 max-frames=200 downscale-long-edge-px=1600 min-sharpness=0.30000001192092896 | 25 | 010f00040004050104c8010204c00c0305000000403333d33f
+[DEBUG][WIRE] feature-params detector=orb target-count=4000 octaves=4 edge-threshold=10 | 28 | 011001036f7262040006000104a01f02040403050000000000002440
+[DEBUG][WIRE] match-params matcher=brute-force ratio-test=0.800000011920929 cross-check=true sequential-window=8 max-pairs-per-frame=16 loop-closure=true | 39 | 0111010b62727574652d666f726365060006000105000000a09999e93f02020304080404100502
+[DEBUG][WIRE] sfm-params ransac-iterations=1000 ransac-threshold-px=2 min-track-length=3 ba-max-iterations=50 robust-loss=huber huber-delta-px=1.5 | 43 | 011201056875626572060004e807010500000000000000400204030304320406000505000000000000f83f
+[DEBUG][WIRE] dense-params resolution=medium window-radius-px=3 min-view-consistency=3 confidence-threshold=0.5 max-points=500000 | 35 | 011301066d656469756d050006000104030204030305000000000000e03f0404a0c21e
+[DEBUG][WIRE] mesh-params tsdf-voxel-size-mm=5 tsdf-truncation-mm=20 decimate-target-triangles=200000 smoothing-iterations=2 texture-enabled=true texture-size=2048 guarantee-watertight=true hole-fill-max-boundary-verts=512 self-intersection-check=false | 46 | 0114000900050000000000001440010500000000000034400204c09a0c0304020402050480100602070480040801
+[DEBUG][WIRE] motion-params enabled=false max-tracks=64 track-window-px=21 min-track-quality=0.30000001192092896 min-track-length-frames=5 | 25 | 0115000500010104400204150305000000403333d33f040405
+[DEBUG][WIRE] geo-params enabled=false origin-lat=1 gsd-m=0.05000000074505806 dsm-cell-m=0.10000000149011612 dtm-filter-radius-m=2 ortho-max-px=4096 | 50 | 0116000600010205000000000000f03f0405000000a09999a93f0505000000a09999b93f0605000000000000004007048020
+[DEBUG][WIRE] reset-placeholder-mesh | 4 | 01170000
+[DEBUG][WIRE] clear-sparse | 4 | 01180000
+[DEBUG][WIRE] clear-dense | 4 | 01190000
+[DEBUG][WIRE] clear-mesh-result | 4 | 011a0000
+[DEBUG][WIRE] clear-tracks | 4 | 011b0000
+[DEBUG][WIRE] clear-geo-products | 4 | 011c0000
+[DEBUG][WIRE] clear-result | 4 | 011d0000
+[DEBUG][WIRE] selection mode=rectangle ids=[ a ] | 24 | 011e0201610972656374616e676c6502000601010c010600
+[DEBUG][WIRE] camera camera { position=@4,-4,3 target=@0,0,0 fov=45 } | 72 | 011f0001000e0d03001503000000000000104000000000000010c0000000000000084001150300000000000000000000000000000000000000000000000002050000000000804640
+[DEBUG][WIRE] layer-visibility layer=dense visible=false | 15 | 0120010564656e7365020006000101
+[DEBUG][WIRE] frame-cursor stream-id=stream-1 frame-index=2 | 19 | 0121010873747265616d2d3102000600010402
+[DEBUG][WIRE] frame-cursor frame-index=0 | 7 | 01210001010400
+[DEBUG][WIRE] report-table table=gcps | 12 | 012201046763707301000600
+[DEBUG][WIRE] active-utility utility-id=measure | 15 | 012301076d65617375726501000600
+[DEBUG][WIRE] locale value=de-DE | 13 | 0124010564652d444501000600
+[DEBUG][WIRE] import-frames | 4 | 01250000
+[DEBUG][WIRE] import-video | 4 | 01260000
+[DEBUG][WIRE] export-qc-report | 4 | 01270000

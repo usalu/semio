@@ -1,0 +1,530 @@
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust)
+warning: unused import: `serde_json::Value`
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:19:5
+   |
+19 | use serde_json::Value;
+   |     ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:481:16
+    |
+481 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+481 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+481 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:482:24
+    |
+482 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+482 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+482 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:492:16
+    |
+492 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+492 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+492 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:493:24
+    |
+493 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+493 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+493 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:553:41
+    |
+553 |     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+553 -     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+553 +     pub fn receive(&mut self, envelope: OperationEnvelope) -> Result<(), SyncError> {
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:735:42
+    |
+735 |                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+735 -                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+735 +                         let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:739:38
+    |
+739 |                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+739 -                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+739 +                     let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:1208:37
+     |
+1208 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1208 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1208 +             let wire_envelopes: Vec<OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:1208:100
+     |
+1208 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1208 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1208 +             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:1275:37
+     |
+1275 |     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |                                     ^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1275 -     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+1275 +     fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |
+
+warning: structure field `pendingOperations` should have a snake case name
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:153:9
+    |
+153 |     pub pendingOperations: usize,
+    |         ^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `pending_operations`
+    |
+    = note: `#[warn(non_snake_case)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+   Compiling semio-framework-os-kernel-math-graph-manifest v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust)
+warning: `semio-framework-os-kernel-store-sync` (lib) generated 12 warnings (run `cargo fix --lib -p semio-framework-os-kernel-store-sync` to apply 11 suggestions)
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3278:68
+     |
+3278 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3278 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3278 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+   Compiling semio-framework-os-kernel-math-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust)
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+   Compiling semio-framework-os v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust)
+   Compiling semio-s-plugin-remodel v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 21.23s
+     Running unittests 📦️lib.rs (target/debug/deps/semio_s_plugin_remodel-0a7d99dfb346a58c)
+
+running 366 tests
+test __semio_plugin_sanity_constitutional_crates_present ... ok
+test apps::remodel::commands::params::tests::set_ingest_params_command_materializes_min_sharpness ... ok
+test apps::remodel::commands::params::tests::set_geo_params_command_materializes_typed_fields_into_operations ... ok
+test apps::remodel::commands::calibration::tests::edit_calibration_inserts_then_updates_the_same_camera_entry ... ok
+test apps::remodel::commands::ingest::tests::add_remove_and_sync_streams_edit_the_stream_list ... ok
+test apps::remodel::commands::calibration::tests::calibrate_cameras_skips_streams_without_frames ... ok
+test apps::remodel::commands::calibration::tests::gcps_are_added_observed_and_removed ... ok
+test apps::remodel::commands::params::tests::set_motion_params_command_materializes_typed_fields ... ok
+test apps::remodel::commands::params::tests::set_sfm_params_command_materializes_typed_fields_into_operations ... ok
+test apps::remodel::commands::params::tests::unknown_enum_keywords_fall_back_to_the_documented_defaults ... ok
+test apps::remodel::commands::reconstruction::tests::full_run_collapses_into_a_single_undo_step ... ok
+test apps::remodel::commands::params::tests::set_mesh_params_command_materializes_watertight_knobs ... ok
+test apps::remodel::commands::reset::tests::clear_result_resets_all_seven_result_fields_and_reset_placeholder_restores_the_box ... ok
+test apps::remodel::commands::reset::tests::each_narrow_clear_touches_exactly_one_result_field ... ok
+test __semio_plugin_sanity_declared_apps_appear_in_bundle_manifest ... ok
+test apps::remodel::commands::shell::tests::export_qc_report_is_a_no_op_without_a_report ... ok
+test apps::remodel::commands::shell::tests::import_pickers_emit_a_host_effect_and_no_operations ... ok
+test apps::remodel::commands::reset::tests::undo_redo_round_trip_through_the_wrapper ... ok
+test apps::remodel::commands::ingest::tests::import_video_bytes_payload_extracts_frames_in_process ... ok
+test apps::remodel::commands::reconstruction::tests::run_reconstruction_runs_synchronously_to_a_terminal_stage ... ok
+test apps::remodel::commands::view::tests::set_active_utility_switches_host_view_state_without_ops_or_history ... ok
+test apps::remodel::commands::view::tests::set_locale_switches_the_rendered_label_language ... ok
+test apps::remodel::commands::view::tests::view_actions_emit_config_operations_not_document_operations ... ok
+test apps::remodel::component::tests::export_media_mesh_out_exports_a_structured_3d_mesh ... ok
+test apps::remodel::component::tests::command_from_action_covers_every_declared_action_and_rejects_unknown_ones ... ok
+test apps::remodel::commands::reconstruction::tests::retry_stage_starts_a_fresh_run_with_a_new_job_id ... ok
+test apps::remodel::component::tests::optional_field_rows_keep_their_pre_migration_bytes ... ok
+test apps::remodel::component::tests::import_media_photos_in_creates_and_appends_to_the_workflow_stream ... ok
+test apps::remodel::component::tests::render_unknown_body_key_reports_it_by_name ... ok
+test apps::remodel::component::tests::render_does_not_panic_for_known_body_keys ... ok
+test apps::remodel::commands::ingest::tests::import_frame_payload_creates_a_stream_and_asset ... ok
+test apps::remodel::component::tests::the_action_bridge_coerces_select_strings_and_both_camera_arg_shapes ... ok
+test apps::remodel::component::tests::every_declared_action_bridges_to_a_command_handler ... ok
+test apps::remodel::component::tests::command_ids_and_wire_keywords_are_unique_per_row ... ok
+test apps::remodel::component::tests::remodel_io_declares_photos_in_and_mesh_out_on_the_manifest ... ok
+test apps::remodel::component::tests::view_rows_dispatch_cleanly_against_the_real_registry ... ok
+test apps::remodel::config::tests::config_operations_apply_and_backwards_restore_the_pre_edit_snapshot ... ok
+test apps::remodel::config::tests::config_operations_roundtrip_through_op_text ... ok
+test apps::remodel::config::tests::remodel_config_default_matches_the_former_runtime_defaults ... ok
+test apps::remodel::modes::capture::windows::frames::tests::an_unset_frame_cursor_renders_no_layers ... ok
+test apps::remodel::component::tests::the_manifest_declares_three_modes_three_windows_and_this_apps_panel_tabs ... ok
+test apps::remodel::config::tests::remodel_config_operation_diff_is_whole_record_replace ... ok
+test apps::remodel::modes::analyze::component::tests::the_analyze_layout_pairs_the_model_window_with_the_report ... ok
+test apps::remodel::modes::capture::component::tests::the_capture_layout_puts_the_filmstrip_first ... ok
+test apps::remodel::modes::analyze::windows::report::tests::switching_the_selected_table_changes_the_rendered_columns ... ok
+test apps::remodel::modes::analyze::windows::report::tests::every_dataset_name_yields_its_own_column_set_and_unknown_falls_back_to_frames ... ok
+test apps::remodel::component::tests::two_instances_converge_disjoint_edits_via_backbone ... ok
+test apps::remodel::modes::model::component::tests::the_default_layout_lists_the_model_and_frames_windows ... ok
+test apps::remodel::modes::capture::windows::frames::tests::renders_a_canvas_2d_surface ... ok
+test apps::remodel::modes::model::windows::model::component::tests::hiding_the_mesh_layer_drops_the_instance ... ok
+test apps::remodel::modes::model::windows::model::options::layers::tests::every_layer_gets_its_own_toggle_and_a_default_open_group ... ok
+test apps::remodel::modes::model::windows::model::component::tests::default_scene_seeds_the_world3d_mesh_json ... ok
+test apps::remodel::modes::model::windows::model::component::tests::renders_a_world_3d_surface ... ok
+test apps::remodel::panels::document::tests::definition_binds_the_framework_document_tab_to_this_body_key ... ok
+test apps::remodel::panels::results::tests::a_fresh_document_reports_no_sparse_dense_trajectory_or_geo_products ... ok
+test apps::remodel::panels::parameters::tests::the_parameters_panel_reflects_a_live_param_edit ... ok
+test apps::remodel::panels::quality::tests::a_document_without_a_report_renders_the_empty_state ... ok
+test apps::remodel::panels::tracks::tests::an_empty_track_list_renders_the_documented_gap_message ... ok
+test artifacts::remodel::component::tests::default_scene_has_placeholder_mesh ... ok
+test artifacts::remodel::component::tests::packed_f32_roundtrips_exactly ... ok
+test artifacts::remodel::component::tests::packed_u8_roundtrips_exactly ... ok
+test apps::remodel::component::tests::every_command_variant_roundtrips_and_prints_its_wire_keyword ... ok
+test apps::remodel::panels::calibration::tests::the_calibration_panel_lists_added_ground_control_points ... ok
+test apps::remodel::panels::document::tests::a_fresh_document_reports_an_idle_job ... ok
+test artifacts::remodel::component::tests::reconstruction_stage_serde_is_stable ... ok
+test artifacts::remodel::component::tests::scene_roundtrips_through_json ... ok
+test apps::remodel::panels::media::tests::the_media_panel_lists_every_imported_stream ... ok
+test artifacts::remodel::component::tests::populated_scene_roundtrips_through_json ... ok
+test artifacts::remodel::diff::tests::empty_diff_is_the_identity_and_absorb_is_last_writer_wins ... ok
+test artifacts::remodel::engine::camera::tests::aggregate_self_calibration_recovers_median_and_rejects_outliers ... ok
+test artifacts::remodel::engine::camera::tests::bougnoux_focal_from_fundamental_recovers_distinct_ground_truth_focals ... ok
+test artifacts::remodel::engine::camera::tests::bougnoux_focal_from_fundamental_rejects_wrong_shaped_matrix ... ok
+test artifacts::remodel::dsl::tests::default_scene_roundtrips_through_dsl ... ok
+test artifacts::remodel::engine::camera::tests::calibrate_planar_rejects_too_few_views ... ok
+test artifacts::remodel::engine::camera::tests::pose_at_row_bottom_to_top_reverses_direction ... ok
+test artifacts::remodel::engine::camera::tests::pose_at_row_matches_pose0_at_first_row_and_grows_monotonically ... ok
+test artifacts::remodel::dsl::tests::populated_scene_roundtrips_through_dsl ... ok
+test artifacts::remodel::engine::camera::tests::project_unproject_round_trips_for_none_distortion ... ok
+test artifacts::remodel::engine::camera::tests::project_unproject_round_trips_through_moderate_distortion ... ok
+test artifacts::remodel::engine::camera::tests::rectify_remap_field_is_near_identity_at_zero_velocity ... ok
+test artifacts::remodel::engine::camera::tests::rig_project_matches_manual_composition ... ok
+test artifacts::remodel::engine::camera::tests::reprojection_jacobians_match_central_difference_at_random_configurations ... ok
+test artifacts::remodel::engine::component::tests::next_remodel_id_is_monotonic_and_prefixed ... ok
+test artifacts::remodel::engine::component::tests::ply_exporter_writes_a_well_formed_ascii_header ... ok
+test artifacts::remodel::engine::camera::tests::undistort_distort_round_trips_for_brown_conrady_and_fisheye ... ok
+test artifacts::remodel::engine::component::tests::las_exporter_writes_a_227_byte_header_plus_20_bytes_per_point ... ok
+test artifacts::remodel::engine::component::tests::remodel_io_declares_photos_in_and_mesh_out ... ok
+test artifacts::remodel::engine::component::tests::raster_to_png_asset_normalizes_valid_cells_only ... ok
+test artifacts::remodel::engine::component::tests::png_export_round_trips_a_stored_texture_asset ... ok
+test artifacts::remodel::engine::camera::tests::reprojection_problem_residuals_vanish_at_ground_truth_and_lm_recovers_from_perturbation ... ok
+test artifacts::remodel::engine::dense::tests::classify_building_vegetation_splits_planar_from_scattered ... ok
+test artifacts::remodel::engine::dense::tests::left_right_check_invalidates_planted_inconsistency ... ok
+test artifacts::remodel::engine::dense::tests::cloud_distance_and_m3c2_measure_planted_offset ... ok
+test artifacts::remodel::engine::dense::tests::fuse_depth_maps_recovers_plane_points ... ok
+test artifacts::remodel::engine::dense::tests::median_fill_fills_missing_pixels_from_valid_neighbors ... ok
+test artifacts::remodel::engine::dense::tests::estimate_normals_recovers_plane_normal ... ok
+test artifacts::remodel::engine::dense::tests::region_grow_planes_groups_planar_patch ... ok
+test artifacts::remodel::engine::dense::tests::speckle_filter_removes_small_isolated_components ... ok
+test artifacts::remodel::engine::dense::tests::statistical_outlier_removal_keeps_cluster_and_drops_far_outliers ... ok
+test apps::remodel::commands::ingest::tests::import_video_frame_payload_then_done_writes_one_stream_with_video_source ... ok
+test artifacts::remodel::engine::dense::tests::tsdf_integrate_zero_crossing_near_true_surface ... ok
+test artifacts::remodel::engine::dense::tests::classify_ground_pmf_achieves_high_ground_recall_with_buildings_and_vegetation ... ok
+test artifacts::remodel::engine::dense::tests::tsdf_sample_agrees_across_block_boundaries_regardless_of_integration_order ... ok
+test artifacts::remodel::engine::feature::tests::akaze_grid_top_k_returns_empty_for_no_candidates_or_zero_target ... ok
+test artifacts::remodel::engine::dense::tests::voxel_downsample_averages_grid_cells_correctly ... ok
+test artifacts::remodel::engine::feature::tests::describe_akaze_is_deterministic_and_self_hamming_zero ... ok
+test artifacts::remodel::engine::feature::tests::describe_orb_is_deterministic_and_self_hamming_zero ... ok
+test artifacts::remodel::engine::feature::tests::detect_harris_keypoints_clusters_near_known_corner ... ok
+test artifacts::remodel::engine::dense::tests::radius_outlier_removal_drops_isolated_points ... ok
+test artifacts::remodel::engine::feature::tests::detect_harris_keypoints_returns_empty_for_zero_target_or_empty_image ... ok
+test artifacts::remodel::engine::feature::tests::detect_orb_keypoints_returns_empty_for_empty_pyramid_or_zero_target ... ok
+test artifacts::remodel::engine::feature::tests::diffusion_step_returns_input_clone_for_zero_sized_image ... ok
+test artifacts::remodel::engine::feature::tests::fast_corners_detects_planted_corner_not_flat_region ... ok
+test artifacts::remodel::engine::feature::tests::fed_tau_schedule_returns_empty_for_non_positive_time ... ok
+test artifacts::remodel::engine::feature::tests::forward_backward_prune_invalidates_degenerate_track_and_keeps_good_one ... ok
+test artifacts::remodel::engine::feature::tests::forward_backward_prune_skips_already_invalid_points ... ok
+test artifacts::remodel::engine::feature::tests::detect_orb_keypoints_returns_roughly_target_count_and_spread ... ok
+test artifacts::remodel::engine::feature::tests::harris_response_is_low_on_flat_and_high_on_corner ... ok
+test artifacts::remodel::engine::feature::tests::klt_track_flags_invalid_on_singular_flat_region ... ok
+test artifacts::remodel::engine::feature::tests::klt_track_returns_invalid_for_empty_pyramid_levels ... ok
+test artifacts::remodel::engine::feature::tests::klt_track_recovers_known_shift_and_flags_out_of_bounds ... ok
+test artifacts::remodel::engine::feature::tests::match_brute_desc_b_empty_returns_empty ... ok
+test artifacts::remodel::engine::feature::tests::match_brute_mutual_filters_non_reciprocal_matches ... ok
+test artifacts::remodel::engine::dense::tests::margin_confidence_rewards_well_textured_high_margin ... ok
+test artifacts::remodel::engine::feature::tests::match_brute_single_candidate_bypasses_ratio_test ... ok
+test artifacts::remodel::engine::feature::tests::match_guided_epipolar_handles_vertical_epipolar_line ... ok
+test artifacts::remodel::engine::feature::tests::match_guided_epipolar_returns_empty_for_empty_kp_b_and_degenerate_matrix ... ok
+test artifacts::remodel::engine::feature::tests::match_zncc_fallback_finds_correct_correspondence_within_radius ... ok
+test artifacts::remodel::engine::feature::tests::match_zncc_fallback_no_match_when_correlation_below_threshold ... ok
+test artifacts::remodel::engine::feature::tests::match_zncc_fallback_returns_empty_for_empty_kp_b ... ok
+test artifacts::remodel::engine::feature::tests::quadratic_refine_2d_returns_zero_offset_for_singular_hessian ... ok
+test artifacts::remodel::engine::feature::tests::shi_tomasi_grid_handles_zero_cell_without_panicking ... ok
+test artifacts::remodel::engine::feature::tests::shi_tomasi_grid_prefers_planted_corner_and_caps_per_cell ... ok
+test artifacts::remodel::engine::geo::tests::circular_feature_extracts_closed_contour_with_expected_perimeter ... ok
+test artifacts::remodel::engine::geo::tests::cut_fill_matches_planted_block_volume ... ok
+test artifacts::remodel::engine::geo::tests::ecef_enu_round_trip_sub_millimeter ... ok
+test artifacts::remodel::engine::geo::tests::dsm_dtm_match_known_terrain_and_idw_fills_holes ... ok
+test artifacts::remodel::engine::geo::tests::orthomosaic_blends_smoothly_across_camera_overlap ... ok
+test artifacts::remodel::engine::geo::tests::georeference_recovers_planted_similarity_under_noise ... ok
+test artifacts::remodel::engine::geo::tests::utm_round_trip_sub_millimeter ... ok
+test artifacts::remodel::engine::images::tests::box_blur_integral_matches_brute_force_average ... ok
+test artifacts::remodel::engine::images::tests::build_pyramid_halves_resolution_per_level ... ok
+test artifacts::remodel::engine::images::tests::census_transform_and_hamming_behave_on_known_pattern ... ok
+test artifacts::remodel::engine::images::tests::downsample_half_averages_two_by_two_blocks ... ok
+test artifacts::remodel::engine::images::tests::extract_patch_quarter_turn_matches_transpose_relation ... ok
+test artifacts::remodel::engine::images::tests::gaussian_blur_preserves_mean_and_reduces_variance ... ok
+test artifacts::remodel::engine::images::tests::gray_sample_bilinear_interpolates_between_pixels ... ok
+test artifacts::remodel::engine::images::tests::integral_image_rect_sums_match_brute_force ... ok
+test artifacts::remodel::engine::images::tests::jpeg_decode_never_panics_on_truncated_input ... ok
+test artifacts::remodel::engine::images::tests::jpeg_decode_rejects_missing_soi ... ok
+test artifacts::remodel::engine::images::tests::jpeg_flat_color_round_trips_with_near_zero_error ... ok
+test artifacts::remodel::engine::geo::tests::quality_report_populates_sane_fields_from_real_sfm_output ... ok
+test artifacts::remodel::engine::images::tests::jpeg_progressive_marker_is_unsupported ... ok
+test artifacts::remodel::engine::images::tests::jpeg_higher_quality_yields_lower_error ... ok
+test artifacts::remodel::engine::images::tests::jpeg_round_trip_checkerboard_meets_psnr_floor ... ok
+test artifacts::remodel::engine::images::tests::jpeg_single_mcu_cosine_pattern_recovers_within_quantization_error ... ok
+test artifacts::remodel::engine::images::tests::luma_conversion_matches_bt601_weights ... ok
+test artifacts::remodel::engine::images::tests::non_max_suppression_keeps_planted_peaks_sorted ... ok
+test artifacts::remodel::engine::images::tests::png_codec_rejects_dimension_mismatch ... ok
+test artifacts::remodel::engine::images::tests::png_gray16_encode_decodes_back_losslessly ... ok
+test artifacts::remodel::engine::images::tests::png_rgba_round_trip_is_lossless ... ok
+test artifacts::remodel::engine::images::tests::remap_identity_returns_original ... ok
+test artifacts::remodel::engine::images::tests::rgba_sample_rgb_normalizes_and_interpolates ... ok
+test artifacts::remodel::engine::images::tests::scharr_gradients_recover_ramp_slopes ... ok
+test artifacts::remodel::engine::images::tests::warp_affine_identity_returns_original ... ok
+test artifacts::remodel::engine::images::tests::warp_homography_inverse_round_trips_away_from_borders ... ok
+test artifacts::remodel::engine::images::tests::zncc_is_invariant_to_gain_and_bias_and_flips_sign ... ok
+test artifacts::remodel::engine::images::tests::jpeg_round_trip_gradient_meets_psnr_floor ... ok
+test artifacts::remodel::engine::mesh::tests::bake_texture_is_empty_with_no_views ... ok
+test artifacts::remodel::engine::mesh::tests::clean_mesh_collapses_near_zero_length_edges ... ok
+test artifacts::remodel::engine::mesh::tests::clean_mesh_removes_degenerate_triangles ... ok
+test artifacts::remodel::engine::mesh::tests::clean_mesh_removes_small_disconnected_components ... ok
+test artifacts::remodel::engine::mesh::tests::clean_mesh_welds_duplicate_vertices ... ok
+test artifacts::remodel::engine::mesh::tests::bake_texture_paints_atlas_from_multiple_views ... ok
+test artifacts::remodel::engine::mesh::tests::dense_field_get_set_out_of_range_are_noops ... ok
+test artifacts::remodel::engine::mesh::tests::edge_map_counts_faces_per_edge ... ok
+test artifacts::remodel::engine::mesh::tests::face_projected_area_none_behind_camera_some_in_front ... ok
+test artifacts::remodel::engine::dense::tests::tsdf_sphere_multi_view_zero_crossing_within_one_voxel ... ok
+test artifacts::remodel::engine::mesh::tests::halfedge_topology_build_rejects_degenerate_triangle ... ok
+test artifacts::remodel::engine::mesh::tests::halfedge_topology_build_rejects_inconsistent_orientation ... ok
+test artifacts::remodel::engine::mesh::tests::halfedge_topology_build_rejects_non_manifold_edge ... ok
+test artifacts::remodel::engine::mesh::tests::halfedge_topology_build_rejects_non_manifold_vertex ... ok
+test artifacts::remodel::engine::mesh::tests::image_gradient_magnitude_detects_vertical_edge ... ok
+test artifacts::remodel::engine::mesh::tests::image_gradient_magnitude_zero_on_flat_image ... ok
+test artifacts::remodel::engine::mesh::tests::level_seam_returns_identity_for_insufficient_samples ... ok
+test artifacts::remodel::engine::mesh::tests::level_seam_solves_gain_and_offset ... ok
+test artifacts::remodel::engine::camera::tests::refine_rig_recovers_planted_extrinsics_and_instance_poses_from_perturbation ... ok
+test artifacts::remodel::engine::mesh::tests::lscm_unwrap_is_bijective_per_chart ... ok
+test artifacts::remodel::engine::mesh::tests::orient_error_display_message ... ok
+test artifacts::remodel::engine::mesh::tests::orient_consistently_recovers_from_flipped_windings ... ok
+test artifacts::remodel::engine::mesh::tests::fill_holes_skips_loops_larger_than_max_boundary_verts ... ok
+test artifacts::remodel::engine::feature::tests::match_brute_recovers_known_translation_correspondences ... ok
+test artifacts::remodel::engine::mesh::tests::close_voxel_alone_is_always_closed_and_manifold ... ok
+test artifacts::remodel::engine::mesh::tests::repair_splits_bowtie_edge_into_two_components ... ok
+test artifacts::remodel::engine::mesh::tests::repair_splits_pinch_vertex_into_two_components ... ok
+test artifacts::remodel::engine::mesh::tests::segment_charts_cuts_at_sharp_dihedral_angle ... ok
+test artifacts::remodel::engine::mesh::tests::segment_charts_keeps_coplanar_faces_in_one_chart ... ok
+test artifacts::remodel::engine::mesh::tests::signed_volume_positive_for_outward_sphere ... ok
+test artifacts::remodel::engine::mesh::tests::simplify_qem_rejects_collapses_that_violate_link_condition ... ok
+test artifacts::remodel::engine::mesh::tests::simplify_qem_stops_when_error_exceeds_max_error ... ok
+test artifacts::remodel::engine::mesh::tests::taubin_smooth_noop_on_empty_mesh ... ok
+test artifacts::remodel::engine::feature::tests::akaze_repeatability_is_at_least_orb_repeatability_under_scale_and_rotation ... ok
+test artifacts::remodel::engine::mesh::tests::topology_error_display_messages ... ok
+test artifacts::remodel::engine::mesh::tests::taubin_smooth_reduces_vertex_noise_amplitude ... ok
+test artifacts::remodel::engine::mesh::tests::qem_simplification_preserves_watertight_invariant ... ok
+test artifacts::remodel::engine::mesh::tests::validate_watertight_detects_self_intersections_when_requested ... ok
+test artifacts::remodel::engine::mesh::tests::validate_watertight_reports_no_self_intersections_for_disjoint_triangles ... ok
+test artifacts::remodel::engine::motion::tests::build_and_fit_deformation_graph_recovers_a_planted_bend_for_held_out_points ... ok
+test artifacts::remodel::engine::motion::tests::estimate_offset_and_refine_subframe_recover_a_fractional_shift ... ok
+test artifacts::remodel::engine::motion::tests::modal_analysis_recovers_a_planted_frequency ... ok
+test artifacts::remodel::engine::motion::tests::multi_object_tracker_associates_spawns_and_prunes ... ok
+test artifacts::remodel::engine::motion::tests::neighborhood_affine_strain_distinguishes_rotation_from_stretch ... ok
+test artifacts::remodel::engine::motion::tests::rolling_shutter_velocity_and_rectify_maps_are_sane ... ok
+test artifacts::remodel::engine::motion::tests::smooth_camera_path_reduces_planted_jitter ... ok
+test artifacts::remodel::engine::motion::tests::stabilization_warps_are_near_identity_for_matching_poses ... ok
+test artifacts::remodel::engine::motion::tests::track_rigid_body_recovers_a_known_rotating_translating_cube_with_partial_visibility ... ok
+test artifacts::remodel::engine::motion::tests::tracker2d_maintains_tracks_and_redetects_lost_coverage ... ok
+test artifacts::remodel::engine::motion::tests::triangulate_tracks_recovers_a_slow_moving_point_from_a_single_orbiting_camera ... ok
+test artifacts::remodel::engine::motion::tests::velocity_and_acceleration_recover_planted_constant_motion ... ok
+test artifacts::remodel::engine::motion::tests::wiener_deconvolve_measurably_sharpens_a_blurred_image ... ok
+test artifacts::remodel::engine::reconstruction::tests::advance_fails_with_fewer_than_two_frames ... ok
+test artifacts::remodel::engine::mesh::tests::tsdf_torus_across_blocks_has_genus_one ... ok
+test artifacts::remodel::engine::reconstruction::tests::push_frame_blur_gate_rejects_planted_blurred_frame ... ok
+test artifacts::remodel::engine::reconstruction::tests::push_frame_stride_and_max_frames_sample ... ok
+test artifacts::remodel::engine::reconstruction::tests::push_video_blur_gate_reports_counts ... ok
+test artifacts::remodel::engine::reconstruction::tests::sparse_preview_is_empty_before_any_advance ... ok
+test artifacts::remodel::engine::sfm::tests::align_to_priors_recovers_planted_similarity ... ok
+test artifacts::remodel::engine::sfm::tests::apply_gcp_prior_residual_matches_scaled_difference ... ok
+test artifacts::remodel::engine::sfm::tests::bundle_adjustment_converges_near_noise_floor ... ok
+test artifacts::remodel::engine::sfm::tests::decompose_essential_recovers_relative_pose_within_tolerance ... ok
+test artifacts::remodel::engine::mesh::tests::tsdf_sphere_across_blocks_is_watertight_and_correct ... ok
+test artifacts::remodel::engine::sfm::tests::epnp_and_refine_pose_lm_recover_pose_within_tolerance_at_one_pixel_noise ... ok
+test artifacts::remodel::engine::sfm::tests::estimate_fundamental_recovers_planted_outliers_and_satisfies_epipolar_constraint ... ok
+test artifacts::remodel::engine::sfm::tests::estimate_homography_recovers_planted_outliers_on_planar_scene ... ok
+test artifacts::remodel::engine::sfm::tests::estimate_init_pair_essential_prefers_five_point_on_planar_scene ... ok
+test artifacts::remodel::engine::sfm::tests::five_point_candidates_include_the_true_essential_matrix ... ok
+test artifacts::remodel::engine::sfm::tests::five_point_recovers_pose_on_planar_scene_where_eight_point_struggles ... ok
+test artifacts::remodel::engine::sfm::tests::fixtures_are_internally_consistent ... ok
+test artifacts::remodel::engine::sfm::tests::init_pair_recovers_pose_and_triangulates_on_low_parallax_pair ... ok
+test artifacts::remodel::engine::sfm::tests::keyframe_index_and_detect_loops_find_a_planted_revisit ... ok
+test artifacts::remodel::engine::sfm::tests::p3p_grunert_returns_ground_truth_among_solutions ... ok
+test artifacts::remodel::engine::sfm::tests::p3p_true_pose_is_among_the_candidate_roots ... ok
+test artifacts::remodel::engine::sfm::tests::pnp_ransac_recovers_pose_despite_planted_outliers ... ok
+test artifacts::remodel::engine::sfm::tests::pose_graph_optimize_reduces_drift_at_loop_closure_edge ... ok
+test artifacts::remodel::engine::sfm::tests::rotation_and_translation_averaging_recover_pose_graph_from_noisy_relative_measurements ... ok
+test artifacts::remodel::engine::camera::tests::calibrate_planar_recovers_intrinsics_from_synthetic_checkerboard ... ok
+test artifacts::remodel::engine::sfm::tests::select_two_view_model_prefers_homography_on_planar_scene ... ok
+test artifacts::remodel::engine::sfm::tests::triangulate_and_validate_rejects_low_angle_and_accepts_well_conditioned_points ... ok
+test artifacts::remodel::engine::sfm::tests::triangulate_dlt_and_refine_point_lm_recover_points_within_reprojection_tolerance ... ok
+test artifacts::remodel::engine::sfm::tests::triangulation_recovers_points_within_noise_scaled_tolerance ... ok
+test artifacts::remodel::engine::video::tests::avi_probe_audio_only_stream_reports_no_video_track ... ok
+test artifacts::remodel::engine::video::tests::avi_probe_falls_back_to_movi_scan_without_idx1 ... ok
+test artifacts::remodel::engine::video::tests::avi_probe_rejects_non_avi_riff_form ... ok
+test artifacts::remodel::engine::video::tests::avi_probe_rejects_non_riff_magic ... ok
+test artifacts::remodel::engine::video::tests::bitreader_more_rbsp_data_detects_remaining_bits ... ok
+test artifacts::remodel::engine::video::tests::bitreader_ue_se_roundtrip_via_bitwriter ... ok
+test artifacts::remodel::engine::video::tests::block4x4_grid_pos_covers_full_4x4_grid_bijectively ... ok
+test artifacts::remodel::engine::video::tests::boundary_strength_covers_all_branches ... ok
+test artifacts::remodel::engine::video::tests::chroma_qp_maps_table_and_clamps_offset ... ok
+test artifacts::remodel::engine::video::tests::chroma_quad_pos_maps_known_indices ... ok
+test artifacts::remodel::engine::video::tests::clip_u8_clamps_to_byte_range ... ok
+test artifacts::remodel::engine::video::tests::codec_fourcc_hint_maps_each_codec_variant ... ok
+test artifacts::remodel::engine::video::tests::dc_pred_all_neighbor_availability_branches ... ok
+test artifacts::remodel::engine::video::tests::dequant4x4_applies_shift_and_rounding_branches ... ok
+test artifacts::remodel::engine::video::tests::extract_frames_avi_rejects_unsupported_codec_with_provenance ... ok
+test artifacts::remodel::engine::video::tests::extract_frames_mjpeg_applies_stride_and_max_frames_exactly ... ok
+test artifacts::remodel::engine::video::tests::extract_frames_mjpeg_lazily_skips_undecoded_frames ... ok
+test artifacts::remodel::engine::video::tests::extract_frames_mjpeg_propagates_jpeg_decode_error ... ok
+test artifacts::remodel::engine::video::tests::extract_frames_rejects_unsupported_codec_with_provenance ... ok
+test artifacts::remodel::engine::video::tests::filter_chroma_normal_computes_expected_values_when_below_threshold ... ok
+test artifacts::remodel::engine::video::tests::filter_chroma_normal_returns_none_above_threshold ... ok
+test artifacts::remodel::engine::video::tests::filter_chroma_strong_averages_when_below_threshold ... ok
+test artifacts::remodel::engine::video::tests::filter_chroma_strong_returns_none_above_threshold ... ok
+test artifacts::remodel::engine::video::tests::filter_luma_normal_computes_expected_deltas_when_below_threshold ... ok
+test artifacts::remodel::engine::video::tests::filter_luma_normal_returns_none_above_threshold ... ok
+test artifacts::remodel::engine::video::tests::filter_luma_strong_computes_expected_edge_samples ... ok
+test artifacts::remodel::engine::video::tests::filter_luma_strong_passes_through_unfiltered_above_threshold ... ok
+test artifacts::remodel::engine::video::tests::fourcc_debug_and_display_render_non_ascii_as_hex ... ok
+test artifacts::remodel::engine::video::tests::fourcc_debug_and_display_render_printable_ascii ... ok
+test artifacts::remodel::engine::video::tests::frame_iter_sample_bytes_errors_on_overflow_and_out_of_bounds ... ok
+test artifacts::remodel::engine::video::tests::h264_b_slice_is_unsupported ... ok
+test artifacts::remodel::engine::video::tests::h264_cabac_pps_is_unsupported ... ok
+test artifacts::remodel::engine::video::tests::h264_decode_sample_rejects_multiple_slice_nals_in_one_access_unit ... ok
+test artifacts::remodel::engine::video::tests::h264_decode_sample_rejects_nonzero_first_mb_in_slice ... ok
+test artifacts::remodel::engine::video::tests::h264_error_display_messages ... ok
+test artifacts::remodel::engine::video::tests::h264_garbage_bytes_error_not_panic ... ok
+test artifacts::remodel::engine::video::tests::h264_i_pcm_single_frame_decodes_bit_exactly ... ok
+test artifacts::remodel::engine::video::tests::h264_i_pcm_with_deblocking_enabled_flat_picture_stays_flat ... ok
+test artifacts::remodel::engine::video::tests::h264_new_rejects_interlaced_sps ... ok
+test artifacts::remodel::engine::video::tests::h264_new_rejects_multiple_slice_groups_pps ... ok
+test artifacts::remodel::engine::video::tests::h264_new_rejects_non_baseline_profile ... ok
+test artifacts::remodel::engine::video::tests::h264_new_rejects_pic_order_cnt_type_one ... ok
+test artifacts::remodel::engine::video::tests::h264_new_rejects_pic_order_cnt_type_out_of_range ... ok
+test artifacts::remodel::engine::video::tests::h264_new_rejects_transform_8x8_mode_pps ... ok
+test artifacts::remodel::engine::video::tests::h264_new_rejects_truncated_or_missing_sps_pps ... ok
+test artifacts::remodel::engine::video::tests::h264_p_skip_chain_propagates_the_i_pcm_frame_unchanged ... ok
+test artifacts::remodel::engine::video::tests::h264_truncated_nal_errors_not_panics ... ok
+test artifacts::remodel::engine::video::tests::hadamard4_1d_basic_butterfly ... ok
+test artifacts::remodel::engine::video::tests::idct4x4_dc_only_produces_uniform_output ... ok
+test artifacts::remodel::engine::video::tests::idct4x4_zero_input_is_zero ... ok
+test artifacts::remodel::engine::video::tests::median_mv_predict_falls_back_to_componentwise_median ... ok
+test artifacts::remodel::engine::video::tests::median_mv_predict_single_ref_match_shortcut ... ok
+test artifacts::remodel::engine::video::tests::mp4_probe_audio_only_track_reports_no_video_track ... ok
+test artifacts::remodel::engine::video::tests::mp4_probe_co64_and_multi_entry_stsc_resolve_sample_offsets ... ok
+test artifacts::remodel::engine::video::tests::mp4_probe_ctts_sample_count_mismatch_errors ... ok
+test artifacts::remodel::engine::video::tests::mp4_probe_ctts_shifts_presentation_timestamps ... ok
+test artifacts::remodel::engine::video::tests::mp4_probe_detects_avc1_codec_from_avcc_sample_entry ... ok
+test artifacts::remodel::engine::video::tests::mp4_probe_missing_ftyp_or_moov_errors ... ok
+test artifacts::remodel::engine::video::tests::mp4_probe_stsc_resolved_sample_count_mismatch_errors ... ok
+test artifacts::remodel::engine::video::tests::mp4_probe_stsd_zero_entries_errors ... ok
+test artifacts::remodel::engine::video::tests::mp4_probe_stts_sample_count_mismatch_errors ... ok
+test artifacts::remodel::engine::video::tests::mp4_probe_truncated_at_every_prefix_length_errors_not_panics ... ok
+test artifacts::remodel::engine::video::tests::norm_adjust_selects_scale_by_position_parity ... ok
+test artifacts::remodel::engine::video::tests::plane_pred_flat_neighbors_are_a_noop ... ok
+test artifacts::remodel::engine::video::tests::predict_intra4x4_dc_mode_averages_available_neighbors ... ok
+test artifacts::remodel::engine::video::tests::predict_intra4x4_rejects_out_of_range_mode ... ok
+test artifacts::remodel::engine::video::tests::predict_intra4x4_uniform_neighbors_yield_uniform_output_for_all_modes ... ok
+test artifacts::remodel::engine::video::tests::predict_intra4x4_vertical_and_horizontal_require_their_neighbor ... ok
+test artifacts::remodel::engine::video::tests::probe_dispatches_by_riff_magic ... ok
+test artifacts::remodel::engine::video::tests::read_te_variants_by_max_val ... ok
+test artifacts::remodel::engine::video::tests::resolve_samples_rejects_empty_stsc ... ok
+test artifacts::remodel::engine::video::tests::samples_per_chunk_for_errors_on_invalid_first_chunk_or_uncovered_chunk ... ok
+test artifacts::remodel::engine::video::tests::select_sample_indices_max_frames_zero_is_unbounded ... ok
+test artifacts::remodel::engine::video::tests::select_sample_indices_treats_stride_zero_as_one_and_respects_max_frames ... ok
+test artifacts::remodel::engine::video::tests::split_annexb_nals_splits_multiple_start_coded_nals ... ok
+test artifacts::remodel::engine::video::tests::transform_chroma_dc_computes_expected_values ... ok
+test artifacts::remodel::engine::video::tests::transform_luma16x16_dc_zero_input_is_zero ... ok
+test artifacts::remodel::engine::video::tests::video_error_display_messages ... ok
+test artifacts::remodel::engine::video::tests::write_avi_mjpg_probe_round_trip_reports_exact_frames ... ok
+test artifacts::remodel::engine::video::tests::write_mp4_mjpeg_probe_round_trip_reports_exact_frames ... ok
+test artifacts::remodel::op::tests::concurrent_edits_across_different_op_families_converge ... ok
+test artifacts::remodel::op::tests::concurrent_set_asset_ops_converge_regardless_of_order ... ok
+test artifacts::remodel::op::tests::every_operation_variant_roundtrips_through_op_text ... ok
+test artifacts::remodel::op::tests::set_asset_op_applies_and_reverts_including_absent_case ... ok
+test artifacts::remodel::op::tests::set_calibration_op_applies_and_reverts ... ok
+test artifacts::remodel::op::tests::set_dense_op_applies_and_reverts ... ok
+test artifacts::remodel::op::tests::set_dense_params_op_applies_and_reverts ... ok
+test artifacts::remodel::op::tests::set_feature_params_op_applies_and_reverts ... ok
+test artifacts::remodel::op::tests::set_gcps_op_applies_and_reverts ... ok
+test artifacts::remodel::op::tests::set_geo_params_op_applies_and_reverts ... ok
+test artifacts::remodel::op::tests::set_geo_products_op_applies_and_reverts ... ok
+test artifacts::remodel::op::tests::set_ingest_params_op_applies_and_reverts ... ok
+test artifacts::remodel::op::tests::set_job_op_applies_and_reverts ... ok
+test artifacts::remodel::op::tests::set_match_params_op_applies_and_reverts ... ok
+test artifacts::remodel::op::tests::set_mesh_params_op_applies_and_reverts ... ok
+test artifacts::remodel::op::tests::set_mesh_result_op_applies_and_reverts ... ok
+test artifacts::remodel::op::tests::set_motion_params_op_applies_and_reverts ... ok
+test artifacts::remodel::op::tests::set_qc_op_applies_and_reverts ... ok
+test artifacts::remodel::op::tests::set_sfm_params_op_applies_and_reverts ... ok
+test artifacts::remodel::op::tests::set_sparse_op_applies_and_reverts ... ok
+test artifacts::remodel::op::tests::set_streams_op_applies_and_reverts ... ok
+test artifacts::remodel::op::tests::set_tracks_op_applies_and_reverts ... ok
+test artifacts::remodel::op::tests::set_trajectory_op_applies_and_reverts ... ok
+test artifacts::remodel::pack::tests::default_scene_roundtrips_through_dsl_pack_equivalence ... ok
+test artifacts::remodel::pack::tests::populated_scene_roundtrips_through_dsl_pack_equivalence ... ok
+test artifacts::remodel::spr::tests::op_binary_round_trips_and_agrees_with_text ... ok
+test artifacts::remodel::spr::tests::store_roundtrips_through_document_text ... ok
+test artifacts::remodel::engine::dense::tests::plane_sweep_depth_recovers_known_plane_depth ... ok
+test artifacts::remodel::engine::sfm::tests::eight_point_ransac_recovers_relative_pose_with_noise_and_outliers ... ok
+test artifacts::remodel::engine::mesh::tests::planted_holes_fill_and_trigger_all_three_strategies ... ok
+test artifacts::remodel::engine::sfm::tests::run_all_reconstructs_synthetic_multi_camera_scene ... ok
+test artifacts::remodel::engine::mesh::tests::pipeline_falls_back_to_close_on_pathological_input ... ok
+test artifacts::remodel::engine::dense::tests::patchmatch_mvs_recovers_known_plane_depth ... ok
+test artifacts::remodel::engine::dense::tests::patchmatch_mvs_recovers_known_sphere_depth ... ok
+test artifacts::remodel::engine::mesh::tests::pipeline_falls_back_to_close_on_catastrophically_fragmented_reconstruction ... ok
+test artifacts::remodel::engine::reconstruction::tests::chunking_does_not_change_the_final_mesh ... ok
+
+test result: ok. 366 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 22.08s
+

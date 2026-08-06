@@ -7,7 +7,7 @@
 //! in the framework plugin crate).
 
 use crate::apps::draw::config::{DrawConfig, DrawConfigOperation};
-use crate::artifacts::draw::engine::{create_draw_boolean_layer, create_draw_path_layer, create_draw_trace_layer, draw_layer_world_bounds, draw_transform_to_matrix, find_draw_layer, flatten_draw_layers, layer_base, layer_id, layer_to_path_segments};
+use crate::artifacts::draw::engine::{create_draw_path_layer, create_draw_trace_layer, draw_layer_world_bounds, draw_transform_to_matrix, find_draw_layer, flatten_draw_layers, layer_base, layer_id, layer_to_path_segments};
 use crate::artifacts::draw::op::DrawOperation;
 use crate::artifacts::draw::{DrawCamera, DrawDocument, DrawLayerNode, PathSegment};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
@@ -20,10 +20,10 @@ use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 pub struct GestureContext {
     method: String,
     merge: String,
-    utility: String,
-    start: [f64; 2],
-    cursor: [f64; 2],
-    points: Vec<[f64; 2]>,
+    pub(crate) utility: String,
+    pub(crate) start: [f64; 2],
+    pub(crate) cursor: [f64; 2],
+    pub(crate) points: Vec<[f64; 2]>,
     active: bool,
 }
 
@@ -107,7 +107,7 @@ pub(crate) fn merge_selection(mode: &str, current: &[String], incoming: &[String
 pub(crate) const DRAW_MARQUEE_THRESHOLD_PX: f64 = 4.0;
 pub(crate) const DRAW_PICK_TOLERANCE_PX: f64 = 8.0;
 
-struct DrawPickTarget {
+pub(crate) struct DrawPickTarget {
     generality: i32,
     layer_id: String,
 }
@@ -488,8 +488,13 @@ fn gesture_pick_point(_ctx: &mut GestureContext, event: Option<&draw_gesture::Ev
 //#endregion 🔖️GestureActions
 
 //#region 🔖️GestureStatechart
-/// 🎭️ Pointer-gesture control flow — states/events/guards straight off the old hand-rolled
-/// `DrawDragState` match arms, compiled by `fsm`'s `statechart!` DSL into dense static tables.
+// 🎭️ Pointer-gesture control flow — states/events/guards straight off the old hand-rolled
+// `DrawDragState` match arms, compiled by `fsm`'s `statechart!` DSL into dense static tables.
+// (plain comment, not a doc comment: rustdoc cannot document a macro invocation, and the resulting
+// `unused_doc_comments` warning is a hard error under this crate's `-D warnings` gate. The
+// `unexpected_cfgs` warning `fsm::statechart!` triggers here is silenced crate-wide in `📦️lib.rs` —
+// an `#[allow]` on the macro invocation itself is ignored by rustc, see its own `unused_attributes`
+// warning if you try.)
 fsm::statechart! {
     machine draw_gesture {
         context: GestureContext;

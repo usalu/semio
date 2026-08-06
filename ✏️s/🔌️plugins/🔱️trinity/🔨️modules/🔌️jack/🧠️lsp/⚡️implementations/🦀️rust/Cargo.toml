@@ -20,8 +20,13 @@ path = "../../../🧠️lsp/⚡️implementations/🦀️rust/📦️lib.rs"
 
 [dependencies]
 mathematical_graph_dsl = { path = "../../../../../../../../🧰️framework/🔨️modules/🧮️math/🕸️graph/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph-dsl" }
-trinity_jack = { path = "../../../../../../../../✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/⚡️implementations/🦀️rust", package = "semio-s-plugin-trinity-jack" }
-trinity_ram = { path = "../../../../../../../../✏️s/🔌️plugins/🔱️trinity/🔨️modules/🐏️ram/⚡️implementations/🦀️rust", package = "semio-s-plugin-trinity-ram" }
+# 📌️ Repointed to the merged plugin crate by the CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE
+# migration (ticket 26/08/05/TRINITY-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION) — this LSP
+# server is a residual not itself restructured in that migration, only repointed so it keeps building
+# after the old `semio-s-plugin-trinity-jack`/`semio-s-plugin-trinity-ram` crates were deleted;
+# `trinity_jack::`/`trinity_ram::` call sites below now resolve via `trinity::core::`/
+# `trinity::artifacts::jack::`.
+trinity = { path = "../../../../../../../../✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust", package = "semio-s-plugin-trinity" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"

@@ -1,0 +1,13 @@
+{
+  "title": "Reasoning Plugin Shape V2 Tree Purity Retrofit",
+  "emoji": "🌳️",
+  "status": "open",
+  "description": "Retrofit the already-migrated 💡️reasoning plugin (crate semio-s-plugin-reasoning-mindmap) from V1 shape to the newly-amended Shape V2 tree-purity rule per CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE/📋️TEMPLATE.md §14. Mechanical only, no logic changes: (1) move owner-root 📦️lib.rs into 📦️packages/🦀️rust/📦️lib.rs, update [lib] path and add ../../ prefix to all #[path] strings; (2) fold sibling variant files 🎛️apps/🔌️wires/🦀️config.rs and 🦀️terminology.rs into their own \u003cfolder\u003e/🦀️component.rs; (3) relocate nested 🗿️artifacts/🔌️wires/📚️examples/ and 🛂️manifest.json to the plugin (owner) root, fixing the include_str! path in dsl/component.rs; (4) verify cargo check/clippy/test with zero test-count drift.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2501"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪9fadcbb812ee4771b6f8bdc7c3ead2c9"
+  ]
+}

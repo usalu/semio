@@ -20,7 +20,7 @@ ports = { react = 6080, wgpu = 6180 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "../../📦️lib.rs"
+path = "📦️lib.rs"
 
 [dependencies]
 dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }

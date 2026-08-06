@@ -1,0 +1,92 @@
+Procedural Plugin Shape V2 Tree Purity Retrofit — manual verification log
+(cargo metadata/-p checks are blocked repo-wide by a concurrent-session dangling manifest:
+ 📕️norm's ✏️s/🔌️plugins/📕️norm/🔨️modules/🫀️core/⚡️implementations/🦀️rust/Cargo.toml does not exist
+ on disk yet root Cargo.toml lists it as a workspace member — NOT caused by this retrofit,
+ confirmed unchanged before/after by 3 retry attempts across this session.)
+
+=== 1. #[path] target existence check (relative to new 📦️lib.rs location) ===
+OK: ../../🗿️artifacts/🌀️procedural2d/🦀️component.rs
+OK: ../../🗿️artifacts/🌀️procedural2d/🔺️diff/🦀️component.rs
+OK: ../../🗿️artifacts/🌀️procedural2d/🔧️op/🦀️component.rs
+OK: ../../🗿️artifacts/🌀️procedural2d/🗣️dsl/🦀️component.rs
+OK: ../../🗿️artifacts/🌀️procedural2d/🎒️pack/🦀️component.rs
+OK: ../../🗿️artifacts/🌀️procedural2d/📡️spr/🦀️component.rs
+OK: ../../🗿️artifacts/🌀️procedural2d/⚙️engine/🦀️component.rs
+OK: ../../🗿️artifacts/🧊️procedural3d/🦀️component.rs
+OK: ../../🗿️artifacts/🧊️procedural3d/🔺️diff/🦀️component.rs
+OK: ../../🗿️artifacts/🧊️procedural3d/🔧️op/🦀️component.rs
+OK: ../../🗿️artifacts/🧊️procedural3d/🗣️dsl/🦀️component.rs
+OK: ../../🗿️artifacts/🧊️procedural3d/🎒️pack/🦀️component.rs
+OK: ../../🗿️artifacts/🧊️procedural3d/📡️spr/🦀️component.rs
+OK: ../../🗿️artifacts/🧊️procedural3d/⚙️engine/🦀️component.rs
+OK: ../../🎛️apps/◻2d/🦀️component.rs
+OK: ../../🎛️apps/◻2d/🎚️config/🦀️component.rs
+OK: ../../🎛️apps/◻2d/🗣️terminology/🦀️component.rs
+OK: ../../🎛️apps/◻2d/🌉️wasm/🦀️component.rs
+OK: ../../🎛️apps/◻2d/🎮️commands/🕸️graph/🦀️component.rs
+OK: ../../🎛️apps/◻2d/🎮️commands/🧩️widget/🦀️component.rs
+OK: ../../🎛️apps/◻2d/🎮️commands/🗂️selection/🦀️component.rs
+OK: ../../🎛️apps/◻2d/🎮️commands/🧬️generation/🦀️component.rs
+OK: ../../🎛️apps/◻2d/🎮️commands/👁️view/🦀️component.rs
+OK: ../../🎛️apps/◻2d/🎮️commands/🧮️eval/🦀️component.rs
+OK: ../../🎛️apps/◻2d/🎮️commands/🗣️locale/🦀️component.rs
+OK: ../../🎛️apps/◻2d/🎭️modes/✏️edit/🦀️component.rs
+OK: ../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🕸️flow/🦀️component.rs
+OK: ../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️component.rs
+OK: ../../🎛️apps/◻2d/🎭️modes/🧬️generate/🦀️component.rs
+OK: ../../🎛️apps/◻2d/🎭️modes/🧬️generate/🪟️windows/🗂️generations/🦀️component.rs
+OK: ../../🎛️apps/◻2d/🎭️modes/🧬️generate/🪟️windows/📝️form/🦀️component.rs
+OK: ../../🎛️apps/◻2d/🎭️modes/🧬️generate/🪟️windows/👁️preview/🦀️component.rs
+OK: ../../🎛️apps/◻2d/📌️panels/📄️document/🦀️component.rs
+OK: ../../🎛️apps/◻2d/📌️panels/🛍️catalogue/🦀️component.rs
+OK: ../../🎛️apps/◻2d/📌️panels/🔍️inspection/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🎚️config/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🗣️terminology/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🎮️commands/🎨️example/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🎮️commands/🕸️graph/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🎮️commands/🧩️widget/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🎮️commands/🧭️gumball/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🎮️commands/🧬️generation/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🎮️commands/👁️view/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🎮️commands/🌞️sun/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🎮️commands/🧮️eval/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🎮️commands/🗣️locale/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🕸️flow/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🎭️modes/🧬️generate/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🎭️modes/🧬️generate/🪟️windows/🗂️generations/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🎭️modes/🧬️generate/🪟️windows/📝️form/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/🎭️modes/🧬️generate/🪟️windows/👁️preview/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/📌️panels/📄️document/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/📌️panels/🛍️catalogue/🦀️component.rs
+OK: ../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs
+
+=== 2. byte-diff of moved sibling variant files vs. pre-move git content ===
+IDENTICAL: ✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎚️config/🦀️component.rs
+IDENTICAL: ✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🗣️terminology/🦀️component.rs
+IDENTICAL: ✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🌉️wasm/🦀️component.rs
+IDENTICAL: ✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎚️config/🦀️component.rs
+IDENTICAL: ✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🗣️terminology/🦀️component.rs
+IDENTICAL: ✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs
+
+=== 3. byte-diff of merged examples vs. pre-move git content (9 files) ===
+IDENTICAL: 🌀️box-fillet-preview.procedural3d
+IDENTICAL: 🌀️box-shell-preview.procedural3d
+IDENTICAL: 🌀️default.procedural2d
+IDENTICAL: 🌀️face-sweep-extrude.procedural3d
+IDENTICAL: 🌀️hexagonal-mushroom-column.procedural3d
+IDENTICAL: 🌀️rectangle-extrude-volume.procedural3d
+IDENTICAL: 🌀️rectangle-wire-preview.procedural3d
+IDENTICAL: 🌀️sphere-box-fuse.procedural3d
+IDENTICAL: 🌀️sphere-cut-with-torus.procedural3d
+
+=== 4. tree purity — non-compliant .rs/.ts files below owner root (excluding 📦️packages) ===
+(empty above = clean; only known exception is 🎮️play/AGENTS.md, a non-.rs/.ts doc file, flagged separately)
+
+=== 5. external dependents on old owner-root 📦️lib.rs path or old per-app 📚️examples paths ===
+.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/PROCEDURAL-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION/🎫️ticket.json:6:  "summary": "Migrated the 🌀️procedural plugin (2 apps: ◻2d, 🧊️3d) from 15 old constitutional-module crates into ONE consolidated crate at ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust (semio-s-plugin-procedural, name preserved from the old bundle crate), following TEMPLATE.md and the 🌊️flow reference. Each app kept its own artifact (procedural2d, procedural3d) per the artifact≡document-schema rule, since 2D and 3D fixtures are genuinely different document schemas sharing no wire format.\n\nFull verification chain, all green, run synchronously (no background Bash) per the coordinator's mid-task correction:\n1. cargo check -p semio-s-plugin-procedural (native) — 0 errors.\n2. cargo check --target wasm32-wasip2 — 0 errors.\n3. cargo clippy --all-targets -- -D warnings — 0 errors, 0 warnings.\n4. cargo test — 196/196 passed (3 repeated full runs, no flakes), 0 doc-test failures.\n5. Wire-format-diff proof (the correctness check that was still outstanding at handoff): built a scratch harness at .🦑️repo/🎫️tickets/26/08/05/PROCEDURAL-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION/wire-format-proof/ (Cargo.toml + main.rs, kept per ticket-folder scratch-file policy) that path-depends on BOTH the old (pre-deletion) protocol crates and the new crate, constructs one representative value per command row using the literal fixtures already in each app's every_command()/old crate's own tests, and compares protocol::OpText::print_op + protocol::OpBinary::encode_op byte-for-byte. Result: 64/64 rows (25 for 2D, 39 for 3D) IDENTICAL text and binary output between old and new. 0 failures.\n6. Deleted the 15 old crate directories only after all of the above passed: 🛂️manifest/🗿️artifact, both apps' ⚡️implementations (facades) and 🔨️modules/{⚙️engine,🎒️pack,📡️protocol,🔧️op,🖱️ui,🗣️dsl}. No stray data files found (example fixtures were already relocated and verified byte-identical beforehand).\n7. Removed the temporary [workspace] verification overlay from the new crate's Cargo.toml plus its nested target/ and Cargo.lock.\n8. Fixed the one repo-wide cross-cutting dependent TEMPLATE.md calls out explicitly: 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep — repointed its procedural_2d/procedural_3d dev-dependencies (old facade crates) to a single `procedural` dependency on the new consolidated crate, and fixed the two `use` lines to `procedural::artifacts::procedural{2d,3d}::Procedural{2d,3d}Document`, mirroring the exact precedent already set by the writer/vcs/animate/shooting/sequence/cad sibling migrations in that same file.\n\nCross-plugin dependent found and FLAGGED, not fixed (outside my ownership): ✏️s/🔌️plugins/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml path-depends on three now-deleted old crates (procedural_3d, procedural_3d_engine, procedural_3d_ui / packages semio-s-app-procedural-3d, -3d-engine, -3d-ui) for its mesh import/export registration (procedural3d_mesh_from_document, procedural3d_document_from_mesh) and Procedural3dPlayApp/create_procedural3d_app. Demonstrator's own crate will not compile until its owning agent/the registrar repoints it at semio-s-plugin-procedural (types now live at crate::artifacts::procedural3d::engine::{procedural3d_mesh_from_document, procedural3d_document_from_mesh} and crate::apps::procedural3d::{Procedural3dPlayApp, create_procedural3d_app}).\n\nREGISTRAR HANDOFF — root Cargo.toml changes needed (not made by me):\n- [workspace.members]: remove the 15 lines currently at lines 298-312 (all \"✏️s/🔌️plugins/🌀️procedural/...\" old paths for both apps' facades/modules and the old manifest bundle), add one new line: \"✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust\",\n- [workspace.dependencies]: remove lines 724-725 (semio-s-app-procedural-2d, semio-s-app-procedural-3d aliases) — confirmed via repo-wide grep that nothing consumes them via `{ workspace = true }` syntax, only direct path-deps (all now either fixed [fixture-sweep] or flagged [demonstrator]).\n- Cargo.lock: needs regeneration once membership changes.\n\nFramework gaps discovered (not migration regressions, both confirmed via isolated diagnosis, worth flagging to the framework owners):\n1. dsl::from_dsl_value unconditionally normalizes a whole-number DslValue::Number(f64) to an integer-backed serde_json::Number on conversion to JSON, even with no print/parse round-trip — broke a naive round-trip test pattern; fixed locally by using non-whole-number test literals (3.5 instead of 3.0) with an explanatory comment, in artifacts/procedural2d/{dsl,pack}/component.rs.\n2. Crate consolidation silently breaks previously-implicit test isolation for any plugin whose split constitutional crates each had their own process-wide TEST_SERIAL-style mutex (here: BRep tessellation cache in the 3D engine) — merging into one crate puts every test in one process/thread-pool, so per-old-crate serialization locks stop serializing against each other. Fixed by unifying into one shared artifacts::procedural3d::engine::test_support::lock() used by all 3D tests that touch the shared cache. TEMPLATE.md does not currently mention this as a required step (the flow pilot likely never hit it, having no BRep-style shared global cache); worth adding to TEMPLATE for future W2 agents on plugins with shared engine-level caches.\n\nFiles created: ✏️s/🔌️plugins/🌀️procedural/📦️lib.rs and the full new taxonomy tree under 🗿️artifacts/{🌀️procedural2d,🧊️procedural3d}/** and 🎛️apps/{◻2d,🧊️3d}/** (component.rs/config.rs/terminology.rs/wasm.rs per app, commands/*, modes/*/windows/*, panels/*), plus 📦️packages/🦀️rust/{Cargo.toml,📋️project.json,📜️script.ts}. Scratch wire-format-diff proof kept at .🦑️repo/🎫️tickets/26/08/05/PROCEDURAL-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION/wire-format-proof/{Cargo.toml,main.rs,Cargo.lock,target/} per ticket-folder scratch-file retention policy.\n\nFiles updated: 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/⚡️implementations/🦀️rust/{Cargo.toml,📦️lib.rs} (repointed procedural dependency).\n\nFiles removed: all 15 old crate directories under ✏️s/🔌️plugins/🌀️procedural/{🛂️manifest, 🎛️apps/◻2d/⚡️implementations, 🎛️apps/◻2d/🔨️modules, 🎛️apps/🧊️3d/⚡️implementations, 🎛️apps/🧊️3d/🔨️modules}.\n\nNot touched (by design): root Cargo.toml/Cargo.lock, registry generate, launch.json, 🎪️demonstrator's files (flagged above only).",
+(only .nx/workspace-data cache hit found, which self-regenerates; no real external dependent)

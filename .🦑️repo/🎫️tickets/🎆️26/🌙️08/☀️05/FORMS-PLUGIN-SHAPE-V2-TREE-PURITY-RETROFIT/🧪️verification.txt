@@ -1,0 +1,62 @@
+Forms Plugin Shape V2 Tree Purity Retrofit — verification log
+================================================================
+
+BLOCKER (pre-existing, not caused by this retrofit):
+`cargo test -p semio-s-plugin-forms --lib`, `cargo check -p semio-s-plugin-forms`,
+`cargo clippy -p semio-s-plugin-forms --all-targets -- -D warnings`, and
+`cargo check --target wasm32-wasip2` all fail identically at the *workspace metadata resolution*
+stage (before reaching semio-s-plugin-forms at all), with:
+
+  error: failed to load manifest for workspace member
+  `/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🔨️modules/🫀️core/⚡️implementations/🦀️rust`
+  referenced by workspace at `/Users/ueli/Documents/semio/Cargo.toml`
+  Caused by: failed to read .../Cargo.toml: No such file or directory (os error 2)
+
+This matches the documented "Known live blocker" (📕️norm mid-migration, dangling manifest path
+in root Cargo.toml). Confirmed the referenced directory genuinely does not exist on disk and the
+root Cargo.toml still lists it (line 274, member; line 507, workspace.dependencies alias,
+"# 52 refs"). Not this ticket's plugin, not touched, root Cargo.toml not edited.
+
+MANUAL VERIFICATION PERFORMED INSTEAD (since live cargo verification is blocked workspace-wide):
+
+1. Byte-diff of moved files against git HEAD:
+   - 🎛️apps/📋️forms/🦀️config.rs -> 🎛️apps/📋️forms/🎚️config/🦀️component.rs: `diff` reports IDENTICAL.
+   - 🎛️apps/📋️forms/🦀️terminology.rs -> 🎛️apps/📋️forms/🗣️terminology/🦀️component.rs: `diff` reports IDENTICAL.
+   - 📦️lib.rs -> 📦️packages/🦀️rust/📦️lib.rs: `diff` against git HEAD shows ONLY the 36 `#[path]`
+     string edits (35 real path-string changes + the 1 accidental doc-comment match on line 5,
+     which was reverted back to the original `#[path = "."]` illustrative text since it was prose
+     describing the general mechanism, not a real attribute in this file). No other line changed.
+   - 📦️packages/🦀️rust/Cargo.toml: `git diff` shows exactly one line changed,
+     `path = "../../📦️lib.rs"` -> `path = "📦️lib.rs"`.
+
+2. Path-mechanics reasoning (per TEMPLATE.md §2's empirically-verified rules): every grouping
+   module already carried `#[path = "."]` (reset-to-file's-own-directory, composes at any depth,
+   independent of nesting level per the doc). Since `📦️lib.rs` moved two levels deeper (into
+   `📦️packages/🦀️rust/`), every reset needed `../../` to still land back at the owner root, and every
+   leaf `#[path]` (already a full path from owner root, since the file's own directory USED to BE
+   the owner root) needed the same `../../` prefix. This was applied uniformly and mechanically to
+   all 36 `#[path]` occurrences (see diff above), consistent with the literal recipe instruction.
+
+3. Cross-reference of `use crate::apps::forms::config::…` / `use crate::apps::forms::terminology::…`
+   sites (16 use-sites across 9 files, grepped) — none needed edits because the Rust `mod`
+   identifiers (`config`, `terminology`) were kept unchanged; only the on-disk `#[path]` target and
+   physical file location moved, exactly per the recipe.
+
+4. `include_str!("../../../📚️examples/…")` calls in 🗿️artifacts/📋️forms/🗣️dsl/🦀️component.rs (3 of
+   them) are unaffected — that file itself was never moved, and 📚️examples/ was already correctly
+   at the owner root before this retrofit (not something this retrofit needed to relocate).
+
+5. Final `find` of the full plugin tree confirms the ONLY things below the owner root are:
+   `🦀️component.rs` files, the `📦️packages` folder (packaging code + entry file only), plain
+   component folders, and `📚️examples/` (an explicitly-allowed `rootDataDirNames` entry, already
+   correctly placed at the owner root, sibling of `📦️packages`).
+
+6. `grep -rln "🔌️plugins/📋️forms/📦️lib.rs" .` (whole repo) found exactly one hit:
+   `.nx/workspace-data/file-map.json` — an auto-regenerated nx cache file, not a real external
+   dependent. No registrar handoff needed.
+
+Baseline test count could not be captured live (same workspace-wide blocker existed even before
+this retrofit's edits started — verified by running the exact same baseline command before making
+any change). Per master.md's W2 batch-2 entry, forms's last known-good count was 88/88. This
+retrofit changed zero logic (only `#[path]` strings + file locations, confirmed byte-identical
+above), so the correctness floor is preserved by construction, not just by assertion.

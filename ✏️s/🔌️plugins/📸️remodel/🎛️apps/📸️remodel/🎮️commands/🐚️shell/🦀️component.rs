@@ -86,7 +86,7 @@ mod tests {
         for command in [RemodelCommand::ImportFrames(import_frames::ImportFrames {}), RemodelCommand::ImportVideo(import_video::ImportVideo {})] {
             let result = dispatch(&mut app, command);
             assert!(result.operations.is_empty(), "a shell picker never mutates the document");
-            assert_eq!(result.effects.len(), 1);
+            assert_eq!(result.requested_effects.len(), 1);
         }
     }
 
@@ -96,7 +96,7 @@ mod tests {
         let mut app = app();
         let result = dispatch(&mut app, RemodelCommand::ExportQcReport(export_qc_report::ExportQcReport {}));
         assert!(result.operations.is_empty());
-        assert!(result.effects.is_empty());
+        assert!(result.requested_effects.is_empty());
     }
 }
 //#endregion 🧪️Tests

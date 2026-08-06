@@ -1,1 +1,0 @@
-m-ed-knm=12.5 n-ed-kn=350kN v-ed-kn=42kN h-ed-kn=18kN z-mm3=12000000 area-mm2=600000mm2 shear-area-mm2=360000mm2 f-k-mpa=6.4MPa f-vk-mpa=0.2MPa annex=en masonry-class=class2 design-situation=transient mu=0.35 wall-thickness-mm=300mm fire-resistance-min=90 unit=calcium-silicate exposure=mx3 mortar=m10 bed-joint-thickness-mm=10mm storeys=4 h-ef-mm=3200mm t-ef-mm=300mm

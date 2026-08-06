@@ -643,6 +643,7 @@ pub fn check_opaque_wall_with_bridges(category: part_2::BuildingCategory, layers
 }
 
 /// 📋️ Full DIN 4108 parts 1, 2–8, 10, and Beiblatt 2 envelope compliance check.
+#[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
 pub fn check_full_envelope(
     category: part_2::BuildingCategory,
     layers: &[part_2::Layer],

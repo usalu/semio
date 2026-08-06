@@ -113,17 +113,17 @@ pub fn validate_structure(catalog: &ManufacturerCatalog) -> Vec<Diagnostic> {
     }
     for product in &catalog.products {
         if product.identity.article_number.is_empty() {
-            issues.push(Diagnostic::error(&format!("product.{}", product.sheet.0), "missing article number"));
+            issues.push(Diagnostic::error(format!("product.{}", product.sheet.0), "missing article number"));
         }
         if product.configuration.id.is_empty() {
-            issues.push(Diagnostic::warning(&format!("configuration.{}", product.sheet.0), "missing configuration id"));
+            issues.push(Diagnostic::warning(format!("configuration.{}", product.sheet.0), "missing configuration id"));
         }
     }
     let known: std::collections::BTreeSet<&str> = RecordFamilyId::all_known().iter().copied().collect();
     for product in &catalog.products {
         for record in &product.records {
             if !known.contains(record.family.0.as_str()) && !record.family.0.starts_with("9") {
-                issues.push(Diagnostic::info(&format!("record.{}", record.family.0), "unknown record family preserved"));
+                issues.push(Diagnostic::info(format!("record.{}", record.family.0), "unknown record family preserved"));
             }
         }
     }
@@ -723,8 +723,7 @@ mod tests {
 
     #[test]
     fn historical_part_check_respects_strict_mode() {
-        let mut doc = Document::default();
-        doc.strict_mode = true;
+        let mut doc = Document { strict_mode: true, ..Document::default() };
         let result = part_12::check(&doc);
         assert_eq!(result.status, CheckStatus::Fail);
 
@@ -742,8 +741,7 @@ mod tests {
 
     #[test]
     fn evaluate_reports_strict_mode_check() {
-        let mut doc = Document::default();
-        doc.strict_mode = true;
+        let doc = Document { strict_mode: true, ..Document::default() };
         let report = evaluate(&doc);
         assert!(report.checks.iter().any(|c| c.clause.section == "strict"));
     }

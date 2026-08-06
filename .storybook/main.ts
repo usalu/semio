@@ -27,7 +27,7 @@ const repoRootPath = resolve(__dirname, "..");
 const storybookScope = process.env.STORYBOOK_SCOPE ?? "";
 
 const uiReactDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react");
-const uiStylingDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript");
+const uiStylingDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript");
 const composeJsDir = resolve(repoRootPath, "compose/client/lib/js");
 const composeAssetsDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript");
 const composeFixturesDir = resolve(repoRootPath, "compose/fixture");
@@ -101,8 +101,8 @@ const config: StorybookConfig = {
       "@compose/ui": resolve(repoRootPath, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx"),
       "@semio-tech/framework-platform-core": resolve(repoRootPath, "🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts"),
       "@semio-tech/framework-playground-core": resolve(repoRootPath, "🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts"),
-      "@semio-tech/framework-platform-renderer-react": resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx"),
-      "@semio-tech/framework-playground-renderer-react": resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx"),
+      "@semio-tech/framework-platform-renderer-react": resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx"),
+      "@semio-tech/framework-playground-renderer-react": resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx"),
     };
     for (const item of workspaceResolve.resolve?.alias ?? []) {
       if (typeof item === "object" && item && "find" in item && "replacement" in item && typeof item.find === "string") {

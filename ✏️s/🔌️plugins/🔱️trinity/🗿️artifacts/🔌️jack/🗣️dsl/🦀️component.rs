@@ -176,7 +176,7 @@ impl store::DocumentPack for GraphFixture {
 //#endregion 🔖️Pack
 
 /// 📄️ The Nakagin Capsule Tower example fixture, handcrafted in the `.trinity` DSL.
-pub const NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../../../../../✏️s/🔌️plugins/🔱️trinity/📚️examples/🔱️nakagin-capsule-tower.trinity");
+pub const NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🔱️nakagin-capsule-tower.trinity");
 
 /// 📖️ Parses `.trinity` DSL text into a `GraphFixture`.
 pub fn parse_dsl(text: &str) -> Result<GraphFixture, TextError> {
@@ -216,9 +216,75 @@ mod tests {
         let nakagin = parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap();
         store::test_support::assert_dsl_round_trip(&nakagin);
         store::test_support::assert_dsl_pack_equivalence(&nakagin);
-        let branch = parse_dsl(include_str!("../../../../../../../✏️s/🔌️plugins/🔱️trinity/📚️examples/🔱️branch-chain.trinity")).unwrap();
+        let branch = parse_dsl(include_str!("../../../📚️examples/🔱️branch-chain.trinity")).unwrap();
         store::test_support::assert_dsl_round_trip(&branch);
         store::test_support::assert_dsl_pack_equivalence(&branch);
+    }
+
+    /// 🧩️ A hand-built fixture (not one of the bundled `.trinity` examples) with a nested `Object`-shaped
+    /// node property (`position: {x,y,z}`) and `Number`-shaped edge properties (`u`/`v`) — exercises the
+    /// `#[dsl(table)]` nested-row-within-a-row path (`NodeDsl.ports`) and `PropertyBag`'s `Object`/
+    /// `Number` variants through the DSL round trip, distinct from what the bundled examples happen to
+    /// contain.
+    #[test]
+    fn dsl_round_trip_mini_fixture() {
+        use crate::artifacts::jack::{Camera, Edge, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
+        use std::collections::BTreeMap;
+
+        let fixture = GraphFixture {
+            schema: GraphFixture::SCHEMA.into(),
+            name: "mini".into(),
+            manifest_id: Some("nakagin".into()),
+            manifest: Manifest::nakagin_default(),
+            camera: Camera::default(),
+            root_node_id: Some("root".into()),
+            nodes: vec![
+                Node {
+                    id: "root".into(),
+                    kind: "Piece".into(),
+                    name: "core".into(),
+                    x: 0.0,
+                    y: 0.0,
+                    width: 80.0,
+                    height: 40.0,
+                    properties: {
+                        let mut p = PropertyBag::new();
+                        let mut pos = BTreeMap::new();
+                        pos.insert("x".into(), PropertyValue::Number(0.0));
+                        pos.insert("y".into(), PropertyValue::Number(0.0));
+                        pos.insert("z".into(), PropertyValue::Number(0.0));
+                        p.insert("position".into(), PropertyValue::Object(pos));
+                        p
+                    },
+                    ports: vec![Port { id: "out-a".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
+                },
+                Node {
+                    id: "child".into(),
+                    kind: "Piece".into(),
+                    name: "capsule".into(),
+                    x: 120.0,
+                    y: 0.0,
+                    width: 80.0,
+                    height: 40.0,
+                    properties: PropertyBag::new(),
+                    ports: vec![Port { id: "in-a".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
+                },
+            ],
+            edges: vec![Edge {
+                id: "e1".into(),
+                kind: "Connection".into(),
+                source: "root@out-a".into(),
+                target: "child@in-a".into(),
+                properties: {
+                    let mut p = PropertyBag::new();
+                    p.insert("u".into(), PropertyValue::Number(1.2));
+                    p.insert("v".into(), PropertyValue::Number(-0.6));
+                    p
+                },
+            }],
+        };
+        store::test_support::assert_dsl_round_trip(&fixture);
+        store::test_support::assert_dsl_pack_equivalence(&fixture);
     }
 }
 //#endregion 🧪️Tests

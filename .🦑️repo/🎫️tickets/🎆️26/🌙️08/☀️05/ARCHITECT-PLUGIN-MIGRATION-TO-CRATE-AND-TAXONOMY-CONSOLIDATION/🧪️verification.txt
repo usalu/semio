@@ -1,0 +1,48 @@
+🏛️ARCHITECT PLUGIN MIGRATION — VERIFICATION LOG
+(all cargo commands run via `--manifest-path` against the temporary [workspace] overlay described in
+TEMPLATE.md §3, since the root workspace was concurrently red from other sessions' in-flight migrations;
+overlay + nested target/ + Cargo.lock removed at handoff)
+
+BASELINE (pre-migration)
+  semio-s-plugin-architect-spine-module (🦴️spine, 18,468 lines) .... 182 tests pass
+  semio-s-plugin-architect-spine (🛂️manifest bundle, 2,208 lines) ... DOES NOT COMPILE at HEAD —
+      26 × "mismatched closing delimiter", the systemic TEMPLATE §12.3 broken-`Ok(` corruption
+      (`Ok(Emit::config(snapshot(next))` etc. missing their closing paren) in `handle()`'s match arms.
+      Its 11 tests could therefore never run. Forward-fixed as part of the port.
+  7 constitutional facade crates (app/op/dsl/pack/protocol/ui/engine): 5–17 lines each, pure
+      `pub use` re-exports, zero tests.
+  BASELINE FLOOR = 182 + 11 = 193
+
+AFTER (semio-s-plugin-architect)
+  1. cargo check (native) ............................. Finished, zero architect warnings
+  2. cargo check --target wasm32-wasip2 ............... Finished (8m02s), zero architect warnings
+  3. cargo clippy --all-targets -- -D warnings ........ Finished, zero architect findings
+  4. cargo test ....................................... 250 passed; 0 failed  (floor 193, +57)
+  4b. wire-format diff ................................ IDENTICAL (see 🧪️wire-baseline-before.txt vs
+      🧪️wire-after.txt) — 26 ArchitectCommand rows (all 22 variants + the Option/bool None|Some pairs)
+      and 5 ProgramOperation rows, printed DSL text + byte length + full hex, byte-for-byte equal.
+  4c. taxonomy audit .................................. clean (🔍️taxonomy-audit.ts, Shape V2 contract)
+  5. old crates deleted ............................... 9 crates (🛂️manifest, 🔨️modules/🦴️spine,
+      🎛️apps/🏛️architect/⚡️implementations, 🎛️apps/🏛️architect/🔨️modules/{⚙️engine,🗣️dsl,🔧️op,
+      🎒️pack,📡️protocol,🖱️ui})
+  6. cargo build --target wasm32-wasip2 --profile wasm-release ....
+      real component produced: semio_s_plugin_architect.wasm, 9,702,559 bytes (12m29s)
+     bunx @bytecodealliance/jco transpile ... --map "semio:framework/host=./🟨️host-shim.js" ....
+      OK — architect_component.js + architect_component.core.wasm + interfaces/ emitted
+      (run on the pre-Shape-V2 file layout; the V2 retrofit is pure file relocation + #[path] rewiring
+       and step 2 above was re-run green afterwards)
+
+SHAPE V2 RETROFIT (ticket 26/08/05/SHAPE-V2-TREE-PURITY-BROADCAST, applied mid-flight)
+  entry file .......... 📦️lib.rs moved plugin-root -> 📦️packages/🦀️rust/📦️lib.rs
+                        [lib] path "../../📦️lib.rs" -> "📦️lib.rs"
+                        43 leaf #[path] strings prefixed with ../../ ; all 11 grouping
+                        #[path = "."] resets left UNPREFIXED (per the corrected rule — prefixing
+                        them breaks composition past one nesting level)
+  sibling variants .... 15 files folded into their own <emoji-folder>/🦀️component.rs (see report)
+  data / docs ......... 📚️examples/ and AGENTS.md were already at the plugin root — no move needed,
+                        no AGENTS.md/README.md collision
+  post-retrofit test .. 250 passed; 0 failed (exact match, zero drift)
+  tree purity ......... the only non-🦀️component.rs files below the plugin root are AGENTS.md and
+                        📚️examples/🏛️sample-clinic.architect, both at the root; 📦️packages holds
+                        only Cargo.toml / 📋️project.json / 📜️script.ts / 📦️lib.rs
+  43 🦀️component.rs files on disk == 43 leaf #[path] declarations in the entry (no dangles, no orphans)

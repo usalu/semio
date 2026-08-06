@@ -1,0 +1,14 @@
+{
+  "title": "Shape V2 Tree Purity Broadcast",
+  "emoji": "🌳️",
+  "status": "closed",
+  "description": "Broadcast the Shape V2 amendment (user directive) to the shared taxonomy vocabulary, TEMPLATE.md, and master.md: inside every owner's domain tree, only component.\u0026lt;ext\u0026gt; files, the 📦️packages folder, and \u0026lt;component\u0026gt; folders may exist. No 📦️lib.rs/📦️index.tsx at owner root (entry file moves into 📦️packages/\u0026lt;lang\u0026gt;/), no sibling variant files (🦀️config.rs, 🦀️terminology.rs, 🦀️wasm.rs, topic files) — each folds into its own \u0026lt;folder\u0026gt;/component.\u0026lt;ext\u0026gt;. Data (📚️examples, 🧫️fixtures, 🛂️manifest.json, 🤖️generated) and docs (AGENTS.md, README.md) relocate to the owner root. Update 🔣️taxonomy.json additively (new fields only, do not disturb the existing 🎯️targets/🧱️elements axis from the concurrent UI-ELEMENT-CO-LOCATION-RESTRUCTURE ticket), TEMPLATE.md (new normative shape + retrofit recipe section), and 📋️master.md (prominent notice for the concurrent session).",
+  "summary": "Broadcast the Shape V2 tree-purity amendment across the three shared coordination surfaces: (1) 🔣️taxonomy.json gained additive fields (entryLocation, rootDataDirNames, rootDataFileNames, rootDocFileNames, _treePurityComment) documenting the machine-readable contract without disturbing the concurrent UI-ELEMENT-CO-LOCATION-RESTRUCTURE ticket's targets/elements axis; (2) TEMPLATE.md gained a lead-section summary of the shape change plus a new §14 retrofit recipe for bringing already-V1-migrated plugins into compliance; (3) master.md gained a prominent top-of-file notice for the concurrent session. Also applied one incidental registrar fix along the way (📜️imperative's dangling root Cargo.toml member, its old 8 core crates were already deleted on disk).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2483"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪6a0a4296635549f18269e94cc6bd6edf"
+  ]
+}

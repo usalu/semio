@@ -1721,7 +1721,7 @@ if (import.meta.vitest) {
   const repoRoot = resolve(fileURLToPath(new URL(".", import.meta.url)), "../../../../../..");
 
   describe("playgroundFlowWasmDevStubPlugin", () => {
-    const importer = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx");
+    const importer = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx");
     const plugin = playgroundFlowWasmDevStubPlugin(repoRoot);
     const resolveId = plugin.resolveId as (id: string, importer: string) => string | undefined;
 

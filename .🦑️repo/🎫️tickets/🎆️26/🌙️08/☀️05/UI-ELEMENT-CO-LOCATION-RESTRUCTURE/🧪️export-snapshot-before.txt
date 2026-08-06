@@ -1,4 +1,4 @@
-# 1186 unique export symbols, 1094 export statements, 1189 symbol occurrences
+# 1186 unique export symbols, 1088 export statements, 1189 symbol occurrences
 ANCHORS
 Accordion
 AccordionContent

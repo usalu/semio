@@ -4,7 +4,7 @@
 //! component adds the media I/O declaration, the chapter-import payload shape, and the block-shell
 //! builder — every doc-pure helper with more than one consumer across the app's taxonomy tree (a helper
 //! with exactly one consumer lives in that consumer's component file). `PlaybookConfig` (view state, not
-//! document state) does NOT live here — see `🎛️apps/📖️playbook/🦀️config.rs`.
+//! document state) does NOT live here — see `🎛️apps/📖️playbook/🎚️config/🦀️component.rs`.
 
 use crate::artifacts::playbook::PLAYBOOK_DOCUMENT_SCHEMA;
 use serde::{Deserialize, Serialize};

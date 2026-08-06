@@ -1,0 +1,15 @@
+Batch: tui — List (new dir), Tabs (existing dir, wired), Input (existing dir, wired)
+Functions extracted from ui-tui/📦️lib.rs `pub mod widget { }` (all 6 were in `widget`, none in `chrome`):
+  list_on_key, paint_list   -> 🧱️elements/List/⌨️component.rs (new element dir)
+  tabs_on_key, paint_tabs   -> 🧱️elements/Tabs/⌨️component.rs (new file in existing dir)
+  input_on_key, paint_input -> 🧱️elements/Input/⌨️component.rs (new file in existing dir)
+
+Wiring: crate-root #[path] mod declarations added immediately before `pub mod widget {`
+(alongside the pre-existing `mod select;`), no #[cfg] attr present on widget mod to duplicate.
+`use crate::{list,tabs,input}::{...}` added to widget's own top use block.
+
+Verification:
+  DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo check -p semio-framework-ui-tui        -> PASS, 0 warnings
+  DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo check -p semio-framework-ui-tui --tests -> PASS, only 3 PRE-EXISTING
+    "unnecessary qualification" warnings unrelated to this batch (crate::cell::DiffRun,
+    crate::event::KeyEvent at lines ~2900/2960/2971, untouched by this extraction).

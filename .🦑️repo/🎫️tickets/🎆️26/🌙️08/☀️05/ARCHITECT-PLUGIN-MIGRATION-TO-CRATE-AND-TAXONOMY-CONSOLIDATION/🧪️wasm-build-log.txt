@@ -1,0 +1,6 @@
+     |
+
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+   Compiling semio-s-plugin-architect v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust)
+    Finished `wasm-release` profile [optimized] target(s) in 12m 29s
+-rw-r--r--@ 1 ueli  staff  9702559 Aug  6 00:08 ✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/target/wasm32-wasip2/wasm-release/semio_s_plugin_architect.wasm

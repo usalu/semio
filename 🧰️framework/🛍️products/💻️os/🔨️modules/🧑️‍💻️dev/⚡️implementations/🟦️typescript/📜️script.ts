@@ -1545,9 +1545,9 @@ class DevScript extends BundleScript {
           process.exit(1);
         }
       }
-      const wgpuScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementations/🦀️rust/📜️script.ts");
+      const wgpuScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts");
       const serveStatus = runCmdStatus("bun", [wgpuScript, "serve"], {
-        cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementations/🦀️rust"),
+        cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu"),
         env: {
           ...process.env,
           SEMIO_PLUGIN: plugin,
@@ -1600,7 +1600,7 @@ class BuildScript extends BundleScript {
     await new PluginBuildScript(this.root).run([plugin]);
     const renderer = process.env.SEMIO_RENDERER ?? "react";
     if (renderer === "wgpu" && process.env.SKIP_WGPU_BUILD !== "1") {
-      const wgpuScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementations/🦀️rust/📜️script.ts");
+      const wgpuScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts");
       if (runCmdStatus("bun", [wgpuScript, "wasm", "--release"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("wgpu trunk build failed");
       return;
     }
@@ -1956,7 +1956,7 @@ class VerifyScript extends BundleScript {
       const packageName = await readPackageName(target.cratePath);
       if (runCmdStatus("cargo", ["test", "--lib", "-p", packageName], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error(`${packageName} tests failed`);
     }
-    if (runBunxStatus(["vitest", "run"], join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript")) !== 0) throw new Error("framework-renderer-react tests failed");
+    if (runBunxStatus(["vitest", "run"], join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react")) !== 0) throw new Error("framework-renderer-react tests failed");
     await runStudioE2eVerify(studioUrl, timeoutMs);
     await new PluginCapabilityLintScript(this.root).run([]);
     console.log(`[DEBUG] s studio verify passed (${studioUrl})`);

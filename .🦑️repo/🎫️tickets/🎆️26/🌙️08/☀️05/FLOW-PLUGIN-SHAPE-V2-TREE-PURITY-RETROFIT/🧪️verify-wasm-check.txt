@@ -1,0 +1,6 @@
+     |
+
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+    Checking semio-s-plugin-flow v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 13m 05s
+EXIT=0

@@ -1,9 +1,8 @@
-//! 📜️ Remodel app — textual document grammar surface + laws (constitutional: dsl).
+//! 📜️ Remodel artifact — the textual document grammar surface (`dsl`) and its laws.
 //!
-//! 🔀️ Deviation from the constitutional-split template: unlike `note`/`imperative`, remodel has no
-//! handcrafted `.remodel` example fixture file under `s/plugin/remodel/example/` — the app's single
-//! "default" example is generated at runtime from `default_remodel_scene().print_dsl()` (see
-//! `remodel_ui::create_remodel_app`), so there is no `REMODEL_EXAMPLE_TEXT` constant to export here.
+//! 🔀️ Deviation from every sibling plugin: remodel ships no handcrafted `.remodel` example fixture
+//! file, so there is no `REMODEL_EXAMPLE_TEXT` constant here — its single "default" example is
+//! generated at runtime from `default_remodel_scene().print_dsl()` (see `create_remodel_app`).
 
 use crate::artifacts::remodel::RemodelScene;
 

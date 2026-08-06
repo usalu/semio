@@ -12,7 +12,13 @@ pub const REMODEL_PLAY_BODY_CALIBRATION: &str = "remodel.play.calibration";
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(REMODEL_PANEL_CALIBRATION_ID.into()), label: LocalizedLabel::native("Calibration", "Kalibrierung"), group: PanelGroup::Details, body_key: Some(REMODEL_PLAY_BODY_CALIBRATION.into()), children: Vec::new() }
+    PanelTabDefinition {
+        kind: PanelTabKind::App(REMODEL_PANEL_CALIBRATION_ID.into()),
+        label: LocalizedLabel::native("Calibration", "Kalibrierung"),
+        group: PanelGroup::Details,
+        body_key: Some(REMODEL_PLAY_BODY_CALIBRATION.into()),
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 

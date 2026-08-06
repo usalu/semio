@@ -1,0 +1,25 @@
+########## cargo check (native)
+    Finished `dev` profile [unoptimized] target(s) in 0.84s
+########## cargo check --target wasm32-wasip2
+    Finished `dev` profile [unoptimized] target(s) in 0.49s
+########## cargo clippy --all-targets -- -D warnings
+    Finished `dev` profile [unoptimized] target(s) in 0.54s
+########## cargo test --lib
+     Running unittests 📦️lib.rs (✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/target/debug/deps/semio_s_plugin_demonstrator-2db98c31c293df58)
+
+running 6 tests
+test panes::bearbeiten::tests::document_from_mesh_always_refuses ... ok
+test panes::bearbeiten::tests::mesh_from_document_rejects_a_non_document_payload ... ok
+test panes::bearbeiten::tests::mesh_from_document_replays_a_default_document ... ok
+test panes::component::tests::every_pane_declares_a_document_schema ... ok
+test panes::component::tests::bundle_keeps_its_plugin_identity ... ok
+test panes::component::tests::bundle_registers_the_six_demonstrator_panes ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+
+########## cargo build --target wasm32-wasip2 --profile wasm-release (BLOCKED, see findings)
+          rust-lld: error: duplicate symbol: semio_plugin_bundle_installer_link_shim
+          rust-lld: error: duplicate symbol: semio_plugin_install_bundle
+  = note: rust-lld: error: duplicate symbol: semio_plugin_bundle_installer_link_shim
+error: could not compile `semio-s-plugin-demonstrator` (lib) due to 1 previous error
+error: linking with `wasm-component-ld` failed: exit status: 1

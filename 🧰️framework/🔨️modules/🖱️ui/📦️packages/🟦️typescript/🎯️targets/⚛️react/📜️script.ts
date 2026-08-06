@@ -193,7 +193,7 @@ export const CHROME_I18N_ALLOWLIST: readonly string[] = [];
  * the scan the way the old hardcoded two-file list did. */
 const CHROME_I18N_SCANNED_ROOTS = [
   "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react",
   "♻️mit-bestand/🧺️demonstrator",
   "compose/client/lib/sketchpad",
 ] as const;

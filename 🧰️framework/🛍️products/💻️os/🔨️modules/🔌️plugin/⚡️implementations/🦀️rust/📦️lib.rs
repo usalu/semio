@@ -1538,11 +1538,16 @@ pub mod app {
             // 🗿️ A plugin already migrated to the one-crate-per-plugin taxonomy (master ticket
             // `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`) has no per-slot crates left
             // to find — its slots are `🦀️component.rs` files under `🗿️artifacts/<a>/`. Detected by the same
-            // marker the registry's discovery contract uses (a plugin-root `📦️lib.rs` beside `🗿️artifacts/`)
-            // and checked against the taxonomy shape instead. Mirrors the registry's `LEGACY_LAYOUT_TOLERANT`
-            // flag: both shapes pass while the migration is in flight.
+            // marker the registry's discovery contract uses and checked against the taxonomy shape instead.
+            // Mirrors the registry's `LEGACY_LAYOUT_TOLERANT` flag: both shapes pass while the migration is
+            // in flight. Two entry-file locations are both accepted here (ticket
+            // `26/08/05/SHAPE-V2-TREE-PURITY-BROADCAST`): the pre-V2 owner-root `📦️lib.rs` beside
+            // `🗿️artifacts/`, and the V2 shape's `📦️packages/🦀️rust/📦️lib.rs` (entry file relocated inside
+            // packages; owner root no longer carries it). A plugin can be in either shape depending on
+            // whether its retrofit pass has landed yet.
             if let Some(plugin_root) = app_root.parent() {
-                if plugin_root.join("📦️lib.rs").is_file() && plugin_root.join("🗿️artifacts").is_dir() {
+                let has_entry_file = plugin_root.join("📦️lib.rs").is_file() || plugin_root.join("📦️packages").join("🦀️rust").join("📦️lib.rs").is_file();
+                if has_entry_file && plugin_root.join("🗿️artifacts").is_dir() {
                     assert_taxonomy_components(plugin_root, &app_root);
                     return;
                 }

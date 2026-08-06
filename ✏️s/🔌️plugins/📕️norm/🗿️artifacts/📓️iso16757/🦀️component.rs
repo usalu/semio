@@ -150,7 +150,7 @@ impl Cardinality {
     }
 
     pub fn satisfies(&self, count: u32) -> bool {
-        count >= self.min && self.max.map_or(true, |max| count <= max)
+        count >= self.min && self.max.is_none_or(|max| count <= max)
     }
 }
 
@@ -939,6 +939,15 @@ impl Document {
 }
 // #endregion Session
 
+//#region 🔖️ArtifactKind
+/// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port —
+/// lifted out of the pre-migration manifest's inline `.artifact_kind(ArtifactKindSpec { .. })` so the
+/// artifact node, not the app, owns its own kind declaration.
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    crate::core::app::artifact_kind_spec("iso16757", "ISO 16757")
+}
+//#endregion 🔖️ArtifactKind
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -990,11 +999,3 @@ mod tests {
     }
 }
 
-//#region 🔖️ArtifactKind
-/// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port —
-/// lifted out of the pre-migration manifest's inline `.artifact_kind(ArtifactKindSpec { .. })` so the
-/// artifact node, not the app, owns its own kind declaration.
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    crate::core::app::artifact_kind_spec("iso16757", "ISO 16757")
-}
-//#endregion 🔖️ArtifactKind

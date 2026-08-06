@@ -1,0 +1,535 @@
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3273:68
+     |
+3273 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3273 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3273 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo clippy --fix --lib -p semio-framework-plugin -- -D warnings` to apply 1 suggestion)
+    Checking semio-s-plugin-norm v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust)
+error: struct update has no effect, all the fields in the struct have already been specified
+  --> ../.././🫀️core/🦀️config.rs:61:114
+   |
+61 |             NormConfigOperation::SetSelectedCheckIndex { index } => NormConfig { selected_check_index: *index, ..base.clone() },
+   |                                                                                                                  ^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_update
+   = note: `-D clippy::needless-update` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(clippy::needless_update)]`
+
+error: this function has too many arguments (18/7)
+   --> ../../././🗿️artifacts/📕️din4108/⚙️engine/🦀️component.rs:646:1
+    |
+646 | / pub fn check_full_envelope(
+647 | |     category: part_2::BuildingCategory,
+648 | |     layers: &[part_2::Layer],
+649 | |     climate: ClimateZoneDe,
+...   |
+664 | |     declared_application_class: &str,
+665 | | ) -> Result<CheckReport, NormError> {
+    | |___________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#too_many_arguments
+    = note: `-D clippy::too-many-arguments` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::too_many_arguments)]`
+
+error: this function has too many arguments (8/7)
+   --> ../../././🗿️artifacts/📗️din16798/⚙️engine/🦀️component.rs:553:5
+    |
+553 |     pub fn check_cooling_energy_need(h_tr_w_k: f64, h_ve_w_k: f64, theta_e_c: f64, theta_set_c: f64, delta_t_h: f64, gains_kwh: f64, utilization_factor: f64, reference_kwh: f64) -> CheckResult {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#too_many_arguments
+
+error: this function has too many arguments (10/7)
+   --> ../../././🗿️artifacts/📘️en1992/⚙️engine/🦀️component.rs:390:1
+    |
+390 | pub fn check_rc_beam(m_ed_knm: f64, v_ed_kn: f64, f_ck: f64, b_mm: f64, d_mm: f64, a_s_mm2: f64, f_yk: f64, rho_l: f64, n_ed_kn: f64, annex: AnnexChoice) -> CheckReport {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#too_many_arguments
+
+error: this function has too many arguments (12/7)
+   --> ../../././🗿️artifacts/📘️en1992/⚙️engine/🦀️component.rs:400:1
+    |
+400 | pub fn check_full_rc_beam(m_ed_knm: f64, v_ed_kn: f64, f_ck: f64, b_mm: f64, d_mm: f64, a_s_mm2: f64, f_yk: f64, rho_l: f64, n_ed_kn: f64, p_kn: f64, a_c_mm2: f64, annex: AnnexChoice) -> CheckReport {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#too_many_arguments
+
+error: this function has too many arguments (9/7)
+   --> ../../././🗿️artifacts/📘️en1992/⚙️engine/🦀️component.rs:427:1
+    |
+427 | pub fn check_rc_beam_from_fem(span_m: f64, udl_kn_m: f64, f_ck: f64, b_mm: f64, d_mm: f64, a_s_mm2: f64, f_yk: f64, rho_l: f64, annex: AnnexChoice) -> Result<CheckReport, fem_core::FemError> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#too_many_arguments
+
+error: this `impl` can be derived
+  --> ../../././🗿️artifacts/📘️en1996/🦀️component.rs:29:1
+   |
+29 | / impl Default for MasonryClass {
+30 | |     fn default() -> Self {
+31 | |         Self::Class3
+32 | |     }
+33 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#derivable_impls
+   = note: `-D clippy::derivable-impls` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(clippy::derivable_impls)]`
+help: replace the manual implementation with a derive attribute and mark the default variant
+   |
+ 9 + #[derive(Default)]
+10 | pub enum MasonryClass {
+11 |     Class1,
+12 |     Class2,
+13 ~     #[default]
+14 ~     Class3,
+   |
+
+error: this function has too many arguments (8/7)
+   --> ../../././🗿️artifacts/📘️en1996/⚙️engine/🦀️component.rs:205:5
+    |
+205 |     pub fn check_simplified_compression(n_ed_kn: f64, phi_s: f64, f_d_mpa: f64, area_mm2: f64, storeys: u32, h_ef_mm: f64, t_ef_mm: f64, annex: AnnexChoice) -> CheckResult {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#too_many_arguments
+
+error: returning the result of a `let` binding from a block
+  --> ../../././🗿️artifacts/📘️en1997/⚙️engine/🦀️component.rs:81:9
+   |
+80 |         let n_q = (std::f64::consts::PI * phi_rad.tan()).exp() * ((45.0 + 0.5 * phi_deg).to_radians().tan()).powi(2);
+   |         ------------------------------------------------------------------------------------------------------------- unnecessary `let` binding
+81 |         n_q
+   |         ^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#let_and_return
+   = note: `-D clippy::let-and-return` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(clippy::let_and_return)]`
+help: return the expression directly
+   |
+80 ~         
+81 ~         (std::f64::consts::PI * phi_rad.tan()).exp() * ((45.0 + 0.5 * phi_deg).to_radians().tan()).powi(2)
+   |
+
+error: this function has too many arguments (13/7)
+   --> ../../././🗿️artifacts/📘️en1997/⚙️engine/🦀️component.rs:226:1
+    |
+226 | / pub fn check_shallow_foundation(
+227 | |     v_ed_kn: f64,
+228 | |     h_ed_kn: f64,
+229 | |     footing_area_m2: f64,
+...   |
+239 | |     settlement_limit_mm: f64,
+240 | | ) -> CheckReport {
+    | |________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#too_many_arguments
+
+error: this function has too many arguments (22/7)
+   --> ../../././🗿️artifacts/📘️en1997/⚙️engine/🦀️component.rs:254:1
+    |
+254 | / pub fn check_full_geotechnical(
+255 | |     v_ed_kn: f64,
+256 | |     h_ed_kn: f64,
+257 | |     footing_area_m2: f64,
+...   |
+276 | |     z_investigated_m: f64,
+277 | | ) -> CheckReport {
+    | |________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#too_many_arguments
+
+error: this function has too many arguments (9/7)
+   --> ../../././🗿️artifacts/📘️en1998/⚙️engine/🦀️component.rs:511:1
+    |
+511 | pub fn check_building_seismic_with_annex(annex: AnnexParams, importance: part_1::ImportanceClass, system: part_1::StructuralSystem, t1_s: f64, mass_t: f64, v_rd_kn: f64, drift_mm: f64, height_m: f64, multiple_resisting_systems: bool) -> CheckReport {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#too_many_arguments
+
+error: this argument is passed by value, but not consumed in the function body
+   --> ../../././🗿️artifacts/📘️en1998/⚙️engine/🦀️component.rs:511:49
+    |
+511 | pub fn check_building_seismic_with_annex(annex: AnnexParams, importance: part_1::ImportanceClass, system: part_1::StructuralSystem,...
+    |                                                 ^^^^^^^^^^^
+    |
+help: or consider marking this type as `Copy`
+   --> ../../././🗿️artifacts/📘️en1998/⚙️engine/🦀️component.rs:224:1
+    |
+224 | pub enum AnnexParams {
+    | ^^^^^^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+    = note: `-D clippy::needless-pass-by-value` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::needless_pass_by_value)]`
+help: consider taking a reference instead
+    |
+511 | pub fn check_building_seismic_with_annex(annex: &AnnexParams, importance: part_1::ImportanceClass, system: part_1::StructuralSystem, t1_s: f64, mass_t: f64, v_rd_kn: f64, drift_mm: f64, height_m: f64, multiple_resisting_systems: bool) -> CheckReport {
+    |                                                 +
+
+error: this function has too many arguments (10/7)
+   --> ../../././🗿️artifacts/📘️en1998/⚙️engine/🦀️component.rs:527:1
+    |
+527 | / pub fn check_building_seismic(
+528 | |     zone: na_de::SeismicZone,
+529 | |     ground: na_de::GroundType,
+530 | |     importance: part_1::ImportanceClass,
+...   |
+537 | |     multiple_resisting_systems: bool,
+538 | | ) -> CheckReport {
+    | |________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#too_many_arguments
+
+error: this function has too many arguments (9/7)
+   --> ../../././🗿️artifacts/📘️en1999/⚙️engine/🦀️component.rs:292:1
+    |
+292 | pub fn check_aluminium_member(n_ed_kn: f64, m_ed_knm: f64, a_mm2: f64, w_el_mm3: f64, alloy: part_1_1::Alloy, chi: f64, i_t_mm4: f64, l_cr_mm: f64, annex: AnnexChoice) -> CheckReport {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#too_many_arguments
+
+error: this `map_or` can be simplified
+   --> ../../././🗿️artifacts/📓️iso16757/🦀️component.rs:153:30
+    |
+153 |         count >= self.min && self.max.map_or(true, |max| count <= max)
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#unnecessary_map_or
+    = note: `-D clippy::unnecessary-map-or` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::unnecessary_map_or)]`
+help: use `is_none_or` instead
+    |
+153 -         count >= self.min && self.max.map_or(true, |max| count <= max)
+153 +         count >= self.min && self.max.is_none_or(|max| count <= max)
+    |
+
+error: called `map(<f>).unwrap_or(<a>)` on an `Option` value
+   --> ../../././🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:194:17
+    |
+194 | ...   catalogue.objects.get(geometry_id).and_then(|obj| obj.shape.as_ref()).map(|shape| evaluate_bounding_box(shape, catalogue)).unwrap_or(Err(NormError::InvalidValue { field: "geometry_id".into(), reason: "unresolved reference".into() }))
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#map_unwrap_or
+    = note: `-D clippy::map-unwrap-or` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::map_unwrap_or)]`
+help: use `map_or(<a>, <f>)` instead
+    |
+194 -                 catalogue.objects.get(geometry_id).and_then(|obj| obj.shape.as_ref()).map(|shape| evaluate_bounding_box(shape, catalogue)).unwrap_or(Err(NormError::InvalidValue { field: "geometry_id".into(), reason: "unresolved reference".into() }))
+194 +                 catalogue.objects.get(geometry_id).and_then(|obj| obj.shape.as_ref()).map_or(Err(NormError::InvalidValue { field: "geometry_id".into(), reason: "unresolved reference".into() }), |shape| evaluate_bounding_box(shape, catalogue))
+    |
+
+error: this `if let` can be collapsed into the outer `if let`
+   --> ../../././🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:202:13
+    |
+202 | /             if let GeometryNode::Reference { geometry_id } = shape {
+203 | |                 if geometry_id == &object.id {
+204 | |                     issues.push(format!("self-reference in geometry {}", object.id));
+...   |
+211 | |                 visited.remove(geometry_id);
+212 | |             }
+    | |_____________^
+    |
+help: the outer pattern can be modified to include the inner pattern
+   --> ../../././🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:201:21
+    |
+201 |         if let Some(shape) = &object.shape {
+    |                     ^^^^^ replace this binding
+202 |             if let GeometryNode::Reference { geometry_id } = shape {
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ with this pattern
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#collapsible_match
+    = note: `-D clippy::collapsible-match` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::collapsible_match)]`
+
+error: this `if` statement can be collapsed
+   --> ../../././🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:285:13
+    |
+285 | /             if rel.kind == RelationshipKind::HasPart || rel.kind == RelationshipKind::HasBlock {
+286 | |                 if !rel.cardinality.satisfies(1) && rel.cardinality.min > 0 {
+287 | |                     issues.push(format!("relationship {} requires cardinality review", rel.id));
+288 | |                 }
+289 | |             }
+    | |_____________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#collapsible_if
+    = note: `-D clippy::collapsible-if` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::collapsible_if)]`
+help: collapse nested if block
+    |
+285 ~             if (rel.kind == RelationshipKind::HasPart || rel.kind == RelationshipKind::HasBlock) {
+286 ~                 && !rel.cardinality.satisfies(1) && rel.cardinality.min > 0 {
+287 |                     issues.push(format!("relationship {} requires cardinality review", rel.id));
+288 ~                 }
+    |
+
+error: field assignment outside of initializer for an instance created with Default::default()
+  --> ../../././🗿️artifacts/📕️din4108/📡️spr/🦀️component.rs:35:9
+   |
+35 |         next.airtightness_n50 = 1.2;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+note: consider initializing the variable with `artifacts::din4108::component::Document { airtightness_n50: 1.2, ..Default::default() }` and removing relevant reassignments
+  --> ../../././🗿️artifacts/📕️din4108/📡️spr/🦀️component.rs:34:9
+   |
+34 |         let mut next = Document::default();
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#field_reassign_with_default
+   = note: `-D clippy::field-reassign-with-default` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(clippy::field_reassign_with_default)]`
+
+error: used `cloned` where `copied` could be used instead
+   --> ../../././🗿️artifacts/📔️vdi3805/🦀️component.rs:513:111
+    |
+513 |         let sheets: Vec<SheetEntry> = SHEET_ENTRIES.iter().filter(|s| filter.map_or(true, |f| s.status == f)).cloned().collect();
+    |                                                                                                               ^^^^^^ help: try: `copied`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#cloned_instead_of_copied
+    = note: `-D clippy::cloned-instead-of-copied` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::cloned_instead_of_copied)]`
+
+error: this `map_or` can be simplified
+   --> ../../././🗿️artifacts/📔️vdi3805/🦀️component.rs:513:71
+    |
+513 |         let sheets: Vec<SheetEntry> = SHEET_ENTRIES.iter().filter(|s| filter.map_or(true, |f| s.status == f)).cloned().collect();
+    |                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#unnecessary_map_or
+help: use `is_none_or` instead
+    |
+513 -         let sheets: Vec<SheetEntry> = SHEET_ENTRIES.iter().filter(|s| filter.map_or(true, |f| s.status == f)).cloned().collect();
+513 +         let sheets: Vec<SheetEntry> = SHEET_ENTRIES.iter().filter(|s| filter.is_none_or(|f| s.status == f)).cloned().collect();
+    |
+
+error: field assignment outside of initializer for an instance created with Default::default()
+  --> ../../././🗿️artifacts/📘️en1990/📡️spr/🦀️component.rs:32:9
+   |
+32 |         next.g_k = 120.0;
+   |         ^^^^^^^^^^^^^^^^^
+   |
+note: consider initializing the variable with `artifacts::en1990::component::Document { g_k: 120.0, ..Default::default() }` and removing relevant reassignments
+  --> ../../././🗿️artifacts/📘️en1990/📡️spr/🦀️component.rs:31:9
+   |
+31 |         let mut next = Document::default();
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#field_reassign_with_default
+
+error: field assignment outside of initializer for an instance created with Default::default()
+  --> ../../././🗿️artifacts/📘️en1991/📡️spr/🦀️component.rs:32:9
+   |
+32 |         next.area_m2 = 80.0;
+   |         ^^^^^^^^^^^^^^^^^^^^
+   |
+note: consider initializing the variable with `artifacts::en1991::component::Document { area_m2: 80.0, ..Default::default() }` and removing relevant reassignments
+  --> ../../././🗿️artifacts/📘️en1991/📡️spr/🦀️component.rs:31:9
+   |
+31 |         let mut next = Document::default();
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#field_reassign_with_default
+
+error: field assignment outside of initializer for an instance created with Default::default()
+   --> ../../././🗿️artifacts/📘️en1991/⚙️engine/🦀️component.rs:611:9
+    |
+611 |         doc.snow_altitude_m = 400.0;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+note: consider initializing the variable with `artifacts::en1991::component::Document { snow_altitude_m: 400.0, annex: AnnexChoice::De, ..Default::default() }` and removing relevant reassignments
+   --> ../../././🗿️artifacts/📘️en1991/⚙️engine/🦀️component.rs:610:9
+    |
+610 |         let mut doc = Document::default();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#field_reassign_with_default
+
+error: the borrowed expression implements the required traits
+   --> ../../././🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:116:43
+    |
+116 |             issues.push(Diagnostic::error(&format!("product.{}", product.sheet.0), "missing article number"));
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: change this to: `format!("product.{}", product.sheet.0)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_borrows_for_generic_args
+    = note: `-D clippy::needless-borrows-for-generic-args` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::needless_borrows_for_generic_args)]`
+
+error: the borrowed expression implements the required traits
+   --> ../../././🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:119:45
+    |
+119 |             issues.push(Diagnostic::warning(&format!("configuration.{}", product.sheet.0), "missing configuration id"));
+    |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: change this to: `format!("configuration.{}", product.sheet.0)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_borrows_for_generic_args
+
+error: the borrowed expression implements the required traits
+   --> ../../././🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:126:46
+    |
+126 |                 issues.push(Diagnostic::info(&format!("record.{}", record.family.0), "unknown record family preserved"));
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: change this to: `format!("record.{}", record.family.0)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_borrows_for_generic_args
+
+error: field assignment outside of initializer for an instance created with Default::default()
+  --> ../../././🗿️artifacts/📘️en1992/📡️spr/🦀️component.rs:32:9
+   |
+32 |         next.m_ed_knm = 200.0;
+   |         ^^^^^^^^^^^^^^^^^^^^^^
+   |
+note: consider initializing the variable with `artifacts::en1992::component::Document { m_ed_knm: 200.0, ..Default::default() }` and removing relevant reassignments
+  --> ../../././🗿️artifacts/📘️en1992/📡️spr/🦀️component.rs:31:9
+   |
+31 |         let mut next = Document::default();
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#field_reassign_with_default
+
+error: field assignment outside of initializer for an instance created with Default::default()
+   --> ../../././🗿️artifacts/📘️en1992/⚙️engine/🦀️component.rs:563:9
+    |
+563 |         doc.use_fem = true;
+    |         ^^^^^^^^^^^^^^^^^^^
+    |
+note: consider initializing the variable with `artifacts::en1992::component::Document { use_fem: true, ..Default::default() }` and removing relevant reassignments
+   --> ../../././🗿️artifacts/📘️en1992/⚙️engine/🦀️component.rs:562:9
+    |
+562 |         let mut doc = Document::default();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#field_reassign_with_default
+
+error: field assignment outside of initializer for an instance created with Default::default()
+   --> ../../././🗿️artifacts/📘️en1992/⚙️engine/🦀️component.rs:573:9
+    |
+573 |         doc.p_kn = 800.0;
+    |         ^^^^^^^^^^^^^^^^^
+    |
+note: consider initializing the variable with `artifacts::en1992::component::Document { p_kn: 800.0, ..Default::default() }` and removing relevant reassignments
+   --> ../../././🗿️artifacts/📘️en1992/⚙️engine/🦀️component.rs:572:9
+    |
+572 |         let mut doc = Document::default();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#field_reassign_with_default
+
+error: field assignment outside of initializer for an instance created with Default::default()
+  --> ../../././🗿️artifacts/📘️en1993/📡️spr/🦀️component.rs:32:9
+   |
+32 |         next.n_ed_kn = 600.0;
+   |         ^^^^^^^^^^^^^^^^^^^^^
+   |
+note: consider initializing the variable with `artifacts::en1993::component::Document { n_ed_kn: 600.0, ..Default::default() }` and removing relevant reassignments
+  --> ../../././🗿️artifacts/📘️en1993/📡️spr/🦀️component.rs:31:9
+   |
+31 |         let mut next = Document::default();
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#field_reassign_with_default
+
+error: manual `RangeInclusive::contains` implementation
+   --> ../../././🗿️artifacts/📘️en1993/⚙️engine/🦀️component.rs:946:17
+    |
+946 |         assert!(class >= 1 && class <= 4);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^ help: use: `(1..=4).contains(&class)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_range_contains
+    = note: `-D clippy::manual-range-contains` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::manual_range_contains)]`
+
+error: manual `RangeInclusive::contains` implementation
+    --> ../../././🗿️artifacts/📘️en1993/⚙️engine/🦀️component.rs:1023:17
+     |
+1023 |         assert!(class >= 1 && class <= 4);
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^ help: use: `(1..=4).contains(&class)`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_range_contains
+
+error: manual `Range::contains` implementation
+   --> ../../././🗿️artifacts/📘️en1995/⚙️engine/🦀️component.rs:481:17
+    |
+481 |         assert!(k_fat < 1.0 && k_fat >= 0.5);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: use: `(0.5..1.0).contains(&k_fat)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_range_contains
+
+error: field assignment outside of initializer for an instance created with Default::default()
+   --> ../../././🗿️artifacts/📘️en1998/⚙️engine/🦀️component.rs:812:9
+    |
+812 |         document.annex = "en".into();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+note: consider initializing the variable with `artifacts::en1998::component::Document { annex: "en".into(), ..Default::default() }` and removing relevant reassignments
+   --> ../../././🗿️artifacts/📘️en1998/⚙️engine/🦀️component.rs:811:9
+    |
+811 |         let mut document = Document::default();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#field_reassign_with_default
+
+error: items after a test module
+   --> ../../././🗿️artifacts/📓️iso16757/🦀️component.rs:943:1
+    |
+943 | mod tests {
+    | ^^^^^^^^^
+...
+997 | pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#items_after_test_module
+    = note: `-D clippy::items-after-test-module` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::items_after_test_module)]`
+    = help: move the items to before the test module was defined
+
+error: could not compile `semio-s-plugin-norm` (lib) due to 24 previous errors
+warning: build failed, waiting for other jobs to finish...
+error: redundant clone
+    --> ../../././🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1088:90
+     |
+1088 |         let rule = crate::artifacts::iso16757::part_5::PartNumberRule::Table { rows: rows.clone(), output_column: "code".into() };
+     |                                                                                          ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../././🗿️artifacts/📓️iso16757/⚙️engine/🦀️component.rs:1088:86
+     |
+1088 |         let rule = crate::artifacts::iso16757::part_5::PartNumberRule::Table { rows: rows.clone(), output_column: "code".into() };
+     |                                                                                      ^^^^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+     = note: `-D clippy::redundant-clone` implied by `-D warnings`
+     = help: to override `-D warnings` add `#[allow(clippy::redundant_clone)]`
+
+error: items after a test module
+    --> ../../././🗿️artifacts/📔️vdi3805/🦀️component.rs:1111:1
+     |
+1111 | mod tests {
+     | ^^^^^^^^^
+...
+1262 | pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#items_after_test_module
+     = help: move the items to before the test module was defined
+
+error: field assignment outside of initializer for an instance created with Default::default()
+   --> ../../././🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:727:9
+    |
+727 |         doc.strict_mode = true;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+note: consider initializing the variable with `artifacts::vdi3805::component::Document { strict_mode: true, ..Default::default() }` and removing relevant reassignments
+   --> ../../././🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:726:9
+    |
+726 |         let mut doc = Document::default();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#field_reassign_with_default
+
+error: field assignment outside of initializer for an instance created with Default::default()
+   --> ../../././🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:746:9
+    |
+746 |         doc.strict_mode = true;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+note: consider initializing the variable with `artifacts::vdi3805::component::Document { strict_mode: true, ..Default::default() }` and removing relevant reassignments
+   --> ../../././🗿️artifacts/📔️vdi3805/⚙️engine/🦀️component.rs:745:9
+    |
+745 |         let mut doc = Document::default();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#field_reassign_with_default
+
+error: could not compile `semio-s-plugin-norm` (lib test) due to 41 previous errors

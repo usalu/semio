@@ -1,4 +1,3 @@
-
 [package]
 name = "semio-s-plugin-space"
 version.workspace = true
@@ -23,7 +22,7 @@ ports = { react = 6070, wgpu = 6066 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "../../📦️lib.rs"
+path = "📦️lib.rs"
 
 [dependencies]
 dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }

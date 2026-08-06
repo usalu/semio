@@ -6,7 +6,7 @@
 //! `DocumentApp::handle`.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
-//! `🎭️modes/✏️edit/🪟️windows/*`, view state in `🦀️config.rs`, shared compute in the artifact's `⚙️engine`.
+//! `🎭️modes/✏️edit/🪟️windows/*`, view state in `🎚️config/🦀️component.rs`, shared compute in the artifact's `⚙️engine`.
 //! This file is a routing table: `handle` → `MathCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 

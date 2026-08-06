@@ -7,6 +7,7 @@ use crate::artifacts::jack::GraphFixture;
 use crate::core;
 use semio_framework_plugin::{Emit, Fault};
 use serde_json::json;
+use store::DocumentDsl;
 
 /// 🔎️ Runs a jack query against the fixture, returning `(result_json, forward operations)`; a parse/execute
 /// failure yields an error result and no operations (no document mutation).
@@ -30,7 +31,7 @@ fn error_result_json(message: &str) -> String {
 }
 
 pub(crate) fn run_query(fixture: &GraphFixture, query: &Option<String>, current_query: &str) -> Result<Emit<TrinityGraphOperation, JackConfigOperation>, Fault> {
-    let resolved = query.as_deref().filter(|value| !value.trim().is_empty()).map(str::to_string).unwrap_or_else(|| current_query.to_string());
+    let resolved = query.as_deref().filter(|value| !value.trim().is_empty()).map_or_else(|| current_query.to_string(), str::to_string);
     let (result_json, operations) = run_jack_query(fixture, &resolved);
     Ok(Emit {
         document_operations: operations,
@@ -68,7 +69,7 @@ pub(crate) fn set_active_example(example_id: &str) -> Result<Emit<TrinityGraphOp
                 document_operations: vec![TrinityGraphOperation::SetFixture { fixture: next.clone() }],
                 config_operations: vec![
                     JackConfigOperation::SetActiveFixture { value: example_id.to_string() },
-                    JackConfigOperation::SetCamera { camera: next.camera.clone() },
+                    JackConfigOperation::SetCamera { camera: next.camera },
                     JackConfigOperation::SetQuery { value: query },
                     JackConfigOperation::SetResult { value: result_json },
                 ],

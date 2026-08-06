@@ -387,6 +387,7 @@ pub mod part_4 {
 // #endregion 🔖️Part4
 
 /// 📋️ RC beam ULS check end-to-end.
+#[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
 pub fn check_rc_beam(m_ed_knm: f64, v_ed_kn: f64, f_ck: f64, b_mm: f64, d_mm: f64, a_s_mm2: f64, f_yk: f64, rho_l: f64, n_ed_kn: f64, annex: AnnexChoice) -> CheckReport {
     let m_rd = part_1_1::flexural_resistance_knm(f_ck, b_mm, d_mm, a_s_mm2, f_yk, annex);
     let v_rd = part_1_1::shear_resistance_vrdc_kn(b_mm, d_mm, f_ck, rho_l, n_ed_kn);
@@ -397,6 +398,7 @@ pub fn check_rc_beam(m_ed_knm: f64, v_ed_kn: f64, f_ck: f64, b_mm: f64, d_mm: f6
 }
 
 /// 📋️ Full EN 1992 RC beam check with optional prestress transfer.
+#[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
 pub fn check_full_rc_beam(m_ed_knm: f64, v_ed_kn: f64, f_ck: f64, b_mm: f64, d_mm: f64, a_s_mm2: f64, f_yk: f64, rho_l: f64, n_ed_kn: f64, p_kn: f64, a_c_mm2: f64, annex: AnnexChoice) -> CheckReport {
     let mut report = check_rc_beam(m_ed_knm, v_ed_kn, f_ck, b_mm, d_mm, a_s_mm2, f_yk, rho_l, n_ed_kn, annex);
     if p_kn > 0.0 {
@@ -424,6 +426,7 @@ fn max_beam_shear_kn(result: &fem_core::StaticResult, element_id: &str) -> f64 {
 }
 
 /// 🏗️ Solve a simply supported RC beam with `fem_core` and run EN 1992 ULS checks.
+#[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
 pub fn check_rc_beam_from_fem(span_m: f64, udl_kn_m: f64, f_ck: f64, b_mm: f64, d_mm: f64, a_s_mm2: f64, f_yk: f64, rho_l: f64, annex: AnnexChoice) -> Result<CheckReport, fem_core::FemError> {
     let mut model = Model::default();
     model.nodes.push(Node { id: "n0".into(), pos: [0.0, 0.0, 0.0] });
@@ -559,8 +562,7 @@ mod tests {
 
     #[test]
     fn evaluate_fem_path() {
-        let mut doc = Document::default();
-        doc.use_fem = true;
+        let doc = Document { use_fem: true, ..Document::default() };
         let report = evaluate(&doc);
         assert!(!report.checks.is_empty());
         let m_ed = report.checks[0].computed.value / 1_000_000.0;
@@ -569,8 +571,7 @@ mod tests {
 
     #[test]
     fn evaluate_analytical_with_prestress() {
-        let mut doc = Document::default();
-        doc.p_kn = 800.0;
+        let doc = Document { p_kn: 800.0, ..Document::default() };
         let report = evaluate(&doc);
         assert_eq!(report.checks.len(), 10);
         assert!(report.checks.iter().all(|c| c.status != CheckStatus::NotApplicable));

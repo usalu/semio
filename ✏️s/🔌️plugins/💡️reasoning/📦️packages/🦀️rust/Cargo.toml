@@ -1,3 +1,5 @@
+cargo-features = ["trim-paths"]
+
 [package]
 name = "semio-s-plugin-reasoning-mindmap"
 version.workspace = true
@@ -21,7 +23,7 @@ ports = { react = 6015, wgpu = 6115 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "../../📦️lib.rs"
+path = "📦️lib.rs"
 
 [dependencies]
 reasoning_mindmap = { path = "../../../../../✏️s/🔨️modules/💭️mindmap/⚡️implementations/🦀️rust", package = "semio-s-kernel-reasoning-mindmap" }
@@ -36,3 +38,4 @@ semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️produc
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+

@@ -1,5 +1,45 @@
 # 📋️ Per-plugin migration template
 
+⚠️ **SHAPE V2 (2026-08-05, ticket `26/08/05/SHAPE-V2-TREE-PURITY-BROADCAST`, user directive) — read this
+before §1/§2 below, which describe the now-superseded V1 shape.** Inside every owner's domain tree, only
+THREE things may exist: `component.<ext>` files, the `📦️packages` folder, and plain `<component>` folders.
+Concretely, changed from what §1/§2 describe:
+
+1. **The entry file (`📦️lib.rs` / `📦️index.tsx`) now lives INSIDE `📦️packages/<lang>/`**, not at the
+   owner root. `[lib] path = "lib.rs"` (relative to the manifest, i.e. same dir) instead of
+   `path = "../../📦️lib.rs"`. **⚠️ CORRECTED 2026-08-06 (found by 🪵️sourcing's retrofit via a real compile
+   failure, verified empirically):** only the LEAF `#[path = "…"]` strings — the ones naming a real,
+   non-`"."` on-disk path — need a `../../` prefix, to reach back out to the owner root's tree now that the
+   file moved one level deeper. **Do NOT prefix the grouping-module `#[path = "."]` resets** — those compose
+   cumulatively against the parent's already-resolved base, not against the raw file directory, so adding
+   `../../` to a `"."` reset double/triple-corrects and fails to compile once nesting goes more than one
+   level deep. If you already retrofitted a plugin by prefixing every `#[path]` string uniformly (the
+   original, imprecise wording of this rule) and only verified it manually (byte-diffs, not a real `cargo
+   check`) because of the norm-blocker window, **re-verify it now with a real compile** — it may be silently
+   broken. See §14 step 3 for the precise corrected procedure.
+2. **No sibling variant files.** `🦀️config.rs`, `🦀️terminology.rs`, `🦀️wasm.rs`, and any `🦀️<topic>.rs`
+   beside a `component.rs` are non-compliant — each becomes its own `<folder>/🦀️component.rs` with a
+   unique, fitting emoji folder name (e.g. `🎚️config/🦀️component.rs`, `🗣️terminology/🦀️component.rs`,
+   `🌉️wasm/🦀️component.rs`). Module *content* doesn't change — only the `#[path]`/`mod` wiring and the
+   physical file location. Register any new folder name choice in `🔣️taxonomy.json` if it needs to be
+   distinguished from a generic "extra component" (most don't — a plain descriptive folder name suffices).
+3. **Data relocates to the owner root, never into `📦️packages`.** `📚️examples/`, `🧫️fixtures/`,
+   `🤖️generated/`, `🛂️manifest.json` all move to `<owner>/`, siblings of `📦️packages` and the component
+   tree. `📦️packages` holds ONLY packaging code: manifests (`Cargo.toml`/`package.json`/`📋️project.json`/
+   `📜️script.ts`/`build.rs`/`tsconfig.json`/etc.) plus the entry file from point 1.
+4. **In-tree `AGENTS.md`/`README.md` move to the owner root**, content byte-for-byte unchanged (CLAUDE.md
+   forbids *editing* AGENTS.md content, not relocating the file — if an owner root already has one and a
+   deeper copy would collide, STOP and flag it in your report rather than merging/choosing one).
+
+See `🔣️taxonomy.json`'s `entryLocation`/`rootDataDirNames`/`rootDataFileNames`/`rootDocFileNames` fields
+(added by this same ticket) for the machine-readable version of this contract. **§14 below is the retrofit
+recipe** for bringing an already-V1-migrated plugin up to V2 — use it instead of §0–§13 if the plugin
+already has a `📦️packages` dir and taxonomy tree; §0–§13 remain correct for a plugin migrating from the
+OLD 7/8-crate layout for the first time, just apply points 1–4 above as you go instead of the V1 shape they
+literally describe.
+
+---
+
 The ordered recipe for merging ONE plugin's 7-crate constitutional layout into ONE crate with a taxonomy
 source tree. Written by the W1 pilot (🌊️flow, ticket
 `26/08/05/FLOW-PLUGIN-PILOT-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION`) from what actually happened,
@@ -45,7 +85,7 @@ so anything it does NOT cover (multi-app, multi-artifact, a `🫀️core` cross-
 ```ts
 #!/usr/bin/env bun
 /** 🌊️ `@semio-tech/<p>-plugin` router: `bun ./📜️script.ts test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
 
 class TestScript extends BundleScript {
   run(_segments: string[]): void {
@@ -538,3 +578,69 @@ alone**. Two mandates every plugin agent from here on must follow so that merge 
    to compile. Fix by hand-rolling `Serialize`/`Deserialize` for that inner type entirely within your own
    plugin files (do not modify the framework `dsl::Wire` type or the `app_commands!` macro itself for this —
    it's a one-off payload-shape mismatch, not a framework bug).
+
+---
+
+## 14. Shape V2 retrofit recipe (for an already-V1-migrated plugin)
+
+Use this when the plugin already has `📦️packages/<lang>/` + a taxonomy tree (i.e. it's already been through
+§0–§13 once) but was built under the V1 shape (entry file at owner root; sibling variant files; data mixed
+into the tree). Purely mechanical — no logic changes, no wire-format risk. Read the Shape V2 section at the
+top of this file first.
+
+1. **Open your own ticket** (`ticket_open`, goal `🎯aioptimizedrepo`), title "`<Plugin>` Shape V2 Tree
+   Purity Retrofit". Record the plugin's current test count first (`DEVELOPER_DIR=/Library/Developer/CommandLineTools
+   cargo test -p <crate> --lib`) — your correctness floor; the retrofit must produce the exact same count,
+   since nothing here changes behavior.
+2. **Inventory non-compliant files**: `find ✏️s/🔌️plugins/<p> -type f \( -name "*.rs" -o -name "*.ts" \)
+   -not -name "🦀️component.rs" -not -name "🟦️component.ts" -not -path "*/📦️packages/*"` — every hit is a
+   sibling variant or the owner-root entry file. Also `find ✏️s/🔌️plugins/<p> -maxdepth 1 -type d` for
+   root-level data dirs already in the right place vs. `find ✏️s/🔌️plugins/<p> \( -name "📚️examples" -o
+   -name "🧫️fixtures" -o -name "🤖️generated" \) -not -maxdepth 1` for data dirs still buried in the tree.
+3. **Move the entry file into packages.** `git mv`-equivalent (plain `mv`, no git commands) the owner-root
+   `📦️lib.rs` into `📦️packages/🦀️rust/📦️lib.rs` (or `📦️index.tsx` into `📦️packages/🟦️typescript/`).
+   Update `[lib] path` in that same `Cargo.toml` from `"../../📦️lib.rs"` to `"📦️lib.rs"`. **Prefix ONLY the
+   LEAF `#[path = "…"]` strings — the ones naming a real on-disk path segment, not a bare `"."` — with
+   `../../`** (the file now needs two more levels to reach the owner-root tree it used to sit directly
+   inside). **Leave every grouping-module `#[path = "."]` reset exactly as `"."`, unprefixed** — nested `"."`
+   resets compose against the parent's already-resolved base, not the raw file directory, so prefixing them
+   too double/triple-corrects and fails to compile past one level of nesting (confirmed via a real compiler
+   error by 🪵️sourcing's retrofit). Do a byte-diff of the file's own logic before/after — only the leaf
+   `#[path]` strings and the file's own location should differ, nothing else. **Verify with a REAL `cargo
+   check` before moving on to step 4** — do not rely on manual/byte-diff verification alone for this step
+   specifically, since a wrong prefix here is exactly the kind of error manual inspection won't catch (it
+   looks locally plausible either way) but the compiler catches immediately.
+3b. **Check for `include_str!`/`include_bytes!` relative paths, not just `#[path]`/`use`** (found by
+   💠️lowpoly's retrofit via a real `cargo test` failure, not by inspection — manual review missed it).
+   Any `include_str!("…")`/`include_bytes!("…")` call site inside the entry file OR inside a folded sibling
+   variant file (step 4) that used a relative path needs the SAME directional correction as the file's own
+   new depth — moving a file one level deeper means its relative `include_str!` targets need one more `../`.
+   Grep for `include_str!\|include_bytes!` in every file you move/fold and check each target still resolves
+   after the move, don't assume `#[path]`/`use` fixes are the only thing that can break.
+4. **Fold each sibling variant file into a component folder.** For each non-compliant file found in step 2
+   (excluding the entry file handled in step 3): pick a fitting emoji folder name for its concept (reuse
+   the file's own doc-comment topic if it names one), create `<owner-relative-dir>/<folder>/🦀️component.rs`,
+   move the file's content there verbatim (a straight `mv` + rename, not a rewrite), update the `#[path]`
+   declaration in the nearest ancestor `mod` block that references it, and update any `use crate::…` sites
+   elsewhere in the crate that referenced the old module path (the Rust module *name* stays the same if you
+   keep the `mod` identifier unchanged — only the on-disk `#[path]` target and the physical location move).
+5. **Relocate data and docs to the owner root.** Any `📚️examples/`, `🧫️fixtures/`, `🤖️generated/`,
+   `🛂️manifest.json` found nested inside the tree moves to `<owner>/`, sibling of `📦️packages`. Any in-tree
+   `AGENTS.md`/`README.md` moves to `<owner>/AGENTS.md`/`<owner>/README.md` — if the owner root already has
+   one, STOP, do not merge or pick a winner; report the collision and leave both in place for a human/
+   follow-up decision. Fix any code/config that referenced the old data path (test fixture loaders, the
+   registry's asset globs, `📋️project.json`'s `namedInputs`).
+6. **Verify.** `DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo check -p <crate>`,
+   `cargo clippy --all-targets -- -D warnings`, `cargo test -p <crate> --lib` (must match step 1's count
+   exactly — this is a pure reshape, zero test-count drift is the correctness bar, not "close enough"),
+   `cargo check --target wasm32-wasip2` if the plugin builds for wasm. Re-run the ticket-local taxonomy
+   audit if one exists in the plugin's ticket history, or write a quick one: confirm zero files remain
+   under the tree that aren't `component.<ext>`/a plain folder/`📦️packages`.
+7. **Registrar handoff is usually empty** for a retrofit — `[lib] path` is an internal-to-the-crate change,
+   root `Cargo.toml`'s member line (`.../<p>/📦️packages/🦀️rust`) doesn't move. Only report a handoff block
+   if something outside the plugin referenced its old owner-root `📦️lib.rs` path directly (rare — check
+   `grep -rn "🔌️plugins/<p>/📦️lib.rs" .` before assuming none).
+
+Report back: files moved (old path → new path, one line each), test count before/after (must match),
+clippy/check results, any AGENTS.md/README.md collision flagged, and confirmation the tree now contains
+nothing but `component.<ext>`/`📦️packages`/plain folders below the owner root.

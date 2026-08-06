@@ -943,7 +943,7 @@ mod tests {
         let flange_c = (200.0 - 9.0) / 2.0 - 12.0;
         let web_c = 190.0 - 2.0 * 15.5 - 2.0 * 12.0;
         let class = part_1_1::section_class(flange_c, 15.5, web_c, 9.0, 355.0);
-        assert!(class >= 1 && class <= 4);
+        assert!((1..=4).contains(&class));
     }
 
     #[test]
@@ -1020,7 +1020,7 @@ mod tests {
     #[test]
     fn chs_classification_table_5_2() {
         let class = part_1_1::chs_class(200.0, 8.0, 355.0);
-        assert!(class >= 1 && class <= 4);
+        assert!((1..=4).contains(&class));
         assert_eq!(part_1_1::chs_class(10.0, 8.0, 355.0), 1);
     }
 

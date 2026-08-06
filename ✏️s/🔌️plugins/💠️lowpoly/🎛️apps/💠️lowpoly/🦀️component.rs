@@ -5,8 +5,9 @@
 //! `🎭️modes/*/🪟️windows/*`, chrome measures/engagement shared by both windows in this file (they are
 //! byte-identical between windows — see the master ticket's TEMPLATE.md §12.2 shared-options pattern,
 //! extended here across mode boundaries since the Model window is reused by both `edit` and `paint`),
-//! panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`, view state in `🦀️config.rs`, scratch
-//! (mid-gesture) state in `🦀️session.rs`, shared read-view/selection helpers in `🦀️view.rs`.
+//! panel trees in `📌️panels/*`, labels in `🗣️terminology/🦀️component.rs`, view state in
+//! `🧮️config/🦀️component.rs`, scratch (mid-gesture) state in `🖌️session/🦀️component.rs`, shared
+//! read-view/selection helpers in `🧭️view/🦀️component.rs`.
 
 use crate::apps::lowpoly::commands::{add_primitive, camera, chrome, engagement, fixture, mesh_edit, patch_object, paint, selection, sun, transform, utility, uv, world};
 use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigOperation};

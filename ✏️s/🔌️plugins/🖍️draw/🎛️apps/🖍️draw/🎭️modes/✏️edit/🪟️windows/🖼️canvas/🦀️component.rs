@@ -21,7 +21,7 @@ const DRAW_ARTBOARD_FILL: [f64; 4] = [0.969, 0.953, 0.890, 1.0];
 const DRAW_ARTBOARD_STROKE: [f64; 4] = [0.198, 0.223, 0.205, 0.55];
 const DRAW_ARTBOARD_LABEL: [f64; 4] = [0.198, 0.223, 0.205, 0.92];
 
-fn overlay_record(id: String, transform: [f64; 6], segments: &[PathSegment], fill: Option<[f64; 4]>, stroke_color: [f64; 4], stroke_width: f64) -> Value {
+fn overlay_record(id: &str, transform: [f64; 6], segments: &[PathSegment], fill: Option<[f64; 4]>, stroke_color: [f64; 4], stroke_width: f64) -> Value {
     json!({
         "id": id,
         "role": "overlay",
@@ -55,7 +55,7 @@ fn artboard_scene_records(document: &DrawDocument) -> Vec<Value> {
     let label_size = 12.0_f64;
     let label_x = (width * 0.5) - (label.len() as f64 * label_size * 0.28);
     vec![
-        overlay_record("artboard:frame".into(), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_ARTBOARD_FILL), DRAW_ARTBOARD_STROKE, 1.0),
+        overlay_record("artboard:frame", [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_ARTBOARD_FILL), DRAW_ARTBOARD_STROKE, 1.0),
         json!({
             "id": "artboard:dimensions",
             "role": "overlay",
@@ -87,7 +87,7 @@ pub fn render(document: &DrawDocument, interaction: &DrawConfig, gesture: &draw_
     let selected_leaf_ids: Vec<String> = interaction.selected_ids.iter().filter_map(|id| find_draw_layer(document, id)).flat_map(draw_layer_descendant_leaf_ids).collect();
     for leaf_id in &selected_leaf_ids {
         if let Some(node) = node_by_id.get(leaf_id.as_str()) {
-            records.push(overlay_record(format!("overlay:sel:{leaf_id}"), node.transform, &node.segments, Some(DRAW_OVERLAY_SELECTION_FILL), DRAW_OVERLAY_SELECTION_STROKE, 2.0));
+            records.push(overlay_record(&format!("overlay:sel:{leaf_id}"), node.transform, &node.segments, Some(DRAW_OVERLAY_SELECTION_FILL), DRAW_OVERLAY_SELECTION_STROKE, 2.0));
         }
     }
     if let Some(hovered_id) = &interaction.hovered_id {
@@ -95,7 +95,7 @@ pub fn render(document: &DrawDocument, interaction: &DrawConfig, gesture: &draw_
             if let Some(layer) = find_draw_layer(document, hovered_id) {
                 for leaf_id in draw_layer_descendant_leaf_ids(layer) {
                     if let Some(node) = node_by_id.get(leaf_id.as_str()) {
-                        records.push(overlay_record(format!("overlay:hover:{leaf_id}"), node.transform, &node.segments, None, DRAW_OVERLAY_HOVER_STROKE, 1.5));
+                        records.push(overlay_record(&format!("overlay:hover:{leaf_id}"), node.transform, &node.segments, None, DRAW_OVERLAY_HOVER_STROKE, 1.5));
                     }
                 }
             }
@@ -108,15 +108,15 @@ pub fn render(document: &DrawDocument, interaction: &DrawConfig, gesture: &draw_
         let width = (ctx.cursor[0] - ctx.start[0]).abs();
         let height = (ctx.cursor[1] - ctx.start[1]).abs();
         let segments = vec![PathSegment::Move { to: [x, y] }, PathSegment::Line { to: [x + width, y] }, PathSegment::Line { to: [x + width, y + height] }, PathSegment::Line { to: [x, y + height] }, PathSegment::Close];
-        records.push(overlay_record("overlay:marquee".into(), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_OVERLAY_MARQUEE_FILL), DRAW_OVERLAY_MARQUEE_STROKE, 1.0));
+        records.push(overlay_record("overlay:marquee", [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_OVERLAY_MARQUEE_FILL), DRAW_OVERLAY_MARQUEE_STROKE, 1.0));
     } else if gesture.matches("shape_dragging") {
         let ctx = &gesture.context;
         let segments = shape_preview_segments(&ctx.utility, ctx.start, ctx.cursor);
-        records.push(overlay_record("overlay:preview".into(), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_OVERLAY_SELECTION_FILL), DRAW_OVERLAY_SELECTION_STROKE, 1.5));
+        records.push(overlay_record("overlay:preview", [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_OVERLAY_SELECTION_FILL), DRAW_OVERLAY_SELECTION_STROKE, 1.5));
     } else if gesture.matches("drafting") {
         let ctx = &gesture.context;
         let segments = draft_preview_segments(&ctx.utility, &ctx.points, ctx.cursor);
-        records.push(overlay_record("overlay:preview".into(), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_OVERLAY_SELECTION_FILL), DRAW_OVERLAY_SELECTION_STROKE, 1.5));
+        records.push(overlay_record("overlay:preview", [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_OVERLAY_SELECTION_FILL), DRAW_OVERLAY_SELECTION_STROKE, 1.5));
     }
     build_canvas_2d_scene(
         DRAW_PLAY_SURFACE_ID,

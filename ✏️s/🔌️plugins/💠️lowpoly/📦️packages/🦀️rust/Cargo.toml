@@ -20,7 +20,7 @@ ports = { react = 6078, wgpu = 6178 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "../../📦️lib.rs"
+path = "📦️lib.rs"
 
 [dependencies]
 dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
@@ -36,7 +36,7 @@ base64 = "0.22.1"
 png = "0.17.16"
 
 [dev-dependencies]
-# 🧪️ Test-only: `⚙️engine/🦀️media.rs`'s `export_concrete_forest_mesh_tests` builds a real CAD solid from a
+# 🧪️ Test-only: `⚙️engine/🧵️media/🦀️component.rs`'s `export_concrete_forest_mesh_tests` builds a real CAD solid from a
 # fixture model to derive a lowpoly mesh export — see that module's doc comment. Carried forward from the
 # old `⚙️engine` crate's `[dev-dependencies]` verbatim (already repointed by a prior batch-1 agent from the
 # deleted `semio-s-app-cad-engine` to this crate).

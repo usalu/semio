@@ -330,7 +330,7 @@ impl Graph {
             if tgt_node != node_id {
                 return false;
             }
-            port_node_id(&e.source).map(|src_node| remaining.contains(src_node)).unwrap_or(false)
+            port_node_id(&e.source).is_some_and(|src_node| remaining.contains(src_node))
         })
     }
 
@@ -447,7 +447,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::jack::op::{apply_trinity_graph_operations, dispatch_trinity_graph_operations, validate_trinity_graph_operation, TrinityGraphOperation};
+    use crate::artifacts::jack::op::{dispatch_trinity_graph_operations, validate_trinity_graph_operation, TrinityGraphOperation};
     use store::DocumentCommand;
 
     fn mini_fixture() -> GraphFixture {
@@ -867,8 +867,8 @@ mod tests {
         };
         let mut g = Graph::from_fixture(fixture).unwrap();
         g.recompute_derived();
-        assert!(g.node("a").unwrap().properties.get("flatPosition").is_some());
-        assert!(g.node("b").unwrap().properties.get("flatPosition").is_some());
+        assert!(g.node("a").unwrap().properties.contains_key("flatPosition"));
+        assert!(g.node("b").unwrap().properties.contains_key("flatPosition"));
     }
 
     #[test]

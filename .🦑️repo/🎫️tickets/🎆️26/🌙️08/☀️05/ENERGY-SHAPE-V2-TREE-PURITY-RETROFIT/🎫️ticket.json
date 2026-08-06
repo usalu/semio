@@ -1,0 +1,14 @@
+{
+  "title": "Energy Shape V2 Tree Purity Retrofit",
+  "emoji": "🌳️",
+  "status": "closed",
+  "description": "Retrofit the already-migrated 🔋️energy plugin (✏️s/🔌️plugins/🔋️energy) from V1 taxonomy shape to the new Shape V2 tree-purity rule per TEMPLATE.md §14 in ticket 26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE. Energy is a special case: pure headless compute library, no 🗿️artifacts/🎛️apps dirs, no config/terminology/wasm sibling files. Apply ONLY the entry-file relocation (owner-root 📦️lib.rs -\u003e 📦️packages/🦀️rust/📦️lib.rs, update [lib] path, add ../../ prefix to #[path] strings) and data/docs relocation (AGENTS.md already at owner root, no examples/fixtures dirs to move). Do NOT fold the 50 ⚙️engine/🦀️\u003cdomain\u003e.rs files into per-file folders — that step is explicitly out of scope for this retrofit pass. Verify check/clippy/test.",
+  "summary": "Retrofitted 🔋️energy to Shape V2 (special case, per explicit scope): pure headless compute library, no 🗿️artifacts/🎛️apps, no config/terminology/wasm siblings. Applied ONLY the entry-file relocation — moved 📦️lib.rs → 📦️packages/🦀️rust/📦️lib.rs, Cargo.toml [lib] path \"../../📦️lib.rs\" → \"📦️lib.rs\", prefixed all 50 flat top-level #[path = \"⚙️engine/🦀️\u003cdomain\u003e.rs\"] mod declarations with ../../ (correct here since energy has no nested inline-mod \".\" resets to compound against — every mod is declared directly at file top level, one hop only). AGENTS.md already at owner root, no examples/fixtures dirs present. Per explicit scope instruction, did NOT fold the 50 ⚙️engine/🦀️\u003cdomain\u003e.rs files into per-file component folders — left as flat files, out of scope for this pass. Verified via isolated-workspace overlay: cargo check clean, clippy --all-targets -D warnings clean, cargo test --lib 235/235 passed (exact baseline match). No stale references found repo-wide.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2490"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪c212dbb35697499e8c018df31629eaf8"
+  ]
+}

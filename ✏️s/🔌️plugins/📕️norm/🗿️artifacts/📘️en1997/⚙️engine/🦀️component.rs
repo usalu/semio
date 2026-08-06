@@ -77,8 +77,7 @@ pub mod part_1 {
     /// 📐️ Bearing capacity factor N_q (Meyerhof).
     pub fn bearing_factor_n_q(phi_deg: f64) -> f64 {
         let phi_rad = phi_deg.to_radians();
-        let n_q = (std::f64::consts::PI * phi_rad.tan()).exp() * ((45.0 + 0.5 * phi_deg).to_radians().tan()).powi(2);
-        n_q
+        (std::f64::consts::PI * phi_rad.tan()).exp() * ((45.0 + 0.5 * phi_deg).to_radians().tan()).powi(2)
     }
 
     /// 📐️ Bearing capacity factor N_c (Meyerhof) with depth correction.
@@ -223,6 +222,7 @@ pub mod part_2 {
 // #endregion 🔖️Part2
 
 /// 📋️ Shallow foundation check.
+#[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
 pub fn check_shallow_foundation(
     v_ed_kn: f64,
     h_ed_kn: f64,
@@ -251,6 +251,7 @@ pub fn check_shallow_foundation(
 }
 
 /// 📋️ Full EN 1997 check across bearing, sliding, settlement, pile axial (part 1), and ground investigation adequacy (part 2).
+#[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
 pub fn check_full_geotechnical(
     v_ed_kn: f64,
     h_ed_kn: f64,

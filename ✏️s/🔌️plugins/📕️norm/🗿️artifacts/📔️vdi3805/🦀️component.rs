@@ -510,7 +510,7 @@ pub const CORRECTION_OVERLAYS: &[CorrectionOverlay] = &[
 
 impl SchemaRegistry {
     fn build(filter: Option<SchemaStatus>) -> Self {
-        let sheets: Vec<SheetEntry> = SHEET_ENTRIES.iter().filter(|s| filter.map_or(true, |f| s.status == f)).cloned().collect();
+        let sheets: Vec<SheetEntry> = SHEET_ENTRIES.iter().filter(|s| filter.is_none_or(|f| s.status == f)).copied().collect();
         Self { sheets, corrections: CORRECTION_OVERLAYS, filter }
     }
 
@@ -1107,6 +1107,15 @@ pub fn reference_fixture() -> Document {
 }
 // #endregion Session
 
+//#region 🔖️ArtifactKind
+/// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port —
+/// lifted out of the pre-migration manifest's inline `.artifact_kind(ArtifactKindSpec { .. })` so the
+/// artifact node, not the app, owns its own kind declaration.
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    crate::core::app::artifact_kind_spec("vdi3805", "VDI 3805")
+}
+//#endregion 🔖️ArtifactKind
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1255,11 +1264,3 @@ mod tests {
     }
 }
 
-//#region 🔖️ArtifactKind
-/// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port —
-/// lifted out of the pre-migration manifest's inline `.artifact_kind(ArtifactKindSpec { .. })` so the
-/// artifact node, not the app, owns its own kind declaration.
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    crate::core::app::artifact_kind_spec("vdi3805", "VDI 3805")
-}
-//#endregion 🔖️ArtifactKind

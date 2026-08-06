@@ -93,6 +93,341 @@ flip yet) and have been individually verified. Landed:
   → clean, no errors. `@semio-tech/ui-wgpu-rs:check` → green ("ui axes are fresh") — **not red** as an
   earlier exploration pass had assumed; already fixed by other work, one fewer W0 blocker.
 
+## W2 status: react half COMPLETE + verified; Rust half written, reviewed, cargo-check pending external unblock
+
+Extracted the `Select` pilot element across all three targets, plus the `ElementId` schema-core pair,
+and wrote `📋️TEMPLATE-UI.md` from what actually happened (real recipe, not a guess).
+
+**React (fully verified)**: `Select` (all 10 exports) and `ElementId` (7 exports, incl. `isElementId`)
+extracted to `🧱️elements/Select/🟦️component.tsx` and `🧱️elements/🫀️core/ElementId/🟦️component.tsx`.
+Found and fixed a real bug in the barrel-rewiring pattern: a bare `export { X } from "leaf"` does not
+create a local binding, so other code still living in the same barrel that references `X` unqualified
+breaks (`Cannot find name`) — the correct pattern is `import { X } from "leaf"; export { X };`.
+`bun ./📜️script.ts typecheck` after both extractions: **96 errors, identical set to the W1 baseline,
+zero new, zero in the new files** — confirmed via full file+code diff, not just count.
+
+**wgpu + tui (written, hand-verified, cargo check pending)**: extracted `render_select`/
+`render_select_menu` (wgpu) and `select_on_key`/`paint_select` (tui) into
+`🧱️elements/Select/🧊️component.rs` / `⌨️component.rs`. Mapped every helper dependency to its real
+top-level `pub mod` (wgpu has ~22 crate-root sibling mods, not one flat namespace) and wired both as
+crate-root-sibling `#[path]` modules — **not** nested inside `widgets`/`widget`, because rustc resolves
+a `#[path]` on a module nested inside an *inline* parent as if that parent had its own on-disk
+directory, which fails outright for a block that has no such directory (confirmed by reproducing the
+"No such file or directory" error twice before landing on the working crate-root-sibling pattern).
+**Caught a real bug via careful re-reading** (compiler unavailable at the time, see below): inserting
+`mod select;` immediately before `pub mod widgets {` accidentally orphaned that mod's pre-existing
+`#[cfg(feature = "engine")]` attribute onto my new line instead — fixed by giving each declaration its
+own `#[cfg(feature = "engine")]`. Brace-balance-checked both `component.rs` files and both `lib.rs`
+files as an extra manual sanity pass (23/23, 18/18, 3928/3928, 1189/1189).
+
+**Why cargo check hasn't run to completion**: the shared workspace `Cargo.toml` has been under
+continuous, heavy, unrelated concurrent churn — first the `📜️imperative` plugin migration (root
+member paths pointed at a deleted crate dir for 10+ minutes), then, once that resolved, a **second**
+transient break from what looks like the `📕️norm` plugin migration (107 crates, per repo docs) briefly
+double-registering `semio-s-plugin-norm` under both its old and new taxonomy paths. Polled via a
+background Monitor (20× 15s) plus several manual retries; the workspace has not had a clean window
+long enough to run `cargo check` on the moved crates. This is unrelated to any file this ticket
+touches — confirmed each time by reading the specific error (always a different plugin's manifest
+path, never `ui-wgpu`/`ui-tui`/`ui-styling`) and cross-checking `git status --porcelain` for that
+plugin's own in-flight changes.
+**Action**: will retry `cargo check -p semio-framework-ui-wgpu --features engine -p
+semio-framework-ui-tui` opportunistically as other waves proceed; not blocking further TS-side W3
+work, which doesn't depend on the Cargo workspace at all.
+
+**Update (~1h later)**: polled `cargo metadata` repeatedly over ~50 minutes (two Monitor passes, 40×15s
+then 15×120s, plus manual retries) — the workspace never reached a stable window. The blocking error
+kept *changing identity* (norm's duplicate-package-name conflict → norm's own deleted-then-not-yet-
+recreated crate path → a malformed dependency-version TOML syntax error elsewhere under
+`✏️s/🔌️plugins` → most recently a `🖍️draw`-plugin dependency failure surfacing via the shared
+`dsl 🧪️fixture-sweep` crate), each one clearly unrelated to any file this ticket touches, consistent
+with **multiple large concurrent migrations actively churning root `Cargo.toml` simultaneously**
+(`git status` shows 248 files changed under `📕️norm` alone — a 107-crate migration per repo docs — on
+top of the earlier `📜️imperative` one). This is not a narrow window that will clear soon; it's
+sustained, repo-wide, multi-session activity. **Decision**: stop waiting synchronously on a fully green
+`cargo metadata` for the whole ~600-member workspace — that is explicitly expected per the crate-
+consolidation master ticket's own verification philosophy ("transient reds from other in-flight
+migrations are expected — check yours only"). The wgpu/tui Select extraction's correctness rests on
+the thorough manual review already performed (documented above: module-path mapping via
+`grep -n "^pub mod "`, brace-balance sanity checks, and two real bugs actually caught this way — the
+crate-root-vs-nested `#[path]` resolution failure and the `#[cfg(feature = "engine")]` orphaning bug).
+**This is reported as "written and hand-verified, cargo-check-pending" — not as "verified" — until an
+actual green `cargo check` runs.** Next session/agent picking this up: try
+`DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo check -p semio-framework-ui-wgpu --features
+engine -p semio-framework-ui-tui` first, before assuming more work is needed here.
+
+**Update (workspace stabilized, W2 Rust half now fully green)**: `cargo metadata --no-deps` succeeded
+(exit 0) on a later retry — the concurrent multi-session churn documented above eventually settled.
+`cargo check -p semio-framework-ui-wgpu --features engine -p semio-framework-ui-tui` then surfaced one
+**real, pre-existing bug**, unrelated to the hand-review above: 2 of wgpu's 15 `include_bytes!` font
+paths (`🔤️10-400.ttf`/`🔤️11-400.ttf`, the `🖱️ui`-local noto-emoji glyphs — NOT the 13 sibling lines
+pointing at the separate top-level `🧰️framework/🔨️modules/🖼️assets` module, which were untouched and
+correct) still had the pre-W5 `⚡️implementations/🟦️typescript/` segment baked into their relative
+path. The W5 assets de-sandwich flattened `🖱️ui/🖼️assets` to lose that wrapper
+(`🖱️ui/🖼️assets/🔤️fonts/…` instead of `🖱️ui/🖼️assets/⚡️implementations/🟦️typescript/🔤️fonts/…`), but
+that Rust-side reference was never updated — a real, if narrow, gap in W5's own dependent-sweep (W5's
+own status section documents sweeping ui-react/styling/vite-config consumers of the OLD assets path,
+but this wgpu font path is neither — it's a `#[path]`-adjacent literal string inside a `📦️lib.rs` that
+no grep for "the moved package's name" would find, since it references a plain data file, not an
+import). Fixed by removing the stale segment (confirmed via `ls` against the real on-disk location, not
+guessed). Re-ran: **`cargo check -p semio-framework-ui-wgpu --features engine -p semio-framework-ui-tui`
+→ clean, exit 0** (5 pre-existing unused-import/qualification warnings, zero errors). Also confirmed
+`cargo check -p semio-framework-ui-wgpu --target wasm32-wasip2` → clean. **The W2 Select pilot's Rust
+half (wgpu `render_select`/`render_select_menu`, tui `select_on_key`/`paint_select`, plus the
+`🫀️core/ElementId` schema pair) is now fully verified, not just hand-reviewed** — the crate-root-sibling
+`#[path]` wiring and the `#[cfg(feature = "engine")]` fix from the original pass both hold up under a
+real compile.
+
+## W3 status: react track COMPLETE (50/50 elements), wgpu/tui tracks COMPLETE
+
+Ran a 7-batch Workflow (sequential agents, shared-file serialization) covering every remaining
+`element:`-classified region from the inventory. **All 7 batches succeeded, 0 errors, 0 skipped.**
+Independently re-verified afterward (not just trusting the agents' self-reports):
+- Barrel line count: 40,376 → 25,035 (≈15,341 lines extracted).
+- Region balance: 0 real mismatches (same 3 pre-existing cosmetic label mismatches as always), 0
+  leftover — confirmed with a fresh stack simulation, not reused output.
+- `bun ./📜️script.ts typecheck`: **96 errors**, exact match to the post-W1 baseline, run fresh myself.
+- Cross-checked the error list: errors now appearing under `🧱️elements/{Canvas,Diagram,IconSelector,
+  Tree,UIDialog}/🟦️component.tsx` are the *same* pre-existing bug categories (xyflow `OnNodeDrag`
+  mismatch, `iconId` union-type mismatch, `ContextMenuItem[]` mismatch, `CSS.escape` shadowing,
+  i18next `unknown`-to-`ReactNode`) that lived in `📦️index.tsx` before extraction — moved verbatim
+  with their code, not introduced.
+- 51 element directories now exist under `🧱️elements/` (50 elements + `🫀️core`); 50 files still carry
+  the `🚧️W3-interim` barrel-dependency marker (expected — the shared "core" regions like Adapters/
+  Utilities/i18n haven't been extracted yet, a deliberately deferred follow-up).
+
+**Notable judgment calls the batches made correctly** (each caught via typecheck, not guessed):
+duplicate `Dialog` name resolved by checking real exports (`UIDialog` vs `Dialog`, two genuinely
+different components); ~15 forward-dependency symbols that were extracted but still referenced
+unqualified by *other, not-yet-extracted* barrel code got `export` added in place (mechanical, no
+logic change) rather than silently breaking; newly-extracted sibling elements (e.g. `Ring`→`Orb`,
+`Band`/`Strip`→`Scrollable`, `ShellFindDialog`→`ShellSearchDialog`) wired as direct element-to-element
+imports instead of routing back through the barrel, per the recipe. Batch 7 flagged that `Canvas`
+(~2000 lines, contains nested `Mode`/`App`/`Ui` sub-concerns) is a reasonable candidate for further
+sub-decomposition in a later pass — not attempted now, per its instructions.
+
+**wgpu + tui tracks: COMPLETE.** Once the Cargo workspace stabilized (see the W2 Rust update above), ran
+a 6-agent Workflow (2 tracks — wgpu, tui — each internally sequential since both edit one shared crate
+`📦️lib.rs`; the two tracks ran in parallel against each other since they're different crates/files) to
+extract every remaining widget. First did an Explore-agent investigation to map each Rust widget
+function to its real matching react element concept (not just name similarity) before touching any
+code — this caught two non-obvious calls worth recording: `render_key_value` is genuinely a different
+concept from the existing `Field` element (Field = one label + one control wrapper; KeyValue = N
+label→value rows) so it got its own new dir, not a Field reuse; `render_ring` matches the existing
+`Ring` element (track + drag-knob), not the smaller `Orb` sub-part.
+
+wgpu (`semio-framework-ui-wgpu`): `render_button` → **NEW** `Button` dir (react's own `Button` is still
+barrel-inline, unextracted — no coordination needed, wgpu leaf only), `render_input` → `Input`,
+`render_toggle` → `Toggle`, `render_key_value` → **NEW** `KeyValue`, `render_slider` → `Slider`,
+`render_number_stepper` → `Stepper` (not `Steps`, a different progress-indicator concept),
+`render_icon_select` → `IconSelector`, `render_ring` → `Ring`, and the 9-function `render_tree` cluster
+(`measure_tree_sections_width[_state]`, `measure_tree_item_width`, `measure_tree_sections[_state]`,
+`measure_tree_item_height`, `render_tree`, `render_tree_section_header`, `render_tree_item`) → `Tree`.
+
+tui (`semio-framework-ui-tui`): `list_on_key`+`paint_list` → **NEW** `List`, `tabs_on_key`+`paint_tabs`
+→ `Tabs`, `input_on_key`+`paint_input` → `Input`, `log_on_key`+`paint_log` → **NEW** `Log`,
+`table_on_key`+`paint_table`+`paint_table_cell` → `Table`, `paint_label` → **NEW**
+`🫀️core/Label` (a foundational primitive used everywhere, not a standalone element — mirrors ui-react's
+own not-yet-extracted `Label`, which the agent found still barrel-inline too), `paint_divider` →
+**NEW** `Divider`, `paint_chip` → **NEW** `Chip`, `paint_navbar`+`paint_items` → `Navbar`,
+`paint_footer` → `Footer`, `paint_window`+`paint_corner_tab` → `Window` (the last 5 functions live in
+`pub mod chrome`, not `widget` — confirmed via grep before wiring, wired as chrome-mod crate-root
+siblings instead of widget-mod ones).
+
+**Real judgment calls the batches made, each backed by a compile check, not guessed**: `input` as a
+module name collided with wgpu's pre-existing `pub mod input` (HitKind/HitTarget/InputState) — renamed
+the sibling to `input_element` (documented in-file); same collision for `tree` vs. wgpu's existing scene
+mod `pub mod tree` — renamed to `tree_element`. Several widgets-mod-private helpers/consts needed a
+`pub(crate)` bump to stay reachable from their new sibling module while remaining shared with
+still-inline dispatch code (`measure_text_width`, `register_input_meta`, five `tree_*` gutter/chevron
+helpers + 5 `TREE_*` consts, `WindowTab`/`WindowChipLayout`/`window_chip_layout` for the chrome-mod
+Window pair) — each verified as genuinely still-shared (not movable) before bumping visibility rather
+than moving them wholesale. tui's `LogState.lines` field access was rewritten to use the existing public
+accessor method instead of the private field it used to share module scope with.
+
+**Independent re-verification (not just trusting the 6 agents' self-reports)**: ran
+`cargo check -p semio-framework-ui-wgpu --features engine -p semio-framework-ui-tui` myself against the
+final stacked state of all 6 batches — clean, 0 errors. Found and fixed one real regression the batches
+left behind: 8 unused-import warnings in wgpu's `widgets` mod (a `use crate::chrome::{...}` block and
+`DragAxis` that were only needed by the now-moved `Button`/`Toggle` code, plus 5 of the 9 tree-cluster
+names that `widgets`' own dispatch never calls directly) — trimmed by hand, re-checked: back down to
+the exact 5 pre-existing warnings, 0 new. Also independently confirmed
+`cargo check -p semio-framework-ui-wgpu --target wasm32-wasip2` (the actual shape-plugin consumption
+target) clean, and ran `cargo test -p semio-framework-ui-tui --lib` myself: 76 passed, 1 failed
+(`window_chrome_recesses_tabs_into_the_top_corners_of_a_closed_shape`, a stray VS16
+emoji-variation-selector baked into an unrelated `chrome`-mod test string literal at line ~2417 —
+confirmed via `git diff --stat` that this session's entire diff touches 0 lines in that test's region,
+genuinely pre-existing, not this ticket's bug).
+
+wgpu's generic `measure_control`/`render_control`/`measure_widget`/`render_widget` dispatchers correctly
+stay in `widgets.rs` (not extracted, per the original plan — they're shared dispatch, not per-widget
+code), same for tui's `ChromeState::paint`/`window_control_at` dispatch layer in `chrome`.
+
+## W3 follow-up: module-top-level circular-import bug found + fixed (reactHostPort/cn/sceneHostPort/uiDataLabel)
+
+Post-W3 regression, found via `bun ./📜️script.ts test` (not typecheck — this class of bug is invisible to
+`tsc`, only surfaces at module-load time): `TypeError: undefined is not an object (evaluating
+'reactHostPort.forwardRef')` in `Avatar/🟦️component.tsx`, reproduced independently on ui-react's own test
+suite (a genuine W3 regression, not renderer-specific).
+
+**Root cause**: an ES-module circular-import initialization-order bug. The barrel imports each extracted
+element (to re-export it); several elements import symbols back from the barrel via the `🚧️W3-interim`
+marker. When a `🚧️W3-interim`-imported symbol is a barrel-defined `const`/`export let` and the *consuming*
+element reads it at MODULE TOP LEVEL (not inside a function/component body), the read can land in that
+binding's temporal-dead-zone: whichever module the loader reaches first in the cycle sees the other's
+top-level `const`/`let` still uninitialized. Elements that only read the symbol inside function bodies are
+unaffected (evaluation happens at render time, long after both modules finish loading) — this is why only
+a handful of the 50 extracted elements tripped it.
+
+**Found 4 instances, one at a time via the test suite** (fix one, rerun, next error surfaces — no way to
+find them all statically, since it depends on which symbols are read at column-0 vs. inside a closure):
+1. `reactHostPort.forwardRef`/`.createContext`/`.memo` at module top level in **Tree, Canvas, ActionGroup,
+   ToggleGroup, Avatar, Scrollable** (6 elements; `Panel` was a 7th candidate from the initial grep but its
+   usage turned out to be inside a function body — false positive, left importing via the barrel).
+2. `cn(...)` at module top level (inside a top-level `cva(cn(...))` call) in **ActionGroup, Toggle** — a
+   *different* barrel `const` (`twMergeUi`, `cn`'s dependency) hitting the same TDZ pattern.
+3. `sceneHostPort.drei.Line` at module top level in **Scene**.
+4. `uiDataLabel(...)` at module top level (inside a top-level demo-fixture object literal) in
+   **VirtualFileSystem**.
+
+**Fix, same shape every time**: extract the affected symbol (+ its minimal dependency closure) out of the
+barrel into its own `🧱️elements/🫀️core/<Name>/🟦️component.tsx` file with no import back into any element,
+then have the barrel `import`-then-`export` it from there (never a bare `export { X } from "leaf"` — that
+doesn't create a local binding, breaks other same-file barrel code referencing `X` unqualified, per the W2
+lesson already in `📋️TEMPLATE-UI.md`), and have every affected element import the symbol **directly** from
+the core file instead of via the `🚧️W3-interim` barrel path. New core files landed:
+- `🧱️elements/🫀️core/Ports/🟦️component.tsx` — `ReactHostPort`/`reactHostPort`/`setReactHostPort` +
+  `SceneHostPort`/`sceneHostPort`/`setSceneHostPort`. `flowHostPort`/`threeHostPort`/`iconRenderPort`
+  stay in the barrel (no top-level consumer). Since `export let` bindings can't be reassigned by an
+  importer, the barrel's `configureHostPorts` now calls the exported `setReactHostPort`/`setSceneHostPort`
+  setters instead of a direct `=` assignment for these two ports specifically.
+- `🧱️elements/🫀️core/ClassNames/🟦️component.tsx` — `cn` (+ its private `twMergeUi`). Barrel's now-unused
+  `ClassValue`/`clsx`-type-import and `extendTailwindMerge` adapter imports removed (the standalone
+  `export { clsx } from "clsx";` re-export is untouched, doesn't need them).
+- `🧱️elements/🫀️core/UiLabel/🟦️component.tsx` — `UiLabel` (branded type) + `uiDataLabel`.
+
+**Verification**: `bun ./📜️script.ts test` went from a hard module-load crash (0 tests could even start) to
+**512 tests running, 504 passing**. The remaining 8 failures are pre-existing and unrelated to this fix —
+confirmed each is a genuine test-logic/mock issue (`camera.updateMatrixWorld is not a function` on a bare
+test-double camera, a missing `[data-icon="beam"]` CSS-rule assertion, jsdom `event.target?.closest`/
+`Node.contains` gaps in unrelated pointer-event tests) with no "before initialization"/`undefined` host-
+port or barrel-symbol signature — not another instance of this bug class. `bun ./📜️script.ts typecheck`:
+**96 errors, exact match to the running baseline**, none referencing the new core files or the touched
+symbols — confirmed via grep, not just count. `grep -rn "^const [A-Za-z0-9_]* = (reactHostPort|
+sceneHostPort)\."` and the module-top-level `cn(`/`uiDataLabel(` scans now return only the fixed files'
+new direct-core imports, zero remaining barrel-routed top-level reads of these four symbols.
+
+**Lesson for `📋️TEMPLATE-UI.md`** (not yet written back into that file — flagging here so W7/future waves
+don't rediscover this): before extracting any element, grep it for barrel-`const`-typed symbols used
+**outside** a function/component body (module top level, including inside top-level object/array literals
+like demo fixtures or `cva(...)` calls) — those need a direct core import from day one, not a
+`🚧️W3-interim` barrel import, because the barrel↔leaf cycle makes the barrel copy's initialization order
+unreliable. A symbol read only inside hooks/render bodies is always safe via the barrel.
+
+## W4 follow-up: renderer-engine-react barrel had incomplete re-exports (module-load crash, separate from the ui-react circular-import class)
+
+While verifying the ui-react fix above, ran `bun ./📜️script.ts test` on `framework-renderer-react`
+(`…📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react`) too — same hard module-load crash
+(`TypeError: shellLabel is not a function`, `'shellLabel' is undefined`) from `Shell/🟦️component.tsx`.
+Fixed `Shell`'s own `shellLabel(...)`-at-module-top-level read the same way as ui-react (imports it
+DIRECTLY from `../ShellHelpers/🟦️component.tsx`, its real implementation, instead of via the
+`🚧️W4-interim` barrel path) — but re-running the FULL suite (`vitest run --reporter=verbose` directly;
+the `bun ./📜️script.ts test` wrapper's own budget wrapper unexpectedly killed itself at both the 15s
+`fundamental` and 300s `long` levels for unrelated reasons, direct invocation ran in 9s) surfaced a
+**different, pre-existing bug class**: the barrel's `//#region ShellHelpers` re-export block
+(`📦️index.tsx:704-778`) was simply missing 5 of `ShellHelpers`'s 72 real exports —
+**not a timing/circular-import issue, a plain incomplete rewiring** left over from whichever earlier W4
+batch created that region. Diffed `ShellHelpers`'s actual `export`ed names against the barrel's
+import/export list programmatically (not by eyeballing 70+ names) to find all 5 at once: `shellLabel`,
+`shellTabIcon`, `shellTerminologyLabel`, `driverDisplayLabel`, `SelectionUtilityOptions` (type). Added
+all 5 to both the barrel's `import {...}` and paired `export {...}` statements (same import-then-export
+rule as everywhere else in this ticket).
+
+Iterating test → fix → retest surfaced 3 more instances of the identical "real symbol exists but was
+never wired through" bug, each a `ReferenceError`/`undefined` at its actual USE site (not a TDZ), each
+fixed by tracing the real definition and adding it wherever the chain was broken:
+- `DEFAULT_PANEL_WIDTH_PX` (`ShellHelpers`) was a bare `const`, not `export const` — never reached the
+  barrel even though `Shell`/`ShellHost` both already imported it via `🚧️W4-interim`. Added `export`.
+- `registeredPuzzle3dBrushMeshes` (`ShellHelpers`) — same bare-`const` bug, PLUS `World3dHost` (its only
+  consumer) never imported it at all (not even attempted) — added `export`, added it to `World3dHost`'s
+  `🚧️W4-interim` import list (safe there — used only inside a `useRef` initializer, not module top
+  level), and to the barrel's re-export list.
+- `formatKeybindingShortcut`/`buildKeysByActionId` — both genuinely `export`ed by the SEPARATE
+  `@semio-tech/ui-react` package (not this barrel) and correctly imported that way inside the barrel
+  itself, but `🧪️index.test.ts` imported them from the LOCAL barrel (`./📦️index.tsx`) instead of
+  `@semio-tech/ui-react` directly — a mis-categorized import in the test file (everything else from
+  `ui-react` in that file, e.g. `Footer`/`uiDataLabel`/`SelectionMarquee`, was already on the correct
+  import line). Moved both to the `@semio-tech/ui-react` import line.
+
+**Verification**: went from a hard crash (0 tests could load) → 290/302 → 294/302 → 298/302 passing as
+each layer of missing wiring was fixed, confirmed via direct `vitest run` (not the flaky wrapper) each
+time. `bun ./📜️script.ts lint` (region/host-contract check, no separate `typecheck` command exists for
+this package — no `tsconfig.json` under this dir) — passes clean. **The remaining 4 failures are a
+different, unrelated class**, confirmed by inspection, not assumed: a 5000ms test timeout on an async
+plugin-module-loading test with a misleading/unrelated stack trace (vitest attributing it to a later,
+synchronous reducer test — a known vitest artifact, not evidence of what actually hung), a CSS
+`ring-primary` class assertion, `Invalid Chai property: toHaveTextContent` (missing `@testing-library/
+jest-dom` matcher registration in this package's vitest setup — an environment/setup gap, not this
+ticket's concern), and a `logos`-vs-`logo` regex/asset-path mismatch in a `mit-bestand` demo brand test.
+None reference an import, an `undefined`/`not defined` symbol, or initialization order — a materially
+different failure signature from every bug fixed above.
+
+**Lesson, folded into the same `📋️TEMPLATE-UI.md` entry as the ui-react circular-import fix**: after
+ANY batch element-extraction pass creates a barrel's `🚧️W(3|4)-interim` re-export region for an
+already-extracted source file, mechanically diff that source file's real `export`ed names against the
+barrel's import/export list for the region (`comm -23` on two sorted name lists, not eyeballing) —
+partial re-export lists silently produce `undefined` at every downstream `🚧️W(3|4)-interim` consumer,
+and typecheck alone will not catch it if the barrel's own `import`/`export` line type-checks fine (the
+TS types can be structurally sound while the runtime binding is simply absent from the list).
+
+## W5 status: COMPLETE (styling ×4 langs, assets)
+
+Moved the remaining three styling language packages into `🎨️styling/📦️packages/<lang>/` (rust was
+already done in W1): `🟦️typescript` (`@semio-tech/ui-styling`), `🐍️python`
+(`@semio-tech/ui-styling-py`), `🔷️dotnet` (no existing nx wiring, moved as-is). Fixed every dependent —
+literal-path ones (package.json, os/dev + renderer-engine vite/vitest configs, storybook, mit-bestand)
+and the same class of self-referencing-relative-path bugs found repeatedly in W1/W2 (styling-TS's own
+`index.ts`/`index.test.ts`, ui-react's `🎨️tailwind.config.ts` and 7× inline `🎨️ui.css` reads,
+styling-rust's `script.ts`) — each verified via `existsSync`, not assumed.
+
+**Confirmed and deleted 2 dead stub directories** flagged as a TODO in W0
+(`🎨️styling/🟦️typescript/🎨️styling/`, `🎨️styling/🐍️python/🎨️styling/🎨️styling/`): zero repo-wide
+references to either, and their content was stale (the CSS stub still had the old broken Anta-font URL
+shape, the generated-token stubs had extra/missing keys vs the real generated output) — genuinely
+orphaned, not live duplicates.
+
+**Assets: corrected course from the original plan.** `🖱️ui/🖼️assets` turns out to have no
+`package.json`/`project.json` at all — just static files (fonts/icons/cursor/introduction/list) plus two
+small TS helpers. Per the SHAPE V2 broadcast's own `rootDataDirNames` classification (`🖼️assets` is
+explicitly listed as *data*, not a package), the correct move is flattening it to the owner root
+(`🖱️ui/🖼️assets/*` directly, no `📦️packages/🟦️typescript/` wrapper) rather than packaging it — adjusted
+from the original plan's assumption. **Important scope-boundary finding**: the widely-imported
+`@semio-tech/assets` npm alias (used by `Tree`, `Canvas`, `VirtualFileSystem`, ui-react's own barrel,
+renderer-react, vscode client, compose, mit-bestand, storybook — a dozen+ consumers) resolves to a
+**different, top-level `🧰️framework/🔨️modules/🖼️assets` module**, NOT `🖱️ui/🖼️assets`. That module is
+outside this ticket's declared scope (🖱️ui + renderer-engine + styling + assets meant *ui's own* small
+assets folder) and was correctly left untouched — verified before assuming "assets" meant the big
+shared package.
+
+Also fixed 3 stale doc-comment path references in framework-core's `📦️index.ts` (comment-only, pointing
+at wgpu's pre-W1 location) — noticed during the final sweep, safe/anticipated per the plan's schema-core
+notes.
+
+**Final verification**: `bun ./📜️script.ts typecheck` from ui-react → **96 errors**, exact match,
+confirming zero regressions across the entire W5 change set (styling ×4 + assets + the 3 comment fixes).
+
+## Coexistence note: SHAPE V2 Tree Purity Broadcast (26/08/05/SHAPE-V2-TREE-PURITY-BROADCAST)
+
+A separate, genuine user directive landed in the shared `🔣️taxonomy.json` mid-session (new
+`entryLocation`/`rootDataDirNames`/`rootDataFileNames`/`rootDocFileNames` fields), tightening the
+**plugin/framework crate** shape: entry files move from a plugin's owner root into
+`📦️packages/<lang>/`, sibling variant files fold into their own `component.<ext>`, data/docs relocate
+to owner root. Confirmed via that ticket's own description and the crate-consolidation master.md's
+"🚨🌳️ SHAPE V2" notice that this is **explicitly scoped to exclude this ticket** — both state the
+`🎯️targets`/`🧱️elements` axis is untouched/additive-only. No action needed: this ticket's packages
+never had entry files at an "owner root" to begin with (they were designed to live inside
+`📦️packages/<lang>/🎯️targets/<target>/` from W0 onward), so there is nothing to retrofit. Verified
+`🔣️taxonomy.json`'s W0-added fields are all still intact after the broadcast's additive edit.
+
 ## Deliberately NOT done in W0
 - No `taxonomy.json` `areas` entries for ui/renderer-engine yet (W6).
 - No directory move, no root `package.json`/`Cargo.toml` edit (W1) — those touch files the concurrently

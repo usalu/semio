@@ -22,7 +22,7 @@ pub(crate) fn trinity_lod_measure(window_id: &str, current_mode: &str, jack_acti
 }
 
 pub(crate) fn trinity_lod_json_for_window(cfg: &JackConfig, window_id: &str) -> Option<String> {
-    let mode = cfg.lod_mode_by_window.get(window_id).map(String::as_str).unwrap_or(TRINITY_LOD_MODE_AUTOMATIC);
+    let mode = cfg.lod_mode_by_window.get(window_id).map_or(TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
     if mode == TRINITY_LOD_MODE_AUTOMATIC {
         Some(json!({ "automatic": true }).to_string())
     } else {

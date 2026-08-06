@@ -4,7 +4,7 @@ use crate::apps::writer::config::WriterConfig;
 use crate::apps::writer::terminology::WriterPlayLabels;
 use crate::artifacts::writer::WriterProjection;
 use semio_framework_plugin::{ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
-use trinity_jack::{example_graph, lint, Diagnostic};
+use trinity::core::{example_graph, lint, Diagnostic};
 
 //#region 🔖️Constants
 pub const WRITER_PLAY_BODY_INSPECTION: &str = "writer.play.inspection";

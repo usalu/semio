@@ -1,8 +1,0 @@
-{
-  "name": "@semio-tech/remodel-geo",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "test": "nx run remodel-geoest"
-  }
-}

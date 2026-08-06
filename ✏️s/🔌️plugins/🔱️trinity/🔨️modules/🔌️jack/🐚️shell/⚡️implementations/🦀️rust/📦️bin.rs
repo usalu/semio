@@ -4,8 +4,8 @@ use std::env;
 use std::fs;
 use std::io::{self, BufRead, Write};
 use store::DocumentDsl;
-use trinity_jack::{run, QueryResult};
-use trinity_ram::{Graph, GraphFixture, PropertyValue};
+use trinity::artifacts::jack::{Graph, GraphFixture, PropertyValue};
+use trinity::core::{run, QueryResult};
 
 //#region ⚠️ Errors
 /// ⚠️ Trinity jack shell errors.
@@ -16,7 +16,7 @@ enum TrinityJackShellError {
     #[error("parse {path}: {source}")]
     Dsl { path: String, source: store::TextError },
     #[error(transparent)]
-    Graph(#[from] trinity_ram::TrinityRamError),
+    Graph(#[from] trinity::artifacts::jack::TrinityRamError),
     #[error("{0}")]
     Query(String),
     #[error(transparent)]
@@ -93,7 +93,7 @@ fn format_cell(value: &PropertyValue) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use trinity_ram::{Camera, Edge, GraphFixture, Manifest, Node, Port, PortDirection, PropertyBag};
+    use trinity::artifacts::jack::{Camera, Edge, GraphFixture, Manifest, Node, Port, PortDirection, PropertyBag};
 
     fn mini_json() -> String {
         let fixture = GraphFixture {

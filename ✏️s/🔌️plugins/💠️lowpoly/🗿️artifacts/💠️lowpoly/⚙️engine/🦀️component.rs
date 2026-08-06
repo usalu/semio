@@ -1,7 +1,7 @@
 //! ⚙️ Lowpoly artifact — headless compute (constitutional: engine): the mutable mesh-editing compute
 //! session (`LowpolyDocument`) wrapping `kernel_3d_mesh`, the default example projection, the app's
 //! typed media I/O surface and shared projection lookups. Pixel/paint compute lives in the sibling
-//! `🦀️paint.rs`; media export/import compute lives in `🦀️media.rs`.
+//! `🎨️paint/🦀️component.rs`; media export/import compute lives in `🧵️media/🦀️component.rs`.
 
 use crate::artifacts::lowpoly::{LowpolyObject, LowpolyPaintLayer, LowpolyProjection, LowpolySelection, LOWPOLY_PAINT_TEXTURE_SIZE};
 use kernel_3d_mesh::{EdgeId, FaceId, HalfedgeMesh, MeshKernelError, Vec3, VertexId};

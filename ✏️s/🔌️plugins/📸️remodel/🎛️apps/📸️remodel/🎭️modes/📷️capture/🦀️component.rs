@@ -3,7 +3,7 @@
 
 use crate::apps::remodel::modes::capture::windows::frames;
 use crate::apps::remodel::modes::model::windows::model;
-use semio_framework_plugin::{create_default_layout, create_named_layout, LocalizedLabel, ModeDefinition, NamedWindowLayout};
+use semio_framework_plugin::{create_default_layout, create_named_layout, LocalizedLabel, ModeDefinition, NamedLayout};
 
 pub const REMODEL_PLAY_MODE_CAPTURE: &str = "capture";
 pub const REMODEL_PLAY_LAYOUT_CAPTURE: &str = "remodel-capture";
@@ -13,7 +13,7 @@ pub fn definition() -> ModeDefinition {
     ModeDefinition { id: REMODEL_PLAY_MODE_CAPTURE.into(), label: LocalizedLabel::native("Capture", "Aufnahme"), icon_id: "camera".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
-pub fn layout() -> NamedWindowLayout {
+pub fn layout() -> NamedLayout {
     create_named_layout(
         REMODEL_PLAY_LAYOUT_CAPTURE,
         "Capture",

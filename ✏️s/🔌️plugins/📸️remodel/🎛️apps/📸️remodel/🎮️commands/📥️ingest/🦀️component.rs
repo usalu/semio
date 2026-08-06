@@ -2,9 +2,7 @@
 //! video frame/done tick pair, the in-process video-bytes fallback, and manual stream bookkeeping.
 
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigOperation};
-use crate::artifacts::remodel::engine::{
-    describe_video_probe, decode_still_image, images as remodel_image, next_remodel_id, payload_from_data_url, video as remodel_video, video_codec_from_label, video_codec_to_document,
-};
+use crate::artifacts::remodel::engine::{decode_still_image, describe_video_probe, images as remodel_image, next_remodel_id, payload_from_data_url, video as remodel_video, video_codec_from_label, video_codec_to_document};
 use crate::artifacts::remodel::op::RemodelOperation;
 use crate::artifacts::remodel::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelScene, VideoSource};
 use base64::Engine as _;
@@ -61,8 +59,9 @@ fn blur_gate_reject(scratch: &mut VideoImportScratch, score: f32, min_sharpness:
 
 /// 🧩️ Pure reconstruction of the blur-gate rolling window from `stream_id`'s already-persisted frames
 /// (most recent `BLUR_GATE_ROLLING_WINDOW` first, then scored oldest-to-newest so the window fills in
-/// the same order the original per-tick `RefCell` scratch would have) — the B1 replacement for carrying
-/// `VideoImportScratch` as hidden interior-mutable runtime state across `ImportVideoFramePayload` ticks.
+/// the same order the original per-tick `RefCell` scratch would have) — the pure-trait replacement
+/// for carrying `VideoImportScratch` as hidden interior-mutable state across `ImportVideoFramePayload`
+/// ticks.
 fn rebuild_video_import_scratch(scene: &RemodelScene, stream_id: &str) -> VideoImportScratch {
     let mut scratch = VideoImportScratch::default();
     let Some(stream) = scene.streams.iter().find(|stream| stream.id == stream_id) else { return scratch };
@@ -84,7 +83,7 @@ fn batch_stream_id(scene: &RemodelScene, index: u32) -> String {
     if index == 0 {
         next_remodel_id("stream")
     } else {
-        scene.streams.last().map(|stream| stream.id.clone()).unwrap_or_else(|| next_remodel_id("stream"))
+        scene.streams.last().map_or_else(|| next_remodel_id("stream"), |stream| stream.id.clone())
     }
 }
 //#endregion 🔖️VideoImportScratch
@@ -412,7 +411,6 @@ mod tests {
     use super::*;
     use crate::apps::remodel::testkit::{app, dispatch};
     use crate::apps::remodel::RemodelCommand;
-    use semio_framework_plugin::PluginApp;
 
     #[test]
     fn import_frame_payload_creates_a_stream_and_asset() {
@@ -431,10 +429,7 @@ mod tests {
         let mut app = app();
         // 🎯️ `IngestParams::default().frame_sample_stride == 5`; force stride 1 so all 5 synthesized
         // frames are kept (a stride-sampling test belongs to the video engine topic file, not here).
-        dispatch(
-            &mut app,
-            RemodelCommand::SetIngestParams(crate::apps::remodel::commands::params::set_ingest_params::SetIngestParams { frame_sample_stride: 1, max_frames: 200, downscale_long_edge_px: 1600, min_sharpness: 0.3 }),
-        );
+        dispatch(&mut app, RemodelCommand::SetIngestParams(crate::apps::remodel::commands::params::set_ingest_params::SetIngestParams { frame_sample_stride: 1, max_frames: 200, downscale_long_edge_px: 1600, min_sharpness: 0.3 }));
         dispatch(&mut app, RemodelCommand::ImportVideoBytesPayload(import_video_bytes_payload::ImportVideoBytesPayload { payload: checker_video_data_url(5, 32, 32, 4), name: "clip.mp4".into() }));
         let scene = app.projection().expect("projection");
         assert_eq!(scene.streams.len(), 1);
@@ -451,13 +446,7 @@ mod tests {
         for index in 0..4u32 {
             dispatch(
                 &mut app,
-                RemodelCommand::ImportVideoFramePayload(import_video_frame_payload::ImportVideoFramePayload {
-                    payload: checker_data_url_jpeg(24, 24, 3),
-                    name: "clip.mp4".into(),
-                    index,
-                    frame_index: index,
-                    timestamp_ms: f64::from(index) * 100.0,
-                }),
+                RemodelCommand::ImportVideoFramePayload(import_video_frame_payload::ImportVideoFramePayload { payload: checker_data_url_jpeg(24, 24, 3), name: "clip.mp4".into(), index, frame_index: index, timestamp_ms: f64::from(index) * 100.0 }),
             );
         }
         dispatch(&mut app, RemodelCommand::ImportVideoDone(import_video_done::ImportVideoDone { name: "clip.mp4".into(), duration_ms: 400.0, frame_count: 4, width: 24, height: 24, codec: "mjpeg".into() }));

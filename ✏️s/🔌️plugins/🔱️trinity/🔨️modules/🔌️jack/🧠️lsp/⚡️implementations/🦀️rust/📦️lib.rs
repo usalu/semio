@@ -4,8 +4,8 @@ use mathematical_graph_dsl::{complete, format, hover, lint, semantic_tokens, Boa
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
-use trinity_jack::{example_graph_fixture, OwnedTrinityQueryableGraph};
-use trinity_ram::Graph;
+use trinity::artifacts::jack::Graph;
+use trinity::core::{example_graph_fixture, OwnedTrinityQueryableGraph};
 
 //#region ⚠️ Errors
 /// ⚠️ Jack language-server fixture-loading errors.
@@ -13,7 +13,7 @@ use trinity_ram::Graph;
 pub enum TrinityJackLspError {
     /// 🧩️ Trinity graph fixture load/validation failure.
     #[error(transparent)]
-    Graph(#[from] trinity_ram::TrinityRamError),
+    Graph(#[from] trinity::artifacts::jack::TrinityRamError),
     /// 🌐️ Board-domain graph fixture load/validation failure.
     #[error(transparent)]
     Dsl(#[from] mathematical_graph_dsl::GraphDslError),
@@ -664,7 +664,7 @@ mod tests {
     #[test]
     fn load_fixture_for_domain_trinity_and_nakagin_succeed() {
         let mut server = JackLanguageServer::new();
-        let fixture_json = trinity_jack::example_graph_fixture_json();
+        let fixture_json = trinity::core::example_graph_fixture_json();
         server.load_fixture_for_domain(&fixture_json, "trinity").unwrap();
         assert_eq!(server.graph_domain(), "trinity");
         server.load_fixture_for_domain(&fixture_json, "nakagin").unwrap();
@@ -720,7 +720,7 @@ mod tests {
     fn load_fixture_for_domain_refreshes_open_documents() {
         let mut server = JackLanguageServer::new();
         open_doc(&mut server, "writer://refresh", 1, "RETURN a");
-        let fixture_json = trinity_jack::example_graph_fixture_json();
+        let fixture_json = trinity::core::example_graph_fixture_json();
         assert!(server.load_fixture_for_domain(&fixture_json, "trinity").is_ok());
     }
 

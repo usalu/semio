@@ -1,0 +1,41 @@
+[package]
+name = "semio-s-plugin-draw"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Draw plugin - one crate for the draw artifact (diff/op/dsl/pack/spr/engine) and the draw play app (commands/modes/windows/panels)"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:draw"
+
+[package.metadata.semio]
+role = "plugin"
+
+[[package.metadata.semio.playground]]
+variant = "draw"
+ports = { react = 6064, wgpu = 6164 }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "📦️lib.rs"
+
+[dependencies]
+fsm = { path = "../../🔄️fsm/📦️packages/🦀️rust", package = "semio-s-plugin-draw-fsm" }
+kernel_2d_engine = { path = "../../../../../✏️s/🔨️modules/◻2d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-kernel-geometry-2d-engine" }
+kernel_2d_rs = { path = "../../../../../✏️s/🔨️modules/◻2d/⚡️implementations/🦀️rust", package = "semio-s-kernel-geometry-2d" }
+dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+semio-framework-core = { path = "../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
+semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+base64 = "0.22"
+image = { version = "0.25", default-features = false, features = ["png"] }
+serde.workspace = true
+serde_json.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen.workspace = true

@@ -29,13 +29,7 @@ pub fn definition() -> PanelTabDefinition {
 /// finishes — the documented, accepted trade-off of the pure-trait conversion.
 pub fn render(scene: &RemodelScene, config: &RemodelConfig, active_utility: &str, labels: &RemodelLabels) -> UiNode {
     let job = &scene.job;
-    let job_label = format!(
-        "{}: {} ({:.0}%){}",
-        labels.reconstruction.as_str(),
-        stage_display(job.stage),
-        job.progress_0_1 * 100.0,
-        job.error.as_ref().map(|error| format!(" - {}: {error}", labels.error.as_str())).unwrap_or_default()
-    );
+    let job_label = format!("{}: {} ({:.0}%){}", labels.reconstruction.as_str(), stage_display(job.stage), job.progress_0_1 * 100.0, job.error.as_ref().map(|error| format!(" - {}: {error}", labels.error.as_str())).unwrap_or_default());
     let running = !matches!(job.stage, ReconstructionStage::Idle | ReconstructionStage::Done | ReconstructionStage::Failed);
     let running_label = format!("{}: {}", labels.status.as_str(), if running { labels.running.as_str() } else { labels.idle.as_str() });
     let utility_label = format!("{}: {} - {}: {} ({})", labels.utility.as_str(), active_utility, labels.selection.as_str(), config.selection.mode, config.selection.ids.len());

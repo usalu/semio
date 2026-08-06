@@ -1,0 +1,46 @@
+[package]
+name = "semio-s-plugin-remodel"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Remodel plugin - one crate for the remodel artifact (diff/op/dsl/pack/spr plus the whole photogrammetry/videogrammetry stack as engine topic files: images, video, camera, feature, sfm, dense, mesh, motion, geo, reconstruction) and the remodel play app (commands/modes/windows/panels)"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:remodel"
+
+[package.metadata.semio]
+role = "plugin"
+
+[[package.metadata.semio.playground]]
+variant = "remodel"
+ports = { react = 6063, wgpu = 6163 }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "📦️lib.rs"
+
+[dependencies]
+dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+pack = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-pack" }
+mathematical_algebra = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/➕️algebra/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-algebra" }
+mathematical_graph = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph" }
+mathematical_lie = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🔷️lie/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-lie" }
+mathematical_optimize = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🎯️optimize/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-optimize" }
+mathematical_random = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🎲️random/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-random" }
+mathematical_signal = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📶️signal/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-signal" }
+mathematical_spatial = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🗺️spatial/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-spatial" }
+semio-framework-core = { workspace = true }
+semio-framework-os = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+serde.workspace = true
+serde_json.workspace = true
+
+# 🖼️ `images` engine topic file — the only third-party codec dependency in the whole stack.
+base64 = "0.22.1"
+png = "0.17.16"
+

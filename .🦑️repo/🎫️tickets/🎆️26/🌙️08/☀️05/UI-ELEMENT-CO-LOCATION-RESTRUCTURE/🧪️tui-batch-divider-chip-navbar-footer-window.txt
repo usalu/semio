@@ -1,0 +1,23 @@
+Batch: paint_divider, paint_chip, paint_navbar+paint_items, paint_footer, paint_window+paint_corner_tab
+Crate: semio-framework-ui-tui
+Verification: cargo check -p semio-framework-ui-tui -> clean, 0 warnings.
+Bonus sanity check: cargo test -p semio-framework-ui-tui --lib -> 76 passed, 1 pre-existing
+unrelated failure (tests::window_chrome_recesses_tabs_into_the_top_corners_of_a_closed_shape),
+caused by VS16 (️) variation-selector characters baked into the box-drawing-glyph string
+literal at lib.rs ~line 2417-2421 in the `tests` mod, a region this ticket never touched. Confirmed
+pre-existing by `git diff --stat` on the file showing zero diff inside the tests region.
+
+Files written:
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Divider/⌨️component.rs (new dir)
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Chip/⌨️component.rs (new dir)
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Navbar/⌨️component.rs (existing dir, added tui leaf)
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Footer/⌨️component.rs (existing dir, added tui leaf)
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Window/⌨️component.rs (existing dir, added tui leaf)
+
+Judgment call: WindowTab/WindowChipLayout (struct + fields) and window_chip_layout (fn) stayed in
+`chrome` mod per the ticket's own instruction (shared with ChromeState::window_control_at, which is
+NOT part of this batch), but they were plain-private in the monolith. Since paint_window/
+paint_corner_tab now live in a sibling crate-root module, promoted all three to pub(crate)
+(struct-level and field-level) — the minimum visibility bump that keeps window_control_at working
+unchanged and lets crate::window reach them. Documented with a doc comment at each site explaining
+why pub(crate) was needed.

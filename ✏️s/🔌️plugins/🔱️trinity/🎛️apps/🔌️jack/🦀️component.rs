@@ -17,6 +17,7 @@ use semio_framework_plugin::{
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use std::collections::HashMap;
+use store::{DocumentDsl, DocumentPack};
 
 //#region 🔖️Constants
 const TRINITY_JACK_PLAY_APP_ID: &str = "trinity-jack-play";
@@ -34,8 +35,8 @@ const TRINITY_JACK_PLAY_WINDOW_GRAPH: &str = "trinity-jack-graph";
 const TRINITY_JACK_PLAY_WINDOW_EDITOR: &str = "trinity-jack-editor";
 const TRINITY_JACK_PLAY_WINDOW_RESULTS: &str = "trinity-jack-results";
 
-pub(crate) const NAKAGIN_FIXTURE_DSL: &str = include_str!("../../../../../../✏️s/🔌️plugins/🔱️trinity/📚️examples/🔱️nakagin-capsule-tower.trinity");
-pub(crate) const BRANCH_FIXTURE_DSL: &str = include_str!("../../../../../../✏️s/🔌️plugins/🔱️trinity/📚️examples/🔱️branch-chain.trinity");
+pub(crate) const NAKAGIN_FIXTURE_DSL: &str = include_str!("../../📚️examples/🔱️nakagin-capsule-tower.trinity");
+pub(crate) const BRANCH_FIXTURE_DSL: &str = include_str!("../../📚️examples/🔱️branch-chain.trinity");
 
 pub(crate) const TRINITY_JACK_DEFAULT_QUERY: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' AND b.name != 'b' RETURN a.name, b.name, b.label";
 //#endregion 🔖️Constants
@@ -292,7 +293,7 @@ impl DocumentApp for TrinityJackPlayApp {
     }
 
     fn window_measures(&self, _doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        let mode = cfg.projection.lod_mode_by_window.get(TRINITY_JACK_PLAY_WINDOW_GRAPH).map(String::as_str).unwrap_or(crate::apps::jack::windows::graph::TRINITY_LOD_MODE_AUTOMATIC);
+        let mode = cfg.projection.lod_mode_by_window.get(TRINITY_JACK_PLAY_WINDOW_GRAPH).map_or(crate::apps::jack::windows::graph::TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
         HashMap::from([(TRINITY_JACK_PLAY_WINDOW_GRAPH.to_string(), vec![crate::apps::jack::windows::graph::trinity_lod_measure(TRINITY_JACK_PLAY_WINDOW_GRAPH, mode, jack_action)])])
     }
 
@@ -303,7 +304,10 @@ impl DocumentApp for TrinityJackPlayApp {
         let selected = cfg.projection.selected_node_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
         let mut menu = Menu::of(registry).action("runQuery").action("reorganize").action("formatDocument").group("mode", |m| m.action("setActiveExample")).group("open", |m| m.action("loadExampleQuery"));
-        if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
+        // 🩹️ `Direct`, not `ViaNodeGraphEdit`: jack's own `TrinityJackCommand::DeleteSelection` is a
+        // real standalone command (no `nodeGraphEdit`-style JSON-operations envelope exists for jack),
+        // so the context-menu row must dispatch the `deleteSelection` action id directly.
+        if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::Direct) {
             menu = menu.item(spec);
         }
         menu.build()
@@ -435,7 +439,35 @@ pub fn create_trinity_jack_app() -> App {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::{OpBinary, OpText};
     use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, ViewState};
+
+    /// 🎫️ Permanent wire guard (TEMPLATE.md §7): every `TrinityJackCommand` variant round-trips
+    /// through both its binary (`OpBinary`, via `#[derive(dsl::DslOps)]`) and text (`OpText`) codecs.
+    #[test]
+    fn trinity_jack_command_text_and_binary_round_trip() {
+        let commands = vec![
+            TrinityJackCommand::SetFixtureJson { json: "{}".into() },
+            TrinityJackCommand::DeleteSelection,
+            TrinityJackCommand::PatchNodes { node_ids: vec!["a".into()], field: "name".into(), value: "Renamed".into() },
+            TrinityJackCommand::Reorganize,
+            TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) RETURN a".into()) },
+            TrinityJackCommand::RunQuery { query: None },
+            TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() },
+            TrinityJackCommand::SetViewport { viewport_json: "{\"x\":1.0,\"y\":2.0,\"zoom\":1.0}".into() },
+            TrinityJackCommand::TextSelect { start: 3, end: 9 },
+            TrinityJackCommand::SetLodMode { window_id: "trinity-jack-graph".into(), value: "compact".into() },
+            TrinityJackCommand::GraphPointerDown { node_id: Some("n1".into()) },
+            TrinityJackCommand::SetSelection { ids: vec!["n1".into(), "n2".into()] },
+            TrinityJackCommand::SetLocale { value: "de-DE".into() },
+        ];
+        for command in commands {
+            let bytes = command.encode_op().expect("encode");
+            assert_eq!(TrinityJackCommand::decode_op(&bytes).expect("decode"), command);
+            let text = command.print_op();
+            assert_eq!(TrinityJackCommand::parse_op(&text).expect("parse"), command);
+        }
+    }
 
     fn meta(actor: &str) -> semio_framework_plugin::ActionMeta {
         testkit::meta(actor)
@@ -591,7 +623,7 @@ mod tests {
         assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
         let last = menu.last().expect("grouped disclosure menu should not be empty");
         let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("deleteSelection");
-        let last_is_group_ending_in_destructive = last.children.as_ref().and_then(|children| children.last()).map(|child| child.destructive == Some(true)).unwrap_or(false);
+        let last_is_group_ending_in_destructive = last.children.as_ref().and_then(|children| children.last()).is_some_and(|child| child.destructive == Some(true));
         assert!(last_is_destructive_leaf || last_is_group_ending_in_destructive, "known destructive deleteSelection must be last: {menu:?}");
     }
 

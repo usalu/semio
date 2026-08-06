@@ -1328,12 +1328,40 @@ pub mod layout {
 // #endregion 🔖️Layout
 
 // #region 🔖️Widget
+#[path = "../../../../🧱️elements/Select/⌨️component.rs"]
+mod select;
+#[path = "../../../../🧱️elements/List/⌨️component.rs"]
+mod list;
+#[path = "../../../../🧱️elements/Tabs/⌨️component.rs"]
+mod tabs;
+#[path = "../../../../🧱️elements/Input/⌨️component.rs"]
+mod input;
+#[path = "../../../../🧱️elements/Log/⌨️component.rs"]
+mod log;
+#[path = "../../../../🧱️elements/Table/⌨️component.rs"]
+mod table;
+#[path = "../../../../🧱️elements/🫀️core/Label/⌨️component.rs"]
+mod label;
+#[path = "../../../../🧱️elements/Divider/⌨️component.rs"]
+mod divider;
+#[path = "../../../../🧱️elements/Chip/⌨️component.rs"]
+mod chip;
+
 pub mod widget {
-    use crate::cell::{attr, Cell, CellBuffer};
-    use crate::event::{Key, KeyEvent};
-    use crate::geometry::{Pos, Rect, Size};
-    use crate::text::{display_width, truncate_to};
-    use crate::theme::{Role, Surface, Theme};
+    use crate::cell::CellBuffer;
+    use crate::chip::paint_chip;
+    use crate::divider::paint_divider;
+    use crate::event::KeyEvent;
+    use crate::geometry::{Rect, Size};
+    use crate::input::{input_on_key, paint_input};
+    use crate::label::paint_label;
+    use crate::list::{list_on_key, paint_list};
+    use crate::log::{log_on_key, paint_log};
+    use crate::select::{paint_select, select_on_key};
+    use crate::table::{paint_table, table_on_key};
+    use crate::tabs::{paint_tabs, tabs_on_key};
+    use crate::text::display_width;
+    use crate::theme::{Role, Theme};
     use std::collections::VecDeque;
 
     /// 📣️ A widget- or window-chrome-level result of handling input, surfaced to the app.
@@ -1573,361 +1601,27 @@ pub mod widget {
             }
         }
     }
-
-    fn list_on_key(l: &mut ListState, ev: &KeyEvent) -> Option<WidgetSignal> {
-        match ev.key {
-            Key::Up if l.selected > 0 => {
-                l.selected -= 1;
-                Some(WidgetSignal::SelectionChanged(l.selected))
-            }
-            Key::Down if l.selected + 1 < l.items.len() => {
-                l.selected += 1;
-                Some(WidgetSignal::SelectionChanged(l.selected))
-            }
-            Key::Char(' ') => {
-                if let Some(m) = l.marks.get_mut(l.selected) {
-                    *m = !*m;
-                    return Some(WidgetSignal::Toggled(*m));
-                }
-                None
-            }
-            Key::Enter => Some(WidgetSignal::Activated(l.selected)),
-            _ => None,
-        }
-    }
-
-    fn select_on_key(s: &mut SelectState, ev: &KeyEvent) -> Option<WidgetSignal> {
-        if s.options.is_empty() {
-            return None;
-        }
-        match ev.key {
-            Key::Left => {
-                s.index = (s.index + s.options.len() - 1) % s.options.len();
-                Some(WidgetSignal::SelectionChanged(s.index))
-            }
-            Key::Right | Key::Enter => {
-                s.index = (s.index + 1) % s.options.len();
-                Some(WidgetSignal::SelectionChanged(s.index))
-            }
-            _ => None,
-        }
-    }
-
-    fn tabs_on_key(t: &mut TabsState, ev: &KeyEvent) -> Option<WidgetSignal> {
-        if t.tabs.is_empty() {
-            return None;
-        }
-        match ev.key {
-            Key::Left => {
-                t.active = (t.active + t.tabs.len() - 1) % t.tabs.len();
-                Some(WidgetSignal::TabChanged(t.active))
-            }
-            Key::Right => {
-                t.active = (t.active + 1) % t.tabs.len();
-                Some(WidgetSignal::TabChanged(t.active))
-            }
-            _ => None,
-        }
-    }
-
-    fn input_on_key(i: &mut InputState, ev: &KeyEvent) -> Option<WidgetSignal> {
-        match ev.key {
-            Key::Char(c) => {
-                i.value.insert(i.cursor, c);
-                i.cursor += c.len_utf8();
-                Some(WidgetSignal::ValueChanged(i.value.clone()))
-            }
-            Key::Backspace if i.cursor > 0 => {
-                let prev = i.value[..i.cursor].chars().next_back().map(char::len_utf8).unwrap_or(1);
-                i.cursor -= prev;
-                i.value.remove(i.cursor);
-                Some(WidgetSignal::ValueChanged(i.value.clone()))
-            }
-            Key::Left if i.cursor > 0 => {
-                i.cursor -= 1;
-                None
-            }
-            Key::Right if i.cursor < i.value.len() => {
-                i.cursor += 1;
-                None
-            }
-            _ => None,
-        }
-    }
-
-    fn log_on_key(log: &mut LogState, ev: &KeyEvent) {
-        let len = log.lines.len();
-        match ev.key {
-            Key::PageUp => {
-                log.scroll = LogScroll::At(match log.scroll {
-                    LogScroll::Follow => len.saturating_sub(1),
-                    LogScroll::At(n) => n.saturating_sub(10),
-                })
-            }
-            Key::PageDown => {
-                let next = match log.scroll {
-                    LogScroll::Follow => return,
-                    LogScroll::At(n) => n + 10,
-                };
-                log.scroll = if next + 1 >= len { LogScroll::Follow } else { LogScroll::At(next) };
-            }
-            Key::Home => log.scroll = LogScroll::At(0),
-            Key::End => log.scroll = LogScroll::Follow,
-            _ => {}
-        }
-    }
-
-    fn table_on_key(t: &mut TableState, ev: &KeyEvent) -> Option<WidgetSignal> {
-        let visible = t.visible_indices();
-        if visible.is_empty() {
-            return None;
-        }
-        let pos = visible.iter().position(|&i| i == t.selected).unwrap_or(0);
-        match ev.key {
-            Key::Up if pos > 0 => {
-                t.selected = visible[pos - 1];
-                Some(WidgetSignal::SelectionChanged(t.selected))
-            }
-            Key::Down if pos + 1 < visible.len() => {
-                t.selected = visible[pos + 1];
-                Some(WidgetSignal::SelectionChanged(t.selected))
-            }
-            Key::Right => {
-                let row = &mut t.rows[t.selected];
-                if row.has_children && !row.expanded {
-                    row.expanded = true;
-                    Some(WidgetSignal::SelectionChanged(t.selected))
-                } else {
-                    None
-                }
-            }
-            Key::Left => {
-                let row = &mut t.rows[t.selected];
-                if row.has_children && row.expanded {
-                    row.expanded = false;
-                    Some(WidgetSignal::SelectionChanged(t.selected))
-                } else {
-                    None
-                }
-            }
-            Key::Enter => {
-                let row = &mut t.rows[t.selected];
-                if row.has_children {
-                    row.expanded = !row.expanded;
-                    Some(WidgetSignal::SelectionChanged(t.selected))
-                } else {
-                    Some(WidgetSignal::Activated(t.selected))
-                }
-            }
-            _ => None,
-        }
-    }
-
-    fn paint_label(l: &LabelState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
-        let bg = buf.get(rect.x, rect.y).map(|c| c.bg).unwrap_or(theme.surface(Surface::Base));
-        let fg = theme.role(l.role);
-        let (text, width) = truncate_to(&l.text, rect.width);
-        let x = match l.align {
-            Align::Left => rect.x,
-            Align::Center => rect.x + rect.width.saturating_sub(width) / 2,
-            Align::Right => rect.x + rect.width.saturating_sub(width),
-        };
-        buf.put_str(Pos { x, y: rect.y }, text, fg, bg, 0, rect);
-    }
-
-    fn paint_list(l: &ListState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
-        let bg = theme.surface(Surface::Window);
-        for row in 0..rect.height {
-            let idx = l.offset + usize::from(row);
-            let Some(item) = l.items.get(idx) else { break };
-            let selected = idx == l.selected;
-            let row_bg = if selected && focused { theme.role(Role::ActiveBase) } else { bg };
-            let row_fg = if selected && focused { theme.role(Role::ActiveForeground) } else { theme.role(Role::Foreground) };
-            buf.fill_rect(Rect::new(rect.x, rect.y + row, rect.width, 1), Cell::blank(row_fg, row_bg));
-            let mark = l.marks.get(idx).copied().unwrap_or(false);
-            let prefix = if mark { "\u{2713} " } else { "  " };
-            let text = format!("{prefix}{item}");
-            let (text, _) = truncate_to(&text, rect.width);
-            buf.put_str(Pos { x: rect.x, y: rect.y + row }, text, row_fg, row_bg, 0, rect);
-        }
-    }
-
-    fn paint_select(s: &SelectState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
-        let fg = if focused { theme.role(Role::Accent) } else { theme.role(Role::Foreground) };
-        let bg = buf.get(rect.x, rect.y).map(|c| c.bg).unwrap_or(theme.surface(Surface::Panel));
-        let value = s.options.get(s.index).map(String::as_str).unwrap_or("");
-        let text = format!("{}: \u{2039} {} \u{203a}", s.label, value);
-        let (text, _) = truncate_to(&text, rect.width);
-        buf.put_str(Pos { x: rect.x, y: rect.y }, text, fg, bg, 0, rect);
-    }
-
-    fn paint_tabs(t: &TabsState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
-        let bg = theme.surface(Surface::Panel);
-        buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), bg));
-        let mut x = rect.x;
-        for (i, tab) in t.tabs.iter().enumerate() {
-            let active = i == t.active;
-            let fg = if active { theme.role(Role::Accent) } else { theme.role(Role::MutedForeground) };
-            let label = format!(" {tab} ");
-            let w = buf.put_str(Pos { x, y: rect.y }, &label, fg, bg, if active { attr::BOLD } else { 0 }, rect);
-            x += w;
-        }
-    }
-
-    fn paint_log(log: &LogState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
-        let bg = theme.surface(Surface::Window);
-        let fg = theme.role(Role::Foreground);
-        buf.fill_rect(rect, Cell::blank(fg, bg));
-        let len = log.lines.len();
-        let last = match log.scroll {
-            LogScroll::Follow => len,
-            LogScroll::At(n) => (n + 1).min(len),
-        };
-        let first = last.saturating_sub(usize::from(rect.height));
-        for (row, line) in log.lines.iter().skip(first).take(last - first).enumerate() {
-            let (text, _) = truncate_to(line, rect.width);
-            buf.put_str(Pos { x: rect.x, y: rect.y + row as u16 }, text, fg, bg, 0, rect);
-        }
-    }
-
-    fn paint_input(i: &InputState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
-        let bg = theme.surface(Surface::Panel);
-        buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), bg));
-        let (text, fg) = if i.value.is_empty() { (i.placeholder.as_str(), theme.role(Role::MutedForeground)) } else { (i.value.as_str(), theme.role(Role::Foreground)) };
-        let (text, _) = truncate_to(text, rect.width);
-        buf.put_str(Pos { x: rect.x, y: rect.y }, text, fg, bg, 0, rect);
-        if focused && rect.width > 0 {
-            let cx = (rect.x + display_width(&i.value[..i.cursor.min(i.value.len())])).min(rect.x + rect.width - 1);
-            buf.put(cx, rect.y, Cell { ch: '\u{2588}', fg: theme.role(Role::Accent), bg, attrs: 0, width: 1 });
-        }
-    }
-
-    fn paint_divider(d: &DividerState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
-        let bg = buf.get(rect.x, rect.y).map(|c| c.bg).unwrap_or(theme.surface(Surface::Base));
-        let fg = theme.role(Role::BorderNormal);
-        buf.hline(Pos { x: rect.x, y: rect.y }, rect.width, '\u{2500}', fg, bg);
-        if let Some(label) = &d.label {
-            let text = format!(" {label} ");
-            let x = rect.x + rect.width.saturating_sub(display_width(&text)) / 2;
-            buf.put_str(Pos { x, y: rect.y }, &text, theme.role(Role::Foreground), bg, 0, rect);
-        }
-    }
-
-    fn paint_chip(c: &ChipState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
-        let bg = if c.on { theme.role(Role::Accent) } else { theme.surface(Surface::Panel) };
-        let fg = if c.on { theme.role(Role::AccentForeground) } else { theme.role(Role::MutedForeground) };
-        buf.fill_rect(rect, Cell::blank(fg, bg));
-        let text = format!(" {} ", c.label);
-        buf.put_str(Pos { x: rect.x, y: rect.y }, &text, fg, bg, 0, rect);
-    }
-
-    /// 📐️ Resolves each column's width: fixed columns keep their `width`, `width == 0` columns
-    /// split whatever space remains evenly.
-    fn table_column_widths(columns: &[TableColumn], total_width: u16) -> Vec<u16> {
-        let fixed_total: u16 = columns.iter().filter(|c| c.width > 0).map(|c| c.width).sum();
-        let gaps = columns.len().saturating_sub(1) as u16;
-        let flex_count = columns.iter().filter(|c| c.width == 0).count() as u16;
-        let remaining = total_width.saturating_sub(fixed_total + gaps);
-        let flex_width = if flex_count > 0 { remaining / flex_count } else { 0 };
-        columns.iter().map(|c| if c.width > 0 { c.width } else { flex_width }).collect()
-    }
-
-    fn paint_table_cell(buf: &mut CellBuffer, x: u16, y: u16, width: u16, text: &str, fg: [u8; 3], bg: [u8; 3], attrs: u8, align: TableAlign, clip: Rect) {
-        let (t, tw) = truncate_to(text, width);
-        let cell_x = match align {
-            TableAlign::Left => x,
-            TableAlign::Right => x + width.saturating_sub(tw),
-        };
-        buf.put_str(Pos { x: cell_x, y }, t, fg, bg, attrs, clip);
-    }
-
-    /// 🖌️ Header (muted, bold) + hairline underline, then hairline-separated body rows; tree rows
-    /// indent by level and carry a `▾️`/`▸️` expand marker — no vertical rules, no striping.
-    fn paint_table(t: &TableState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
-        if rect.width == 0 || rect.height == 0 || t.columns.is_empty() {
-            return;
-        }
-        let bg = buf.get(rect.x, rect.y).map(|c| c.bg).unwrap_or(theme.surface(Surface::Window));
-        buf.fill_rect(rect, Cell::blank(theme.role(Role::MutedForeground), bg));
-
-        let widths = table_column_widths(&t.columns, rect.width);
-        let mut xs = Vec::with_capacity(widths.len());
-        let mut x = rect.x;
-        for &w in &widths {
-            xs.push(x);
-            x += w + 1;
-        }
-
-        for ((col, &cx), &w) in t.columns.iter().zip(&xs).zip(&widths) {
-            paint_table_cell(buf, cx, rect.y, w, &col.label, theme.role(Role::MutedForeground), bg, attr::BOLD, col.align, rect);
-        }
-        if rect.height == 1 {
-            return;
-        }
-        buf.hline(Pos { x: rect.x, y: rect.y + 1 }, rect.width, '\u{2500}', theme.role(Role::BorderNormal), bg);
-        if rect.height <= 2 {
-            return;
-        }
-
-        let visible = t.visible_indices();
-        if visible.is_empty() {
-            let (text, w) = truncate_to("(empty)", rect.width);
-            let cx = rect.x + rect.width.saturating_sub(w) / 2;
-            buf.put_str(Pos { x: cx, y: rect.y + 2 }, text, theme.role(Role::MutedForeground), bg, 0, rect);
-            return;
-        }
-
-        let body_height = rect.height - 2;
-        let items_fit = usize::from((body_height / 2).max(1));
-        let sel_pos = visible.iter().position(|&i| i == t.selected).unwrap_or(0);
-        let first = if visible.len() <= items_fit { 0 } else { sel_pos.saturating_sub(items_fit / 2).min(visible.len() - items_fit) };
-
-        let mut y = rect.y + 2;
-        let bottom = rect.y + rect.height;
-        for &row_idx in visible.iter().skip(first) {
-            if y >= bottom {
-                break;
-            }
-            let row = &t.rows[row_idx];
-            let selected = row_idx == t.selected;
-            let row_bg = if selected && focused { theme.role(Role::ActiveBase) } else { bg };
-            let row_fg = if selected && focused { theme.role(Role::ActiveForeground) } else { theme.role(Role::MutedForeground) };
-            buf.fill_rect(Rect::new(rect.x, y, rect.width, 1), Cell::blank(row_fg, row_bg));
-            for (ci, ((col, &cx), &w)) in t.columns.iter().zip(&xs).zip(&widths).enumerate() {
-                let text = if ci == 0 {
-                    let indent = "  ".repeat(usize::from(row.level));
-                    let marker = if !row.has_children {
-                        "  "
-                    } else if row.expanded {
-                        "\u{25be} "
-                    } else {
-                        "\u{25b8} "
-                    };
-                    format!("{indent}{marker}{}", row.cells.first().map(String::as_str).unwrap_or(""))
-                } else {
-                    row.cells.get(ci).cloned().unwrap_or_default()
-                };
-                paint_table_cell(buf, cx, y, w, &text, row_fg, row_bg, 0, col.align, rect);
-            }
-            y += 1;
-            if y >= bottom {
-                break;
-            }
-            buf.hline(Pos { x: rect.x, y }, rect.width, '\u{2500}', theme.role(Role::BorderNormal), bg);
-            y += 1;
-        }
-    }
 }
 // #endregion 🔖️Widget
 
 // #region 🔖️Chrome
+#[path = "../../../../🧱️elements/Navbar/⌨️component.rs"]
+mod navbar;
+#[path = "../../../../🧱️elements/Footer/⌨️component.rs"]
+mod footer;
+#[path = "../../../../🧱️elements/Window/⌨️component.rs"]
+mod window;
+
 pub mod chrome {
     use crate::cell::{Cell, CellBuffer};
+    use crate::footer::paint_footer;
     use crate::geometry::{Pos, Rect};
     use crate::layout::{solve_window_layout, WindowLayout};
+    use crate::navbar::paint_navbar;
     use crate::scene::{Node, NodeContent, NodeId, Scene};
     use crate::text::{display_width, truncate_to};
     use crate::theme::{Role, Surface, Theme};
+    use crate::window::paint_window;
 
     #[derive(Clone)]
     pub struct NavItem {
@@ -2008,47 +1702,6 @@ pub mod chrome {
         }
     }
 
-    fn paint_items(items: &[NavItem], theme: &Theme, mut x: u16, y: u16, bg: [u8; 3], rect: Rect, buf: &mut CellBuffer) -> u16 {
-        for item in items {
-            let fg = if item.active { theme.role(Role::Accent) } else { theme.role(Role::Foreground) };
-            let label = format!(" {} ", item.label);
-            let w = buf.put_str(Pos { x, y }, &label, fg, bg, 0, rect);
-            x += w;
-        }
-        x
-    }
-
-    fn paint_navbar(n: &NavbarState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
-        let bg = theme.surface(Surface::Base);
-        let (content, hairline) = rect.split_bottom(1);
-        buf.fill_rect(content, Cell::blank(theme.role(Role::Foreground), bg));
-        paint_items(&n.left, theme, content.x, content.y, bg, content, buf);
-        let center_text: String = n.center.iter().map(|i| i.label.clone()).collect::<Vec<_>>().join(" ");
-        let center_x = content.x + content.width.saturating_sub(display_width(&center_text)) / 2;
-        buf.put_str(Pos { x: center_x, y: content.y }, &center_text, theme.role(Role::MutedForeground), bg, 0, content);
-        let right_width: u16 = n.right.iter().map(|i| display_width(&i.label) + 2).sum();
-        let right_x = content.x + content.width.saturating_sub(right_width);
-        paint_items(&n.right, theme, right_x, content.y, bg, content, buf);
-        buf.hline(Pos { x: hairline.x, y: hairline.y }, hairline.width, '\u{2500}', theme.role(Role::BorderNormal), bg);
-    }
-
-    fn paint_footer(f: &FooterState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
-        let bg = theme.surface(Surface::Base);
-        let (hairline, content) = rect.split_top(1);
-        buf.hline(Pos { x: hairline.x, y: hairline.y }, hairline.width, '\u{2500}', theme.role(Role::BorderNormal), bg);
-        buf.fill_rect(content, Cell::blank(theme.role(Role::Foreground), bg));
-        let mut x = content.x;
-        for hint in &f.hints {
-            let key = format!(" {} ", hint.key);
-            x += buf.put_str(Pos { x, y: content.y }, &key, theme.role(Role::Accent), bg, 0, content);
-            let label = format!("{} ", hint.label);
-            x += buf.put_str(Pos { x, y: content.y }, &label, theme.role(Role::MutedForeground), bg, 0, content);
-        }
-        let (status, status_w) = truncate_to(&f.status, content.width.saturating_sub(x - content.x));
-        let status_x = content.x + content.width.saturating_sub(status_w);
-        buf.put_str(Pos { x: status_x, y: content.y }, status, theme.role(Role::MutedForeground), bg, 0, content);
-    }
-
     /// 🔘️ The controls tab's interior content: enlarge glyph then close glyph, padded to one cell each.
     const WINDOW_CONTROLS_INTERIOR: &str = " \u{2922} \u{2715} ";
     const WINDOW_CONTROLS_MAXIMIZE_OFFSET: u16 = 1;
@@ -2056,22 +1709,26 @@ pub mod chrome {
 
     /// 🪟️ One 2-row tab recessed into a top corner of the window: `x` is its own left-wall column,
     /// `interior` is the padded text between its walls (the tab is `interior_width + 2` cells wide).
-    struct WindowTab {
-        x: u16,
-        interior: String,
-        interior_width: u16,
+    /// `pub(crate)` (struct and fields): shared with `crate::window`'s `paint_window`/`paint_corner_tab`.
+    pub(crate) struct WindowTab {
+        pub(crate) x: u16,
+        pub(crate) interior: String,
+        pub(crate) interior_width: u16,
     }
 
-    struct WindowChipLayout {
-        has_tabs: bool,
-        title: WindowTab,
-        controls: Option<WindowTab>,
+    /// 🪟️ `pub(crate)` (struct and fields): shared with `crate::window`'s `paint_window`.
+    pub(crate) struct WindowChipLayout {
+        pub(crate) has_tabs: bool,
+        pub(crate) title: WindowTab,
+        pub(crate) controls: Option<WindowTab>,
     }
 
     /// 📐️ Shared by paint and click hit-testing so the two can never drift apart. The title tab's own
     /// left wall is the window's left wall; the controls tab's own right wall is the window's right
     /// wall — both 2 rows tall, each bending down into the main body's top edge one row below.
-    fn window_chip_layout(w: &WindowState, rect: Rect) -> WindowChipLayout {
+    /// `pub(crate)`: called from `crate::window`'s `paint_window` (extracted to its own element file;
+    /// this fn stays here because `ChromeState::window_control_at`, also in this mod, needs it too).
+    pub(crate) fn window_chip_layout(w: &WindowState, rect: Rect) -> WindowChipLayout {
         let controls_interior_width = display_width(WINDOW_CONTROLS_INTERIOR);
         let controls_width = controls_interior_width + 2;
         let number_prefix = w.number.as_ref().map(|n| format!("{n} ")).unwrap_or_default();
@@ -2084,87 +1741,6 @@ pub mod chrome {
         let controls_fits = show_controls && rect.width >= title_width + controls_width + 3;
         let controls = controls_fits.then(|| WindowTab { x: rect.x + rect.width - controls_width, interior: WINDOW_CONTROLS_INTERIOR.to_string(), interior_width: controls_interior_width });
         WindowChipLayout { has_tabs, title: WindowTab { x: rect.x, interior: title_interior.to_string(), interior_width: title_interior_width }, controls }
-    }
-
-    /// 🪟️ Paints one 2-row corner tab: a normal `┌️─️┐️ / │️text│️` box, then bends its *short* wall (the
-    /// one that is not also the window's own permanent side wall) down one row into the main body's
-    /// top hairline — `└️` when the short wall is on the right (title tab), `┘️` when on the left
-    /// (controls tab).
-    fn paint_corner_tab(buf: &mut CellBuffer, y: u16, tab: &WindowTab, short_wall_is_left: bool, text_fg: [u8; 3], bg: [u8; 3], border: [u8; 3]) {
-        let width = tab.interior_width + 2;
-        buf.put(tab.x, y, Cell { ch: '\u{250c}', fg: border, bg, attrs: 0, width: 1 });
-        buf.hline(Pos { x: tab.x + 1, y }, width.saturating_sub(2), '\u{2500}', border, bg);
-        buf.put(tab.x + width - 1, y, Cell { ch: '\u{2510}', fg: border, bg, attrs: 0, width: 1 });
-        buf.put(tab.x, y + 1, Cell { ch: '\u{2502}', fg: border, bg, attrs: 0, width: 1 });
-        buf.put_str(Pos { x: tab.x + 1, y: y + 1 }, &tab.interior, text_fg, bg, 0, Rect::new(tab.x + 1, y + 1, tab.interior_width, 1));
-        buf.put(tab.x + width - 1, y + 1, Cell { ch: '\u{2502}', fg: border, bg, attrs: 0, width: 1 });
-        if short_wall_is_left {
-            buf.put(tab.x, y + 2, Cell { ch: '\u{2518}', fg: border, bg, attrs: 0, width: 1 });
-        } else {
-            buf.put(tab.x + width - 1, y + 2, Cell { ch: '\u{2514}', fg: border, bg, attrs: 0, width: 1 });
-        }
-    }
-
-    /// 🖌️ Paints a window whose title/control tabs are recessed into its top corners: each is a real
-    /// 2-row box sharing the window's own left/right wall, with its short inner wall bending down
-    /// into the main body's top edge — the 🖋️semio-window.sty "flowing" tab look, not text cut into a
-    /// flat border line. A side with no tab (controls not wanted, or too narrow to fit) simply stays
-    /// flat, its corner sitting at the main body's top row instead of rising two rows like a tab.
-    fn paint_window(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
-        if rect.width < 2 || rect.height < 2 {
-            return;
-        }
-        let bg = theme.surface(Surface::Window);
-        let border = if w.focused { theme.role(Role::BorderEmphasized) } else { theme.role(Role::BorderNormal) };
-        let fg = theme.role(Role::Foreground);
-        buf.fill_rect(rect, Cell::blank(fg, bg));
-
-        let bottom_y = rect.y + rect.height - 1;
-        let right_x = rect.x + rect.width - 1;
-        let layout = window_chip_layout(w, rect);
-
-        if !layout.has_tabs {
-            buf.hline(Pos { x: rect.x + 1, y: rect.y }, rect.width.saturating_sub(2), '\u{2500}', border, bg);
-            buf.hline(Pos { x: rect.x + 1, y: bottom_y }, rect.width.saturating_sub(2), '\u{2500}', border, bg);
-            buf.vline(Pos { x: rect.x, y: rect.y + 1 }, bottom_y.saturating_sub(rect.y + 1), '\u{2502}', border, bg);
-            buf.vline(Pos { x: right_x, y: rect.y + 1 }, bottom_y.saturating_sub(rect.y + 1), '\u{2502}', border, bg);
-            buf.put(rect.x, rect.y, Cell { ch: '\u{250c}', fg: border, bg, attrs: 0, width: 1 });
-            buf.put(right_x, rect.y, Cell { ch: '\u{2510}', fg: border, bg, attrs: 0, width: 1 });
-            buf.put(rect.x, bottom_y, Cell { ch: '\u{2514}', fg: border, bg, attrs: 0, width: 1 });
-            buf.put(right_x, bottom_y, Cell { ch: '\u{2518}', fg: border, bg, attrs: 0, width: 1 });
-            return;
-        }
-
-        let top_y = rect.y + 2;
-
-        // bottom edge: always flat, full width
-        buf.hline(Pos { x: rect.x + 1, y: bottom_y }, rect.width.saturating_sub(2), '\u{2500}', border, bg);
-        buf.put(rect.x, bottom_y, Cell { ch: '\u{2514}', fg: border, bg, attrs: 0, width: 1 });
-        buf.put(right_x, bottom_y, Cell { ch: '\u{2518}', fg: border, bg, attrs: 0, width: 1 });
-
-        // left side: always a raised title tab
-        buf.vline(Pos { x: rect.x, y: rect.y + 1 }, bottom_y.saturating_sub(rect.y + 1), '\u{2502}', border, bg);
-        paint_corner_tab(buf, rect.y, &layout.title, false, theme.role(Role::Accent), bg, border);
-
-        // right side: a raised controls tab, or — when absent — a plain flat corner at the body's top
-        let body_right_x = match &layout.controls {
-            Some(controls) => {
-                buf.vline(Pos { x: right_x, y: rect.y + 1 }, bottom_y.saturating_sub(rect.y + 1), '\u{2502}', border, bg);
-                paint_corner_tab(buf, rect.y, controls, true, theme.role(Role::MutedForeground), bg, border);
-                controls.x
-            }
-            None => {
-                buf.vline(Pos { x: right_x, y: top_y + 1 }, bottom_y.saturating_sub(top_y + 1), '\u{2502}', border, bg);
-                buf.put(right_x, top_y, Cell { ch: '\u{2510}', fg: border, bg, attrs: 0, width: 1 });
-                right_x
-            }
-        };
-
-        // main body's top edge: from the title tab's bend to the right side's bend/corner
-        let body_left_x = layout.title.x + layout.title.interior_width + 2;
-        if body_right_x > body_left_x {
-            buf.hline(Pos { x: body_left_x, y: top_y }, body_right_x - body_left_x, '\u{2500}', border, bg);
-        }
     }
 
     /// 🏛️ The three fixed shell regions plus one Window node per resolved `WindowMeasure`.

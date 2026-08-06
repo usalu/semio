@@ -4,9 +4,9 @@ use crate::artifacts::block2d::Block2dDefinition;
 
 /// 📄️ The `hexagonal-cut-concrete-forest-left` example fixture, handcrafted in the `.block2d` DSL —
 /// the `NodeKind` half of `s/plugin/puzzle/app/2d/manifest/🛂️manifest.jsonconcrete-forest.manifest.json`.
-pub const BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../../🎛️apps/◻2d/📚️examples/🧱️hexagonal-cut-concrete-forest-left.block2d");
+pub const BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🧱️hexagonal-cut-concrete-forest-left.block2d");
 /// 📄️ The `hexagonal-cut-concrete-forest-right` example fixture, handcrafted in the `.block2d` DSL.
-pub const BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT: &str = include_str!("../../../🎛️apps/◻2d/📚️examples/🧱️hexagonal-cut-concrete-forest-right.block2d");
+pub const BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🧱️hexagonal-cut-concrete-forest-right.block2d");
 
 /// 📖️ Parses `.block2d` DSL text into a `Block2dDefinition`.
 pub fn parse_dsl(text: &str) -> Result<Block2dDefinition, store::TextError> {

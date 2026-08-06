@@ -1,0 +1,82 @@
+Shape V2 Retrofit Path-Prefix Bug Audit — results log
+=======================================================
+
+Bug hunted: TEMPLATE.md §14 step 3's original (wrong) wording told retrofit agents to prefix
+EVERY #[path = "…"] string in a relocated plugin-root 📦️lib.rs with ../../, including bare
+"." grouping-module resets. Only LEAF paths (real on-disk segments) should get the prefix;
+"." resets compose against the parent's already-resolved base and get double/triple-corrected
+if also prefixed, failing to compile past one level of nesting. Corrected by 🪵️sourcing's
+retrofit via a real compiler error (see master ticket 26/08/05/CRATE-CONSOLIDATION-AND-
+PLUGIN-TAXONOMY-RESTRUCTURE's note dated 2026-08-06, and TEMPLATE.md's corrected lead
+section point 1 + §14 step 3).
+
+Detection method: literal grep for the wrong pattern `"../../."]"` in every plugin's
+📦️packages/🦀️rust/📦️lib.rs (100% precise — this exact byte sequence can only appear from the
+over-correction bug, since a correct file has bare `"."` for every grouping reset). Cross-checked
+with an independent second pattern: any #[path] leaf (segment starting 🗿️/🎛️, not ".") that is
+MISSING the ../../ prefix entirely — a second, inverse bug variant found in 4 plugins.
+
+Plugins fixed (bug present, now corrected + real-compile-verified):
+-------------------------------------------------------------------
+1. NOTE — 14 grouping "." resets wrongly prefixed to "../../."; reverted to ".". Verified:
+   cargo check clean, cargo clippy --all-targets -D warnings clean, cargo test 63/63 (matches
+   original ticket's recorded baseline exactly).
+2. FORMS — 9 grouping "." resets wrongly prefixed; reverted. Verified: check/clippy clean,
+   test 88/88 (matches baseline).
+3. PLAYBOOK — different/inverse manifestation: all 16 LEAF paths were missing the required
+   ../../ prefix entirely (0 of 16 had it). Added ../../ to every 🗿️artifacts/🎛️apps leaf path.
+   Verified: check/clippy clean, test 50/50 (matches baseline).
+4. IMPERATIVE — same inverse bug: all 19 leaf paths missing ../../ prefix. Fixed. Verified:
+   check/clippy clean, test 80/80 (matches baseline).
+5. DAG — same inverse bug: all 20 leaf paths missing ../../ prefix. Fixed. Verified: check/
+   clippy clean, test 61/61.
+6. RASTER — same inverse bug: all 27 leaf paths missing ../../ prefix. Fixed. Verified: check/
+   clippy clean, test 57/57 (matches baseline).
+
+Plugins audited clean (no bug, real-compile-verified by this audit):
+----------------------------------------------------------------------
+- BLOCK — check clean, test 102/102 (matches baseline). clippy blocked by an UNRELATED,
+  pre-existing/concurrently-introduced clippy::needless_range_loop violation in a shared
+  framework crate (semio-framework-os-kernel-dsl-core, 🧰️framework/…/🗣️dsl/🫀️core/…/📦️lib.rs:908)
+  — reproduced twice, not caused by this audit's changes, out of scope, not fixed.
+- GIS — check/clippy/test all clean, 146/146.
+- MATHEMATICAL — check/clippy/test all clean, 55/55 (matches baseline).
+- PROCEDURAL — check/test clean, 196/196 (matches baseline). clippy found 2 real but
+  UNRELATED pre-existing clippy::map_unwrap_or violations in the plugin's own app component
+  files (🎛️apps/◻2d/🦀️component.rs:157, 🎛️apps/🧊️3d/🦀️component.rs:270) plus an
+  unused_qualifications hit — never caught before because this plugin's original retrofit
+  ticket only had manual verification and never actually ran clippy. Flagged via a spawned
+  background task (task_e4278d76, "Fix pre-existing clippy failures in procedural plugin"),
+  not fixed here since it's outside this audit's specific path-prefix-bug scope.
+- SPACE — check/clippy/test all clean, 85/85 (matches baseline).
+
+Plugins grep-confirmed clean (deterministic pattern match, not independently re-compiled by
+this audit — either already had a real documented compile pass in their own closed ticket,
+or were confirmed via the final repo-wide sweep below):
+----------------------------------------------------------------------------------------------
+ANIMATE, CAD, ENERGY, FLOW, LAYOUT, LOWPOLY, NORM, PROCESS, PUZZLE, SEQUENCE, SHOOTING,
+SOURCING, VCS — all show zero instances of the wrong `"../../."]"` pattern and zero
+leaf paths missing the ../../ prefix.
+
+Final full-tree sweep (after all fixes above): grepped every plugin under ✏️s/🔌️plugins/ with
+a 📦️packages/🦀️rust/📦️lib.rs (31 plugins total, i.e. every plugin migrated to V2 shape as of
+2026-08-06) for both bug signatures — zero hits repo-wide. The specific path-prefix
+double-correction bug (both the over-prefix and the newly-discovered under-prefix variant) is
+now fully eradicated across every currently-migrated plugin.
+
+Not touched (retrofit ticket still open as of final check — REASONING, WRITER): both already
+grep-confirmed clean regardless, no action taken/needed, left for their own owning sessions.
+
+Not touched (still mid-migration to V2 per master.md, no 📦️packages/🦀️rust/📦️lib.rs yet, or
+explicitly flagged in-flight): 🏗️fem, 🏛️architect, 📸️remodel, 🔱️trinity, 🖍️draw, 🎪️demonstrator.
+
+Method: TEMPLATE.md §3 isolated [workspace] overlay technique (copied verbatim workspace.package/
+workspace.dependencies-scoped-to-need/workspace.lints/profile blocks from root Cargo.toml,
+temporarily appended to each plugin's own 📦️packages/🦀️rust/Cargo.toml), `cargo check
+--manifest-path`, `cargo clippy --manifest-path … --all-targets -- -D warnings`, `cargo test
+--manifest-path`, all prefixed DEVELOPER_DIR=/Library/Developer/CommandLineTools. Overlay + nested
+target/ + Cargo.lock removed after each plugin's verification, confirmed via diff back to the
+pre-overlay Cargo.toml content. Note: an automated repo-wide lint/format process was observed
+independently stripping these overlay blocks from disk within seconds in several cases (visible via
+mid-session tool-injected "file was modified by a linter" notices) — did not interfere with any
+already-started cargo invocation, but meant some cleanup steps found the overlay already gone.

@@ -28,8 +28,7 @@ mod tests {
 
     #[test]
     fn document_text_round_trips_through_store() {
-        let mut next = Document::default();
-        next.area_m2 = 80.0;
+        let next = Document { area_m2: 80.0, ..Document::default() };
         let envelope = store::create_document_envelope("norm.en1991/v1", "en1991", Document::default(), None);
         let mut doc_store = store::DocumentStore::new(envelope);
         doc_store.dispatch(store::DocumentCommand::Apply { operations: vec![Operation::SetDocument { document: next }], description: None }).expect("apply");

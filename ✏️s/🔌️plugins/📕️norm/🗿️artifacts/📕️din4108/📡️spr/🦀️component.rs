@@ -31,8 +31,7 @@ mod tests {
     fn document_text_round_trips_through_store() {
         let envelope = store::create_document_envelope("norm.din4108/v1", "din4108", Document::default(), None);
         let mut store = store::DocumentStore::new(envelope);
-        let mut next = Document::default();
-        next.airtightness_n50 = 1.2;
+        let next = Document { airtightness_n50: 1.2, ..Document::default() };
         store.dispatch(store::DocumentCommand::Apply { operations: vec![Operation::SetDocument { document: next }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);

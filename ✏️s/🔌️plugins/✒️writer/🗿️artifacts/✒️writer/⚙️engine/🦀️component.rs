@@ -1,6 +1,6 @@
 //! ⚙️ Writer artifact — headless compute over the `WriterProjection` projection (constitutional: engine).
 //!
-//! Everything here is pure over `WriterProjection`/`WriterCamera` (artifact types) and `trinity_jack`'s
+//! Everything here is pure over `WriterProjection`/`WriterCamera` (artifact types) and `trinity::core`'s
 //! shared parser. It deliberately takes no `crate::apps::writer::config::WriterConfig` parameter: that
 //! type lives at APP level (view state, not document — artifacts must never depend on apps). A helper
 //! that needs `WriterConfig` (e.g. `editor_hover_context`, shared by the main window and the document
@@ -194,15 +194,15 @@ pub fn jack_ast_tree_icon(kind: &str) -> Option<&'static str> {
     }
 }
 
-/// 🌉️ Adapts trinity_jack's shared [`trinity_jack::SpannedNode`] tree into writer's own [`JackAstNode`]
+/// 🌉️ Adapts trinity::core's shared [`trinity::core::SpannedNode`] tree into writer's own [`JackAstNode`]
 /// (adds the stable tree-item `id` the outline panel needs; `kind`/`label`/spans pass through unchanged).
-fn jack_ast_from_spanned(node: &trinity_jack::SpannedNode) -> JackAstNode {
+fn jack_ast_from_spanned(node: &trinity::core::SpannedNode) -> JackAstNode {
     JackAstNode { id: format!("jack-ast-{}-{}-{}", node.kind, node.start, node.end), kind: node.kind.clone(), label: node.label.clone(), start: node.start, end: node.end, children: node.children.iter().map(jack_ast_from_spanned).collect() }
 }
 
-/// 🌳️ Parse jack source into a span-tracked AST for hierarchy panels, via the shared `trinity_jack` parser.
+/// 🌳️ Parse jack source into a span-tracked AST for hierarchy panels, via the shared `trinity::core` parser.
 pub fn parse_jack_ast(text: &str) -> JackAstNode {
-    jack_ast_from_spanned(&trinity_jack::parse_spanned(text))
+    jack_ast_from_spanned(&trinity::core::parse_spanned(text))
 }
 
 /// 🎯️ Deepest AST node containing a byte offset.
@@ -304,23 +304,23 @@ fn jack_placeholder_visible(caret: usize, offset: usize) -> bool {
     caret >= offset - 32 && caret <= offset + 48
 }
 
-/// 🔤️ Fine-grained, never-fails jack tokens for editor heuristics — routed through `trinity_jack`'s shared
+/// 🔤️ Fine-grained, never-fails jack tokens for editor heuristics — routed through `trinity::core`'s shared
 /// forgiving lexer instead of a hand-rolled writer copy.
-fn jack_tokens(text: &str) -> Vec<trinity_jack::SpannedToken> {
-    trinity_jack::lex_spanned(text, true).unwrap_or_default()
+fn jack_tokens(text: &str) -> Vec<trinity::core::SpannedToken> {
+    trinity::core::lex_spanned(text, true).unwrap_or_default()
 }
 
-fn jack_token_expects_expr(token: &trinity_jack::Token) -> bool {
-    matches!(token, trinity_jack::Token::And | trinity_jack::Token::Or)
+fn jack_token_expects_expr(token: &trinity::core::Token) -> bool {
+    matches!(token, trinity::core::Token::And | trinity::core::Token::Or)
 }
 
-fn jack_token_expects_pattern(token: &trinity_jack::Token) -> bool {
-    matches!(token, trinity_jack::Token::KwMatch | trinity_jack::Token::KwCreate | trinity_jack::Token::KwMerge)
+fn jack_token_expects_pattern(token: &trinity::core::Token) -> bool {
+    matches!(token, trinity::core::Token::KwMatch | trinity::core::Token::KwCreate | trinity::core::Token::KwMerge)
 }
 
 /// 👻️ Required jack token placeholders near the caret (premigration `jackEditorPlaceholders`).
 pub fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlaceholder> {
-    use trinity_jack::Token;
+    use trinity::core::Token;
     let tokens = jack_tokens(text);
     let mut out = Vec::new();
     for i in 0..tokens.len() {
@@ -427,21 +427,21 @@ pub fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlace
     out
 }
 
-const JACK_NEWLINE_AFTER_KEYWORDS: &[trinity_jack::Token] = &[
-    trinity_jack::Token::KwMatch,
-    trinity_jack::Token::KwWhere,
-    trinity_jack::Token::KwReturn,
-    trinity_jack::Token::KwCreate,
-    trinity_jack::Token::KwDelete,
-    trinity_jack::Token::KwSet,
-    trinity_jack::Token::KwMerge,
-    trinity_jack::Token::And,
-    trinity_jack::Token::Or,
+const JACK_NEWLINE_AFTER_KEYWORDS: &[trinity::core::Token] = &[
+    trinity::core::Token::KwMatch,
+    trinity::core::Token::KwWhere,
+    trinity::core::Token::KwReturn,
+    trinity::core::Token::KwCreate,
+    trinity::core::Token::KwDelete,
+    trinity::core::Token::KwSet,
+    trinity::core::Token::KwMerge,
+    trinity::core::Token::And,
+    trinity::core::Token::Or,
 ];
 
-fn jack_lex_token_at_offset(tokens: &[trinity_jack::SpannedToken], offset: usize) -> Option<&trinity_jack::SpannedToken> {
+fn jack_lex_token_at_offset(tokens: &[trinity::core::SpannedToken], offset: usize) -> Option<&trinity::core::SpannedToken> {
     for token in tokens {
-        if token.token == trinity_jack::Token::Eof {
+        if token.token == trinity::core::Token::Eof {
             break;
         }
         if offset >= token.start && offset <= token.end {
@@ -453,7 +453,7 @@ fn jack_lex_token_at_offset(tokens: &[trinity_jack::SpannedToken], offset: usize
 
 /// ↩️ Whether a jack query may break onto a new line at a byte offset (premigration `jackNewlineAllowedAt`).
 pub fn jack_newline_allowed_at(text: &str, offset: usize) -> bool {
-    use trinity_jack::Token;
+    use trinity::core::Token;
     let clamped = offset.min(text.len());
     if !text.is_char_boundary(clamped) {
         return false;
@@ -476,8 +476,8 @@ pub fn jack_newline_allowed_at(text: &str, offset: usize) -> bool {
         return false;
     }
 
-    let mut prev: Option<&trinity_jack::SpannedToken> = None;
-    let mut next: Option<&trinity_jack::SpannedToken> = None;
+    let mut prev: Option<&trinity::core::SpannedToken> = None;
+    let mut next: Option<&trinity::core::SpannedToken> = None;
     for token in &tokens {
         if token.token == Token::Eof {
             break;
@@ -525,7 +525,7 @@ pub fn jack_newline_gate_offsets(text: &str) -> Vec<usize> {
 
 /// 🔗️ Bound jack variable names from pattern bindings (premigration `jackBoundVariableNames`).
 pub fn jack_bound_variable_names(text: &str) -> std::collections::HashSet<String> {
-    use trinity_jack::Token;
+    use trinity::core::Token;
     let tokens = jack_tokens(text);
     let mut vars = std::collections::HashSet::new();
     for i in 0..tokens.len() {
@@ -544,8 +544,8 @@ pub fn jack_bound_variable_names(text: &str) -> std::collections::HashSet<String
     vars
 }
 
-fn is_jack_variable_use_token(tokens: &[trinity_jack::SpannedToken], index: usize, bound: &std::collections::HashSet<String>) -> bool {
-    use trinity_jack::Token;
+fn is_jack_variable_use_token(tokens: &[trinity::core::SpannedToken], index: usize, bound: &std::collections::HashSet<String>) -> bool {
+    use trinity::core::Token;
     let Some(token) = tokens.get(index) else { return false };
     let Token::Ident(text) = &token.token else { return false };
     if !bound.contains(text) {
@@ -560,7 +560,7 @@ fn is_jack_variable_use_token(tokens: &[trinity_jack::SpannedToken], index: usiz
 
 /// 🔁️ All bound-variable occurrences for a jack variable name (premigration `jackVariableOccurrences`).
 pub fn jack_variable_occurrences(text: &str, var_name: &str) -> Vec<(usize, usize)> {
-    use trinity_jack::Token;
+    use trinity::core::Token;
     let tokens = jack_tokens(text);
     let bound = jack_bound_variable_names(text);
     if !bound.contains(var_name) {
@@ -593,7 +593,7 @@ pub struct JackSymbolAtCursor {
 
 /// 🎯️ Resolve the jack symbol at a byte offset for semantic editor actions (premigration `jackSymbolAtOffset`).
 pub fn jack_symbol_at_offset(text: &str, offset: usize) -> Option<JackSymbolAtCursor> {
-    use trinity_jack::Token;
+    use trinity::core::Token;
     let tokens = jack_tokens(text);
     let clamped = offset.min(text.len());
     let index = tokens.iter().position(|token| matches!(token.token, Token::Ident(_)) && clamped >= token.start && clamped < token.end)?;
@@ -630,15 +630,15 @@ pub fn apply_jack_rename(text: &str, occurrences: &[(usize, usize)], new_name: &
 }
 
 pub fn jack_completions_json(text: &str, cursor: usize) -> Option<String> {
-    let graph = trinity_jack::example_graph();
-    let items: Vec<Value> = trinity_jack::complete(&graph, text, cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
+    let graph = trinity::core::example_graph();
+    let items: Vec<Value> = trinity::core::complete(&graph, text, cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
     serde_json::to_string(&items).ok()
 }
 
 /// 🪞️ Canonical jack format when possible, else a whitespace-only normalization for other languages.
 pub fn format_writer_text(text: &str, language_id: &str) -> String {
     if language_id == "jack" {
-        if let Ok(formatted) = trinity_jack::format(text) {
+        if let Ok(formatted) = trinity::core::format(text) {
             return formatted;
         }
     }

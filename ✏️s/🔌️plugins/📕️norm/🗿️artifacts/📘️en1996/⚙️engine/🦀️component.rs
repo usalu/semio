@@ -202,6 +202,7 @@ pub mod part_3 {
         storeys <= 3 && h_ef_mm / t_ef_mm <= 27.0
     }
 
+    #[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
     pub fn check_simplified_compression(n_ed_kn: f64, phi_s: f64, f_d_mpa: f64, area_mm2: f64, storeys: u32, h_ef_mm: f64, t_ef_mm: f64, annex: AnnexChoice) -> CheckResult {
         let clause = ClauseId::new("EN 1996-3", "§4.2", "4.2");
         if !is_applicable(storeys, h_ef_mm, t_ef_mm) {

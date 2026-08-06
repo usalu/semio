@@ -224,7 +224,7 @@ fn validate_property_bag_trinity(path: &str, defs: &[crate::artifacts::jack::Pro
             continue;
         };
         if !property_value_matches_type_trinity(value, def) {
-            return Err(TrinityRamError::PropertyTypeMismatch { path: path.to_string(), name: def.name.clone(), value_type: def.value_type.id().to_string() });
+            return Err(TrinityRamError::PropertyTypeMismatch { path: path.to_string(), name: def.name.clone(), value_type: def.value_type.id() });
         }
     }
     for key in bag.keys() {
@@ -362,6 +362,7 @@ impl Operation<GraphFixture> for TrinityGraphOperation {
 mod tests {
     use super::*;
     use crate::artifacts::jack::{Camera, Manifest, PortDirection};
+    use protocol::OperationDiff;
 
     fn mini_fixture() -> GraphFixture {
         GraphFixture {
@@ -413,7 +414,7 @@ mod tests {
     #[test]
     fn graph_op_rejects_port_kind_not_declared_on_operation() {
         let mut fixture = mini_fixture();
-        fixture.manifest = crate::artifacts::jack::Manifest {
+        fixture.manifest = Manifest {
             node_kinds: vec![mathematical_graph_manifest::TrinityNodeKindDef { name: "Piece".into(), properties: vec![], port_kinds: vec!["Connector".into()] }],
             edge_kinds: vec![mathematical_graph_manifest::TrinityEdgeKindDef { name: "Connection".into(), properties: vec![] }],
             port_kinds: vec![
@@ -511,6 +512,14 @@ mod tests {
     }
 
     #[test]
+    fn document_text_round_trip_graph_store() {
+        let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
+        dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::Rename { id: "root".into(), name: "renamed".into() }]).expect("apply");
+        store::test_support::assert_document_text_round_trip(&store);
+        store::test_support::assert_document_pack_round_trip(&store);
+    }
+
+    #[test]
     fn dispatch_trinity_graph_operations_noop_on_empty() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         let generation_before = store.generation();
@@ -563,7 +572,7 @@ mod tests {
         assert_eq!(value, Some(PropertyValue::String("first".into())));
 
         dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::ClearDataProperty { entity: EntityRef::Node("root".into()), key: "label".into() }]).expect("clear");
-        assert!(store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.get("label").is_none());
+        assert!(!store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.contains_key("label"));
         store.dispatch(DocumentCommand::Undo).expect("undo clear");
         let value = store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.get("label").cloned();
         assert_eq!(value, Some(PropertyValue::String("first".into())));

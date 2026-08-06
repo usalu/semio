@@ -842,19 +842,80 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
 
   // 📦️ lib.rs mod/#[path] cross-check: every component.rs on disk must be declared, and no declared
   // #[path] target may dangle (point at a file that doesn't exist) — reported as separate findings.
-  const libRsPath = join(pluginRoot, "📦️lib.rs");
+  // 🌳️ Shape V2-aware: the entry file lives at `📦️packages/🦀️rust/📦️lib.rs` under V2 or at `📦️lib.rs`
+  // directly under the older V1 shape.
+  //
+  // 🧮️ #[path] resolution is CUMULATIVE, not always-relative-to-the-raw-file: each nested `pub mod X`
+  // (or leaf `mod X;`) resolves its own `#[path]` string relative to its immediately enclosing mod's
+  // *already-resolved* directory (defaulting to `<enclosing dir>/X` when no `#[path]` is given at all,
+  // and to "no change" when the string is exactly `"."`) — confirmed empirically against a real,
+  // compiling plugin (🖨️raster) that resets the base ONCE via `#[path = "../../."]` on an outer
+  // grouping module and lets every nested `#[path = "."]` inherit it, as well as plugins (🏛️architect,
+  // 📸️remodel, 🖍️draw) that instead prefix every LEAF path with `../../` and leave every nested `"."`
+  // unprefixed — both are valid, and a flat "resolve every #[path] against the raw file directory"
+  // approach mis-resolves the first style. So: walk the file's brace structure with a resolved-base
+  // stack, seeded with the file's own directory.
+  const v1LibRsPath = join(pluginRoot, "📦️lib.rs");
+  const v2LibRsPath = join(pluginRoot, "📦️packages", "🦀️rust", "📦️lib.rs");
+  const libRsPath = existsSync(v2LibRsPath) ? v2LibRsPath : v1LibRsPath;
   if (existsSync(libRsPath)) {
+    const libDir = dirname(libRsPath);
     const libText = readFileSync(libRsPath, "utf8");
-    const declaredPaths = [...libText.matchAll(/#\[path\s*=\s*"([^"]+)"\]/g)].map((m) => m[1]);
-    const declaredAbs = new Set(declaredPaths.map((p) => join(pluginRoot, p)));
+    const declaredAbs = new Set<string>();
+    const danglingLeafPaths: string[] = [];
+
+    // 🥞️ One stack frame per open `{` that followed a `mod`/`pub mod` declaration, holding that
+    // scope's resolved base dir. A pending `#[path = "…"]` applies to the NEXT `mod` line only.
+    const baseStack: string[] = [libDir];
+    let pendingPath: string | null = null;
+    const lines = libText.split("\n");
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      const pathMatch = line.match(/#\[path\s*=\s*"([^"]+)"\]/);
+      if (pathMatch) {
+        pendingPath = pathMatch[1];
+        continue;
+      }
+      const modMatch = line.match(/^(?:pub\s+)?mod\s+(\w+)\s*(\{|;)/);
+      if (modMatch) {
+        const parentBase = baseStack[baseStack.length - 1];
+        const rawTarget = pendingPath ?? modMatch[1]; // no #[path] ⇒ default splice of the mod's own name
+        const resolved = join(parentBase, rawTarget); // node:path's join already normalizes "." / ".." segments
+        pendingPath = null;
+        if (modMatch[2] === ";") {
+          // Leaf: either a real component file (ends .rs) or a `mod tests;`-style non-path leaf — only
+          // cross-check paths that look like a file (the taxonomy only ever points #[path] at .rs files).
+          if (pendingPathLooksLikeFile(rawTarget)) {
+            declaredAbs.add(resolved);
+            if (!existsSync(resolved)) danglingLeafPaths.push(rawTarget);
+          }
+        } else {
+          baseStack.push(resolved);
+        }
+        continue;
+      }
+      // Count bare closing braces against open mod scopes (lib.rs is wiring-only, so every `{`/`}` in
+      // the file belongs to a mod block or the trailing semio_plugin! macro call — once the stack is
+      // back to just the file base, further closes belong to the macro call and are ignored).
+      const closes = (line.match(/\}/g) ?? []).length;
+      const opens = (line.match(/\{/g) ?? []).length;
+      for (let i = 0; i < closes - opens; i++) {
+        if (baseStack.length > 1) baseStack.pop();
+      }
+    }
+
+    function pendingPathLooksLikeFile(p: string): boolean {
+      return p.endsWith(".rs");
+    }
+
     for (const file of componentFiles) {
       if (!declaredAbs.has(file)) findings.push(`${pluginId}: ${relative(pluginRoot, file)} is not declared by any #[path] in 📦️lib.rs`);
     }
-    for (const p of declaredPaths) {
-      if (p.endsWith(".rs") && !existsSync(join(pluginRoot, p))) findings.push(`${pluginId}: 📦️lib.rs declares #[path = "${p}"] but the file does not exist on disk`);
+    for (const p of danglingLeafPaths) {
+      findings.push(`${pluginId}: 📦️lib.rs declares #[path = "${p}"] but the file does not exist on disk`);
     }
   } else {
-    findings.push(`${pluginId}: missing 📦️lib.rs at plugin root`);
+    findings.push(`${pluginId}: missing 📦️lib.rs (checked plugin root and 📦️packages/🦀️rust/)`);
   }
 
   // 🚫️ no `📡️protocol` path segment may remain under a migrated plugin (renamed to `📡️spr`).

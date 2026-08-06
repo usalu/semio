@@ -1,0 +1,14 @@
+{
+  "title": "Raster Shape V2 Tree Purity Retrofit",
+  "emoji": "🌳️",
+  "status": "closed",
+  "description": "Retrofit the already-migrated 🖨️raster plugin (✏️s/🔌️plugins/🖨️raster) from V1 taxonomy shape to the new Shape V2 tree-purity rule per TEMPLATE.md §14 in ticket 26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE. Mechanical only: relocate owner-root 📦️lib.rs into 📦️packages/🦀️rust/📦️lib.rs (update [lib] path, add ../../ prefix to #[path] strings), fold 🦀️config.rs, 🦀️terminology.rs, 🦀️wasm.rs siblings into their own component folders, relocate 📚️examples to owner root (already there; no AGENTS.md/README.md present), verify check/clippy/test, confirm tree purity.",
+  "summary": "Retrofitted 🖨️raster to Shape V2 tree purity. Moved 📦️lib.rs → 📦️packages/🦀️rust/📦️lib.rs (Cargo.toml [lib] path updated). Folded 🎛️apps/🖨️raster/🦀️config.rs → 🎚️config/🦀️component.rs, 🦀️terminology.rs → 🗣️terminology/🦀️component.rs, 🦀️wasm.rs → 🌉️wasm/🦀️component.rs. 📚️examples already at owner root; no AGENTS.md/README.md present in this plugin (nothing to relocate, no collision). Applied correct #[path]-prefix (only the two zero-indent top-level mod declarations get ../../; nested resets/leaves unchanged). Verified via isolated-workspace overlay (root cargo metadata blocked by other sessions' in-flight plugins — not this one): cargo check clean, clippy --all-targets -D warnings clean for this crate, cargo test --lib 57/57 passed (matches pre-retrofit baseline exactly). Tree confirmed pure. No registrar handoff needed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2493"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪b5c3ca411c57401badc461b798588fe0"
+  ]
+}

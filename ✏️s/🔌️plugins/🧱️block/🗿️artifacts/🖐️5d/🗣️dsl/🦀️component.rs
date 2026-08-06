@@ -4,9 +4,9 @@ use crate::artifacts::block5d::Block5dDefinition;
 
 /// 📄️ The `hexagonal-cut-concrete-forest-left` example fixture, handcrafted in the `.block5d` DSL —
 /// the `PartKind` slice of `s/plugin/puzzle/app/5d/example/🧩️concrete-forest.puzzle5d`.
-pub const BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../../🎛️apps/🖐️5d/📚️examples/🧱️hexagonal-cut-concrete-forest-left.block5d");
+pub const BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🧱️hexagonal-cut-concrete-forest-left.block5d");
 /// 📄️ The `nakagin-capsule` example fixture, handcrafted in the `.block5d` DSL.
-pub const BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT: &str = include_str!("../../../🎛️apps/🖐️5d/📚️examples/🧱️nakagin-capsule.block5d");
+pub const BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🧱️nakagin-capsule.block5d");
 
 /// 📖️ Parses `.block5d` DSL text into a `Block5dDefinition`.
 pub fn parse_dsl(text: &str) -> Result<Block5dDefinition, store::TextError> {

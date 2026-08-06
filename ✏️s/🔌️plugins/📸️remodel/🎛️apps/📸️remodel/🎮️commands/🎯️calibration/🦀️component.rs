@@ -166,7 +166,6 @@ mod tests {
     use super::*;
     use crate::apps::remodel::testkit::{app, dispatch};
     use crate::apps::remodel::RemodelCommand;
-    use semio_framework_plugin::PluginApp;
 
     #[test]
     fn edit_calibration_inserts_then_updates_the_same_camera_entry() {
@@ -202,10 +201,7 @@ mod tests {
         let mut app = app();
         dispatch(&mut app, RemodelCommand::AddGcp(add_gcp::AddGcp { name: "Corner".into(), world_x: 1.0, world_y: 2.0, world_z: 3.0 }));
         let gcp_id = app.projection().expect("projection").gcps[0].id.clone();
-        dispatch(
-            &mut app,
-            RemodelCommand::PlaceGcpObservation(place_gcp_observation::PlaceGcpObservation { gcp_id: gcp_id.clone(), stream_id: "stream-1".into(), frame_index: 0, pixel_x: 10.0, pixel_y: 20.0 }),
-        );
+        dispatch(&mut app, RemodelCommand::PlaceGcpObservation(place_gcp_observation::PlaceGcpObservation { gcp_id: gcp_id.clone(), stream_id: "stream-1".into(), frame_index: 0, pixel_x: 10.0, pixel_y: 20.0 }));
         assert_eq!(app.projection().expect("projection").gcps[0].observations.len(), 1);
         dispatch(&mut app, RemodelCommand::RemoveGcp(remove_gcp::RemoveGcp { gcp_id }));
         assert!(app.projection().expect("projection").gcps.is_empty());

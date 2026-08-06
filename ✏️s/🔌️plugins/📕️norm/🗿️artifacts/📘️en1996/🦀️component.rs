@@ -5,10 +5,11 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️Types
 /// 🧱️ Masonry manufacturing-control class underlying the EN-recommended γ_M table (EN 1996-1-1 Table 2.1-style).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 pub enum MasonryClass {
     Class1,
     Class2,
+    #[default]
     Class3,
     Class4,
     Class5,
@@ -23,12 +24,6 @@ impl MasonryClass {
             Self::Class4 => 2.2,
             Self::Class5 => 2.5,
         }
-    }
-}
-
-impl Default for MasonryClass {
-    fn default() -> Self {
-        Self::Class3
     }
 }
 

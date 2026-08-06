@@ -1,8 +1,0 @@
-{
-  "name": "@semio-tech/remodel-feature",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "test": "nx run remodel-featureest"
-  }
-}

@@ -607,9 +607,7 @@ mod tests {
 
     #[test]
     fn snow_and_wind_de_vs_en_diverge_at_altitude() {
-        let mut doc = Document::default();
-        doc.snow_altitude_m = 400.0;
-        doc.annex = AnnexChoice::De;
+        let doc = Document { snow_altitude_m: 400.0, annex: AnnexChoice::De, ..Document::default() };
         let de_s_k = part_1_3::design_ground_snow_load(doc.annex, doc.snow_zone, doc.snow_altitude_m, doc.en_s_k_kn_m2);
         let en_s_k = part_1_3::design_ground_snow_load(AnnexChoice::En, doc.snow_zone, doc.snow_altitude_m, doc.en_s_k_kn_m2);
         assert!(de_s_k > en_s_k);

@@ -131,7 +131,7 @@ mod tests {
     use super::*;
     use crate::apps::remodel::testkit::{app, dispatch};
     use crate::apps::remodel::RemodelCommand;
-    use semio_framework_plugin::{testkit, PluginApp};
+    use semio_framework_plugin::testkit;
 
     #[test]
     fn clear_result_resets_all_seven_result_fields_and_reset_placeholder_restores_the_box() {
@@ -149,13 +149,7 @@ mod tests {
         let mut app = app();
         let placeholder_vertex_count = app.projection().expect("materialize projection").results.mesh.mesh.vertex_count();
         assert!(placeholder_vertex_count > 0, "the seeded placeholder box must have vertices");
-        testkit::assert_undo_redo_round_trip(
-            &mut app,
-            RemodelCommand::ClearResult(clear_result::ClearResult {}),
-            |app| app.projection().expect("materialize projection").results.mesh.mesh.vertex_count(),
-            placeholder_vertex_count,
-            0,
-        );
+        testkit::assert_undo_redo_round_trip(&mut app, RemodelCommand::ClearResult(clear_result::ClearResult {}), |app| app.projection().expect("materialize projection").results.mesh.mesh.vertex_count(), placeholder_vertex_count, 0);
     }
 
     #[test]

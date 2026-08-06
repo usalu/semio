@@ -1,0 +1,80 @@
+Shape V2 retrofit — ➗️mathematical — verification notes
+=========================================================
+
+BLOCKER (confirmed, not this ticket's bug):
+  DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo test -p semio-s-plugin-mathematical --lib
+  DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo check --manifest-path ✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/Cargo.toml
+  Both fail identically, before reaching this crate at all:
+
+    error: failed to load manifest for workspace member
+    `/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🔨️modules/🫀️core/⚡️implementations/🦀️rust`
+    referenced by workspace at `/Users/ueli/Documents/semio/Cargo.toml`
+    Caused by: failed to read .../Cargo.toml: No such file or directory (os error 2)
+
+  Confirmed via `find ✏️s/🔌️plugins/📕️norm -maxdepth 3 -type d`: 📕️norm's tree already shows the NEW
+  taxonomy shape (🫀️core, 🎛️apps, 🗿️artifacts, 📦️packages at plugin root) — its old crate dir referenced
+  by root Cargo.toml no longer exists on disk. This is 📕️norm's own in-flight migration elsewhere in the
+  repo, exactly the documented "known live blocker." Retried once near the end (after finishing the
+  retrofit) — still blocked, unchanged. Falling back to manual verification per instructions.
+
+MANUAL VERIFICATION PERFORMED (in lieu of live cargo):
+
+1. Byte-diff of moved 📦️lib.rs (original owner-root copy backed up to this ticket folder as
+   original-lib.rs.bak before the move) vs the new 📦️packages/🦀️rust/📦️lib.rs:
+   ONLY the 16 leaf `#[path = "…"]` string literals changed (each gained a `../../` prefix, and the
+   config one additionally retargeted to the new 🎚️config/🦀️component.rs location). Zero other lines
+   differ — no logic, no doc comments (besides one intentionally-updated stale filename reference in
+   🎛️apps/➗️mathematical/🦀️component.rs's module doc, see below), no reordering.
+
+2. Cargo.toml: single line changed, `[lib] path = "../../📦️lib.rs"` -> `path = "📦️lib.rs"`. Nothing else
+   in the dependency table touched (per §13.4 in TEMPLATE.md — did not "improve" any dependency
+   declaration while retrofitting).
+
+3. Folded 🎛️apps/➗️mathematical/🦀️config.rs -> 🎛️apps/➗️mathematical/🎚️config/🦀️component.rs via a plain
+   `mv` (no content rewrite). Verified content is byte-identical: `git show HEAD:<old-path> | diff -
+   <new-path>` reported IDENTICAL. The one #[path] declaration in 📦️lib.rs that pointed at it was
+   updated to the new location + `../../` prefix (module identifier `config` unchanged, so no other
+   `use crate::apps::mathematical::config::...` call sites needed edits — confirmed by
+   `grep -rln "config::"` across the plugin tree, all 4 hits are consumers using the unchanged module
+   path).
+
+4. Updated one stale doc-comment cross-reference (not a #[path] wiring, purely descriptive prose) in
+   🎛️apps/➗️mathematical/🦀️component.rs's module doc: "view state in `🦀️config.rs`" ->
+   "view state in `🎚️config/🦀️component.rs`".
+
+5. `#[path]` target existence check — resolved every non-"." #[path] string in the new 📦️lib.rs relative
+   to its own directory (📦️packages/🦀️rust/) and confirmed a real file exists at each of the 16 targets:
+   all OK, zero MISSING.
+
+6. Reverse check — every 🦀️component.rs file physically on disk under the taxonomy tree (excluding
+   📦️packages) is referenced by exactly one #[path] string in 📦️lib.rs: confirmed, zero unreferenced
+   files.
+
+7. Full `find` of the plugin tree post-retrofit shows only: AGENTS.md, README.md (owner root, untouched,
+   no collision), 🦀️component.rs leaves, 📦️packages/🦀️rust/{Cargo.toml,📋️project.json,📜️script.ts,
+   📦️lib.rs}, and plain taxonomy folders. Zero sibling variant files, zero buried data
+   (📚️examples/🧫️fixtures/🤖️generated/🛂️manifest.json — none exist anywhere in this plugin, confirmed
+   absent both before and after).
+
+8. `📋️project.json`'s `namedInputs.default` already globs the whole plugin tree
+   (`{workspaceRoot}/✏️s/🔌️plugins/➗️mathematical/**/*.rs`), not individual file paths — no update needed.
+
+9. External-reference check: `grep -rn "🔌️plugins/➗️mathematical/📦️lib.rs" .` (excluding this ticket
+   folder) — only hit is `.nx/workspace-data/file-map.json`, an nx-generated cache file that
+   self-regenerates on next nx run; not a real source reference, not touched, no registrar handoff
+   needed.
+
+10. git rename-detection sanity check (git add -A on this plugin's pathspec only, then immediately
+    `git reset` to unstage — no commit, no destructive op, scoped strictly to this plugin's path):
+    both moved files (📦️lib.rs and the folded config file) were detected by git as pure renames (R),
+    confirming the tooling itself agrees these are relocations, not rewrites. Unstaged again immediately
+    after inspection so no shared index state was left behind for concurrent devs/sessions.
+
+BASELINE: 55/55 tests (per the original migration ticket's verification.txt,
+26/08/05/MATHEMATICAL-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION). Not independently
+re-executed live due to the norm blocker above — no logic changed, so no drift is expected, but this is
+reported as MANUAL verification, not a live-run confirmation.
+
+Live cargo test/clippy/check should be re-run by whichever session/registrar next has a healthy
+workspace, to convert this from manual to live confirmation. No code changes are pending on this
+plugin's part; only the norm migration elsewhere needs to finish.

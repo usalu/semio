@@ -1,1 +1,0 @@
-annex=en m-ed-knm=330 v-ed-kn=180kN m-pla=120 m-pl-rd=380 eta=0.9 v-l-rd=220 insulation-thickness-mm=32mm fire-rating=r90 deck-type=re-entrant delta-sigma-mpa=60MPa fatigue-detail=shear_connector d-mm=22mm h-sc-mm=100mm f-ck-mpa=35MPa f-u-mpa=450MPa e-cm-mpa=34000MPa v-ed-per-stud-kn=45kN span-m=20m f-y-mpa=355MPa n-cycles-stud=2000000 delta-tau-stud-mpa=50MPa

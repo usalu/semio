@@ -5,8 +5,7 @@ use crate::artifacts::jack::dsl::{port_dsl_to_port, port_to_port_dsl, PortDsl};
 use crate::artifacts::jack::op::TrinityGraphOperation;
 use crate::artifacts::jack::{EntityRef, GraphFixture, PropertyValue};
 use protocol::{OpBinary, OpText};
-use serde::{Deserialize, Serialize};
-use store::{TextError, TextSpan};
+use store::TextError;
 
 //#region 🔖️DslMirrors
 /// 🏷️ The `entity` half of `EntityRefDsl` — a plain 2-variant scalar tag (`dsl::DslScalar`, not
@@ -171,7 +170,6 @@ pub fn decode_op(bytes: &[u8]) -> Result<TrinityGraphOperation, protocol::Protoc
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::jack::op::create_trinity_graph_envelope;
     use crate::artifacts::jack::TRINITY_GRAPH_SCHEMA;
 
     #[test]
@@ -259,6 +257,11 @@ mod tests {
     #[test]
     fn op_text_round_trip_clear_data_property() {
         store::test_support::assert_op_line_round_trip(&TrinityGraphOperation::ClearDataProperty { entity: EntityRef::Edge("e1".into()), key: "u".into() });
+    }
+
+    #[test]
+    fn op_text_round_trip_set_fixture() {
+        store::test_support::assert_op_line_round_trip(&TrinityGraphOperation::SetFixture { fixture: crate::artifacts::jack::engine::empty_jack_document() });
     }
 
     #[test]

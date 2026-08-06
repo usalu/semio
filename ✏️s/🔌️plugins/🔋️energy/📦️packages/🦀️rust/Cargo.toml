@@ -15,7 +15,7 @@ package = "semio:energy"
 role = "plugin"
 
 [lib]
-path = "../../📦️lib.rs"
+path = "📦️lib.rs"
 
 [dependencies]
 mathematical_algebra = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/➕️algebra/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-algebra" }

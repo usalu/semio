@@ -3,7 +3,7 @@
 
 use crate::apps::remodel::modes::analyze::windows::report;
 use crate::apps::remodel::modes::model::windows::model;
-use semio_framework_plugin::{create_default_layout, create_named_layout, LocalizedLabel, ModeDefinition, NamedWindowLayout};
+use semio_framework_plugin::{create_default_layout, create_named_layout, LocalizedLabel, ModeDefinition, NamedLayout};
 
 pub const REMODEL_PLAY_MODE_ANALYZE: &str = "analyze";
 pub const REMODEL_PLAY_LAYOUT_ANALYZE: &str = "remodel-analyze";
@@ -13,7 +13,7 @@ pub fn definition() -> ModeDefinition {
     ModeDefinition { id: REMODEL_PLAY_MODE_ANALYZE.into(), label: LocalizedLabel::native("Analyze", "Analyse"), icon_id: "search".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
-pub fn layout() -> NamedWindowLayout {
+pub fn layout() -> NamedLayout {
     create_named_layout(
         REMODEL_PLAY_LAYOUT_ANALYZE,
         "Analyze",

@@ -1,0 +1,56 @@
+=== Final tree (after retrofit) ===
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎚️config/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎭️modes/✏️edit/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎭️modes/✏️edit/🪟️windows/🖼️composite/🎚️options/✏️pencil/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎭️modes/✏️edit/🪟️windows/🖼️composite/🎚️options/🎥️camera/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎭️modes/✏️edit/🪟️windows/🖼️composite/🎚️options/🔲️grid/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎭️modes/✏️edit/🪟️windows/🖼️composite/🎚️options/🧲️snap/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎭️modes/✏️edit/🪟️windows/🖼️composite/🎚️options/🧹️eraser-point/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎭️modes/✏️edit/🪟️windows/🖼️composite/🎚️options/🧽️eraser-stroke/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎭️modes/✏️edit/🪟️windows/🖼️composite/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎭️modes/✏️edit/🪟️windows/🧭️navigator/🎚️options/🔍️zoom/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎭️modes/✏️edit/🪟️windows/🧭️navigator/🎚️options/🔲️grid-visible/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎭️modes/✏️edit/🪟️windows/🧭️navigator/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/✏️drawing/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🎥️camera/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🐚️export/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/💬️engagement/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🔲️grid/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🖊️ink/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗂️selection/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗃️fixture/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗣️locale/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧰️utility/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️block/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧲️snap/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/📌️panels/📄️document/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/📌️panels/🔍️inspection/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/📌️panels/🛍️catalogue/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🗣️terminology/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/📚️examples/🗒️semio.note
+✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/Cargo.toml
+✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/📋️project.json
+✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/📜️script.ts
+✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/📦️lib.rs
+✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/⚙️engine/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🎒️pack/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📡️spr/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔧️op/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🗣️dsl/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️component.rs
+✏️s/🔌️plugins/🗒️note/🛂️manifest.json
+
+=== git diff --stat (staged rename summary) ===
+ ✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/{🦀️config.rs => 🎚️config/🦀️component.rs}    | 0
+ .../🗒️note/🎛️apps/🗒️note/{🦀️terminology.rs => 🗣️terminology/🦀️component.rs}   | 0
+ ✏️s/🔌️plugins/🗒️note/{ => 📦️packages/🦀️rust}/📦️lib.rs                       | 0
+ ✏️s/🔌️plugins/🗒️note/{🗿️artifacts/🗒️note => }/🛂️manifest.json                | 0
+ 4 files changed, 0 insertions(+), 0 deletions(-)
+
+=== git diff (working tree edits beyond pure rename) ===
+ ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/Cargo.toml |   2 +-
+ ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/📦️lib.rs   | 111 ++++++++++++------------
+ 2 files changed, 57 insertions(+), 56 deletions(-)

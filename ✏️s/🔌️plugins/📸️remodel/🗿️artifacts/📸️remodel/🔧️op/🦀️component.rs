@@ -1,10 +1,10 @@
 //! ⚡️ Remodel artifact — the operation vocabulary and its laws.
 
+use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::{
     CalibrationState, CameraTrajectory, DenseCloud, DenseParams, FeatureParams, GeoParams, GeoProducts, GroundControlPoint, ImageAsset, IngestParams, MatchParams, MediaStream, MeshParams, MotionParams, MotionTrackSummary, QcReportSnapshot,
     ReconstructionJob, RemodelMesh, RemodelScene, SfmParams, SparseCloud,
 };
-use crate::artifacts::remodel::diff::RemodelDiff;
 use protocol::Operation;
 use serde::{Deserialize, Serialize};
 
@@ -200,7 +200,10 @@ impl Operation<RemodelScene> for RemodelOperation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::remodel::{default_remodel_scene, CameraCalibration, CameraPosePreview, FrameRef, GcpObservation, MediaKind, MeshSource, PackedF32, PackedU8, ReconstructionStage, RigExtrinsic, TrackClass, VideoCodec, VideoSource, WatertightReportSnapshot};
+    use crate::artifacts::remodel::{
+        default_remodel_scene, CameraCalibration, CameraPosePreview, FrameRef, GcpObservation, MediaKind, MeshSource, PackedF32, PackedU8, ReconstructionStage, RigExtrinsic, TrackClass, VideoCodec, VideoSource, WatertightReportSnapshot,
+    };
+    use protocol::OperationDiff as _;
 
     //#region Operations
     #[test]
@@ -575,7 +578,7 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&RemodelOperation::SetTracks { tracks: scene.results.tracks.clone() });
         store::test_support::assert_op_line_round_trip(&RemodelOperation::SetGeoProducts { geo: scene.results.geo.clone() });
         store::test_support::assert_op_line_round_trip(&RemodelOperation::SetGeoProducts { geo: None });
-        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetQc { qc: scene.results.qc.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetQc { qc: scene.results.qc });
         store::test_support::assert_op_line_round_trip(&RemodelOperation::SetQc { qc: None });
     }
     //#endregion 🔖️OpText

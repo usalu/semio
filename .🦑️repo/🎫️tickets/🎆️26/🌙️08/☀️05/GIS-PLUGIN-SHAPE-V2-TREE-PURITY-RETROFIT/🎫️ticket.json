@@ -1,0 +1,14 @@
+{
+  "title": "Gis Plugin Shape V2 Tree Purity Retrofit",
+  "emoji": "🌳️",
+  "status": "closed",
+  "description": "Retrofit the already-migrated 🌍️gis plugin (✏️s/🔌️plugins/🌍️gis) from Shape V1 to Shape V2 tree purity per TEMPLATE.md §14: move the owner-root 📦️lib.rs into 📦️packages/🦀️rust/📦️lib.rs (fix [lib] path + add ../../ prefix to all #[path] strings), fold five sibling variant files (◻2d's 🦀️config.rs/🦀️terminology.rs/🦀️wasm.rs/🦀️maphost.rs and 🧊️3d's 🦀️config.rs) into their own \u003cfolder\u003e/🦀️component.rs, and merge both apps' 📚️examples/ into one owner-root 📚️examples/. Pure mechanical reshape, no logic changes. Baseline: 146/146 lib tests (per earlier migration ticket); root cargo commands are currently blocked repo-wide by an unrelated 📕️norm dangling-manifest issue, so verification will be manual byte-diff + find-based tree-purity confirmation, with a live cargo retry near the end.",
+  "summary": "Retrofitted the already-migrated 🌍️gis plugin from Shape V1 to Shape V2 tree purity per TEMPLATE.md §14. Pure mechanical reshape, zero logic changes, verified via byte-diff (live cargo blocked twice by unrelated concurrent-session issues: writer's malformed Cargo.toml, then the known norm dangling-manifest blocker). Moved entry file 📦️lib.rs -\u003e 📦️packages/🦀️rust/📦️lib.rs, updated [lib] path to \"📦️lib.rs\", added ../../ prefix to all 47 non-\".\" #[path] strings. Folded 5 sibling variant files into component folders: ◻2d's 🦀️config.rs-\u003e🎚️config/🦀️component.rs, 🦀️terminology.rs-\u003e🗣️terminology/🦀️component.rs, 🦀️wasm.rs-\u003e🌉️wasm/🦀️component.rs, 🦀️maphost.rs-\u003e🗺️maphost/🦀️component.rs (named after the file's own doc-comment topic, \"the shared MapHost projection\"); 🧊️3d's 🦀️config.rs-\u003e🎚️config/🦀️component.rs. Merged both apps' 📚️examples/ into one owner-root 📚️examples/ (🌍️reuse.map.gismap + 🌍️reuse.terrain.gisterrain, no collision), updating the two include_str! paths in the gismap/gisterrain 🗣️dsl/🦀️component.rs files. AGENTS.md/README.md were already at the owner root pre-retrofit, no move/collision. Verification: all 7 moved files byte-identical to git HEAD originals; the 3 edited files (Cargo.toml, 2 dsl component.rs) each show exactly one changed line; every #[path] target resolves on disk; find-based tree-purity check confirms nothing remains below the owner root except 🦀️component.rs/plain folders/📦️packages/rootData+rootDoc names. Registrar handoff: none needed — root Cargo.toml's gis member line unchanged, demonstrator's dependency already points at the crate dir (📦️packages/🦀️rust), unaffected by the internal [lib] path change. Only stray hit for the old lib.rs path is .nx/workspace-data/file-map.json, an nx cache artifact that self-regenerates, not touched.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2505"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪23434a9b1bfc4fa7a6e8657fc127d0c9"
+  ]
+}

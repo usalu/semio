@@ -10,14 +10,14 @@ use playbook::{FormGeneration, GenerationPlayState};
 use std::collections::BTreeMap;
 
 //#region 🔖️Examples
-pub const PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT: &str = include_str!("../../../🎛️apps/🧊️3d/📚️examples/🌀️hexagonal-mushroom-column.procedural3d");
-pub const PROCEDURAL3D_EXAMPLE_RECT_EXTRUDE_TEXT: &str = include_str!("../../../🎛️apps/🧊️3d/📚️examples/🌀️rectangle-extrude-volume.procedural3d");
-pub const PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT: &str = include_str!("../../../🎛️apps/🧊️3d/📚️examples/🌀️sphere-cut-with-torus.procedural3d");
-pub const PROCEDURAL3D_EXAMPLE_BOX_FILLET_TEXT: &str = include_str!("../../../🎛️apps/🧊️3d/📚️examples/🌀️box-fillet-preview.procedural3d");
-pub const PROCEDURAL3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT: &str = include_str!("../../../🎛️apps/🧊️3d/📚️examples/🌀️sphere-box-fuse.procedural3d");
-pub const PROCEDURAL3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT: &str = include_str!("../../../🎛️apps/🧊️3d/📚️examples/🌀️face-sweep-extrude.procedural3d");
-pub const PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT: &str = include_str!("../../../🎛️apps/🧊️3d/📚️examples/🌀️rectangle-wire-preview.procedural3d");
-pub const PROCEDURAL3D_EXAMPLE_BOX_SHELL_TEXT: &str = include_str!("../../../🎛️apps/🧊️3d/📚️examples/🌀️box-shell-preview.procedural3d");
+pub const PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT: &str = include_str!("../../../📚️examples/🌀️hexagonal-mushroom-column.procedural3d");
+pub const PROCEDURAL3D_EXAMPLE_RECT_EXTRUDE_TEXT: &str = include_str!("../../../📚️examples/🌀️rectangle-extrude-volume.procedural3d");
+pub const PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT: &str = include_str!("../../../📚️examples/🌀️sphere-cut-with-torus.procedural3d");
+pub const PROCEDURAL3D_EXAMPLE_BOX_FILLET_TEXT: &str = include_str!("../../../📚️examples/🌀️box-fillet-preview.procedural3d");
+pub const PROCEDURAL3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT: &str = include_str!("../../../📚️examples/🌀️sphere-box-fuse.procedural3d");
+pub const PROCEDURAL3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT: &str = include_str!("../../../📚️examples/🌀️face-sweep-extrude.procedural3d");
+pub const PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT: &str = include_str!("../../../📚️examples/🌀️rectangle-wire-preview.procedural3d");
+pub const PROCEDURAL3D_EXAMPLE_BOX_SHELL_TEXT: &str = include_str!("../../../📚️examples/🌀️box-shell-preview.procedural3d");
 //#endregion 🔖️Examples
 
 //#region 🔖️DslMirror

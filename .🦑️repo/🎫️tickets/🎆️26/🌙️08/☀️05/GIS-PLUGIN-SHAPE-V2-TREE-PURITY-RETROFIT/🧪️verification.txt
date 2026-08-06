@@ -1,0 +1,51 @@
+Gis Plugin Shape V2 Tree Purity Retrofit — manual verification log
+====================================================================
+
+Live cargo blocked both attempts (root workspace-wide `cargo check`/`test -p semio-s-plugin-gis`
+cannot resolve `cargo metadata`):
+  1st attempt (cargo check -p semio-s-plugin-gis): failed on ✒️writer's Cargo.toml
+     (`cargo-features = ["trim-paths"]` malformed as a sequence) — another session's concurrent WIP,
+     not this plugin.
+  2nd attempt, retried near the end (cargo test -p semio-s-plugin-gis --lib): failed on the
+     documented 📕️norm dangling-manifest blocker
+     (`✏️s/🔌️plugins/📕️norm/🔨️modules/🫀️core/⚡️implementations/🦀️rust/Cargo.toml` missing).
+  Neither is caused by this retrofit — no gis file was touched by either failure's manifest chain.
+
+Manual verification performed instead:
+
+1. #[path] target existence — every non-"." #[path = "…"] string in the moved
+   📦️packages/🦀️rust/📦️lib.rs resolved (relative to its own directory) against the filesystem.
+   Result: zero missing targets.
+
+2. 📦️lib.rs logic diff (against 🧪️lib-before.rs, the pre-move backup) — every changed line is a
+   #[path] string only: either gaining a "../../" prefix, or (for the 5 folded sibling files)
+   pointing at the new <folder>/🦀️component.rs location. Zero other lines changed. See
+   🧪️lib-diff.txt for the full diff.
+
+3. Content byte-identity of every moved file (git HEAD original vs. new location), via
+   `diff <(git show HEAD:<old-path>) <new-path>`:
+     - 🎛️apps/◻2d/🦀️config.rs        -> 🎛️apps/◻2d/🎚️config/🦀️component.rs        IDENTICAL
+     - 🎛️apps/🧊️3d/🦀️config.rs        -> 🎛️apps/🧊️3d/🎚️config/🦀️component.rs        IDENTICAL
+     - 🎛️apps/◻2d/🦀️terminology.rs   -> 🎛️apps/◻2d/🗣️terminology/🦀️component.rs   IDENTICAL
+     - 🎛️apps/◻2d/🦀️wasm.rs          -> 🎛️apps/◻2d/🌉️wasm/🦀️component.rs          IDENTICAL
+     - 🎛️apps/◻2d/🦀️maphost.rs       -> 🎛️apps/◻2d/🗺️maphost/🦀️component.rs       IDENTICAL
+     - 🎛️apps/◻2d/📚️examples/🌍️reuse.map.gismap        -> 📚️examples/🌍️reuse.map.gismap        IDENTICAL
+     - 🎛️apps/🧊️3d/📚️examples/🌍️reuse.terrain.gisterrain -> 📚️examples/🌍️reuse.terrain.gisterrain IDENTICAL
+
+4. `git diff` on the only 3 non-moved files touched (📦️packages/🦀️rust/Cargo.toml,
+   🗿️artifacts/🗺️gismap/🗣️dsl/🦀️component.rs, 🗿️artifacts/🏔️gisterrain/🗣️dsl/🦀️component.rs):
+   exactly one changed line each — the `[lib] path` value and each artifact's `include_str!` path
+   respectively. Zero logic changes.
+
+5. Tree purity — `find ✏️s/🔌️plugins/🌍️gis -type f \( -name "*.rs" -o -name "*.ts" \) -not -name
+   "🦀️component.rs" -not -name "🟦️component.ts" -not -path "*/📦️packages/*"` returns EMPTY.
+   Full tree listing confirms: every file below the owner root is either a 🦀️component.rs (inside a
+   plain component folder), inside 📦️packages/🦀️rust (manifests + entry file), or one of the
+   rootDataDirNames/rootDocFileNames at the owner root itself (📚️examples/, AGENTS.md, README.md).
+
+6. AGENTS.md / README.md — already at the owner root pre-retrofit (confirmed via `find`, no nested
+   copies anywhere in the tree) — no move needed, no collision.
+
+Conclusion: the reshape is verified correct by construction (byte-identical content, path-only
+diffs, full #[path]-target resolution, tree-purity find) even though live `cargo test` could not run
+due to two consecutive unrelated repo-wide blockers from other sessions' concurrent in-flight work.

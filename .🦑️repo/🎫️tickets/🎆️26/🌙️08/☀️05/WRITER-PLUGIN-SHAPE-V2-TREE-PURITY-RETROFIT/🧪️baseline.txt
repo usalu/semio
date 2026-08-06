@@ -1,0 +1,18 @@
+Baseline attempt (2026-08-05):
+`DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo test -p semio-s-plugin-writer --lib`
+and
+`cargo check --manifest-path .../✒️writer/📦️packages/🦀️rust/Cargo.toml`
+both fail identically with:
+  error: failed to load manifest for workspace member
+  `.../✏️s/🔌️plugins/📕️norm/🔨️modules/🫀️core/⚡️implementations/🦀️rust`
+  Caused by: No such file or directory (os error 2)
+
+This matches the documented known live blocker: 📕️norm is mid-migration elsewhere in the
+repo, dangling workspace member manifest path breaks any workspace-rooted cargo invocation
+(root Cargo.toml still lists old norm module path that's been deleted on disk by norm's own
+migrating session). NOT this session's bug, not touched.
+
+Previous migration ticket (WRITER-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION)
+recorded baseline as 86/86 passing. Proceeding with manual verification (byte-diff moved
+files, confirm every #[path] target exists on disk via find) per the Shape V2 retrofit
+instructions' documented fallback. Will retry cargo test near the end in case norm resolves.

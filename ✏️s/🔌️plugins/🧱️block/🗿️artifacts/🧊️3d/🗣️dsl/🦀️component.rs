@@ -4,9 +4,9 @@ use crate::artifacts::block3d::Block3dDefinition;
 
 /// 📄️ The `nakagin-capsule` example fixture, handcrafted in the `.block3d` DSL — the `ObjectKind` half
 /// of semio_compose_rs's metabolism-kit `Capsule` type.
-pub const BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT: &str = include_str!("../../../🎛️apps/🧊️3d/📚️examples/🧱️nakagin-capsule.block3d");
+pub const BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🧱️nakagin-capsule.block3d");
 /// 📄️ The `hexagonal-cut-concrete-forest-left` example fixture, handcrafted in the `.block3d` DSL.
-pub const BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../../🎛️apps/🧊️3d/📚️examples/🧱️hexagonal-cut-concrete-forest-left.block3d");
+pub const BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🧱️hexagonal-cut-concrete-forest-left.block3d");
 
 /// 📖️ Parses `.block3d` DSL text into a `Block3dDefinition`.
 pub fn parse_dsl(text: &str) -> Result<Block3dDefinition, store::TextError> {

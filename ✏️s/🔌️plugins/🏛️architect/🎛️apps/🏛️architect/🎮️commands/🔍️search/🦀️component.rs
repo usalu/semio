@@ -1,7 +1,7 @@
 //! 🔍️ Architect play app command — keyword search across every register, selecting the top hits and
 //! appending the query to the config's search history.
 
-pub mod search {
+pub mod query {
     use crate::apps::architect::config::{parse_search_history, snapshot, ArchitectConfig, ArchitectConfigOperation};
     use crate::artifacts::program::engine::search::{search_plugin, SearchQuery};
     use crate::artifacts::program::op::ProgramOperation;

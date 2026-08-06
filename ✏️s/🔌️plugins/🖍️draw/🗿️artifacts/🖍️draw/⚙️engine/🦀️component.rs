@@ -2,7 +2,7 @@
 
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use crate::artifacts::draw::{
-    default_draw_trace_params, default_draw_transform, DocumentDsl, DrawArtboard, DrawAttributes, DrawBooleanBody, DrawCircle, DrawDocument, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawImageBody, DrawLayerBase, DrawLayerNode, DrawLine,
+    default_draw_trace_params, default_draw_transform, DocumentDsl, DrawArtboard, DrawAttributes, DrawBooleanBody, DrawDocument, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawImageBody, DrawLayerBase, DrawLayerNode, DrawLine,
     DrawPathBody, DrawPolygon, DrawRect, DrawShapeBody, DrawTextBody, DrawTraceBody, DrawTransform, FillStyle, PathSegment, StrokeStyle, DRAW_DOCUMENT_SCHEMA,
 };
 use serde::{Deserialize, Serialize};
@@ -409,10 +409,10 @@ pub fn draw_layer_world_bounds(layer: &DrawLayerNode) -> Option<(f64, f64, f64, 
         ys.push(world.1);
     }
     Some((
-        xs.iter().cloned().fold(f64::INFINITY, f64::min),
-        ys.iter().cloned().fold(f64::INFINITY, f64::min),
-        xs.iter().cloned().fold(f64::NEG_INFINITY, f64::max) - xs.iter().cloned().fold(f64::INFINITY, f64::min),
-        ys.iter().cloned().fold(f64::NEG_INFINITY, f64::max) - ys.iter().cloned().fold(f64::INFINITY, f64::min),
+        xs.iter().copied().fold(f64::INFINITY, f64::min),
+        ys.iter().copied().fold(f64::INFINITY, f64::min),
+        xs.iter().copied().fold(f64::NEG_INFINITY, f64::max) - xs.iter().copied().fold(f64::INFINITY, f64::min),
+        ys.iter().copied().fold(f64::NEG_INFINITY, f64::max) - ys.iter().copied().fold(f64::INFINITY, f64::min),
     ))
 }
 
@@ -1034,7 +1034,7 @@ fn resolve_boolean_layer_segments(doc: &DrawDocument, boolean: &DrawBooleanBody)
 /// 🖼️ Decodes a (possibly resized) PNG asset into an 8-bit luma buffer, matching the premigration canvas-based decode.
 fn decode_draw_image_asset_luma(asset: &DrawImageAsset) -> Option<(u32, u32, Vec<u8>)> {
     let base64_data = match asset.data.strip_prefix("data:") {
-        Some(rest) => rest.split_once(',').map(|(_, data)| data).unwrap_or(rest),
+        Some(rest) => rest.split_once(',').map_or(rest, |(_, data)| data),
         None => asset.data.as_str(),
     };
     let bytes = BASE64.decode(base64_data).ok()?;
@@ -1155,7 +1155,7 @@ pub fn draw_document_to_svg(doc: &DrawDocument) -> (String, u32, u32) {
         .map(|node| {
             let matrix = node.transform.iter().map(|value| value.to_string()).collect::<Vec<_>>().join(" ");
             if let Some(text) = node.text {
-                let fill = node.fill.as_ref().map(fill_style_to_svg).unwrap_or_else(|| "black".into());
+                let fill = node.fill.as_ref().map_or_else(|| "black".into(), fill_style_to_svg);
                 return format!(r#"<g transform="matrix({matrix})" opacity="{}"><text x="0" y="{}" font-size="{}" fill="{fill}">{}</text></g>"#, node.opacity, text.size, text.size, escape_svg_text(&text.content));
             }
             if let Some(image) = node.image {
@@ -1165,9 +1165,9 @@ pub fn draw_document_to_svg(doc: &DrawDocument) -> (String, u32, u32) {
             if d.is_empty() {
                 return String::new();
             }
-            let fill = node.fill.as_ref().map(fill_style_to_svg).unwrap_or_else(|| "none".into());
-            let stroke = node.stroke.as_ref().map(|style| rgba_to_svg_color(style.color)).unwrap_or_else(|| "none".into());
-            let stroke_width = node.stroke.as_ref().map(|style| style.width).unwrap_or(0.0);
+            let fill = node.fill.as_ref().map_or_else(|| "none".into(), fill_style_to_svg);
+            let stroke = node.stroke.as_ref().map_or_else(|| "none".into(), |style| rgba_to_svg_color(style.color));
+            let stroke_width = node.stroke.as_ref().map_or(0.0, |style| style.width);
             format!(r#"<g transform="matrix({matrix})" opacity="{}"><path d="{d}" fill="{fill}" stroke="{stroke}" stroke-width="{stroke_width}" fill-rule="evenodd"/></g>"#, node.opacity)
         })
         .filter(|shape| !shape.is_empty())
@@ -1312,6 +1312,7 @@ pub fn draw_vector_media(doc: &DrawDocument) -> Result<semio_framework_core::Med
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::draw::DrawCircle;
 
     #[test]
     fn default_document_has_path_layer() {
@@ -1677,7 +1678,7 @@ mod tests {
     fn filter_path_segments_by_contour_area_keeps_all_for_non_positive_min_area_and_drops_small_contours() {
         let small = vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [1.0, 0.0] }, PathSegment::Line { to: [1.0, 1.0] }, PathSegment::Close];
         let big = vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [10.0, 0.0] }, PathSegment::Line { to: [10.0, 10.0] }, PathSegment::Close];
-        let mut combined = small.clone();
+        let mut combined = small;
         combined.extend(big.clone());
 
         assert_eq!(filter_path_segments_by_contour_area(&combined, 0.0), combined);
@@ -1771,7 +1772,7 @@ mod tests {
         assert_eq!(luma.len(), 16);
         assert!(luma.iter().all(|&v| v == 255));
 
-        let resized_asset = DrawImageAsset { mime: "image/png".into(), data: encoded.clone(), width: Some(8), height: Some(8) };
+        let resized_asset = DrawImageAsset { mime: "image/png".into(), data: encoded, width: Some(8), height: Some(8) };
         let (rw, rh, rluma) = decode_draw_image_asset_luma(&resized_asset).expect("decode resized");
         assert_eq!((rw, rh), (8, 8));
         assert_eq!(rluma.len(), 64);

@@ -600,7 +600,7 @@ export type UiMenuRef = {
 
 /** 🌐️ A 3D world surface scene payload — mirrors the wasm `componentScene` node's `world3d` field. */
 /** 🖱️ One row of a resolved context menu — TS twin of the Rust `ContextMenuItemSpec`
- * (`🧰️framework/🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust/📦️lib.rs`). Plugins build these with
+ * (`🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️lib.rs`). Plugins build these with
  * `MenuBuilder`; the host maps them through `ContextMenuController` (React) / `render_context_menu`
  * (wgpu) unchanged. */
 export type ContextMenuItemSpec = {
@@ -622,7 +622,7 @@ export type ContextMenuItemSpec = {
 
 //#region 🗂️ContextMenuOrganizer
 /** 🗂️ Canonical ribbon-parent taxonomy — TS twin of the Rust `RIBBON_PARENT_CATEGORIES` const
- * (`🧰️framework/🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust/📦️lib.rs`) and of ui-react's closed
+ * (`🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️lib.rs`) and of ui-react's closed
  * `UiRibbonParentCategory` union (`🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx`
  * ~3419). Id spelling and order are load-bearing: `organizeContextMenu` sorts `menu.group.<category>`
  * rows by this order (unknown categories sort after, in emit order). */
@@ -813,7 +813,7 @@ function contextMenuEmitOverBudget(
  * (`contextMenuEmitWithinBudget`/`contextMenuEmitOverBudget`). `categoryOf` resolves a leaf's
  * dispatched action id to a `RIBBON_PARENT_CATEGORIES` id (`undefined` buckets into `"actions"`) —
  * branch-for-branch twin of the Rust `organize_context_menu`
- * (`🧰️framework/🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust/📦️lib.rs`). */
+ * (`🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️lib.rs`). */
 export function organizeContextMenu(
   items: readonly ContextMenuItemSpec[],
   categoryOf: (id: string) => string | undefined,

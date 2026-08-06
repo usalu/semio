@@ -1097,7 +1097,7 @@ describe("resolveCargoPackageName", () => {
   test("resolves short lib names to full package names", () => {
     const root = process.cwd();
     expect(resolveCargoPackageName("db_actor", join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/⚡️implementations/🦀️rust"))).toBe("semio-framework-os-kernel-db-actor");
-    expect(resolveCargoPackageName("architect_spine", join(root, "✏️s/🔌️plugins/🏛️architect/🔨️modules/🦴️spine/⚡️implementations/🦀️rust"))).toBe("semio-s-plugin-architect-spine");
+    expect(resolveCargoPackageName("semio-s-plugin-architect", join(root, "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust"))).toBe("semio-s-plugin-architect");
     expect(resolveCargoPackageName("semio-s-plugin-energy", join(root, "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust"))).toBe("semio-s-plugin-energy");
   });
 

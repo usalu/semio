@@ -1,8 +1,8 @@
 //! 🔧️ Draw artifact — operation enum + apply/backwards (constitutional: op).
 
 use crate::artifacts::draw::diff::{DrawDiff, DrawLayerBasePatch, DrawLayerTreeAdd, DrawLayerTreePatch};
-use crate::artifacts::draw::engine::{clone_draw_layer_node, extract_layer_node, find_draw_layer, find_draw_layer_location, hex_to_rgba, insert_layer, layer_base, layer_base_mut, mutate_draw_layer, remove_layer_from_tree, update_layer_in_tree};
-use crate::artifacts::draw::{DrawCamera, DrawDocument, DrawLayerNode, FillStyle, StrokeStyle};
+use crate::artifacts::draw::engine::{clone_draw_layer_node, extract_layer_node, find_draw_layer, find_draw_layer_location, hex_to_rgba, insert_layer, layer_base, layer_base_mut, mutate_draw_layer, remove_layer_from_tree};
+use crate::artifacts::draw::{DrawDocument, DrawLayerNode, FillStyle, StrokeStyle};
 use protocol::Operation;
 use serde::{Deserialize, Serialize};
 
@@ -179,11 +179,10 @@ pub fn draw_op_for_layer_field(doc: &DrawDocument, layer_id: &str, field: &str, 
                 .attributes
                 .fill
                 .as_ref()
-                .map(|fill| match fill {
+                .map_or(1.0, |fill| match fill {
                     FillStyle::Solid { color } => color[3],
                     FillStyle::LinearGradient { .. } | FillStyle::RadialGradient { .. } => 1.0,
-                })
-                .unwrap_or(1.0);
+                });
             DrawOperation::SetFill { layer_id: layer_id.into(), fill: Some(FillStyle::Solid { color: hex_to_rgba(value.as_str().unwrap_or("#000000"), alpha) }) }
         }
         "strokeWidth" => {

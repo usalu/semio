@@ -2,6 +2,16 @@
 //! `jack` app's UI (interactive query editor) and the `rewrite` app's engine (`apply_rule`'s pattern
 //! matching), plus the plugin's out-of-scope `🐚️shell`/`🧠️lsp` residuals (repointed to this crate by
 //! the registrar, not restructured themselves in this migration).
+//!
+//! 📌️ `completion_prefix`/`tokens_before_cursor`/`after_colon_kind_context`/`after_dot_property_context`/
+//! `open_bracket_kind`/`collect_bound_vars`/`in_where_clause`/`graph_node_kinds`/`graph_edge_kinds`/
+//! `graph_property_names`/`filter_completions`/`collect_pattern_vars`/`collect_clause_bound_vars`/
+//! `collect_referenced_vars`/`collect_expr_vars`/`semantic_lints`/`find_kind_span`/`find_ident_span`
+//! were already unreferenced at the old crate's HEAD (`complete()`/`lint()` delegate entirely to
+//! `mathematical_graph_dsl`'s own implementation) — pre-existing dead code, not introduced by this
+//! migration; carried forward verbatim rather than deleted, since removing them risks losing an
+//! intended-but-unwired local completion/lint path this migration has no mandate to redesign.
+#![allow(dead_code)]
 
 pub mod queryable {
     // #region queryable
@@ -188,9 +198,10 @@ pub enum Expr {
     Or(Box<Expr>, Box<Expr>),
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum QueryResultKind {
+    #[default]
     Table,
     Graph,
 }
@@ -204,12 +215,6 @@ pub struct QueryResult {
     pub rows: Vec<Vec<PropertyValue>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub graph_fixture: Option<GraphFixture>,
-}
-
-impl Default for QueryResultKind {
-    fn default() -> Self {
-        Self::Table
-    }
 }
 
 impl QueryResult {
@@ -473,7 +478,7 @@ fn completion_prefix(source: &str, cursor: usize) -> String {
     source[start..cursor].to_string()
 }
 
-fn tokens_before_cursor<'a>(tokens: &'a [SpannedToken], cursor: usize) -> &'a [SpannedToken] {
+fn tokens_before_cursor(tokens: &[SpannedToken], cursor: usize) -> &[SpannedToken] {
     let mut end = tokens.len();
     for (i, row) in tokens.iter().enumerate() {
         if row.start >= cursor && !matches!(row.token, Token::Eof) {
@@ -979,12 +984,12 @@ impl Parser {
     }
 
     fn parse_pattern(&mut self) -> Result<Pattern, String> {
-        self.expect(Token::LParen)?;
+        self.expect(&Token::LParen)?;
         let left = self.parse_pattern_node()?;
-        self.expect(Token::RParen)?;
+        self.expect(&Token::RParen)?;
         if matches!(self.peek(), Token::Dash) {
             self.bump();
-            self.expect(Token::LBracket)?;
+            self.expect(&Token::LBracket)?;
             let edge_var = if matches!(self.peek(), Token::Ident(_)) { Some(self.expect_ident()?) } else { None };
             let edge_kind = if matches!(self.peek(), Token::Colon) {
                 self.bump();
@@ -992,11 +997,11 @@ impl Parser {
             } else {
                 None
             };
-            self.expect(Token::RBracket)?;
-            self.expect(Token::Arrow)?;
-            self.expect(Token::LParen)?;
+            self.expect(&Token::RBracket)?;
+            self.expect(&Token::Arrow)?;
+            self.expect(&Token::LParen)?;
             let right = self.parse_pattern_node()?;
-            self.expect(Token::RParen)?;
+            self.expect(&Token::RParen)?;
             Ok(Pattern { nodes: vec![left], edge: Some(PatternEdge { var: edge_var, kind: edge_kind, directed: true, right }) })
         } else {
             Ok(Pattern { nodes: vec![left], edge: None })
@@ -1005,7 +1010,7 @@ impl Parser {
 
     fn parse_pattern_node(&mut self) -> Result<PatternNode, String> {
         let var = self.expect_ident()?;
-        self.expect(Token::Colon)?;
+        self.expect(&Token::Colon)?;
         let kind = self.expect_ident()?;
         Ok(PatternNode { var, kind })
     }
@@ -1023,9 +1028,9 @@ impl Parser {
 
     fn parse_assignment(&mut self) -> Result<Assignment, String> {
         let var = self.expect_ident()?;
-        self.expect(Token::Dot)?;
+        self.expect(&Token::Dot)?;
         let prop = self.expect_ident()?;
-        self.expect(Token::Eq)?;
+        self.expect(&Token::Eq)?;
         let value = self.parse_value()?;
         Ok(Assignment { var, prop, value })
     }
@@ -1056,7 +1061,7 @@ impl Parser {
 
     fn parse_cmp_expr(&mut self) -> Result<Expr, String> {
         let var = self.expect_ident()?;
-        self.expect(Token::Dot)?;
+        self.expect(&Token::Dot)?;
         let prop = self.expect_ident()?;
         match self.bump() {
             Token::Eq => Ok(Expr::Eq { var, prop, value: self.parse_value()? }),
@@ -1076,8 +1081,8 @@ impl Parser {
         }
     }
 
-    fn expect(&mut self, want: Token) -> Result<(), String> {
-        if std::mem::discriminant(self.peek()) == std::mem::discriminant(&want) {
+    fn expect(&mut self, want: &Token) -> Result<(), String> {
+        if std::mem::discriminant(self.peek()) == std::mem::discriminant(want) {
             self.bump();
             Ok(())
         } else {
@@ -1125,7 +1130,7 @@ fn collapse_spanned_whitespace(text: &str) -> String {
 
 fn spanned_node(kind: &str, start: usize, end: usize, source: &str, children: Vec<SpannedNode>, label: Option<&str>) -> SpannedNode {
     let slice = collapse_spanned_whitespace(source.get(start..end).unwrap_or(""));
-    let label = label.map(str::to_string).unwrap_or_else(|| if slice.is_empty() { kind.to_string() } else { slice });
+    let label = label.map_or_else(|| if slice.is_empty() { kind.to_string() } else { slice }, str::to_string);
     SpannedNode { kind: kind.into(), label, start, end, children }
 }
 
@@ -1187,7 +1192,7 @@ impl<'a> SpannedParser<'a> {
                     self.bump();
                     patterns.push(self.parse_pattern()?);
                 }
-                let end = patterns.last().map(|p| p.end).unwrap_or(start);
+                let end = patterns.last().map_or(start, |p| p.end);
                 Ok(spanned_node("match", start, end, self.source, patterns, Some("MATCH")))
             }
             Token::KwWhere => {
@@ -1203,7 +1208,7 @@ impl<'a> SpannedParser<'a> {
                     self.bump();
                     items.push(self.parse_return_item()?);
                 }
-                let end = items.last().map(|i| i.end).unwrap_or(start);
+                let end = items.last().map_or(start, |i| i.end);
                 Ok(spanned_node("return", start, end, self.source, items, Some("RETURN")))
             }
             Token::KwCreate => {
@@ -1219,7 +1224,7 @@ impl<'a> SpannedParser<'a> {
                     self.bump();
                     vars.push(self.expect_ident()?);
                 }
-                let end = vars.last().map(|(_, _, end)| *end).unwrap_or(start);
+                let end = vars.last().map_or(start, |(_, _, end)| *end);
                 let children: Vec<SpannedNode> = vars.iter().map(|(text, vstart, vend)| spanned_node("var", *vstart, *vend, self.source, Vec::new(), Some(text.as_str()))).collect();
                 Ok(spanned_node("delete", start, end, self.source, children, Some("DELETE")))
             }
@@ -1230,7 +1235,7 @@ impl<'a> SpannedParser<'a> {
                     self.bump();
                     items.push(self.parse_assignment()?);
                 }
-                let end = items.last().map(|i| i.end).unwrap_or(start);
+                let end = items.last().map_or(start, |i| i.end);
                 Ok(spanned_node("set", start, end, self.source, items, Some("SET")))
             }
             Token::KwMerge => {
@@ -1611,7 +1616,7 @@ fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> Qu
         let mut row = Vec::new();
         for item in items {
             let val = match item {
-                ReturnItem::Var(v) => binding.nodes.get(v).and_then(|id| graph.node(id)).map(|n| PropertyValue::String(n.name.clone())).unwrap_or(PropertyValue::Null),
+                ReturnItem::Var(v) => binding.nodes.get(v).and_then(|id| graph.node(id)).map_or(PropertyValue::Null, |n| PropertyValue::String(n.name.clone())),
                 ReturnItem::Property { var, prop } => binding_value(graph, binding, var, prop).unwrap_or(PropertyValue::Null),
             };
             row.push(val);

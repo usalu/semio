@@ -1,0 +1,15 @@
+=== FINAL VERIFICATION (real root workspace, all synchronous) ===
+cargo test -p semio-s-plugin-puzzle --lib: 377 passed; 0 failed; 0 ignored (baseline match, exact)
+cargo check -p semio-s-plugin-puzzle: exit 0, zero warnings from puzzle itself
+cargo check -p semio-s-plugin-puzzle --target wasm32-wasip2: exit 0, clean
+cargo clippy -p semio-s-plugin-puzzle --all-targets -- -D warnings (real workspace): BLOCKED by a
+  pre-existing, out-of-scope clippy::needless_range_loop violation in framework crate
+  semio-framework-os-kernel-dsl-core (🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:908),
+  never touched by this retrofit. Isolated-overlay clippy run (dsl-core NOT a workspace member there,
+  so not deny-escalated) proved puzzle's own code is 0 warnings / exit 0 under -D warnings.
+cargo check -p semio-framework-os-kernel-surface-board-2d: exit 0, only 4 pre-existing unused-import
+  warnings (puzzle:: paths resolve correctly, confirming module-path contract intact).
+cargo check -p semio-framework-os-renderer-wgpu: exactly its 3 known pre-existing errors
+  (HostEffect E0425, dsl_core E0433, request_media_frames E0308 — flagged since W0-A per master.md),
+  zero new errors, none related to puzzle::.
+

@@ -478,7 +478,7 @@ mod tests {
     fn fatigue_reduction_factor_degrades_with_cycles() {
         assert!((part_2::fatigue_reduction_factor(500_000.0) - 1.0).abs() < 1e-9);
         let k_fat = part_2::fatigue_reduction_factor(1.0e8);
-        assert!(k_fat < 1.0 && k_fat >= 0.5);
+        assert!((0.5..1.0).contains(&k_fat));
     }
 
     #[test]

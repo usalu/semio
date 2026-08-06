@@ -110,7 +110,7 @@ fn pattern_to_match_clause(pattern: &PatternJson) -> String {
     }
 }
 
-fn parse_bindings_json(bindings_json: &str) -> Result<BTreeMap<String, PropertyValue>, TrinityRewriteError> {
+pub(crate) fn parse_bindings_json(bindings_json: &str) -> Result<BTreeMap<String, PropertyValue>, TrinityRewriteError> {
     if bindings_json.trim().is_empty() {
         return Ok(BTreeMap::new());
     }

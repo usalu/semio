@@ -1,0 +1,14 @@
+{
+  "title": "Forms Plugin Shape V2 Tree Purity Retrofit",
+  "emoji": "🌳️",
+  "status": "closed",
+  "description": "Retrofit the already-migrated 📋️forms plugin (✏️s/🔌️plugins/📋️forms) to the newly-amended Shape V2 tree-purity rule per TEMPLATE.md §14: move the owner-root 📦️lib.rs into 📦️packages/🦀️rust/📦️lib.rs, fold sibling variant files (🦀️config.rs, 🦀️terminology.rs) into their own component folders, relocate any nested data/docs to owner root, and verify zero test-count drift. Mechanical retrofit only, no logic changes.",
+  "summary": "Retrofitted 📋️forms to Shape V2 tree purity (TEMPLATE.md §14), purely mechanical, no logic changes. Moved owner-root 📦️lib.rs into 📦️packages/🦀️rust/📦️lib.rs, updated Cargo.toml [lib] path from \"../../📦️lib.rs\" to \"📦️lib.rs\", and prefixed all 36 #[path] strings inside it with ../../ (byte-diffed against git HEAD to confirm nothing else changed). Folded the two sibling variant files into their own component folders: 🦀️config.rs -\u003e 🎚️config/🦀️component.rs, 🦀️terminology.rs -\u003e 🗣️terminology/🦀️component.rs (both byte-identical moves, mod identifiers unchanged so no use-site edits needed). No nested data dirs or AGENTS.md/README.md were found in the tree (📚️examples/ was already correctly at the owner root pre-retrofit). Live cargo verification (check/clippy/test/wasm) is blocked workspace-wide by the documented pre-existing 📕️norm dangling-manifest issue in root Cargo.toml (not touched, not this plugin's bug) - substituted careful manual byte-diffing and #[path] mechanics verification instead, logged in 🧪️verification.txt. Final tree confirmed to contain only 🦀️component.rs files, 📦️packages, plain folders, and the allowed 📚️examples root data dir.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2498"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪4c8c6069ecf24439bc4ffdac647bc2df"
+  ]
+}

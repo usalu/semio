@@ -13,7 +13,7 @@ use crate::apps::architect::commands::element::{add_element, remove_element};
 use crate::apps::architect::commands::exchange::{export_program, export_registers_csv, import_program, import_program_request, import_registers_csv};
 use crate::apps::architect::commands::graph::{node_graph_edit, node_graph_viewport};
 use crate::apps::architect::commands::register::{add_register_item, patch_register_item, remove_register_item, select_register};
-use crate::apps::architect::commands::search::search;
+use crate::apps::architect::commands::search::query;
 use crate::apps::architect::commands::selection::set_selection;
 use crate::apps::architect::commands::template::apply;
 use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigOperation};
@@ -68,7 +68,7 @@ semio_framework_plugin::app_commands! {
         "nodeGraphEdit" as "node-graph-edit" => node_graph_edit::NodeGraphEdit,
         "nodeGraphViewport" as "node-graph-viewport" => node_graph_viewport::NodeGraphViewport,
         "setAdjacencyKind" as "set-adjacency-kind" => set_adjacency_kind::SetAdjacencyKind,
-        "search" as "search" => search::Search,
+        "search" as "search" => query::Search,
         "setAdjacencyFilter" as "set-adjacency-filter" => set_adjacency_filter::SetAdjacencyFilter,
     }
 }
@@ -130,12 +130,12 @@ impl DocumentApp for ArchitectPlayApp {
             "patchRegisterItem" => Ok(ArchitectCommand::PatchRegisterItem(patch_register_item::PatchRegisterItem {
                 register_id: parse_register_id(args).unwrap_or_default(),
                 entity_id: parse_entity_id_from_args(args, "entityId").map(|id| id.0).unwrap_or_default(),
-                patch_json: args.and_then(|value| value.get("patch")).map(Value::to_string).unwrap_or_else(|| "null".into()),
+                patch_json: args.and_then(|value| value.get("patch")).map_or_else(|| "null".into(), Value::to_string),
             })),
             "setAdjacencyField" => Ok(ArchitectCommand::SetAdjacencyField(set_adjacency_field::SetAdjacencyField {
                 entity_id: parse_entity_id_from_args(args, "entityId").map(|id| id.0).unwrap_or_default(),
                 field: str_field("field").unwrap_or_default(),
-                value_json: args.and_then(|value| value.get("value")).map(Value::to_string).unwrap_or_else(|| "null".into()),
+                value_json: args.and_then(|value| value.get("value")).map_or_else(|| "null".into(), Value::to_string),
             })),
             "applyTemplate" => Ok(ArchitectCommand::ApplyTemplate(apply::ApplyTemplate { template_id: parse_entity_id_from_args(args, "templateId").map(|id| id.0).unwrap_or_default() })),
             "exportRegistersCsv" => Ok(ArchitectCommand::ExportRegistersCsv(export_registers_csv::ExportRegistersCsv {})),
@@ -152,7 +152,7 @@ impl DocumentApp for ArchitectPlayApp {
             "importProgramRequest" => Ok(ArchitectCommand::ImportProgramRequest(import_program_request::ImportProgramRequest {})),
             "importProgram" => Ok(ArchitectCommand::ImportProgram(import_program::ImportProgram { payload: str_field("payload").or_else(|| str_field("dsl")).unwrap_or_default() })),
             "nodeGraphEdit" => Ok(ArchitectCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-                operations_json: args.and_then(|value| value.get("operations")).map(Value::to_string).unwrap_or_else(|| "[]".into()),
+                operations_json: args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), Value::to_string),
             })),
             "nodeGraphViewport" => Ok(ArchitectCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: str_field("viewportJson").unwrap_or_default() })),
             "setAdjacencyKind" => Ok(ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind {
@@ -161,7 +161,7 @@ impl DocumentApp for ArchitectPlayApp {
                 kind: str_field("kind"),
                 cycle: bool_field("cycle").unwrap_or(false),
             })),
-            "search" => Ok(ArchitectCommand::Search(search::Search { query: str_field("query").unwrap_or_default() })),
+            "search" => Ok(ArchitectCommand::Search(query::Search { query: str_field("query").unwrap_or_default() })),
             "setAdjacencyFilter" => Ok(ArchitectCommand::SetAdjacencyFilter(set_adjacency_filter::SetAdjacencyFilter { kind: str_field("kind") })),
             other => Err(Fault::from(format!("architect: unhandled action id {other}"))),
         }
@@ -321,15 +321,15 @@ pub(crate) mod testkit {
 
     /// 🔀️ Drives a typed `ArchitectCommand` straight through `handle` against a bare
     /// `ArchitectPlayApp` — mirrors `cad`'s `drive`/`drive_with_config` harness.
-    pub fn drive(command: ArchitectCommand, program: &Program) -> Emit<ProgramOperation, ArchitectConfigOperation> {
+    pub fn drive(command: &ArchitectCommand, program: &Program) -> Emit<ProgramOperation, ArchitectConfigOperation> {
         drive_with_config(command, program, &ArchitectPlayApp.initial_config())
     }
 
-    pub fn drive_with_config(command: ArchitectCommand, program: &Program, config: &ArchitectConfig) -> Emit<ProgramOperation, ArchitectConfigOperation> {
+    pub fn drive_with_config(command: &ArchitectCommand, program: &Program, config: &ArchitectConfig) -> Emit<ProgramOperation, ArchitectConfigOperation> {
         let history = HistoryView::empty();
         let doc = DocumentView { projection: program, history: &history };
         let cfg = ConfigView { projection: config };
-        ArchitectPlayApp.handle(&command, &doc, &cfg).expect("handle")
+        ArchitectPlayApp.handle(command, &doc, &cfg).expect("handle")
     }
 
     /// 🧮️ Folds an `Emit`'s `config_operations` onto a base `ArchitectConfig` — mirrors what
@@ -386,7 +386,7 @@ mod tests {
             ArchitectCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }),
             ArchitectCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: "{}".into() }),
             ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind { element_a_id: "a".into(), element_b_id: "b".into(), kind: None, cycle: true }),
-            ArchitectCommand::Search(search::Search { query: "hall".into() }),
+            ArchitectCommand::Search(query::Search { query: "hall".into() }),
             ArchitectCommand::SetAdjacencyFilter(set_adjacency_filter::SetAdjacencyFilter { kind: None }),
         ]
     }
@@ -458,7 +458,7 @@ mod tests {
     fn command_from_action_bridges_declared_actions() {
         let app = ArchitectPlayApp;
         assert!(matches!(app.command_from_action("runValidation", None), Ok(ArchitectCommand::RunValidation(_))));
-        assert!(matches!(app.command_from_action("search", Some(&json!({ "query": "hall" }))), Ok(ArchitectCommand::Search(search::Search { query })) if query == "hall"));
+        assert!(matches!(app.command_from_action("search", Some(&json!({ "query": "hall" }))), Ok(ArchitectCommand::Search(query::Search { query })) if query == "hall"));
         assert!(matches!(
             app.command_from_action("selectRegister", Some(&json!({ "registerId": "risks" }))),
             Ok(ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id })) if register_id == "risks"
@@ -514,7 +514,7 @@ mod tests {
         let program = sample_plugin();
         let adjacency = program.adjacencies.first().expect("adjacency");
         let emit = testkit::drive(
-            ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind { element_a_id: adjacency.element_a_id.0.clone(), element_b_id: adjacency.element_b_id.0.clone(), kind: None, cycle: true }),
+            &ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind { element_a_id: adjacency.element_a_id.0.clone(), element_b_id: adjacency.element_b_id.0.clone(), kind: None, cycle: true }),
             &program,
         );
         assert!(matches!(
@@ -527,7 +527,7 @@ mod tests {
     fn run_validation_populates_last_result_json() {
         let program = sample_plugin();
         let initial = ArchitectPlayApp.initial_config();
-        let emit = testkit::drive_with_config(ArchitectCommand::RunValidation(run_validation::RunValidation {}), &program, &initial);
+        let emit = testkit::drive_with_config(&ArchitectCommand::RunValidation(run_validation::RunValidation {}), &program, &initial);
         assert!(!testkit::config_after(&emit, &initial).last_result_json.is_empty());
     }
 
@@ -535,7 +535,7 @@ mod tests {
     fn search_finds_sample_elements() {
         let program = sample_plugin();
         let initial = ArchitectPlayApp.initial_config();
-        let emit = testkit::drive_with_config(ArchitectCommand::Search(search::Search { query: "Reception".into() }), &program, &initial);
+        let emit = testkit::drive_with_config(&ArchitectCommand::Search(query::Search { query: "Reception".into() }), &program, &initial);
         let config = testkit::config_after(&emit, &initial);
         assert!(!config.selected_ids.is_empty());
         assert!(!config.search_history_json.is_empty());
@@ -545,7 +545,7 @@ mod tests {
     fn select_register_switches_active_register() {
         let program = sample_plugin();
         let initial = ArchitectPlayApp.initial_config();
-        let emit = testkit::drive_with_config(ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "stakeholders".into() }), &program, &initial);
+        let emit = testkit::drive_with_config(&ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "stakeholders".into() }), &program, &initial);
         assert_eq!(testkit::config_after(&emit, &initial).active_register, "stakeholders");
         assert!(!register_entities(&program, "stakeholders").is_empty());
     }
@@ -555,7 +555,7 @@ mod tests {
         let program = sample_plugin();
         let element_id = program.elements[0].header.id.clone();
         let emit = testkit::drive(
-            ArchitectCommand::PatchRegisterItem(patch_register_item::PatchRegisterItem { register_id: "elements".into(), entity_id: element_id.0.clone(), patch_json: json!({ "name": "Updated Reception" }).to_string() }),
+            &ArchitectCommand::PatchRegisterItem(patch_register_item::PatchRegisterItem { register_id: "elements".into(), entity_id: element_id.0, patch_json: json!({ "name": "Updated Reception" }).to_string() }),
             &program,
         );
         assert!(matches!(
@@ -568,7 +568,7 @@ mod tests {
     fn formatted_report_renders_section_headings() {
         let program = sample_plugin();
         let initial = ArchitectPlayApp.initial_config();
-        let emit = testkit::drive_with_config(ArchitectCommand::RunReport(run_report::RunReport { report_kind: "executiveSummary".into() }), &program, &initial);
+        let emit = testkit::drive_with_config(&ArchitectCommand::RunReport(run_report::RunReport { report_kind: "executiveSummary".into() }), &program, &initial);
         let config = testkit::config_after(&emit, &initial);
         let json = serde_json::to_string(&testkit::render_direct(report_window::ARCHITECT_BODY_REPORT, &program, &config)).expect("json");
         assert!(json.contains("Overview"));
@@ -590,7 +590,7 @@ mod tests {
     fn import_registers_csv_action_sets_plugin() {
         let program = sample_plugin();
         let csv = export_registers_csv(&program).expect("export csv");
-        let emit = testkit::drive(ArchitectCommand::ImportRegistersCsv(import_registers_csv::ImportRegistersCsv { csv, strategy: "upsert".into() }), &program);
+        let emit = testkit::drive(&ArchitectCommand::ImportRegistersCsv(import_registers_csv::ImportRegistersCsv { csv, strategy: "upsert".into() }), &program);
         assert!(matches!(emit.document_operations.first(), Some(ProgramOperation::SetProgram { .. })));
     }
 

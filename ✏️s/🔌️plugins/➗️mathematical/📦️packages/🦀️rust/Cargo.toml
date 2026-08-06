@@ -22,7 +22,7 @@ ports = { react = 6084, wgpu = 6184 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "../../📦️lib.rs"
+path = "📦️lib.rs"
 
 [dependencies]
 # 🧭️ `workspace = true` only works when this crate's local dependency KEY matches the key in root

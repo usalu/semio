@@ -1,0 +1,176 @@
+23c23
+<         #[path = "🗿️artifacts/🗺️gismap/🦀️component.rs"]
+---
+>         #[path = "../../🗿️artifacts/🗺️gismap/🦀️component.rs"]
+27c27
+<         #[path = "🗿️artifacts/🗺️gismap/🔺️diff/🦀️component.rs"]
+---
+>         #[path = "../../🗿️artifacts/🗺️gismap/🔺️diff/🦀️component.rs"]
+29c29
+<         #[path = "🗿️artifacts/🗺️gismap/🔧️op/🦀️component.rs"]
+---
+>         #[path = "../../🗿️artifacts/🗺️gismap/🔧️op/🦀️component.rs"]
+31c31
+<         #[path = "🗿️artifacts/🗺️gismap/🗣️dsl/🦀️component.rs"]
+---
+>         #[path = "../../🗿️artifacts/🗺️gismap/🗣️dsl/🦀️component.rs"]
+33c33
+<         #[path = "🗿️artifacts/🗺️gismap/🎒️pack/🦀️component.rs"]
+---
+>         #[path = "../../🗿️artifacts/🗺️gismap/🎒️pack/🦀️component.rs"]
+35c35
+<         #[path = "🗿️artifacts/🗺️gismap/📡️spr/🦀️component.rs"]
+---
+>         #[path = "../../🗿️artifacts/🗺️gismap/📡️spr/🦀️component.rs"]
+37c37
+<         #[path = "🗿️artifacts/🗺️gismap/⚙️engine/🦀️component.rs"]
+---
+>         #[path = "../../🗿️artifacts/🗺️gismap/⚙️engine/🦀️component.rs"]
+43c43
+<         #[path = "🗿️artifacts/🏔️gisterrain/🦀️component.rs"]
+---
+>         #[path = "../../🗿️artifacts/🏔️gisterrain/🦀️component.rs"]
+47c47
+<         #[path = "🗿️artifacts/🏔️gisterrain/🔺️diff/🦀️component.rs"]
+---
+>         #[path = "../../🗿️artifacts/🏔️gisterrain/🔺️diff/🦀️component.rs"]
+49c49
+<         #[path = "🗿️artifacts/🏔️gisterrain/🔧️op/🦀️component.rs"]
+---
+>         #[path = "../../🗿️artifacts/🏔️gisterrain/🔧️op/🦀️component.rs"]
+51c51
+<         #[path = "🗿️artifacts/🏔️gisterrain/🗣️dsl/🦀️component.rs"]
+---
+>         #[path = "../../🗿️artifacts/🏔️gisterrain/🗣️dsl/🦀️component.rs"]
+53c53
+<         #[path = "🗿️artifacts/🏔️gisterrain/🎒️pack/🦀️component.rs"]
+---
+>         #[path = "../../🗿️artifacts/🏔️gisterrain/🎒️pack/🦀️component.rs"]
+55c55
+<         #[path = "🗿️artifacts/🏔️gisterrain/📡️spr/🦀️component.rs"]
+---
+>         #[path = "../../🗿️artifacts/🏔️gisterrain/📡️spr/🦀️component.rs"]
+57c57
+<         #[path = "🗿️artifacts/🏔️gisterrain/⚙️engine/🦀️component.rs"]
+---
+>         #[path = "../../🗿️artifacts/🏔️gisterrain/⚙️engine/🦀️component.rs"]
+68c68
+<         #[path = "🎛️apps/◻2d/🦀️component.rs"]
+---
+>         #[path = "../../🎛️apps/◻2d/🦀️component.rs"]
+72c72
+<         #[path = "🎛️apps/◻2d/🦀️config.rs"]
+---
+>         #[path = "../../🎛️apps/◻2d/🎚️config/🦀️component.rs"]
+74c74
+<         #[path = "🎛️apps/◻2d/🦀️maphost.rs"]
+---
+>         #[path = "../../🎛️apps/◻2d/🗺️maphost/🦀️component.rs"]
+76c76
+<         #[path = "🎛️apps/◻2d/🦀️terminology.rs"]
+---
+>         #[path = "../../🎛️apps/◻2d/🗣️terminology/🦀️component.rs"]
+78c78
+<         #[path = "🎛️apps/◻2d/🦀️wasm.rs"]
+---
+>         #[path = "../../🎛️apps/◻2d/🌉️wasm/🦀️component.rs"]
+83c83
+<             #[path = "🎛️apps/◻2d/🎮️commands/🎨️example/🦀️component.rs"]
+---
+>             #[path = "../../🎛️apps/◻2d/🎮️commands/🎨️example/🦀️component.rs"]
+85c85
+<             #[path = "🎛️apps/◻2d/🎮️commands/🗺️features/🦀️component.rs"]
+---
+>             #[path = "../../🎛️apps/◻2d/🎮️commands/🗺️features/🦀️component.rs"]
+87c87
+<             #[path = "🎛️apps/◻2d/🎮️commands/🗂️selection/🦀️component.rs"]
+---
+>             #[path = "../../🎛️apps/◻2d/🎮️commands/🗂️selection/🦀️component.rs"]
+89c89
+<             #[path = "🎛️apps/◻2d/🎮️commands/👁️view/🦀️component.rs"]
+---
+>             #[path = "../../🎛️apps/◻2d/🎮️commands/👁️view/🦀️component.rs"]
+91c91
+<             #[path = "🎛️apps/◻2d/🎮️commands/🗣️locale/🦀️component.rs"]
+---
+>             #[path = "../../🎛️apps/◻2d/🎮️commands/🗣️locale/🦀️component.rs"]
+93c93
+<             #[path = "🎛️apps/◻2d/🎮️commands/🌐️shell/🦀️component.rs"]
+---
+>             #[path = "../../🎛️apps/◻2d/🎮️commands/🌐️shell/🦀️component.rs"]
+101c101
+<                 #[path = "🎛️apps/◻2d/🎭️modes/✏️edit/🦀️component.rs"]
+---
+>                 #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🦀️component.rs"]
+109c109
+<                         #[path = "🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🦀️component.rs"]
+---
+>                         #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🦀️component.rs"]
+115c115
+<                             #[path = "🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/🖼️render-mode/🦀️component.rs"]
+---
+>                             #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/🖼️render-mode/🦀️component.rs"]
+117c117
+<                             #[path = "🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/🎨️vector-style/🦀️component.rs"]
+---
+>                             #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/🎨️vector-style/🦀️component.rs"]
+119c119
+<                             #[path = "🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/🔽️lod-mode/🦀️component.rs"]
+---
+>                             #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/🔽️lod-mode/🦀️component.rs"]
+121c121
+<                             #[path = "🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/🖱️selection-method/🦀️component.rs"]
+---
+>                             #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/🖱️selection-method/🦀️component.rs"]
+123c123
+<                             #[path = "🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/👁️layers/🦀️component.rs"]
+---
+>                             #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/👁️layers/🦀️component.rs"]
+125c125
+<                             #[path = "🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/📏️layer-weights/🦀️component.rs"]
+---
+>                             #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/📏️layer-weights/🦀️component.rs"]
+135c135
+<             #[path = "🎛️apps/◻2d/📌️panels/📄️document/🦀️component.rs"]
+---
+>             #[path = "../../🎛️apps/◻2d/📌️panels/📄️document/🦀️component.rs"]
+137c137
+<             #[path = "🎛️apps/◻2d/📌️panels/🛍️catalogue/🦀️component.rs"]
+---
+>             #[path = "../../🎛️apps/◻2d/📌️panels/🛍️catalogue/🦀️component.rs"]
+139c139
+<             #[path = "🎛️apps/◻2d/📌️panels/🔍️inspection/🦀️component.rs"]
+---
+>             #[path = "../../🎛️apps/◻2d/📌️panels/🔍️inspection/🦀️component.rs"]
+146c146
+<         #[path = "🎛️apps/🧊️3d/🦀️component.rs"]
+---
+>         #[path = "../../🎛️apps/🧊️3d/🦀️component.rs"]
+150c150
+<         #[path = "🎛️apps/🧊️3d/🦀️config.rs"]
+---
+>         #[path = "../../🎛️apps/🧊️3d/🎚️config/🦀️component.rs"]
+155c155
+<             #[path = "🎛️apps/🧊️3d/🎮️commands/🏔️exaggeration/🦀️component.rs"]
+---
+>             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🏔️exaggeration/🦀️component.rs"]
+157c157
+<             #[path = "🎛️apps/🧊️3d/🎮️commands/👁️view/🦀️component.rs"]
+---
+>             #[path = "../../🎛️apps/🧊️3d/🎮️commands/👁️view/🦀️component.rs"]
+159c159
+<             #[path = "🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs"]
+---
+>             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs"]
+161c161
+<             #[path = "🎛️apps/🧊️3d/🎮️commands/🗣️locale/🦀️component.rs"]
+---
+>             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗣️locale/🦀️component.rs"]
+169c169
+<                 #[path = "🎛️apps/🧊️3d/🎭️modes/👁️view/🦀️component.rs"]
+---
+>                 #[path = "../../🎛️apps/🧊️3d/🎭️modes/👁️view/🦀️component.rs"]
+175c175
+<                     #[path = "🎛️apps/🧊️3d/🎭️modes/👁️view/🪟️windows/🏔️terrain/🦀️component.rs"]
+---
+>                     #[path = "../../🎛️apps/🧊️3d/🎭️modes/👁️view/🪟️windows/🏔️terrain/🦀️component.rs"]

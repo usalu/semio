@@ -1,0 +1,13 @@
+{
+  "title": "Writer Plugin Shape V2 Tree Purity Retrofit",
+  "emoji": "✒️",
+  "status": "open",
+  "description": "Retrofit the already-migrated ✒️writer plugin (✏️s/🔌️plugins/✒️writer) to the Shape V2 tree-purity rule per TEMPLATE.md §14 (ticket 26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE). Move the owner-root 📦️lib.rs into 📦️packages/🦀️rust/📦️lib.rs (fix [lib] path + add ../../ prefix to every #[path]). Fold sibling variant files 🦀️config.rs, 🦀️terminology.rs, 🦀️wasm.rs into their own \u003cfolder\u003e/🦀️component.rs (🎚️config, 🗣️terminology, 🌉️wasm). Relocate buried 🛂️manifest.json to the owner root and fix its loader reference. Verify cargo check/clippy/test match the 86/86 baseline exactly. Pure mechanical reshape, no logic changes. Exclusive ownership: only touch ✏️s/🔌️plugins/✒️writer/**.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2494"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪521958ba87634154a8b0343c3a1a7bfd"
+  ]
+}

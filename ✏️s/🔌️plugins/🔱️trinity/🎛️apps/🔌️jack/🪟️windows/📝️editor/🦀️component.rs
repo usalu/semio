@@ -9,7 +9,7 @@ use serde_json::json;
 pub(crate) fn render(surface_id: &str, controller_id: &str, fixture: &GraphFixture, cfg: &JackConfig) -> UiNode {
     let query = &cfg.jack_query;
     let graph = crate::apps::jack::graph_from_fixture_or_default(fixture);
-    let cursor = cfg.editor_selection.as_ref().map(|selection| selection.end as usize).unwrap_or(0);
+    let cursor = cfg.editor_selection.as_ref().map_or(0, |selection| selection.end as usize);
     let selection_json = cfg.editor_selection.as_ref().map(|selection| json!({ "start": selection.start, "end": selection.end }).to_string());
     build_text_editor_scene(
         surface_id,

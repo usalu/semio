@@ -289,6 +289,7 @@ pub fn buckling_resistance_kn(a_mm2: f64, f_0_2_mpa: f64, chi: f64, gamma_m: f64
 }
 
 /// 📋️ Aluminium member check.
+#[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
 pub fn check_aluminium_member(n_ed_kn: f64, m_ed_knm: f64, a_mm2: f64, w_el_mm3: f64, alloy: part_1_1::Alloy, chi: f64, i_t_mm4: f64, l_cr_mm: f64, annex: AnnexChoice) -> CheckReport {
     let gamma_m1 = na_de::AnnexParams::for_choice(annex).gamma_m1;
     let f_0_2 = alloy.f_0_2_mpa();

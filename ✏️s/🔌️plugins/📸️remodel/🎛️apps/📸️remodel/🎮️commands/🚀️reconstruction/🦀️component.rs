@@ -1,17 +1,16 @@
 //! 🚀️ Remodel play app commands — staged reconstruction.
 //!
-//! 🧭️ B1: `runReconstruction`/`retryStage`/`runStage` run the WHOLE staged pipeline synchronously
+//! 🧭️ `runReconstruction`/`retryStage`/`runStage` run the WHOLE staged pipeline synchronously
 //! inside one pure `handle()` call (bounded by [`REMODEL_MAX_RECONSTRUCTION_TICKS`], a totality safety
 //! valve, not a real-world limit). `handle` is `&self` and pure — there is no legal place to park a
 //! live, non-`Clone`/non-`Serialize` compute engine between calls, so there is no
 //! `advanceReconstruction` tick and no `cancelReconstruction` (a synchronous compute has nothing
 //! running in the background to cancel). All three rows share the same body: a retry/stage request is
-//! a fresh whole run, since a partial resume would need exactly the runtime state B1 removed.
+//! a fresh whole run, since a partial resume would need exactly the runtime state the pure-trait
+//! pivot removed.
 
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigOperation};
-use crate::artifacts::remodel::engine::{
-    build_qc_snapshot, build_engine_params, camera_pose_preview, decode_still_image, next_remodel_id, raster_to_png_asset, reconstruction as remodel_engine, watertight_snapshot,
-};
+use crate::artifacts::remodel::engine::{build_engine_params, build_qc_snapshot, camera_pose_preview, decode_still_image, next_remodel_id, raster_to_png_asset, reconstruction as remodel_engine, watertight_snapshot};
 use crate::artifacts::remodel::op::RemodelOperation;
 use crate::artifacts::remodel::{CameraPosePreview, CameraTrajectory, GeoProducts, ImageAsset, MeshSource, PackedF32, ReconstructionJob, ReconstructionStage, RemodelMesh, RemodelScene, SparseCloud};
 use base64::Engine as _;
@@ -168,7 +167,7 @@ pub mod retry_stage {
     }
 
     /// 🔁️ A retry is a fresh whole run (see the module doc comment): resuming at `payload.stage` would
-    /// need the mid-pipeline engine state B1 removed, so the stage name is accepted and ignored.
+    /// need the mid-pipeline engine state the pure-trait pivot removed, so the stage name is accepted and ignored.
     pub fn handle(_payload: &RetryStage, doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
         run_whole_pipeline(doc)
     }

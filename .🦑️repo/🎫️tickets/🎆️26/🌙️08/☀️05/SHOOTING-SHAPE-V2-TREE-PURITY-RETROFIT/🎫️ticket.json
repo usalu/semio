@@ -1,0 +1,14 @@
+{
+  "title": "Shooting Shape V2 Tree Purity Retrofit",
+  "emoji": "🌳️",
+  "status": "closed",
+  "description": "Retrofit the already-migrated 🎥️shooting plugin (✏️s/🔌️plugins/🎥️shooting/**) from V1 taxonomy shape to Shape V2 tree purity per master ticket 26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE's TEMPLATE.md §14. Mechanical only, no logic changes: (1) move owner-root 📦️lib.rs into 📦️packages/🦀️rust/📦️lib.rs, update [lib] path, prefix every #[path] string with ../../; (2) fold sibling variant files 🦀️config.rs, 🦀️terminology.rs, 🦀️wasm.rs (under 🎛️apps/🎥️shooting/) into their own component folders; (3) data (📚️examples, AGENTS.md, README.md) already at owner root, confirm; (4) verify cargo check/clippy/test match pre-retrofit baseline exactly.",
+  "summary": "Retrofitted 🎥️shooting from V1 to Shape V2 tree purity, purely mechanical, zero logic changes. (1) Moved owner-root 📦️lib.rs → 📦️packages/🦀️rust/📦️lib.rs; updated [lib] path to \"📦️lib.rs\"; prefixed all 37 non-\".\" #[path] strings with ../../. (2) Folded sibling variant files 🎛️apps/🎥️shooting/🦀️config.rs → 🎚️config/🦀️component.rs, 🦀️terminology.rs → 🗣️terminology/🦀️component.rs, 🦀️wasm.rs → 🌉️wasm/🦀️component.rs. (3) Data (📚️examples, AGENTS.md, README.md) already at owner root, confirmed. (4) Verified synchronously with a temporary isolated-workspace overlay: cargo check clean (0 warnings for semio-s-plugin-shooting), cargo clippy --all-targets -D warnings clean, cargo test 97/97 passing (exact match of the pre-retrofit baseline). Overlay + nested target/Cargo.lock removed. Byte-identity of all 3 folded files vs git HEAD confirmed via diff. Tree purity confirmed: no non-component/non-packages *.rs files remain; top level is only 🎛️apps, 📚️examples, README.md, AGENTS.md, 🗿️artifacts, 📦️packages.\n\nRegistrar handoff: none needed — [lib] path is internal to the crate's own Cargo.toml, root Cargo.toml's member line is unchanged. No external references to the old owner-root 🔌️plugins/🎥️shooting/📦️lib.rs path found.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2487"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪7f255fdc4d6d49469335135f15a0bbf7"
+  ]
+}

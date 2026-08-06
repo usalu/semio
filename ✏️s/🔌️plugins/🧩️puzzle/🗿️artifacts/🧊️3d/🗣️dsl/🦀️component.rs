@@ -4,9 +4,9 @@
 use crate::artifacts::puzzle3d::Puzzle3dProjection;
 
 /// 📄️ The `concrete-forest` example fixture, handcrafted in the `.puzzle3d` DSL.
-pub const PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../🎛️apps/🧊️3d/📚️examples/🧩️concrete-forest.puzzle3d");
+pub const PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🧩️concrete-forest.puzzle3d");
 /// 📄️ The `nakagin-capsule-tower` example fixture, handcrafted in the `.puzzle3d` DSL.
-pub const PUZZLE3D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../🎛️apps/🧊️3d/📚️examples/🧩️nakagin-capsule-tower.puzzle3d");
+pub const PUZZLE3D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🧩️nakagin-capsule-tower.puzzle3d");
 
 /// 📖️ Parses `.puzzle3d` DSL text into a `Puzzle3dProjection`.
 pub fn parse_dsl(text: &str) -> Result<Puzzle3dProjection, store::TextError> {

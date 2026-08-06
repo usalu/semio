@@ -1,0 +1,518 @@
+warning: unused import: `serde_json::Value`
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:19:5
+   |
+19 | use serde_json::Value;
+   |     ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:481:16
+    |
+481 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+481 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+481 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:482:24
+    |
+482 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+482 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+482 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:492:16
+    |
+492 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+492 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+492 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:493:24
+    |
+493 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+493 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+493 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:553:41
+    |
+553 |     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+553 -     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+553 +     pub fn receive(&mut self, envelope: OperationEnvelope) -> Result<(), SyncError> {
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:735:42
+    |
+735 |                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+735 -                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+735 +                         let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:739:38
+    |
+739 |                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+739 -                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+739 +                     let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:1208:37
+     |
+1208 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1208 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1208 +             let wire_envelopes: Vec<OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:1208:100
+     |
+1208 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1208 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1208 +             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:1275:37
+     |
+1275 |     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |                                     ^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1275 -     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+1275 +     fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |
+
+warning: structure field `pendingOperations` should have a snake case name
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/../../../🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs:153:9
+    |
+153 |     pub pendingOperations: usize,
+    |         ^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `pending_operations`
+    |
+    = note: `#[warn(non_snake_case)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3273:68
+     |
+3273 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3273 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3273 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: `semio-framework-os-kernel-store-sync` (lib) generated 12 warnings (run `cargo clippy --fix --lib -p semio-framework-os-kernel-store-sync -- -D warnings` to apply 11 suggestions)
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo clippy --fix --lib -p semio-framework-plugin -- -D warnings` to apply 1 suggestion)
+    Checking semio-s-plugin-remodel v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust)
+error: unused import: `semio_framework_plugin::PluginApp`
+   --> ../.././././🎛️apps/📸️remodel/🎮️commands/📥️ingest/🦀️component.rs:415:9
+    |
+415 |     use semio_framework_plugin::PluginApp;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `-D unused-imports` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(unused_imports)]`
+
+error: unused import: `semio_framework_plugin::PluginApp`
+   --> ../.././././🎛️apps/📸️remodel/🎮️commands/🎯️calibration/🦀️component.rs:169:9
+    |
+169 |     use semio_framework_plugin::PluginApp;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: unused import: `semio_framework_plugin::PluginApp`
+   --> ../.././././🎛️apps/📸️remodel/🎮️commands/⚙️params/🦀️component.rs:265:9
+    |
+265 |     use semio_framework_plugin::PluginApp;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: unused import: `PluginApp`
+   --> ../.././././🎛️apps/📸️remodel/🎮️commands/🧹️reset/🦀️component.rs:134:43
+    |
+134 |     use semio_framework_plugin::{testkit, PluginApp};
+    |                                           ^^^^^^^^^
+
+error[E0599]: no method named `apply` found for enum `artifacts::remodel::diff::RemodelDiff` in the current scope
+   --> ../../././🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs:399:51
+    |
+399 |                 assert_eq!(operation.diff(&scene).apply(&scene).params.$field, params);
+    |                                                   ^^^^^ method not found in `artifacts::remodel::diff::RemodelDiff`
+...
+409 |     param_op_roundtrip_test!(set_feature_params_op_applies_and_reverts, SetFeatureParams, feature, FeatureParams, |p| p.target_count = 8000);
+    |     ---------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+   ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:16:8
+    |
+ 16 |     fn apply(&self, base: &P) -> P;
+    |        ----- the method is available for `artifacts::remodel::diff::RemodelDiff` here
+    |
+   ::: ../../././🗿️artifacts/📸️remodel/🔺️diff/🦀️component.rs:14:1
+    |
+ 14 | pub enum RemodelDiff {
+    | -------------------- method `apply` not found for this enum
+    |
+    = help: items from traits can only be used if the trait is in scope
+    = note: this error originates in the macro `param_op_roundtrip_test` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: trait `OperationDiff` which provides `apply` is implemented but not in scope; perhaps you want to import it
+    |
+202 +     use protocol::OperationDiff;
+    |
+
+error[E0599]: no method named `apply` found for enum `artifacts::remodel::diff::RemodelDiff` in the current scope
+   --> ../../././🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs:213:43
+    |
+213 |         assert_eq!(operation.diff(&scene).apply(&scene).streams, streams);
+    |                                           ^^^^^ method not found in `artifacts::remodel::diff::RemodelDiff`
+    |
+   ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:16:8
+    |
+ 16 |     fn apply(&self, base: &P) -> P;
+    |        ----- the method is available for `artifacts::remodel::diff::RemodelDiff` here
+    |
+   ::: ../../././🗿️artifacts/📸️remodel/🔺️diff/🦀️component.rs:14:1
+    |
+ 14 | pub enum RemodelDiff {
+    | -------------------- method `apply` not found for this enum
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `OperationDiff` which provides `apply` is implemented but not in scope; perhaps you want to import it
+    |
+202 +     use protocol::OperationDiff;
+    |
+
+error[E0599]: no method named `apply` found for enum `artifacts::remodel::diff::RemodelDiff` in the current scope
+   --> ../../././🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs:399:51
+    |
+399 |                 assert_eq!(operation.diff(&scene).apply(&scene).params.$field, params);
+    |                                                   ^^^^^ method not found in `artifacts::remodel::diff::RemodelDiff`
+...
+410 |     param_op_roundtrip_test!(set_match_params_op_applies_and_reverts, SetMatchParams, matching, MatchParams, |p| p.ratio_test = 0.6);
+    |     -------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+   ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:16:8
+    |
+ 16 |     fn apply(&self, base: &P) -> P;
+    |        ----- the method is available for `artifacts::remodel::diff::RemodelDiff` here
+    |
+   ::: ../../././🗿️artifacts/📸️remodel/🔺️diff/🦀️component.rs:14:1
+    |
+ 14 | pub enum RemodelDiff {
+    | -------------------- method `apply` not found for this enum
+    |
+    = help: items from traits can only be used if the trait is in scope
+    = note: this error originates in the macro `param_op_roundtrip_test` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: trait `OperationDiff` which provides `apply` is implemented but not in scope; perhaps you want to import it
+    |
+202 +     use protocol::OperationDiff;
+    |
+
+error[E0599]: no method named `apply` found for enum `artifacts::remodel::diff::RemodelDiff` in the current scope
+   --> ../../././🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs:229:50
+    |
+229 |         assert_eq!(insert_operation.diff(&scene).apply(&scene).assets.get("frame-1"), Some(&asset));
+    |                                                  ^^^^^ method not found in `artifacts::remodel::diff::RemodelDiff`
+    |
+   ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:16:8
+    |
+ 16 |     fn apply(&self, base: &P) -> P;
+    |        ----- the method is available for `artifacts::remodel::diff::RemodelDiff` here
+    |
+   ::: ../../././🗿️artifacts/📸️remodel/🔺️diff/🦀️component.rs:14:1
+    |
+ 14 | pub enum RemodelDiff {
+    | -------------------- method `apply` not found for this enum
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `OperationDiff` which provides `apply` is implemented but not in scope; perhaps you want to import it
+    |
+202 +     use protocol::OperationDiff;
+    |
+
+error[E0599]: no method named `apply` found for enum `artifacts::remodel::diff::RemodelDiff` in the current scope
+   --> ../../././🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs:399:51
+    |
+399 |                 assert_eq!(operation.diff(&scene).apply(&scene).params.$field, params);
+    |                                                   ^^^^^ method not found in `artifacts::remodel::diff::RemodelDiff`
+...
+411 |     param_op_roundtrip_test!(set_sfm_params_op_applies_and_reverts, SetSfmParams, sfm, SfmParams, |p| p.ransac_iterations = 2000);
+    |     ----------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+   ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:16:8
+    |
+ 16 |     fn apply(&self, base: &P) -> P;
+    |        ----- the method is available for `artifacts::remodel::diff::RemodelDiff` here
+    |
+   ::: ../../././🗿️artifacts/📸️remodel/🔺️diff/🦀️component.rs:14:1
+    |
+ 14 | pub enum RemodelDiff {
+    | -------------------- method `apply` not found for this enum
+    |
+    = help: items from traits can only be used if the trait is in scope
+    = note: this error originates in the macro `param_op_roundtrip_test` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: trait `OperationDiff` which provides `apply` is implemented but not in scope; perhaps you want to import it
+    |
+202 +     use protocol::OperationDiff;
+    |
+
+error[E0599]: no method named `apply` found for enum `artifacts::remodel::diff::RemodelDiff` in the current scope
+   --> ../../././🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs:326:43
+    |
+326 |         assert_eq!(operation.diff(&scene).apply(&scene).results.mesh, mesh);
+    |                                           ^^^^^ method not found in `artifacts::remodel::diff::RemodelDiff`
+    |
+   ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:16:8
+    |
+ 16 |     fn apply(&self, base: &P) -> P;
+    |        ----- the method is available for `artifacts::remodel::diff::RemodelDiff` here
+    |
+   ::: ../../././🗿️artifacts/📸️remodel/🔺️diff/🦀️component.rs:14:1
+    |
+ 14 | pub enum RemodelDiff {
+    | -------------------- method `apply` not found for this enum
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `OperationDiff` which provides `apply` is implemented but not in scope; perhaps you want to import it
+    |
+202 +     use protocol::OperationDiff;
+    |
+
+error[E0599]: no method named `apply` found for enum `artifacts::remodel::diff::RemodelDiff` in the current scope
+   --> ../../././🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs:399:51
+    |
+399 |                 assert_eq!(operation.diff(&scene).apply(&scene).params.$field, params);
+    |                                                   ^^^^^ method not found in `artifacts::remodel::diff::RemodelDiff`
+...
+412 |     param_op_roundtrip_test!(set_dense_params_op_applies_and_reverts, SetDenseParams, dense, DenseParams, |p| p.max_points = 100);
+    |     ----------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+   ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:16:8
+    |
+ 16 |     fn apply(&self, base: &P) -> P;
+    |        ----- the method is available for `artifacts::remodel::diff::RemodelDiff` here
+    |
+   ::: ../../././🗿️artifacts/📸️remodel/🔺️diff/🦀️component.rs:14:1
+    |
+ 14 | pub enum RemodelDiff {
+    | -------------------- method `apply` not found for this enum
+    |
+    = help: items from traits can only be used if the trait is in scope
+    = note: this error originates in the macro `param_op_roundtrip_test` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: trait `OperationDiff` which provides `apply` is implemented but not in scope; perhaps you want to import it
+    |
+202 +     use protocol::OperationDiff;
+    |
+
+error[E0599]: no method named `apply` found for enum `artifacts::remodel::diff::RemodelDiff` in the current scope
+   --> ../../././🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs:399:51
+    |
+399 |                 assert_eq!(operation.diff(&scene).apply(&scene).params.$field, params);
+    |                                                   ^^^^^ method not found in `artifacts::remodel::diff::RemodelDiff`
+...
+413 |     param_op_roundtrip_test!(set_mesh_params_op_applies_and_reverts, SetMeshParams, mesh, MeshParams, |p| p.guarantee_watertight = false);
+    |     ------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+   ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:16:8
+    |
+ 16 |     fn apply(&self, base: &P) -> P;
+    |        ----- the method is available for `artifacts::remodel::diff::RemodelDiff` here
+    |
+   ::: ../../././🗿️artifacts/📸️remodel/🔺️diff/🦀️component.rs:14:1
+    |
+ 14 | pub enum RemodelDiff {
+    | -------------------- method `apply` not found for this enum
+    |
+    = help: items from traits can only be used if the trait is in scope
+    = note: this error originates in the macro `param_op_roundtrip_test` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: trait `OperationDiff` which provides `apply` is implemented but not in scope; perhaps you want to import it
+    |
+202 +     use protocol::OperationDiff;
+    |
+
+error[E0599]: no method named `apply` found for enum `artifacts::remodel::diff::RemodelDiff` in the current scope
+   --> ../../././🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs:399:51
+    |
+399 |                 assert_eq!(operation.diff(&scene).apply(&scene).params.$field, params);
+    |                                                   ^^^^^ method not found in `artifacts::remodel::diff::RemodelDiff`
+...
+408 |     param_op_roundtrip_test!(set_ingest_params_op_applies_and_reverts, SetIngestParams, ingest, IngestParams, |p| p.min_sharpness = 0.6);
+    |     ------------------------------------------------------------------------------------------------------------------------------------ in this macro invocation
+    |
+   ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:16:8
+    |
+ 16 |     fn apply(&self, base: &P) -> P;
+    |        ----- the method is available for `artifacts::remodel::diff::RemodelDiff` here
+    |
+   ::: ../../././🗿️artifacts/📸️remodel/🔺️diff/🦀️component.rs:14:1
+    |
+ 14 | pub enum RemodelDiff {
+    | -------------------- method `apply` not found for this enum
+    |
+    = help: items from traits can only be used if the trait is in scope
+    = note: this error originates in the macro `param_op_roundtrip_test` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: trait `OperationDiff` which provides `apply` is implemented but not in scope; perhaps you want to import it
+    |
+202 +     use protocol::OperationDiff;
+    |
+
+error[E0599]: no method named `apply` found for enum `artifacts::remodel::diff::RemodelDiff` in the current scope
+   --> ../../././🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs:399:51
+    |
+399 |                 assert_eq!(operation.diff(&scene).apply(&scene).params.$field, params);
+    |                                                   ^^^^^ method not found in `artifacts::remodel::diff::RemodelDiff`
+...
+414 |     param_op_roundtrip_test!(set_motion_params_op_applies_and_reverts, SetMotionParams, motion, MotionParams, |p| p.enabled = true);
+    |     ------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+   ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:16:8
+    |
+ 16 |     fn apply(&self, base: &P) -> P;
+    |        ----- the method is available for `artifacts::remodel::diff::RemodelDiff` here
+    |
+   ::: ../../././🗿️artifacts/📸️remodel/🔺️diff/🦀️component.rs:14:1
+    |
+ 14 | pub enum RemodelDiff {
+    | -------------------- method `apply` not found for this enum
+    |
+    = help: items from traits can only be used if the trait is in scope
+    = note: this error originates in the macro `param_op_roundtrip_test` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: trait `OperationDiff` which provides `apply` is implemented but not in scope; perhaps you want to import it
+    |
+202 +     use protocol::OperationDiff;
+    |
+
+error[E0599]: no method named `apply` found for enum `artifacts::remodel::diff::RemodelDiff` in the current scope
+   --> ../../././🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs:399:51
+    |
+399 |                 assert_eq!(operation.diff(&scene).apply(&scene).params.$field, params);
+    |                                                   ^^^^^ method not found in `artifacts::remodel::diff::RemodelDiff`
+...
+415 |     param_op_roundtrip_test!(set_geo_params_op_applies_and_reverts, SetGeoParams, geo, GeoParams, |p| p.enabled = true);
+    |     ------------------------------------------------------------------------------------------------------------------- in this macro invocation
+    |
+   ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:16:8
+    |
+ 16 |     fn apply(&self, base: &P) -> P;
+    |        ----- the method is available for `artifacts::remodel::diff::RemodelDiff` here
+    |
+   ::: ../../././🗿️artifacts/📸️remodel/🔺️diff/🦀️component.rs:14:1
+    |
+ 14 | pub enum RemodelDiff {
+    | -------------------- method `apply` not found for this enum
+    |
+    = help: items from traits can only be used if the trait is in scope
+    = note: this error originates in the macro `param_op_roundtrip_test` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: trait `OperationDiff` which provides `apply` is implemented but not in scope; perhaps you want to import it
+    |
+202 +     use protocol::OperationDiff;
+    |
+
+error: unused import: `PluginApp`
+   --> ../../././🎛️apps/📸️remodel/🦀️component.rs:487:47
+    |
+487 |     use semio_framework_plugin::{HistoryView, PluginApp};
+    |                                               ^^^^^^^^^
+
+error: consider adding a `;` to the last statement for consistent formatting
+   --> ../.././././🗿️artifacts/📸️remodel/⚙️engine/🦀️images.rs:696:13
+    |
+696 |             dc[id] = Some(table)
+    |             ^^^^^^^^^^^^^^^^^^^^ help: add a `;` here: `dc[id] = Some(table);`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#semicolon_if_nothing_returned
+    = note: `-D clippy::semicolon-if-nothing-returned` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::semicolon_if_nothing_returned)]`
+
+error: consider adding a `;` to the last statement for consistent formatting
+   --> ../.././././🗿️artifacts/📸️remodel/⚙️engine/🦀️images.rs:698:13
+    |
+698 |             ac[id] = Some(table)
+    |             ^^^^^^^^^^^^^^^^^^^^ help: add a `;` here: `ac[id] = Some(table);`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#semicolon_if_nothing_returned
+
+For more information about this error, try `rustc --explain E0599`.
+error: could not compile `semio-s-plugin-remodel` (lib test) due to 16 previous errors
+warning: build failed, waiting for other jobs to finish...
+error: called `map(<f>).unwrap_or(<a>)` on an `Option` value
+   --> ../../././🎛️apps/📸️remodel/🦀️component.rs:156:34
+    |
+156 | ...ype = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#map_unwrap_or
+    = note: `-D clippy::map-unwrap-or` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::map_unwrap_or)]`
+help: use `map_or(<a>, <f>)` instead
+    |
+156 -                 let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+156 +                 let media_type = self.io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+    |
+
+error: called `map(<f>).unwrap_or(<a>)` on a `Result` value
+   --> ../../././🎛️apps/📸️remodel/🦀️component.rs:176:39
+    |
+176 | ...   let (width, height) = decode_still_image("image/png", &bytes).map(|image| (image.width, image.height)).unwrap_or((0, 0));
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#map_unwrap_or
+help: use `map_or(<a>, <f>)` instead
+    |
+176 -                 let (width, height) = decode_still_image("image/png", &bytes).map(|image| (image.width, image.height)).unwrap_or((0, 0));
+176 +                 let (width, height) = decode_still_image("image/png", &bytes).map_or((0, 0), |image| (image.width, image.height));
+    |
+
+error: called `map(<f>).unwrap_or_else(<g>)` on an `Option` value
+  --> ../.././././🎛️apps/📸️remodel/🎮️commands/📥️ingest/🦀️component.rs:87:9
+   |
+87 |         scene.streams.last().map(|stream| stream.id.clone()).unwrap_or_else(|| next_remodel_id("stream"))
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `scene.streams.last().map_or_else(|| next_remodel_id("stream"), |stream| stream.id.clone())`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#map_unwrap_or
+
+error: could not compile `semio-s-plugin-remodel` (lib) due to 5 previous errors

@@ -8,7 +8,7 @@ use crate::artifacts::writer::engine::{jack_completions_json, jack_editor_placeh
 use crate::artifacts::writer::WriterProjection;
 use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 use serde_json::{json, Value};
-use trinity_jack::{example_graph, lint, semantic_tokens, Diagnostic};
+use trinity::core::{example_graph, lint, semantic_tokens, Diagnostic};
 
 //#region 🔖️Constants
 pub const WRITER_PLAY_WINDOW_KIND: &str = "writer-main";

@@ -1,15 +1,20 @@
 //! 🔎️ wgpu render functions for the Select element — extracted from `widgets` mod's inline body
-//! (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a `#[path]` child module of
-//! `crate::widgets` (see that mod's `mod select;` declaration), so `super::` reaches sibling widgets
-//! items (`WidgetContext`, `SelectItem`, `draw_text`, `draw_text_on`) and `crate::` reaches the other
-//! top-level engine mods `widgets` itself depends on (`chrome`, `input`, `theme`).
+//! (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a CRATE-ROOT sibling module of
+//! `crate::widgets` (declared `#[cfg(feature = "engine")] #[path = "..."] mod select;` right before
+//! `pub mod widgets` in lib.rs — deliberately NOT nested inside `widgets { }`, since rustc resolves a
+//! nested inline-module's `#[path]` as if the parent had its own on-disk directory, which fails for a
+//! genuinely inline `mod widgets { }` block). `widgets` mod pulls these back in via
+//! `use crate::select::{render_select, render_select_menu};` so its own unqualified call sites keep
+//! working. `crate::widgets::{...}` reaches the sibling items this needs (`WidgetContext`,
+//! `SelectItem`, `draw_text`, `draw_text_on`); `crate::chrome`/`crate::input`/`crate::theme` are the
+//! other top-level engine mods `widgets` itself also depends on.
 
-use super::{draw_text, draw_text_on, SelectItem, WidgetContext};
+use crate::widgets::{draw_text, draw_text_on, SelectItem, WidgetContext};
 use crate::chrome::push_control_border;
 use crate::input::{HitKind, HitTarget};
 use crate::theme::Level;
 
-pub(super) fn render_select<E: Clone>(id: &str, value: &str, items: &[SelectItem], placeholder: Option<&str>, bounds: crate::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
+pub(crate) fn render_select<E: Clone>(id: &str, value: &str, items: &[SelectItem], placeholder: Option<&str>, bounds: crate::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
     let open = *ctx.open_selects.get(id).unwrap_or(&false);
     let hovered = ctx.input.hovered_id.as_deref() == Some(id);
     let bg = if hovered { ctx.theme.button_hover } else { ctx.theme.input_bg };
@@ -25,7 +30,7 @@ pub(super) fn render_select<E: Clone>(id: &str, value: &str, items: &[SelectItem
     }
 }
 
-pub(super) fn render_select_menu<E: Clone>(id: &str, value: &str, items: &[SelectItem], bounds: crate::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
+pub(crate) fn render_select_menu<E: Clone>(id: &str, value: &str, items: &[SelectItem], bounds: crate::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
     let item_h = ctx.theme.control_height;
     let menu_h = items.len() as f32 * item_h + 4.0;
     let menu = crate::geometry::Rect::new(bounds.x, bounds.y + bounds.h + 2.0, bounds.w, menu_h);

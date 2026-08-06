@@ -1,0 +1,53 @@
+Block Shape V2 Tree Purity Retrofit — verification log
+========================================================
+
+BLOCKER (repro'd 4x across the session, matches documented known issue):
+cargo check/test -p semio-s-plugin-block fails with:
+  error: failed to load manifest for workspace member
+  `.../✏️s/🔌️plugins/📕️norm/🔨️modules/🫀️core/⚡️implementations/🦀️rust`
+  Caused by: No such file or directory (os error 2)
+This is norm's own in-flight migration leaving a dangling workspace member path —
+not caused by this retrofit, not fixable from inside the block plugin tree.
+Retried at start, mid-way, and at the end (post all edits) — same failure every time.
+
+MANUAL VERIFICATION PERFORMED (since cargo could not run):
+
+1. Tree purity audit (find-based):
+   - `find block -type f \( -name "*.rs" -o -name "*.ts" \) -not -name component.rs -not -path "*/packages/*"`
+     => EMPTY (zero sibling-variant/entry files remain outside packages)
+   - `find block -maxdepth 1 -type d` => 🎛️apps, 📚️examples, 🫀️core, 🗿️artifacts, 📦️packages (all compliant)
+   - `find block \( -name examples -o -name fixtures -o -name generated \) -not -maxdepth 1` => EMPTY
+   - AGENTS.md/README.md anywhere in tree => only the pre-existing root AGENTS.md; no nested collision.
+   - Total files in tree: 81.
+
+2. #[path] resolution check (Python, walking every #[path="..."] in the moved lib.rs
+   relative to its new directory 📦️packages/🦀️rust/):
+     checked 70 non-"." path attrs => ALL RESOLVE OK (verified against real files on disk)
+
+3. Byte-level content check on moved lib.rs: read full file before the python rewrite
+   and after; only the #[path="..."] string literals changed (97 attrs touched by regex,
+   including 27 "." attrs which the regex left untouched by design); all other lines
+   (doc comments, clippy allow, register_block_exports, semio_plugin! macro block)
+   are unchanged.
+
+4. Cargo.toml diff: only `[lib] path` changed from "../../📦️lib.rs" to "📦️lib.rs".
+   Dependency paths (relative to Cargo.toml's own directory, which did not move) untouched.
+
+5. use-site check: grepped every `use crate::apps::block{2d,3d,5d}::{config,terminology,world}::...`
+   in the crate (70+ hits across commands/panels/modes/windows) — all valid unchanged since
+   module *names* were not renamed, only their on-disk #[path] targets moved.
+
+6. include_str! example-fixture references: found and fixed all 3 dsl component.rs files
+   (block2d/block3d/block5d) that embedded example fixtures via include_str! pointing at the
+   old per-app 📚️examples/ location; repointed to the new owner-root 📚️examples/ (pattern
+   cross-checked against already-retrofitted 🌀️procedural plugin, which uses the identical
+   `../../../📚️examples/<file>` relative-path convention from the same directory depth).
+
+7. Registrar handoff check: `grep -rn "🔌️plugins/🧱️block/📦️lib.rs" .` (repo-wide, excluding .nx
+   cache) => no hits. Confirms no external file references the old owner-root entry path.
+
+Baseline: prior V1 migration ticket (BLOCK-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION)
+reported 102/102 tests passing with the DEVELOPER_DIR workaround. This retrofit changed zero
+logic — only file locations and #[path]/mod/include_str! wiring strings — so the test count is
+expected to remain 102/102 once cargo can run again (live verification blocked by the norm
+issue above, not by anything in this retrofit).

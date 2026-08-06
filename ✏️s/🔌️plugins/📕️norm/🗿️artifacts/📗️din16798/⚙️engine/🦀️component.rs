@@ -550,6 +550,7 @@ pub mod part_9 {
     }
 
     /// ✅️ Check net cooling energy need against a reference value.
+    #[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
     pub fn check_cooling_energy_need(h_tr_w_k: f64, h_ve_w_k: f64, theta_e_c: f64, theta_set_c: f64, delta_t_h: f64, gains_kwh: f64, utilization_factor: f64, reference_kwh: f64) -> CheckResult {
         let computed = cooling_energy_need_kwh(h_tr_w_k, h_ve_w_k, theta_e_c, theta_set_c, delta_t_h, gains_kwh, utilization_factor);
         CheckResult::from_utilization(ClauseId::new("EN 16798-9", "§6", "6.1"), Quantity::new(crate::core::QuantityKind::Energy, computed), Quantity::new(crate::core::QuantityKind::Energy, reference_kwh), "net cooling energy need", AnnexChoice::De)

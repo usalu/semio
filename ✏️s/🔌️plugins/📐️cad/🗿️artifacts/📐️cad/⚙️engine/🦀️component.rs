@@ -2,9 +2,9 @@
 //! quad play fixture importer, mesh/typology tessellation, native geometry import/export, and the
 //! plugin-level `register()` that wires cad's exporters/importers into the host.
 //!
-//! 📚️ Sibling topic files: `🦀️geometry_import.rs` (authored-geometry → kernel handles),
-//! `🦀️transformation.rs` (derive/classify engine), `🦀️interaction.rs` (the declarative
-//! construction statechart), `🦀️construct.rs` (Jack topology queries).
+//! 📚️ Sibling topic folders: `📥️geometry-import/🦀️component.rs` (authored-geometry → kernel handles),
+//! `🔄️transformation/🦀️component.rs` (derive/classify engine), `🕹️interaction/🦀️component.rs` (the
+//! declarative construction statechart), `🔍️construct/🦀️component.rs` (Jack topology queries).
 //!
 //! 🧭️ Placement rule for helpers reaching across nodes: a helper with exactly ONE consumer lives in
 //! that consumer's file; two or more consumers put it here.

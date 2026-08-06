@@ -207,13 +207,7 @@ pub mod set_motion_params {
 
     pub fn handle(payload: &SetMotionParams, _doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
         Ok(Emit::operations(vec![RemodelOperation::SetMotionParams {
-            params: MotionParams {
-                enabled: payload.enabled,
-                max_tracks: payload.max_tracks,
-                track_window_px: payload.track_window_px,
-                min_track_quality: payload.min_track_quality,
-                min_track_length_frames: payload.min_track_length_frames,
-            },
+            params: MotionParams { enabled: payload.enabled, max_tracks: payload.max_tracks, track_window_px: payload.track_window_px, min_track_quality: payload.min_track_quality, min_track_length_frames: payload.min_track_length_frames },
         }]))
     }
 }
@@ -262,15 +256,11 @@ mod tests {
     use super::*;
     use crate::apps::remodel::testkit::{app, dispatch};
     use crate::apps::remodel::RemodelCommand;
-    use semio_framework_plugin::PluginApp;
 
     #[test]
     fn set_sfm_params_command_materializes_typed_fields_into_operations() {
         let mut app = app();
-        let result = dispatch(
-            &mut app,
-            RemodelCommand::SetSfmParams(set_sfm_params::SetSfmParams { ransac_iterations: 500, ransac_threshold_px: 1.5, min_track_length: 4, ba_max_iterations: 20, robust_loss: "cauchy".into(), huber_delta_px: 2.5 }),
-        );
+        let result = dispatch(&mut app, RemodelCommand::SetSfmParams(set_sfm_params::SetSfmParams { ransac_iterations: 500, ransac_threshold_px: 1.5, min_track_length: 4, ba_max_iterations: 20, robust_loss: "cauchy".into(), huber_delta_px: 2.5 }));
         assert_eq!(result.operations.len(), 1, "typed command produces one SetSfmParams operation");
         let params = app.projection().expect("materialize projection").params.sfm;
         assert_eq!(params.ransac_iterations, 500);
@@ -282,10 +272,7 @@ mod tests {
     #[test]
     fn set_geo_params_command_materializes_typed_fields_into_operations() {
         let mut app = app();
-        dispatch(
-            &mut app,
-            RemodelCommand::SetGeoParams(set_geo_params::SetGeoParams { enabled: true, origin_lon: None, origin_lat: None, origin_alt: None, gsd_m: 0.02, dsm_cell_m: 0.2, dtm_filter_radius_m: 2.0, ortho_max_px: 2048 }),
-        );
+        dispatch(&mut app, RemodelCommand::SetGeoParams(set_geo_params::SetGeoParams { enabled: true, origin_lon: None, origin_lat: None, origin_alt: None, gsd_m: 0.02, dsm_cell_m: 0.2, dtm_filter_radius_m: 2.0, ortho_max_px: 2048 }));
         let params = app.projection().expect("materialize projection").params.geo;
         assert!(params.enabled);
         assert_eq!(params.gsd_m, 0.02);

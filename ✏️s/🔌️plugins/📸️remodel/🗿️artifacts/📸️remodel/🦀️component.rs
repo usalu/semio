@@ -975,7 +975,7 @@ mod tests {
     /// exercises every optional/collection field at least once, so `assert_dsl_round_trip` (and the
     /// pre-existing `populated_scene_roundtrips_through_json`) actually walk the full document shape
     /// instead of just `default_remodel_scene()`'s mostly-empty surface. Duplicated verbatim into every
-    /// constitutional slot that needs it (`dsl`, `op`, `pack`) since it is a private test-only builder.
+    /// taxonomy node that needs it (`🗣️dsl`, `🔧️op`, `🎒️pack`) since it is a private test-only builder.
     fn populated_scene_fixture() -> RemodelScene {
         let mut scene = default_remodel_scene();
         scene.streams.push(MediaStream {

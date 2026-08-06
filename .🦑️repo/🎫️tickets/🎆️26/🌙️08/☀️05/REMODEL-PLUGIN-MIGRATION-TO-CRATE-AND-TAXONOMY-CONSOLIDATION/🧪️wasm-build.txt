@@ -1,0 +1,169 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling zmij v1.0.23
+   Compiling thiserror v2.0.19
+   Compiling memchr v2.8.3
+   Compiling serde_core v1.0.229
+   Compiling serde v1.0.229
+   Compiling arrayvec v0.7.8
+   Compiling serde_json v1.0.151
+   Compiling simd-adler32 v0.3.10
+   Compiling shlex v2.0.1
+   Compiling futures-core v0.3.33
+   Compiling futures-io v0.3.33
+   Compiling log v0.4.33
+   Compiling miniz_oxide v0.8.9
+   Compiling cc v1.4.0
+   Compiling smallvec v1.15.2
+   Compiling rustversion v1.0.23
+   Compiling zerocopy v0.8.55
+   Compiling fastrand v2.5.0
+   Compiling futures-sink v0.3.33
+   Compiling crossbeam-utils v0.8.22
+   Compiling futures-task v0.3.33
+   Compiling blake3 v1.8.5
+   Compiling bumpalo v3.20.3
+   Compiling futures-lite v2.6.1
+   Compiling futures-channel v0.3.33
+   Compiling crossbeam-epoch v0.9.20
+   Compiling wasm-bindgen v0.2.126
+   Compiling crossbeam-deque v0.8.7
+   Compiling indexmap v2.14.0
+   Compiling zlib-rs v0.6.7
+   Compiling anyhow v1.0.104
+   Compiling bitflags v2.13.1
+   Compiling ahash v0.8.12
+   Compiling syn v3.0.3
+   Compiling syn v2.0.119
+   Compiling semio-framework-ui-wgpu v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu)
+   Compiling either v1.17.0
+   Compiling flate2 v1.1.9
+   Compiling hashbrown v0.14.5
+   Compiling thiserror-impl v2.0.19
+   Compiling serde_derive v1.0.229
+   Compiling async-trait v0.1.91
+   Compiling futures-macro v0.3.33
+   Compiling wasm-bindgen-macro-support v0.2.126
+   Compiling futures-util v0.3.33
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/⚡️implementations/🦀️rust)
+   Compiling gltf-derive v1.4.1
+   Compiling semio-framework-ui-styling v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust)
+   Compiling wasmparser v0.220.1
+   Compiling semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/⚡️implementations/🦀️rust)
+   Compiling spdx v0.10.9
+   Compiling brepkit-math v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+   Compiling semio-framework-os-kernel-dsl-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust)
+   Compiling wasm-bindgen-macro v0.2.126
+   Compiling gltf-json v1.4.1
+   Compiling rayon-core v1.13.0
+   Compiling bytemuck v1.25.2
+   Compiling wasm-encoder v0.220.1
+   Compiling wit-parser v0.220.1
+   Compiling semio-framework-os-kernel-math-number v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/🔢️number/⚡️implementations/🦀️rust)
+   Compiling brepkit-topology v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+   Compiling semio-framework-os-kernel-pack-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🫀️core/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-dsl-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/⚡️implementations/🦀️rust)
+   Compiling js-sys v0.3.103
+   Compiling rayon v1.12.0
+   Compiling gltf v1.4.1
+   Compiling brepkit-geometry v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+   Compiling wasm-metadata v0.220.1
+   Compiling zopfli v0.8.3
+   Compiling wit-bindgen-core v0.36.0
+   Compiling prettyplease v0.2.37
+   Compiling semio-framework-os-kernel-pack-format v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📐️format/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust)
+   Compiling web-sys v0.3.103
+   Compiling serde-wasm-bindgen v0.6.5
+   Compiling wasm-bindgen-futures v0.4.76
+   Compiling tinyvec v1.12.0
+   Compiling wit-component v0.220.1
+   Compiling brepkit-check v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+   Compiling brepkit-heal v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+   Compiling brepkit-offset v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+   Compiling semio-framework-os-kernel-pack-value v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️value/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-command v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-format v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📐️format/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-pack-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⏳️async/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-pack-io v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔌️io/⚡️implementations/🦀️rust)
+   Compiling tiny-skia-path v0.11.4
+   Compiling wit-bindgen-rust v0.36.0
+   Compiling brepkit-algo v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+   Compiling brepkit-blend v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+   Compiling futures-executor v0.3.33
+   Compiling semio-framework-os-kernel-pack-index v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️index/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-causal v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔗️causal/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-history v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📜️history/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-crdt v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔀️crdt/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-pack-http v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌐️http/⚡️implementations/🦀️rust)
+   Compiling brepkit-sketch v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+   Compiling kurbo v0.11.3
+   Compiling fdeflate v0.3.7
+   Compiling memmap2 v0.9.11
+   Compiling getrandom v0.4.3
+   Compiling rustybuzz v0.20.1
+   Compiling zip v8.6.0
+   Compiling semio-framework-os-kernel-protocol-wire v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📡️wire/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-materialize v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/💎️materialize/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-channel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧵️channel/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust)
+   Compiling brepkit-operations v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+   Compiling svgtypes v0.15.3
+   Compiling png v0.17.16
+   Compiling fontdb v0.23.0
+   Compiling futures v0.3.33
+   Compiling wit-bindgen-rust-macro v0.36.0
+   Compiling wit-bindgen-rt v0.36.0
+   Compiling semio-framework-os-kernel-math-algebra v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/➕️algebra/⚡️implementations/🦀️rust)
+   Compiling displaydoc v0.2.7
+   Compiling semio-framework-os-kernel-protocol v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-math-graph-manifest v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust)
+   Compiling simplecss v0.2.2
+   Compiling polycool v0.4.0
+   Compiling quick-xml v0.40.1
+   Compiling zip v2.4.2
+   Compiling tiny-skia v0.11.4
+   Compiling semio-framework-os-kernel-3d-brep-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️modules/🧊️3d/📐️brep/⚙️engine/⚡️implementations/🦀️rust)
+   Compiling wit-bindgen v0.36.0
+   Compiling semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-vcs v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust)
+   Compiling kurbo v0.13.1
+   Compiling brepkit-io v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+   Compiling usvg v0.45.1
+   Compiling rgb v0.8.53
+   Compiling console_error_panic_hook v0.1.7
+   Compiling uuid v1.24.0
+   Compiling semio-framework-os-kernel-math-random v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/🎲️random/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-math-lie v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/🔷️lie/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-math-geometry v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📐️geometry/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-math-signal v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📶️signal/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-math-spatial v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/🗺️spatial/⚡️implementations/🦀️rust)
+   Compiling resvg v0.45.1
+   Compiling semio-framework-os-kernel-math-optimize v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/🎯️optimize/⚡️implementations/🦀️rust)
+   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-math-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-3d-brep v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️modules/🧊️3d/📐️brep/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-space v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-workflow v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/⚡️implementations/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust)
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3278:68
+     |
+3278 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3278 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3278 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+   Compiling semio-framework-os v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust)
+   Compiling semio-s-plugin-remodel v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust)
+error: couldn't read `../../📦️lib.rs`: No such file or directory (os error 2)
+
+error: could not compile `semio-s-plugin-remodel` (lib) due to 1 previous error

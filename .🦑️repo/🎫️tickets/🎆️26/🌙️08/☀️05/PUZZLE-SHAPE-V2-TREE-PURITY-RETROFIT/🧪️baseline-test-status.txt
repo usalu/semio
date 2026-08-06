@@ -1,0 +1,9 @@
+=== cargo test -p semio-s-plugin-puzzle --lib BLOCKED ===
+error: failed to load manifest for workspace member `/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🔨️modules/🫀️core/⚡️implementations/🦀️rust`
+referenced by workspace at `/Users/ueli/Documents/semio/Cargo.toml`
+
+Caused by:
+  failed to read `/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🔨️modules/🫀️core/⚡️implementations/🦀️rust/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)

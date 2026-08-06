@@ -1,4 +1,4 @@
-//! 📦️ Remodel app — binary document surface + laws (constitutional: pack).
+//! 📦️ Remodel artifact — the binary document surface (`pack`) and its laws.
 
 use crate::artifacts::remodel::RemodelScene;
 use store::PackError;

@@ -508,7 +508,8 @@ pub mod part_6 {
 // #endregion 🔖️Part6
 
 /// 📋️ Building seismic check generalized over DE zone-based or EN Type-1/2-spectrum annex selection.
-pub fn check_building_seismic_with_annex(annex: AnnexParams, importance: part_1::ImportanceClass, system: part_1::StructuralSystem, t1_s: f64, mass_t: f64, v_rd_kn: f64, drift_mm: f64, height_m: f64, multiple_resisting_systems: bool) -> CheckReport {
+#[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
+pub fn check_building_seismic_with_annex(annex: &AnnexParams, importance: part_1::ImportanceClass, system: part_1::StructuralSystem, t1_s: f64, mass_t: f64, v_rd_kn: f64, drift_mm: f64, height_m: f64, multiple_resisting_systems: bool) -> CheckReport {
     let choice = annex.choice();
     let gamma_i = importance.gamma_i();
     let q = system.q();
@@ -524,6 +525,7 @@ pub fn check_building_seismic_with_annex(annex: AnnexParams, importance: part_1:
 }
 
 /// 📋️ Building seismic check (DE NA zone parameters).
+#[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
 pub fn check_building_seismic(
     zone: na_de::SeismicZone,
     ground: na_de::GroundType,
@@ -536,7 +538,7 @@ pub fn check_building_seismic(
     height_m: f64,
     multiple_resisting_systems: bool,
 ) -> CheckReport {
-    check_building_seismic_with_annex(AnnexParams::De { zone, ground }, importance, system, t1_s, mass_t, v_rd_kn, drift_mm, height_m, multiple_resisting_systems)
+    check_building_seismic_with_annex(&AnnexParams::De { zone, ground }, importance, system, t1_s, mass_t, v_rd_kn, drift_mm, height_m, multiple_resisting_systems)
 }
 
 /// 📋️ Full seismic check across EN 1998 parts 1 through 6.
@@ -558,7 +560,7 @@ pub fn check_full_seismic(document: &Document) -> CheckReport {
     let s_d = part_1::design_spectrum_sd(s_e, gamma_i, q);
     let v_b = part_1::base_shear_from_design_kn(s_d, document.mass_t);
 
-    let mut report = check_building_seismic_with_annex(annex, importance, system, document.t1_s, document.mass_t, document.v_rd_kn, document.drift_mm, document.height_m, document.multiple_resisting_systems);
+    let mut report = check_building_seismic_with_annex(&annex, importance, system, document.t1_s, document.mass_t, document.v_rd_kn, document.drift_mm, document.height_m, document.multiple_resisting_systems);
 
     let q_isol = part_2::isolation_reduction_factor(document.period_ratio);
     let s_d_isol = part_2::isolated_spectrum_sd(s_e, gamma_i, q_isol);
@@ -808,8 +810,7 @@ mod tests {
 
     #[test]
     fn full_seismic_en_annex_e2e() {
-        let mut document = Document::default();
-        document.annex = "en".into();
+        let document = Document { annex: "en".into(), ..Document::default() };
         let report = check_full_seismic(&document);
         assert_eq!(report.checks.len(), 12);
     }

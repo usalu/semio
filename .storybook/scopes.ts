@@ -51,8 +51,8 @@ export const STORY_SCOPES: readonly StoryScope[] = [
     titlePrefix: "🖱️ui⚛️react",
     sourceRoots: [
       repoRelative("🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"),
-      repoRelative("🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript"),
-      repoRelative("🧰️framework/🔨️modules/🖱️ui/🖼️assets/⚡️implementations/🟦️typescript"),
+      repoRelative("🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript"),
+      repoRelative("🧰️framework/🔨️modules/🖱️ui/🖼️assets"),
       repoRelative("✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript"),
       repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementations/🟦️typescript"),
     ],
@@ -66,7 +66,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   {
     id: "styling",
     titlePrefix: "🎨️styling",
-    sourceRoots: [repoRelative("🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript")],
+    sourceRoots: [repoRelative("🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript")],
   },
   {
     id: "puzzle",
@@ -121,20 +121,20 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   {
     id: "framework",
     titlePrefix: "🛠️framework",
-    sourceRoots: [repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript"), repoRelative("🧰️framework/⚡️implementations/🟦️typescript")],
+    sourceRoots: [repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"), repoRelative("🧰️framework/⚡️implementations/🟦️typescript")],
   },
   {
     id: "framework/hosts",
     titlePrefix: "🛠️framework🔌️hosts",
     sourceRoots: [
-      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript"),
+      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"),
       repoRelative("🧰️framework/⚡️implementations/🟦️typescript"),
       repoRelative("🧰️framework/🔨️modules/🗺️surface"),
       repoRelative("🧰️framework/🔨️modules/✍️editor"),
       repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust"),
     ],
     aliases: {
-      "@semio-tech/framework-renderer-react": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx",
+      "@semio-tech/framework-renderer-react": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
       "@semio-tech/framework-core": "🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts",
     },
   },
@@ -142,15 +142,15 @@ export const STORY_SCOPES: readonly StoryScope[] = [
     id: "framework/os",
     titlePrefix: "🛠️framework🖥️os",
     sourceRoots: [
-      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript"),
-      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementations/🦀️rust"),
+      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"),
+      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu"),
       repoRelative("🧰️framework/⚡️implementations/🟦️typescript"),
       repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry"),
       repoRelative("🧰️framework/🛍️products/💻️os"),
     ],
     aliases: {
-      "@semio-tech/framework-renderer-react": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx",
-      "@semio-tech/framework-renderer-wgpu": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementations/🦀️rust/📦️index.ts",
+      "@semio-tech/framework-renderer-react": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+      "@semio-tech/framework-renderer-wgpu": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️index.ts",
       "@semio-tech/framework-core": "🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts",
       "/plugin-modules": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/🔌️plugin-modules",
       "/renderer-modules": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/📺️renderer-modules",

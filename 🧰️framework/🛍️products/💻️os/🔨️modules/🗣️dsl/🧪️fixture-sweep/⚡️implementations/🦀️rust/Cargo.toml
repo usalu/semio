@@ -96,28 +96,17 @@ layout = { path = "../../../../../../../../✏️s/🔌️plugins/📏️layout/
 # facade crate was merged into `semio-s-plugin-cad` by the crate-consolidation taxonomy migration
 # (ticket 26/08/05/CAD-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION).
 cad_document = { path = "../../../../../../../../✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust", package = "semio-s-plugin-cad" }
-iso16757 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📓️iso16757/⚡️implementations/🦀️rust", package = "semio-s-app-norm-iso16757" }
-vdi3805 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📔️vdi3805/⚡️implementations/🦀️rust", package = "semio-s-app-norm-vdi3805" }
-din4108 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📕️din4108/⚡️implementations/🦀️rust", package = "semio-s-app-norm-din4108" }
-din16798 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📗️din16798/⚡️implementations/🦀️rust", package = "semio-s-app-norm-din16798" }
-en1990 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1990/⚡️implementations/🦀️rust", package = "semio-s-app-norm-en1990" }
-en1991 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1991/⚡️implementations/🦀️rust", package = "semio-s-app-norm-en1991" }
-en1992 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1992/⚡️implementations/🦀️rust", package = "semio-s-app-norm-en1992" }
-en1993 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1993/⚡️implementations/🦀️rust", package = "semio-s-app-norm-en1993" }
-en1994 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1994/⚡️implementations/🦀️rust", package = "semio-s-app-norm-en1994" }
-en1995 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1995/⚡️implementations/🦀️rust", package = "semio-s-app-norm-en1995" }
-en1996 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1996/⚡️implementations/🦀️rust", package = "semio-s-app-norm-en1996" }
-en1997 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1997/⚡️implementations/🦀️rust", package = "semio-s-app-norm-en1997" }
-en1998 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1998/⚡️implementations/🦀️rust", package = "semio-s-app-norm-en1998" }
-en1999 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1999/⚡️implementations/🦀️rust", package = "semio-s-app-norm-en1999" }
-din18599 = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📙️din18599/⚡️implementations/🦀️rust", package = "semio-s-app-norm-din18599" }
+# 📏️ Every norm `Document` is genuinely plugin-owned (no shared kernel crate), so all fifteen now
+# live at `norm::artifacts::<standard>::Document` (see this crate's `📦️lib.rs`) — the fifteen deleted
+# `semio-s-app-norm-*` facade crates were merged into `semio-s-plugin-norm` by the crate-consolidation
+# taxonomy migration (ticket 26/08/05/NORM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION).
+norm = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", package = "semio-s-plugin-norm" }
 playbook = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-playbook" }
-imperative = { path = "../../../../../../../../✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/⚡️implementations/🦀️rust", package = "semio-s-app-imperative" }
-remodel = { path = "../../../../../../../../✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/⚡️implementations/🦀️rust", package = "semio-s-app-remodel" }
-rewrite = { path = "../../../../../../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/✏️rewrite/⚡️implementations/🦀️rust", package = "semio-s-app-trinity-rewrite" }
-trinity_ram = { path = "../../../../../../../../✏️s/🔌️plugins/🔱️trinity/🔨️modules/🐏️ram/⚡️implementations/🦀️rust", package = "semio-s-plugin-trinity-ram" }
+imperative = { path = "../../../../../../../../✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust", package = "semio-s-plugin-imperative" }
+remodel = { path = "../../../../../../../../✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust", package = "semio-s-plugin-remodel" }
+trinity = { path = "../../../../../../../../✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust", package = "semio-s-plugin-trinity" }
 dag_app = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-dag" }
-draw = { path = "../../../../../../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/⚡️implementations/🦀️rust", package = "semio-s-app-draw" }
+draw = { path = "../../../../../../../../✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust", package = "semio-s-plugin-draw" }
 raster = { path = "../../../../../../../../✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust", package = "semio-s-plugin-raster" }
 note_app = { path = "../../../../../../../../✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust", package = "semio-s-plugin-note" }
 puzzle = { path = "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle" }

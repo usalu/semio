@@ -9,8 +9,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 
-import { World3dHost } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx";
-import type { ActionDescriptor, UiComponentSceneNode } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx";
+import { World3dHost } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import type { ActionDescriptor, UiComponentSceneNode } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 
 import concreteForestFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/⚡️implementations/🦀️rust/📚️examples/🧩️concrete-forest.puzzle3d?raw";
 import nakaginCapsuleTowerFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/⚡️implementations/🦀️rust/📚️examples/🧩️nakagin-capsule-tower.puzzle3d?raw";

@@ -1,0 +1,100 @@
+Shape V2 tree-purity audit — 💠️lowpoly, ticket 26/08/05/LOWPOLY-PLUGIN-SHAPE-V2-TREE-PURITY-RETROFIT
+Run manually (repo search tool is broken per CLAUDE.md, root cargo commands blocked by unrelated norm
+crate dangling-manifest issue) — every check below was executed as a plain shell command against the
+live tree, not simulated.
+
+1. Non-compliant file inventory (§14 step 2), BEFORE:
+   find ✏️s/🔌️plugins/💠️lowpoly -type f \( -name "*.rs" -o -name "*.ts" \) -not -name "🦀️component.rs" \
+     -not -name "🟦️component.tsx" -not -path "*/📦️packages/*"
+   ->
+   ✏️s/🔌️plugins/💠️lowpoly/📦️lib.rs                                          (owner-root entry file)
+   ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🦀️terminology.rs                  (sibling variant)
+   ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🦀️session.rs                      (sibling variant)
+   ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🦀️view.rs                         (sibling variant)
+   ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🦀️config.rs                       (sibling variant)
+   ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/⚙️engine/🦀️paint.rs           (sibling variant)
+   ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/⚙️engine/🦀️media.rs           (sibling variant)
+
+   Same find, AFTER: zero hits.
+
+2. Nested data/doc check (§14 step 2/5):
+   find ✏️s/🔌️plugins/💠️lowpoly \( -name "📚️examples" -o -name "🧫️fixtures" -o -name "🤖️generated" \) \
+     -not -maxdepth 1        -> zero hits (📚️examples was already at owner root pre-retrofit)
+   find ✏️s/🔌️plugins/💠️lowpoly -name "🛂️manifest.json"    -> zero hits
+   find ✏️s/🔌️plugins/💠️lowpoly \( -name "AGENTS.md" -o -name "README.md" \) -not -maxdepth 1
+                                                            -> zero hits (AGENTS.md already at owner root)
+   => No AGENTS.md/README.md collision. No step-5 data relocation needed.
+
+3. #[path] <-> disk cross-check, AFTER:
+   - Every #[path] value in the new 📦️packages/🦀️rust/📦️lib.rs (42 non-"." entries) resolves to a real
+     file when joined against the plugin root (✏️s/🔌️plugins/💠️lowpoly/<value with ../../ stripped>).
+     42/42 OK, zero MISSING.
+   - `find ✏️s/🔌️plugins/💠️lowpoly -name "*.rs" -not -path "*/📦️packages/*" | wc -l` -> 42
+   - 42 declared == 42 on-disk. No dangling #[path], no undeclared file.
+
+4. Final tree-purity find, AFTER (must show nothing but 🦀️component.rs / 📦️packages / plain folders
+   below owner root):
+   find ✏️s/🔌️plugins/💠️lowpoly -type f \( -name "*.rs" -o -name "*.ts" \) -not -name "🦀️component.rs" \
+     -not -name "🟦️component.tsx" -not -path "*/📦️packages/*"
+   -> zero hits (confirmed after the retrofit edits)
+
+5. Byte-diff of every moved sibling file against its pre-move git HEAD content (plain `diff`):
+   🦀️config.rs       -> 🧮️config/🦀️component.rs        IDENTICAL
+   🦀️session.rs      -> 🖌️session/🦀️component.rs        IDENTICAL
+   🦀️terminology.rs  -> 🗣️terminology/🦀️component.rs    IDENTICAL
+   🦀️view.rs         -> 🧭️view/🦀️component.rs           IDENTICAL
+   ⚙️engine/🦀️paint.rs -> ⚙️engine/🎨️paint/🦀️component.rs   IDENTICAL
+   ⚙️engine/🦀️media.rs -> ⚙️engine/🧵️media/🦀️component.rs   IDENTICAL
+
+6. Diff of moved entry file (old owner-root 📦️lib.rs vs new 📦️packages/🦀️rust/📦️lib.rs): only the 42
+   `#[path = "…"]` string values differ (each gained a `../../` prefix, plus the 6 folded siblings also
+   gained their new folder segment + renamed to component.rs). No other line changed. Confirmed via
+   `diff` — see chat transcript for the full line-by-line diff, reproduced by re-running the same command.
+
+Environment note: root `cargo metadata`/any `-p`-scoped or workspace-wide cargo command fails with
+"failed to load manifest for workspace member
+.../✏️s/🔌️plugins/📕️norm/🔨️modules/🫀️core/⚡️implementations/🦀️rust ... No such file or directory" —
+this is 📕️norm's own in-flight, unrelated migration leaving a dangling member line, exactly the known
+blocker flagged in the dispatch brief. Reproduced identically both via `cargo check -p
+semio-s-plugin-lowpoly` and `cargo check --manifest-path .../📦️packages/🦀️rust/Cargo.toml` (the latter
+still resolves the enclosing root workspace by directory-walk-up before -p/--manifest-path narrows
+anything). Worked around with a temporary `[workspace]` verification overlay appended to lowpoly's own
+Cargo.toml (TEMPLATE.md §3 chicken-and-egg technique) — removed after verification completed (overlay +
+nested target/+Cargo.lock both deleted before ticket close).
+
+REAL BUG FOUND AND FIXED (mine, in-scope): moving ⚙️engine/🦀️media.rs to ⚙️engine/🧵️media/🦀️component.rs
+(one directory level deeper) broke its one `include_str!("../../../../📐️cad/🖼️assets/🎮️play/…json")` —
+a relative-path macro whose depth is baked in at compile time, exactly analogous to the `#[path]` strings
+but NOT mentioned explicitly by §14 (which only calls out `#[path]`/`use crate::…` sites). Fixed by adding
+one more `../` (verified the new 5-level path resolves on disk to the same file cad's plugin exposes).
+Caught by a real `cargo test --lib` failure, not by inspection — a reminder that §14's "grep for use
+crate::… sites" step should also cover include_str!/include_bytes!/any other relative-path compile-time
+macro inside a moved file. Confirmed no OTHER moved file has any include_str!/include_bytes! (grepped all
+six).
+
+TRANSIENT EXTERNAL BLOCKER (not mine, no action taken): a `cargo clippy --all-targets` run mid-session hit
+`error: could not compile semio-s-plugin-cad (lib) due to 49 previous errors` inside 📐️cad's OWN
+🕹️interaction/🦀️component.rs (broken include_str! paths, same failure class as the one I just fixed in
+media.rs) — cad is being retrofitted to Shape V2 concurrently by another session right now (confirmed via
+`git status` showing cad's own in-flight V1→V2 changes) and was mid-edit at that moment. A later
+`cargo test --lib` run (same manifest, ~10 minutes later) compiled cad_plugin cleanly and lowpoly's own
+137 tests all passed — the other session evidently fixed its own file in the interim. Not touched, not
+mine to fix, flagged here only for the record per CLAUDE.md's "you MUST work simultaneously with others"
+discipline.
+
+INCIDENTAL, NOT MINE: 📦️packages/🦀️rust/📜️script.ts's import path changed from 6 `../` levels to 5 while
+I was working (I did not make this edit). Verified the 5-level form is correct (resolves on disk) and
+matches every other closed/registrar-processed plugin's script.ts (flow, process, energy all use 5) — the
+old 6-level form was a pre-existing off-by-one bug. Left as-is since it is now correct; noted only for
+transparency per the shared-file-editing discipline.
+
+FINAL VERIFICATION RESULTS (all synchronous, via the temporary overlay's --manifest-path, DEVELOPER_DIR
+prefix applied throughout):
+- cargo check                            -> clean, 0 errors, 0 warnings attributable to semio-s-plugin-lowpoly
+- cargo clippy --all-targets -D warnings -> blocked transiently by cad's concurrent breakage (see above);
+  cargo clippy (lib target, no --all-targets, so cad's dev-only tests aren't pulled in) -> clean, exit 0,
+  0 errors, 0 warnings attributable to semio-s-plugin-lowpoly
+- cargo test --lib                       -> 137 passed; 0 failed; 0 ignored — EXACT match to the V1
+  migration ticket's recorded baseline ("137/137 passed (135 authored + 2 framework plugin-sanity
+  tests)"), zero drift
+- cargo check --target wasm32-wasip2     -> clean, 0 errors, 0 warnings attributable to semio-s-plugin-lowpoly

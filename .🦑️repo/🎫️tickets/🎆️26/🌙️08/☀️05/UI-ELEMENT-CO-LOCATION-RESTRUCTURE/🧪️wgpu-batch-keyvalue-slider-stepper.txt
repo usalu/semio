@@ -1,0 +1,38 @@
+Batch: wgpu extraction — render_key_value, render_slider, render_number_stepper
+crate: semio-framework-ui-wgpu
+
+Files written:
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/KeyValue/🧊️component.rs   (NEW element dir)
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Slider/🧊️component.rs    (existing element dir, wgpu leaf new)
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/Stepper/🧊️component.rs   (existing element dir, wgpu leaf new)
+
+Wiring added to 📦️lib.rs, immediately before `pub mod widgets {`:
+  #[cfg(feature = "engine")] #[path = "../../../../🧱️elements/KeyValue/🧊️component.rs"] mod key_value;
+  #[cfg(feature = "engine")] #[path = "../../../../🧱️elements/Slider/🧊️component.rs"] mod slider;
+  #[cfg(feature = "engine")] #[path = "../../../../🧱️elements/Stepper/🧊️component.rs"] mod stepper;
+
+use imports added inside widgets' top use block:
+  use crate::key_value::render_key_value;
+  use crate::slider::render_slider;
+  use crate::stepper::render_number_stepper;
+
+Judgment calls:
+1. `quantize_step` (pure numeric helper, only caller was render_slider) moved into
+   🧱️elements/Slider/🧊️component.rs as a private fn alongside render_slider, rather than
+   left stranded in widgets mod, since it has no other caller anywhere in the crate
+   (verified via crate-wide grep).
+2. `register_input_meta` (widgets-local fn used by render_number_stepper AND two other
+   widgets-internal call sites for render_input's own metadata registration) was changed
+   from private to `pub(crate)` in place in widgets mod (NOT moved) since it's still shared
+   by other widgets besides Stepper.
+3. KeyValue: confirmed via CLAUDE.md instructions this is NOT the Field element (single
+   labeled-field wrapper) — created a fresh element dir since Field/Slider/Stepper dirs
+   pre-existed only with 🟦️component.tsx (react), no 🧊️wgpu leaf yet.
+4. Stepper vs Steps: confirmed Steps is a separate progress-indicator concept (its own
+   pre-existing element dir with unrelated react component) — did not touch it.
+
+Verification:
+  DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo check -p semio-framework-ui-wgpu --features engine
+  => PASSED (0 errors). 5 warnings, all pre-existing/unrelated (unused Level/IconName imports,
+  unnecessary qualification, unused render_select_menu import from the earlier Select pilot) —
+  none originate from KeyValue/Slider/Stepper's new files.

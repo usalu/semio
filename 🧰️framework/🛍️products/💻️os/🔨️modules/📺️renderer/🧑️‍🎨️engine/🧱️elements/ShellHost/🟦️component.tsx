@@ -1,0 +1,4960 @@
+// #region 🧲️Header
+// 🎨️ framework/products/os/modules/renderer/engine/elements/ShellHost/component.tsx
+/** @emoji 🏗️ `ShellHost` — the `FrameworkOsShell` orchestrator: boots/hot-swaps plugin wasm modules,
+ * owns the window/dock/panel layout, wires the tutorial recorder/player, presence, backbone sync,
+ * command/tool/utility ribbons, context menus, and mounts every per-app window via `Interpreter`.
+ * The single largest component in the renderer-react package. */
+// #endregion 🧲️Header
+
+// #region 🔌️Adapters
+import React, {
+  createContext,
+  type CSSProperties,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactElement,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
+import {
+  type ActionDescriptor,
+  type AppDefinition,
+  buildContributionsJson,
+  type ContextMenuItemSpec,
+  createBrowserStoragePort,
+  createDevPluginSource,
+  createMemoryStoragePort,
+  createScopedStoragePort,
+  DockLayoutStore,
+  type DockUiPanelState,
+  DockUiStateStore,
+  evictPluginModule,
+  expandPluginRegistry,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+  FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID,
+  FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+  FRAMEWORK_PANEL_TAB_HISTORY_ID,
+  type HostEffect,
+  type IntroductionInteraction,
+  type LocalizedLabel,
+  NamedLayoutStore,
+  normalizeAppLabelsOverlay,
+  organizeContextMenu,
+  panelTabKindId,
+  pendingPanelUiNode,
+  pendingWindowUiNode,
+  type PluginAppLabelsOverlay,
+  type PluginContextMenuRequest,
+  type PluginSource,
+  type PluginSourceEvent,
+  type PluginUiRefreshSectionResponse,
+  postPluginBackboneInbound,
+  type ProgramHotSwapEvent,
+  RECORD_TUTORIAL_ACTION_ID,
+  registerPluginBackboneRoute,
+  resolveExternalSlots,
+  resolveLayoutForMode,
+  resolveModeTools,
+  resolvePlaygroundDefaultAppId,
+  resolvePluginHostConfig,
+  resolvePluginRegistryId,
+  resolveUiDirtyScope,
+  resolveWindowActions,
+  SET_ACTIVE_TOOL_ACTION_ID,
+  SET_ACTIVE_UTILITY_ACTION_ID,
+  type ShellBrand,
+  START_INTRODUCTION_ACTION_ID,
+  START_TUTORIAL_ACTION_ID,
+  type StoragePort,
+  TUTORIAL_CONVERGE_MS,
+  type TutorialAssetSrc,
+  type TutorialCameraState,
+  type TutorialChapter,
+  type TutorialDefinition,
+  type TutorialDocumentEventKind,
+  type TutorialEvent,
+  type TutorialGestureCue,
+  type TutorialUiChange,
+  type TutorialUiSnapshot,
+  type TutorialVideoCue,
+  type UiDirtyScope,
+  type UiNode,
+  type UtilityNode,
+  windowElementId,
+  type WindowEngagement,
+  type WindowLayout,
+  type WindowMeasure,
+} from "@semio-tech/framework-core";
+import {
+  type BackboneWorkerRequest,
+  type BackboneWorkerResponse,
+  buildFileBackboneUri,
+  buildFolderBackboneUri,
+  buildFrameworkSyncUtilities,
+  buildRemoteBackboneUri,
+  decodeBackboneMessage,
+  decodeBackboneWorkerResponse,
+  decodePackValue,
+  type DocumentActorMsg,
+  encodeActionWire,
+  encodeBackboneMessage,
+  encodeBackboneWorkerRequest,
+  encodeOperationEnvelopesPack,
+  FRAMEWORK_SYNC_CONTROLLER_ID,
+  operationEnvelopeFromWire,
+  operationEnvelopeToWire,
+  type PersistenceBinding,
+} from "@semio-tech/framework-os-core";
+import {
+  decodeWorldProjectionTemplateId,
+  worldProjectionSpecIconId,
+  worldProjectionSpecLabel,
+} from "@semio-tech/infinite-world-r3f";
+import {
+  type Anchor,
+  ANCHORS,
+  App,
+  applyDockSkeleton,
+  applyUiThemeToRoot,
+  borderNormalBottomClass,
+  buildKeysByActionId,
+  builtinUiDrivers,
+  builtinUiThemes,
+  ButtonGroup,
+  ButtonGroupItem,
+  CanvasSkeleton,
+  CELEBRATE_STAMP_DURATION_MS,
+  celebrateAllElements,
+  celebrateElements,
+  childElementId,
+  ChromeAwareWindowScrollSurface,
+  clearUiThemeFromRoot,
+  cn,
+  composeControlKeybindings,
+  composeTutorialUi,
+  ContextMenuController,
+  type ContextMenuItem,
+  createShellScope,
+  createTutorialClock,
+  DEFAULT_UI_DRIVER,
+  detectShellLocale,
+  disposeShellI18nInstance,
+  dockSkeletonOf,
+  dockSkeletonsEqual,
+  elementIdSelector,
+  type ElementsSurfaceAppearance,
+  type ElementsSurfaceDevice,
+  findPanelTabInDock,
+  findPanelTabNode,
+  findPanelTabPath,
+  Footer,
+  getTutorialCameraDriver,
+  Icon,
+  type IconName,
+  iconRenderPort,
+  insertWindowAtDropZone,
+  interactiveActiveFillClass,
+  interpolateTutorialCamera,
+  isContextMenuPointerTarget,
+  Layout,
+  LevelProvider,
+  loadingBorderClass,
+  Mode,
+  type ModeCanvasDropTarget,
+  type ModeWindowDescriptor,
+  moveTabInDock,
+  moveTreeUnitInDock,
+  Navbar,
+  NavbarExampleSelect,
+  navbarFillItem,
+  type NavbarItem,
+  PanelChromeTabBar,
+  type PanelDock,
+  PanelDockProvider,
+  panelTabChildren,
+  type PanelTabDockMove,
+  type PanelTabNode,
+  type PanelTabSelectionOptions,
+  type PanelTreeUnitDockMove,
+  parseUiTheme,
+  readStoredIntroductionSeen,
+  readStoredUiChromeLocale,
+  readStoredUiChromeThemeSnapshot,
+  reconcileActivePath,
+  resolveUiDriver,
+  SemioLogo,
+  semioTheme,
+  serializeUiTheme,
+  setActiveUiTheme,
+  ShellBrandLogo,
+  shellChromeTitleClassName,
+  type ShellScope,
+  ShellScopeProvider,
+  singleTreeLeaf,
+  staticTreePanelDefinition,
+  TextSelectionContextMenuHost,
+  type ThemeAppearanceName,
+  type ThemePaletteGroup,
+  Toggle,
+  TutorialBar,
+  tutorialCameraAt,
+  TutorialCaptions,
+  type TutorialChapterMarker,
+  type TutorialClock,
+  type TutorialClockPort,
+  tutorialCuesBetween,
+  TutorialGhostPointer,
+  tutorialSlice,
+  type TutorialSlice,
+  TutorialVideoOverlay,
+  UI_MOBILE_MEDIA_QUERY,
+  UI_TERMINOLOGY_NATIVE,
+  type UiChromeLayout,
+  UIDialog,
+  type UiDriver,
+  UIIntroduction,
+  UiKeybindingsProvider,
+  type UiLocale,
+  type UiStatus,
+  type UiTheme,
+  useActionHotkey,
+  useElementsSurfaceChrome,
+  useLabel,
+  useMediaQuery,
+  usePanelChromeHotkeys,
+  useShellKeydown,
+  useShellScope,
+  useTutorialClock,
+  validateTutorial,
+  WindowBodySkeleton,
+  type WindowLayoutNode,
+  type WindowTemplateDropPayload,
+  writeStoredIntroductionSeen,
+  writeStoredUiChromeAppearance,
+  writeStoredUiChromeLayout,
+  writeStoredUiChromeLocale,
+  writeStoredUiChromeTerminology,
+  writeStoredUiChromeThemeId,
+  writeStoredUiChromeThemeSnapshot,
+  writeStoredUiCustomDrivers,
+  writeStoredUiCustomThemes,
+  writeStoredUiDriverId,
+  writeStoredUiKeybindingOverrides,
+} from "@semio-tech/ui-react";
+import {
+  declarativeSurfaceStatus,
+  InterpretedUiNode,
+  PluginSurfaceActionsContext,
+  ShellContextMenuFallbackContext,
+  wireLabel,
+} from "../Interpreter/🟦️component.tsx";
+import {
+  actionStageKey,
+  type ActiveSession,
+  EMPTY_SHELL_DEFAULTS,
+  EMPTY_SHELL_LOCKS,
+  type ExtraWindowInstance,
+  type FrameworkOsDefaults,
+  initialShellState,
+  isEphemeralShellBrand,
+  type LoadedProgramState,
+  resolveBootExampleId,
+  type ResolvedShellLocks,
+  ShellFaultBoundary,
+  shellReducer,
+  shouldPersistIntroductionSeen,
+  shouldReplayIntroductionOnLoad,
+  type SpacePanelState,
+  type SpaceProgramEntry,
+  type SpawnedAppEntry,
+  type ViewState,
+} from "../Shell/🟦️component.tsx";
+import {
+  beginInteractivePluginAction,
+  clearPendingWorldProjection,
+  endInteractivePluginAction,
+  mapContextMenuSpecs,
+  registerPendingWorldProjection,
+  WindowInstanceIdContext,
+} from "../World3dHost/🟦️component.tsx";
+import {
+  DEFAULT_PANEL_WIDTH_PX,
+  dispatchOpenedFiles,
+  EMPTY_APP_LABELS_OVERLAY,
+  loadPluginModuleResilient,
+  runRequestMediaFrames,
+  shellLabel,
+} from "../ShellHelpers/🟦️component.tsx";
+import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
+import { ENTWERFEN_MIT_BESTAND_BRAND_IDS } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🟦️brand.ts";
+// 🚧️W4-interim: these still live in the framework-renderer-react barrel (not yet extracted to their own
+// 🧱️elements/<Element>/ dir) — a later wave rewires this import per-symbol as each dependency's own
+// element file lands. Do not import the barrel from any OTHER new leaf file without the same marker;
+// grep for `🚧️W4-interim` must be empty before this wave's closing batch.
+import {
+  coerceWireBytes,
+  createFrameworkDisplayPanelTabs,
+  createFrameworkPluginsPanelTabs,
+  createFrameworkSettingsPanelTabs,
+  type DisplayHostApi,
+  PluginRecoveryPanel,
+  type PluginsHostApi,
+  type PluginsPanelEntry,
+  type PluginWasmHandle,
+  type SettingsHostApi,
+  ShellRouteNotFoundPage,
+  synthesizeLocalizedLabel,
+  SyncAttachCard,
+  UIFind,
+  UIFindProvider,
+  UISearch,
+  type UISearchItem,
+  useNamedLayoutHost,
+  UTILITY_CATEGORY_ICON_ID,
+} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+// #endregion 🔌️Adapters
+
+//#region FrameworkOsShell
+/** @emoji 🏷️ Lets a per-window host rewrite its Mode window title (e.g. live projection label). */
+export const SetWindowTitleContext = createContext<((windowId: string, title: string) => void) | null>(null);
+
+/** @emoji 🖼️ Lets a per-window host rewrite its Mode window icon (e.g. live projection glyph). */
+export const SetWindowIconContext = createContext<((windowId: string, iconId: IconName) => void) | null>(null);
+
+const EMPTY_KEYS_BY_ACTION_ID = new Map<string, string>();
+
+/** @emoji ⌨️ Last-wins app keybindings for enriching context-menu shortcut labels in scene hosts. */
+const AppKeybindingsContext = createContext<ReadonlyMap<string, string>>(EMPTY_KEYS_BY_ACTION_ID);
+
+/** @emoji ⌨️ Resolves action→keys bindings from the nearest {@link AppKeybindingsContext} provider. */
+export function useAppKeybindingsByActionId(): ReadonlyMap<string, string> {
+  return useContext(AppKeybindingsContext);
+}
+
+/** @emoji 🖱️ Maps program context-menu specs with app keybinding shortcut enrichment. */
+export function useMapContextMenuSpecs(dispatch: (action: string, args?: Record<string, unknown>) => void) {
+  const keysByActionId = useAppKeybindingsByActionId();
+  return useCallback((specs: readonly ContextMenuItemSpec[]) => mapContextMenuSpecs(specs, dispatch, keysByActionId), [dispatch, keysByActionId]);
+}
+
+//#region 🎥️TutorialOverlayHosts
+/** @emoji 📦️ Resolves a `TutorialAssetSrc` to a value usable as an `<video>`/`<audio>` `src` — `Blob` (a
+ * studio `BlobStore` reference) isn't resolvable from this scope (no blob-store bridge here) and returns
+ * `null` with a console warning; `Url`/`DataUrl` resolve directly. */
+function tutorialAssetSrcToUrl(src: TutorialAssetSrc): string | null {
+  if (src.kind === "url") return src.url;
+  if (src.kind === "dataUrl") return src.data;
+  console.warn("[DEBUG] tutorial blob asset src not resolvable in this scope", src.hash);
+  return null;
+}
+
+/** @emoji 💬️ Self-subscribes to the tutorial clock (see `useTutorialClock`) so only THIS leaf re-renders every frame — never the whole shell — mirroring `TutorialBar`'s own subscription. */
+const TutorialCaptionsHost: React.FC<{ readonly tutorial: TutorialDefinition; readonly clock: TutorialClockPort; readonly captionsOn: boolean; readonly terminology: string; readonly locale: string }> = ({ tutorial, clock, captionsOn, terminology, locale }) => {
+  const timeMs = useTutorialClock(clock);
+  const cue = tutorialCuesBetween(tutorial.tracks.narration, timeMs)[0] ?? null;
+  return <TutorialCaptions text={cue ? resolveManifestLabel(cue.text, terminology, locale) : null} visible={captionsOn} />;
+};
+
+const TUTORIAL_DEFAULT_VIDEO_RECT = { x: 0.72, y: 0.7, width: 0.24, height: 0.24 } as const;
+
+/** @emoji 📹️ Self-subscribes to the tutorial clock; resolves the covering `TutorialVideoCue` (if any) and its source-relative local time. */
+const TutorialVideoOverlayHost: React.FC<{ readonly tutorial: TutorialDefinition; readonly clock: TutorialClockPort; readonly muted: boolean; readonly playing: boolean; readonly rate: number }> = ({
+  tutorial,
+  clock,
+  muted,
+  playing,
+  rate,
+}) => {
+  const timeMs = useTutorialClock(clock);
+  const cue: TutorialVideoCue | null = tutorialCuesBetween(tutorial.tracks.video, timeMs)[0] ?? null;
+  const src = cue ? tutorialAssetSrcToUrl(cue.src) : null;
+  const localTimeMs = cue ? timeMs - cue.at + cue.sourceOffsetMs : 0;
+  return <TutorialVideoOverlay src={src} rect={cue?.rect ?? TUTORIAL_DEFAULT_VIDEO_RECT} muted={muted || (cue?.muted ?? false)} playing={playing} rate={rate} localTimeMs={localTimeMs} />;
+};
+
+/** @emoji 👻️ Self-subscribes to the tutorial clock; resolves the covering `TutorialGestureCue` (if any) and progress (0–1) through it, driving `TutorialGhostPointer` off the PLAYHEAD rather than its own internal clock (unlike the introduction demonstration overlay). */
+const TutorialGhostPointerHost: React.FC<{ readonly tutorial: TutorialDefinition; readonly clock: TutorialClockPort }> = ({ tutorial, clock }) => {
+  const timeMs = useTutorialClock(clock);
+  const cue: TutorialGestureCue | null = tutorialCuesBetween(tutorial.tracks.gestures, timeMs)[0] ?? null;
+  const progress = cue ? Math.min(1, Math.max(0, (timeMs - cue.at) / Math.max(cue.durationMs, 1))) : 0;
+  return <TutorialGhostPointer cue={cue} progress={progress} />;
+};
+//#endregion 🎥️TutorialOverlayHosts
+
+//#region 🎥️TutorialRecorder
+/** @emoji ↔ Field-by-field structural diff of two `TutorialUiSnapshot`s into the sparse `TutorialUiChange`
+ * alphabet — the recorder's UI-diff effect calls this every `ShellState` change while armed. */
+function diffTutorialUiSnapshot(prev: TutorialUiSnapshot, next: TutorialUiSnapshot): TutorialUiChange[] {
+  const changes: TutorialUiChange[] = [];
+  if (prev.activeModeId !== next.activeModeId && next.activeModeId != null) changes.push({ kind: "activeMode", id: next.activeModeId });
+  if (prev.focusedWindowId !== next.focusedWindowId) changes.push({ kind: "focusedWindow", id: next.focusedWindowId });
+  const utilityWindowIds = new Set([...Object.keys(prev.activeUtilityByWindowId), ...Object.keys(next.activeUtilityByWindowId)]);
+  for (const windowId of utilityWindowIds) {
+    if (prev.activeUtilityByWindowId[windowId] !== next.activeUtilityByWindowId[windowId]) changes.push({ kind: "activeUtility", windowId, utilityId: next.activeUtilityByWindowId[windowId] });
+  }
+  if (prev.activeToolId !== next.activeToolId) changes.push({ kind: "activeTool", id: next.activeToolId });
+  if (next.layout && JSON.stringify(prev.layout) !== JSON.stringify(next.layout)) changes.push({ kind: "layout", layout: next.layout });
+  const groups = new Set([...Object.keys(prev.activePanelTabByGroup), ...Object.keys(next.activePanelTabByGroup)]);
+  for (const group of groups) {
+    if (prev.activePanelTabByGroup[group] !== next.activePanelTabByGroup[group]) changes.push({ kind: "panelTab", group, tabId: next.activePanelTabByGroup[group] });
+  }
+  if (next.panelJson != null && prev.panelJson !== next.panelJson) changes.push({ kind: "panelState", panelJson: next.panelJson });
+  if (next.selectionJson != null && prev.selectionJson !== next.selectionJson) changes.push({ kind: "selection", selectionJson: next.selectionJson });
+  if (prev.openDialogId !== next.openDialogId) changes.push({ kind: "dialog", id: next.openDialogId });
+  const prevTree = new Set(prev.expandedTreeIds);
+  const nextTree = new Set(next.expandedTreeIds);
+  for (const id of nextTree) if (!prevTree.has(id)) changes.push({ kind: "treeExpansion", id, expanded: true });
+  for (const id of prevTree) if (!nextTree.has(id)) changes.push({ kind: "treeExpansion", id, expanded: false });
+  if (prev.commandPanelOpen !== next.commandPanelOpen) changes.push({ kind: "commandPanel", open: next.commandPanelOpen });
+  return changes;
+}
+
+/** @emoji 🎥️ Epsilon-equality for two camera poses — the recorder's 10Hz camera sampler skips writing a
+ * new keyframe when the live pose hasn't meaningfully moved since the last sample. */
+function tutorialCameraPoseEquals(a: TutorialCameraState, b: TutorialCameraState): boolean {
+  if (a.kind !== b.kind) return false;
+  if (a.kind === "orbit" && b.kind === "orbit") return a.position.every((value, index) => Math.abs(value - b.position[index]) < 1e-4) && a.target.every((value, index) => Math.abs(value - b.target[index]) < 1e-4);
+  if (a.kind === "canvas" && b.kind === "canvas") return Math.abs(a.x - b.x) < 1e-4 && Math.abs(a.y - b.y) < 1e-4 && Math.abs(a.zoom - b.zoom) < 1e-4;
+  return false;
+}
+
+/** @emoji 🎥️ Captures a live session into a `TutorialDefinition` — a recording IS a `TutorialDefinition`,
+ * so this class simply accumulates a densely-sampled one (see the Rust core doc comment on
+ * `TutorialDefinition`). Deliberately produces events/UI/camera/document tracks only: webcam/mic capture
+ * (`MediaRecorder`) is an explicit, reported scope cut — see the ticket close-out summary — a text-only
+ * recording is still a fully valid, useful `TutorialDefinition` per the Rust model's own optionality
+ * (narration/video tracks default to empty). Document `Edit` operations are NOT captured (that would
+ * require intercepting the plugin's internal vcs operation stream in per-op form, which isn't exposed to
+ * this shell) — also a reported scope cut; UI/camera/events still replay faithfully. */
+export class TutorialRecorder {
+  private readonly startedAtMs: number;
+  private readonly baseUiSnapshot: TutorialUiSnapshot;
+  private readonly baseDocumentJson: string | null;
+  private readonly events: TutorialEvent[] = [];
+  private readonly uiKeyframes: { readonly at: number; readonly sample: { readonly kind: "snapshot"; readonly state: TutorialUiSnapshot } | { readonly kind: "delta"; readonly changes: TutorialUiChange[] } }[] = [];
+  private readonly cameraKeyframes: { readonly at: number; readonly windowId: string; readonly camera: TutorialCameraState; readonly easing: "easeInOut" }[] = [];
+  private readonly chapters: TutorialChapter[] = [];
+  private lastUiSnapshot: TutorialUiSnapshot;
+  private readonly lastCameraByWindow = new Map<string, TutorialCameraState>();
+
+  constructor(baseUiSnapshot: TutorialUiSnapshot, baseDocumentJson: string | null) {
+    this.startedAtMs = performance.now();
+    this.baseUiSnapshot = baseUiSnapshot;
+    this.lastUiSnapshot = baseUiSnapshot;
+    this.baseDocumentJson = baseDocumentJson;
+  }
+
+  private nowMs(): number {
+    return Math.max(0, Math.round(performance.now() - this.startedAtMs));
+  }
+
+  recordEvent(kind: TutorialEvent["kind"]): void {
+    this.events.push({ at: this.nowMs(), kind });
+  }
+
+  recordUiDiff(next: TutorialUiSnapshot): void {
+    const changes = diffTutorialUiSnapshot(this.lastUiSnapshot, next);
+    if (changes.length > 0) this.uiKeyframes.push({ at: this.nowMs(), sample: { kind: "delta", changes } });
+    this.lastUiSnapshot = next;
+  }
+
+  recordSnapshot(state: TutorialUiSnapshot): void {
+    this.uiKeyframes.push({ at: this.nowMs(), sample: { kind: "snapshot", state } });
+    this.lastUiSnapshot = state;
+  }
+
+  sampleCamera(windowId: string, camera: TutorialCameraState): void {
+    const prev = this.lastCameraByWindow.get(windowId);
+    if (prev && tutorialCameraPoseEquals(prev, camera)) return;
+    this.lastCameraByWindow.set(windowId, camera);
+    this.cameraKeyframes.push({ at: this.nowMs(), windowId, camera, easing: "easeInOut" });
+  }
+
+  /** 📖️ `ui.tutorial.addChapter` — marks the current elapsed time as a scrub-bar chapter with an
+   * auto-numbered title (no naming-prompt UI in this scope; a recorded tutorial's authored titles can
+   * always be hand-edited in the downloaded JSON afterward). Synthesizes a `LocalizedLabel` matrix. */
+  addChapter(title?: string | LocalizedLabel): void {
+    const index = this.chapters.length + 1;
+    const rawTitle = title ?? `Chapter ${index}`;
+    this.chapters.push({ id: `chapter-${index}`, at: this.nowMs(), title: synthesizeLocalizedLabel(rawTitle) });
+  }
+
+  build(id: string, title: string | LocalizedLabel, exampleId?: string): TutorialDefinition {
+    const durationMs = Math.max(1000, this.nowMs());
+    return {
+      id,
+      title: synthesizeLocalizedLabel(title),
+      durationMs,
+      chapters: this.chapters,
+      base: { documentJson: this.baseDocumentJson ?? undefined, exampleId, ui: this.baseUiSnapshot, cameras: [] },
+      tracks: { narration: [], video: [], events: this.events, ui: this.uiKeyframes, document: [], camera: this.cameraKeyframes, gestures: [] },
+      recordedAt: new Date().toISOString(),
+    };
+  }
+}
+//#endregion 🎥️TutorialRecorder
+
+//#region 🐚️ShellMount
+/** @emoji 🐚️ Public props for {@link FrameworkOsShell} — the multi-instance-safe entry point. `shellId`,
+ * `storageNamespace`, and `ownsPage` exist so several shells can be mounted on one page: `ownsPage`
+ * gates the handful of behaviors that are legitimately page-global (document title, browser history
+ * sync via `bootFrameworkOs`), `storageNamespace` prefixes this shell's durable storage keys so
+ * co-mounted shells don't share `semio.os.dock`/`ui.chrome.*` state. */
+export interface FrameworkOsShellProps {
+  readonly pluginFilter?: string;
+  readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
+  readonly appId?: string;
+  readonly locks?: ResolvedShellLocks;
+  readonly defaults?: FrameworkOsDefaults;
+  readonly brand?: ShellBrand;
+  readonly shellId?: string;
+  readonly storageNamespace?: string;
+  readonly ownsPage?: boolean;
+  /** 🐚️ Skips the brand/app introduction auto-start (and any brand-owned tutorial's own auto-considered
+   * reveal) for a shell that's mounted but not the one the user is actually looking at — a live
+   * multi-shell page (e.g. the mit-bestand demonstrator's background panes) has no iframe boundary for
+   * the existing `window.self !== window.top` heuristic below to key off, so several shells would
+   * otherwise all auto-play their onboarding at once the moment they boot. Defaults to `false` (existing
+   * single-shell-per-page behavior unchanged). */
+  readonly suppressAutoIntroduction?: boolean;
+}
+
+/** @emoji 🐚️ Resolves the {@link ShellScope.storage} port for a shell mount: ephemeral brands always get
+ * an in-memory port (never durable, regardless of namespace); a namespaced non-ephemeral shell gets a
+ * scoped view over browser storage; a bare non-ephemeral shell (the historical single-app-per-page
+ * case) gets the plain shared browser port. */
+function resolveShellScopeStorage(ephemeral: boolean, storageNamespace: string | undefined): StoragePort {
+  if (ephemeral) return createMemoryStoragePort();
+  const browser = createBrowserStoragePort();
+  return storageNamespace ? createScopedStoragePort(browser, storageNamespace) : browser;
+}
+
+/** @emoji 🐚️ Mounts a `.semio-scope` root (theme/appearance/id scoping lands with later waves) carrying a
+ * {@link ShellScope} — the seam that lets several of these coexist on one page — around the actual shell
+ * implementation in {@link FrameworkOsShellInner}. */
+export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactElement {
+  const { shellId, storageNamespace, ownsPage = false, brand, locks, ...innerProps } = props;
+  const ephemeral = isEphemeralShellBrand(brand);
+  const [scope] = useState<ShellScope>(() => {
+    const storage = resolveShellScopeStorage(ephemeral, storageNamespace);
+    // 🐚️ Resolved synchronously (not in a `useEffect`) so an embedded shell never flashes the wrong
+    // locale's chrome on its first paint, mirroring `initUiLocaleSync`'s reasoning for the page-owning
+    // case. `locks.locale` and any previously-stored preference cover the common cases; a brand's own
+    // `defaults.locale` (not available yet here) still lands moments later via the uiPrefs effect below.
+    const initialLocale = locks?.locale ?? readStoredUiChromeLocale(storage) ?? detectShellLocale(typeof navigator !== "undefined" ? navigator.language : undefined);
+    return createShellScope({ shellId, ownsPage, storage, initialLocale });
+  });
+  // 🐚️ `scope.rootRef` is a stable object (its identity never changes), so a descendant hook that puts
+  // the REF ITSELF in a `useEffect`/`useLayoutEffect` dependency array would never re-fire once the ref
+  // attaches. This state bump forces one guaranteed re-render right after attachment so descendants that
+  // read `scope.rootRef.current` fresh at render time (see `FrameworkOsShellInner`'s
+  // `useElementsSurfaceChrome`/`useCanvasAppearanceSync` calls) pick up the real element instead of
+  // sticking with whatever they saw (usually `null`) on the very first render.
+  const [, bumpAfterRootAttach] = useState(0);
+  const setRoot = useCallback((node: HTMLDivElement | null) => {
+    scope.rootRef.current = node;
+    bumpAfterRootAttach((n) => n + 1);
+  }, [scope]);
+  const setPortalLayer = useCallback((node: HTMLDivElement | null) => {
+    scope.portalLayerRef.current = node;
+  }, [scope]);
+  useEffect(() => () => disposeShellI18nInstance(scope.i18n), [scope]);
+  return (
+    <div ref={setRoot} className="semio-scope" data-shell-id={scope.shellId} style={{ height: "100%", width: "100%", isolation: "isolate" }}>
+      <ShellScopeProvider scope={scope}>
+        <FrameworkOsShellInner {...innerProps} locks={locks} brand={brand} />
+        <div data-semio-portal-layer ref={setPortalLayer} />
+      </ShellScopeProvider>
+    </div>
+  );
+}
+//#endregion 🐚️ShellMount
+
+function FrameworkOsShellInner({
+  pluginFilter,
+  plugins,
+  appId,
+  locks: locksProp,
+  defaults: defaultsProp,
+  brand,
+  suppressAutoIntroduction = false,
+}: {
+  readonly pluginFilter?: string;
+  readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
+  readonly appId?: string;
+  readonly locks?: ResolvedShellLocks;
+  readonly defaults?: FrameworkOsDefaults;
+  readonly brand?: ShellBrand;
+  readonly suppressAutoIntroduction?: boolean;
+}) {
+  const scope = useShellScope();
+  const shellContextMenuTitleLabel = useLabel("ui.surfaceContextMenu.workspace");
+  // 🏠️🧳️ `hostConfig` is the sole piece of per-plugin identity knowledge the shell needs (which app id is
+  // "landing", which is "host") — every controller id / default panel tab derives from the *loaded*
+  // manifest's own `controllerId`/`panelTabs` on those apps below, never from a separate literal.
+  const hostConfig = pluginFilter ? resolvePluginHostConfig(pluginFilter) : undefined;
+  const studioMode = hostConfig !== undefined;
+  const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
+  const locks = locksProp ?? EMPTY_SHELL_LOCKS;
+  const defaults = defaultsProp ?? EMPTY_SHELL_DEFAULTS;
+  const ephemeral = isEphemeralShellBrand(brand);
+  const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks, defaults, storage: scope.storage }));
+  const { loadedPlugins, pluginStatusById, pluginSupervisorById, session, error } = shellState.pluginRuntime;
+  const hostPlugin = useMemo(() => (hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined), [loadedPlugins, hostConfig]);
+  const hostApp = useMemo(() => hostPlugin?.manifest.apps.find((app) => app.id === hostConfig?.hostAppId), [hostPlugin, hostConfig]);
+  const landingApp = useMemo(() => hostPlugin?.manifest.apps.find((app) => app.id === hostConfig?.landingAppId) ?? hostPlugin?.manifest.apps[0], [hostPlugin, hostConfig]);
+  const landingAppId = hostConfig?.landingAppId;
+  const hostAppId = hostConfig?.hostAppId;
+  const hostControllerId = hostApp?.controllerId;
+  const landingControllerId = landingApp?.controllerId;
+  const hostCatalogueTabId = hostApp?.panelTabs[0] ? panelTabKindId(hostApp.panelTabs[0].kind) : undefined;
+  const { windowUiByWindowId, windowEngagementsByWindowId, windowMeasuresByWindowId, toolMeasuresByToolId, panelUiByKey, appLabelsOverlay } = shellState.windowUi;
+  const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
+  const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId, activeToolId } = shellState.actionPane;
+  const { expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
+  const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, mobilePanelVisible, extraWindowInstances, windowTitlesById, windowIconsById } = shellState.layout;
+  const { searchOpen, findOpen, introductionStepIndex, introductionCompletedInteractions, dialog: overlayDialog } = shellState.overlays;
+  const { activeTutorialId, playing: tutorialPlaying, rate: tutorialRate, muted: tutorialMuted, captionsOn: tutorialCaptionsOn, recording: tutorialRecording, deviated: tutorialDeviated } = shellState.tutorial;
+  const { uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft, uiKeybindingOverrides } = shellState.uiPrefs;
+  const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
+  const importSpaceInputRef = useRef<HTMLInputElement>(null);
+  const refreshGenerationRef = useRef(0);
+  const contributionsJsonRef = useRef<string | null>(null);
+  const appRegistrationsJsonRef = useRef<string | null>(null);
+  const spawnedRefreshGenerationRef = useRef(0);
+  const contributorInstancesRef = useRef<Map<string, number>>(new Map());
+  const layoutSeedKeyRef = useRef<string | null>(null);
+  const noExampleResetInstanceIdRef = useRef<number | null>(null);
+  const extraWindowCounterRef = useRef(0);
+  // 🖱️ Shell-level context-menu fallback: opens for any right-click the shell hasn't already claimed
+  // (every existing per-surface `onContextMenu` now calls `stopPropagation()` once it decides to show
+  // its own menu — see the `🖱️ShellContextMenu` region below). Covers window-level declared actions
+  // plus the OS command palette, so every window/background always shows *something*.
+  const [shellContextMenu, setShellContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  // 🪟️ Live extra-window list, updated synchronously on every seed/split/drop — `refreshUi` reads this
+  // instead of the render-closure `extraWindowInstances` so a concurrent action refresh (e.g. boot
+  // `setActiveExample`) that starts after the session-switch refresh wrote extras but before React
+  // re-rendered cannot fetch with `[]` and wipe Top/Perspective bodies to "missing window".
+  const extraWindowInstancesRef = useRef<readonly ExtraWindowInstance[]>([]);
+  extraWindowInstancesRef.current = extraWindowInstances;
+  const setWindowTitle = useCallback((windowId: string, title: string) => {
+    dispatch({ type: "SET_WINDOW_TITLE", windowId, title });
+  }, []);
+  const setWindowIcon = useCallback((windowId: string, iconId: IconName) => {
+    dispatch({ type: "SET_WINDOW_ICON", windowId, iconId });
+  }, []);
+  // 🐢️ Per-instance content-hash cache for the batched `refresh-ui` call, keyed by the same
+  // `pluginId:appId:instanceId` triple as `layoutSeedKeyRef` — cleared on session switch below.
+  const uiRefreshCacheRef = useRef<UiRefreshCache>(new Map());
+  // 🐢️ Same idea for the studio-mode spawned-instance view, keyed by spawned instanceId — cleared when
+  // the spawned instance itself changes (tracked via `spawnedLayoutSeedRef`).
+  const spawnedUiRefreshCacheRef = useRef<UiRefreshCache>(new Map());
+  const spawnedLayoutSeedRef = useRef<string | null>(null);
+  const openSpaceIdRef = useRef<string | null>(null);
+  const openInstanceIdRef = useRef<string | null>(null);
+  const sessionRef = useRef<ActiveSession | null>(null);
+  const uiDevice: ElementsSurfaceDevice = mobile ? "mobile" : uiLayout;
+  const uiTheme: UiTheme = useMemo(() => {
+    if (uiThemeDraft) return uiThemeDraft;
+    const found = builtinUiThemes().find((t) => t.id === uiThemeId) ?? uiCustomThemes[uiThemeId];
+    return found ?? readStoredUiChromeThemeSnapshot(scope.storage) ?? semioTheme();
+  }, [uiThemeId, uiCustomThemes, uiThemeDraft, scope.storage]);
+  const uiDriver: UiDriver = useMemo(() => uiDriverDraft ?? resolveUiDriver(uiDriverId, uiCustomDrivers), [uiDriverId, uiCustomDrivers, uiDriverDraft]);
+  /** 🧵️ Lazily-created worker running `🟦️backbone-🟦️worker.ts` — one per shell instance, reused across `openDocument` calls. */
+  const backboneWorkerRef = useRef<Worker | null>(null);
+  /** 🖋️ Stable per-tab actor id for hub `Hello`/presence frames and operation-origin filtering. */
+  const shellActorIdRef = useRef<string>(`client-${Math.random().toString(36).slice(2)}`);
+  /** 🗂️ Which session/plugin owns each open document id, so incoming worker events route correctly. */
+  const openDocumentSessionsRef = useRef<Map<string, { session: ActiveSession; plugin: PluginWasmHandle }>>(new Map());
+  /** 🐚️ Unregisters this shell's `registerPluginBackboneRoute` entry for each open document id — called
+   * from `closeDocument` and (for whatever is still open) on shell unmount. */
+  const pluginBackboneRouteUnregistersRef = useRef<Map<string, () => void>>(new Map());
+  /** 🐚️ Mirrors `loadedPlugins` for the unmount-cleanup effect below, which needs the latest value at
+   * teardown time without depending on it (a dependency would tear down and re-run on every reload). */
+  const loadedPluginsRef = useRef<readonly LoadedProgramState[]>([]);
+  loadedPluginsRef.current = loadedPlugins;
+  /** 🔌️ The exact (possibly cache-busted `?v=`) module URL each currently-loaded plugin was acquired
+   * at — `LoadedProgramState`/`PluginWasmHandle` carry no URL of their own, but `reloadPlugin`/
+   * `uninstallPlugin` need the OLD url to `evictPluginModule` after swapping in a new lease at a
+   * different url (see the lease pool's key convention in `@semio-tech/framework-core`). */
+  const pluginModuleUrlByIdRef = useRef<Map<string, string>>(new Map());
+  /** 🔌️ Per-pluginId mutual exclusion across `installPlugin`/`reloadPlugin`/`uninstallPlugin` — the
+   * boot effect and the `PluginSource` subscription effect can both request the same pluginId around
+   * mount (e.g. the host plugin already appears in the connect-time `snapshot`), and without this guard
+   * both calls would independently acquire a module lease, race their `UPSERT_LOADED_PLUGIN` dispatches,
+   * and leak whichever lease lost the race (nothing left holding a reference to release it). */
+  const pluginOpInFlightRef = useRef<Set<string>>(new Set());
+
+  const ensureBackboneWorker = useCallback((): Worker => {
+    if (backboneWorkerRef.current) return backboneWorkerRef.current;
+    const worker = new Worker(new URL("../../product/os/core/js/🟦️backbone-🟦️worker.ts", import.meta.url), { type: "module" });
+    worker.onmessage = (messageEvent: MessageEvent<BackboneWorkerResponse | { readonly wire: Uint8Array }>) => {
+      const message = "wire" in messageEvent.data ? decodeBackboneWorkerResponse(messageEvent.data.wire) : messageEvent.data;
+      if (message.kind !== "event") return;
+      const entry = openDocumentSessionsRef.current.get(message.documentId);
+      if (!entry) return;
+      const { event } = message;
+      if (event.kind === "status") {
+        dispatch({ type: "SET_SYNC_STATUS_FOR_DOCUMENT", documentId: message.documentId, status: { persisted: event.persisted, pendingOperations: event.pendingOperations, remote: event.remote } });
+      } else if (event.kind === "presence") {
+        const peersJson = JSON.stringify(event.peers.map((peer) => ({ clientId: peer.actor, name: peer.label ?? peer.actor, selectionCount: 0 })));
+        dispatch({
+          type: "SET_SESSION",
+          value: (current) => (current && current.instanceId === entry.session.instanceId ? { ...current, viewState: { ...current.viewState, presencePeersJson: peersJson } } : current),
+        });
+      } else if (event.kind === "remoteOperations" && entry.plugin.applyOperations) {
+        void entry.plugin.applyOperations(entry.session.instanceId, encodeOperationEnvelopesPack(event.envelopes));
+        const actorUri = `actor://${message.documentId}`;
+        postPluginBackboneInbound(entry.session.pluginId, actorUri, [
+          encodeBackboneMessage({
+            kind: "operations",
+            envelopes: event.envelopes.map((envelope, index) =>
+              operationEnvelopeToWire(envelope, { actor: 0, physical_ms: Date.now(), logical: index + 1 }),
+            ),
+          }),
+        ]);
+      } else if (event.kind === "snapshotReplaced" && entry.plugin.loadAppDocument) {
+        const packBytes = new Uint8Array(event.pack);
+        let documentJson: string;
+        try {
+          documentJson = JSON.stringify(decodePackValue(packBytes));
+        } catch {
+          documentJson = JSON.stringify({ pack: Array.from(event.pack), spr: Array.from(event.spr) });
+        }
+        void entry.plugin.loadAppDocument(entry.session.instanceId, documentJson);
+        const actorUri = `actor://${message.documentId}`;
+        postPluginBackboneInbound(entry.session.pluginId, actorUri, [
+          encodeBackboneMessage({ kind: "snapshot", pack: packBytes, spr: new Uint8Array(event.spr) }),
+        ]);
+      } else if (event.kind === "conflict") {
+        console.warn("[os-shell] sync conflict", message.documentId, event.message);
+      }
+    };
+    backboneWorkerRef.current = worker;
+    return worker;
+  }, []);
+
+  // 🐚️ Only a page-owning studio shell syncs to the real browser URL bar/history — an embedded shell
+  // sharing the page with others must not fight them over `window.history`.
+  const { uri: shellUri, canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, navigate: navigateHistory } = useUIHistory("/", studioMode && scope.ownsPage);
+  const shellRoute = useMemo(() => parseShellRoute(shellUri.split("?")[0] ?? "/"), [shellUri]);
+
+  // 🐚️ `scope.storage` (not a separately-resolved ephemeral/browser port here) — two shells sharing a
+  // page must not clobber each other's panel layout/dock state through an unnamespaced localStorage key.
+  const shellStorage = scope.storage;
+  const namedLayoutStore = useMemo(() => new NamedLayoutStore(session?.app.id ?? "framework-os", shellStorage), [session?.app.id, shellStorage]);
+  const dockLayoutStore = useMemo(() => new DockLayoutStore(shellStorage, session?.app.id), [session?.app.id, shellStorage]);
+  const dockUiStateStore = useMemo(() => new DockUiStateStore(shellStorage, session?.app.id), [session?.app.id, shellStorage]);
+
+  const registry = useMemo(() => {
+    const expanded = expandPluginRegistry(plugins, pluginFilter ? resolvePluginRegistryId(pluginFilter) : undefined, studioMode);
+    if (studioMode) return expanded;
+    return pluginFilter ? expanded : plugins;
+  }, [pluginFilter, plugins, studioMode]);
+
+  //#region 🔌️PluginRuntime
+  /** 🔌️ The one registry entry the shell must have loaded before it can create a session — the studio
+   * host plugin (`hostConfig.pluginId`) in studio mode, otherwise the resolved single-app variant.
+   * Every other registry entry streams in independently and is never fatal to boot. */
+  const primaryPluginId = useMemo(() => hostConfig?.pluginId ?? (pluginFilter ? resolvePluginRegistryId(pluginFilter) : undefined) ?? registry[0]?.pluginId, [hostConfig, pluginFilter, registry]);
+  const shellPluginCanvasStatus = useMemo((): UiStatus | undefined => {
+    if (!session) return "loading";
+    if (!primaryPluginId) return undefined;
+    const pluginStatus = pluginStatusById[primaryPluginId];
+    if (pluginStatus === "installing" || pluginStatus === "reloading") return "loading";
+    return undefined;
+  }, [session, primaryPluginId, pluginStatusById]);
+  /** 🔌️ Dev-only today (`createDevPluginSource`) — a future hub-backed source implements the same
+   * `PluginSource` contract and swaps in here with no other change to the runtime below. */
+  const pluginSource: PluginSource = useMemo(() => createDevPluginSource(registry), [registry]);
+
+  /** 🔌️ Recreates the primary session instance for `handle` — the exact `hostConfig`/non-studio
+   * app-resolution logic the boot effect used to run once inline, now shared with `reloadPlugin` so a
+   * hot-swap of the session-owning plugin re-establishes the session the same way boot does. */
+  const establishPrimarySession = useCallback(
+    async (handle: PluginWasmHandle) => {
+      const manifest = handle.manifest;
+      if (hostConfig) {
+        const sApp = manifest.apps.find((app) => app.id === hostConfig.landingAppId) ?? manifest.apps[0];
+        if (!sApp) throw new Error("host program missing landing app");
+        // 🪦️ `manifest.workflows` (the source `buildSpacePrograms` used to read) was deleted from the
+        // Rust `PluginManifest` — the studio catalogue is now registry-driven (see `SpaceCommand::SetAppRegistrations`),
+        // so `SpacePanelState.programs` is permanently empty; `spawnedApps`/`activePanelTab`/`activeSpawnedId` are
+        // still real, live state, so `SpacePanelState` itself stays.
+        const panelState = buildSpacePanelState([], []);
+        const instanceId = await handle.createApp(sApp.id);
+        const viewState: ViewState = { activeModeId: sApp.defaultModeId ?? sApp.modes[0]?.id, panelJson: panelJsonFromState(panelState) };
+        // 🪟️ Seed default-layout panes (Top/Perspective) before any effect can fire actions — otherwise
+        // boot `setActiveExample` races the session-switch refresh and wipes pane bodies.
+        const seeded = applyFrameworkLayoutSeed(sApp.defaultLayout, sApp.windowKinds, EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
+        extraWindowInstancesRef.current = seeded.extraInstances;
+        extraWindowCounterRef.current = seeded.extraInstances.length;
+        dispatch({ type: "SET_SESSION", value: { pluginId: handle.pluginId, instanceId, app: sApp, viewState } });
+        dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+        dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+        dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+        dispatch({ type: "SET_ERROR", value: null });
+        return;
+      }
+      const primaryApp = appId
+        ? (() => {
+            const found = manifest.apps.find((app) => app.id === appId);
+            if (!found) throw new Error(`appId "${appId}" does not resolve to any app in the loaded program manifest`);
+            return found;
+          })()
+        : (() => {
+            const defaultAppId = pluginFilter ? resolvePlaygroundDefaultAppId(pluginFilter) : undefined;
+            return (defaultAppId ? manifest.apps.find((app) => app.id === defaultAppId) : undefined) ?? manifest.apps[0];
+          })();
+      if (!primaryApp) return;
+      const instanceId = await handle.createApp(primaryApp.id);
+      const seeded = applyFrameworkLayoutSeed(primaryApp.defaultLayout, primaryApp.windowKinds, EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
+      extraWindowInstancesRef.current = seeded.extraInstances;
+      extraWindowCounterRef.current = seeded.extraInstances.length;
+      dispatch({
+        type: "SET_SESSION",
+        value: { pluginId: handle.pluginId, instanceId, app: primaryApp, viewState: { activeModeId: primaryApp.defaultModeId ?? primaryApp.modes[0]?.id } },
+      });
+      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+      dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+      dispatch({ type: "SET_ERROR", value: null });
+    },
+    [hostConfig, appId, pluginFilter, uiTerminology, uiLocale],
+  );
+
+  /** 🔌️ Installs a registry entry that isn't loaded yet: acquires its module (worker-backed, refcounted
+   * — see `acquirePluginModule`), upserts it into `loadedPlugins`, and — if this is the primary plugin
+   * and no session exists yet — establishes the session. Shared by the boot effect (primary plugin
+   * only) and the `PluginSource` subscription effect (every other plugin, as its build lands). */
+  const installPlugin = useCallback(
+    async (pluginId: string, rebuiltAt?: number): Promise<PluginInstallOutcome> => {
+      if (pluginOpInFlightRef.current.has(pluginId)) return "in-flight";
+      if (loadedPluginsRef.current.some((entry) => entry.handle.pluginId === pluginId)) return "already-loaded";
+      const entry = registry.find((candidate) => candidate.pluginId === pluginId);
+      if (!entry) return "missing-registry";
+      pluginOpInFlightRef.current.add(pluginId);
+      dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "installing" });
+      try {
+        const moduleUrl = pluginSource.moduleUrl(pluginId, rebuiltAt);
+        const handle = await loadPluginModuleResilient(pluginId, moduleUrl);
+        if (!handle) {
+          dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "failed" });
+          dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "crashed" });
+          return "failed";
+        }
+        pluginModuleUrlByIdRef.current.set(pluginId, moduleUrl);
+        dispatch({ type: "UPSERT_LOADED_PLUGIN", value: { handle, manifest: handle.manifest } });
+        dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
+        dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "loaded" });
+        if (pluginId === primaryPluginId && !sessionRef.current) {
+          try {
+            await establishPrimarySession(handle);
+            dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "running" });
+          } catch (bootError) {
+            console.error("[DEBUG] framework os boot failed", bootError);
+            dispatch({ type: "SET_ERROR", value: bootError instanceof Error ? bootError.message : String(bootError) });
+            return "failed";
+          }
+        }
+        return "loaded";
+      } finally {
+        pluginOpInFlightRef.current.delete(pluginId);
+      }
+    },
+    [registry, pluginSource, primaryPluginId, establishPrimarySession],
+  );
+
+  /** 🔌️ Hot-swaps an already-loaded plugin to a newly built module — mirrors the os-core kernel's
+   * `PluginHost::hot_swap_plugin` contract (validate → destroy affected instances → swap → recreate the
+   * session if it was this plugin's → release the old module) without inventing a separate one:
+   * acquires the new module BEFORE tearing anything down (the old handle keeps serving concurrent
+   * traffic during the swap), validates the new manifest still declares apps (and, if this plugin owns
+   * the active session, still declares the session's app id), then only commits. A validation failure
+   * disposes the new lease and leaves the old plugin exactly as it was — nothing destroyed, status back
+   * to `"loaded"`. */
+  const reloadPlugin = useCallback(
+    async (pluginId: string, rebuiltAt?: number) => {
+      if (pluginOpInFlightRef.current.has(pluginId)) return;
+      const current = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === pluginId);
+      if (!current) return installPlugin(pluginId, rebuiltAt);
+      const oldModuleUrl = pluginModuleUrlByIdRef.current.get(pluginId);
+      pluginOpInFlightRef.current.add(pluginId);
+      dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "reloading" });
+      dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "restarting" });
+      let newHandle: PluginWasmHandle | null = null;
+      try {
+        const moduleUrl = pluginSource.moduleUrl(pluginId, rebuiltAt);
+        newHandle = await loadPluginModuleResilient(pluginId, moduleUrl);
+        if (!newHandle) throw new Error(`program ${pluginId} failed to reload`);
+        if (newHandle.manifest.apps.length === 0) throw new Error(`program ${pluginId} reload declares no apps`);
+        const activeSession = sessionRef.current;
+        const ownsSession = activeSession?.pluginId === pluginId;
+        if (ownsSession && activeSession && !newHandle.manifest.apps.some((app) => app.id === activeSession.app.id)) {
+          throw new Error(`program ${pluginId} reload dropped the active session's app "${activeSession.app.id}"`);
+        }
+
+        const oldAppIds = new Set(current.manifest.apps.map((app) => app.id));
+        const newAppIds = new Set(newHandle.manifest.apps.map((app) => app.id));
+        const hotSwapEvent: ProgramHotSwapEvent = {
+          pluginId,
+          version: newHandle.manifest.version,
+          addedApps: [...newAppIds].filter((id) => !oldAppIds.has(id)),
+          removedApps: [...oldAppIds].filter((id) => !newAppIds.has(id)),
+        };
+        console.log(`[DEBUG] hot-swap ${pluginId}`, hotSwapEvent);
+
+        // 🪦️ Destroy this plugin's live instances under the OLD handle before swapping — the primary
+        // session instance (if owned), every studio-spawned instance, and any external-slot contributor
+        // instance. Mirrors the shell-unmount teardown effect, scoped to one pluginId instead of every
+        // loaded plugin.
+        if (ownsSession && activeSession) {
+          await current.handle.destroyApp(activeSession.instanceId).catch(() => {});
+        }
+        for (const spawned of spawnedAppsRef.current.filter((entry) => entry.pluginId === pluginId)) {
+          await current.handle.destroyApp(spawned.instanceId).catch(() => {});
+        }
+        const contributorInstanceId = contributorInstancesRef.current.get(pluginId);
+        if (contributorInstanceId != null) {
+          await current.handle.destroyApp(contributorInstanceId).catch(() => {});
+          contributorInstancesRef.current.delete(pluginId);
+        }
+        if (studioMode && activeSession) {
+          const currentPanel = parsePanelState(activeSession.viewState);
+          const dropped = currentPanel?.spawnedApps.filter((entry) => entry.pluginId === pluginId) ?? [];
+          if (currentPanel && dropped.length > 0) {
+            console.log(
+              `[DEBUG] hot-swap ${pluginId} dropped ${dropped.length} spawned instance(s)`,
+              dropped.map((entry) => entry.id),
+            );
+            const survivingSpawned = currentPanel.spawnedApps.filter((entry) => entry.pluginId !== pluginId);
+            const activeSpawnedId = currentPanel.activeSpawnedId && dropped.some((entry) => entry.id === currentPanel.activeSpawnedId) ? undefined : currentPanel.activeSpawnedId;
+            const nextPanel = { ...currentPanel, spawnedApps: survivingSpawned, activeSpawnedId };
+            dispatch({
+              type: "SET_SESSION",
+              value: (nextSession) => (nextSession ? { ...nextSession, viewState: { ...nextSession.viewState, panelJson: panelJsonFromState(nextPanel) } } : nextSession),
+            });
+          }
+        }
+
+        pluginModuleUrlByIdRef.current.set(pluginId, moduleUrl);
+        dispatch({ type: "UPSERT_LOADED_PLUGIN", value: { handle: newHandle, manifest: newHandle.manifest } });
+        dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
+        dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: ownsSession ? "running" : "loaded" });
+
+        if (ownsSession) await establishPrimarySession(newHandle);
+
+        current.handle.dispose();
+        if (oldModuleUrl) evictPluginModule(oldModuleUrl);
+      } catch (error) {
+        console.warn(`[DEBUG] hot-swap rolled back for ${pluginId}`, error);
+        newHandle?.dispose();
+        dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
+        dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "crashed" });
+      } finally {
+        pluginOpInFlightRef.current.delete(pluginId);
+      }
+    },
+    [installPlugin, establishPrimarySession, studioMode, pluginSource],
+  );
+
+  /** 🔌️ Removes an already-loaded plugin: refuses the host/primary plugin and whichever plugin owns the
+   * active session (there is nothing to fall back to), otherwise destroys its live instances the same
+   * way `reloadPlugin` does, drops it from `loadedPlugins`, and evicts its module lease immediately
+   * (rather than the pool's normal 30s linger — freeing it right away is the point of an explicit
+   * uninstall). */
+  const uninstallPlugin = useCallback(
+    async (pluginId: string) => {
+      if (pluginOpInFlightRef.current.has(pluginId)) return;
+      const current = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === pluginId);
+      if (!current) return;
+      if (pluginId === primaryPluginId) {
+        console.warn(`[DEBUG] refusing to uninstall the host/primary plugin: ${pluginId}`);
+        return;
+      }
+      if (sessionRef.current?.pluginId === pluginId) {
+        console.warn(`[DEBUG] refusing to uninstall the active session's plugin: ${pluginId}`);
+        return;
+      }
+      pluginOpInFlightRef.current.add(pluginId);
+      try {
+        for (const spawned of spawnedAppsRef.current.filter((entry) => entry.pluginId === pluginId)) {
+          await current.handle.destroyApp(spawned.instanceId).catch(() => {});
+        }
+        const contributorInstanceId = contributorInstancesRef.current.get(pluginId);
+        if (contributorInstanceId != null) {
+          await current.handle.destroyApp(contributorInstanceId).catch(() => {});
+          contributorInstancesRef.current.delete(pluginId);
+        }
+        if (studioMode && sessionRef.current) {
+          const activeSession = sessionRef.current;
+          const currentPanel = parsePanelState(activeSession.viewState);
+          const dropped = currentPanel?.spawnedApps.filter((entry) => entry.pluginId === pluginId) ?? [];
+          if (currentPanel && dropped.length > 0) {
+            const survivingSpawned = currentPanel.spawnedApps.filter((entry) => entry.pluginId !== pluginId);
+            const activeSpawnedId = currentPanel.activeSpawnedId && dropped.some((entry) => entry.id === currentPanel.activeSpawnedId) ? undefined : currentPanel.activeSpawnedId;
+            const nextPanel = { ...currentPanel, spawnedApps: survivingSpawned, activeSpawnedId };
+            dispatch({
+              type: "SET_SESSION",
+              value: (nextSession) => (nextSession ? { ...nextSession, viewState: { ...nextSession.viewState, panelJson: panelJsonFromState(nextPanel) } } : nextSession),
+            });
+          }
+        }
+        dispatch({ type: "REMOVE_LOADED_PLUGIN", pluginId });
+        dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "available" });
+        current.handle.dispose();
+        const moduleUrl = pluginModuleUrlByIdRef.current.get(pluginId);
+        pluginModuleUrlByIdRef.current.delete(pluginId);
+        if (moduleUrl) evictPluginModule(moduleUrl);
+      } finally {
+        pluginOpInFlightRef.current.delete(pluginId);
+      }
+    },
+    [primaryPluginId, studioMode],
+  );
+  //#endregion 🔌️PluginRuntime
+
+  // 🐢️ Memoized on the raw `panelJson` string (not `session` object identity, which churns every
+  // action) so a `session` refresh that leaves `panelJson` untouched reuses the same parsed `panel`
+  // object — a prerequisite for any downstream `useMemo`/`React.memo` keyed on `panel` to bail.
+  const panel = useMemo(() => (session ? parsePanelState(session.viewState) : null), [session?.viewState.panelJson]);
+  /** 🐚️ Mirrors `panel?.spawnedApps` for the unmount-cleanup effect below — same rationale as
+   * `loadedPluginsRef`: needs the latest value at teardown time without depending on it. */
+  const spawnedAppsRef = useRef<readonly SpawnedAppEntry[]>([]);
+  spawnedAppsRef.current = panel?.spawnedApps ?? [];
+  const activeSpawnedEntry = panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
+  const activeAppTitle = appDocumentLabel(activeSpawnedEntry ? resolveDocumentByAppId(loadedPlugins, activeSpawnedEntry.appId, activeSpawnedEntry.document, uiTerminology) : session ? resolveAppDocument(session.app, uiTerminology) : []);
+
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+
+  // 🎓️ A brand-owned introduction fully replaces the app's own (already localized, rendered verbatim);
+  // its first-run-seen flag is brand-scoped so the branded tour plays even on a device that saw the
+  // unbranded one. Brands with `replayIntroductionOnLoad` skip persistence and auto-start every load.
+  const activeIntroduction = brand?.introduction ?? session?.app.introduction;
+  const introductionSeenKey = session ? (brand ? `${brand.id}:${session.app.id}` : session.app.id) : "";
+  const replayIntroductionOnLoad = shouldReplayIntroductionOnLoad(brand);
+  const persistIntroductionSeen = shouldPersistIntroductionSeen(brand);
+  const activeIntroductionRef = useRef(activeIntroduction);
+  activeIntroductionRef.current = activeIntroduction;
+
+  // 🎓️ Auto-starts an app's introduction the first time it launches on this device (or every load when
+  // the brand opts in); replaying stays available afterward via the shell-owned Introduce App command.
+  // 🎥️ Never auto-starts while a tutorial is active (mutual exclusivity) — `activeTutorialId` is declared
+  // just below (the TutorialOrchestration block's state resolution); read via `shellState.tutorial`
+  // directly here rather than the not-yet-declared local to avoid a definition-order dependency.
+  useEffect(() => {
+    if (!session || !activeIntroduction || shellState.tutorial.activeTutorialId != null) return;
+    if (typeof window !== "undefined" && window.self !== window.top) return;
+    if (suppressAutoIntroduction) return;
+    if (!replayIntroductionOnLoad && readStoredIntroductionSeen(introductionSeenKey)) return;
+    dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
+  }, [session?.app.id, activeIntroduction, introductionSeenKey, replayIntroductionOnLoad, shellState.tutorial.activeTutorialId, suppressAutoIntroduction]);
+
+  // 🎥️ Zero per-app work: any app/brand that declares `tutorials` gets shell support automatically.
+  // Brand-owned tutorials are shown ALONGSIDE the app's own (never replacing them, unlike `introduction`).
+  const activeTutorials = useMemo((): readonly TutorialDefinition[] => [...(brand?.tutorials ?? []), ...(session?.app.tutorials ?? [])], [brand?.tutorials, session?.app.tutorials]);
+  /** ⏺️ The recorder is dev/studio-only — Vite always defines `import.meta.env.DEV`; guarded for non-Vite (e.g. `bun test`) evaluation. */
+  const tutorialRecorderAvailable = useMemo(() => {
+    try {
+      return Boolean((import.meta as unknown as { readonly env?: { readonly DEV?: boolean } }).env?.DEV);
+    } catch {
+      return false;
+    }
+  }, []);
+
+  // 🧰️ Refs so `refreshUi`/`onAction`/`applyHostEffects` can read the current host-owned active utility and
+  // active window without re-creating those callbacks on every utility switch.
+  const activeUtilityByWindowIdRef = useRef(activeUtilityByWindowId);
+  activeUtilityByWindowIdRef.current = activeUtilityByWindowId;
+  const activeToolIdRef = useRef(activeToolId);
+  activeToolIdRef.current = activeToolId;
+  /** 🧰️ Dispatch + sync the ref immediately — `refreshUi` reads the ref before the next render, so a
+   * bare `dispatch(SET_ACTIVE_UTILITY)` alone leaves the map stale and the gumball never appears. */
+  const setActiveUtilityForWindow = useCallback((windowId: string, utilityId: string | null) => {
+    activeUtilityByWindowIdRef.current = { ...activeUtilityByWindowIdRef.current, [windowId]: utilityId };
+    dispatch({ type: "SET_ACTIVE_UTILITY", windowId, utilityId });
+  }, []);
+  /** 🧰️ Clear every window's utility in the ref + store at once (tool/utility mutual exclusion). */
+  const clearAllWindowUtilities = useCallback(() => {
+    const next: Record<string, string | null> = { ...activeUtilityByWindowIdRef.current };
+    for (const windowId of Object.keys(next)) {
+      if (next[windowId]) {
+        next[windowId] = null;
+        dispatch({ type: "SET_ACTIVE_UTILITY", windowId, utilityId: null });
+      }
+    }
+    activeUtilityByWindowIdRef.current = next;
+  }, []);
+  const toolMeasuresByToolIdRef = useRef(toolMeasuresByToolId);
+  toolMeasuresByToolIdRef.current = toolMeasuresByToolId;
+  const activeWindowIdRef = useRef(activeWindowId);
+  activeWindowIdRef.current = activeWindowId;
+  const actionPaneExpandedByWindowIdRef = useRef(actionPaneExpandedByWindowId);
+  actionPaneExpandedByWindowIdRef.current = actionPaneExpandedByWindowId;
+  const actionPaneStagedArgsByKeyRef = useRef(actionPaneStagedArgsByKey);
+  actionPaneStagedArgsByKeyRef.current = actionPaneStagedArgsByKey;
+  const introductionStepIndexRef = useRef(introductionStepIndex);
+  introductionStepIndexRef.current = introductionStepIndex;
+  const introductionCompletedInteractionsRef = useRef(introductionCompletedInteractions);
+  introductionCompletedInteractionsRef.current = introductionCompletedInteractions;
+
+  // 🎥️ Forward-declared refs so `onAction` (defined below, before the full tutorial orchestration further
+  // down this component) can shell-intercept `START_TUTORIAL_ACTION_ID`/`RECORD_TUTORIAL_ACTION_ID`
+  // without a definition-order cycle — mirrors the `onActionRef` pattern used the other way around.
+  // Populated by the TutorialOrchestration block's effect once the real callbacks exist.
+  const startTutorialRef = useRef<(tutorialId: string) => void>(() => {});
+  const stopTutorialRef = useRef<() => void>(() => {});
+  const toggleTutorialRecordingRef = useRef<() => void>(() => {});
+  /** 🧲️ True for the duration of any director/seek/converge-driven dispatch — `onAction`'s deviation
+   * check below skips setting `deviated`/auto-pausing for anything stamped while this is true, mirroring
+   * how the introduction mechanism's own interception distinguishes shell-originated from user-originated
+   * activity. Never read during render, only inside event callbacks — a plain mutable ref is correct. */
+  const tutorialDrivenRef = useRef(false);
+  const tutorialPlayingRef = useRef(tutorialPlaying);
+  tutorialPlayingRef.current = tutorialPlaying;
+  const tutorialRecordingRef = useRef(tutorialRecording);
+  tutorialRecordingRef.current = tutorialRecording;
+  /** ⏺️ Non-null while armed — mutated by `toggleTutorialRecording` (defined in the TutorialOrchestration block below), read/appended-to by `onAction`'s recorder tap right below. */
+  const tutorialRecorderRef = useRef<TutorialRecorder | null>(null);
+  const shellStateRef = useRef(shellState);
+  shellStateRef.current = shellState;
+
+  /** 🎓️ Ends the active introduction — persists the seen flag when configured, and on successful
+   * completion (Done / last interaction) fires the tour-finale {@link celebrateAllElements} stamp
+   * across every mounted UI element. Skip/escape passes `completed: false` and does not celebrate. */
+  const dismissIntroduction = useCallback(
+    (completed: boolean) => {
+      if (completed && scope.rootRef.current) celebrateAllElements(CELEBRATE_STAMP_DURATION_MS, scope.rootRef.current);
+      dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
+      if (persistIntroductionSeen) writeStoredIntroductionSeen(introductionSeenKey);
+    },
+    [introductionSeenKey, persistIntroductionSeen],
+  );
+
+  /** 🎓️ Shared step-complete path: fires once every interaction-gated step's `interactions` are all done
+   * (via `completeIntroductionInteraction` below), celebrating `introduce` on top of each interaction's
+   * own celebration, then advances or finishes the tour. Finishing the last step celebrates every UI
+   * element via {@link dismissIntroduction}(true) instead of only the introduce target. `celebrateOverride`
+   * (threaded through from `completeIntroductionInteraction`) narrows this to the one element responsible
+   * for the just-completed interaction — e.g. the specific 3D window pane that was orbited — instead of
+   * every element aliased to the step's `introduce` kind (every open pane of that window kind). */
+  const advanceIntroductionByDoing = useCallback(
+    (celebrateOverride?: string) => {
+      const stepIndex = introductionStepIndexRef.current;
+      const introduction = activeIntroductionRef.current;
+      if (stepIndex == null || !introduction) return;
+      const step = introduction.steps[stepIndex];
+      if (stepIndex >= introduction.steps.length - 1) {
+        dismissIntroduction(true);
+        return;
+      }
+      const celebrateId = celebrateOverride ?? step?.introduce;
+      if (step && (step.interactions ?? []).length > 0 && celebrateId && scope.rootRef.current) celebrateElements(elementIdSelector(celebrateId), CELEBRATE_STAMP_DURATION_MS, scope.rootRef.current);
+      dispatch({ type: "SET_INTRODUCTION_STEP", value: stepIndex + 1 });
+    },
+    [dismissIntroduction],
+  );
+
+  /** ✅️ Completes the first not-yet-done interaction of the active step matching `matches` (respecting
+   * `step.ordered` — only the next in-order interaction may complete), celebrates its target element, and
+   * advances the step once every interaction is done. Mirrors the wgpu shell's
+   * `chrome_tour_complete_interaction`. `celebrateOverride` — passed by callers that know exactly which
+   * DOM element caused the completion (e.g. the gesture intercept knows the one window pane that was
+   * actually orbited) — takes precedence over `interaction.celebrate ?? step.introduce`. Without it, a
+   * window-kind `introduce`/`celebrate` id would celebrate every pane aliased to that kind, not just the
+   * one that completed the interaction. */
+  const completeIntroductionInteraction = useCallback(
+    (matches: (interaction: IntroductionInteraction) => boolean, celebrateOverride?: string) => {
+      const stepIndex = introductionStepIndexRef.current;
+      const introduction = activeIntroductionRef.current;
+      if (stepIndex == null || !introduction) return;
+      const step = introduction.steps[stepIndex];
+      if (!step || (step.interactions ?? []).length === 0) return;
+      const completed = introductionCompletedInteractionsRef.current;
+      const interactions = step.interactions ?? [];
+      const index = interactions.findIndex((interaction, i) => !completed.includes(i) && matches(interaction));
+      if (index < 0) return;
+      if (step.ordered && index !== completed.length) return;
+      const celebrateId = celebrateOverride ?? interactions[index].celebrate ?? step.introduce;
+      if (celebrateId && scope.rootRef.current) celebrateElements(elementIdSelector(celebrateId), CELEBRATE_STAMP_DURATION_MS, scope.rootRef.current);
+      introductionCompletedInteractionsRef.current = [...completed, index];
+      dispatch({ type: "COMPLETE_INTRODUCTION_INTERACTION", index });
+      if (introductionCompletedInteractionsRef.current.length >= interactions.length) advanceIntroductionByDoing(celebrateOverride);
+    },
+    [advanceIntroductionByDoing],
+  );
+  // 🎛️ So the command-category leaves' lazily-resolved tree content (built once per resolved-commands
+  // change, not per keystroke — see `buildCommandCategoryTabs`) can read the latest expand/staged-arg
+  // state without becoming a `defaultDock` memo dependency, which would otherwise persist-write the dock
+  // skeleton on every keystroke while staging a command argument.
+  const expandedCommandIdRef = useRef(expandedCommandId);
+  expandedCommandIdRef.current = expandedCommandId;
+  const commandStagedArgsByCommandIdRef = useRef(commandStagedArgsByCommandId);
+  commandStagedArgsByCommandIdRef.current = commandStagedArgsByCommandId;
+
+  /** 🛠️ Overlays the mode-level host-owned `activeToolId` onto a view state at plugin-call time —
+   * mirrors `injectActiveUtility` but is windowless (a tool is scoped to the active mode, not a window). */
+  const injectActiveTool = useCallback((viewState: ViewState): ViewState => {
+    const toolId = activeToolIdRef.current ?? undefined;
+    return viewState.activeToolId === toolId ? viewState : { ...viewState, activeToolId: toolId };
+  }, []);
+
+  /** 🧰️ Overlays the active window's host-owned `activeUtilityId` (and the mode's `activeToolId`) onto a view state at plugin-call time. */
+  const injectActiveUtility = useCallback((viewState: ViewState, windowId?: string | null): ViewState => {
+    const key = windowId ?? activeWindowIdRef.current;
+    const utilityId = key ? (activeUtilityByWindowIdRef.current[key] ?? undefined) : undefined;
+    const withUtility = viewState.activeUtilityId === utilityId ? viewState : { ...viewState, activeUtilityId: utilityId };
+    return injectActiveTool(withUtility);
+  }, [injectActiveTool]);
+
+  useEffect(() => {
+    dispatch({ type: "SET_SYNC_BACKBONE_URI", value: null });
+    dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
+  }, [panel?.activeSpawnedId, session, studioMode]);
+
+  /** 🐚️ The relay a document's `registerPluginBackboneRoute` entry uses — forwards a plugin's outbound
+   * backbone bytes into THIS shell's own backbone worker. Registered per open document (in
+   * `openDocument`/`closeDocument` below) rather than once for the whole shell: the old single
+   * page-global relay slot (`setPluginBackboneOutboundRelay`) meant a second mounted shell silently
+   * stole every document's outbound routing, then severed it entirely on that shell's unmount. */
+  const relayPluginBackboneMessage = useCallback((uri: string, messageBytes: Uint8Array) => {
+    const documentId = uri.startsWith("actor://") ? uri.slice("actor://".length) : null;
+    if (!documentId) return;
+    const worker = backboneWorkerRef.current;
+    if (!worker) return;
+    let actorMessage: DocumentActorMsg;
+    try {
+      const parsed = decodeBackboneMessage(messageBytes);
+      if (parsed.kind === "operations") {
+        actorMessage = {
+          kind: "localOperations",
+          envelopes: parsed.envelopes.map((envelope) => operationEnvelopeFromWire(envelope)),
+        };
+      } else if (parsed.kind === "snapshot") {
+        actorMessage = { kind: "localSnapshot", pack: Array.from(parsed.pack), spr: Array.from(parsed.spr) };
+      } else {
+        return;
+      }
+    } catch {
+      return;
+    }
+    const request: BackboneWorkerRequest = { kind: "send", documentId, message: actorMessage };
+    worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
+  }, []);
+
+  useEffect(() => {
+    const worker = backboneWorkerRef.current;
+    return () => worker?.terminate();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      for (const unregister of pluginBackboneRouteUnregistersRef.current.values()) unregister();
+      pluginBackboneRouteUnregistersRef.current.clear();
+      const primary = sessionRef.current;
+      if (primary) {
+        const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === primary.pluginId)?.handle;
+        void plugin?.destroyApp(primary.instanceId).catch(() => {});
+      }
+      // 🪶️ Closes the previously-documented Wave-1 gap: studio-mode spawned apps (`panel.spawnedApps`)
+      // and external-slot contributor instances (`contributorInstancesRef`) each hold a live plugin
+      // instance too — leaving them running past shell unmount was pure leaked memory (see
+      // REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT). Best-effort: an instance the guest already dropped,
+      // or whose plugin already disposed, just rejects harmlessly via the same `.catch(() => {})`
+      // pattern the primary session's own destroy already used above.
+      for (const spawned of spawnedAppsRef.current) {
+        const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === spawned.pluginId)?.handle;
+        void plugin?.destroyApp(spawned.instanceId).catch(() => {});
+      }
+      for (const [pluginId, instanceId] of contributorInstancesRef.current) {
+        const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === pluginId)?.handle;
+        void plugin?.destroyApp(instanceId).catch(() => {});
+      }
+      contributorInstancesRef.current.clear();
+      for (const entry of loadedPluginsRef.current) entry.handle.dispose();
+    };
+  }, []);
+
+  useEffect(() => {
+    // 🐚️ Only the page-owning shell may write the browser tab title — an embedded shell (e.g. one
+    // demonstrator pane) sharing the page with others must not fight them over it.
+    if (!scope.ownsPage) return;
+    if (brand) {
+      document.title = brand.windowTitle;
+    } else if (activeAppTitle) {
+      document.title = activeAppTitle;
+    }
+  }, [activeAppTitle, brand, scope.ownsPage]);
+
+  // 🔌️ Boot gates on the primary/host plugin ONLY — every other registry entry streams in via the
+  // subscription effect below as its build lands, instead of the whole shell waiting on all ~37 crates
+  // (see `buildPluginsStreaming` in the dev runner). A primary that fails to load (timeout/error) is
+  // still fatal, mirroring the old `noPluginsLoaded`/"host program missing landing app" boot failures.
+  useEffect(() => {
+    if (!primaryPluginId) return;
+    if (loadedPluginsRef.current.some((entry) => entry.handle.pluginId === primaryPluginId)) return;
+    void (async () => {
+      const outcome = await installPlugin(primaryPluginId);
+      if (outcome === "failed") {
+        dispatch({ type: "SET_ERROR", value: shellLabel("ui.common.noPluginsLoaded") });
+      }
+    })();
+  }, [primaryPluginId, installPlugin]);
+
+  // 🔌️ Streams every registry entry in independently of boot: one connect-time `snapshot` (whatever's
+  // already built, including a dev server that was already fully built before this shell mounted) plus
+  // a `built` event per crate as `buildPluginsStreaming`/the folded-in watch loop finishes it. An event
+  // for an already-loaded plugin routes to `reloadPlugin` (hot-swap) instead of `installPlugin`.
+  useEffect(() => {
+    const registryIds = new Set(registry.map((entry) => entry.pluginId));
+    const handlePluginAvailable = (pluginId: string, rebuiltAt: number) => {
+      if (!registryIds.has(pluginId)) return;
+      const alreadyLoaded = loadedPluginsRef.current.some((entry) => entry.handle.pluginId === pluginId);
+      void (alreadyLoaded ? reloadPlugin(pluginId, rebuiltAt) : installPlugin(pluginId, rebuiltAt));
+    };
+    return pluginSource.subscribe((event: PluginSourceEvent) => {
+      if (event.kind === "snapshot") {
+        for (const plugin of event.plugins) handlePluginAvailable(plugin.pluginId, plugin.rebuiltAt);
+        return;
+      }
+      handlePluginAvailable(event.pluginId, event.rebuiltAt);
+    });
+  }, [registry, pluginSource, installPlugin, reloadPlugin]);
+
+  const findPluginForAction = useCallback(
+    (action: ActionDescriptor) => {
+      const byController = loadedPlugins.find((entry) => entry.manifest.apps.some((app) => app.controllerId === action.controllerId));
+      if (byController) return byController;
+      return loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId);
+    },
+    [loadedPlugins, session?.pluginId],
+  );
+
+  const requestContextMenu = useCallback(
+    async (request: PluginContextMenuRequest): Promise<readonly ContextMenuItemSpec[]> => {
+      if (!session) return [];
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+      if (!plugin?.contextMenu) return [];
+      // 🖱️ No view state on the wire — the SDK's ContextMenuWireRequest dropped it (the plugin's
+      // own persisted selection/hover state already answers "what's selected", see AppActionRegistry
+      // funnel); sending one here would just be silently discarded on the Rust side.
+      return plugin.contextMenu(session.instanceId, request);
+    },
+    [loadedPlugins, session],
+  );
+
+  const refreshUi = useCallback(
+    // 🪟️ `extraInstancesOverride` lets a caller that just synchronously computed a NEW extra-window list
+    // (split/drop, layout/mode switch) hand it straight to this fetch instead of reading `extraWindowInstances`
+    // from React state, which wouldn't reflect the just-dispatched change until the next render.
+    async (nextSession: ActiveSession, scopeArg: UiDirtyScope = { kind: "full" }, extraInstancesOverride?: readonly ExtraWindowInstance[]) => {
+      if (scopeArg.kind === "none") return;
+      const generation = ++refreshGenerationRef.current;
+      const program = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId)?.handle;
+      if (!program) return;
+      const layoutSeedKey = `${nextSession.pluginId}:${nextSession.app.id}:${nextSession.instanceId}`;
+      const isSessionSwitch = layoutSeedKeyRef.current !== layoutSeedKey;
+      // 🐢️ A session switch invalidates every cached hash from the previous instance — force a full
+      // fetch regardless of what scope this particular call was given.
+      let scope = scopeArg;
+      if (isSessionSwitch) {
+        uiRefreshCacheRef.current = new Map();
+        scope = { kind: "full" };
+      }
+      const cache = uiRefreshCacheRef.current;
+      // 🪟️ On a session switch, seed the default layout's extra instances BEFORE fetching (not after), so
+      // this very first fetch already requests every default-layout pane's body/measures/engagements
+      // instead of leaving newly-seeded panes to show "missing window" until some later, unrelated refresh.
+      const layoutSeed = isSessionSwitch ? applyFrameworkLayoutSeed(nextSession.app.defaultLayout, nextSession.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale) : undefined;
+      // 🪟️ Prefer the override, then the just-computed session-switch seed, then the live ref (never the
+      // render-closure snapshot) so a concurrent refresh cannot drop default-layout panes.
+      const extraInstancesForFetch = extraInstancesOverride ?? layoutSeed?.extraInstances ?? extraWindowInstancesRef.current;
+      const windowInstances = sessionWindowInstances(nextSession.app, extraInstancesForFetch);
+      const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
+      // 🪐️ Every loaded plugin's declared apps, flattened for the space app's catalogue — mirrors
+      // `contributionsJson` above exactly (same opt-in hint-push shape below), because the space app is
+      // its own wasm component: `semio_framework_os::APP_REGISTRATIONS` (populated at native/test
+      // `PluginHost::load_plugin`/`hot_swap_plugin` time) lives in a separate linear memory from the
+      // space app's own statically-linked copy of the same os-core crate, so nothing crosses the wasm
+      // boundary unless this shell pushes it explicitly.
+      const appRegistrationsJson = JSON.stringify(loadedPlugins.flatMap((entry) => (entry.manifest.apps ?? []).map((app) => ({ pluginId: entry.handle.pluginId, app }))));
+      const viewState: ViewState = injectActiveTool({
+        ...nextSession.viewState,
+        contributionsJson,
+        locale: uiLocale,
+        terminology: uiTerminology,
+        windowInstances: windowInstances.map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+        activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
+        activeUtilityId: undefined,
+      });
+      const panelTabLeaves = flattenPanelTabLeaves(nextSession.app.panelTabs);
+      // 🐢️ One batched, hash-conditional round trip replaces the old ~12 sequential
+      // render/utilities/windowEngagements/windowMeasures/appLabels calls — the plugin omits payloads for
+      // any section whose hash still matches what `cache` already holds.
+      const request = buildUiRefreshRequest(scope, windowInstances, panelTabLeaves, viewState, cache);
+      if (request) {
+        const response = await program.refreshUi(nextSession.instanceId, request);
+        if (generation !== refreshGenerationRef.current) return;
+        const slotContext = {
+          plugins: new Map(loadedPlugins.map((entry) => [entry.handle.pluginId, entry.handle])),
+          contributorInstances: contributorInstancesRef.current,
+          viewState,
+        };
+        // Resolve external slots on freshly-changed window/panel bodies only, before caching them, so a
+        // later no-operation refresh reuses the already-resolved cached value instead of re-resolving.
+        const resolveIfChanged = async (entry: PluginUiRefreshSectionResponse): Promise<PluginUiRefreshSectionResponse> => (entry.value !== undefined ? { ...entry, value: await resolveExternalSlots(entry.value as UiNode, slotContext) } : entry);
+        const [resolvedWindows, resolvedPanels] = await Promise.all([Promise.all((response.windows ?? []).map(resolveIfChanged)), Promise.all((response.panels ?? []).map(resolveIfChanged))]);
+        if (generation !== refreshGenerationRef.current) return;
+        applyUiRefreshResponseToCache(cache, { ...response, windows: resolvedWindows, panels: resolvedPanels });
+        // ⏱️ See `DocumentApp::pending_effects` — e.g. resuming a `flowEvalTick` chain after this refresh.
+        if (response.requestedEffects?.length) await applyHostEffects(response.requestedEffects, nextSession);
+      }
+      // 🎯 Both push guards below are keyed on `${nextSession.instanceId}::${json}`, NOT on the json
+      // content alone — the content is derived purely from `loadedPlugins`, which stabilizes right after
+      // boot, so a content-only key would only ever unlock ONE push for the process lifetime (the very
+      // first `refreshUi` call, which always targets whatever session exists at boot — usually `home`,
+      // which doesn't implement either action and rejects it). Folding `instanceId` into the key makes a
+      // session switch (new studio/space instance opened, same unchanged json) retrigger the push instead
+      // of being silently swallowed by a guard that already considered this content "delivered".
+      if (contributionsJson) {
+        const contributionsPushKey = `${nextSession.instanceId}::${contributionsJson}`;
+        if (contributionsPushKey !== contributionsJsonRef.current) {
+          contributionsJsonRef.current = contributionsPushKey;
+          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId);
+          // 🛡️ `setContributions` is an opt-in hint push — only `procedural3d`'s `Procedural3dCommand::SetContributions`
+          // (flow.extension hot-swap) and `forms`'s `FormsCommand::SetContributions` (playbook block-kind catalogue)
+          // actually implement it; it is deliberately NOT declared in either app's action catalog (same
+          // uncatalogued-bridge shape as `setLocale`), so catalog membership can't gate this call. Every other
+          // app's `DocumentApp::command_from_action` default rejects unknown ids — swallow that rejection here
+          // rather than gating by app id, so this stays correct if a future app adds its own `SetContributions`
+          // variant without this call site needing to know about it.
+          // 🧵️ B1: MUST go through `handleAction` (kind:"action" → `dispatch_action` → `command_from_action`
+          // → `dispatch_typed_command_inner`) — `handleCommand` (kind:"command") always hard-errors now, see
+          // `VcsDocumentApp::dispatch_command`'s doc; there are no framework-reserved COMMANDS, only actions.
+          if (pluginEntry) {
+            try {
+              const wire = encodeActionWire({ controllerId: nextSession.app.controllerId, action: "setContributions", args: { json: contributionsJson } });
+              await pluginEntry.handle.handleAction(nextSession.instanceId, wire, nextSession.viewState);
+            } catch (error) {
+              console.warn("[DEBUG] setContributions push skipped", error instanceof Error ? error.message : String(error));
+            }
+          }
+        }
+      }
+      if (appRegistrationsJson) {
+        const appRegistrationsPushKey = `${nextSession.instanceId}::${appRegistrationsJson}`;
+        if (appRegistrationsPushKey !== appRegistrationsJsonRef.current) {
+          appRegistrationsJsonRef.current = appRegistrationsPushKey;
+          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId);
+          // 🪐️ `setAppRegistrations` mirrors `setContributions` immediately above exactly: an opt-in hint
+          // push, currently only implemented by the space app's `SpaceCommand::SetAppRegistrations`
+          // (populates its own linked-in copy of `semio_framework_os::APP_REGISTRATIONS` so
+          // `workflow_palette()`/`build_catalogue_tree` can list every loaded app). Not declared in any
+          // app's action catalog, so — same as `setContributions` — gate by swallowing the rejection every
+          // other app's `DocumentApp::command_from_action` default throws for an unknown id, rather than by
+          // app id, so this stays correct if a future app adds its own `SetAppRegistrations` variant
+          // without this call site needing to know about it.
+          // 🧵️ B1: MUST go through `handleAction` (kind:"action" → `dispatch_action` → `command_from_action`
+          // → `dispatch_typed_command_inner`) — `handleCommand` (kind:"command") always hard-errors now, see
+          // `VcsDocumentApp::dispatch_command`'s doc; there are no framework-reserved COMMANDS, only actions.
+          if (pluginEntry) {
+            try {
+              const wire = encodeActionWire({ controllerId: nextSession.app.controllerId, action: "setAppRegistrations", args: { json: appRegistrationsJson } });
+              await pluginEntry.handle.handleAction(nextSession.instanceId, wire, nextSession.viewState);
+            } catch (error) {
+              console.warn("[DEBUG] setAppRegistrations push skipped", error instanceof Error ? error.message : String(error));
+            }
+          }
+        }
+      }
+      // 🐢️ Merge-with-identity-preservation: unrequested/unchanged sections keep exactly the object
+      // reference already in `cache` (dispatched from a prior refresh), so `mergeRecordPreservingIdentity`
+      // bails on them via reference equality — this is what lets `InterpretedUiNode`'s `React.memo` (and
+      // `modeWindows`'s `useMemo`) skip reconciling the whole shell on every interaction.
+      dispatch({
+        type: "SET_WINDOW_UI_BY_WINDOW_ID",
+        value: (current) =>
+          mergeRecordPreservingIdentity(
+            current,
+            windowInstances.map((instance) => [instance.id, (cache.get(`window:${instance.id}`)?.value as UiNode | undefined) ?? current[instance.id] ?? pendingWindowUiNode()] as const),
+          ),
+      });
+      const dynamicEngagements = (cache.get("engagements")?.value as Readonly<Record<string, WindowEngagement>> | undefined) ?? {};
+      dispatch({
+        type: "SET_WINDOW_ENGAGEMENTS_BY_WINDOW_ID",
+        value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicEngagements)),
+      });
+      const dynamicMeasures = (cache.get("measures")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {};
+      dispatch({
+        type: "SET_WINDOW_MEASURES_BY_WINDOW_ID",
+        value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicMeasures)),
+      });
+      const dynamicToolMeasures = (cache.get("tools")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {};
+      dispatch({
+        type: "SET_TOOL_MEASURES_BY_TOOL_ID",
+        value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicToolMeasures)),
+      });
+      const freshAppLabelsOverlay = normalizeAppLabelsOverlay(cache.get("labels")?.value as Partial<PluginAppLabelsOverlay> | undefined);
+      dispatch({ type: "SET_APP_LABELS_OVERLAY", value: (current) => preserveJsonIdentity(current, freshAppLabelsOverlay) });
+      dispatch({
+        type: "SET_PANEL_UI_BY_KEY",
+        value: (current) =>
+          mergeRecordPreservingIdentity(
+            current,
+            panelTabLeaves
+              .filter((tab) => tab.bodyKey)
+              .map((tab) => [panelTabKindId(tab.kind), (cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as UiNode | undefined) ?? current[panelTabKindId(tab.kind)] ?? pendingPanelUiNode()] as const),
+          ),
+      });
+      if (isSessionSwitch && layoutSeed) {
+        layoutSeedKeyRef.current = layoutSeedKey;
+        extraWindowInstancesRef.current = layoutSeed.extraInstances;
+        extraWindowCounterRef.current = layoutSeed.extraInstances.length;
+        dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: layoutSeed.extraInstances });
+        dispatch({ type: "SET_SHELL_LAYOUT", value: layoutSeed.modeLayout });
+        dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+      }
+    },
+    // 🐢️ `applyHostEffects` is declared later in this component (its own deps need `updateSpacePanel`/
+    // `syncSpawnedPluginDocument`, declared later still) — referencing it here in the body only (never
+    // added to this array) avoids a temporal-dead-zone reference-before-init; safe because this callback
+    // is only ever invoked after render completes, by which point `applyHostEffects` is initialized.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [appLabelsOverlay, injectActiveTool, loadedPlugins, uiLocale, uiTerminology],
+  );
+
+  /** @emoji 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale. */
+  useEffect(() => {
+    const windowKinds = session?.app.windowKinds;
+    if (!windowKinds) return;
+    dispatch({
+      type: "SET_SHELL_LAYOUT",
+      value: (current) => (current ? retitleWindowLayoutNode(current, windowKinds, extraWindowInstancesRef.current, uiTerminology, uiLocale) : current),
+    });
+    dispatch({
+      type: "SET_EXTRA_WINDOW_INSTANCES",
+      value: (current) => {
+        const next = current.map((entry) => {
+          const kind = windowKinds.find((k) => k.id === entry.windowKindId || k.id === entry.id);
+          const title = kind ? resolveManifestLabel(kind.label, uiTerminology, uiLocale) : entry.title;
+          return { ...entry, title };
+        });
+        extraWindowInstancesRef.current = next;
+        return next;
+      },
+    });
+  }, [uiTerminology, uiLocale]);
+
+  const refreshSpawnedUi = useCallback(
+    async (spawned: SpawnedAppEntry, viewState: ViewState, scopeArg: UiDirtyScope = { kind: "full" }) => {
+      if (scopeArg.kind === "none") return;
+      const generation = ++spawnedRefreshGenerationRef.current;
+      const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId);
+      const plugin = pluginEntry?.handle;
+      const app = pluginEntry?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
+      if (!plugin || !app) {
+        console.warn("[os-shell] refreshSpawnedUi: plugin/app unavailable", { pluginId: spawned.pluginId, appId: spawned.appId });
+        dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: { type: "text", value: `Plugin unavailable: ${spawned.pluginId}/${spawned.appId}` } as UiNode });
+        dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
+        dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
+        return;
+      }
+      const spawnedSeed = `${spawned.pluginId}:${spawned.appId}:${spawned.instanceId}`;
+      if (spawnedLayoutSeedRef.current !== spawnedSeed) {
+        spawnedLayoutSeedRef.current = spawnedSeed;
+        spawnedUiRefreshCacheRef.current = new Map();
+      }
+      const cache = spawnedUiRefreshCacheRef.current;
+      const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
+      const bodyKey = resolveCanvasBodyKey(app);
+      const fullViewState: ViewState = injectActiveUtility(
+        { ...viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology, windowId: bodyKey, windowInstances: [{ id: bodyKey, windowKindId: bodyKey }] },
+        spawned.id,
+      );
+      // 🐢️ A spawned instance's view is a single body + utilities + engagements + measures (no panels, no
+      // labels) — that's already the minimal grouping, so there is no narrower-than-full "partial" scope
+      // worth expressing here; only `none` (handled above) short-circuits the request.
+      const singleWindowKind = [{ id: bodyKey, bodyKey }];
+      const request = buildUiRefreshRequest({ kind: "full" }, singleWindowKind, [], fullViewState, cache);
+      if (request) {
+        const response = await plugin.refreshUi(spawned.instanceId, request);
+        if (generation !== spawnedRefreshGenerationRef.current) return;
+        applyUiRefreshResponseToCache(cache, response);
+      }
+      const ui = (cache.get(`window:${bodyKey}`)?.value as UiNode | undefined) ?? pendingWindowUiNode();
+      const dynamicEngagements = (cache.get("engagements")?.value as Readonly<Record<string, WindowEngagement>> | undefined) ?? {};
+      const dynamicMeasures = (cache.get("measures")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {};
+      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: (current: UiNode | null) => preserveJsonIdentity(current ?? undefined, ui) });
+      dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: dynamicEngagements });
+      dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: dynamicMeasures });
+    },
+    [injectActiveUtility, loadedPlugins, uiLocale, uiTerminology],
+  );
+
+  // 🐢️ Keyed on the pluginId/app/instance triple (not `session` object identity) so this only fires on
+  // a genuine session switch (app open/spawn/instance change) — every other action already calls
+  // `refreshUi` explicitly via `applyHostEffects`, and re-running it here too on every `session` object
+  // churn was a second, redundant full-shell refresh cascade per interaction.
+  const sessionIdentityKey = session ? `${session.pluginId}:${session.app.id}:${session.instanceId}` : null;
+  useEffect(() => {
+    const current = sessionRef.current;
+    if (!current) return;
+    void refreshUi(current).catch((renderError) => {
+      console.error("[DEBUG] render failed", renderError);
+      dispatch({ type: "SET_ERROR", value: renderError instanceof Error ? renderError.message : String(renderError) });
+    });
+  }, [loadedPlugins, refreshUi, sessionIdentityKey]);
+
+  useEffect(() => {
+    if (!studioMode || !session) {
+      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: null });
+      dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
+      dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
+      return;
+    }
+    const activeSpawned = panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
+    if (!activeSpawned) {
+      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: null });
+      dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
+      dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
+      return;
+    }
+    void refreshSpawnedUi(activeSpawned, session.viewState).catch((renderError) => {
+      console.error("[DEBUG] spawned render failed", renderError);
+      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: null });
+    });
+  }, [loadedPlugins, panel, refreshSpawnedUi, session, studioMode]);
+
+  const updateSpacePanel = useCallback((panelState: SpacePanelState) => {
+    dispatch({
+      type: "SET_SESSION",
+      value: (current) => {
+        if (!current) return current;
+        return { ...current, viewState: { ...current.viewState, panelJson: panelJsonFromState(panelState) } };
+      },
+    });
+  }, []);
+
+  // 🏠️🧳️ Generic replacement for the old `switchToSApp` — switches to either the host plugin's landing
+  // or host app by id (both resolved via `hostConfig`, never a specific app's identity).
+  const switchToManagedApp = useCallback(
+    async (appId: string, viewState?: ViewState): Promise<ActiveSession | null> => {
+      const sPlugin = hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined;
+      const app = sPlugin?.manifest.apps.find((candidate) => candidate.id === appId);
+      if (!sPlugin || !app) return null;
+      if (session?.pluginId === sPlugin.handle.pluginId && session.app.id === appId) {
+        if (!viewState) return session;
+        const nextSession: ActiveSession = { ...session, viewState };
+        dispatch({ type: "SET_SESSION", value: nextSession });
+        await refreshUi(nextSession);
+        return nextSession;
+      }
+      const instanceId = await sPlugin.handle.createApp(app.id);
+      // 🪦️ See `establishPrimarySession`'s comment above — `programs` is permanently empty now.
+      const nextViewState: ViewState = viewState ?? {
+        activeModeId: app.defaultModeId ?? app.modes[0]?.id,
+        panelJson: panelJsonFromState(buildSpacePanelState([], [])),
+      };
+      const nextSession: ActiveSession = { pluginId: sPlugin.handle.pluginId, instanceId, app, viewState: nextViewState };
+      dispatch({ type: "SET_SESSION", value: nextSession });
+      const seeded = applyFrameworkLayoutSeed(app.defaultLayout, app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale);
+      extraWindowInstancesRef.current = seeded.extraInstances;
+      extraWindowCounterRef.current = seeded.extraInstances.length;
+      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+      dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+      if (appId === landingAppId) {
+        openSpaceIdRef.current = null;
+        openInstanceIdRef.current = null;
+      }
+      await refreshUi(nextSession);
+      return nextSession;
+    },
+    [loadedPlugins, refreshUi, session, appLabelsOverlay, hostConfig, landingAppId, uiTerminology, uiLocale],
+  );
+
+  const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, documentJson: string, viewState: ViewState) => {
+    try {
+      const document = JSON.parse(documentJson) as Record<string, unknown>;
+      await plugin.handleAction(pluginInstanceId, encodeActionWire({ controllerId: app.controllerId, action: "setDocument", args: { document } }), viewState);
+    } catch (syncError) {
+      console.error("[DEBUG] spawned program document sync failed", syncError);
+    }
+  }, []);
+
+  const ensureSpawnedPlugin = useCallback(
+    async (program: SpaceProgramEntry, label?: string, osInstanceId?: string, documentJson?: string, sourceViewState?: ViewState): Promise<SpacePanelState | null> => {
+      const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === program.pluginId);
+      if (!pluginEntry || !session) return null;
+      const app = pluginEntry.manifest.apps.find((candidate) => candidate.id === program.appId);
+      const currentPanel = parsePanelState(sourceViewState ?? session.viewState) ?? buildSpacePanelState([], []);
+      const existing = osInstanceId ? currentPanel.spawnedApps.find((entry) => entry.id === osInstanceId) : currentPanel.spawnedApps.find((entry) => entry.appId === program.appId && entry.pluginId === program.pluginId);
+      if (existing) {
+        if (documentJson && app) {
+          await syncSpawnedPluginDocument(pluginEntry.handle, app, existing.instanceId, documentJson, sourceViewState ?? session.viewState);
+        }
+        return studioPanelFocusingSpawned(currentPanel, existing);
+      }
+      const instanceId = await pluginEntry.handle.createApp(program.appId);
+      if (documentJson && app) {
+        await syncSpawnedPluginDocument(pluginEntry.handle, app, instanceId, documentJson, sourceViewState ?? session.viewState);
+      }
+      const spawnedId = osInstanceId ?? `${program.pluginId}-${instanceId}`;
+      return studioPanelFocusingSpawned(currentPanel, {
+        id: spawnedId,
+        pluginId: program.pluginId,
+        instanceId,
+        appId: program.appId,
+        label: label ?? program.label,
+        document: program.document,
+      });
+    },
+    [loadedPlugins, session, syncSpawnedPluginDocument],
+  );
+
+  /**
+   * 🐚️ Consumes a plugin action's typed `requestedEffects: HostEffect[]` (WS-D's `InvocationResponse`) —
+   * replaces the deleted `processPluginOperations` string-matching. The legacy `setDocument`-mirror
+   * backbone-write block is gone entirely: document content sync now flows through
+   * `openDocument`/`closeDocument`'s worker-backed `DocumentHost` lifecycle, not a per-operation JS mirror.
+   */
+  const applyHostEffects = useCallback(
+    async (effects: readonly HostEffect[], baseSession: ActiveSession, uiScope: UiDirtyScope = { kind: "full" }) => {
+      let nextViewState = baseSession.viewState;
+      for (const effect of effects) {
+        if (effect === "requestSync") continue;
+        if ("setPanel" in effect) {
+          nextViewState = { ...nextViewState, panelJson: effect.setPanel.panelJson };
+          continue;
+        }
+        if ("setActiveUtility" in effect) {
+          // 🧰️ A program programmatically switched utility: mirror it into the host-owned store slice AND
+          // the ref `refreshUi` reads (bare `dispatch` alone leaves the map stale until the next render —
+          // which is after this same pass's refresh, so brush/suggestion ghosts and gumballs never appear).
+          const { windowId, utilityId } = effect.setActiveUtility;
+          setActiveUtilityForWindow(windowId, utilityId || null);
+          if (utilityId && activeToolIdRef.current) {
+            activeToolIdRef.current = null;
+            dispatch({ type: "SET_ACTIVE_TOOL", toolId: null });
+          }
+          if (windowId === activeWindowIdRef.current) nextViewState = { ...nextViewState, activeUtilityId: utilityId || undefined, activeToolId: utilityId ? undefined : nextViewState.activeToolId };
+          continue;
+        }
+        if ("setActiveTool" in effect) {
+          // 🛠️ A program programmatically switched tools (e.g. puzzle3d fill via engagement text command):
+          // mirror it into the host-owned store slice, clear every window's active utility (mutual
+          // exclusion — a tool and a window utility never both claim the pointer), and fold it into the
+          // view state fed to the follow-up refresh.
+          const { toolId } = effect.setActiveTool;
+          activeToolIdRef.current = toolId || null;
+          dispatch({ type: "SET_ACTIVE_TOOL", toolId: toolId || null });
+          if (toolId) clearAllWindowUtilities();
+          nextViewState = { ...nextViewState, activeToolId: toolId || undefined, activeUtilityId: toolId ? undefined : nextViewState.activeUtilityId };
+          continue;
+        }
+        if ("patchWorld3dChrome" in effect) {
+          const { selectionJson, vorticesJson, documentSelectedIds, documentHighlightedIds } = effect.patchWorld3dChrome;
+          const patch = { selectionJson, vorticesJson };
+          const windowInstances = sessionWindowInstances(baseSession.app, extraWindowInstancesRef.current);
+          const documentPanelKey = panelTabKindId(FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
+          dispatch({
+            type: "SET_WINDOW_UI_BY_WINDOW_ID",
+            value: (current) =>
+              mergeRecordPreservingIdentity(
+                current,
+                windowInstances.map((instance) => {
+                  const node = current[instance.id];
+                  return [instance.id, node ? patchWorld3dChromeOntoNode(node, patch) : node] as const;
+                }),
+              ),
+          });
+          dispatch({
+            type: "SET_PANEL_UI_BY_KEY",
+            value: (current) => {
+              const documentNode = current[documentPanelKey];
+              if (!documentNode) return current;
+              return mergeRecordPreservingIdentity(current, [[documentPanelKey, patchDocumentTreeSelectedIds(documentNode, documentSelectedIds, documentHighlightedIds)]]);
+            },
+          });
+          const cache = uiRefreshCacheRef.current;
+          for (const instance of windowInstances) {
+            const cached = cache.get(`window:${instance.id}`);
+            if (cached?.value) {
+              cache.set(`window:${instance.id}`, { hash: cached.hash, value: patchWorld3dChromeOntoNode(cached.value as UiNode, patch) });
+            }
+          }
+          const documentCached = cache.get(`panel:${documentPanelKey}`);
+          if (documentCached?.value) {
+            cache.set(`panel:${documentPanelKey}`, {
+              hash: documentCached.hash,
+              value: patchDocumentTreeSelectedIds(documentCached.value as UiNode, documentSelectedIds, documentHighlightedIds),
+            });
+          }
+          continue;
+        }
+        if ("openDialog" in effect) {
+          // 🗨️ Renders from the active `baseSession.app` — dialogs opened by spawned program
+          // instances are v1-out-of-scope, mirroring the introduction's active-session-only scope.
+          const { dialogId, args } = effect.openDialog;
+          if (baseSession.app.dialogs?.some((entry) => entry.id === dialogId)) {
+            dispatch({ type: "SET_DIALOG", value: { dialogId, seedArgs: args as Record<string, unknown> | undefined } });
+          } else {
+            console.error(`[os-shell] openDialog: app ${baseSession.app.id} declares no dialog "${dialogId}"`);
+          }
+          continue;
+        }
+        if ("navigate" in effect) {
+          navigateHistory(effect.navigate.uri);
+          continue;
+        }
+        if ("loadDocument" in effect) {
+          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
+          const payload = effect.loadDocument;
+          if (payload.pack && payload.spr && pluginEntry?.handle.loadAppDocumentPack) {
+            const packBytes = coerceWireBytes(payload.pack);
+            const sprBytes = coerceWireBytes(payload.spr);
+            console.log("[DEBUG] loadDocument pack/spr for instance", baseSession.instanceId, "pack", packBytes.length, "spr", sprBytes.length);
+            await pluginEntry.handle.loadAppDocumentPack(baseSession.instanceId, packBytes, sprBytes);
+          } else if (payload.documentJson && pluginEntry?.handle.loadAppDocument) {
+            console.log("[DEBUG] loadDocument for instance", baseSession.instanceId, "bytes", payload.documentJson.length);
+            await pluginEntry.handle.loadAppDocument(baseSession.instanceId, payload.documentJson);
+          } else {
+            console.error("[os-shell] loadDocument: program has no pack/json loader", baseSession.pluginId, Object.keys(payload));
+          }
+          continue;
+        }
+        if ("openExternalUrl" in effect) {
+          window.open(effect.openExternalUrl.url, "_blank", "noopener,noreferrer");
+          continue;
+        }
+        if ("downloadMediaExport" in effect) {
+          const { filename, mimeType, data, encoding } = effect.downloadMediaExport;
+          downloadMediaExport(filename, mimeType, data, encoding);
+          continue;
+        }
+        if ("iconRenderExport" in effect) {
+          for (const item of effect.iconRenderExport.items) {
+            try {
+              const result = await iconRenderPort.render(item.request as Parameters<typeof iconRenderPort.render>[0]);
+              downloadDataUrl(item.filename, result.dataUrl);
+            } catch (error) {
+              console.error(`icon render export failed for ${item.filename}`, error);
+            }
+          }
+          continue;
+        }
+        if ("requestFileOpen" in effect) {
+          const { accept, readAs, importAction, multiple } = effect.requestFileOpen;
+          const opened = await requestFileOpen(accept || ".spk,.dsl,.ops,application/octet-stream", readAs, multiple);
+          if (opened.length > 0) {
+            const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
+            if (pluginEntry) {
+              // 📤️ Single-file (multiple absent/false): identical to the pre-multi-select shape, one
+              // `handleAction` call with `{payload, name}`. Multi-file: one sequential call per selected
+              // file, each extending args with `{index, total}` so the plugin can stage/merge imports.
+              await dispatchOpenedFiles(opened, importAction, Boolean(multiple), makeEffectDispatchOne(pluginEntry, baseSession, applyHostEffects));
+            }
+          }
+          continue;
+        }
+        if ("dispatchAction" in effect) {
+          // 🔁️ Self re-dispatch (D2): re-invokes the same plugin instance with `action` after `delayMs`,
+          // without blocking the current `applyHostEffects` pass — `setTimeout` (0 is "next tick") fires
+          // the follow-up call and feeds its own `requestedEffects` back through `applyHostEffects`
+          // recursively, so a plugin can chain several ticks of staged/progressive work (e.g. a
+          // multi-pass reconstruction) purely by re-emitting `dispatchAction` from its own handler.
+          const { action: dispatchActionId, args: dispatchArgs, delayMs } = effect.dispatchAction;
+          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
+          if (pluginEntry) {
+            scheduleDispatchAction(dispatchActionId, dispatchArgs as Record<string, unknown> | undefined, delayMs, makeEffectDispatchOne(pluginEntry, baseSession, applyHostEffects));
+          }
+          continue;
+        }
+        if ("requestMediaFrames" in effect) {
+          // 🎞️ D5: decodes a video (file picker, or `payload` bytes already in hand from a drop zone)
+          // and fans sampled frames + a completion marker out through the same `dispatchOne` path as
+          // every other effect branch — see `runRequestMediaFrames` for the Tier 1 (WebCodecs)/Tier 2
+          // (`<video>` seek-and-capture)/fallback decision tree.
+          const { accept, payload, frameAction, doneAction, fallbackAction, sampleStride, maxFrames, maxLongEdgePx, fpsHint, args } = effect.requestMediaFrames;
+          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
+          if (pluginEntry) {
+            await runRequestMediaFrames(
+              {
+                frameAction,
+                doneAction,
+                fallbackAction,
+                sampleStride: sampleStride ?? 0,
+                maxFrames: maxFrames ?? 0,
+                maxLongEdgePx: maxLongEdgePx ?? 0,
+                fpsHint: fpsHint ?? 0,
+                args: args as Record<string, unknown> | undefined,
+              },
+              accept,
+              payload,
+              makeEffectDispatchOne(pluginEntry, baseSession, applyHostEffects),
+            );
+          }
+          continue;
+        }
+        if ("requestPluginExchange" in effect) {
+          const { pluginId, appId, requestJson, responseAction } = effect.requestPluginExchange;
+          const request = JSON.parse(requestJson) as { operatorId?: string; inputJson?: string; nodeHash?: number };
+          const contributor = loadedPlugins.find((entry) => entry.handle.pluginId === pluginId);
+          if (contributor && request.operatorId && request.inputJson != null && request.nodeHash != null) {
+            try {
+              const bim = (await import("@semio-tech/flow-module-bim")) as { evaluate?: (kindId: string, inputJson: string) => string };
+              const outputJson = typeof bim.evaluate === "function" ? bim.evaluate(request.operatorId, request.inputJson) : "";
+              console.log("[DEBUG] requestPluginExchange resolved extension eval", { pluginId, appId, operatorId: request.operatorId, nodeHash: request.nodeHash });
+              await makeEffectDispatchOne(pluginEntry, baseSession, applyHostEffects)(responseAction, {
+                nodeHash: request.nodeHash,
+                outputJson,
+              });
+            } catch (error) {
+              console.warn("[os-shell] requestPluginExchange failed", { pluginId, appId, error });
+            }
+          }
+          continue;
+        }
+        if ("spawnPluginInstance" in effect) {
+          const { pluginId, appId, osInstanceId, label, documentJson } = effect.spawnPluginInstance;
+          const currentPanel = parsePanelState(nextViewState) ?? buildSpacePanelState([], []);
+          // 🪦️ See `establishPrimarySession`'s comment above — the `manifest.workflows` fallback source is dead; `catalog` is `currentPanel.programs` or empty.
+          const catalog = currentPanel.programs.length > 0 ? currentPanel.programs : [];
+          const program = catalog.find((entry) => entry.pluginId === pluginId && entry.appId === appId) ?? catalog.find((entry) => entry.pluginId === pluginId);
+          if (program) {
+            // 🪟️ Fold spawn into `nextViewState` — a separate SET_SESSION would be clobbered by the
+            // final write below and leave the shell stuck on the studio surface.
+            const nextPanel = await ensureSpawnedPlugin(program, label, osInstanceId, documentJson, nextViewState);
+            if (nextPanel) nextViewState = viewStateWithSpacePanel(nextViewState, nextPanel);
+          }
+          continue;
+        }
+        if ("openPluginInstance" in effect) {
+          const { pluginId, appId, osInstanceId } = effect.openPluginInstance;
+          const currentPanel = parsePanelState(nextViewState) ?? buildSpacePanelState([], []);
+          // 🪦️ See `establishPrimarySession`'s comment above — the `manifest.workflows` fallback source is dead; `catalog` is `currentPanel.programs` or empty.
+          const catalog = currentPanel.programs.length > 0 ? currentPanel.programs : [];
+          const program = catalog.find((entry) => entry.pluginId === pluginId && entry.appId === appId) ?? catalog.find((entry) => entry.pluginId === pluginId);
+          if (program) {
+            // 🪟️ Fold focus into `nextViewState` so the final SET_SESSION keeps `activeSpawnedId`
+            // (opening a workflow node depends on this — otherwise nothing appears to happen).
+            const nextPanel = await ensureSpawnedPlugin(program, undefined, osInstanceId, undefined, nextViewState);
+            if (nextPanel) {
+              nextViewState = viewStateWithSpacePanel(nextViewState, nextPanel);
+              console.log("[DEBUG] openPluginInstance focused spawned app", {
+                pluginId,
+                appId,
+                osInstanceId,
+                activeSpawnedId: nextPanel.activeSpawnedId,
+                spawnedCount: nextPanel.spawnedApps.length,
+              });
+            }
+            if (osInstanceId && openSpaceIdRef.current) {
+              openInstanceIdRef.current = osInstanceId;
+              navigateHistory(`/spaces/${openSpaceIdRef.current}/instances/${osInstanceId}`);
+            }
+          } else {
+            console.warn(
+              "[os-shell] openPluginInstance: no program matches",
+              { pluginId, appId },
+              "available:",
+              catalog.map((entry) => `${entry.pluginId}/${entry.appId}`),
+            );
+          }
+          continue;
+        }
+      }
+      const nextSession = { ...baseSession, viewState: nextViewState };
+      const isSpawnedPluginSession = studioMode && session && baseSession.pluginId !== session.pluginId;
+      dispatch({
+        type: "SET_SESSION",
+        value: (current) => {
+          if (!current) return nextSession;
+          if (isSpawnedPluginSession) return current.viewState === nextViewState ? current : { ...current, viewState: nextViewState };
+          if (current.instanceId !== nextSession.instanceId) return current;
+          // 🐢️ Preserve `current`'s identity when the viewState didn't actually change — otherwise every
+          // action mints a new `session` object, which cascades into a new `onAction` identity, which
+          // busts every memo keyed on it (windows, panels, the boot-refresh effect below) even when
+          // nothing about the session changed.
+          return current.viewState === nextViewState ? current : { ...current, viewState: nextViewState };
+        },
+      });
+      if (isSpawnedPluginSession) {
+        const spawned = parsePanelState(nextViewState)?.spawnedApps.find((entry) => entry.pluginId === baseSession.pluginId && entry.instanceId === baseSession.instanceId);
+        if (spawned) await refreshSpawnedUi(spawned, nextViewState, uiScope);
+      } else if (session?.instanceId === nextSession.instanceId || baseSession.instanceId === nextSession.instanceId) {
+        await refreshUi(nextSession, uiScope);
+      }
+    },
+    [clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, session, setActiveUtilityForWindow, studioMode],
+  );
+
+  const applyShellUri = useCallback(
+    async (uri: string, preservedViewState?: ViewState) => {
+      const currentSession = sessionRef.current;
+      if (!hostConfig || !currentSession || loadedPlugins.length === 0) return;
+      const path = uri.split("?")[0] ?? "/";
+      const route = parseShellRoute(path);
+      const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId)?.handle;
+      if (!sPlugin) return;
+      if (route.kind === "landing") {
+        openSpaceIdRef.current = null;
+        openInstanceIdRef.current = null;
+        if (currentSession.app.id !== hostConfig.landingAppId) await switchToManagedApp(hostConfig.landingAppId, preservedViewState);
+        return;
+      }
+      if (route.kind === "notFound") {
+        openSpaceIdRef.current = null;
+        openInstanceIdRef.current = null;
+        return;
+      }
+      const { spaceId, instanceId } = route;
+      // 🧭️ Pin the route studio id before the async app switch so the boot example effect cannot
+      // race-navigate to `/spaces/demo` while `switchToManagedApp` is still awaiting.
+      const studioChanged = openSpaceIdRef.current !== spaceId;
+      openSpaceIdRef.current = spaceId;
+      const studioSession = currentSession.app.id === hostConfig.hostAppId ? currentSession : await switchToManagedApp(hostConfig.hostAppId, preservedViewState);
+      if (!studioSession) return;
+      const studioControllerId = studioSession.app.controllerId;
+      if (studioChanged) {
+        openInstanceIdRef.current = null;
+        console.log("[DEBUG] applyShellUri openSpace", spaceId);
+        const openResponse = await sPlugin.handleAction(studioSession.instanceId, encodeActionWire({ controllerId: studioControllerId, action: "openSpace", args: { spaceId } }), studioSession.viewState);
+        await applyHostEffects(openResponse.requestedEffects ?? [], studioSession, resolveUiDirtyScope(openResponse.uiScope));
+      }
+      if (openInstanceIdRef.current === (instanceId ?? null)) return;
+      openInstanceIdRef.current = instanceId ?? null;
+      if (instanceId) {
+        const response = await sPlugin.handleAction(studioSession.instanceId, encodeActionWire({ controllerId: studioControllerId, action: "openInstance", args: { instanceId } }), studioSession.viewState);
+        await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope));
+      } else {
+        const response = await sPlugin.handleAction(studioSession.instanceId, encodeActionWire({ controllerId: studioControllerId, action: "closeFocusedInstance" }), studioSession.viewState);
+        const currentPanel = parsePanelState(studioSession.viewState) ?? buildSpacePanelState([], []);
+        updateSpacePanel(buildSpacePanelState(currentPanel.programs, currentPanel.spawnedApps, currentPanel.activePanelTab, undefined));
+        await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope));
+      }
+    },
+    [applyHostEffects, loadedPlugins, refreshUi, hostConfig, switchToManagedApp, updateSpacePanel],
+  );
+
+  useEffect(() => {
+    if (!studioMode || loadedPlugins.length === 0) return;
+    void applyShellUri(shellUri).catch((uriError) => {
+      console.error("[DEBUG] shell uri apply failed", uriError);
+    });
+  }, [applyShellUri, loadedPlugins.length, shellUri, studioMode]);
+
+  const resolveSyncTargetSession = useCallback((): ActiveSession | null => {
+    if (!session) return null;
+    if (studioMode && panel?.activeSpawnedId) {
+      const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
+      if (spawned) {
+        const app = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
+        if (app) return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: session.viewState };
+      }
+    }
+    return session;
+  }, [loadedPlugins, panel, session, studioMode]);
+
+  /**
+   * 🧵️ `openDocument(ref, bindings)` — replaces `attachSyncBackbone`'s URI-string mirror. Spins up (or
+   * reuses) `🟦️backbone-🟦️worker.ts`, tells it to open the document, subscribes to its postMessage events,
+   * and calls the plugin instance's `attachBackbone`/`loadAppDocument` WIT-exported methods (WS-D) so
+   * the plugin-side store starts pumping through the same logical channel. The `actor://<documentId>`
+   * uri mirrors `framework/sync`'s `ChannelBackbone::pair` convention on the Rust side.
+   *
+   * Full loop note: this wires the main-thread half of the contract. The remaining hop — the
+   * sandboxed plugin's own `backbone-send`/`backbone-poll` WIT host-import calls relaying through its
+   * dedicated program worker, through this main thread, into `🟦️backbone-🟦️worker.ts` — is
+   * `framework/os/dev/script.ts`'s `pluginWorkerSource` responsibility (dev workflow, deferred
+   * per this session's priority order if not otherwise completed); see that file's own notes.
+   */
+  const openDocument = useCallback(
+    async (ref: { readonly documentId: string; readonly schema: string }, bindings: readonly PersistenceBinding[]) => {
+      const targetSession = resolveSyncTargetSession();
+      if (!targetSession) return;
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle;
+      if (!plugin) return;
+      const worker = ensureBackboneWorker();
+      openDocumentSessionsRef.current.set(ref.documentId, { session: targetSession, plugin });
+      // 🐚️ Registers THIS shell as the route for this document's outbound backbone bytes before the
+      // plugin can possibly emit any (attachBackbone below) — see `relayPluginBackboneMessage`'s doc.
+      pluginBackboneRouteUnregistersRef.current.get(ref.documentId)?.();
+      pluginBackboneRouteUnregistersRef.current.set(ref.documentId, registerPluginBackboneRoute(ref.documentId, relayPluginBackboneMessage));
+      const request: BackboneWorkerRequest = {
+        kind: "open",
+        documentId: ref.documentId,
+        schema: ref.schema,
+        bindings,
+        watchExternal: true,
+        actor: shellActorIdRef.current,
+      };
+      worker.postMessage(request);
+      const uri = `actor://${ref.documentId}`;
+      if (plugin.attachBackbone) await plugin.attachBackbone(targetSession.instanceId, uri);
+      dispatch({ type: "SET_SYNC_BACKBONE_URI", value: uri });
+      dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
+    },
+    [loadedPlugins, relayPluginBackboneMessage, resolveSyncTargetSession],
+  );
+
+  const closeDocument = useCallback((documentId: string) => {
+    const entry = openDocumentSessionsRef.current.get(documentId);
+    if (entry?.plugin.detachBackbone) void entry.plugin.detachBackbone(entry.session.instanceId);
+    openDocumentSessionsRef.current.delete(documentId);
+    pluginBackboneRouteUnregistersRef.current.get(documentId)?.();
+    pluginBackboneRouteUnregistersRef.current.delete(documentId);
+    const request: BackboneWorkerRequest = { kind: "close", documentId };
+    backboneWorkerRef.current?.postMessage(request);
+  }, []);
+
+  /** @deprecated superseded by {@link openDocument}; kept as a thin URI-parsing adapter only for the
+   * existing sync-card UI (`onAction`'s `attach` handler below), which still collects a single uri
+   * from file/folder/remote pickers — translates that uri into an `OsDocumentRef` + `PersistenceBinding`. */
+  const attachSyncBackbone = useCallback(
+    async (uri: string) => {
+      const targetSession = resolveSyncTargetSession();
+      if (!targetSession) return;
+      const documentId = syncDocumentId(targetSession, panel, studioMode);
+      const bindings: PersistenceBinding[] = uri.startsWith("remote://")
+        ? (() => {
+            const rest = uri.slice("remote://".length);
+            const slash = rest.indexOf("/");
+            const baseUrl = slash > 0 ? `http://${rest.slice(0, slash)}` : `http://${rest}`;
+            const spaceId = slash > 0 ? rest.slice(slash + 1) || "default" : "default";
+            return [{ kind: "hub", baseUrl, spaceId }];
+          })()
+        : uri.startsWith("folder://")
+          ? [{ kind: "folder", path: uri.slice("folder://".length) }]
+          : uri.startsWith("file://")
+            ? [{ kind: "folder", path: uri.slice("file://".length).replace(/\/[^/]*$/, "") }]
+            : [];
+      await openDocument({ documentId, schema: targetSession.app.document.join(".") }, bindings);
+    },
+    [openDocument, panel, resolveSyncTargetSession, studioMode],
+  );
+
+  const detachSyncBackbone = useCallback(() => {
+    if (syncBackboneUri) closeDocument(syncBackboneUri.replace(/^actor:\/\//, ""));
+    dispatch({ type: "SET_SYNC_BACKBONE_URI", value: null });
+    dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
+  }, [closeDocument, syncBackboneUri]);
+
+  const spawnProgram = useCallback(
+    async (program: SpaceProgramEntry) => {
+      const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === program.pluginId);
+      if (!pluginEntry || !session) return;
+      const instanceId = await pluginEntry.handle.createApp(program.appId);
+      const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState([], []);
+      const spawnedId = `${program.pluginId}-${instanceId}`;
+      updateSpacePanel(
+        studioPanelFocusingSpawned(currentPanel, {
+          id: spawnedId,
+          pluginId: program.pluginId,
+          instanceId,
+          appId: program.appId,
+          label: program.label,
+          document: program.document,
+        }),
+      );
+    },
+    [loadedPlugins, session, updateSpacePanel],
+  );
+
+  const onAction = useCallback(
+    (action: ActionDescriptor) => {
+      if (action.controllerId === "recovery") {
+        const args = typeof action.args === "object" && action.args != null ? (action.args as { pluginId?: string }) : {};
+        const pluginId = args.pluginId ?? primaryPluginId;
+        if (!pluginId) return;
+        if (action.action === "recovery.restartApp") {
+          dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "restarting" });
+          void reloadPlugin(pluginId);
+          return;
+        }
+        if (action.action === "recovery.disablePlugin") {
+          dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "quarantined" });
+          if (pluginId !== primaryPluginId) void uninstallPlugin(pluginId);
+          return;
+        }
+        if (action.action === "recovery.showDiagnostics") {
+          console.log("[DEBUG] recovery diagnostics", { pluginId, supervisor: pluginSupervisorById[pluginId] });
+          return;
+        }
+      }
+
+      if (!session) return;
+
+      // 🎓️ First-run walkthrough (mirrors setActiveUtility below): fully shell-intercepted, resets
+      // playback to the first step, never forwarded to the program.
+      if (action.action === START_INTRODUCTION_ACTION_ID) {
+        dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
+        return;
+      }
+
+      // 🎥️ Fully shell-intercepted, mirroring `START_INTRODUCTION_ACTION_ID` above: sandboxes the
+      // document and starts tutorial playback from t=0 (real work happens in `startTutorialRef`, wired up
+      // by the TutorialOrchestration block further down this component).
+      if (action.action === START_TUTORIAL_ACTION_ID) {
+        const args = typeof action.args === "object" && action.args != null ? (action.args as { tutorialId?: unknown }) : {};
+        if (typeof args.tutorialId === "string") startTutorialRef.current(args.tutorialId);
+        return;
+      }
+      if (action.action === RECORD_TUTORIAL_ACTION_ID) {
+        toggleTutorialRecordingRef.current();
+        return;
+      }
+
+      // 🎥️ Deviation detection: any action NOT stamped by the tutorial director/seek/converge path while
+      // a tutorial is actively playing means the user diverged from the recording — auto-pause and flag
+      // `deviated` so pressing Play again converges instead of resuming blindly mid-drift.
+      if (tutorialPlayingRef.current && !tutorialDrivenRef.current) {
+        dispatch({ type: "SET_TUTORIAL_PLAYING", value: false });
+        dispatch({ type: "SET_TUTORIAL_DEVIATED", value: true });
+      }
+
+      // ⏺️ Recorder tap: annotational-only capture (see `TutorialTracks.events` doc comment) — never
+      // re-dispatched on playback. Skips navigation/introduction/tutorial-control actions (noise, or
+      // meaningless to replay) and anything the director itself just dispatched.
+      if (tutorialRecordingRef.current && !tutorialDrivenRef.current) {
+        if (!TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS.has(action.action)) {
+          tutorialRecorderRef.current?.recordEvent({ kind: "action", action: action.action, args: action.args as Record<string, unknown> | undefined });
+        }
+      }
+
+      // 🧭️ Camera-navigation gesture report from a 3D window's `WorldOrbitGated` (shell-only, never
+      // forwarded to the program) — completes any pan/zoom/orbit interaction of the active step that
+      // targets the window the gesture happened on. Celebrates only `windowId`'s own pane (via
+      // `windowElementId`, its unique per-instance element id) — never the whole window-kind alias
+      // selector, which would celebrate every other open pane of that same kind too (e.g. a split view).
+      if (action.action === NOTE_WORLD_NAVIGATION_ACTION_ID) {
+        const args = typeof action.args === "object" && action.args != null ? (action.args as { windowId?: unknown; gestures?: unknown }) : {};
+        const windowId = typeof args.windowId === "string" ? args.windowId : "";
+        const gestures = Array.isArray(args.gestures) ? (args.gestures as readonly string[]) : [];
+        if (windowId) {
+          const windowKindId = sessionWindowInstances(session.app, extraWindowInstancesRef.current).find((instance) => instance.id === windowId)?.windowKindId ?? windowId;
+          for (const gesture of gestures) {
+            completeIntroductionInteraction(
+              (interaction) => interaction.on.kind === gesture && introductionTargetsWindow(windowId, windowKindId, interaction.on.id),
+              windowElementId(windowId),
+            );
+          }
+        }
+        return;
+      }
+
+      // 🧰️ Utility activation (P5): host-owned session state, never a document operation. Re-clicking the active
+      // utility (or an empty utilityId) deactivates. We resolve the target window from the descriptor's tagged
+      // `windowId` (see `tagSetActiveUtilityWindow`), falling back to the active window, update the store,
+      // then forward the resolved utility to the plugin so it can clear/prepare scratch.
+      if (action.action === SET_ACTIVE_UTILITY_ACTION_ID) {
+        const args = typeof action.args === "object" && action.args != null ? (action.args as { utilityId?: unknown; windowId?: unknown }) : {};
+        const windowId = typeof args.windowId === "string" && args.windowId ? args.windowId : (activeWindowIdRef.current ?? "");
+        if (!windowId) return;
+        const requested = typeof args.utilityId === "string" ? args.utilityId : "";
+        const next = resolveUtilityActivation(activeUtilityByWindowIdRef.current[windowId], requested);
+        setActiveUtilityForWindow(windowId, next);
+        // 🛠️ A tool and a window utility are mutually exclusive interaction owners — activating a real
+        // utility clears any active mode-level tool.
+        if (next && activeToolIdRef.current) {
+          activeToolIdRef.current = null;
+          dispatch({ type: "SET_ACTIVE_TOOL", toolId: null });
+        }
+        if (next) completeIntroductionInteraction((interaction) => interaction.on.kind === "utility" && interaction.on.id === next);
+        const pluginEntry = findPluginForAction(action);
+        const program = pluginEntry?.handle;
+        if (plugin) {
+          const viewState: ViewState = { ...session.viewState, activeUtilityId: next ?? undefined, activeToolId: next ? undefined : activeToolIdRef.current ?? undefined, windowId };
+          const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { utilityId: next } };
+          void program
+            .handleAction(session.instanceId, encodeActionWire(forwarded), viewState)
+            .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope)))
+            .catch((utilityError) => console.error("[DEBUG] setActiveUtility failed", utilityError));
+        }
+        return;
+      }
+
+      // 🛠️ Tool activation: host-owned session state (mode-scoped, windowless), never a document operation.
+      // Re-clicking the active tool (or an empty toolId) deactivates. Mutually exclusive with every
+      // window's active utility — activating a tool clears them all, mirroring `SET_ACTIVE_UTILITY_ACTION_ID`.
+      if (action.action === SET_ACTIVE_TOOL_ACTION_ID) {
+        const args = typeof action.args === "object" && action.args != null ? (action.args as { toolId?: unknown }) : {};
+        const requested = typeof args.toolId === "string" ? args.toolId : "";
+        const next = resolveUtilityActivation(activeToolIdRef.current, requested);
+        activeToolIdRef.current = next;
+        dispatch({ type: "SET_ACTIVE_TOOL", toolId: next });
+        if (next) clearAllWindowUtilities();
+        if (next) completeIntroductionInteraction((interaction) => interaction.on.kind === "tool" && interaction.on.id === next);
+        const pluginEntry = findPluginForAction(action);
+        const program = pluginEntry?.handle;
+        if (plugin) {
+          const viewState: ViewState = { ...session.viewState, activeToolId: next ?? undefined, activeUtilityId: next ? undefined : session.viewState.activeUtilityId };
+          const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { toolId: next } };
+          void program
+            .handleAction(session.instanceId, encodeActionWire(forwarded), viewState)
+            .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope)))
+            .catch((toolError) => console.error("[DEBUG] setActiveTool failed", toolError));
+        }
+        return;
+      }
+
+      completeIntroductionInteraction((interaction) => interaction.on.kind === "action" && interaction.on.id === action.action);
+
+      if (action.controllerId === FRAMEWORK_SYNC_CONTROLLER_ID) {
+        if (action.action === "selectFile") {
+          dispatch({ type: "SET_SYNC_CARD_KIND", value: "file" });
+          dispatch({ type: "SET_SYNC_DRAFT_PATH", value: syncBackboneUri?.startsWith("file://") ? syncBackboneUri.slice("file://".length) : "" });
+          return;
+        }
+        if (action.action === "selectFolder") {
+          dispatch({ type: "SET_SYNC_CARD_KIND", value: "folder" });
+          dispatch({ type: "SET_SYNC_DRAFT_PATH", value: syncBackboneUri?.startsWith("folder://") ? syncBackboneUri.slice("folder://".length) : "" });
+          return;
+        }
+        if (action.action === "selectRemote") {
+          dispatch({ type: "SET_SYNC_CARD_KIND", value: "remote" });
+          const remote = syncBackboneUri?.startsWith("remote://") ? syncBackboneUri.slice("remote://".length) : "";
+          dispatch({ type: "SET_SYNC_DRAFT_PATH", value: remote });
+          return;
+        }
+        if (action.action === "attach") {
+          const path = typeof action.args === "object" && action.args != null && "path" in action.args ? String((action.args as { path?: string }).path ?? "") : syncDraftPath;
+          if (!path.trim()) return;
+          const uri =
+            action.args && typeof action.args === "object" && "kind" in action.args
+              ? String((action.args as { kind?: string }).kind) === "remote"
+                ? (() => {
+                    const [hostPort, ...rest] = path.split("/");
+                    const [spaceId, documentId] = rest.length >= 2 ? [rest[0], rest.slice(1).join("/")] : ["default", rest[0] || syncDocumentId(session, panel, studioMode)];
+                    return buildRemoteBackboneUri(hostPort ?? "127.0.0.1:8787", spaceId, documentId);
+                  })()
+                : String((action.args as { kind?: string }).kind) === "folder"
+                  ? buildFolderBackboneUri(path)
+                  : buildFileBackboneUri(path)
+              : buildFileBackboneUri(path);
+          void attachSyncBackbone(uri);
+          return;
+        }
+        if (action.action === "detach") {
+          void detachSyncBackbone();
+          return;
+        }
+        return;
+      }
+
+      if (studioMode && action.controllerId === landingControllerId && action.action === "importSpace") {
+        importSpaceInputRef.current?.click();
+        return;
+      }
+
+      if (studioMode && action.action === "spawnApp" && action.controllerId !== hostControllerId) {
+        const pluginId = typeof action.args === "object" && action.args != null && "pluginId" in action.args ? String((action.args as { pluginId?: string }).pluginId ?? "") : "";
+        const currentPanel = parsePanelState(session.viewState);
+        const program = currentPanel?.programs.find((entry) => entry.pluginId === pluginId);
+        if (program) void spawnProgram(program);
+        return;
+      }
+
+      if (studioMode && action.controllerId === hostControllerId && action.action === "setActivePanelTab") {
+        const tabId = typeof action.args === "object" && action.args != null && "tabId" in action.args ? String((action.args as { tabId?: string }).tabId ?? hostCatalogueTabId ?? "") : (hostCatalogueTabId ?? "");
+        const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState([], []);
+        updateSpacePanel(buildSpacePanelState(currentPanel.programs, currentPanel.spawnedApps, tabId, currentPanel.activeSpawnedId));
+        return;
+      }
+
+      const pluginEntry = findPluginForAction(action);
+      const plugin = pluginEntry?.handle;
+      if (!plugin) return;
+
+      const targetSession =
+        studioMode && action.controllerId !== session.app.controllerId
+          ? (() => {
+              const spawned = panel?.spawnedApps.find((entry) => {
+                const app = loadedPlugins.find((p) => p.handle.pluginId === entry.pluginId)?.manifest.apps.find((a) => a.id === entry.appId);
+                return app?.controllerId === action.controllerId;
+              });
+              if (!spawned) return session;
+              const app = loadedPlugins.find((p) => p.handle.pluginId === spawned.pluginId)?.manifest.apps.find((a) => a.id === spawned.appId);
+              if (!app) return session;
+              return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: session.viewState };
+            })()
+          : session;
+
+      // 🚫️ The old `setDocument` → `patchAppSource` mirror (spawned-instance content write-back on the
+      // os document) is deleted — app content no longer embeds on the os document at all
+      // (`OsAppInstance.document` is now just an `OsDocumentRef` handle). A spawned instance's content
+      // sync now goes through its own `openDocument`-opened `DocumentHost` channel, same as any other
+      // document; there is no host-side JS mirroring step anymore.
+      // 🪟️ `windowId` is read back off the tagged `action.args` (see `windowMeasuresChrome`/`tagSetActiveUtilityWindow`),
+      // falling back to the active window — stamped into the dispatched view state so the plugin can key any
+      // per-window option mutation off `view_state.windowId` instead of ever guessing at the active window.
+      const actionWindowId = typeof action.args === "object" && action.args != null && typeof (action.args as { windowId?: unknown }).windowId === "string" ? (action.args as { windowId: string }).windowId : undefined;
+      const dispatchWindowId = actionWindowId ?? activeWindowIdRef.current ?? undefined;
+      const dispatchViewState = injectActiveUtility(
+        {
+          ...targetSession.viewState,
+          windowId: dispatchWindowId,
+          windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+        },
+        dispatchWindowId,
+      );
+      const declaredAction = targetSession.app.actions?.some((entry) => entry.id === action.action) ?? false;
+      if (!declaredAction && !FRAMEWORK_RESERVED_ACTION_IDS.has(action.action)) {
+        console.warn("[DEBUG] skipping undeclared action", action.action, targetSession.app.id);
+        return;
+      }
+
+      const interactiveAction = action.action !== "suggestionsTick" && action.action !== "fillBuildTick";
+      if (interactiveAction) beginInteractivePluginAction();
+      return plugin
+        .handleAction(targetSession.instanceId, encodeActionWire(action), dispatchViewState)
+        .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
+        .catch((actionError) => {
+          console.error("[DEBUG] action failed", action.action, action.args, actionError);
+        })
+        .finally(() => {
+          if (interactiveAction) endInteractivePluginAction();
+        });
+    },
+    [
+      applyHostEffects,
+      attachSyncBackbone,
+      clearAllWindowUtilities,
+      detachSyncBackbone,
+      findPluginForAction,
+      injectActiveUtility,
+      loadedPlugins,
+      panel,
+      session,
+      setActiveUtilityForWindow,
+      spawnProgram,
+      studioMode,
+      syncBackboneUri,
+      syncDraftPath,
+      updateSpacePanel,
+      hostControllerId,
+      landingControllerId,
+      hostCatalogueTabId,
+      completeIntroductionInteraction,
+      primaryPluginId,
+      reloadPlugin,
+      uninstallPlugin,
+      pluginSupervisorById,
+    ],
+  );
+
+  /** 🧭️ Logs a shell-chrome command (theme change, dock drag, window resize, panel toggle, …) into the
+   * plugin's session-only command-history panel — routed through the exact same `onAction` funnel as every
+   * other action (see `NOTE_SHELL_COMMAND_ACTION_ID`) so it lands on `targetSession.instanceId` via the
+   * standard `handleAction` call, just tagged with an id the plugin intercepts before the app sees it.
+   * No-ops when there's no active app session. */
+  const noteShellCommand = useCallback(
+    (commandId: string, label: string, detail?: Record<string, unknown>) => {
+      if (!session) return;
+      onAction(buildNoteShellCommandAction(session.app.controllerId, commandId, label, detail));
+    },
+    [session, onAction],
+  );
+
+  const onActionRef = useRef(onAction);
+  useEffect(() => {
+    onActionRef.current = onAction;
+  }, [onAction]);
+
+  // 🐢️ `onAction`'s own identity churns every action (its deps include `session`, `panel`, …). Render
+  // trees built from `UiNode`s only need a *callable* action dispatcher, not a fresh one each time —
+  // route them through this permanently-stable ref indirection so `interpretUiNode`'s `React.memo`
+  // (and any `useMemo` keyed on the dispatcher passed to it) can actually bail.
+  const onActionStable = useCallback((action: Parameters<typeof onAction>[0]) => onActionRef.current(action), []);
+
+  //#region 🎥️TutorialOrchestration
+  /** ⏱️ Real-time throttle for the director's UI/document/event application (~10Hz) — camera stays
+   * smooth every clock tick regardless (see the `subscribe` callback below). */
+  const TUTORIAL_DIRECTOR_TICK_MS = 90;
+
+  const activeTutorial = useMemo(() => activeTutorials.find((tutorial) => tutorial.id === activeTutorialId) ?? null, [activeTutorials, activeTutorialId]);
+
+  const tutorialClockRef = useRef<TutorialClock | null>(null);
+  if (!tutorialClockRef.current) tutorialClockRef.current = createTutorialClock(activeTutorial?.durationMs ?? 0);
+  const tutorialClock = tutorialClockRef.current;
+  useEffect(() => () => tutorialClockRef.current?.dispose(), []);
+  useEffect(() => {
+    tutorialClock.setDurationMs(activeTutorial?.durationMs ?? 0);
+  }, [activeTutorial?.durationMs, tutorialClock]);
+  useEffect(() => {
+    tutorialClock.setRate(tutorialRate);
+  }, [tutorialRate, tutorialClock]);
+  useEffect(() => {
+    if (tutorialPlaying) tutorialClock.play();
+    else tutorialClock.pause();
+  }, [tutorialPlaying, tutorialClock]);
+
+  const uiBridgeCtxRef = useRef<TutorialUiBridgeContext>({ session, appLabelsOverlay, terminology: uiTerminology, locale: uiLocale });
+  uiBridgeCtxRef.current = { session, appLabelsOverlay, terminology: uiTerminology, locale: uiLocale };
+
+  /** ⏱️ Playhead (ms) the director/seek last applied document/UI tracks up to — the "from" side of the
+   * next `tutorialSlice(def, from, to)` call. Reset to 0 on sandbox (re)start. */
+  const tutorialLastAppliedMsRef = useRef(0);
+  /** 🎬️ Sandboxed-out live document (full `DocumentEnvelope` JSON), restored on stop/exit. */
+  const tutorialDocumentSnapshotRef = useRef<string | null>(null);
+
+  // 🎬️ Sandbox start/stop (design point 3): on activation, snapshot the live document, load `base`, apply
+  // `base.ui`/`base.cameras`, and seek the clock to 0; on deactivation, restore the snapshot.
+  const prevActiveTutorialIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const previousId = prevActiveTutorialIdRef.current;
+    prevActiveTutorialIdRef.current = activeTutorialId;
+    if (previousId === activeTutorialId || !session) return;
+    const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+    if (!plugin) return;
+    if (activeTutorialId) {
+      const def = activeTutorials.find((tutorial) => tutorial.id === activeTutorialId);
+      if (!def) return;
+      tutorialDrivenRef.current = true;
+      void (async () => {
+        try {
+          if (plugin.readAppDocument) tutorialDocumentSnapshotRef.current = await plugin.readAppDocument(session.instanceId);
+        } catch (snapshotError) {
+          console.error("[DEBUG] tutorial sandbox snapshot failed", snapshotError);
+        }
+        try {
+          if (def.base.documentJson && plugin.loadAppDocument) await plugin.loadAppDocument(session.instanceId, def.base.documentJson);
+          else if (def.base.exampleId) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: def.base.exampleId });
+        } catch (loadError) {
+          console.error("[DEBUG] tutorial base document load failed", loadError);
+        }
+        applyTutorialUiSnapshotToShell(dispatch, def.base.ui, uiBridgeCtxRef.current);
+        for (const cameraKeyframe of def.base.cameras) getTutorialCameraDriver(cameraKeyframe.windowId)?.set(cameraKeyframe.camera);
+        tutorialLastAppliedMsRef.current = 0;
+        tutorialClock.seek(0);
+        await refreshUi(session, { kind: "full" });
+        tutorialDrivenRef.current = false;
+      })();
+    } else if (previousId) {
+      tutorialDrivenRef.current = true;
+      void (async () => {
+        try {
+          const snapshotJson = tutorialDocumentSnapshotRef.current;
+          if (snapshotJson && plugin.loadAppDocument) await plugin.loadAppDocument(session.instanceId, snapshotJson);
+        } catch (restoreError) {
+          console.error("[DEBUG] tutorial sandbox restore failed", restoreError);
+        }
+        tutorialDocumentSnapshotRef.current = null;
+        await refreshUi(session, { kind: "full" });
+        tutorialDrivenRef.current = false;
+      })();
+    }
+  }, [activeTutorialId, activeTutorials, session, loadedPlugins, tutorialClock, refreshUi]);
+
+  /** 🎬️ Applies every entry of one `TutorialSlice` (a director tick or a seek span) onto the live
+   * session — UI changes first, then document-track entries through the plugin bridge: `Edit` via
+   * `applyOperations` (forward/backward per `slice.forward`), `Load` via `loadAppDocument`,
+   * `Undo`/`Redo`/`Checkpoint`/`CheckoutCheckpoint`/`SwitchAlternative` via the SAME History-action
+   * `onAction` funnel the app's own undo/redo buttons dispatch through (never a bespoke channel) — then
+   * pulses any annotational event's target element via the existing `celebrateElements` vocabulary. */
+  const applyTutorialSliceToShell = useCallback(
+    async (slice: TutorialSlice, activeSession: ActiveSession) => {
+      for (const change of slice.uiChanges) applyTutorialUiChangeToShell(dispatch, change, uiBridgeCtxRef.current);
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === activeSession.pluginId)?.handle;
+      let documentTouched = false;
+      for (const documentEvent of slice.document) {
+        const kind: TutorialDocumentEventKind = documentEvent.kind;
+        if (kind.kind === "edit") {
+          documentTouched = true;
+          const operations = slice.forward ? kind.forwards : kind.backwards;
+          if (plugin?.applyOperations) await plugin.applyOperations(activeSession.instanceId, encodeOperationEnvelopesPack(operations));
+        } else if (kind.kind === "load") {
+          documentTouched = true;
+          const documentJson = slice.forward ? kind.documentJson : kind.previousJson;
+          if (plugin?.loadAppDocument) await plugin.loadAppDocument(activeSession.instanceId, documentJson);
+        } else if (kind.kind === "undo") {
+          onActionRef.current({ controllerId: activeSession.app.controllerId, action: slice.forward ? "undo" : "redo" });
+        } else if (kind.kind === "redo") {
+          onActionRef.current({ controllerId: activeSession.app.controllerId, action: slice.forward ? "redo" : "undo" });
+        } else if (kind.kind === "checkpoint") {
+          if (slice.forward) onActionRef.current({ controllerId: activeSession.app.controllerId, action: "commitCheckpoint" });
+        } else if (kind.kind === "checkoutCheckpoint") {
+          onActionRef.current({ controllerId: activeSession.app.controllerId, action: "checkoutCheckpoint", args: { checkpointId: kind.checkpointId } });
+        } else if (kind.kind === "switchAlternative") {
+          onActionRef.current({ controllerId: activeSession.app.controllerId, action: "switchAlternative", args: { alternativeId: kind.alternativeId } });
+        }
+      }
+      for (const event of slice.events) {
+        const kind = event.kind;
+        const targetId = kind.kind === "action" ? kind.action : kind.kind === "command" ? kind.command : undefined;
+        if (targetId && scope.rootRef.current) celebrateElements(elementIdSelector(targetId), CELEBRATE_STAMP_DURATION_MS, scope.rootRef.current);
+      }
+      if (documentTouched) await refreshUi(activeSession, { kind: "full" });
+    },
+    [loadedPlugins, refreshUi],
+  );
+
+  // 🎬️ Director: one subscription to the clock's rAF-driven ticks. Camera interpolation applies every
+  // tick (smooth); UI/document/event application throttles to `TUTORIAL_DIRECTOR_TICK_MS`.
+  useEffect(() => {
+    const def = activeTutorial;
+    if (!def || !session) return;
+    let lastHeavyTickAt = 0;
+    const cameraWindowIds = new Set([...def.base.cameras, ...def.tracks.camera].map((keyframe) => keyframe.windowId));
+    const unsubscribe = tutorialClock.subscribe(() => {
+      const t = tutorialClock.getTimeMs();
+      for (const windowId of cameraWindowIds) {
+        const pose = tutorialCameraAt(def, windowId, t);
+        if (pose) getTutorialCameraDriver(windowId)?.set(pose);
+      }
+      if (!tutorialClock.isPlaying()) return;
+      const now = performance.now();
+      if (now - lastHeavyTickAt < TUTORIAL_DIRECTOR_TICK_MS) return;
+      lastHeavyTickAt = now;
+      const from = tutorialLastAppliedMsRef.current;
+      if (from === t) return;
+      const slice = tutorialSlice(def, from, t);
+      tutorialLastAppliedMsRef.current = t;
+      tutorialDrivenRef.current = true;
+      void applyTutorialSliceToShell(slice, session).finally(() => {
+        tutorialDrivenRef.current = false;
+      });
+    });
+    return unsubscribe;
+  }, [activeTutorial, session, tutorialClock, applyTutorialSliceToShell]);
+
+  /** ✂️ Seek/rebuild (design point 5): composes UI wholesale (never accumulates deltas across a seek —
+   * mirrors the Rust `tutorial_slice` doc comment's own warning), applies the forward/backward document
+   * span crossed since the last applied playhead, sets every camera exactly (no interpolation on a seek),
+   * and moves the clock. */
+  const seekTutorial = useCallback(
+    (ms: number) => {
+      const def = activeTutorial;
+      if (!def || !session) return;
+      const clamped = Math.min(def.durationMs, Math.max(0, ms));
+      const from = tutorialLastAppliedMsRef.current;
+      tutorialDrivenRef.current = true;
+      void (async () => {
+        applyTutorialUiSnapshotToShell(dispatch, composeTutorialUi(def, clamped), uiBridgeCtxRef.current);
+        const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+        const slice = tutorialSlice(def, from, clamped);
+        let documentTouched = false;
+        for (const documentEvent of slice.document) {
+          const kind: TutorialDocumentEventKind = documentEvent.kind;
+          if (kind.kind === "edit") {
+            documentTouched = true;
+            const operations = slice.forward ? kind.forwards : kind.backwards;
+            if (plugin?.applyOperations) await plugin.applyOperations(session.instanceId, encodeOperationEnvelopesPack(operations));
+          } else if (kind.kind === "load") {
+            documentTouched = true;
+            const documentJson = slice.forward ? kind.documentJson : kind.previousJson;
+            if (plugin?.loadAppDocument) await plugin.loadAppDocument(session.instanceId, documentJson);
+          }
+          // 🚧️ Undo/Redo/Checkpoint/CheckoutCheckpoint/SwitchAlternative crossings mid-seek are an honest
+          // scope cut here (replaying a crossed history op out of its natural live-dispatch order is
+          // ambiguous without more VCS-side infrastructure) — the director's per-tick forward playback
+          // above still applies them correctly; only a large scrub jumping OVER one of these entries misses it.
+        }
+        const cameraWindowIds = new Set([...def.base.cameras, ...def.tracks.camera].map((keyframe) => keyframe.windowId));
+        for (const windowId of cameraWindowIds) {
+          const pose = tutorialCameraAt(def, windowId, clamped);
+          if (pose) getTutorialCameraDriver(windowId)?.set(pose);
+        }
+        tutorialLastAppliedMsRef.current = clamped;
+        tutorialClock.seek(clamped);
+        if (documentTouched) await refreshUi(session, { kind: "full" });
+        console.log("[DEBUG] tutorial rebuild", { atMs: clamped });
+        tutorialDrivenRef.current = false;
+      })();
+    },
+    [activeTutorial, session, loadedPlugins, tutorialClock, refreshUi],
+  );
+
+  /** ▶️ Play/pause toggle — the deviation-converge path (design point 6): snaps document+UI to the
+   * composed target at the current playhead, tweens the camera over `TUTORIAL_CONVERGE_MS` (real-time,
+   * rate-independent) from each window's LIVE pose to its target pose, then resumes the clock. */
+  const playPauseTutorial = useCallback(() => {
+    if (!activeTutorial) return;
+    if (tutorialPlaying) {
+      dispatch({ type: "SET_TUTORIAL_PLAYING", value: false });
+      return;
+    }
+    if (tutorialDeviated && session) {
+      const def = activeTutorial;
+      const atMs = tutorialClock.getTimeMs();
+      tutorialDrivenRef.current = true;
+      applyTutorialUiSnapshotToShell(dispatch, composeTutorialUi(def, atMs), uiBridgeCtxRef.current);
+      const cameraWindowIds = new Set([...def.base.cameras, ...def.tracks.camera].map((keyframe) => keyframe.windowId));
+      const startPoseByWindow = new Map<string, TutorialCameraState>();
+      for (const windowId of cameraWindowIds) {
+        const live = getTutorialCameraDriver(windowId)?.get();
+        if (live) startPoseByWindow.set(windowId, live);
+      }
+      const startedAt = performance.now();
+      const tween = (now: number) => {
+        const progress = Math.min(1, (now - startedAt) / TUTORIAL_CONVERGE_MS);
+        for (const windowId of cameraWindowIds) {
+          const targetPose = tutorialCameraAt(def, windowId, atMs);
+          if (!targetPose) continue;
+          const driver = getTutorialCameraDriver(windowId);
+          if (!driver) continue;
+          const startPose = startPoseByWindow.get(windowId);
+          if (startPose && startPose.kind === targetPose.kind) {
+            driver.set(interpolateTutorialCamera({ at: 0, windowId, camera: startPose, easing: "linear" }, { at: TUTORIAL_CONVERGE_MS, windowId, camera: targetPose, easing: "linear" }, progress * TUTORIAL_CONVERGE_MS));
+          } else {
+            driver.set(targetPose);
+          }
+        }
+        if (progress < 1) requestAnimationFrame(tween);
+        else {
+          tutorialDrivenRef.current = false;
+          dispatch({ type: "SET_TUTORIAL_DEVIATED", value: false });
+          dispatch({ type: "SET_TUTORIAL_PLAYING", value: true });
+        }
+      };
+      requestAnimationFrame(tween);
+      return;
+    }
+    dispatch({ type: "SET_TUTORIAL_PLAYING", value: true });
+  }, [activeTutorial, tutorialPlaying, tutorialDeviated, session, tutorialClock]);
+
+  const startTutorial = useCallback(
+    (tutorialId: string) => {
+      if (!activeTutorials.some((tutorial) => tutorial.id === tutorialId)) return;
+      dispatch({ type: "SET_TUTORIAL", value: tutorialId });
+    },
+    [activeTutorials],
+  );
+  const stopTutorial = useCallback(() => {
+    dispatch({ type: "SET_TUTORIAL", value: null });
+  }, []);
+
+  /** ⏺️ Arms/disarms `TutorialRecorder` against the LIVE (never sandboxed) document — a recording IS the
+   * user's work. On stop: light `validateTutorial` sanity check, then serialize + trigger a browser
+   * download, matching the repo's existing media-export download pattern. */
+  const toggleTutorialRecording = useCallback(() => {
+    if (!session) return;
+    const recorder = tutorialRecorderRef.current;
+    if (recorder) {
+      tutorialRecorderRef.current = null;
+      const id = `recorded-${session.app.id}-${Date.now()}`;
+      const def = recorder.build(id, `${session.app.id} recording`);
+      const validationError = validateTutorial(def);
+      if (validationError) console.error("[DEBUG] tutorial recording validation failed", validationError);
+      const json = JSON.stringify(def, null, 2);
+      console.log("[DEBUG] tutorial recording", json);
+      downloadMediaExport(`tutorial-${session.app.id}-${Date.now()}.ops`, "text/plain", json);
+      dispatch({ type: "SET_TUTORIAL_RECORDING", value: false });
+      return;
+    }
+    void (async () => {
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+      let documentJson: string | null = null;
+      try {
+        if (plugin?.readAppDocument) documentJson = await plugin.readAppDocument(session.instanceId);
+      } catch (captureError) {
+        console.error("[DEBUG] tutorial recorder base capture failed", captureError);
+      }
+      tutorialRecorderRef.current = new TutorialRecorder(captureTutorialUiSnapshot(shellStateRef.current, session), documentJson);
+      dispatch({ type: "SET_TUTORIAL_RECORDING", value: true });
+    })();
+  }, [session, loadedPlugins]);
+
+  useEffect(() => {
+    startTutorialRef.current = startTutorial;
+    stopTutorialRef.current = stopTutorial;
+    toggleTutorialRecordingRef.current = toggleTutorialRecording;
+  }, [startTutorial, stopTutorial, toggleTutorialRecording]);
+
+  // ⏺️ Recorder: UI-state diff on every `ShellState` change (catches panel-tab clicks/tree expands/etc.
+  // that bypass `onAction`), a periodic full-snapshot keyframe every 5s, and a 10Hz epsilon-filtered
+  // camera sampler per registered driver (world drags bypass `onAction` entirely).
+  useEffect(() => {
+    if (!tutorialRecording) return;
+    tutorialRecorderRef.current?.recordUiDiff(captureTutorialUiSnapshot(shellState, session));
+  }, [tutorialRecording, shellState, session]);
+
+  useEffect(() => {
+    if (!tutorialRecording || !session || typeof window === "undefined") return;
+    const interval = window.setInterval(() => {
+      tutorialRecorderRef.current?.recordSnapshot(captureTutorialUiSnapshot(shellStateRef.current, session));
+    }, 5000);
+    return () => window.clearInterval(interval);
+  }, [tutorialRecording, session]);
+
+  useEffect(() => {
+    if (!tutorialRecording || !session || typeof window === "undefined") return;
+    const interval = window.setInterval(() => {
+      const recorder = tutorialRecorderRef.current;
+      if (!recorder) return;
+      for (const instance of sessionWindowInstances(session.app, extraWindowInstancesRef.current)) {
+        const pose = getTutorialCameraDriver(instance.id)?.get();
+        if (pose) recorder.sampleCamera(instance.id, pose);
+      }
+    }, 100);
+    return () => window.clearInterval(interval);
+  }, [tutorialRecording, session]);
+
+  const addTutorialChapter = useCallback(() => {
+    tutorialRecorderRef.current?.addChapter();
+  }, []);
+
+  const tutorialChapterMarkers = useMemo(
+    (): readonly TutorialChapterMarker[] => (activeTutorial ? activeTutorial.chapters.map((chapter) => ({ id: chapter.id, title: resolveManifestLabel(chapter.title, uiTerminology, uiLocale), atMs: chapter.at })) : []),
+    [activeTutorial, uiTerminology, uiLocale],
+  );
+  //#endregion 🎥️TutorialOrchestration
+
+  const studioSessionActive = studioMode && session?.app.id === hostAppId;
+  // 🏠️🧳️ Once `studioSessionActive` is true, `session.app` *is* the host app, so its own self-declared
+  // `controllerId` is the right value — no separate app-identity lookup needed.
+  const studioSessionControllerId = studioSessionActive ? session?.app.controllerId : undefined;
+  useEffect(() => {
+    if (!studioSessionActive || !studioSessionControllerId || typeof window === "undefined") return;
+    const identity = presenceClientIdentity(ephemeral);
+    const beat = () => onActionRef.current({ controllerId: studioSessionControllerId, action: "presenceHeartbeat", args: identity });
+    const initial = window.setTimeout(beat, 1000);
+    const timer = window.setInterval(beat, PRESENCE_HEARTBEAT_INTERVAL_MS);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(timer);
+    };
+  }, [studioSessionActive, studioSessionControllerId, ephemeral]);
+
+  usePanelChromeHotkeys({
+    // 📱️ All eight anchor hotkeys collapse onto the single mobile panel toggle on mobile. Same `shell.panelToggle`
+    // commandId as the mouse-driven toggle in `buildPanelSelectionProps` (so keyboard/mouse fold together),
+    // flagged `hotkey: true` in detail.
+    onToggle: (anchor) => {
+      if (mobile) dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: (visible) => !visible });
+      else dispatch({ type: "SET_PANEL_VISIBLE", anchor, value: (visible) => !visible });
+      noteShellCommand("shell.panelToggle", shellLabel("ui.shellCommand.panelToggle"), { anchor: mobile ? undefined : anchor, hotkey: true });
+    },
+  });
+
+  useElementsSurfaceChrome({ appearance: uiAppearance, device: uiDevice, driver: uiDriver }, scope.rootRef.current ?? undefined);
+
+  //#region 💾️ uiPrefs persistence (skips writes for any locked preference; an ephemeral brand's
+  // `scope.storage` is already an in-memory port, so the writes below are harmless there too — no more
+  // `ephemeral` branch needed to skip them outright)
+  useEffect(() => {
+    if (!locks.appearance) writeStoredUiChromeAppearance(scope.storage, uiAppearance);
+    writeStoredUiChromeLayout(scope.storage, uiLayout);
+    writeStoredUiDriverId(scope.storage, uiDriverId);
+    writeStoredUiCustomDrivers(scope.storage, uiCustomDrivers);
+    writeStoredUiKeybindingOverrides(scope.storage, uiKeybindingOverrides);
+    if (!locks.locale) writeStoredUiChromeLocale(scope.storage, uiLocale);
+    // 🐚️ This shell's own i18next instance (not the shared `uiI18n` singleton) — and its own root's
+    // `lang` attribute; `document.documentElement.lang` stays reserved for the page-owning case.
+    void scope.i18n.changeLanguage(uiLocale);
+    if (scope.ownsPage) {
+      if (typeof document !== "undefined") document.documentElement.lang = uiLocale;
+    } else if (scope.rootRef.current) {
+      scope.rootRef.current.lang = uiLocale;
+    }
+    if (!locks.terminology) writeStoredUiChromeTerminology(scope.storage, uiTerminology);
+    // 🐚️ `setActiveUiTheme` is page-global (writes `document.documentElement`'s CSS vars) — correct only
+    // for the page-owning shell. A co-mounted embedded shell paints its own theme tokens onto its own
+    // `.semio-scope` root instead, via `applyUiThemeToRoot`, so two shells with different `themeId` locks
+    // never fight over the same document-wide tokens.
+    if (scope.ownsPage) {
+      setActiveUiTheme(uiTheme);
+    } else if (scope.rootRef.current) {
+      applyUiThemeToRoot(scope.rootRef.current, uiTheme);
+    }
+    if (!locks.themeId) {
+      writeStoredUiChromeThemeSnapshot(scope.storage, uiTheme);
+      writeStoredUiChromeThemeId(scope.storage, uiThemeId);
+    }
+    writeStoredUiCustomThemes(scope.storage, uiCustomThemes);
+  }, [uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiKeybindingOverrides, uiLocale, uiTerminology, uiTheme, uiThemeId, uiCustomThemes, locks, scope]);
+
+  // 🐚️ Unmount cleanup for the embedded (non-page-owning) case — a shell that painted its own root's
+  // theme tokens must remove them on unmount, or a later, unrelated element reused at the same DOM
+  // position (React/vite HMR reuse, or another shell's canvas-clone assets in a dev harness) would
+  // silently inherit a stale theme's inline overrides. The page-owning case is intentionally left alone:
+  // `document.documentElement` outlives any single shell's lifetime.
+  useEffect(() => {
+    if (scope.ownsPage) return;
+    return () => {
+      if (scope.rootRef.current) clearUiThemeFromRoot(scope.rootRef.current);
+    };
+  }, [scope]);
+  //#endregion
+
+  useActionHotkey(
+    "ui.nav.back",
+    useCallback(() => {
+      if (canGoBack) goBack();
+    }, [canGoBack, goBack]),
+    undefined,
+    [canGoBack, goBack],
+    { overrides: uiKeybindingOverrides },
+  );
+  useActionHotkey(
+    "ui.nav.forward",
+    useCallback(() => {
+      if (canGoForward) goForward();
+    }, [canGoForward, goForward]),
+    undefined,
+    [canGoForward, goForward],
+    { overrides: uiKeybindingOverrides },
+  );
+  useActionHotkey(
+    "ui.nav.up",
+    useCallback(() => {
+      if (canGoUp) goUp();
+    }, [canGoUp, goUp]),
+    undefined,
+    [canGoUp, goUp],
+    { overrides: uiKeybindingOverrides },
+  );
+  useActionHotkey(
+    "ui.search.toggle",
+    useCallback(() => dispatch({ type: "SET_SEARCH_OPEN", value: (open) => !open }), []),
+    undefined,
+    [],
+    { overrides: uiKeybindingOverrides },
+  );
+  useActionHotkey(
+    "ui.find.toggle",
+    useCallback(() => dispatch({ type: "SET_FIND_OPEN", value: (open) => !open }), []),
+    undefined,
+    [],
+    { overrides: uiKeybindingOverrides },
+  );
+
+  const applyNamedLayout = useCallback(
+    (layout: WindowLayout) => {
+      if (!session) return;
+      const seeded = applyFrameworkLayoutSeed(layout, session.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale);
+      extraWindowInstancesRef.current = seeded.extraInstances;
+      extraWindowCounterRef.current = seeded.extraInstances.length;
+      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+      dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+      // 🪟️ Hand the just-computed instance list straight to the fetch rather than reading `extraWindowInstances`
+      // state (which wouldn't reflect this dispatch until the next render) — every newly-seeded pane's own
+      // body/measures/engagement gets fetched immediately instead of showing "missing window" until later.
+      void refreshUi(session, { kind: "full" }, seeded.extraInstances);
+    },
+    [session, appLabelsOverlay, refreshUi, uiTerminology, uiLocale],
+  );
+
+  const applyModeChange = useCallback(
+    (modeId: string) => {
+      // 🛠️ Tools are scoped to a mode — switching modes always clears the active tool (and every
+      // window's active utility), mirroring how a fresh mode starts with no utility pressed either.
+      dispatch({ type: "SET_ACTIVE_TOOL", toolId: null });
+      dispatch({
+        type: "SET_SESSION",
+        value: (current) => {
+          if (!current) return current;
+          const layout = resolveLayoutForMode(current.app, modeId);
+          const nextSession: ActiveSession = { ...current, viewState: { ...current.viewState, activeModeId: modeId, activeToolId: undefined } };
+          if (layout) {
+            const seeded = applyFrameworkLayoutSeed(layout, current.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale);
+            extraWindowInstancesRef.current = seeded.extraInstances;
+            extraWindowCounterRef.current = seeded.extraInstances.length;
+            dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+            dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+            dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+            void refreshUi(nextSession, { kind: "full" }, seeded.extraInstances);
+          }
+          return nextSession;
+        },
+      });
+    },
+    [appLabelsOverlay, refreshUi, uiTerminology, uiLocale],
+  );
+
+  const handleTemplateDrop = useCallback(
+    (payload: WindowTemplateDropPayload, target: ModeCanvasDropTarget) => {
+      if (!session) return;
+      const kind = session.app.windowKinds.find((entry) => entry.id === payload.windowKindId);
+      if (!kind) return;
+      extraWindowCounterRef.current += 1;
+      const instanceId = `${payload.windowKindId}-${extraWindowCounterRef.current}`;
+      const projectionSpec = decodeWorldProjectionTemplateId(payload.templateId);
+      if (projectionSpec) registerPendingWorldProjection(instanceId, projectionSpec);
+      const title = projectionSpec ? worldProjectionSpecLabel(projectionSpec) : resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label, uiTerminology, uiLocale));
+      const nextExtraInstances = [...extraWindowInstancesRef.current, { id: instanceId, windowKindId: payload.windowKindId, title }];
+      extraWindowInstancesRef.current = nextExtraInstances;
+      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: nextExtraInstances });
+      if (projectionSpec) {
+        dispatch({ type: "SET_WINDOW_TITLE", windowId: instanceId, title });
+        dispatch({ type: "SET_WINDOW_ICON", windowId: instanceId, iconId: worldProjectionSpecIconId(projectionSpec) as IconName });
+      }
+      // 🪟️ The new split pane is its own window instance — fetch its body/measures/engagement right away
+      // (see `applyNamedLayout`'s comment) rather than waiting for an unrelated action to trigger a refresh.
+      void refreshUi(session, { kind: "full" }, nextExtraInstances);
+      dispatch({
+        type: "SET_SHELL_LAYOUT",
+        value: (current) => {
+          const base =
+            current ??
+            resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale).modeLayout;
+          return insertWindowAtDropZone(base, instanceId, target);
+        },
+      });
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: instanceId });
+      noteShellCommand("shell.windowSplit", shellLabel("ui.shellCommand.windowSplit"), { windowKindId: payload.windowKindId, instanceId });
+    },
+    [appLabelsOverlay, refreshUi, session, noteShellCommand, uiTerminology, uiLocale],
+  );
+
+  const displayHostRef = useRef<DisplayHostApi | null>(null);
+  const displayHost = useNamedLayoutHost({
+    appId: session?.app.id ?? "framework-os",
+    windowKinds: session?.app.windowKinds.map((kind) => ({ ...kind, label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label, uiTerminology, uiLocale)) })) ?? [],
+    builtinLayouts: session?.app.namedLayouts ?? [],
+    currentLayout: captureCurrentFrameworkLayout(shellLayout, extraWindowInstances, session?.app.defaultLayout),
+    onApplyLayout: applyNamedLayout,
+    namedLayoutStore,
+  });
+  displayHostRef.current = displayHost;
+
+  //#region 🔖️ThemeMutators
+  const uiThemeBase = uiThemeDraft ?? uiTheme;
+  const uiThemeDirty = uiThemeDraft !== null;
+  const uiThemeList = useMemo((): readonly UiTheme[] => [...builtinUiThemes(), ...Object.values(uiCustomThemes)], [uiCustomThemes]);
+  const uiDriverList = useMemo((): readonly UiDriver[] => [...builtinUiDrivers(), ...Object.values(uiCustomDrivers)], [uiCustomDrivers]);
+  const keysByActionId = useMemo(() => buildKeysByActionId(session?.app.keybindings ?? []), [session?.app.keybindings]);
+  const controlKeybindings = useMemo(() => composeControlKeybindings(keysByActionId, uiKeybindingOverrides), [keysByActionId, uiKeybindingOverrides]);
+  const osCommands = useMemo(
+    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])], activeIntroduction != null, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable, uiTerminology, uiLocale),
+    [uiThemeList, session?.app.terminologies, activeIntroduction, uiLocale, uiTerminology, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable],
+  );
+
+  /** 🧭️ Direct theme/appearance/locale/terminology/driver/layout setters below (settings panel, theme/driver
+   * editors) bypass `dispatchOsCommand`'s named-command path entirely — this reuses the exact same `os.*`
+   * command id (and its `osCommands`-resolved, locale-adapted label) so a direct-path change folds together
+   * with a command-palette-triggered one in the history panel regardless of which path triggered it. */
+  const noteOsCommand = useCallback(
+    (commandId: string, detail?: Record<string, unknown>) => {
+      const label = osCommands.find((entry) => entry.id === commandId)?.label ?? commandId;
+      noteShellCommand(commandId, label, detail);
+    },
+    [osCommands, noteShellCommand],
+  );
+
+  const draftThemePatch = useCallback(
+    (patch: (next: UiTheme) => void) => {
+      const next = structuredClone(uiThemeBase);
+      patch(next);
+      dispatch({ type: "SET_UI_THEME_DRAFT", value: next });
+    },
+    [uiThemeBase],
+  );
+
+  const setThemeId = useCallback(
+    (id: string) => {
+      dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
+      dispatch({ type: "SET_UI_THEME_ID", value: id });
+      noteOsCommand("os.setThemeId", { themeId: id });
+    },
+    [noteOsCommand],
+  );
+
+  const setThemeColor = useCallback(
+    (key: string, hex: string) =>
+      draftThemePatch((next) => {
+        next.colors[key] = hex;
+      }),
+    [draftThemePatch],
+  );
+  const setThemeSpacing = useCallback(
+    (key: string, value: string) =>
+      draftThemePatch((next) => {
+        next.spacing[key] = value;
+      }),
+    [draftThemePatch],
+  );
+  const setThemeFontStack = useCallback(
+    (key: string, value: string) =>
+      draftThemePatch((next) => {
+        next.fontStacks[key] = value;
+      }),
+    [draftThemePatch],
+  );
+  const setThemeStroke = useCallback(
+    (key: string, value: number | number[]) =>
+      draftThemePatch((next) => {
+        next.strokes[key] = value;
+      }),
+    [draftThemePatch],
+  );
+  const setThemeRadius = useCallback(
+    (key: string, value: number) =>
+      draftThemePatch((next) => {
+        next.radii[key] = value;
+      }),
+    [draftThemePatch],
+  );
+  const setThemeOpacity = useCallback(
+    (key: string, value: number) =>
+      draftThemePatch((next) => {
+        next.opacities[key] = value;
+      }),
+    [draftThemePatch],
+  );
+  const setThemeMetric = useCallback(
+    (section: string, key: string, value: number | number[]) =>
+      draftThemePatch((next) => {
+        next.metrics[section] = { ...(next.metrics[section] ?? {}), [key]: value };
+      }),
+    [draftThemePatch],
+  );
+  const setThemeAppearancePaint = useCallback(
+    (appearance: ThemeAppearanceName, group: ThemePaletteGroup, key: string, hex: string, alpha?: number) =>
+      draftThemePatch((next) => {
+        next.appearances[appearance][group][key] = alpha === undefined ? { hex } : { hex, alpha };
+      }),
+    [draftThemePatch],
+  );
+
+  const resetTheme = useCallback(() => {
+    dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
+    dispatch({ type: "SET_UI_THEME_ID", value: "semio" });
+  }, []);
+
+  const saveTheme = useCallback(
+    (label: string) => {
+      const trimmed = label.trim();
+      if (!trimmed) return;
+      const slug = trimmed
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-+|-+$)/g, "");
+      if (!slug) return;
+      const id = `custom.${slug}`;
+      const saved: UiTheme = { ...uiThemeBase, id, label: trimmed };
+      dispatch({ type: "SET_UI_CUSTOM_THEMES", value: (current) => ({ ...current, [id]: saved }) });
+      dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
+      dispatch({ type: "SET_UI_THEME_ID", value: id });
+    },
+    [uiThemeBase],
+  );
+
+  const deleteTheme = useCallback((id: string) => {
+    if (!id.startsWith("custom.")) return;
+    dispatch({
+      type: "SET_UI_CUSTOM_THEMES",
+      value: (current) => {
+        const { [id]: _removed, ...rest } = current;
+        return rest;
+      },
+    });
+    dispatch({ type: "SET_UI_THEME_ID", value: (current) => (current === id ? "semio" : current) });
+    dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
+  }, []);
+
+  const exportTheme = useCallback(() => {
+    downloadMediaExport(`${uiThemeBase.id}.theme.dsl`, "text/plain", serializeUiTheme(uiThemeBase));
+  }, [uiThemeBase]);
+
+  const importTheme = useCallback(async () => {
+    const opened = (await requestFileOpen(".theme.dsl,.dsl,text/plain"))[0];
+    if (!opened) return;
+    try {
+      const parsed = parseUiTheme(JSON.parse(opened.contents));
+      saveTheme(parsed.label || parsed.id);
+    } catch {
+      /* invalid theme file, ignore */
+    }
+  }, [saveTheme]);
+  //#endregion 🔖️ThemeMutators
+
+  //#region 🚗️DriverMutators
+  const uiDriverBase = uiDriverDraft ?? uiDriver;
+  const uiDriverDirty = uiDriverDraft !== null;
+
+  const setDriverId = useCallback(
+    (id: string) => {
+      dispatch({ type: "SET_UI_DRIVER_DRAFT", value: null });
+      dispatch({ type: "SET_UI_DRIVER_ID", value: id });
+      noteOsCommand("os.setDriver", { driver: id });
+    },
+    [noteOsCommand],
+  );
+
+  const setDriverField = useCallback(
+    <K extends keyof Omit<UiDriver, "id" | "label">>(key: K, value: UiDriver[K]) => {
+      dispatch({ type: "SET_UI_DRIVER_DRAFT", value: { ...uiDriverBase, [key]: value } });
+    },
+    [uiDriverBase],
+  );
+
+  const saveDriver = useCallback(
+    (label: string) => {
+      const trimmed = label.trim();
+      if (!trimmed) return;
+      const slug = trimmed
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-+|-+$)/g, "");
+      if (!slug) return;
+      const id = `custom.${slug}`;
+      const saved: UiDriver = { ...uiDriverBase, id, label: trimmed };
+      dispatch({ type: "SET_UI_CUSTOM_DRIVERS", value: (current) => ({ ...current, [id]: saved }) });
+      dispatch({ type: "SET_UI_DRIVER_DRAFT", value: null });
+      dispatch({ type: "SET_UI_DRIVER_ID", value: id });
+    },
+    [uiDriverBase],
+  );
+
+  const deleteDriver = useCallback((id: string) => {
+    if (!id.startsWith("custom.")) return;
+    dispatch({
+      type: "SET_UI_CUSTOM_DRIVERS",
+      value: (current) => {
+        const { [id]: _removed, ...rest } = current;
+        return rest;
+      },
+    });
+    dispatch({ type: "SET_UI_DRIVER_ID", value: (current) => (current === id ? DEFAULT_UI_DRIVER.id : current) });
+    dispatch({ type: "SET_UI_DRIVER_DRAFT", value: null });
+  }, []);
+  //#endregion 🚗️DriverMutators
+
+  const [themeSaveLabel, setThemeSaveLabel] = useState("");
+  const [driverSaveLabel, setDriverSaveLabel] = useState("");
+  const [keybindingCaptureControlId, setKeybindingCaptureControlId] = useState<string | null>(null);
+  const setKeybindingOverride = useCallback((controlId: string, keys: string) => {
+    dispatch({ type: "SET_UI_KEYBINDING_OVERRIDES", value: (current) => ({ ...current, [controlId]: keys }) });
+  }, []);
+  const resetKeybindingOverride = useCallback((controlId: string) => {
+    dispatch({
+      type: "SET_UI_KEYBINDING_OVERRIDES",
+      value: (current) => {
+        const { [controlId]: _removed, ...rest } = current;
+        return rest;
+      },
+    });
+  }, []);
+  useEffect(() => {
+    const onNavigateToHotkey = (event: Event) => {
+      const path = (event as CustomEvent<{ readonly path?: string }>).detail?.path;
+      if (path) setKeybindingCaptureControlId(path);
+      dispatch({ type: "SET_PANEL_VISIBLE", anchor: "bottom-right", value: true });
+      dispatch({ type: "SET_PANEL_PATH", anchor: "bottom-right", value: ["framework.settings.keybindings"] });
+    };
+    window.addEventListener("navigate-to-hotkey", onNavigateToHotkey);
+    return () => window.removeEventListener("navigate-to-hotkey", onNavigateToHotkey);
+  }, [dispatch]);
+  const settingsHostRef = useRef<SettingsHostApi | null>(null);
+  const settingsHost: SettingsHostApi = useMemo(
+    () => ({
+      appId: session?.app.id,
+      appLabel: session ? appDocumentLabel(resolveAppDocument(session.app, uiTerminology)) : undefined,
+      controllerId: session?.app.controllerId,
+      pluginId: session?.pluginId,
+      driverId: uiDriverId,
+      driver: uiDriverBase,
+      driverDirty: uiDriverDirty,
+      drivers: uiDriverList,
+      setDriverId,
+      setDriverField,
+      saveDriver,
+      deleteDriver,
+      driverSaveLabel,
+      setDriverSaveLabel,
+      appearance: uiAppearance,
+      setAppearance: (value: string) => {
+        dispatch({ type: "SET_UI_APPEARANCE", value: value as ElementsSurfaceAppearance });
+        noteOsCommand("os.setAppearance", { appearance: value });
+      },
+      layout: uiLayout,
+      setLayout: (value: UiChromeLayout) => {
+        dispatch({ type: "SET_UI_LAYOUT", value });
+        noteOsCommand("os.setLayout", { layout: value });
+      },
+      mobileActive: mobile,
+      onResetDock: () => {
+        dispatch({ type: "RESET_DOCK" });
+        dockLayoutStore.reset();
+        dockUiStateStore.reset();
+        noteOsCommand("os.resetDock");
+      },
+      locale: uiLocale,
+      setLocale: (value: UiLocale) => {
+        dispatch({ type: "SET_UI_LOCALE", value });
+        noteOsCommand("os.setLocale", { locale: value });
+      },
+      terminology: uiTerminology,
+      setTerminology: (value: string) => {
+        dispatch({ type: "SET_UI_TERMINOLOGY", value });
+        noteOsCommand("os.setTerminology", { terminology: value });
+      },
+      terminologies: [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])],
+      theme: uiThemeBase,
+      themeId: uiThemeId,
+      themeDirty: uiThemeDirty,
+      themes: uiThemeList,
+      setThemeId,
+      setThemeColor,
+      setThemeSpacing,
+      setThemeFontStack,
+      setThemeStroke,
+      setThemeRadius,
+      setThemeOpacity,
+      setThemeMetric,
+      setThemeAppearancePaint,
+      saveTheme,
+      deleteTheme,
+      resetTheme,
+      exportTheme,
+      importTheme,
+      themeSaveLabel,
+      setThemeSaveLabel,
+      controlKeybindings,
+      keybindingCaptureControlId,
+      setKeybindingCaptureControlId,
+      setKeybindingOverride,
+      resetKeybindingOverride,
+      locks,
+    }),
+    [
+      session,
+      dockLayoutStore,
+      uiDriverId,
+      uiDriverBase,
+      uiDriverDirty,
+      uiDriverList,
+      setDriverId,
+      setDriverField,
+      saveDriver,
+      deleteDriver,
+      driverSaveLabel,
+      setDriverSaveLabel,
+      controlKeybindings,
+      keybindingCaptureControlId,
+      setKeybindingOverride,
+      resetKeybindingOverride,
+      uiAppearance,
+      uiLayout,
+      mobile,
+      uiLocale,
+      uiTerminology,
+      uiThemeBase,
+      uiThemeId,
+      uiThemeDirty,
+      uiThemeList,
+      locks,
+      setThemeId,
+      setThemeColor,
+      setThemeSpacing,
+      setThemeFontStack,
+      setThemeStroke,
+      setThemeRadius,
+      setThemeOpacity,
+      setThemeMetric,
+      setThemeAppearancePaint,
+      saveTheme,
+      deleteTheme,
+      resetTheme,
+      exportTheme,
+      importTheme,
+      themeSaveLabel,
+      setThemeSaveLabel,
+      noteOsCommand,
+    ],
+  );
+  settingsHostRef.current = settingsHost;
+
+  const frameworkDisplayTabs = useMemo(() => createFrameworkDisplayPanelTabs(() => displayHostRef.current), [displayHost, uiLocale]);
+  const frameworkSettingsTabs = useMemo(() => createFrameworkSettingsPanelTabs(() => settingsHostRef.current), [settingsHost]);
+
+  const pluginsHostRef = useRef<PluginsHostApi | null>(null);
+  const pluginsHost: PluginsHostApi = useMemo(
+    () => ({
+      plugins: registry.map((entry): PluginsPanelEntry => {
+        const loadedEntry = loadedPlugins.find((candidate) => candidate.handle.pluginId === entry.pluginId);
+        return {
+          pluginId: entry.pluginId,
+          label: loadedEntry?.manifest.label ?? entry.pluginId,
+          version: loadedEntry?.manifest.version,
+          status: pluginStatusById[entry.pluginId] ?? "available",
+          sourceId: pluginSource.id,
+          canUninstall: entry.pluginId !== primaryPluginId && session?.pluginId !== entry.pluginId,
+        };
+      }),
+      install: (pluginId) => void installPlugin(pluginId),
+      uninstall: (pluginId) => void uninstallPlugin(pluginId),
+      reload: (pluginId) => void reloadPlugin(pluginId),
+    }),
+    [registry, loadedPlugins, pluginStatusById, pluginSource, primaryPluginId, session?.pluginId, installPlugin, uninstallPlugin, reloadPlugin],
+  );
+  pluginsHostRef.current = pluginsHost;
+  const frameworkPluginsTabs = useMemo(() => createFrameworkPluginsPanelTabs(() => pluginsHostRef.current), [pluginsHost]);
+
+  // 🐚️ Gated to this shell via `useShellKeydown` below — was an unconditional `window` keydown listener,
+  // so every mounted shell fired its bound action (and could `preventDefault()` out from under another
+  // shell) for every keystroke on the page regardless of which shell the user was actually using.
+  const handleAppKeydown = useCallback(
+    (event: KeyboardEvent) => {
+      if (!session) return;
+      const parseKeys = (keys: string) =>
+        keys
+          .split(",")
+          .map((key) => key.trim().toLowerCase())
+          .filter(Boolean);
+      const isEditableTarget = (target: EventTarget | null) => {
+        if (!(target instanceof HTMLElement)) return false;
+        const tag = target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+        if (target.isContentEditable) return true;
+        return target.closest("[contenteditable='true'], [role='textbox']") != null;
+      };
+      const matches = (event: KeyboardEvent, binding: string) => {
+        const parts = binding.split("+").map((part) => part.trim());
+        const key = parts[parts.length - 1] ?? "";
+        const needsCtrl = parts.includes("ctrl") || parts.includes("meta") || parts.includes("mod");
+        const needsShift = parts.includes("shift");
+        const needsAlt = parts.includes("alt");
+        const hasCtrl = event.ctrlKey || event.metaKey;
+        if (needsCtrl !== hasCtrl) return false;
+        if (needsShift !== event.shiftKey) return false;
+        if (needsAlt !== event.altKey) return false;
+        return event.key.toLowerCase() === key;
+      };
+      const actionById = new Map(session.app.actions.map((action) => [action.id, action]));
+      if (isEditableTarget(event.target)) return;
+      // 🧰️🛠️ Escape deactivates the active window's active utility (P5), or — when no utility is active —
+      // the active mode-level tool, when nothing is being typed.
+      if (event.key === "Escape") {
+        const windowId = activeWindowIdRef.current;
+        if (windowId && activeUtilityByWindowIdRef.current[windowId]) {
+          event.preventDefault();
+          onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_UTILITY_ACTION_ID, args: { windowId, utilityId: "" } });
+          return;
+        }
+        if (activeToolIdRef.current) {
+          event.preventDefault();
+          onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: "" } });
+          return;
+        }
+      }
+      for (const binding of session.app.keybindings) {
+        for (const chord of parseKeys(binding.keys)) {
+          if (!matches(event, chord)) continue;
+          event.preventDefault();
+          // ✍️ Arg-carrying hotkeys never silent-fire defaults (P4): open the staged form, or — if that
+          // form is already expanded in the active window — treat the hotkey as Execute (with validation).
+          const definition = actionById.get(binding.action.action);
+          if (definition && actionRequiresStagedForm(definition)) {
+            const windowId = activeWindowIdRef.current;
+            if (!windowId) return;
+            const expanded = actionPaneExpandedByWindowIdRef.current[windowId] ?? null;
+            const staged = actionPaneStagedArgsByKeyRef.current[actionStageKey(windowId, definition.id)] ?? {};
+            const intent = resolveKeybindingIntent(definition, expanded, staged);
+            if (intent.kind === "execute") {
+              onAction({ controllerId: session.app.controllerId, action: intent.actionId, args: intent.args });
+            } else if (intent.kind === "open") {
+              dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId, value: false });
+              dispatch({ type: "SET_ACTION_PANE_EXPANDED", windowId, value: intent.actionId });
+            }
+            return;
+          }
+          onAction(binding.action);
+          return;
+        }
+      }
+    },
+    [onAction, session],
+  );
+  useShellKeydown(scope.rootRef, handleAppKeydown, [handleAppKeydown]);
+
+  const activeRightPanelTab = session?.app.panelTabs.find((tab) => panelAnchorForGroup(tab.group) === "top-right");
+  const activePanelTabId = panel?.activePanelTab ?? (activeRightPanelTab ? panelTabKindId(activeRightPanelTab.kind) : undefined) ?? (session?.app.panelTabs[0] ? panelTabKindId(session.app.panelTabs[0].kind) : undefined);
+
+  const workbenchLeftTabs = useMemo((): PanelTabNode[] => {
+    if (!session) return [];
+    const pluginLeftTabs = session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale));
+    if (studioMode && session.app.id === hostAppId && pluginLeftTabs.length > 0) return pluginLeftTabs;
+    const hasPluginDocumentTab = pluginLeftTabs.some((tab) => tab.id === FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
+    if (hasPluginDocumentTab) return pluginLeftTabs;
+    const documentTab = singleTreeLeaf({
+      id: FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+      icon: shellTabIcon(FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID),
+      name: shellLabel("ui.panel.document"),
+      order: 0,
+      tree: staticTreePanelDefinition({
+        sections: [
+          {
+            id: "document.root",
+            label: shellLabel("ui.panel.document"),
+            items: [{ id: "document.empty", label: studioMode ? `${panel?.spawnedApps.length ?? 0} ${shellLabel("ui.panel.spawnedAppsSuffix")}` : shellLabel("ui.panel.documentEmpty") }],
+          },
+        ],
+      }),
+    });
+    return [documentTab, ...pluginLeftTabs];
+  }, [appLabelsOverlay, onAction, panel?.spawnedApps.length, panelUiByKey, session, studioMode, uiLocale, uiTerminology, hostAppId]);
+
+  const detailsRightTabs = useMemo((): PanelTabNode[] => {
+    if (!session) return [];
+    return session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-right").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale));
+  }, [appLabelsOverlay, onAction, panelUiByKey, session, uiTerminology, uiLocale]);
+
+  const settingsRightTabs = useMemo((): PanelTabNode[] => frameworkSettingsTabs, [frameworkSettingsTabs]);
+
+  //#region 🧰️FooterUtilityLeaves — bottom-right's History tab, sourced from the framework-injected
+  // `framework.panel.history` panel tab (every app gets one — see `AppBuilder::build_definition`).
+  const frameworkUtilitiesHistoryTab = useMemo((): PanelTabNode | null => {
+    if (!session) return null;
+    const tab = session.app.panelTabs.find((candidate) => panelTabKindId(candidate.kind) === FRAMEWORK_PANEL_TAB_HISTORY_ID);
+    if (!tab) return null;
+    return panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, 1, appLabelsOverlay, uiTerminology, uiLocale);
+  }, [appLabelsOverlay, onAction, panelUiByKey, session, uiTerminology, uiLocale]);
+  //#endregion 🧰️FooterUtilityLeaves
+
+  //#region 🔄️SyncLeaf — bottom-left's sync tab, replacing the old floating footer SyncAttachCard.
+  const frameworkSyncTab = useMemo((): PanelTabNode | null => {
+    const syncUtilities = buildFrameworkSyncUtilities(syncBackboneUri) as readonly UtilityNode[];
+    if (!syncUtilities.length) return null;
+    const syncStatus = syncBackboneUri ? (syncStatusByDocumentId[syncBackboneUri.replace(/^actor:\/\//, "")] ?? null) : null;
+    return singleTreeLeaf({
+      id: "framework.sync",
+      icon: shellTabIcon(UTILITY_CATEGORY_ICON_ID.sync),
+      name: shellLabel("ui.panel.sync"),
+      order: 0,
+      tree: {
+        sections: [
+          {
+            id: "framework.sync.root",
+            label: "",
+            items: [
+              {
+                id: "framework.sync.card",
+                label: "",
+                control: (
+                  <SyncAttachCard
+                    activeUri={syncBackboneUri}
+                    cardKind={syncCardKind}
+                    draftPath={syncDraftPath}
+                    syncUtilities={syncUtilities}
+                    status={syncStatus}
+                    onAction={onAction}
+                    onDraftPathChange={(value) => dispatch({ type: "SET_SYNC_DRAFT_PATH", value })}
+                    onClose={() => dispatch({ type: "SET_SYNC_CARD_KIND", value: null })}
+                    onAttach={attachSyncBackbone}
+                    onDetach={detachSyncBackbone}
+                  />
+                ),
+              },
+            ],
+          },
+        ],
+      },
+    });
+  }, [attachSyncBackbone, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId, uiLocale]);
+  //#endregion 🔄️SyncLeaf
+
+  const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
+  const activeModeId = session?.viewState.activeModeId ?? session?.app.modes[0]?.id ?? session?.app.id ?? "";
+
+  // 📱️ Moved ahead of `mobilePanelTabs` (below) so its synthetic mobile "App" tab can share the exact
+  // example-select/mode-switcher elements the desktop navbar center cluster renders — single source of truth.
+  const exampleOptions = useMemo(() => {
+    const appId = session?.app.id ?? "";
+    if (!appId) return [];
+    const seen = new Set<string>();
+    return (activePluginManifest?.examples ?? [])
+      .filter((example) => example.appId === appId)
+      .filter((example) => {
+        if (seen.has(example.id)) return false;
+        seen.add(example.id);
+        return true;
+      })
+      .map((example) => ({
+        id: example.id,
+        label: resolveAppLabel(appLabelsOverlay, "example", example.id, resolveManifestLabel(example.label, uiTerminology, uiLocale)),
+        icon: example.iconId,
+      }));
+  }, [activePluginManifest, session?.app.id, appLabelsOverlay, uiTerminology, uiLocale]);
+
+  const dispatchActiveExample = useCallback(
+    (exampleId: string) => {
+      if (!session) return;
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+      if (!plugin) return;
+      onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: exampleId || "" } });
+    },
+    [applyHostEffects, injectActiveUtility, loadedPlugins, onAction, session],
+  );
+
+  /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
+  const exampleSelectElement = useMemo(() => {
+    if (!session || exampleOptions.length === 0 || locks.exampleId || (studioMode && session.app.id === landingAppId)) return null;
+    return (
+      <NavbarExampleSelect
+        key="fixture"
+        id="playground.navbar.fixture"
+        value={activeExampleId}
+        options={exampleOptions}
+        onValueChange={(exampleId) => {
+          dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
+          dispatchActiveExample(exampleId || "");
+        }}
+      />
+    );
+  }, [session, exampleOptions, locks.exampleId, studioMode, landingAppId, activeExampleId, dispatchActiveExample]);
+
+  /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
+  const modeSwitcherElement = useMemo(() => {
+    if (!session || session.app.modes.length <= 1) return null;
+    return (
+      <ButtonGroup key="modes" id="playground.navbar.modes">
+        {session.app.modes.map((mode) => {
+          const isActive = activeModeId === mode.id;
+          return (
+            <ButtonGroupItem
+              key={mode.id}
+              id={`playground.navbar.modes.${mode.id}`}
+              className={cn(isActive && interactiveActiveFillClass)}
+              data-state={isActive ? "on" : undefined}
+              onClick={() => applyModeChange(mode.id)}
+              icon={mode.iconId}
+              text={resolveAppLabel(appLabelsOverlay, "mode", mode.id, resolveManifestLabel(mode.label, uiTerminology, uiLocale))}
+            />
+          );
+        })}
+      </ButtonGroup>
+    );
+  }, [session, activeModeId, applyModeChange, appLabelsOverlay, uiTerminology, uiLocale]);
+
+  const resolvedCommands = useMemo(
+    () => resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale),
+    [osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale],
+  );
+
+  const commandCategoryList = useMemo(() => commandCategories(resolvedCommands), [resolvedCommands, uiLocale]);
+
+  /**
+   * 🎛️ Dispatches a resolved command: os-scope commands are handled locally (no program round trip);
+   * plugin/app/mode-scope commands route through the active session's program `handleCommand`, mirroring
+   * `onAction`'s tail. Plugin commands are only resolvable/dispatchable for the active session's program
+   * instance (no headless-instance routing for non-focused plugins yet).
+   */
+  const onCommand = useCallback(
+    (source: ResolvedCommand["source"], commandId: string, args?: Record<string, unknown>) => {
+      // 🎥️ Same sandbox-start/recorder-arm side effects `START_TUTORIAL_ACTION_ID`/`RECORD_TUTORIAL_ACTION_ID`
+      // need — routed through the `startTutorialRef`/`toggleTutorialRecordingRef` bridge since they need
+      // more context (plugin bridge, sandbox snapshot) than a bare `dispatch` gives `dispatchOsCommand`.
+      if (source.kind === "os" && commandId === "os.playTutorial") {
+        const tutorialId = typeof args?.tutorialId === "string" ? args.tutorialId : "";
+        if (tutorialId) startTutorialRef.current(tutorialId);
+        return;
+      }
+      if (source.kind === "os" && commandId === "os.recordTutorial") {
+        toggleTutorialRecordingRef.current();
+        return;
+      }
+      if (source.kind === "os") {
+        dispatchOsCommand(commandId, args, dispatch, dockLayoutStore, dockUiStateStore, locks);
+        const label = resolvedCommands.find((entry) => entry.definition.id === commandId)?.definition.label ?? commandId;
+        noteShellCommand(commandId, label, args);
+        return;
+      }
+      if (!session) return;
+      // ⏺️ Recorder tap for plugin/app/mode-scope commands — mirrors `onAction`'s tap above.
+      if (tutorialRecordingRef.current && !tutorialDrivenRef.current) {
+        tutorialRecorderRef.current?.recordEvent({ kind: "command", command: commandId, args });
+      }
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+      if (!plugin?.handleAction) return;
+      const dispatchViewState = injectActiveUtility(session.viewState);
+      // 🎯️ App palette commands share the action wire + `command_from_action` bridge — there are no
+      // framework-reserved COMMANDS, so `handleCommand`/`kind:"command"` always hard-errors pointing at
+      // the typed channel (see `VcsDocumentApp::dispatch_command`).
+      void plugin
+        .handleAction(session.instanceId, encodeActionWire({ controllerId: session.app.controllerId, action: commandId, args }), dispatchViewState)
+        .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
+        .catch((commandError) => {
+          console.error("[DEBUG] command failed", commandError);
+        });
+    },
+    [applyHostEffects, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session, locks, resolvedCommands, noteShellCommand],
+  );
+
+  const commandCategoryTabs = useMemo(() => buildCommandCategoryTabs(resolvedCommands, commandCategoryList, expandedCommandIdRef, commandStagedArgsByCommandIdRef, onCommand, dispatch), [resolvedCommands, commandCategoryList, onCommand]);
+
+  // 🗺️ `ToolDefinition.label` is a manifest `LocalizedLabel` field — resolved here, right after
+  // `resolveModeTools` (an external `framework-os-core` helper this file cannot edit), so every
+  // downstream consumer (`buildToolTree`/`buildToolTabs`) keeps reading an already-plain-string `label`.
+  const resolvedModeTools = useMemo(
+    () => resolveModeTools(session?.app, activeModeId).map((tool) => ({ ...tool, label: resolveManifestLabel(tool.label, uiTerminology, uiLocale) })),
+    [session?.app, activeModeId, uiTerminology, uiLocale],
+  );
+
+  const toolTabs = useMemo(
+    () => (session ? buildToolTabs(resolvedModeTools, session.app.controllerId, activeToolIdRef, toolMeasuresByToolIdRef, onActionStable) : []),
+    [resolvedModeTools, session?.app.controllerId, onActionStable],
+  );
+
+  //#region 🧭️DockAssembly — default four-corner arrangement (the two middle anchors start empty save the command palette in bottom-middle) + persisted-override reconciliation + drag-and-drop wiring.
+  const defaultDock = useMemo((): PanelDock => {
+    // 🧭️ Top-left (Workbench: Document/Catalogue), top-right (Details: Inspection/Parameters) and bottom-right
+    // (Settings: Theme/Settings) render their tabs flat, one level up from where they used to sit — the
+    // category-branch wrapper tab is gone, so each leaf is a top-level toggle instead of two clicks deep.
+    const topLeft: PanelTabNode[] = [...workbenchLeftTabs];
+    const bottomLeft: PanelTabNode[] = [];
+    if (frameworkDisplayTabs.length > 0) {
+      bottomLeft.push({ kind: "branch", id: FRAMEWORK_CATEGORY_DISPLAY_ID, icon: categoryTabIcon(frameworkDisplayTabs, "layout-grid"), name: shellLabel("ui.panelToggle.display"), order: 0, children: frameworkDisplayTabs });
+    }
+    if (frameworkSyncTab) bottomLeft.push(frameworkSyncTab);
+    const topRight: PanelTabNode[] = [...detailsRightTabs];
+    const bottomRight: PanelTabNode[] = [...settingsRightTabs, ...frameworkPluginsTabs];
+    if (frameworkUtilitiesHistoryTab) bottomRight.push(frameworkUtilitiesHistoryTab);
+    // 🛠️ Tool categories stay nested under one expandable Tool branch, exactly like Command categories,
+    // placed left of Command (order 0 vs 1) — like commands not being window-level, tools are not
+    // window-level either; both live only on this shared mode-scoped anchor.
+    // 🎛️ Command categories stay nested under one expandable Command branch (unlike flat Theme/Settings
+    // footer toggles) so the folded bottom-middle chrome shows a single Command toggle, not every
+    // category leaf inlined along the footer.
+    const bottomMiddle: PanelTabNode[] = [
+      ...(toolTabs.length > 0 ? [{ kind: "branch" as const, id: FRAMEWORK_CATEGORY_TOOL_ID, icon: categoryTabIcon(toolTabs, "hammer"), name: shellLabel("ui.panelToggle.tool"), order: 0, children: toolTabs }] : []),
+      ...(commandCategoryTabs.length > 0 ? [{ kind: "branch" as const, id: FRAMEWORK_CATEGORY_COMMAND_ID, icon: categoryTabIcon(commandCategoryTabs, "wrench"), name: shellLabel("ui.panelToggle.command"), order: 1, children: commandCategoryTabs }] : []),
+    ];
+    return { anchors: { "top-left": topLeft, "top-middle": [], "top-right": topRight, "right-middle": [], "bottom-right": bottomRight, "bottom-middle": bottomMiddle, "bottom-left": bottomLeft, "left-middle": [] } };
+  }, [commandCategoryTabs, detailsRightTabs, frameworkDisplayTabs, frameworkPluginsTabs, frameworkSyncTab, frameworkUtilitiesHistoryTab, settingsRightTabs, toolTabs, uiLocale, workbenchLeftTabs]);
+
+  useEffect(() => {
+    dispatch({ type: "SET_DOCK_OVERRIDE", value: dockLayoutStore.getSnapshot() });
+  }, [dockLayoutStore]);
+
+  const dock = useMemo((): PanelDock => applyDockSkeleton(defaultDock, dockOverride), [defaultDock, dockOverride]);
+
+  // 📱️ All eight anchors' tabs flattened into the single mobile panel's tab list — defined here (ahead of the
+  // dock-assembly override effects below) so those effects can resolve a mobile-panel path alongside the
+  // desktop per-anchor one.
+  const mobilePanelTabs = useMemo(() => {
+    const anchorTabs = ANCHORS.flatMap((anchor) => defaultDock.anchors[anchor]);
+    // 📱️ The example selector and mode switcher have no navbar room on mobile (see `navbarItems`) — they
+    // surface as one more tab in the merged mobile panel instead, sharing the exact same elements the
+    // desktop navbar center cluster renders.
+    if (!exampleSelectElement && !modeSwitcherElement) return anchorTabs;
+    const appTab = singleTreeLeaf({
+      id: "framework.mobile.app",
+      icon: shellTabIcon("smartphone"),
+      name: shellLabel("ui.mobilePanel.app"),
+      order: 99,
+      tree: {
+        sections: [
+          {
+            id: "framework.mobile.app.root",
+            label: "",
+            items: [
+              ...(exampleSelectElement ? [{ id: "framework.mobile.app.example", label: "", control: exampleSelectElement }] : []),
+              ...(modeSwitcherElement ? [{ id: "framework.mobile.app.modes", label: "", control: modeSwitcherElement }] : []),
+            ],
+          },
+        ],
+      },
+    });
+    return [...anchorTabs, appTab];
+  }, [defaultDock, exampleSelectElement, modeSwitcherElement]);
+
+  /** 🗄️ Skips the very first (pre-hydration) commit so a persisted skeleton isn't clobbered with `null` before the seeding effect above has a chance to read and apply it. */
+  const dockPersistedOnceRef = useRef(false);
+  useEffect(() => {
+    if (!dockPersistedOnceRef.current) {
+      dockPersistedOnceRef.current = true;
+      return;
+    }
+    const nextSkeleton = dockSkeletonOf(dock);
+    const defaultSkeleton = dockSkeletonOf(defaultDock);
+    dockLayoutStore.save(dockSkeletonsEqual(nextSkeleton, defaultSkeleton) ? null : nextSkeleton);
+  }, [dock, defaultDock, dockLayoutStore]);
+
+  useEffect(() => {
+    dispatch({ type: "HYDRATE_DOCK_UI", value: dockUiStateStore.getSnapshot() });
+  }, [dockUiStateStore]);
+
+  /** 🗄️ Same first-commit-skip as the dock skeleton effect above, but also re-arms when the store identity itself changes (app switch) — otherwise the new app's pre-hydration state would be written into its own key on the first post-switch commit. */
+  const dockUiPersistedOnceRef = useRef(false);
+  const dockUiPersistedStoreRef = useRef(dockUiStateStore);
+  useEffect(() => {
+    if (dockUiPersistedStoreRef.current !== dockUiStateStore) {
+      dockUiPersistedStoreRef.current = dockUiStateStore;
+      dockUiPersistedOnceRef.current = false;
+    }
+    if (!dockUiPersistedOnceRef.current) {
+      dockUiPersistedOnceRef.current = true;
+      return;
+    }
+    const anchors: Partial<Record<Anchor, DockUiPanelState>> = {};
+    for (const anchor of ANCHORS) {
+      const panelState = panels[anchor];
+      const entry: DockUiPanelState = {};
+      if (panelState.visible) entry.visible = true;
+      if (panelState.size !== DEFAULT_PANEL_WIDTH_PX) entry.size = panelState.size;
+      if (panelState.path.length > 0) entry.path = panelState.path;
+      if (Object.keys(entry).length > 0) anchors[anchor] = entry;
+    }
+    const hasPathMemory = Object.keys(panelPathMemory).length > 0;
+    const hasTreeOpen = Object.keys(treeOpenStates).length > 0;
+    const isDefault = Object.keys(anchors).length === 0 && !hasPathMemory && !hasTreeOpen;
+    dockUiStateStore.save(isDefault ? null : { version: 3, anchors, pathMemory: hasPathMemory ? panelPathMemory : undefined, treeOpen: hasTreeOpen ? treeOpenStates : undefined });
+  }, [panels, panelPathMemory, treeOpenStates, dockUiStateStore]);
+
+  const handleTabDockDrop = useCallback(
+    (move: PanelTabDockMove) => {
+      const nextDock = moveTabInDock(dock, move);
+      if (nextDock === dock) return;
+      const nextSkeleton = dockSkeletonOf(nextDock);
+      const defaultSkeleton = dockSkeletonOf(defaultDock);
+      dispatch({ type: "SET_DOCK_OVERRIDE", value: dockSkeletonsEqual(nextSkeleton, defaultSkeleton) ? null : nextSkeleton });
+      const targetPath = findPanelTabPath(nextDock.anchors[move.target.anchor], move.tabId);
+      if (targetPath) dispatch({ type: "SET_PANEL_PATH", anchor: move.target.anchor, value: targetPath });
+      if (move.fromAnchor !== move.target.anchor) {
+        const sourceTabs = nextDock.anchors[move.fromAnchor];
+        dispatch({ type: "SET_PANEL_PATH", anchor: move.fromAnchor, value: (prev) => reconcileActivePath(sourceTabs, prev, panelTabChildren) });
+      }
+      dispatch({ type: "SET_PANEL_VISIBLE", anchor: move.target.anchor, value: true });
+      noteShellCommand("shell.dockMove", shellLabel("ui.shellCommand.dockMove"), { tabId: move.tabId, fromAnchor: move.fromAnchor, toAnchor: move.target.anchor });
+    },
+    [dock, defaultDock, noteShellCommand],
+  );
+
+  const handleTreeUnitDockDrop = useCallback(
+    (move: PanelTreeUnitDockMove) => {
+      const nextDock = moveTreeUnitInDock(dock, move);
+      if (nextDock === dock) return;
+      const nextSkeleton = dockSkeletonOf(nextDock);
+      const defaultSkeleton = dockSkeletonOf(defaultDock);
+      dispatch({ type: "SET_DOCK_OVERRIDE", value: dockSkeletonsEqual(nextSkeleton, defaultSkeleton) ? null : nextSkeleton });
+      dispatch({ type: "SET_PANEL_VISIBLE", anchor: move.target.anchor, value: true });
+      noteShellCommand("shell.dockMove", shellLabel("ui.shellCommand.dockMove"), { toAnchor: move.target.anchor });
+    },
+    [dock, defaultDock, noteShellCommand],
+  );
+
+  const studioOverrideTabId = studioMode && session?.app.id === hostAppId ? (panel?.activePanelTab ?? hostCatalogueTabId) : undefined;
+  const studioOverrideAnchor = studioOverrideTabId ? findPanelTabInDock(dock, studioOverrideTabId)?.anchor : undefined;
+  const detailsOverrideTabId = panel?.activePanelTab;
+  const detailsOverrideAnchor = detailsOverrideTabId ? findPanelTabInDock(dock, detailsOverrideTabId)?.anchor : undefined;
+
+  /** @emoji 🎓️ The current introduction step's target element ids (`introduce` + `show`), classified by
+   * shape — `null` unless that shape is present, so every reveal override below (here and in
+   * `modeWindows`) is a plain truthiness check. A folded utility bar/Actions rail/dock panel would
+   * otherwise hide the target from ever mounting (see `useIntroductionAnchorRect`), leaving the step
+   * centered with no cutout and no way for the user to find what to do. Ids are matched, never
+   * reconstructed: a `framework.window.{segment}` id's segment is `elementIdSegment(windowId)`, a lossy
+   * camelCase normalization — comparing `elementIdSegment(windowId) === segment` OR the same for the
+   * instance's window-kind id is the only safe check (Top/Perspective instances share a kind). */
+  const activeIntroductionStep = activeIntroduction && introductionStepIndex != null ? (activeIntroduction.steps[introductionStepIndex] ?? null) : null;
+  const introductionElementIds = useMemo(
+    (): readonly string[] => (activeIntroductionStep ? [activeIntroductionStep.introduce, ...activeIntroductionStep.show].filter((id): id is string => Boolean(id)) : []),
+    [activeIntroductionStep],
+  );
+  const introductionUtilityId = useMemo(() => {
+    if (!session) return null;
+    const utilities = session.app.utilities ?? [];
+    return introductionElementIds.find((id) => utilities.some((utility) => utility.id === id)) ?? null;
+  }, [introductionElementIds, session]);
+  const introductionActionWindowSegment = useMemo(() => {
+    for (const id of introductionElementIds) {
+      const rest = id.startsWith("framework.window.") ? id.slice("framework.window.".length) : null;
+      const actionIndex = rest?.indexOf(".action.") ?? -1;
+      if (rest && actionIndex >= 0) return rest.slice(0, actionIndex);
+    }
+    return null;
+  }, [introductionElementIds]);
+  const introductionPanelTabId = useMemo(() => {
+    for (const id of introductionElementIds) {
+      if (id.startsWith("framework.panelTab.")) {
+        const rest = id.slice("framework.panelTab.".length);
+        return rest.endsWith(".firstDraggable") ? rest.slice(0, -".firstDraggable".length) : rest;
+      }
+    }
+    return null;
+  }, [introductionElementIds]);
+  /** 🛠️ Tool ids the active step asks the user to activate (`interactions` of kind `tool`, or a bare
+   * `tool.<id>` introduce/show). Reveals the Tool category chrome so the leaf tab can be pressed —
+   * never drills into the leaf itself (that would open the inactive activate-toggle tree and, via tab
+   * selection, auto-activate + celebrate before the user acts). */
+  const introductionToolPickIds = useMemo((): readonly string[] => {
+    const fromInteractions = (activeIntroductionStep?.interactions ?? [])
+      .filter((interaction): interaction is IntroductionInteraction & { readonly on: { readonly kind: "tool"; readonly id: string } } => interaction.on.kind === "tool")
+      .map((interaction) => interaction.on.id);
+    if (fromInteractions.length > 0) return fromInteractions;
+    return introductionElementIds.flatMap((id) => {
+      const match = /^tool\.([a-z][a-zA-Z0-9]*)$/.exec(id);
+      return match?.[1] ? [match[1]] : [];
+    });
+  }, [activeIntroductionStep, introductionElementIds]);
+  const introductionPanelTabAnchor = introductionPanelTabId ? findPanelTabInDock(dock, introductionPanelTabId)?.anchor : undefined;
+  const introductionUtilityWindowId = useMemo(() => {
+    if (!introductionUtilityId || !session) return null;
+    for (const kind of session.app.windowKinds) {
+      const utilities = resolveUtilityNodes(session.app, kind, null, kind.id, appLabelsOverlay, uiTerminology, uiLocale);
+      if (utilityNodeTreeContainsId(utilities, introductionUtilityId)) return kind.id;
+    }
+    return null;
+  }, [appLabelsOverlay, introductionUtilityId, session, uiTerminology, uiLocale]);
+  /** 🎓️ Window-kind id whose measures tree owns an introduce/show measure id — force-unfolds the Window
+   * Options rail so targets like `puzzle3d-play-vortex-show` can mount for the tour. */
+  const introductionMeasureWindowId = useMemo(() => {
+    if (!session || introductionElementIds.length === 0) return null;
+    for (const kind of session.app.windowKinds) {
+      const kindMeasures = kind.options.measures ?? [];
+      if (introductionElementIds.some((id) => windowMeasureTreeContainsId(kindMeasures, id))) return kind.id;
+      for (const [windowId, measures] of Object.entries(windowMeasuresByWindowId)) {
+        if (!introductionElementIds.some((id) => windowMeasureTreeContainsId(measures, id))) continue;
+        if (windowId === kind.id || extraWindowInstances.some((instance) => instance.id === windowId && instance.windowKindId === kind.id)) return kind.id;
+      }
+    }
+    return null;
+  }, [extraWindowInstances, introductionElementIds, session, windowMeasuresByWindowId]);
+
+  /** 🛠️ Tool id whose measure tree owns an introduce/show id — keeps mode-level tools like fill
+   * active so targets such as `puzzle3d-play-distribution` stay mounted for the tour. */
+  const introductionToolId = useMemo(() => {
+    if (introductionElementIds.length === 0) return null;
+    for (const [toolId, measures] of Object.entries(toolMeasuresByToolId)) {
+      if (introductionElementIds.some((id) => windowMeasureTreeContainsId(measures, id))) return toolId;
+    }
+    return null;
+  }, [introductionElementIds, toolMeasuresByToolId]);
+
+  const lastIntroductionToolIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!introductionToolId || !session) {
+      lastIntroductionToolIdRef.current = null;
+      return;
+    }
+    if (lastIntroductionToolIdRef.current === introductionToolId && activeToolIdRef.current === introductionToolId) return;
+    lastIntroductionToolIdRef.current = introductionToolId;
+    if (activeToolIdRef.current === introductionToolId) return;
+    onActionStable({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: introductionToolId } });
+  }, [introductionToolId, onActionStable, session]);
+
+  /** 🛠️ Tool-pick steps (e.g. Füllen): open the Tool category so `tool.<id>` leaf tabs mount in the
+   * panel chrome, clear any already-active tool so the user must activate it, and never select the
+   * leaf path (selecting auto-activates and would celebrate before they act). */
+  const lastIntroductionToolPickStepIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!session || introductionToolPickIds.length === 0 || !activeIntroductionStep) {
+      lastIntroductionToolPickStepIdRef.current = null;
+      return;
+    }
+    // 🛠️ Measure-driven keep-alive (`introductionToolId`) owns activation for steps that introduce
+    // tool measures (fill-distribution) — don't fight it by clearing the tool.
+    if (introductionToolId) return;
+    if (lastIntroductionToolPickStepIdRef.current === activeIntroductionStep.id) return;
+    lastIntroductionToolPickStepIdRef.current = activeIntroductionStep.id;
+    for (const toolId of introductionToolPickIds) {
+      if (activeToolIdRef.current === toolId) {
+        onActionStable({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: "" } });
+      }
+    }
+    if (mobile) {
+      const resolved = findPanelTabPath(mobilePanelTabs, FRAMEWORK_CATEGORY_TOOL_ID);
+      if (resolved) dispatch({ type: "SET_MOBILE_PANEL_PATH", value: resolved });
+      dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: true });
+      return;
+    }
+    const toolAnchor = findPanelTabInDock(dock, FRAMEWORK_CATEGORY_TOOL_ID)?.anchor ?? "bottom-middle";
+    const resolved = findPanelTabPath(dock.anchors[toolAnchor], FRAMEWORK_CATEGORY_TOOL_ID);
+    if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: toolAnchor, value: resolved });
+    dispatch({ type: "SET_PANEL_VISIBLE", anchor: toolAnchor, value: true });
+  }, [activeIntroductionStep, dock, introductionToolId, introductionToolPickIds, mobile, mobilePanelTabs, onActionStable, session]);
+
+  const lastIntroductionPanelTabIdRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!introductionPanelTabId || !introductionPanelTabAnchor) {
+      lastIntroductionPanelTabIdRef.current = undefined;
+      return;
+    }
+    if (lastIntroductionPanelTabIdRef.current === introductionPanelTabId) return;
+    lastIntroductionPanelTabIdRef.current = introductionPanelTabId;
+    if (mobile) {
+      const resolved = findPanelTabPath(mobilePanelTabs, introductionPanelTabId);
+      if (resolved) dispatch({ type: "SET_MOBILE_PANEL_PATH", value: resolved });
+      dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: true });
+      return;
+    }
+    const resolved = findPanelTabPath(dock.anchors[introductionPanelTabAnchor], introductionPanelTabId);
+    if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: introductionPanelTabAnchor, value: resolved });
+    dispatch({ type: "SET_PANEL_VISIBLE", anchor: introductionPanelTabAnchor, value: true });
+  }, [introductionPanelTabId, introductionPanelTabAnchor, dock, mobile, mobilePanelTabs]);
+
+  /** 🎓️ Panel interactions complete when their named panel tab is open and visible — checked for every
+   * `panel` interaction of the active step, not just the first, so a step can require opening several. */
+  useEffect(() => {
+    if (!activeIntroductionStep) return;
+    for (const interaction of activeIntroductionStep.interactions ?? []) {
+      if (interaction.on.kind !== "panel") continue;
+      const tabId = interaction.on.id;
+      const located = findPanelTabInDock(dock, tabId);
+      if (!located) continue;
+      const panel = panels[located.anchor];
+      if (!panel.visible || !panel.path.includes(tabId)) continue;
+      completeIntroductionInteraction((candidate) => candidate.on.kind === "panel" && candidate.on.id === tabId);
+    }
+  }, [activeIntroductionStep, completeIntroductionInteraction, dock, panels]);
+
+  /** 🎓️ Expand interactions start with every named tree section forced closed on step entry, then
+   * complete individually as the user opens each one. */
+  const lastIntroductionExpandStepIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const expandInteractions = (activeIntroductionStep?.interactions ?? []).filter((interaction) => interaction.on.kind === "expand");
+    if (!activeIntroductionStep || expandInteractions.length === 0) {
+      lastIntroductionExpandStepIdRef.current = null;
+      return;
+    }
+    if (lastIntroductionExpandStepIdRef.current !== activeIntroductionStep.id) {
+      lastIntroductionExpandStepIdRef.current = activeIntroductionStep.id;
+      for (const interaction of expandInteractions) {
+        const stateSuffix = `tree-section-${interaction.on.id}`;
+        const catalogueKey = `${FRAMEWORK_PANEL_TAB_CATALOGUE_ID}.tree:${stateSuffix}`;
+        dispatch({ type: "SET_TREE_OPEN_STATE", id: catalogueKey, open: false });
+      }
+      return;
+    }
+    for (const interaction of expandInteractions) {
+      const sectionId = interaction.on.id;
+      const stateSuffix = `tree-section-${sectionId}`;
+      const expanded = Object.entries(treeOpenStates).some(([key, open]) => open && key.endsWith(stateSuffix));
+      if (expanded) completeIntroductionInteraction((candidate) => candidate.on.kind === "expand" && candidate.on.id === sectionId);
+    }
+  }, [activeIntroductionStep, completeIntroductionInteraction, treeOpenStates]);
+
+  /** 🧭️ Progressive reveal means a stored path can legitimately end at a branch (or be empty) — this is now a plain per-anchor truncation-validate, no override reassertion (see the write-through effects below). */
+  const panelActivePaths = useMemo((): Record<Anchor, readonly string[]> => {
+    const result = {} as Record<Anchor, readonly string[]>;
+    for (const anchor of ANCHORS) result[anchor] = reconcileActivePath(dock.anchors[anchor], panels[anchor].path, panelTabChildren);
+    return result;
+  }, [panels, dock]);
+
+  /**
+   * 🧭️ Generalizes the old `leftPanelActivePath`/`rightPanelActivePath` studio/plugin "snap to the active panel
+   * tab" overrides across all eight anchors. Write-through rather than read-time: each override dispatches
+   * `SET_PANEL_PATH` only when its target tab id actually changes, so a user's own collapse/navigation
+   * afterward sticks instead of being reasserted on every render (progressive reveal made read-time reassertion
+   * fight the user's own collapses). Studio wins over details when both would touch the same anchor.
+   **/
+  const lastStudioOverrideTabIdRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!studioOverrideTabId || !studioOverrideAnchor) {
+      lastStudioOverrideTabIdRef.current = undefined;
+      return;
+    }
+    if (lastStudioOverrideTabIdRef.current === studioOverrideTabId) return;
+    lastStudioOverrideTabIdRef.current = studioOverrideTabId;
+    if (mobile) {
+      if (mobilePanelPath[0] === FRAMEWORK_CATEGORY_DISPLAY_ID) return;
+      const resolved = findPanelTabPath(mobilePanelTabs, studioOverrideTabId);
+      if (resolved) dispatch({ type: "SET_MOBILE_PANEL_PATH", value: resolved });
+      return;
+    }
+    if (panels[studioOverrideAnchor].path[0] === FRAMEWORK_CATEGORY_DISPLAY_ID) return;
+    const resolved = findPanelTabPath(dock.anchors[studioOverrideAnchor], studioOverrideTabId);
+    if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: studioOverrideAnchor, value: resolved });
+  }, [studioOverrideTabId, studioOverrideAnchor, dock, panels, mobile, mobilePanelTabs, mobilePanelPath]);
+
+  const lastDetailsOverrideTabIdRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!detailsOverrideTabId || !detailsOverrideAnchor) {
+      lastDetailsOverrideTabIdRef.current = undefined;
+      return;
+    }
+    if (lastDetailsOverrideTabIdRef.current === detailsOverrideTabId) return;
+    lastDetailsOverrideTabIdRef.current = detailsOverrideTabId;
+    if (detailsOverrideAnchor === studioOverrideAnchor) return;
+    // 🧭️ Settings tabs render flat now (no category branch to check against) — skip the override if the
+    // anchor's active leaf already belongs to Settings, so browsing Theme/Settings there doesn't get stomped.
+    if (mobile) {
+      if (settingsRightTabs.some((tab) => tab.id === mobilePanelPath[0])) return;
+      const resolved = findPanelTabPath(mobilePanelTabs, detailsOverrideTabId);
+      if (resolved) dispatch({ type: "SET_MOBILE_PANEL_PATH", value: resolved });
+      return;
+    }
+    if (settingsRightTabs.some((tab) => tab.id === panels[detailsOverrideAnchor].path[0])) return;
+    const resolved = findPanelTabPath(dock.anchors[detailsOverrideAnchor], detailsOverrideTabId);
+    if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: detailsOverrideAnchor, value: resolved });
+  }, [detailsOverrideTabId, detailsOverrideAnchor, studioOverrideAnchor, dock, panels, settingsRightTabs, mobile, mobilePanelTabs, mobilePanelPath]);
+  //#endregion 🧭️DockAssembly
+
+  const mobilePanel = useMemo(() => {
+    if (mobilePanelTabs.length === 0) return undefined;
+    return {
+      visible: mobilePanelVisible,
+      tabs: mobilePanelTabs,
+      activeTabPath: mobilePanelPath,
+      onActiveTabPathChange: (path: readonly string[]) => {
+        dispatch({ type: "SET_MOBILE_PANEL_PATH", value: path });
+        const tabId = path[path.length - 1];
+        // 🌱️ Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
+        if (tabId && studioMode && session?.app.id === hostAppId && findPanelTabNode(mobilePanelTabs, path)?.kind === "leaf") {
+          onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
+        }
+      },
+      pathMemory: panelPathMemory,
+      onPathMemoryChange: (value: Readonly<Record<string, string>>) => dispatch({ type: "SET_PANEL_PATH_MEMORY", value }),
+      treeOpenStates,
+      onTreeOpenStateChange: (id: string, open: boolean) => dispatch({ type: "SET_TREE_OPEN_STATE", id, open }),
+      // ♻️ Lazy tool/command trees read measures + active tool from refs — revision forces re-resolve.
+      treeContentRevision: { activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey },
+    };
+  }, [mobilePanelVisible, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, studioMode, treeOpenStates, hostAppId, activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey]);
+
+  useEffect(() => {
+    if (exampleOptions.length === 0) return;
+    dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: (current) => (!current || exampleOptions.some((option) => option.id === current) ? current : "") });
+  }, [exampleOptions, session?.app.id, session?.pluginId]);
+
+  // 🎛️ Announces the boot example to the fresh session exactly once per instance. When nothing is
+  // locked/defaulted, seed the first registered example so the dropdown matches the plugin default
+  // document (e.g. procedural3d hexagonal column) — same rule as wgpu `sync_session_chrome`.
+  // Studio-mode routes load documents via `applyShellUri`/`openSpace`; never boot-override those.
+  useEffect(() => {
+    if (exampleOptions.length === 0 || !session) return;
+    if (studioMode) {
+      noExampleResetInstanceIdRef.current = session.instanceId;
+      return;
+    }
+    if (noExampleResetInstanceIdRef.current === session.instanceId) return;
+    noExampleResetInstanceIdRef.current = session.instanceId;
+    const exampleId = resolveBootExampleId(activeExampleId, exampleOptions, defaults.exampleId);
+    if (exampleId !== activeExampleId) {
+      dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
+    }
+    dispatchActiveExample(exampleId);
+  }, [activeExampleId, defaults.exampleId, dispatchActiveExample, exampleOptions, session, studioMode]);
+
+  //#region 🎛️PanelTabBarHosting — `buildPanelSelectionProps` is the single source of an anchor's tab
+  // selection state, shared by the chrome-hosted `PanelChromeTabBar` (below, for anchors in
+  // {@link PANEL_TAB_BAR_HOSTS}) and the floating `Panel` itself (`buildPanelProps`) — the two hosts of the
+  // SAME anchor always read/write the exact same controlled state.
+  const buildPanelSelectionProps = useCallback(
+    (anchor: Anchor): PanelTabSelectionOptions => ({
+      tabs: dock.anchors[anchor],
+      visible: panels[anchor].visible,
+      onVisibleChange: (value: boolean) => {
+        dispatch({ type: "SET_PANEL_VISIBLE", anchor, value });
+        noteShellCommand("shell.panelToggle", shellLabel("ui.shellCommand.panelToggle"), { anchor, visible: value });
+      },
+      activeTabPath: panelActivePaths[anchor],
+      onActiveTabPathChange: (path: readonly string[]) => {
+        const pathChanged = (panelActivePaths[anchor] ?? []).join("/") !== path.join("/");
+        dispatch({ type: "SET_PANEL_PATH", anchor, value: path });
+        // 🎛️ Command palette only: switching category leaves always collapses any expanded arg form — the
+        // next hierarchy level up only makes sense under its own category's command list (mirrors the old
+        // dedicated `SET_COMMAND_CATEGORY` reducer case, now expressed at the generic path-change call site
+        // since category-active state itself is just this anchor's `activeTabPath`). Categories sit under
+        // the Command branch, so compare the category segment (path[1]), not the shared branch root.
+        if (anchor === "bottom-middle" && panels[anchor].path[1] !== path[1]) {
+          dispatch({ type: "SET_COMMAND_EXPANDED", value: null });
+        }
+        const tabId = path[path.length - 1];
+        // 🛠️ Selecting a mode-tool leaf (`tool.<id>`) activates that tool so its measures render immediately
+        // under the tab — no nested Fill toggle inside the tree.
+        if (anchor === "bottom-middle" && session && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
+          const selectedToolId = toolIdFromPanelTabId(tabId);
+          if (selectedToolId && selectedToolId !== activeToolIdRef.current) {
+            onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: selectedToolId } });
+          }
+        }
+        // 🌱️ Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
+        if (tabId && studioMode && session?.app.id === hostAppId && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
+          onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
+        }
+        if (pathChanged && tabId) noteShellCommand("shell.panelTab", shellLabel("ui.shellCommand.panelTab"), { anchor, tabId });
+      },
+      pathMemory: panelPathMemory,
+      onPathMemoryChange: (value: Readonly<Record<string, string>>) => dispatch({ type: "SET_PANEL_PATH_MEMORY", value }),
+    }),
+    [dock, onAction, panelActivePaths, panelPathMemory, panels, session, studioMode, hostAppId, noteShellCommand],
+  );
+  //#endregion 🎛️PanelTabBarHosting
+
+  const navbarItems = useMemo((): NavbarItem[] => {
+    if (!session) return [];
+    const logoAndTitle = (
+      <div key="logoAndTitle" className="flex min-w-0 shrink-0 items-center gap-single">
+        {brand?.logoSvg ? <ShellBrandLogo svg={brand.logoSvg} className="size-workbench shrink-0" /> : <SemioLogo className="size-workbench shrink-0" />}
+        <span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>
+          {appDocumentLabel(resolveAppDocument(session.app, uiTerminology))}
+        </span>
+      </div>
+    );
+    const showExampleSelect = exampleOptions.length > 0 && !locks.exampleId && (!studioMode || session.app.id !== landingAppId);
+    // 📱️ Mobile has no room for tab bars, example selector, or mode switcher in the navbar — just the
+    // logo/title and the single toggle for the merged mobile panel (the two dropped controls resurface as
+    // the panel's synthetic "App" tab, see `mobilePanelTabs`).
+    if (mobile) {
+      return [
+        { key: "logoAndTitle", content: logoAndTitle },
+        navbarFillItem("navbarTrailingFill"),
+        {
+          key: "mobilePanelToggle",
+          content: <Toggle id="ui.mobilePanel.toggle" pressed={mobilePanelVisible} onPressedChange={(value) => dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value })} icon="panel-left" />,
+        },
+      ];
+    }
+    // Logo/title, example selector, and mode switcher render as one cluster, centered as a group in the navbar
+    // (via `centered`) rather than left-anchored with fill spacers pushing the rest toward the trailing edge.
+    const centerContent: ReactNode[] = [logoAndTitle];
+    if (showExampleSelect && exampleSelectElement) centerContent.push(exampleSelectElement);
+    if (modeSwitcherElement) centerContent.push(modeSwitcherElement);
+    return [
+      { key: "topLeftPanelTabs", content: <PanelChromeTabBar anchor="top-left" {...buildPanelSelectionProps("top-left")} /> },
+      navbarFillItem("navbarTrailingFill"),
+      { key: "topRightPanelTabs", content: <PanelChromeTabBar anchor="top-right" {...buildPanelSelectionProps("top-right")} /> },
+      {
+        key: "center",
+        centered: true,
+        content: (
+          <div className="flex min-w-0 items-center gap-double">
+            {centerContent}
+            <PanelChromeTabBar anchor="top-middle" {...buildPanelSelectionProps("top-middle")} />
+          </div>
+        ),
+      },
+    ];
+  }, [brand, buildPanelSelectionProps, exampleOptions, exampleSelectElement, locks.exampleId, mobile, mobilePanelVisible, modeSwitcherElement, session, uiTerminology, studioMode, landingAppId]);
+
+  const searchItems = useMemo(() => {
+    if (!session) return [];
+    const items: UISearchItem[] = [];
+    for (const tab of flattenPanelTabLeaves(session.app.panelTabs)) {
+      const tabId = panelTabKindId(tab.kind);
+      items.push({
+        id: `panel.${tabId}`,
+        label: resolvePanelTabLabel(appLabelsOverlay, tabId, resolveManifestLabel(tab.label, uiTerminology, uiLocale)),
+        category: shellLabel("ui.search.category.panels"),
+        icon: <Icon icon="panel-left" size="small" />,
+        onSelect: () => onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } }),
+      });
+    }
+    for (const kind of session.app.windowKinds) {
+      items.push({
+        id: `window.${kind.id}`,
+        label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label, uiTerminology, uiLocale)),
+        category: shellLabel("ui.search.category.windows"),
+        icon: <Icon icon="app-window" size="small" />,
+        onSelect: () => dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: kind.id }),
+      });
+    }
+    const keysByActionId = new Map(session.app.keybindings.map((binding) => [binding.action.action, binding.keys]));
+    const declaredActionIds = new Set<string>();
+    // 📇️ First window kind whose resolved actions include this id (orphan/global actions fall through to
+    // the active window, then the first window) — the redirect target for arg-carrying palette entries.
+    const hostWindowForAction = (actionId: string): string | undefined => {
+      for (const kind of session.app.windowKinds) {
+        if (resolveWindowActions(session.app, kind).some((entry) => entry.id === actionId)) return kind.id;
+      }
+      return activeWindowId ?? session.app.windowKinds[0]?.id;
+    };
+    for (const action of session.app.actions ?? []) {
+      if (!action.inPalette) continue;
+      declaredActionIds.add(action.id);
+      const argCarrying = actionRequiresStagedForm(action);
+      const resolvedActionLabel = resolveAppLabel(appLabelsOverlay, "action", action.id, resolveManifestLabel(action.label, uiTerminology, uiLocale));
+      items.push({
+        id: `action.${action.id}`,
+        // ✍️ Arg-carrying actions never fire from the palette (P3): the "…" entry activates the hosting
+        // window, unfolds its top-left Actions pane, and expands this action's staged form instead of dispatching.
+        label: argCarrying ? `${resolvedActionLabel}…` : resolvedActionLabel,
+        description: action.keys ?? keysByActionId.get(action.id),
+        category: action.category ?? (action.kind === "history" ? shellLabel("ui.ribbon.parent.history") : shellLabel("ui.ribbon.parent.actions")),
+        onSelect: () => {
+          if (argCarrying) {
+            const windowId = hostWindowForAction(action.id);
+            if (windowId) {
+              dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: windowId });
+              dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId, value: false });
+              dispatch({ type: "SET_ACTION_PANE_EXPANDED", windowId, value: action.id });
+            }
+            dispatch({ type: "SET_SEARCH_OPEN", value: false });
+            return;
+          }
+          onAction({ controllerId: session.app.controllerId, action: action.id });
+        },
+      });
+    }
+    for (const binding of session.app.keybindings) {
+      if (declaredActionIds.has(binding.action.action)) continue;
+      items.push({
+        id: `keybinding.${binding.keys}`,
+        label: binding.action.action,
+        description: binding.keys,
+        category: shellLabel("ui.ribbon.parent.actions"),
+        onSelect: () => onAction(binding.action),
+      });
+    }
+    // 🎛️ Commands (os/plugin/app/mode) — the footer twin of the window-rail P3 redirect above: an
+    // arg-carrying command never fires from the palette, it opens the bottom-middle command panel at its
+    // category and expands its form instead.
+    for (const { definition, source } of resolvedCommands) {
+      if (!definition.inPalette) continue;
+      const argCarrying = (definition.args?.length ?? 0) > 0;
+      items.push({
+        id: `command.${definition.id}`,
+        label: argCarrying ? `${definition.label}…` : definition.label,
+        description: definition.keys,
+        category: commandCategoryLabel(definition.category),
+        onSelect: () => {
+          if (argCarrying) {
+            const commandPath = [FRAMEWORK_CATEGORY_COMMAND_ID, `command.category.${definition.category}`];
+            // 📱️ On mobile every anchor's tabs are merged into the single mobile panel — route the same
+            // path there instead of the (unrendered) bottom-middle anchor, and open the mobile panel itself.
+            if (mobile) {
+              dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: true });
+              dispatch({ type: "SET_MOBILE_PANEL_PATH", value: commandPath });
+            } else {
+              dispatch({ type: "SET_PANEL_VISIBLE", anchor: "bottom-middle", value: true });
+              dispatch({ type: "SET_PANEL_PATH", anchor: "bottom-middle", value: commandPath });
+            }
+            dispatch({ type: "SET_COMMAND_EXPANDED", value: definition.id });
+            dispatch({ type: "SET_SEARCH_OPEN", value: false });
+            return;
+          }
+          onCommand(source, definition.id);
+        },
+      });
+    }
+    if (studioMode && panel) {
+      for (const program of panel.programs) {
+        items.push({
+          id: `spawn.${program.pluginId}`,
+          label: `${shellLabel("ui.palette.spawnPrefix")} ${appDocumentLabel(resolveDocumentByAppId(loadedPlugins, program.appId, program.document, uiTerminology))}`,
+          category: shellLabel("ui.search.category.catalogue"),
+          onSelect: () => onAction({ controllerId: hostControllerId ?? "", action: "spawnApp", args: { pluginId: program.pluginId } }),
+        });
+      }
+      items.push(
+        {
+          id: "studio.undo",
+          label: shellLabel("ui.palette.undo"),
+          category: shellLabel("ui.search.category.studio"),
+          icon: <Icon icon="undo-2" size="small" />,
+          onSelect: () => onAction({ controllerId: hostControllerId ?? "", action: "undo" }),
+        },
+        {
+          id: "studio.redo",
+          label: shellLabel("ui.palette.redo"),
+          category: shellLabel("ui.search.category.studio"),
+          icon: <Icon icon="redo-2" size="small" />,
+          onSelect: () => onAction({ controllerId: hostControllerId ?? "", action: "redo" }),
+        },
+        {
+          id: "studio.home",
+          label: shellLabel("ui.palette.goHome"),
+          category: shellLabel("ui.search.category.navigation"),
+          onSelect: () => onAction({ controllerId: hostControllerId ?? "", action: "goHome" }),
+        },
+      );
+    }
+    return items;
+  }, [activeWindowId, appLabelsOverlay, loadedPlugins, mobile, onAction, onCommand, panel, resolvedCommands, session, studioMode, uiLocale, uiTerminology, hostControllerId]);
+
+  const modeWindows = useMemo((): ModeWindowDescriptor[] => {
+    if (!session) return [];
+    const actionPaneSlice: ActionPaneSlice = { expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId };
+    const actionsFoldedFor = (windowId: string, windowKindId: string = windowId) =>
+      introductionTargetsWindow(windowId, windowKindId, null, introductionActionWindowSegment) ? false : (actionPaneFoldedByWindowId[windowId] ?? true);
+    // 🎓️ `undefined` keeps the Window's own internal fold state — only windows of the introduction's
+    // target kind (including every open instance) are force-controlled to `false` while its utility step
+    // is active.
+    const utilityBarFoldedFor = (windowId: string, windowKindId: string = windowId): boolean | undefined =>
+      introductionTargetsWindow(windowId, windowKindId, introductionUtilityWindowId) ? false : undefined;
+    const measuresFoldedFor = (windowId: string, windowKindId: string = windowId): boolean | undefined =>
+      introductionTargetsWindow(windowId, windowKindId, introductionMeasureWindowId) ? false : undefined;
+    const onActionsFoldedFor = (windowId: string) => (folded: boolean) => dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId, value: folded });
+    // 🖱️ Window-body cursor follows the active utility's declared `cursor` (P5).
+    const cursorFor = (app: AppDefinition, windowId: string): CSSProperties | undefined => {
+      const utilityId = activeUtilityByWindowId[windowId];
+      const cursor = utilityId ? (app.utilities ?? []).find((utility) => utility.id === utilityId)?.cursor : undefined;
+      return cursor ? { cursor } : undefined;
+    };
+    if (studioMode && spawnedWindowUi && panel?.activeSpawnedId) {
+      const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
+      if (spawned) {
+        const spawnedApp = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
+        const windowKind = spawnedApp?.windowKinds[0];
+        const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawned.id, spawnedWindowEngagements, spawnedWindowMeasures, activeUtilityByWindowId[spawned.id], onActionStable) : undefined;
+        const spawnedUtilities = spawnedApp && windowKind ? resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[spawned.id], spawned.id, appLabelsOverlay, uiTerminology, uiLocale) : [];
+        return [
+          {
+            id: spawned.id,
+            title: wireLabel(appDocumentLabel(spawnedApp ? resolveAppDocument(spawnedApp, uiTerminology) : spawned.document)),
+            fill: true,
+            showControls: true,
+            measures: chrome?.measures,
+            measuresFolded: measuresFoldedFor(spawned.id, windowKind?.id ?? spawned.id),
+            engagement: chrome?.engagement,
+            search: chrome?.search,
+            utilityBar: spawnedApp && windowKind ? utilityBarNode(spawnedUtilities, spawned.id, onActionStable, introductionUtilityId, chrome?.utilityOptions) : undefined,
+            utilityBarFolded: utilityBarFoldedFor(spawned.id, windowKind?.id ?? spawned.id),
+            actionPane: spawnedApp && windowKind ? windowActionPaneNode(spawnedApp, windowKind, spawned.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale) : undefined,
+            actionsFolded: actionsFoldedFor(spawned.id, windowKind?.id ?? spawned.id),
+            onActionsFoldedChange: onActionsFoldedFor(spawned.id),
+            children: (
+              <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={spawnedApp ? cursorFor(spawnedApp, spawned.id) : undefined}>
+                <ShellFaultBoundary boundaryId={`window-${spawned.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
+                  <InterpretedUiNode node={spawnedWindowUi} onAction={onActionStable} />
+                </ShellFaultBoundary>
+              </ChromeAwareWindowScrollSurface>
+            ),
+          },
+        ];
+      }
+    }
+    if (Object.keys(windowUiByWindowId).length === 0) return [];
+    const baseWindows = session.app.windowKinds.map((kind) => {
+      const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id, appLabelsOverlay, uiTerminology, uiLocale);
+      const chrome = windowMeasuresChrome(windowMeasuresByWindowId[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id], kind.id, onActionStable);
+      const resolvedEngagement = resolveWindowEngagement(kind, kind.id, windowEngagementsByWindowId);
+      return {
+        id: kind.id,
+        iconId: windowIconsById[kind.id] ?? kind.iconId,
+        title: windowTitlesById[kind.id] ?? appWindowDocumentLabel(session.app, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label, uiTerminology, uiLocale)), uiLocale),
+        fill: true,
+        showControls: true,
+        measures: chrome.measures,
+        measuresFolded: measuresFoldedFor(kind.id, kind.id),
+        engagement: windowEngagementToSpec(resolvedEngagement, onActionStable),
+        search: windowEngagementToSearchSpec(resolvedEngagement, onActionStable),
+        utilityBar: utilityBarNode(utilities, kind.id, onActionStable, introductionUtilityId, chrome.utilityOptions),
+        utilityBarFolded: utilityBarFoldedFor(kind.id, kind.id),
+        actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale),
+        actionsFolded: actionsFoldedFor(kind.id, kind.id),
+        onActionsFoldedChange: onActionsFoldedFor(kind.id),
+        status: declarativeSurfaceStatus(windowUiByWindowId[kind.id]),
+        skeleton: <WindowBodySkeleton />,
+        children: (
+          <ChromeAwareWindowScrollSurface id={childElementId("framework.window", kind.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(session.app, kind.id)}>
+            <WindowInstanceIdContext.Provider value={kind.id}>
+              <ShellFaultBoundary boundaryId={`window-${kind.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
+                <InterpretedUiNode node={windowUiByWindowId[kind.id] ?? pendingWindowUiNode()} onAction={onActionStable} />
+              </ShellFaultBoundary>
+            </WindowInstanceIdContext.Provider>
+          </ChromeAwareWindowScrollSurface>
+        ),
+      };
+    });
+    // 🪟️ Each extra (split/spawned) instance renders its OWN `windowUiByWindowId[instance.id]` body,
+    // measures, and engagement — never the base kind's shared entry — so two instances of the same kind
+    // (e.g. split top/perspective panes) never show or affect each other's options. `data-element-alias`
+    // aliases the instance to its window kind's element id so an introduction `show` target of the kind
+    // (not a specific instance) raises every open instance above the glass, not only the base one.
+    const extraWindows = extraWindowInstances.flatMap((instance) => {
+      const kind = session.app.windowKinds.find((entry) => entry.id === instance.windowKindId);
+      if (!kind) return [];
+      const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id, appLabelsOverlay, uiTerminology, uiLocale);
+      const chrome = windowMeasuresChrome(windowMeasuresByWindowId[instance.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id], instance.id, onActionStable);
+      const resolvedEngagement = resolveWindowEngagement(kind, instance.id, windowEngagementsByWindowId);
+      return [
+        {
+          id: instance.id,
+          iconId: windowIconsById[instance.id] ?? kind.iconId,
+          title: windowTitlesById[instance.id] ?? instance.title,
+          fill: true,
+          showControls: true,
+          measures: chrome.measures,
+          measuresFolded: measuresFoldedFor(instance.id, instance.windowKindId),
+          engagement: windowEngagementToSpec(resolvedEngagement, onActionStable),
+          search: windowEngagementToSearchSpec(resolvedEngagement, onActionStable),
+          utilityBar: utilityBarNode(utilities, instance.id, onActionStable, introductionUtilityId, chrome.utilityOptions),
+          utilityBarFolded: utilityBarFoldedFor(instance.id, instance.windowKindId),
+          actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale),
+          actionsFolded: actionsFoldedFor(instance.id, instance.windowKindId),
+          onActionsFoldedChange: onActionsFoldedFor(instance.id),
+          status: declarativeSurfaceStatus(windowUiByWindowId[instance.id]),
+          skeleton: <WindowBodySkeleton />,
+          children: (
+            <ChromeAwareWindowScrollSurface
+              id={childElementId("framework.window", instance.id)}
+              data-element-alias={childElementId("framework.window", kind.id)}
+              className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+              style={cursorFor(session.app, instance.id)}
+            >
+              <WindowInstanceIdContext.Provider value={instance.id}>
+                <ShellFaultBoundary boundaryId={`window-${instance.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
+                  <InterpretedUiNode node={windowUiByWindowId[instance.id] ?? pendingWindowUiNode()} onAction={onActionStable} />
+                </ShellFaultBoundary>
+              </WindowInstanceIdContext.Provider>
+            </ChromeAwareWindowScrollSurface>
+          ),
+        },
+      ];
+    });
+    return [...baseWindows, ...extraWindows];
+  }, [
+    actionPaneExpandedByWindowId,
+    actionPaneFoldedByWindowId,
+    actionPaneStagedArgsByKey,
+    activeUtilityByWindowId,
+    appLabelsOverlay,
+    extraWindowInstances,
+    introductionActionWindowSegment,
+    introductionUtilityId,
+    introductionUtilityWindowId,
+    loadedPlugins,
+    onActionStable,
+    panel,
+    session,
+    spawnedWindowEngagements,
+    spawnedWindowMeasures,
+    spawnedWindowUi,
+    studioMode,
+    uiLocale,
+    uiTerminology,
+    windowEngagementsByWindowId,
+    windowMeasuresByWindowId,
+    windowTitlesById,
+    windowIconsById,
+    windowUiByWindowId,
+  ]);
+
+  const effectiveModeLayout = useMemo(
+    () =>
+      shellLayout ??
+      (session ? resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale).modeLayout : { kind: "stack" as const, children: [] }),
+    [appLabelsOverlay, session, shellLayout, uiTerminology, uiLocale],
+  );
+
+  const handleActiveWindowChange = useCallback(
+    (value: string | null) => {
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value });
+      if (value) noteShellCommand("shell.windowActivate", shellLabel("ui.shellCommand.windowActivate"), { windowId: value });
+    },
+    [noteShellCommand],
+  );
+
+  // 🪟️ `Mode.onLayoutChange` fires continuously during a live drag/resize (one call per frame) — classify
+  // each delta against the last-seen layout, remember only the latest non-null classification, and note a
+  // single shell command once the drag settles (see `LAYOUT_CHANGE_SETTLE_MS`). A pure active-window-flag
+  // echo classifies `null` and is silently skipped here (handled by `handleActiveWindowChange` instead).
+  const layoutChangeSettleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const layoutChangeClassificationRef = useRef<"resize" | "rearrange" | null>(null);
+  const layoutChangePreviousRef = useRef<WindowLayoutNode | null>(effectiveModeLayout);
+  useEffect(() => {
+    layoutChangePreviousRef.current = effectiveModeLayout;
+  }, [effectiveModeLayout]);
+  useEffect(
+    () => () => {
+      if (layoutChangeSettleTimeoutRef.current) clearTimeout(layoutChangeSettleTimeoutRef.current);
+    },
+    [],
+  );
+  const handleModeLayoutChange = useCallback(
+    (value: WindowLayoutNode) => {
+      dispatch({ type: "SET_SHELL_LAYOUT", value });
+      const classification = classifyWindowLayoutChange(layoutChangePreviousRef.current, value);
+      layoutChangePreviousRef.current = value;
+      if (classification) layoutChangeClassificationRef.current = classification;
+      if (layoutChangeSettleTimeoutRef.current) clearTimeout(layoutChangeSettleTimeoutRef.current);
+      layoutChangeSettleTimeoutRef.current = setTimeout(() => {
+        layoutChangeSettleTimeoutRef.current = null;
+        const finalClassification = layoutChangeClassificationRef.current;
+        layoutChangeClassificationRef.current = null;
+        if (finalClassification === "resize") noteShellCommand("shell.windowResize", shellLabel("ui.shellCommand.windowResize"));
+        else if (finalClassification === "rearrange") noteShellCommand("shell.windowMove", shellLabel("ui.shellCommand.windowMove"));
+      }, LAYOUT_CHANGE_SETTLE_MS);
+    },
+    [noteShellCommand],
+  );
+
+  const canvas = useMemo(() => {
+    if (studioMode && shellRoute.kind === "notFound") {
+      return <ShellRouteNotFoundPage path={shellRoute.path} onHome={() => navigateHistory("/")} />;
+    }
+    const supervisorPluginId = primaryPluginId;
+    const supervisorState = supervisorPluginId ? pluginSupervisorById[supervisorPluginId] : undefined;
+    if (supervisorState === "crashed" || supervisorState === "quarantined") {
+      return (
+        <PluginRecoveryPanel
+          pluginId={supervisorPluginId!}
+          quarantined={supervisorState === "quarantined"}
+          onRestart={() => {
+            dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId: supervisorPluginId!, value: "restarting" });
+            void reloadPlugin(supervisorPluginId!);
+          }}
+          onDisable={() => {
+            dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId: supervisorPluginId!, value: "quarantined" });
+            if (supervisorPluginId !== primaryPluginId) void uninstallPlugin(supervisorPluginId!);
+          }}
+        />
+      );
+    }
+    if (error)
+      return (
+        <p className="p-double text-sm text-destructive" role="alert" data-semio-os-shell-error="">
+          {error}
+        </p>
+      );
+    if (!session) return <CanvasSkeleton label={shellLabel("ui.common.loadingPlugins")} className={cn(loadingBorderClass, "h-full w-full")} />;
+    const modes = session.app.modes.length > 0 ? session.app.modes : [{ id: session.app.id, label: appDocumentLabel(resolveAppDocument(session.app, uiTerminology)) }];
+    const studioHomeBar =
+      studioMode && session.app.id === hostAppId && !panel?.activeSpawnedId ? (
+        <button
+          type="button"
+          className={cn(borderNormalBottomClass, "px-single py-single text-left text-sm text-muted-foreground hover:bg-muted/40 hover:text-foreground")}
+          onClick={() => onAction({ controllerId: session.app.controllerId, action: "goHome" })}
+        >
+          ← {shellLabel("ui.common.home")}
+        </button>
+      ) : null;
+    const focusedSpawned = panel?.activeSpawnedId ? panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId) : undefined;
+    const focusedBar = focusedSpawned ? (
+      <div className={cn(borderNormalBottomClass, "flex items-center gap-single px-single py-single text-sm text-muted-foreground")}>
+        <button type="button" className="hover:text-foreground" onClick={() => (openSpaceIdRef.current ? navigateHistory(`/spaces/${openSpaceIdRef.current}`) : onAction({ controllerId: session.app.controllerId, action: "closeFocusedInstance" }))}>
+          ← {shellLabel("ui.common.backToWorkflow")}
+        </button>
+        <span>·</span>
+        <span>{appDocumentLabel(resolveDocumentByAppId(loadedPlugins, focusedSpawned.appId, focusedSpawned.document, uiTerminology))}</span>
+      </div>
+    ) : null;
+    return (
+      <div className="flex h-full min-h-0 flex-col overflow-hidden">
+        {studioHomeBar}
+        {focusedBar}
+        <input
+          ref={importSpaceInputRef}
+          type="file"
+          // 📦️ `.pack` files branch to `s/plugin`'s pack-aware `importSpacePackPayload` action
+          // (`semio_framework_os::import_os_space_from_pack`, wave 2 s+shome+sstudio family) —
+          // read as a dataUrl, same shape as the generic `RequestFileOpen`/`readAs: "dataUrl"` path
+          // below. Anything else keeps reading as text and dispatching the JSON-envelope "importSpace".
+          accept=".spk,.dsl,.ops,application/octet-stream"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            if (file.name.toLowerCase().endsWith(".pack")) {
+              const reader = new FileReader();
+              reader.onload = () => {
+                const payload = typeof reader.result === "string" ? reader.result : "";
+                onAction({ controllerId: landingControllerId ?? "", action: "importSpacePackPayload", args: { payload } });
+                event.target.value = "";
+              };
+              reader.readAsDataURL(file);
+              return;
+            }
+            void file.text().then((json) => {
+              onAction({ controllerId: landingControllerId ?? "", action: "importSpace", args: { json } });
+              event.target.value = "";
+            });
+          }}
+        />
+        <div className="min-h-0 flex-1">
+          <ShellFaultBoundary boundaryId="session-canvas" fallbackLabel={shellLabel("ui.common.renderError")}>
+            <App
+            modes={modes.map((mode) => ({ id: mode.id, label: resolveAppLabel(appLabelsOverlay, "mode", mode.id, resolveManifestLabel(mode.label, uiTerminology, uiLocale)), children: null }))}
+            activeModeId={session.viewState.activeModeId ?? modes[0]?.id ?? session.app.id}
+            onActiveModeChange={applyModeChange}
+            chrome={false}
+          >
+            <Mode
+              className="h-full w-full"
+              mobile={mobile}
+              windows={modeWindows}
+              layout={effectiveModeLayout}
+              activeWindowId={activeWindowId}
+              onActiveWindowChange={handleActiveWindowChange}
+              onLayoutChange={handleModeLayoutChange}
+              onTemplateDrop={mobile ? undefined : handleTemplateDrop}
+              onWindowClose={(windowId) => {
+                noteShellCommand("shell.windowClose", shellLabel("ui.shellCommand.windowClose"), { windowId });
+                if (studioMode && panel?.spawnedApps.some((entry) => entry.id === windowId)) {
+                  const closedSpawned = panel.spawnedApps.find((entry) => entry.id === windowId);
+                  const nextSpawned = panel.spawnedApps.filter((entry) => entry.id !== windowId);
+                  updateSpacePanel(buildSpacePanelState(panel.programs, nextSpawned, panel.activePanelTab, nextSpawned[0]?.id));
+                  // 🪶️ Closing a spawned app's window used to leave its plugin instance running forever
+                  // (see REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT's documented teardown gap) — the panel
+                  // entry was dropped from the UI, but nothing ever told the guest to free it.
+                  if (closedSpawned) {
+                    const closedPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === closedSpawned.pluginId)?.handle;
+                    void closedPlugin?.destroyApp(closedSpawned.instanceId).catch(() => {});
+                  }
+                }
+                clearPendingWorldProjection(windowId);
+                dispatch({
+                  type: "SET_EXTRA_WINDOW_INSTANCES",
+                  value: (current) => {
+                    const next = current.filter((entry) => entry.id !== windowId);
+                    extraWindowInstancesRef.current = next;
+                    return next;
+                  },
+                });
+                dispatch({
+                  type: "SET_SHELL_LAYOUT",
+                  value: (current) => current ?? resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale).modeLayout,
+                });
+              }}
+            />
+          </App>
+          </ShellFaultBoundary>
+        </div>
+      </div>
+    );
+  }, [activeWindowId, effectiveModeLayout, error, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateHistory, noteShellCommand, onAction, panel, pluginSupervisorById, primaryPluginId, reloadPlugin, session, shellRoute, studioMode, uiLocale, uiTerminology, updateSpacePanel, dispatch, uninstallPlugin]);
+
+  const footerItems = useMemo((): NavbarItem[] => {
+    // 🏛️ Mit Bestand Aggregator partner credits: left "Ein Projekt von LUH und UdK", right "Gefördert durch Zukunft Bau".
+    // A single middle flex-1 fill pushes the funding credit to the trailing edge; fixed `w-huge` gaps keep each credit
+    // off the exact corner pixel that floating corner panels also anchor to (a second flex-1 would center the funding
+    // credit under the Command overlay; `w-double` reads as flush against the toggle group).
+    // 📱️ The three tab bars have no anchor on mobile (all anchors merge into the mobile panel) — only the credits stay.
+    const items: NavbarItem[] = mobile
+      ? []
+      : [
+          { key: "bottomLeftPanelTabs", content: <PanelChromeTabBar anchor="bottom-left" {...buildPanelSelectionProps("bottom-left")} /> },
+          { key: "bottomMiddlePanelTabs", centered: true, content: <PanelChromeTabBar anchor="bottom-middle" {...buildPanelSelectionProps("bottom-middle")} /> },
+        ];
+    if (brand?.id && (ENTWERFEN_MIT_BESTAND_BRAND_IDS as readonly string[]).includes(brand.id)) {
+      items.push(
+        { key: "footerProjectOfGap", className: "w-huge", content: null },
+        aProjectOfLuhUdkFooterItem("aProjectOfLuhUdk", uiLocale, mobile),
+        navbarFillItem("footerLeadingFill"),
+        fundedByZukunftBauFooterItem("fundedByZukunftBau", uiLocale, mobile),
+        { key: "footerFundedByGap", className: "w-huge", content: null },
+      );
+    } else {
+      items.push(navbarFillItem("footerLeadingFill"));
+    }
+    if (!mobile) items.push({ key: "bottomRightPanelTabs", content: <PanelChromeTabBar anchor="bottom-right" {...buildPanelSelectionProps("bottom-right")} /> });
+    return items;
+  }, [brand?.id, buildPanelSelectionProps, mobile, uiLocale]);
+
+  const buildPanelProps = useCallback(
+    (anchor: Anchor) => ({
+      ...buildPanelSelectionProps(anchor),
+      size: panels[anchor].size,
+      onSizeChange: (value: number) => dispatch({ type: "SET_PANEL_SIZE", anchor, value }),
+      tabBarHost: (PANEL_TAB_BAR_HOSTS[anchor] ? "chrome" : "panel") as "panel" | "chrome",
+      treeOpenStates,
+      onTreeOpenStateChange: (id: string, open: boolean) => dispatch({ type: "SET_TREE_OPEN_STATE", id, open }),
+    }),
+    [buildPanelSelectionProps, panels, treeOpenStates],
+  );
+
+  // #region 🔖️ReadinessBeacon
+  /** 🚦️ Deterministic DOM beacon for headless smoke tests (e.g. Storybook's OS-shell plugin-boot matrix)
+   * to wait on instead of screenshots/timeouts — set once a session resolves or errors, cleared on unmount. */
+  useEffect(() => {
+    const root = document.documentElement;
+    const beaconId = pluginFilter ?? "unknown";
+    const notFound = studioMode && shellRoute.kind === "notFound";
+    if (notFound) {
+      root.dataset.semioOsNotFound = beaconId;
+      delete root.dataset.semioOsReady;
+      delete root.dataset.semioOsError;
+    } else if (error) {
+      root.dataset.semioOsError = beaconId;
+      delete root.dataset.semioOsReady;
+      delete root.dataset.semioOsNotFound;
+    } else if (session) {
+      root.dataset.semioOsReady = beaconId;
+      delete root.dataset.semioOsError;
+      delete root.dataset.semioOsNotFound;
+    }
+    return () => {
+      delete root.dataset.semioOsReady;
+      delete root.dataset.semioOsError;
+      delete root.dataset.semioOsNotFound;
+    };
+  }, [session, error, pluginFilter, shellRoute.kind, studioMode]);
+  // #endregion 🔖️ReadinessBeacon
+
+  //#region 🖱️ShellContextMenu
+  /** 🖱️ Dispatch sink for the shell fallback menu's `ContextMenuItemSpec`s (see
+   * `buildShellContextMenuItems`) — intercepts the two reserved ids the builder emits in place of a
+   * real dispatch (`"shell.openActionPane"`/`"shell.openPalette"`) and forwards everything else to
+   * `onAction`, mirroring the command palette's own arg-carrying redirect. */
+  const dispatchShellMenuAction = useCallback(
+    (action: string, args?: Record<string, unknown>) => {
+      if (!session) return;
+      if (action === "shell.openActionPane") {
+        const windowKind = session.app.windowKinds.find((kind) => kind.id === activeWindowId) ?? session.app.windowKinds[0];
+        const actionId = typeof args?.actionId === "string" ? args.actionId : undefined;
+        if (!windowKind || !actionId) return;
+        dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: windowKind.id });
+        dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId: windowKind.id, value: false });
+        dispatch({ type: "SET_ACTION_PANE_EXPANDED", windowId: windowKind.id, value: actionId });
+        return;
+      }
+      if (action === "shell.openPalette") {
+        dispatch({ type: "SET_SEARCH_OPEN", value: true });
+        return;
+      }
+      onAction({ controllerId: session.app.controllerId, action });
+    },
+    [session, activeWindowId, onAction, dispatch],
+  );
+
+  /** 🖱️ Builds the shell-level fallback menu: the active window's declared actions (undo/redo, view
+   * actions, ...) plus a command-palette opener — shown for any right-click no inner surface claimed
+   * (window background, empty panel/navbar/footer space, an app with no scene at all). Arg-carrying
+   * actions route through the reserved `"shell.openActionPane"` id (parity with the wgpu shell's
+   * `build_shell_context_menu_specs`), the whole spec list runs through `organizeContextMenu`, then
+   * `mapContextMenuSpecs` binds it to `dispatchShellMenuAction`. */
+  const buildShellContextMenuItems = useCallback((): ContextMenuItem[] => {
+    if (!session) return [];
+    const windowKind = session.app.windowKinds.find((kind) => kind.id === activeWindowId) ?? session.app.windowKinds[0];
+    const specs: ContextMenuItemSpec[] = [];
+    const categoryByActionId = new Map<string, string>();
+    if (windowKind) {
+      for (const action of resolveWindowActions(session.app, windowKind)) {
+        // 🧹️ Same curation as the command palette (`if (!action.inPalette) continue`) — most apps
+        // declare internal/pointer-tracking view actions (worldHover, engagementInput, ...) as window
+        // actions purely for dispatch plumbing; only palette-worthy ones belong in a user-facing menu.
+        if (!action.inPalette) continue;
+        const argCarrying = actionRequiresStagedForm(action);
+        categoryByActionId.set(action.id, actionCategoryId(action));
+        specs.push({
+          id: `shell-menu.action.${action.id}`,
+          label: resolveAppLabel(appLabelsOverlay, "action", action.id, resolveManifestLabel(action.label, uiTerminology, uiLocale)) + (argCarrying ? "…" : ""),
+          icon: action.iconId,
+          shortcut: action.keys ?? keysByActionId.get(action.id),
+          destructive: action.kind === "operation" && action.id.toLowerCase().includes("delete"),
+          action: argCarrying ? "shell.openActionPane" : action.id,
+          args: argCarrying ? { actionId: action.id } : undefined,
+        });
+      }
+    }
+    if (specs.length > 0) specs.push({ id: "shell-menu.separator", separator: true });
+    specs.push({
+      id: "shell.openPalette",
+      label: shellLabel("ui.search.toggle"),
+      icon: "search",
+      action: "shell.openPalette",
+    });
+    const organized = organizeContextMenu(specs, (id) => categoryByActionId.get(id));
+    return mapContextMenuSpecs(organized, dispatchShellMenuAction, keysByActionId);
+  }, [session, activeWindowId, appLabelsOverlay, keysByActionId, dispatchShellMenuAction, uiTerminology, uiLocale]);
+
+  useEffect(() => {
+    const handleContextMenu = (event: MouseEvent) => {
+      if (isContextMenuPointerTarget(event.target)) return;
+      const items = buildShellContextMenuItems();
+      if (items.length === 0) return;
+      event.preventDefault();
+      setShellContextMenu({ x: event.clientX, y: event.clientY, items });
+    };
+    window.addEventListener("contextmenu", handleContextMenu);
+    return () => window.removeEventListener("contextmenu", handleContextMenu);
+  }, [buildShellContextMenuItems]);
+  //#endregion 🖱️ShellContextMenu
+
+  return (
+    <SetWindowTitleContext.Provider value={setWindowTitle}>
+    <SetWindowIconContext.Provider value={setWindowIcon}>
+    <AppKeybindingsContext.Provider value={keysByActionId}>
+    <UiKeybindingsProvider bindings={controlKeybindings}>
+    <PluginSurfaceActionsContext.Provider value={requestContextMenu}>
+    <ShellContextMenuFallbackContext.Provider value={buildShellContextMenuItems}>
+    <ShellFaultBoundary boundaryId="shell-root" fallbackLabel={shellLabel("ui.common.renderError")}>
+    <UIFindProvider>
+      <LevelProvider level="base">
+        <div className="flex h-screen min-h-0 w-screen flex-col bg-transparent" data-level="base">
+          <PanelDockProvider dock={dock} onTabDockDrop={handleTabDockDrop} onTreeUnitDockDrop={handleTreeUnitDockDrop}>
+            <Layout
+              mobile={mobile}
+              mobilePanel={mobilePanel}
+              navbar={<Navbar items={navbarItems} showFullscreenToggle={!mobile} />}
+              subnavbar={
+                activeTutorial ? (
+                  <TutorialBar
+                    title={resolveManifestLabel(activeTutorial.title, uiTerminology, uiLocale)}
+                    durationMs={activeTutorial.durationMs}
+                    playing={tutorialPlaying}
+                    rate={tutorialRate}
+                    muted={tutorialMuted}
+                    captionsOn={tutorialCaptionsOn}
+                    recording={tutorialRecording}
+                    recordAvailable={tutorialRecorderAvailable}
+                    chapters={tutorialChapterMarkers}
+                    clock={tutorialClock}
+                    onPlayPause={playPauseTutorial}
+                    onStop={stopTutorial}
+                    onSeek={seekTutorial}
+                    onRateChange={(value) => dispatch({ type: "SET_TUTORIAL_RATE", value })}
+                    onMutedChange={(value) => dispatch({ type: "SET_TUTORIAL_MUTED", value })}
+                    onCaptionsChange={(value) => dispatch({ type: "SET_TUTORIAL_CAPTIONS", value })}
+                    onRecordToggle={toggleTutorialRecording}
+                    onAddChapter={addTutorialChapter}
+                  />
+                ) : undefined
+              }
+              footer={<Footer items={footerItems} />}
+              panels={Object.fromEntries(ANCHORS.map((anchor) => [anchor, buildPanelProps(anchor)])) as Record<Anchor, ReturnType<typeof buildPanelProps>>}
+              canvasStatus={shellPluginCanvasStatus}
+              canvasSkeleton={<CanvasSkeleton label={shellLabel("ui.common.loadingPlugins")} />}
+              canvas={
+                <ShellFaultBoundary boundaryId="route-canvas" fallbackLabel={shellLabel("ui.common.renderError")}>
+                  {canvas}
+                </ShellFaultBoundary>
+              }
+            />
+          </PanelDockProvider>
+        </div>
+        <UISearch items={searchItems} open={searchOpen} onOpenChange={(value) => dispatch({ type: "SET_SEARCH_OPEN", value })} />
+        <UIFind open={findOpen} onOpenChange={(value) => dispatch({ type: "SET_FIND_OPEN", value })} />
+        <TextSelectionContextMenuHost />
+        <ContextMenuController
+          title={shellContextMenuTitleLabel}
+          open={shellContextMenu != null}
+          position={shellContextMenu}
+          items={shellContextMenu?.items ?? []}
+          onOpenChange={(open) => {
+            if (!open) setShellContextMenu(null);
+          }}
+        />
+        {session && activeIntroduction && introductionStepIndex != null && (
+          <UIIntroduction
+            introduction={brand?.introduction ?? resolveIntroductionDefinition(activeIntroduction, appLabelsOverlay, uiTerminology, uiLocale)}
+            stepIndex={introductionStepIndex}
+            completedInteractionIndices={introductionCompletedInteractions}
+            onStepIndexChange={(value) => dispatch({ type: "SET_INTRODUCTION_STEP", value })}
+            onDismiss={dismissIntroduction}
+          />
+        )}
+        {activeTutorial && (
+          <>
+            <TutorialCaptionsHost tutorial={activeTutorial} clock={tutorialClock} captionsOn={tutorialCaptionsOn} terminology={uiTerminology} locale={uiLocale} />
+            <TutorialVideoOverlayHost tutorial={activeTutorial} clock={tutorialClock} muted={tutorialMuted} playing={tutorialPlaying} rate={tutorialRate} />
+            <TutorialGhostPointerHost tutorial={activeTutorial} clock={tutorialClock} />
+          </>
+        )}
+        {session &&
+          overlayDialog &&
+          (() => {
+            const dialog = session.app.dialogs?.find((entry) => entry.id === overlayDialog.dialogId);
+            if (!dialog) return null;
+            return (
+              <UIDialog
+                dialog={resolveDialogDefinition(dialog, appLabelsOverlay, uiTerminology, uiLocale)}
+                seedArgs={overlayDialog.seedArgs}
+                renderField={(def, value, onChange) => renderStagedArgControl(def, value, onChange)}
+                onSubmit={(args) => {
+                  dispatch({ type: "SET_DIALOG", value: null });
+                  onAction({ controllerId: session.app.controllerId, action: dialog.submitAction, args });
+                }}
+                onCancel={() => {
+                  dispatch({ type: "SET_DIALOG", value: null });
+                  if (dialog.cancelAction) onAction({ controllerId: session.app.controllerId, action: dialog.cancelAction });
+                }}
+              />
+            );
+          })()}
+      </LevelProvider>
+    </UIFindProvider>
+    </ShellFaultBoundary>
+    </ShellContextMenuFallbackContext.Provider>
+    </PluginSurfaceActionsContext.Provider>
+    </UiKeybindingsProvider>
+    </AppKeybindingsContext.Provider>
+    </SetWindowIconContext.Provider>
+    </SetWindowTitleContext.Provider>
+  );
+}
+//#endregion FrameworkOsShell

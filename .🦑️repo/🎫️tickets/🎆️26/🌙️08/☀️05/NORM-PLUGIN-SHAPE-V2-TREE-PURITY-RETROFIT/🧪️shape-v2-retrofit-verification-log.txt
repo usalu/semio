@@ -1,0 +1,70 @@
+Shape V2 Tree Purity Retrofit — 📕️norm — verification log
+============================================================
+
+Files moved:
+  ✏️s/🔌️plugins/📕️norm/📦️lib.rs
+    -> ✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️lib.rs
+  ✏️s/🔌️plugins/📕️norm/🫀️core/🦀️config.rs
+    -> ✏️s/🔌️plugins/📕️norm/🫀️core/🎚️config/🦀️component.rs
+  ✏️s/🔌️plugins/📕️norm/🫀️core/🦀️app.rs
+    -> ✏️s/🔌️plugins/📕️norm/🫀️core/🖥️app-surface/🦀️component.rs
+
+Cargo.toml changes (✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/Cargo.toml):
+  [lib] path: "../../📦️lib.rs" -> "📦️lib.rs"
+  (temporary [workspace] verification overlay added, used, then fully removed before handoff —
+   confirmed via grep: zero "TEMPORARY VERIFICATION OVERLAY"/"[workspace]" hits remain in this file)
+
+lib.rs #[path] string fixes (via ticket-local 🛠️shape-v2-fix-paths.ts):
+  258 leaf paths prefixed with "../../"
+  109 grouping-module "." resets left exactly as "." (unprefixed, per the corrected recipe)
+  2 of those 258 leaves repointed to the new folded locations (core/config, core/app-surface)
+
+Data/docs: already at owner root before this retrofit (📚️examples/, AGENTS.md) — no data was buried
+inside the taxonomy tree or inside 📦️packages, so no relocation was needed for those. Confirmed via
+find sweep: zero 📚️examples/🧫️fixtures/🤖️generated/manifest.json hits below maxdepth 1.
+
+VERIFICATION (all via isolated --manifest-path against a temporary [workspace] overlay on norm's own
+Cargo.toml — root cargo metadata is blocked repo-wide by an unrelated leftover overlay in
+➗️mathematical's Cargo.toml, not this ticket's to touch; confirmed via a scratch diff
+(🛠️registry-staleness-diff.ts) that the registry catalog staleness gate is caused by 🎪️demonstrator's
+unrelated, concurrent, in-flight migration — norm's own registry entry is byte-identical before/after):
+
+1. DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo check --manifest-path .../norm/📦️packages/🦀️rust/Cargo.toml
+   -> clean, zero errors (one pre-existing warning in the semio-framework-plugin dependency, unrelated)
+
+2. DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo check --manifest-path ... --target wasm32-wasip2
+   -> clean, zero errors
+
+3. DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo clippy --manifest-path ... --all-targets -- -D warnings
+   -> clean (norm itself: zero warnings; same one pre-existing dependency warning as above)
+
+4. DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo test --manifest-path ... --lib
+   -> test result: ok. 894 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+   -> EXACT match to the pre-retrofit baseline (894/894, recorded in this ticket's
+      🧪️test-baseline-before.txt from the original V1 migration) — zero test-count drift, as required.
+   -> Wire-format proof: the 894 include the permanent pinned-hex wire guards
+      (every_command_round_trips_text_and_binary_under_its_declared_wire_keyword,
+      optional_field_rows_keep_their_pre_migration_bytes, config_operations_keep_their_pre_migration_bytes)
+      all still passing — sufficient proof per this ticket's brief (pure relocation, no logic touched).
+
+5. Ticket-local taxonomy audit (🛠️taxonomy-audit.ts, updated to point at the new
+   📦️packages/🦀️rust/📦️lib.rs location and resolve #[path] strings relative to it):
+   "✅️ taxonomy tree clean: 📕️norm" — 258 component files (256 + 2 newly folded), 15 artifacts, 15 apps,
+   every component declared by a #[path] in 📦️lib.rs, no dangling #[path], no misnamed taxonomy leaves,
+   no retired "protocol" segment, lib.rs stays wiring-only (no struct/enum/trait/impl bodies).
+
+   The real registry `bun .../📇️registry/📜️script.ts check` could not be run past its staleness gate
+   (caused by 🎪️demonstrator's unrelated concurrent migration, not by this retrofit — confirmed by
+   diffing the in-memory-recomputed catalog against generated/🔣️plugins.json: norm's own entry
+   {pluginId, cratePath, packageName, wasmOut, contributes, consumes} is byte-identical before/after;
+   the only diff is demonstrator's cratePath). Did not run `generate` (forbidden — registry generated
+   output; also would blow away demonstrator's own in-flight concurrent session's state).
+
+Final structural sanity sweep (find-based, matches TEMPLATE §14 step 6's closing checklist):
+  - zero non-component .rs/.ts files remain outside 📦️packages under the plugin tree
+  - zero buried 📚️examples/🧫️fixtures/🤖️generated/manifest.json below maxdepth 1
+  - 📦️packages/🦀️rust contains packaging code only: Cargo.toml, 📦️lib.rs, 📋️project.json, 📜️script.ts
+  - 🫀️core contains only 🦀️component.rs + two plain folders (🎚️config, 🖥️app-surface), each holding
+    their own 🦀️component.rs
+  - repo-wide grep for the old owner-root "🔌️plugins/📕️norm/📦️lib.rs" path: zero hits (registrar
+    handoff is empty, as expected for a retrofit — nothing outside the plugin referenced the old path)

@@ -1,0 +1,14 @@
+{
+  "title": "Mathematical Plugin Shape V2 Tree Purity Retrofit",
+  "emoji": "🌳️",
+  "status": "closed",
+  "description": "Retrofit the already-migrated ➗️mathematical plugin (at ✏️s/🔌️plugins/➗️mathematical) to the Shape V2 tree-purity rule per TEMPLATE.md §14. Mechanical only: move the owner-root 📦️lib.rs entry file into 📦️packages/🦀️rust/📦️lib.rs (fix [lib] path, add ../../ prefix to every #[path] string inside it), fold the sibling 🎛️apps/➗️mathematical/🦀️config.rs into 🎛️apps/➗️mathematical/🎚️config/🦀️component.rs, confirm no buried data/docs need relocating (AGENTS.md/README.md already at owner root), then verify with cargo check/clippy/test (baseline 55/55 tests) and confirm the tree contains nothing but component.\u003cext\u003e/📦️packages/plain folders below the owner root. No logic changes.",
+  "summary": "Retrofitted the already-migrated ➗️mathematical plugin to the Shape V2 tree-purity rule per TEMPLATE.md §14, mechanically only — no logic changes. (1) Moved the owner-root entry file 📦️lib.rs into 📦️packages/🦀️rust/📦️lib.rs, changed Cargo.toml's [lib] path from \"../../📦️lib.rs\" to \"📦️lib.rs\", and prefixed all 16 leaf #[path] strings inside it with \"../../\" (byte-diff confirmed these are the only changes). (2) Folded the sole sibling variant file 🎛️apps/➗️mathematical/🦀️config.rs into 🎛️apps/➗️mathematical/🎚️config/🦀️component.rs via plain move (content confirmed byte-identical against the pre-move git blob), updated the one #[path] declaration referencing it, and refreshed one stale doc-comment cross-reference. (3) Confirmed no buried data/docs needed relocating — no 📚️examples/🧫️fixtures/🤖️generated/🛂️manifest.json exist anywhere in this plugin, and AGENTS.md/README.md were already at the owner root with no collision. Verified every #[path] target resolves to a real file and every on-disk component.rs is referenced exactly once (bidirectional check, zero orphans/dangles). Live cargo check/clippy/test were blocked by the known, pre-documented, unrelated 📕️norm mid-migration dangling-manifest issue (root Cargo.toml still lists 📕️norm's old 🫀️core/⚡️implementations/🦀️rust member, which no longer exists on disk) — confirmed this is 📕️norm's own in-flight work, not caused by this retrofit, and retried once at the end with no change. Fell back to thorough manual verification instead (byte-diffs, path-existence/reference cross-checks, git rename-detection sanity check) — see 🧪️verification.txt for full detail. Baseline was 55/55 tests (from the original V1 migration ticket); no logic changed so no drift expected, but this was not live-re-run. Registrar handoff is empty — only external reference to the old owner-root path is an nx cache file (.nx/workspace-data/file-map.json) that self-regenerates, not a real source dependent.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2496"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪475b71a854ca400d83a9ae5c48be90b8"
+  ]
+}

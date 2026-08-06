@@ -1,0 +1,45 @@
+Batch: tui (semio-framework-ui-tui) — Log, Table, 🫀️core/Label
+
+Source: 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/📦️lib.rs
+All target functions confirmed via grep to live in `pub mod widget { ... }` (none in `chrome`).
+
+Extracted:
+- log_on_key, paint_log -> 🧱️elements/Log/⌨️component.rs (new element dir)
+  - JUDGMENT CALL: LogState.lines is a private field (only `pub fn lines(&self)` accessor is
+    pub). Original code accessed `log.lines.len()` / `log.lines.iter()` directly, legal only
+    because it lived in the same module as the struct def. Once moved out, rewrote both call
+    sites to use `log.lines()` instead — same behavior, now via the existing public accessor.
+    No change to widget mod needed since LogState itself stays there.
+- table_on_key, paint_table, paint_table_cell -> 🧱️elements/Table/⌨️component.rs (existing dir,
+  react-only until now)
+  - JUDGMENT CALL: `table_column_widths` (private helper, only ever called from paint_table) was
+    not named in the batch list but was moved along with paint_table rather than left behind in
+    widget — it's Table-only, not shared vocabulary with any other widget, so leaving it in
+    widget would have meant either duplicating it or exposing it via pub(crate) purely for one
+    caller. Kept it private (not pub(crate)) inside table/⌨️component.rs since nothing outside
+    that file calls it.
+  - widget's `use crate::table::{...}` only imports `paint_table` and `table_on_key` (the two
+    called from WidgetState::on_key/paint); `paint_table_cell` is pub(crate) for the #[path]
+    wiring convention but not imported into widget since widget never calls it directly.
+- paint_label -> 🧱️elements/🫀️core/Label/⌨️component.rs (new 🫀️core/ dir, per instructions —
+  foundational primitive, not a top-level element)
+
+Wiring: 3 new crate-root #[path] mod decls added immediately before `pub mod widget {`
+(alongside the pre-existing select/list/tabs/input ones). No #[cfg] attribute existed on the
+neighboring decls or on `pub mod widget {` itself to duplicate (tui has no "engine" feature).
+
+Cleanup: removed now-unused `attr` (crate::cell::attr, was only used by paint_table's BOLD),
+`Key` (crate::event::Key, was only used by log_on_key/table_on_key), and `truncate_to`
+(crate::text::truncate_to, was only used by the four moved paint fns) from widget mod's own
+`use` block — all three would otherwise be dead imports post-move.
+
+Verification:
+  DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo check -p semio-framework-ui-tui
+  -> clean, zero warnings, zero errors.
+
+  DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo test -p semio-framework-ui-tui
+  -> 76 passed, 1 failed (tests::window_chrome_recesses_tabs_into_the_top_corners_of_a_closed_shape,
+     in `chrome` mod's window box-drawing, unrelated to widget/log/table/label — emoji
+     variation-selector rendering issue, not touched by this batch, not investigated further,
+     pre-existing/out of scope). All log_on_key/paint_log/table_on_key/paint_table/paint_table_cell
+     unit tests pass, as does widget_preferred_size_for_label_select_chip_and_divider.
