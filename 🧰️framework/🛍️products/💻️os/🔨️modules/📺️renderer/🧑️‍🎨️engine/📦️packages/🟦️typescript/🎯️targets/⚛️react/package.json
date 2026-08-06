@@ -26,7 +26,6 @@
     "@semio-tech/framework-surface-tiled-map-rs": "workspace:*",
     "@semio-tech/framework-surface-terrain-rs": "workspace:*",
     "@semio-tech/framework-surface-board-2d-rs": "workspace:*",
-    "@semio-tech/puzzle-2d-rs": "workspace:*",
     "@semio-tech/framework-surface-paint-rs": "workspace:*",
     "@semio-tech/infinite-canvas-react-renderer": "workspace:*",
     "@semio-tech/infinite-world-r3f": "workspace:*",

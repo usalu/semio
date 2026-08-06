@@ -1871,7 +1871,10 @@ function solidFromModelTopology(model: Model, cell: SolidRecord): ValidSolid | n
 /** @emoji 🧊️ Brep for records with shell topology or analytic `SolidPrimitive` when no shell graph exists. */
 function deriveValidSolidFromRecordOrPrimitive(model: Model, cell: SolidRecord, primitiveFrom: (p: SolidPrimitive) => ValidSolid): ValidSolid | null {
   if (String(cell.id).startsWith("from_geometry-")) return null;
-  if (solidRecordHasShellTopology(model, cell)) return solidFromModelTopology(model, cell);
+  if (solidRecordHasShellTopology(model, cell)) {
+    const fromTopo = solidFromModelTopology(model, cell);
+    if (fromTopo) return fromTopo;
+  }
   if (cell.solid) return primitiveFrom(cell.solid);
   return null;
 }
@@ -2977,17 +2980,21 @@ class BrepjsWasmEngine {
           if (brepAnchor === undefined) {
             const brep = this.solids.get(solid.id) ?? this.solidForSolidRecord(model, solid);
             if (brep) {
-              const stepRes = exportSTEP([{ shape: brep, name: String(solid.id) }]);
-              if (isOk(stepRes)) {
-                const chunk = await stepRes.value.text();
-                const idMap = mergeStepDataChunk(chunk, writer);
-                const rootOld = [...idMap.keys()].find((oldId) => {
-                  const body = chunk.match(new RegExp(`#${oldId}\\s*=\\s*([^;]+);`, "m"))?.[1]?.trim() ?? "";
-                  return body.startsWith("SHAPE_REPRESENTATION(") || body.startsWith("ADVANCED_BREP_SHAPE_REPRESENTATION(");
-                });
-                brepAnchor = rootOld !== undefined ? idMap.get(rootOld)! : writer.alloc();
-                hashToBrepRoot.set(hash, brepAnchor);
-                emitSpatialUdaProperty(writer, brepAnchor, "Spatial_Hash", hash, "System_Generated");
+              try {
+                const stepRes = exportSTEP([{ shape: brep, name: String(solid.id) }]);
+                if (isOk(stepRes)) {
+                  const chunk = await stepRes.value.text();
+                  const idMap = mergeStepDataChunk(chunk, writer);
+                  const rootOld = [...idMap.keys()].find((oldId) => {
+                    const body = chunk.match(new RegExp(`#${oldId}\\s*=\\s*([^;]+);`, "m"))?.[1]?.trim() ?? "";
+                    return body.startsWith("SHAPE_REPRESENTATION(") || body.startsWith("ADVANCED_BREP_SHAPE_REPRESENTATION(");
+                  });
+                  brepAnchor = rootOld !== undefined ? idMap.get(rootOld)! : writer.alloc();
+                  hashToBrepRoot.set(hash, brepAnchor);
+                  emitSpatialUdaProperty(writer, brepAnchor, "Spatial_Hash", hash, "System_Generated");
+                }
+              } catch {
+                // Ignore shapes that cannot be exported by brepjs exportSTEP
               }
             }
           }
@@ -4043,7 +4050,7 @@ if (import.meta.vitest) {
       it(`imports raw Rhino STEP BREP for ${fixture.name}`, async () => {
         const { readFile } = await import("node:fs/promises");
         const { resolve } = await import("node:path");
-        const stepPath = resolve(import.meta.dirname, "../../asset/abbau-aufbau", fixture.file);
+        const stepPath = resolve(import.meta.dirname, "../../../../../♻️mit-bestand/🖼️asset/🏚️abbau-aufbau", fixture.file);
         const stepText = await readFile(stepPath, "utf8");
         const space = await kernel.importStepBrepToModelSpace(stepText, { prefix: fixture.name });
         const modelId = defaultModelDefinitionId();
@@ -4070,7 +4077,7 @@ if (import.meta.vitest) {
     it("stepPresentationLayers reads BIM layer assignments from concrete forest left", async () => {
       const { readFile } = await import("node:fs/promises");
       const { resolve } = await import("node:path");
-      const stepPath = resolve(import.meta.dirname, "../../asset/abbau-aufbau/📐️hexagonal-cut-concrete-forest-left-bim.stp");
+      const stepPath = resolve(import.meta.dirname, "../../../../../♻️mit-bestand/🖼️asset/🏚️abbau-aufbau/📐️hexagonal-cut-concrete-forest-left-bim.stp");
       const stepText = await readFile(stepPath, "utf8");
       const { solidOrder, layerBySolidEntity } = stepPresentationLayers(stepText);
       expect(solidOrder).toHaveLength(12);
@@ -4084,7 +4091,7 @@ if (import.meta.vitest) {
     it("imports BIM STEP with presentation-layer typologies for concrete forest left", async () => {
       const { readFile } = await import("node:fs/promises");
       const { resolve } = await import("node:path");
-      const stepPath = resolve(import.meta.dirname, "../../asset/abbau-aufbau/📐️hexagonal-cut-concrete-forest-left-bim.stp");
+      const stepPath = resolve(import.meta.dirname, "../../../../../♻️mit-bestand/🖼️asset/🏚️abbau-aufbau/📐️hexagonal-cut-concrete-forest-left-bim.stp");
       const stepText = await readFile(stepPath, "utf8");
       const space = await kernel.importStepBimToModelSpace(stepText, {
         prefix: "hexagonal-cut-concrete-forest-left-bim",
@@ -4133,7 +4140,7 @@ if (import.meta.vitest) {
     it("imports energy and classic structure STEP presentation fixtures for concrete forest left", async () => {
       const { readFile } = await import("node:fs/promises");
       const { resolve } = await import("node:path");
-      const fixtureRoot = resolve(import.meta.dirname, "../../asset/abbau-aufbau");
+      const fixtureRoot = resolve(import.meta.dirname, "../../../../../♻️mit-bestand/🖼️asset/🏚️abbau-aufbau");
       const energyText = await readFile(resolve(fixtureRoot, "📐️hexagonal-cut-concrete-forest-left-energy.stp"), "utf8");
       const structureText = await readFile(resolve(fixtureRoot, "📐️hexagonal-cut-concrete-forest-left-classic-structure.stp"), "utf8");
       const energySpace = await kernel.importStepBimToModelSpace(energyText, {
@@ -4171,7 +4178,7 @@ if (import.meta.vitest) {
       if (process.env.CAD_GENERATE_STEP_FIXTURES !== "1") return;
       const { readFile, writeFile } = await import("node:fs/promises");
       const { resolve } = await import("node:path");
-      const fixtureRoot = resolve(import.meta.dirname, "../../asset/abbau-aufbau");
+      const fixtureRoot = resolve(import.meta.dirname, "../../../../../♻️mit-bestand/🖼️asset/🏚️abbau-aufbau");
       const playRoot = resolve(import.meta.dirname, "../../🖼️assets/🎮️play");
       for (const fixture of composeStepFixtures) {
         const stepPath = resolve(fixtureRoot, fixture.file);

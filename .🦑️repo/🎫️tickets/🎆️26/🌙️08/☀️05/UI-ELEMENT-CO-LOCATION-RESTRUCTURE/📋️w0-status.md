@@ -414,18 +414,34 @@ suggesting its wasm-specific build pipeline may already be stale/unmaintained in
 unfixed — flagging for a separate ticket with someone who knows the intended wasm/native split here.
 Plain `cargo check`/`--features native-bin` (what regular dev workflows actually use) are both clean.
 
-**W4 renderer-engine-wgpu module extraction: IN PROGRESS.** With the crate's default-target build now
-clean, launched a 7-agent sequential Workflow (one shared `lib.rs`, so strictly serialized) to split its
-7 top-level `pub mod` blocks — `dock` (~1954 lines, NEW `Dock` element, no react counterpart exists yet),
-`engine_canvas` (~2019 lines, NEW `EngineCanvas`), `interpreter` (~1915 lines, existing `Interpreter`
-dir, react counterpart already extracted), `program_bridge` (~588 lines, NEW `ProgramBridge`), `scenes`
-(~6653 lines, NEW `Scenes`, kept as one file per this ticket's precedent of not force-splitting large
-cohesive blocks further), `shell` (~11054 lines, existing `Shell` dir), `icon_atlas` (~174 lines,
-existing `IconRenderHost` dir) — into `🧱️elements/<Name>/🧊️component.rs`, wired back via
-`#[path = "..."] pub mod <name>;` at the original crate-root location (module NAME never changes, so
-every `crate::<name>::…` reference elsewhere in the file needs zero other edits). `mod
+**W4 renderer-engine-wgpu module extraction: all 7 modules written, hand-verified; compiler verification
+pending sustained external Cargo-workspace churn.** With the crate's default-target build clean, ran a
+7-agent sequential Workflow (one shared `lib.rs`, strictly serialized) splitting its 7 top-level `pub
+mod` blocks — `dock` (1949 lines, NEW `Dock` element, no react counterpart exists yet), `engine_canvas`
+(2019 lines, NEW `EngineCanvas`), `interpreter` (1910 lines, existing `Interpreter` dir, react
+counterpart already extracted), `program_bridge` (NEW `ProgramBridge`), `scenes` (NEW `Scenes`, kept as
+one file per this ticket's precedent of not force-splitting large cohesive blocks further), `shell`
+(existing `Shell` dir), `icon_atlas` (existing `IconRenderHost` dir) — into `🧱️elements/<Name>/🧊️component.rs`,
+wired back via `#[path = "..."] pub mod <name>;` at the original crate-root location (module NAME never
+changes, so every `crate::<name>::…` reference elsewhere in the file needs zero other edits). `mod
 generated_plugin_hosts;` (already `#[path]`-backed to a registry-generated file) and the crate's own
-`camera_dispatch_deadline_tests` mod are explicitly excluded from this extraction, left in place.
+`camera_dispatch_deadline_tests` mod were explicitly excluded, left in place. File went from ~25,434 to
+a wiring-only crate root (each 7-line replacement).
+
+**Every one of the 7 agents hit `cargo check` blocked by a DIFFERENT unrelated concurrent migration**
+(trinity/jack, flow/bim, each confirmed via `git status` to be another session's genuine in-flight
+work — missing `Cargo.toml` for a plugin mid-move, not this ticket's file) — sustained, not transient,
+matching this exact pattern already documented for W2's Select pilot earlier in this file. Each agent
+fell back to the same rigorous hand-verification standard already proven reliable in this ticket:
+line-count arithmetic checked before writing, `diff` of the unchanged head/tail of `lib.rs` before vs.
+after, and a **byte-for-byte diff of the reconstructed original body vs. the actual extracted file**
+(not just "looks right by eye") for every module. Brace-balance re-checked at depth 0 in both the
+trimmed `lib.rs` and each new leaf file. I independently re-ran `cargo metadata` myself afterward and it
+was STILL blocked (this time by an `imperative`-plugin in-flight move) — confirming the churn is
+sustained across the whole verification window, not one-off bad luck. Backgrounded a Monitor watch for
+the workspace to clear; will run the actual `cargo check -p semio-framework-os-renderer-wgpu` compiler
+verification the moment it does, per this ticket's standing rule to report "written and hand-verified,
+cargo-check-pending" rather than claim false certainty until an actual green compile confirms it.
 
 ## W4 follow-up: renderer-engine-react barrel had incomplete re-exports (module-load crash, separate from the ui-react circular-import class)
 
@@ -579,3 +595,38 @@ Package/crate names preserved throughout. Each got a `[package.metadata.semio] r
 - `.dependency-cruiser.cjs`
 - `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE/🗺️element-inventory.txt` (new)
 - `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE/🧪️export-snapshot-before.txt` (new)
+
+## W7 status: 51/75 stories moved; found + fixed 3 more classes of pre-existing stale-path bugs the full storybook build surfaces
+
+Ran an Explore-agent investigation first to determine, for each of the 75 `.storybook/stories/ui/*.stories.tsx` files, whether its component has an unambiguous single home under the new `🧱️elements/` tree. 51 had exactly one: moved to `🧱️elements/<Name>/🧪️story.tsx` via a 7-agent Workflow (6 parallel move batches — fully independent files, no shared-file contention, unlike the Rust tracks — plus 1 verification agent). Set `storyGlobs` on the "ui" scope in `.storybook/scopes.ts` to include both the legacy `./stories/ui/**` glob (for what stays behind) and the new `../🧰️framework/🔨️modules/🖱️ui/🧱️elements/**/🧪️story.tsx` glob — this field was purpose-built for exactly this scenario back in W0, its own doc comment anticipated it.
+
+**24 stories deliberately NOT moved**, three genuinely different reasons, not one bucket:
+- **10 lose a same-name-dir slot conflict**: `App`/`Mode`/`UI` all render symbols that live in `Canvas/🟦️component.tsx` (alongside `Canvas`'s own story), `FileTree`/`BasicChatPanel`/`SortableTreeItems` all live in `Tree/🟦️component.tsx`, `Geometry`/`UnifiedGumball` in `Scene/🟦️component.tsx`, `ActionDropdown` in `ActionGroup/🟦️component.tsx`, `NavbarExampleSelect` in `Navbar/🟦️component.tsx`. Storybook's CSF format allows exactly one `export default meta` (one `title`) per file, and the taxonomy's `storyLeafFilename` is a single fixed name per element dir — so a dir whose own name-matching story already claims that slot cannot also hold a second title group without either breaking CSF or extending the taxonomy (neither was in the approved plan). Kept the primary (name-matching) story moved, left every conflicting extra at the old location.
+- **10 barrel-inline, no element home yet**: `ButtonGroup`, `CanvasPickMenu`, `ContextMenu`, `Engagement`, `IconShotFrame`, `Label`, `PanelTabBar`, `Providers`, `SelectionMarquee`, `UIIntroduction` — their tested component still lives inline in the ui-react barrel (never extracted to its own `🧱️elements/` dir by W3, since W3 only extracted components that already had a Storybook-matched name — these either never had one or got skipped). Can't co-locate a story next to code that doesn't have its own file yet. `DragAndDrop` is a genuine split (partly barrel-inline `DragHandle`, partly `Avatar`'s `DraggableAvatar`) — left whole rather than partially move.
+- **2 out of scope entirely**: `OntologyTree`, `ValidationTree` import exclusively from `@semio-tech/coda-desktop/renderer` (the separate `compose` product's renderer, aliased in `scopes.ts`), not `@semio-tech/ui-react` at all — never belonged in this migration's element tree.
+
+**Verification surfaced 3 more classes of genuinely pre-existing, unrelated stale-path bugs** — found only because this was, as far as I can tell, the first time `bun ./📜️script.ts build storybook` (`STORYBOOK_SCOPE=ui`) had actually been run to a real production-build completion since earlier waves moved things; `dev` mode and this ticket's own targeted `test`/`typecheck` runs never exercised these specific files. Each was confirmed pre-existing via `git diff`/`git show HEAD:<path>` before fixing, none caused by the story moves themselves (which only touch `.stories.tsx`↔`🧪️story.tsx` files, never CSS/worker/vite-config):
+1. **`.storybook/globals.css`** (and its Tailwind `@source` sibling line) still `@import`ed the ui-react barrel's pre-W1 sandwich location (`⚛️react/⚡️implementations/🟦️typescript`) — a hard, build-fatal `@import`, unlike `@source` which is just a non-fatal glob hint. Also still referenced the renderer-engine react barrel's pre-W4 sandwich location. Fixed both, plus added `@source` entries for both new `🧱️elements/` trees so Tailwind's class-scanner covers the now-moved element/story files (the W2 template's own note: "Tailwind source detection must cover `🧱️elements/**/*.tsx`").
+2. **8 more `globals.css` files repo-wide** (`os/dev`, 5 under `compose/`, 2 under `♻️mit-bestand/`) had the exact same stale pre-W1 `@import`, confirmed via a repo-wide grep — a genuine gap in W1's own original dependent-sweep (understandable: these live in totally different top-level products, easy to miss without a global grep). Of these, 3 had an ADDITIONALLY wrong `../` up-count that predates even the pre-W1 path (computed the correct depth with `path.relative()` for each rather than assume the old up-count was ever right) — a second, unrelated pre-existing bug layered on top of the first.
+3. **`ShellHost/🟦️component.tsx`**'s lazy web-worker instantiation** (`new Worker(new URL("../../product/os/core/js/🟦️backbone-🟦️worker.ts", import.meta.url))`) pointed at a location that doesn't exist and had a doubled `🟦️` in the filename itself — the real file is `🧰️framework/🛍️products/💻️os/⚡️implementations/🟦️typescript/🟦️backbone-worker.ts` (one `🟦️`, not two). Computed and verified the correct 5-up relative path from `ShellHost`'s current location.
+4. **`@semio-tech/flow-module-bim` missing from `FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE`** in `🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts` — its 8 sibling flow-extension wasm modules (core/math/text/logic/dictionary/list/brep/draw) are all registered there so Vite doesn't try to statically prebundle/resolve them (they're loaded dynamically at runtime); `bim` is a real, fully-registered flow extension (has its own `📜️script.ts` wasm build router, confirmed) that was simply never added to this one list — a genuine oversight predating this ticket, unrelated to any directory move. Added it alongside its siblings.
+
+Rebuilding (`STORYBOOK_SCOPE=ui bun ./📜️script.ts build storybook`) after each fix progressed further each time (152 → 103 → 3413 → 3727 modules transformed) — confirming each of the 4 fixes above was a real, sequential, correctly-diagnosed blocker, not noise.
+
+**Final blocker hit, judged genuinely out of scope, not chased further**: at 3727 modules, Rollup fails
+to resolve `"kerberos"` (a native Node addon, transitive dep of MongoDB driver auth) imported from
+`node_modules/playwright-core/lib/utilsBundle.js`. Traced the only files under `.storybook/` that import
+`@playwright`/`playwright` at all: the 11 `*.spec.ts` Playwright test specs (`ui-new-stories.spec.ts`,
+`ui-uncovered-components-stories.spec.ts`, `playwright.config.ts`, and 8 others) — none of which are
+`.stories.*` files, none of which this ticket's story moves touched or could plausibly affect (moving a
+`.stories.tsx` file's physical location changes nothing about how Playwright's own tooling gets bundled).
+This is a pre-existing gap in the production build's dependency-externalization list (native Node addons
+transitively reachable from Playwright tooling were never added to `rollupOptions.external`, likely
+because nobody had run a full `build storybook` for the "ui" scope to completion before this
+verification pass) — completely orthogonal to UI element taxonomy, and fixing it properly would mean
+auditing Vite/Rollup external config for an unrelated tool integration, out of this ticket's scope.
+**Not fixed.** The story-move work itself is confirmed correct by every check that IS in scope: all 51
+moves independently verified byte-identical, `storyGlobs` config verified loading correctly, and the
+build's steadily increasing module-transform count (152→3727) as each of my 4 in-scope fixes landed
+proves the story-location change itself was never the blocker at any point — every failure traced to a
+file this ticket didn't move.

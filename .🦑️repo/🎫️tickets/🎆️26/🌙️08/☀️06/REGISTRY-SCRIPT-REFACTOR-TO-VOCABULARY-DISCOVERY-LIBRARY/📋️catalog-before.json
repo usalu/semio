@@ -268,30 +268,6 @@
       "consumes": []
     },
     {
-      "pluginId": "sourcing-module-beams",
-      "cratePath": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/⚡️implementations/🦀️rust",
-      "packageName": "semio-s-plugin-sourcing-beams",
-      "wasmOut": "semio_s_plugin_sourcing_beams.wasm",
-      "contributes": [],
-      "consumes": []
-    },
-    {
-      "pluginId": "sourcing-module-slabs",
-      "cratePath": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/⚡️implementations/🦀️rust",
-      "packageName": "semio-s-plugin-sourcing-slabs",
-      "wasmOut": "semio_s_plugin_sourcing_slabs.wasm",
-      "contributes": [],
-      "consumes": []
-    },
-    {
-      "pluginId": "sourcing-module-windows",
-      "cratePath": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/⚡️implementations/🦀️rust",
-      "packageName": "semio-s-plugin-sourcing-windows",
-      "wasmOut": "semio_s_plugin_sourcing_windows.wasm",
-      "contributes": [],
-      "consumes": []
-    },
-    {
       "pluginId": "trinity",
       "cratePath": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust",
       "packageName": "semio-s-plugin-trinity",

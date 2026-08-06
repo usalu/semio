@@ -5,10 +5,6 @@
   },
   "useDaemonProcess": false,
   "defaultBase": "⛳️wip",
-  "workspaceLayout": {
-    "appsDir": "compose",
-    "libsDir": "compose"
-  },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "sharedGlobals": [
@@ -35,17 +31,7 @@
     "cargo": ["{projectRoot}/**/*.rs", "{projectRoot}/Cargo.toml", "{workspaceRoot}/Cargo.lock"],
     "go": ["{projectRoot}/**/*.go", "{projectRoot}/go.mod", "{projectRoot}/go.sum", "{workspaceRoot}/go.work", "{workspaceRoot}/go.work.sum"],
     "uv": ["{projectRoot}/**/*.py", "{projectRoot}/pyproject.toml", "{workspaceRoot}/uv.lock"],
-    "dotnet": ["{projectRoot}/**/*.cs", "{projectRoot}/**/*.csproj", "{workspaceRoot}/Monorepo.sln"],
-    "cpp": [
-      "{workspaceRoot}/CMakeLists.txt",
-      "{workspaceRoot}/CMakePresets.json",
-      "{workspaceRoot}/elements/client/lib/geometry/topologic/**/*.h",
-      "{workspaceRoot}/elements/client/lib/geometry/topologic/**/*.hpp",
-      "{workspaceRoot}/elements/client/lib/geometry/topologic/**/*.cpp",
-      "{workspaceRoot}/elements/client/lib/geometry/topologic/**/*.cmake",
-      "{workspaceRoot}/elements/client/lib/geometry/topologic/**/CMakeLists.txt",
-      "{workspaceRoot}/elements/client/lib/geometry/topologic/vcpkg.json"
-    ]
+    "dotnet": ["{projectRoot}/**/*.cs", "{projectRoot}/**/*.csproj", "{workspaceRoot}/Monorepo.sln"]
   },
   "targetDefaults": {
     "setup": {

@@ -14,6 +14,15 @@ package = "semio:block"
 [package.metadata.semio]
 role = "plugin"
 
+# 📖️ Opts this plugin into the generated Storybook scope registry (`.storybook/scopes.ts`'s
+# `GENERATED_SCOPES`, read via `readSemioMarkerSubTable`) instead of a hand-maintained entry — see
+# 26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG. `"."` is this plugin's OWNER
+# root (`✏️s/🔌️plugins/🧱️block`) itself, matching the pre-existing hand-curated `block` scope.
+[package.metadata.semio.storybook]
+id = "block"
+titlePrefix = "🧱️block"
+sourceRoots = ["."]
+
 [[package.metadata.semio.playground]]
 variant = "block2d"
 app = "block2d-play"

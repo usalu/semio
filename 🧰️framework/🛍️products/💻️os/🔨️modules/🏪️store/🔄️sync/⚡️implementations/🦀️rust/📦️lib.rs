@@ -1871,32 +1871,36 @@ impl FolderTextStorage {
         Self { folder }
     }
 
-    fn dsl_path(&self, document_id: &str, extension: &str) -> std::path::PathBuf {
-        self.folder.join(format!("{document_id}.{extension}"))
+    fn dsl_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
+        self.folder
+            .join(store::semio_format::semio_filename(document_id, envelope_id, store::semio_format::Component::Dsl))
     }
 
-    fn ops_path(&self, document_id: &str, extension: &str) -> std::path::PathBuf {
-        self.folder.join(format!("{document_id}.{extension}.ops"))
+    fn ops_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
+        self.folder
+            .join(store::semio_format::semio_filename(document_id, envelope_id, store::semio_format::Component::Op))
     }
 
-    /// @emoji 🏷️ Path of the authoritative binary pack file — `dsl_path` with a `.pack` suffix.
-    pub fn pack_path(&self, document_id: &str, extension: &str) -> std::path::PathBuf {
-        self.folder.join(format!("{document_id}.{extension}.pack"))
+    /// @emoji 🏷️ Path of the authoritative binary pack file.
+    pub fn pack_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
+        self.folder
+            .join(store::semio_format::semio_filename(document_id, envelope_id, store::semio_format::Component::Pack))
     }
 
-    /// @emoji 🏷️ Path of the authoritative binary op-log file — `dsl_path` with a `.spr` suffix.
-    pub fn spr_path(&self, document_id: &str, extension: &str) -> std::path::PathBuf {
-        self.folder.join(format!("{document_id}.{extension}.spr"))
+    /// @emoji 🏷️ Path of the authoritative binary op-log file.
+    pub fn spr_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
+        self.folder
+            .join(store::semio_format::semio_filename(document_id, envelope_id, store::semio_format::Component::Spr))
     }
 
     /// @emoji 📖️ Reads both files for `document_id`, or `None` if the DSL file does not exist yet.
-    pub fn read(&self, document_id: &str, extension: &str) -> Result<Option<DocumentTextFiles>, vcs::VcsError> {
-        let dsl = match std::fs::read_to_string(self.dsl_path(document_id, extension)) {
+    pub fn read(&self, document_id: &str, envelope_id: &str) -> Result<Option<DocumentTextFiles>, vcs::VcsError> {
+        let dsl = match std::fs::read_to_string(self.dsl_path(document_id, envelope_id)) {
             Ok(text) => text,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(None),
             Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
         };
-        let ops = match std::fs::read_to_string(self.ops_path(document_id, extension)) {
+        let ops = match std::fs::read_to_string(self.ops_path(document_id, envelope_id)) {
             Ok(text) => text,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => String::new(),
             Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
@@ -1906,10 +1910,10 @@ impl FolderTextStorage {
 
     /// @emoji ✍️ Overwrites both files wholesale — the structural-command cold path (undo/redo/
     /// checkpoint/alternative).
-    pub fn write(&self, document_id: &str, extension: &str, files: &DocumentTextFiles) -> Result<(), vcs::VcsError> {
+    pub fn write(&self, document_id: &str, envelope_id: &str, files: &DocumentTextFiles) -> Result<(), vcs::VcsError> {
         std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.dsl_path(document_id, extension), &files.dsl).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.ops_path(document_id, extension), &files.ops).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
+        std::fs::write(self.dsl_path(document_id, envelope_id), &files.dsl).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.ops_path(document_id, envelope_id), &files.ops).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
     /// @emoji 📖️ pack+spr-first read: reads the AUTHORITATIVE pair for `document_id`, or `None` if
@@ -1918,20 +1922,22 @@ impl FolderTextStorage {
     /// import-only). A present `.pack` with a missing `.spr` is a hard error — no legacy: they are
     /// always written together (see `write_pack`), so a missing `.spr` means corruption or a
     /// manual edit, never a valid state to silently recover from.
-    pub fn read_pack(&self, document_id: &str, extension: &str) -> Result<Option<DocumentPackFiles>, vcs::VcsError> {
-        let pack = match std::fs::read(self.pack_path(document_id, extension)) {
+    pub fn read_pack(&self, document_id: &str, envelope_id: &str) -> Result<Option<DocumentPackFiles>, vcs::VcsError> {
+        let pack = match std::fs::read(self.pack_path(document_id, envelope_id)) {
             Ok(bytes) => bytes,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(None),
             Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
         };
-        let spr = std::fs::read(self.spr_path(document_id, extension)).map_err(|err| {
+        let spr = std::fs::read(self.spr_path(document_id, envelope_id)).map_err(|err| {
             if err.kind() == std::io::ErrorKind::NotFound {
-                vcs::VcsError::Backbone(format!("{document_id}.{extension}.pack exists but {document_id}.{extension}.spr is missing — pack and spr are always written together"))
+                vcs::VcsError::Backbone(format!(
+                    "{document_id} pack.semio exists but spr.semio is missing for envelope {envelope_id}"
+                ))
             } else {
                 vcs::VcsError::Backbone(err.to_string())
             }
         })?;
-        let ops = match std::fs::read_to_string(self.ops_path(document_id, extension)) {
+        let ops = match std::fs::read_to_string(self.ops_path(document_id, envelope_id)) {
             Ok(text) => text,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => String::new(),
             Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
@@ -1942,26 +1948,26 @@ impl FolderTextStorage {
     /// @emoji ✍️ Overwrites all four files: the AUTHORITATIVE `.pack` + `.spr` pair, the shared
     /// `.ops` text mirror, and the always-written DSL mirror `dsl_mirror` (`print_dsl` on the
     /// initial projection) — the pack-aware sibling of `write`.
-    pub fn write_pack(&self, document_id: &str, extension: &str, files: &DocumentPackFiles, dsl_mirror: &str) -> Result<(), vcs::VcsError> {
+    pub fn write_pack(&self, document_id: &str, envelope_id: &str, files: &DocumentPackFiles, dsl_mirror: &str) -> Result<(), vcs::VcsError> {
         std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.pack_path(document_id, extension), &files.pack).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.spr_path(document_id, extension), &files.spr).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.ops_path(document_id, extension), &files.ops).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.dsl_path(document_id, extension), dsl_mirror).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
+        std::fs::write(self.pack_path(document_id, envelope_id), &files.pack).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.spr_path(document_id, envelope_id), &files.spr).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.ops_path(document_id, envelope_id), &files.ops).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.dsl_path(document_id, envelope_id), dsl_mirror).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
     /// @emoji ➕️ Appends already-printed op-log lines (one {@link print_edit_lines} block) to the `.ops`
     /// file without rewriting it — the hot-path append unit, O(new edit) instead of O(whole history).
-    pub fn append_ops(&self, document_id: &str, extension: &str, lines: &str) -> Result<(), vcs::VcsError> {
+    pub fn append_ops(&self, document_id: &str, envelope_id: &str, lines: &str) -> Result<(), vcs::VcsError> {
         use std::io::Write;
         std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        let mut file = std::fs::OpenOptions::new().create(true).append(true).open(self.ops_path(document_id, extension)).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        let mut file = std::fs::OpenOptions::new().create(true).append(true).open(self.ops_path(document_id, envelope_id)).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         file.write_all(lines.as_bytes()).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
-    /// @emoji 📇️ Lists every stored document id (by DSL file stem) for a given extension.
-    pub fn document_ids(&self, extension: &str) -> Result<Vec<String>, vcs::VcsError> {
-        let suffix = format!(".{extension}");
+    /// @emoji 📇️ Lists every stored document id (by DSL `.semio` file stem) for a given envelope id.
+    pub fn document_ids(&self, envelope_id: &str) -> Result<Vec<String>, vcs::VcsError> {
+        let suffix = format!(".{envelope_id}.dsl.semio");
         let entries = match std::fs::read_dir(&self.folder) {
             Ok(entries) => entries,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),

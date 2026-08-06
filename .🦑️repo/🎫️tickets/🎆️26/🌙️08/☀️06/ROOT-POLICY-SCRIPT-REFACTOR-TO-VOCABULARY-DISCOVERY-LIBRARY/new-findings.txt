@@ -1,0 +1,44 @@
+
+=== app-plugin/stray-cargo-artifact (5)
+  [high] Stray "Cargo.lock" checked into ✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/
+  [high] Stray "Cargo.lock" checked into ✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/
+  [low] Stray "Cargo.lock" checked into ✏️s/🔨️modules/◻2d/📦️packages/🦀️rust/
+  [low] Stray "Cargo.lock" checked into ✏️s/🔨️modules/💭️mindmap/📦️packages/🦀️rust/
+  [low] Stray "Cargo.lock" checked into 🌎️hub/📦️packages/🦀️rust/
+
+=== taxonomy/dirs (4)
+  [medium] "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🧱️kernel" is not a recognized artifact component dir
+  [medium] "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🗄️registers" is not a recognized artifact component dir
+  [medium] "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📚️examples" is not a recognized artifact component dir
+  [medium] "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec" is not a recognized artifact component dir
+
+=== taxonomy/lib-shape (4)
+  [medium] "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/📦️lib.rs" has ~529 lines of fn/impl body content — a migrated package's lib.rs must stay wiring-only
+  [low] "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/📦️lib.rs" has ~2217 lines of fn/impl body content — a migrated package's lib.rs must stay wiring-only
+  [low] "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️lib.rs" has ~10707 lines of fn/impl body content — a migrated package's lib.rs must stay wiring-only
+  [low] "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️lib.rs" has ~818 lines of fn/impl body content — a migrated package's lib.rs must stay wiring-only
+
+=== taxonomy/spr-naming (2)
+  [medium] "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🔨️modules/📡️protocol" uses the retired "protocol" name — the taxonomy concept is "spr" (state patch representation)
+  [medium] "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/📡️protocol" uses the retired "protocol" name — the taxonomy concept is "spr" (state patch representation)
+
+=== taxonomy/component-file (0)
+
+=== taxonomy/barrel-shape (0)
+
+=== app-plugin/app-coupling (15)
+  [medium] ✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust depends directly on another plugin's crate (trinity -> ✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust)
+  [medium] ✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust depends directly on another plugin's crate (procedural -> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust)
+  [medium] ✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust depends directly on another plugin's crate (cad -> ✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust)
+  [medium] ✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust depends directly on another plugin's crate (puzzle -> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust)
+  [medium] ✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust depends directly on another plugin's crate (sourcing -> ✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust)
+  [medium] ✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust depends directly on another plugin's crate (process -> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust)
+  [medium] ✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust depends directly on another plugin's crate (gis -> ✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust)
+  [medium] ✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust depends directly on another plugin's crate (cad_plugin -> ✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust)
+  [medium] ✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust depends directly on another plugin's crate (fem_core -> ✏️s/🔌️plugins/🏗️fem/🔨️modules/🫀️core/⚡️implementations/🦀️rust)
+  [low] ✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust depends directly on another plugin's crate (imperative_module_core -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core/⚡️implementations/🦀️rust)
+  [low] ✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust depends directly on another plugin's crate (imperative_module_text -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/⚡️implementations/🦀️rust)
+  [low] ✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust depends directly on another plugin's crate (imperative_module_math -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/⚡️implementations/🦀️rust)
+  [low] ✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust depends directly on another plugin's crate (imperative_module_logic -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/⚡️implementations/🦀️rust)
+  [low] ✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust depends directly on another plugin's crate (imperative_module_control -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/⚡️implementations/🦀️rust)
+  [low] 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu depends directly on another plugin's crate (puzzle -> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust)

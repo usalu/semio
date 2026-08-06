@@ -53,7 +53,7 @@ impl Patchable<MapFeaturePatch> for MapFeature {
 /// document state, so panning and styling never enter undo history.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "gismap", layout = "lines")]
+#[dsl(id = "gis.gismap", layout = "lines")]
 pub struct GisMapDocument {
     #[serde(default)]
     #[dsl(table)]

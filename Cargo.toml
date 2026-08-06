@@ -7,6 +7,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/⚡️implementations/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📇️registry/⚡️implementations/🦀️rust",
@@ -149,6 +150,7 @@ members = [
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/⚡️implementations/🦀️rust",
     "✏️s/🔨️modules/💭️mindmap/⚡️implementations/🦀️rust",
+    "✏️s/🔨️modules/◻2d/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust",
     "🧰️framework/🔨️modules/🗺️surface/🏔️terrain/⚡️implementations/🦀️rust",
     "🧰️framework/🔨️modules/🗺️surface/🎲️board-2d/⚡️implementations/🦀️rust",
@@ -161,14 +163,14 @@ members = [
     "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust",
-    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/⚡️implementations/🦀️rust",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust",
     "✏️s/🔨️modules/🧊️3d/📐️brep/⚡️implementations/🦀️rust",
     "✏️s/🔨️modules/🧊️3d/📐️brep/⚙️engine/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust",
-    "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/⚡️implementations/🦀️rust",
+    "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🏗️fem/🔨️modules/🫀️core/⚡️implementations/🦀️rust",
@@ -208,7 +210,7 @@ members = [
     "🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust",
-    "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust",
+    "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core/⚡️implementations/🦀️rust",
@@ -222,11 +224,7 @@ members = [
     # not run any cargo command standalone. Adoption fixes real breakage.
     "🧰️framework/🔨️modules/🧬️schema/⚡️implementations/🦀️rust",
     "✏️s/🔨️modules/🧊️3d/🗺️spatial/⚡️implementations/🦀️rust",
-    "🌎️hub/⚡️implementations/🦀️rust",
-    "🌎️hub/🔨️modules/📇️directory/⚡️implementations/🦀️rust",
-    "🌎️hub/🔨️modules/📇️directory/🐘️postgres/⚡️implementations/🦀️rust",
-    "🌎️hub/🔨️modules/📇️directory/🌐️neo4j/⚡️implementations/🦀️rust",
-    "🌎️hub/🔨️modules/📇️directory/🪶️sqlite/⚡️implementations/🦀️rust",
+    "🌎️hub/📦️packages/🦀️rust",
     "compose/client/lib/rs",
     "compose/client/lib/query/rs",
     "compose/client/bin/gql/rs",
@@ -273,6 +271,7 @@ semio-framework-os-kernel-db-state = { path = "🧰️framework/🛍️products/
 semio-framework-os-kernel-db-storage = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/⚡️implementations/🦀️rust" }  # 14 refs
 semio-framework-os-kernel-db-wal = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/⚡️implementations/🦀️rust" }  # 6 refs
 semio-framework-os-kernel-dsl = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust" }  # 206 refs
+semio-framework-os-kernel-semio = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/⚡️implementations/🦀️rust" }
 semio-framework-os-kernel-dsl-core = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust" }  # 22 refs
 semio-framework-os-kernel-dsl-schema = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/⚡️implementations/🦀️rust" }  # 10 refs
 semio-framework-os-kernel-flow-core = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust" }  # 21 refs

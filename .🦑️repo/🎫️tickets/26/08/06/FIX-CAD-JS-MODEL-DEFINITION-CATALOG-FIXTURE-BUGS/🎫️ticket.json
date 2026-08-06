@@ -1,0 +1,15 @@
+{
+  "id": "26/08/06/FIX-CAD-JS-MODEL-DEFINITION-CATALOG-FIXTURE-BUGS",
+  "title": "Fix CAD JS Model Definition Catalog Fixture Bugs",
+  "status": "closed",
+  "created_at": "2026-08-06T06:04:00Z",
+  "closed_at": "2026-08-06T06:12:00Z",
+  "description": "Fix pre-existing cad-js model-definition catalog/fixture bugs, transformation spec loading, brepjs STEP export/import/fixture issues, and extension test failures.",
+  "summary": "Fixed catalog asset path markers in modelDefinitionAssetPathRest and shippedModelDefinitionAssets, resolved transformation spec loading, fixed STEP fixture paths in brepjs component.ts, added fallback handling in deriveValidSolidFromRecordOrPrimitive and exportModelSpaceToStep, and updated @semio-tech/kernel-3d-js package.json exports.",
+  "files": [
+    "✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "✏️s/🔌️plugins/📐️cad/🔨️modules/🏃️runtime/🟦️component.ts",
+    "✏️s/🔌️plugins/📐️cad/🔨️modules/📐️brepjs/🟦️component.ts",
+    "✏️s/🔨️modules/🧊️3d/📐️brep/⚡️implementations/🟦️typescript/package.json"
+  ]
+}

@@ -2,7 +2,7 @@
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@semio-tech/animate-js",
   "version": "0.1.0",
-  "description": "animate · React + reveal.js renderer for @semio-tech/animate-present-core",
+  "description": "animate · React + reveal.js renderer for declarative animate presentations",
   "type": "module",
   "private": true,
   "exports": {
@@ -10,7 +10,6 @@
     "./globals.css": "../../🎛️apps/🎬️present/📺️renderer/⚛️react/🎨️globals.css"
   },
   "dependencies": {
-    "@semio-tech/animate-present-core": "workspace:*",
     "@semio-tech/framework-core": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
     "react": "^19.2.3",

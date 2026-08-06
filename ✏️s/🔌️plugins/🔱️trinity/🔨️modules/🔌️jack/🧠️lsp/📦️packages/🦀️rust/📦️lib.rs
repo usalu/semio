@@ -1,4 +1,13 @@
 //! 📡️ Jack language server — JSON-RPC LSP subset over trinity graphs.
+//!
+//! 🧹️ This crate was a residual not restructured by the trinity plugin's own crate-consolidation
+//! migration (ticket `26/08/05/TRINITY-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION`), only
+//! repointed to keep building; it was first brought under `-D warnings` clippy gating by its own
+//! de-sandwich (`26/08/06/TRINITY-PLUGIN-RESIDUAL-MOP-UP-JACK-TOOLS`), which surfaced these pre-existing
+//! findings across ~40 call sites of small serde-`Value`-building helpers and one query-backend enum —
+//! allowed here rather than hand-touched, matching the `result_large_err`/`large_enum_variant`
+//! precedent in `📋️TEMPLATE.md` §9/§12 for findings the verification gate itself creates.
+#![allow(clippy::needless_pass_by_value, clippy::large_enum_variant)]
 
 use mathematical_graph_dsl::{complete, format, hover, lint, semantic_tokens, BoardQueryableGraph, Completion, Diagnostic, DiagnosticSeverity, Hover, QueryableGraph};
 use serde::Deserialize;

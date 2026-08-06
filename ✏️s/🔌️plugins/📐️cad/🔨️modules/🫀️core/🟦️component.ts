@@ -2981,12 +2981,7 @@ export function parseTransformationSpec(raw: unknown, modelDefinitionId: string)
 }
 
 function modelDefinitionIdFromTransformationAssetPath(assetPath: string): string | null {
-  const rest = modelDefinitionAssetPathRest(assetPath);
-  if (!rest) return null;
-  const parts = rest.split("/");
-  const tIdx = parts.indexOf("transformation");
-  if (tIdx <= 0) return null;
-  return parts.slice(0, tIdx).join(".");
+  return modelDefinitionIdFromAssetPath(assetPath);
 }
 
 function shippedTransformationCatalog(): readonly TransformationSpec[] {
@@ -3028,7 +3023,7 @@ export function listTransformationsFromModelDefinition(modelDefinitionId: string
 // #region 🧭️ModelDefinitionScope
 function modelDefinitionAssetPathRest(assetPath: string): string | null {
   const normalized = assetPath.replace(/\\/g, "/");
-  for (const marker of ["/asset/modelDefinition/", "assets/modelDefinition/"]) {
+  for (const marker of ["/asset/modelDefinition/", "assets/modelDefinition/", "assets/modelDefinitions/", "🖼️assets/🏗️modelDefinitions/"]) {
     const idx = normalized.indexOf(marker);
     if (idx >= 0) return normalized.slice(idx + marker.length);
   }

@@ -128,11 +128,17 @@ pub use dsl_core::{TextError, TextSpan};
 /// an equal projection — canonical `print_dsl` output is always a `parse_dsl` fixpoint; hand-written
 /// text may normalize (whitespace, ordering) before reaching that fixpoint.
 pub trait DocumentDsl: Sized {
-    /// @emoji 🏷️ Canonical file extension WITHOUT the leading dot, e.g. `"note"`, `"puzzle3d"`.
+    /// @emoji 🏷️ Legacy single-segment suffix used by fixture paths and codecs.
     const EXTENSION: &'static str;
     fn parse_dsl(text: &str) -> Result<Self, TextError>;
     fn print_dsl(&self) -> String;
+    /// @emoji 🪪️ Dotted `plugin.artifact` identity for `.semio` preambles and on-disk names.
+    fn envelope_id() -> &'static str {
+        Self::EXTENSION
+    }
 }
+
+pub use semio_format;
 
 // 🎞️ CW3 kernel cut-over: `OpText` moved (method order flipped, behavior unchanged) to
 // `protocol_command`, re-exported via the `🚧️TEMPORARY protocol shim` near the top of this file.
@@ -486,7 +492,7 @@ impl DocumentCodec {
 
         Self {
             schema: schema.into(),
-            extension: P::EXTENSION,
+            extension: P::envelope_id().into(),
             pack_schema_hash: P::record_spec().map(|spec| pack::schema_hash(&spec)).unwrap_or([0u8; 32]),
             compile_dsl: compile_dsl_impl::<P, Operation>,
             print_mirror: print_mirror_impl::<P, Operation>,

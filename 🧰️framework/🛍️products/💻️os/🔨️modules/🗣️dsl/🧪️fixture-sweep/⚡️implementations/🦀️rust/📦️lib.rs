@@ -89,8 +89,7 @@ mod tests {
     //#endregion 🔖️AppTypes
 
     //#region 🔖️Registry
-    /// @emoji 🧭️ `(app label, P::EXTENSION, check fn)` — the check fn is `P`'s own monomorphized
-    /// `store::test_support::check_dsl_fixture_text_laws::<P>`, a genuine zero-capture `fn` pointer.
+    /// @emoji 🧭️ `(app label, envelope_id, check fn)` — dispatch is by sniffed `plugin.artifact` from `.semio` content.
     type CheckFn = fn(&str) -> Result<(), String>;
 
     fn registry() -> Vec<(&'static str, &'static str, CheckFn)> {
@@ -101,7 +100,9 @@ mod tests {
             ("procedural_3d", <Procedural3dDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Procedural3dDocument>),
             ("flow_app", <FlowFixture as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<FlowFixture>),
             ("gis2d", <GisMapDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<GisMapDocument>),
+            ("gis2d", "gis.gismap", store::test_support::check_dsl_fixture_text_laws::<GisMapDocument>),
             ("gis3d", <Gis3dTerrainDocument as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<Gis3dTerrainDocument>),
+            ("gis3d", "gis.gisterrain", store::test_support::check_dsl_fixture_text_laws::<Gis3dTerrainDocument>),
             ("vcs_app", <VcsDemoProjection as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<VcsDemoProjection>),
             ("present", <PresentDeck as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<PresentDeck>),
             ("shooting", <ShootingFixture as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<ShootingFixture>),
@@ -242,6 +243,33 @@ mod tests {
         let mut failures: Vec<String> = Vec::new();
 
         for file in &fixture_files {
+            if file.extension().and_then(|e| e.to_str()) == Some("semio") {
+                let bytes = std::fs::read(file).unwrap_or_else(|error| panic!("read {}: {error}", file.display()));
+                let envelope = match store::semio_format::sniff(&bytes) {
+                    Ok(envelope) => envelope,
+                    Err(detail) => {
+                        unmapped.push(format!("{} (semio sniff failed: {detail})", file.display()));
+                        continue;
+                    }
+                };
+                if envelope.component != store::semio_format::Component::Dsl {
+                    continue;
+                }
+                let key = envelope.envelope_id();
+                let matching: Vec<&(&str, &str, CheckFn)> = registry.iter().filter(|(_, ext, _)| *ext == key).collect();
+                if matching.is_empty() {
+                    unmapped.push(format!("{} (envelope {key} — no registered DocumentDsl)", file.display()));
+                    continue;
+                }
+                let text = std::str::from_utf8(&bytes).unwrap_or_else(|_| panic!("{} is not valid utf-8", file.display()));
+                for (label, _, check) in &matching {
+                    walked += 1;
+                    if let Err(detail) = check(text) {
+                        failures.push(format!("[{label}] {}: {detail}", file.display()));
+                    }
+                }
+                continue;
+            }
             let extension = match file.extension().and_then(|e| e.to_str()) {
                 Some(extension) => extension,
                 None => {

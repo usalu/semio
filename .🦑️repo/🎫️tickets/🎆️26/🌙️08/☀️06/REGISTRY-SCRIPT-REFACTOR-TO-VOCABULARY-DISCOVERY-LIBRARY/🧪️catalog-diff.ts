@@ -31,3 +31,45 @@ console.log(`playground variants only-before: ${JSON.stringify(variants(before.p
 console.log(`playground variants only-after:  ${JSON.stringify(variants(after.playgrounds).filter((v) => !variants(before.playgrounds).includes(v)))}`);
 const same = JSON.stringify(before) === JSON.stringify(after);
 console.log(same ? "IDENTICAL catalogs (byte-for-byte JSON)" : "DIFFERENT — inspect 📋️catalog-before.json vs 📋️catalog-after.json");
+
+// 🔬️ Per-row equality for everything present on BOTH sides, keyed by (pluginId, packageName) so a
+// crate that physically moved on disk mid-run is compared on its identity fields rather than its path.
+const key = (row: { pluginId: string; packageName: string }) => `${row.pluginId}|${row.packageName}`;
+const beforeByKey = new Map(before.plugins.map((row) => [key(row), row]));
+const afterByKey = new Map(after.plugins.map((row) => [key(row), row]));
+let mismatches = 0;
+for (const [k, beforeRow] of beforeByKey) {
+  const afterRow = afterByKey.get(k);
+  if (!afterRow) {
+    console.log(`DROPPED  ${k}  (${beforeRow.cratePath})`);
+    mismatches++;
+    continue;
+  }
+  const strip = (row: typeof beforeRow) => ({ ...row, cratePath: undefined });
+  if (JSON.stringify(strip(beforeRow)) !== JSON.stringify(strip(afterRow))) {
+    console.log(`CHANGED  ${k}\n  before ${JSON.stringify(beforeRow)}\n  after  ${JSON.stringify(afterRow)}`);
+    mismatches++;
+  } else if (beforeRow.cratePath !== afterRow.cratePath) {
+    console.log(`MOVED    ${k}  ${beforeRow.cratePath} -> ${afterRow.cratePath}`);
+  }
+}
+for (const [k, afterRow] of afterByKey) if (!beforeByKey.has(k)) console.log(`RECOVERED ${k}  (${afterRow.cratePath})`);
+console.log(`shared rows with a real field mismatch: ${mismatches}`);
+
+const pgKey = (row: { variant: string; pluginId: string }) => `${row.pluginId}|${row.variant}`;
+const beforePg = new Map(before.playgrounds.map((row) => [pgKey(row), row]));
+let pgMismatches = 0;
+for (const row of after.playgrounds) {
+  const beforeRow = beforePg.get(pgKey(row));
+  if (!beforeRow) {
+    console.log(`PLAYGROUND-NEW  ${pgKey(row)}`);
+    pgMismatches++;
+    continue;
+  }
+  const strip = (r: typeof row) => ({ ...r, cratePath: undefined });
+  if (JSON.stringify(strip(beforeRow)) !== JSON.stringify(strip(row))) {
+    console.log(`PLAYGROUND-CHANGED ${pgKey(row)}\n  before ${JSON.stringify(beforeRow)}\n  after  ${JSON.stringify(row)}`);
+    pgMismatches++;
+  }
+}
+console.log(`playground rows with a real field mismatch: ${pgMismatches}`);

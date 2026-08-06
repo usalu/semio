@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "../../../📐️brep/⚡️implementations/🟦️typescript/📦️index.ts"
+    ".": "./📦️index.ts"
   },
   "dependencies": {
     "@semio-tech/flow-module-brep": "workspace:*"

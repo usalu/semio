@@ -54,7 +54,7 @@ import { homedir } from "node:os";
 import { dirname, extname, join, relative, resolve } from "node:path";
 import { createServer } from "node:net";
 import { stat } from "node:fs/promises";
-import { resolveActiveScopes } from "./.storybook/scopes.ts";
+import { resolveActiveScopes, STORY_SCOPES } from "./.storybook/scopes.ts";
 
 const WORKSPACE_ROOT = import.meta.dir;
 (() => {
@@ -671,6 +671,8 @@ export class VerifyScript extends Script {
     runCmd("bun", ["nx", "run", "@semio-tech/ui-react:check-chrome-i18n"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] leveled test target coverage…");
     this.checkLeveledTestTargets();
+    console.log("[verify] storybook scope freshness…");
+    this.checkStorybookFreshness();
     console.log("[verify] dsl fixture laws…");
     // Quick level here: the full repo-wide sweep (parse→print→reparse fixpoint, canonicalize
     // idempotence over every real 📚️examples fixture — @semio-tech/dsl-fixture-sweep-rs) runs at
@@ -711,6 +713,50 @@ export class VerifyScript extends Script {
     if (offenders.length) {
       console.error(`[verify] ${offenders.length} project.json file(s) have a "test" target without leveled siblings:`);
       for (const o of offenders) console.error(`  ${o}`);
+      process.exit(1);
+    }
+  }
+
+  /** 📖️ Every `StoryScope.sourceRoots`/`storyGlobs` entry across `.storybook/scopes.ts`'s `STORY_SCOPES`
+   * (both `HAND_CURATED_SCOPES` and the package-catalog-derived `GENERATED_SCOPES`) must resolve to a real
+   * on-disk path — catches exactly the "stale de-emojified sourceRoot" class of bug the W0 finding in
+   * `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE/📋️master.md` flagged (a plugin/framework
+   * dir moves mid-migration and a hand-written scope entry silently keeps pointing at the old location).
+   * `GENERATED_SCOPES` entries can't go stale this way (they're re-derived from disk on every import), but
+   * a package's own opt-in `sourceRoots` value CAN still name a subdir that no longer exists — checked the
+   * same way. See `26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG`. */
+  private checkStorybookFreshness(): void {
+    const offenders: string[] = [];
+    for (const scope of STORY_SCOPES) {
+      for (const root of scope.sourceRoots) {
+        if (!existsSync(join(this.root, root))) offenders.push(`scope ${JSON.stringify(scope.id)}: sourceRoot ${JSON.stringify(root)} does not exist`);
+      }
+      for (const glob of scope.storyGlobs ?? []) {
+        const literalPrefix = glob.split(/[*{]/)[0] ?? glob;
+        const literalDir = literalPrefix.endsWith("/") ? literalPrefix.slice(0, -1) : dirname(literalPrefix);
+        const resolved = literalDir.startsWith("../") || literalDir.startsWith("./") ? resolve(join(this.root, ".storybook"), literalDir) : join(this.root, literalDir);
+        if (!existsSync(resolved)) offenders.push(`scope ${JSON.stringify(scope.id)}: storyGlob ${JSON.stringify(glob)} has no matching directory (resolved ${JSON.stringify(relative(this.root, resolved))})`);
+      }
+    }
+    // 🎨️ `.storybook/globals.css`'s `@import`/`@source` at-rules are hand-maintained literal paths (Tailwind
+    // v4's content-scanning `@source` needs a real filesystem path, not a package specifier) — this is the
+    // exact bug class (a de-sandwiched plugin's old `⚡️implementations/<lang>` segment left dangling in this
+    // file) `26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG` found and fixed for cad;
+    // guard against it recurring.
+    const globalsCssPath = join(this.root, ".storybook", "globals.css");
+    if (existsSync(globalsCssPath)) {
+      for (const rawLine of readFileSync(globalsCssPath, "utf8").split("\n")) {
+        const match = rawLine.match(/^@(?:import|source)\s+"([^"]+)"/);
+        if (!match) continue;
+        const literal = match[1];
+        if (!literal.startsWith(".")) continue; // 🌐️ a bare package specifier (node resolution), not a literal fs path — nothing to check on disk here.
+        if (!existsSync(resolve(this.root, ".storybook", literal))) offenders.push(`.storybook/globals.css: ${JSON.stringify(literal)} does not exist`);
+      }
+    }
+    if (offenders.length) {
+      console.error(`[verify] ${offenders.length} Storybook scope path(s) are stale:`);
+      for (const o of offenders) console.error(`  ${o}`);
+      console.error("run-check `.storybook/scopes.ts`'s HAND_CURATED_SCOPES (or the opting-in package's own manifest) — see 26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG.");
       process.exit(1);
     }
   }
@@ -1221,9 +1267,26 @@ export class OsScript extends Script {
 }
 //#endregion 🔖️OsScript
 
+//#region 🔖️SemioScript
+/** @emoji 🧬 Universal `.semio` file processor (`inspect`, `verify`, `open`, `convert`). */
+export class SemioScript extends Script {
+  run(segments: string[]): void {
+    if (segments.length === 0) {
+      console.error("[semio] usage: bun ./📜️script.ts semio <inspect|verify|open|convert> <path>");
+      process.exit(1);
+    }
+    runCmd("cargo", ["run", "-p", "semio-framework-os-kernel-semio", "--bin", "semio", "--", ...segments], {
+      cwd: this.root,
+      budgetMs: buildBudgetMs(),
+    });
+  }
+}
+//#endregion 🔖️SemioScript
+
 //#region 🔖️Dispatch
 const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("os", OsScript)
+  .register("semio", SemioScript)
   .register("nx", NxScript)
   .register("setup", SetupScript)
   .register("start", StartScript)
@@ -1489,6 +1552,9 @@ function policyCanonicalComponent(segment: string): string {
   return POLICY_COMPONENT_ALIASES[ascii] ?? ascii;
 }
 
+/** 💾️Memoized `policyPluginOwnerDirs` result per repo root — one lint run asks for it once per crate. */
+const policyPluginOwnerCache = new Map<string, readonly string[]>();
+
 /**
  * 🗂️Owner dirs of every discovered `role = "plugin"` package, longest first — the discovery-driven
  * replacement for the old hardcoded `✏️s/🔌️plugins` prefix constant (mechanism step M4): "which plugin
@@ -1497,12 +1563,11 @@ function policyCanonicalComponent(segment: string): string {
  * `role = "tool"` jack shell/lsp packages) are deliberately excluded so they keep resolving to their
  * enclosing plugin's scope key, exactly as the prefix form did.
  */
-const policyPluginOwnerCache = new Map<string, readonly string[]>();
-
 function policyPluginOwnerDirs(repoRoot: string): readonly string[] {
   const cached = policyPluginOwnerCache.get(repoRoot);
   if (cached) return cached;
-  const owners = [...new Set(discoverPackages(repoRoot).filter((pkg) => pkg.role === "plugin").map((pkg) => pkg.ownerRel))].sort((a, b) => b.length - a.length);
+  const pluginOwners = discoverPackages(repoRoot).flatMap((pkg) => (pkg.role === "plugin" ? [pkg.ownerRel] : []));
+  const owners = [...new Set(pluginOwners)].sort((a, b) => b.length - a.length);
   policyPluginOwnerCache.set(repoRoot, owners);
   return owners;
 }
@@ -1591,8 +1656,8 @@ function policyNormalizeRelPath(relPath: string): string {
  * `libRelPath` its crate-root source file as the manifest itself declares it (`[lib]`/`[[bin]]`
  * `path`) — never assumed, because the two shapes disagree: Shape V2 keeps the entry beside the
  * manifest (`📦️packages/🦀️rust/📦️lib.rs`) while the Shape V1 leftovers still point two levels up
- * (`path = "../../📦️lib.rs"`). `role`/`ownerRel`/`area` come straight from the shared discovery
- * contract; `pluginId` is `""` for every crate outside a plugin owner (framework/hub/s-modules).
+ * (`path = "../../📦️lib.rs"`). `role`/`ownerRel` come straight from the shared discovery contract;
+ * `pluginId` is `""` for every crate outside a plugin owner (framework/hub/s-modules).
  */
 type PolicyCrateRef = {
   dir: string;
@@ -1601,7 +1666,6 @@ type PolicyCrateRef = {
   role: PackageRole | "";
   ownerRel: string;
   pluginId: string;
-  area: string;
 };
 
 /** 🚦️Priority floor for a rule firing on newly-visible surface: framework/hub/s-module crates entered these rules' field of view only with mechanism step M4, so their findings land as tracked (`"low"`) until a dedicated sweep triages them — plugin findings keep the priority the rule already used. */
@@ -1641,6 +1705,8 @@ function policyCrateEntryPath(repoRoot: string, manifestDirRel: string, ownerRel
  */
 function policyDiscoverCrateDirs(repoRoot: string): PolicyCrateRef[] {
   const taxonomy = loadTaxonomy();
+  const forbiddenSegments = new Set<string>(taxonomy.forbiddenPathSegments);
+  const legacyEntryFilename = taxonomy.entryFilenames["🦀️rust"] ?? "📦️lib.rs";
   const found = new Map<string, PolicyCrateRef>();
 
   for (const pkg of discoverPackages(repoRoot, taxonomy)) {
@@ -1652,7 +1718,6 @@ function policyDiscoverCrateDirs(repoRoot: string): PolicyCrateRef[] {
       role: pkg.role,
       ownerRel: pkg.ownerRel,
       pluginId: policyScopeKey(repoRoot, pkg.ownerRel),
-      area: pkg.area,
     });
   }
 
@@ -1668,16 +1733,15 @@ function policyDiscoverCrateDirs(repoRoot: string): PolicyCrateRef[] {
       for (const ent of entries) {
         if (!ent.isDirectory() || POLICY_SKIP_DIRS.has(ent.name) || ent.name === taxonomy.packagesDirName) continue;
         const childRel = `${relDir}/${ent.name}`;
-        if (ent.name === "🦀️rust" && relDir.endsWith("/⚡️implementations")) {
-          if (!found.has(childRel) && existsSync(join(repoRoot, childRel, "📦️lib.rs")) && existsSync(join(repoRoot, childRel, "Cargo.toml"))) {
+        if (ent.name === "🦀️rust" && forbiddenSegments.has(relDir.split("/").pop() ?? "")) {
+          if (!found.has(childRel) && existsSync(join(repoRoot, childRel, legacyEntryFilename)) && existsSync(join(repoRoot, childRel, "Cargo.toml"))) {
             found.set(childRel, {
               dir: childRel,
-              libRelPath: `${childRel}/📦️lib.rs`,
+              libRelPath: `${childRel}/${legacyEntryFilename}`,
               shape: "legacy",
               role: pluginId ? "plugin" : (owner.roles[0] ?? ""),
               ownerRel: owner.ownerRel,
               pluginId,
-              area: owner.area,
             });
           }
           continue;
@@ -2355,7 +2419,8 @@ const POLICY_CARGO_DEP_RE = /^([\w.-]+)\s*=\s*\{[^\n]*?\bpath\s*=\s*"([^"]+)"[^\
 function policyAppCouplingBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const crateDirSet = new Set(crates.map((c) => c.dir));
   const breaches: BreachRecord[] = [];
-  for (const { dir, pluginId: selfPluginId } of crates) {
+  for (const crate of crates) {
+    const { dir, pluginId: selfPluginId } = crate;
     const cargoTomlAbs = join(repoRoot, dir, "Cargo.toml");
     if (!existsSync(cargoTomlAbs)) continue;
     const text = readFileSync(cargoTomlAbs, "utf8");
@@ -2380,7 +2445,7 @@ function policyAppCouplingBreaches(repoRoot: string, crates: readonly PolicyCrat
           // design and merges last for exactly that reason — see the master plan's crate-list rulings).
           // None of these are mine to repoint from script.ts; WARN-only until each dependency is
           // resolved by its owning plugin's wave agent, then flip back to "high".
-          priority: "medium",
+          priority: policyNewSurfacePriority(crate, "medium"),
           reason: "Wave 4 V3 coupling audit: no plugin crate may depend on another plugin's crate.",
           solution: `Remove the "${depName}" dependency from ${dir}/Cargo.toml, or move the shared logic into a neutral domain crate outside any plugin's tree (e.g. under 🧰️framework).`,
         });

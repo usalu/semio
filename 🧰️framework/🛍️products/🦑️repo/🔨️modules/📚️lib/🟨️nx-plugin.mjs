@@ -30,8 +30,8 @@ function scriptExportsPolicy(absScript) {
  * @param {string} absScript
  */
 function extraPolicyInputs(workspaceRoot, absScript) {
-  const text = readFileSync(absScript, "utf8");
-  const m = text.match(/export\s+const\s+policyFile\s*=\s*["']([^"']+)["']/);
+  const text = readTextOrNull(absScript);
+  const m = text?.match(/export\s+const\s+policyFile\s*=\s*["']([^"']+)["']/);
   if (!m) return [];
   const targetAbs = join(dirname(absScript), m[1]);
   const tr = relative(workspaceRoot, targetAbs).split("\\").join("/");

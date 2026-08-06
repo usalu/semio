@@ -17,3 +17,5 @@ repo/hooks/* text eol=lf
 *.ico binary
 *.zip binary
 *.wasm binary
+*.pack.semio binary
+*.spr.semio binary

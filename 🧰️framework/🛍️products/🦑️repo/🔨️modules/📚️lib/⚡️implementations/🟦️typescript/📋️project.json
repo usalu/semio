@@ -38,6 +38,20 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript",
         "command": "bun ./📜️script.ts test exhaustive"
       }
+    },
+    "workspaces-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript",
+        "command": "bun ./📜️script.ts workspaces --check"
+      }
+    },
+    "workspaces-write": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript",
+        "command": "bun ./📜️script.ts workspaces --write"
+      }
     }
   }
 }

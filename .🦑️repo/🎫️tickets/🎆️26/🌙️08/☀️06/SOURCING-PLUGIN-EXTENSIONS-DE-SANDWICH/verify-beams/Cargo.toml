@@ -1,0 +1,56 @@
+cargo-features = ["trim-paths"]
+
+[package]
+name = "semio-s-plugin-sourcing-beams"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Sourcing beams module — contributes the beams typology and demo catalogue kinds"
+
+[package.metadata.component]
+package = "semio:sourcing-module-beams"
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/📦️lib.rs"
+
+[dependencies]
+sourcing_curate = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust", package = "semio-s-plugin-sourcing" }
+semio-framework-plugin = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-core = { path = "/Users/ueli/Documents/semio/🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
+serde_json = "1.0.149"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.106"
+
+[workspace]
+
+[profile.dev]
+debug = false
+incremental = true
+
+[profile.dev.build-override]
+opt-level = 3
+
+[lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"

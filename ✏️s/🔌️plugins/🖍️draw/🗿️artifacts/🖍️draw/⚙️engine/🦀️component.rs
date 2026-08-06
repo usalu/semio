@@ -980,8 +980,8 @@ pub fn flatten_segments_to_lines(segments: &[PathSegment]) -> Vec<PathSegment> {
 //#endregion 🔖️SegmentGeometry
 
 //#region 🔖️KernelResolve
-fn to_kernel_segment(segment: &PathSegment) -> kernel_2d_engine::PathSegment {
-    use kernel_2d_engine::PathSegment as KernelSegment;
+fn to_kernel_segment(segment: &PathSegment) -> semio_s_2d::PathSegment {
+    use semio_s_2d::PathSegment as KernelSegment;
     match segment {
         PathSegment::Move { to } => KernelSegment::Move { to: *to },
         PathSegment::Line { to } => KernelSegment::Line { to: *to },
@@ -992,8 +992,8 @@ fn to_kernel_segment(segment: &PathSegment) -> kernel_2d_engine::PathSegment {
     }
 }
 
-fn from_kernel_segment(segment: &kernel_2d_engine::PathSegment) -> PathSegment {
-    use kernel_2d_engine::PathSegment as KernelSegment;
+fn from_kernel_segment(segment: &semio_s_2d::PathSegment) -> PathSegment {
+    use semio_s_2d::PathSegment as KernelSegment;
     match segment {
         KernelSegment::Move { to } => PathSegment::Move { to: *to },
         KernelSegment::Line { to } => PathSegment::Line { to: *to },
@@ -1004,11 +1004,11 @@ fn from_kernel_segment(segment: &kernel_2d_engine::PathSegment) -> PathSegment {
     }
 }
 
-fn to_kernel_segments(segments: &[PathSegment]) -> Vec<kernel_2d_engine::PathSegment> {
+fn to_kernel_segments(segments: &[PathSegment]) -> Vec<semio_s_2d::PathSegment> {
     segments.iter().map(to_kernel_segment).collect()
 }
 
-fn from_kernel_segments(segments: &[kernel_2d_engine::PathSegment]) -> Vec<PathSegment> {
+fn from_kernel_segments(segments: &[semio_s_2d::PathSegment]) -> Vec<PathSegment> {
     segments.iter().map(from_kernel_segment).collect()
 }
 
@@ -1024,8 +1024,8 @@ fn resolve_boolean_layer_segments(doc: &DrawDocument, boolean: &DrawBooleanBody)
     if child_segments.is_empty() {
         return Vec::new();
     }
-    let kernel_inputs: Vec<Vec<kernel_2d_engine::PathSegment>> = child_segments.iter().map(|segments| to_kernel_segments(segments)).collect();
-    match kernel_2d_rs::booleans::boolean_paths_many(&kernel_inputs, &boolean.operation) {
+    let kernel_inputs: Vec<Vec<semio_s_2d::PathSegment>> = child_segments.iter().map(|segments| to_kernel_segments(segments)).collect();
+    match semio_s_2d::booleans::boolean_paths_many(&kernel_inputs, &boolean.operation) {
         Ok(result) => from_kernel_segments(&result),
         Err(_) => Vec::new(),
     }
@@ -1079,7 +1079,7 @@ fn resolve_trace_layer_segments(doc: &DrawDocument, trace: &DrawTraceBody) -> Ve
     let Some(assets) = &doc.assets else { return Vec::new() };
     let Some(asset) = assets.get(&trace.source_key) else { return Vec::new() };
     let Some((width, height, luma)) = decode_draw_image_asset_luma(asset) else { return Vec::new() };
-    let traced = match kernel_2d_rs::trace::trace_bitmap_paths(width, height, &luma, trace.params.threshold, trace.params.simplify_epsilon) {
+    let traced = match semio_s_2d::trace::trace_bitmap_paths(width, height, &luma, trace.params.threshold, trace.params.simplify_epsilon) {
         Ok(segments) => from_kernel_segments(&segments),
         Err(_) => return Vec::new(),
     };

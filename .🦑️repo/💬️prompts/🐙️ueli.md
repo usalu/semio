@@ -5,7 +5,7 @@
 ---
 
 Extend/Refactor/Change clean mechanisms to properly achieve this.
-Exhaustively plan for a workforce of agents /workflows.
+Exhaustively plan for a workforce of parallel agents /workflows.
 Everything end to end.
 
 ---
@@ -711,11 +711,39 @@ e.g. currently in os http://127.0.0.1:6070/spaces/space-1 doesnt even render a p
 
 ---
 
-pack/spr and dsl/op are currently one way of structurally representing data.
-Instead of having one grammar for a dsl, protocol move to handcrafted document specific grammars for every app/artifact.
+pack/spr and dsl/op currently follow one general way of structurally representing data following one general gramar.
+Instead of having one grammar for a dsl and one protocol (a protocol is a grammar for binary data) move to handcrafted document specific grammar/protocol for every artifact.
 e.g. graphlike data should represent data over arrows, such as <-, -e1-, -c:Connection> etc
 Reuse grammar across similar data and design the individual grammars consistently.
-Every single grammar must have a grammar file, language server protocol and be integrated to writer, etc
+Every single artifactmust have multiple grammar/protocol files, language server protocol and be integrated to writer, etc
+
+```
+plugins
+	<plugin>
+    artifacts
+      <artifact>
+        dsl
+          component.rs
+          component.ts
+          component.grammar.semio
+          …
+        pack
+          component.rs
+          component.ts
+          component.protocol.semio
+          …
+        op
+          component.rs
+          component.ts
+          component.grammar.semio
+          …
+        spr
+          component.rs
+          component.ts
+          component.protocol.semio
+          …
+        …
+```
 
 ---
 

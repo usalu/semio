@@ -4,8 +4,13 @@
 // Summary: Replaces the three hardcoded `ui`/`puzzle`/`compose` stacks in `main.ts` with a data-driven
 // registry every consumer derives from: story globs, workspace aliases, watch-ignores, static-dir
 // assets (e.g. `/plugin-modules` for OS-shell program boot stories), and lazy scope-gated Vite plugins.
-// Pure data + pure functions only — no Vite/Storybook imports — so `script.ts` (bun, CLI validation)
-// and `playwright.config.ts` can import it without dragging in the Vite/MDX module graph.
+// `STORY_SCOPES` = `HAND_CURATED_SCOPES` (scopes needing aliases/assets/vitePlugins, a cross-owner
+// sourceRoot, or living under an area not yet migrated to `📦️packages`) + `GENERATED_SCOPES` (every
+// package that opts into Storybook coverage via its own manifest, derived from the repo-lib package
+// catalog — see `26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG`).
+// Pure data + pure functions only — no Vite/Storybook imports (only `node:fs`-backed catalog discovery)
+// — so `script.ts` (bun, CLI validation) and `playwright.config.ts` can import it without dragging in
+// the Vite/MDX module graph.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 

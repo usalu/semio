@@ -348,14 +348,13 @@ fn serialize_svg(scene: &DrawingScene) -> String {
         match &node.node {
             DrawingNode::Text { x, y, content, size } => {
                 let [tx, ty] = node.transform.transform_point([*x, *y]);
-                let fill = node
-                    .fill
-                    .as_ref()
-                    .map(|f| match f {
+                let fill = node.fill.as_ref().map_or_else(
+                    || "black".into(),
+                    |f| match f {
                         FillStyle::Solid { color } => color_css(*color),
                         _ => "black".into(),
-                    })
-                    .unwrap_or_else(|| "black".into());
+                    },
+                );
                 body.push_str(&format!(r#"<text x="{tx}" y="{ty}" font-size="{size}" fill="{fill}">{content}</text>"#));
             }
             _ => {
@@ -930,7 +929,7 @@ mod tests {
     fn bool_op_many_forks_single_handle() {
         let mut store = DrawingStore::new();
         let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
-        let forked = block_on(store.bool_op_many("union", &[rect.clone()])).unwrap();
+        let forked = block_on(store.bool_op_many("union", std::slice::from_ref(&rect))).unwrap();
         assert_ne!(forked.as_str(), rect.as_str());
         assert_eq!(block_on(store.kind(&forked)).unwrap(), DrawingKind::Rect);
     }

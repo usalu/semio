@@ -73,7 +73,7 @@ CREATE INDEX IF NOT EXISTS idx_sync_session_document ON hub_sync_session (docume
 
 fn now_ms() -> i64 {
     use std::time::{SystemTime, UNIX_EPOCH};
-    SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_millis() as i64).unwrap_or(0)
+    SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_millis() as i64)
 }
 
 fn backend<E: std::fmt::Display>(err: E) -> DirectoryError {

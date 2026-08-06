@@ -646,9 +646,10 @@ fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError> {
 /// `OS_HUB_DIRECTORY_NEO4J_URI` — otherwise, each match arm compiled only when this crate's
 /// same-named feature is enabled).
 // 🌵️ `data_dir` is only read by the `sqlite` arm below (`postgres`/`neo4j` connect via env-provided
-// URIs instead) — with every backend feature off it goes genuinely unused, so the allow is scoped
-// to exactly that combination rather than blanket-silencing the lint for every feature set.
-#[cfg_attr(not(any(feature = "sqlite", feature = "postgres", feature = "neo4j")), allow(unused_variables))]
+// URIs/connection strings instead, never a local path) — whenever the `sqlite` feature is off it
+// goes genuinely unused (whether or not another backend feature is on), so the allow is scoped to
+// exactly that condition rather than blanket-silencing the lint for every feature set.
+#[cfg_attr(not(feature = "sqlite"), allow(unused_variables))]
 async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<dyn HubDirectory>, HubError> {
     let backend = std::env::var("OS_HUB_DIRECTORY_BACKEND").unwrap_or_else(|_| "sqlite".into());
     match backend.as_str() {

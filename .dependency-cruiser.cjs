@@ -90,7 +90,12 @@ function noImplSegmentRule() {
  * imports are already an ERROR via `crossPluginRules`, so plugins are deliberately left out here to avoid
  * a redundant WARN — the gap this rule actually closes is *within* 🧰️framework (product-to-product,
  * module-to-module), ✏️s/🔨️modules (s-module-to-s-module), 🌎️hub/🔨️modules, and ♻️mit-bestand
- * (item-to-item), none of which any existing rule reaches). */
+ * (item-to-item), none of which any existing rule reaches).
+ * `📜️script.ts` itself is exempt (`pathNot` below): every such bootstrap script across the repo already
+ * relative-imports repo-lib (`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/…`) across family boundaries —
+ * the SAME sanctioned pattern `no-escaping-relative-imports` above already carves out ("do not fix it into
+ * a specifier-depth rule, that would break every script.ts in the repo") — flagging it here would just be
+ * ~30 files of noise on an already-litigated non-issue, not a new real finding. */
 function crossPackageRelativeRule() {
   const familyPattern = "🧰️framework/(?:🛍️products|🔨️modules)/[^/]+|✏️s/🔨️modules/[^/]+|🌎️hub/🔨️modules/[^/]+|♻️mit-bestand/[^/]+";
   return {
@@ -98,7 +103,7 @@ function crossPackageRelativeRule() {
     severity: "warn",
     comment:
       "Deep relative imports must not cross package/module family boundaries in favor of @semio-tech/… package-name imports — WARN until package-name imports are the norm repo-wide, then promote at finalization",
-    from: { path: `^(${familyPattern})/` },
+    from: { path: `^(${familyPattern})/`, pathNot: "(^|/)📜️script\\.ts$" },
     to: {
       dependencyTypes: ["local"],
       pathNot: "^$1/",

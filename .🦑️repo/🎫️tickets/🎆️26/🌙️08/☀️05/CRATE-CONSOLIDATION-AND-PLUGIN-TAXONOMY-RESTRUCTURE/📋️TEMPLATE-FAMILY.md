@@ -119,9 +119,15 @@ always-on code:
 5. **`cargo check --no-default-features` must still succeed** (the plan's own verification gate). Any
    `match` arm in the binary that references a feature-gated type needs `#[cfg(feature = "…")]` on the
    ARM itself (stable, supported syntax), with a catch-all fallback arm outside any cfg. Watch for a
-   function parameter that's ONLY read inside cfg-gated arms — with every backend feature off it goes
-   genuinely unused; scope an `#[cfg_attr(not(any(feature = "a", feature = "b", …)), allow(unused_variables))]`
-   to exactly that combination rather than blanket-suppressing the lint.
+   function parameter that's only read inside a SUBSET of the cfg-gated arms — hub's `data_dir` looked at
+   first glance like it needed `#[cfg_attr(not(any(feature = "sqlite", feature = "postgres", feature =
+   "neo4j")), allow(unused_variables))]` ("unused only when every backend is off"), but only the `sqlite`
+   arm actually reads it (`postgres`/`neo4j` connect via env-provided URIs, never a local path) — so it
+   goes unused whenever `sqlite` specifically is off, REGARDLESS of whether another backend feature is on.
+   Test each feature combination individually (§6) rather than assuming the "all backends off" case is the
+   only one that needs the allow; a wrong guess here compiles fine under `--all-features`/default and only
+   breaks a combination you didn't happen to try (found by this ticket's own `--features postgres` run,
+   not by inspection).
 
 ---
 
@@ -220,3 +226,16 @@ this is a coincidence per-owner, not a guarantee).
   for a small crate) when many other sessions are compiling framework crates simultaneously — this is
   contention, not a sign your Cargo.toml is wrong. Budget generous timeouts and run verification commands
   synchronously (never backgrounded — see the master ticket's ground rules on this).
+- **Do not background your own verification commands even when a build is running long** — a backgrounded
+  cargo invocation only wakes the MAIN orchestrating session automatically; a subagent/worker session gets
+  no such wake-up and will stall indefinitely waiting on a notification that never arrives. If a check is
+  taking longer than the default tool timeout, re-run it synchronously with an explicit longer timeout
+  (this ticket needed ~600000ms for a contended `clippy --no-default-features`) rather than backgrounding
+  it and moving on — this doubles down on `📋️TEMPLATE.md` §12.1's identical warning, confirmed again here.
+- **TEMPLATE.md §9's "pre-existing clippy findings ride along with the moved code" holds for a
+  framework/product family exactly as it does for a plugin** — hub's merge surfaced 4 pre-existing
+  `map_unwrap_or`/`needless_pass_by_value` findings in code that was previously spread across 5 separate
+  crates (each individually clean under the workspace lint set, but the specific combination of `-D
+  warnings` `--all-targets` full recompilation as ONE crate is what actually exercises every lint path).
+  Fix them the mechanical way (`map_or`/`map_or_else`, take `&T` instead of `T` when the body never
+  consumes it) — don't `#[allow]` them away.

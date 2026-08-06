@@ -14,6 +14,15 @@ package = "semio:animate"
 [package.metadata.semio]
 role = "plugin"
 
+# 📖️ Opts this plugin into the generated Storybook scope registry (`.storybook/scopes.ts`'s
+# `GENERATED_SCOPES`, read via `readSemioMarkerSubTable`) instead of a hand-maintained entry — see
+# 26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG. `sourceRoots` are relative to
+# this plugin's OWNER dir (`✏️s/🔌️plugins/🎞️animate`), matching the pre-existing hand-curated `animate` scope.
+[package.metadata.semio.storybook]
+id = "animate"
+titlePrefix = "🎬️animate"
+sourceRoots = ["🎛️apps/🎬️present/📺️renderer/⚛️react"]
+
 [[package.metadata.semio.playground]]
 variant = "animate"
 ports = { react = 6051, wgpu = 6151 }

@@ -45,7 +45,7 @@ function shippedModelDefinitionAssets(): ModelDefinitionAssetModules {
     extensions: import.meta.glob("../../🖼️assets/🏗️modelDefinitions/**/🔣️extension.json", { eager: true, import: "default" }) as Record<string, unknown>,
     attributes: import.meta.glob("../../🖼️assets/🏗️modelDefinitions/**/🏷️attributeDefinitions/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
     propertyDefinitions: import.meta.glob(["../../🖼️assets/🏗️modelDefinitions/**/🔧️propertyDefinitions/*.json", "../../🖼️assets/🏗️modelDefinitions/**/🏷️propertyKinds/*.json"], { eager: true, import: "default" }) as Record<string, unknown>,
-    properties: import.meta.glob("../../🖼️assets/🏗️modelDefinitions/**/property/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
+    properties: import.meta.glob(["../../🖼️assets/🏗️modelDefinitions/**/🏷️properties/*.json", "../../🖼️assets/🏗️modelDefinitions/**/🔧️properties/*.json"], { eager: true, import: "default" }) as Record<string, unknown>,
     statDefinitions: import.meta.glob("../../🖼️assets/🏗️modelDefinitions/**/📊️statDefinitions/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
     transformations: import.meta.glob("../../🖼️assets/🏗️modelDefinitions/**/🔀️transformations/**/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
   };

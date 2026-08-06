@@ -1,7 +1,7 @@
-//! 🖊️ Flow draw module: 2D vector-graphics operators backed by [`kernel_2d_rs::DrawingStore`].
+//! 🖊️ Flow draw module: 2D vector-graphics operators backed by [`semio_s_2d::DrawingStore`].
 
-use kernel_2d_engine::{block_on, DrawingError, DrawingHandle, DrawingKernel, FillStyle, GradientStop, LineCap, LineJoin, StrokeStyle, Vec2};
-use kernel_2d_rs::DrawingStore;
+use semio_s_2d::{block_on, DrawingError, DrawingHandle, DrawingKernel, FillStyle, GradientStop, LineCap, LineJoin, StrokeStyle, Vec2};
+use semio_s_2d::DrawingStore;
 use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
 use std::collections::HashSet;
 use std::sync::{Mutex, OnceLock};
@@ -33,16 +33,16 @@ fn map_kernel_error(error: DrawingError) -> EvalError {
     EvalError::InvalidInput(error.to_string())
 }
 
-fn kind_label(kind: kernel_2d_engine::DrawingKind) -> &'static str {
+fn kind_label(kind: semio_s_2d::DrawingKind) -> &'static str {
     match kind {
-        kernel_2d_engine::DrawingKind::Rect => "rect",
-        kernel_2d_engine::DrawingKind::Ellipse => "ellipse",
-        kernel_2d_engine::DrawingKind::Circle => "circle",
-        kernel_2d_engine::DrawingKind::Line => "line",
-        kernel_2d_engine::DrawingKind::Polygon => "polygon",
-        kernel_2d_engine::DrawingKind::Path => "path",
-        kernel_2d_engine::DrawingKind::Text => "text",
-        kernel_2d_engine::DrawingKind::Group => "group",
+        semio_s_2d::DrawingKind::Rect => "rect",
+        semio_s_2d::DrawingKind::Ellipse => "ellipse",
+        semio_s_2d::DrawingKind::Circle => "circle",
+        semio_s_2d::DrawingKind::Line => "line",
+        semio_s_2d::DrawingKind::Polygon => "polygon",
+        semio_s_2d::DrawingKind::Path => "path",
+        semio_s_2d::DrawingKind::Text => "text",
+        semio_s_2d::DrawingKind::Group => "group",
     }
 }
 
@@ -755,7 +755,7 @@ pub fn trace_bitmap_json(width: u32, height: u32, mask: &[u8], threshold: f64, s
         .and_then(|mut store| match block_on(store.trace_bitmap(width, height, mask, threshold, simplify_epsilon)) {
             Ok(handle) => match block_on(store.flatten_scene(&handle)) {
                 Ok(scene) => {
-                    let segments = scene.nodes.into_iter().find_map(|node| if let kernel_2d_engine::DrawingNode::Path { segments } = node.node { Some(segments) } else { None });
+                    let segments = scene.nodes.into_iter().find_map(|node| if let semio_s_2d::DrawingNode::Path { segments } = node.node { Some(segments) } else { None });
                     segments.map(|segs| serde_json::json!({ "segments": segs }).to_string())
                 }
                 Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
@@ -767,7 +767,7 @@ pub fn trace_bitmap_json(width: u32, height: u32, mask: &[u8], threshold: f64, s
 
 /// 🔀️ Boolean-combines two path segment arrays.
 pub fn boolean_segments_json(a_json: &str, b_json: &str, operation: &str) -> String {
-    let parse = |json: &str| -> Result<Vec<kernel_2d_engine::PathSegment>, DrawModuleError> {
+    let parse = |json: &str| -> Result<Vec<semio_s_2d::PathSegment>, DrawModuleError> {
         let parsed: serde_json::Value = serde_json::from_str(json)?;
         if let Some(error) = parsed.get("error").and_then(|v| v.as_str()) {
             return Err(DrawModuleError::Invalid(error.to_string()));

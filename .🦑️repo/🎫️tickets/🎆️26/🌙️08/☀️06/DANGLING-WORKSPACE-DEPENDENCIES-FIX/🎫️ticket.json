@@ -1,0 +1,17 @@
+{
+  "title": "Fix 2 Dangling Workspace Dependencies Blocking Bun Install",
+  "emoji": "🔗️",
+  "status": "closed",
+  "description": "Fix dangling workspace:* dependency declarations for @semio-tech/animate-present-core and @semio-tech/puzzle-2d-rs blocking bun install repo-wide.",
+  "summary": "1. Removed dead workspace dependency `@semio-tech/animate-present-core`: \"workspace:*\" from `✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json` (@semio-tech/animate-js) and `♻️mit-bestand/🎤️präsentation/📅️33.projektetage/⚡️implementation/🟦️typescript/package.json` (@semio-tech/mit-bestand-praesentation-projektetage).\n2. Removed dead workspace dependency `@semio-tech/puzzle-2d-rs`: \"workspace:*\" from `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json` (@semio-tech/framework-renderer-react), where board-2d rendering already routes via `@semio-tech/framework-surface-board-2d-rs`.\n3. Executed unsandboxed `bun install` at repo root — confirmed lockfile regenerated and `bun install` completed cleanly (135 packages installed, 0 errors).",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "b98d53b7-1033-4685-91ee-817129c89476"
+  ],
+  "files": [
+    "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/⚡️implementation/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+    "bun.lock"
+  ]
+}

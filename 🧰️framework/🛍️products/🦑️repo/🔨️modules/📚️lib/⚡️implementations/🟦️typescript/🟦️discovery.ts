@@ -97,6 +97,10 @@ export interface Taxonomy {
   readonly artifactComponentDirs: readonly string[];
   /** 🌳️ STRUCTURAL set: every dir allowed as a child of an artifact (superset of `artifactComponentDirs`; the extra member is `⚙️engine`, allowed but not required). */
   readonly artifactChildDirs: readonly string[];
+  readonly exampleComponentDirs: readonly string[];
+  readonly appChildDirs: readonly string[];
+  readonly semioDataLeafPrefix: string;
+  readonly semioFileExtension: string;
   readonly windowChildDirs: readonly string[];
   readonly taxonomyLeafParentDirs: readonly string[];
   /** 🍃️ Leaf component filename, keyed by target when a package has one (e.g. `"🧊️wgpu"`), else by lang (e.g. `"🦀️rust"` for plugins, which never have a target level). */
@@ -139,6 +143,11 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
   const areaStates = new Set<string>(taxonomy.areaStates);
   for (const [area, state] of Object.entries(taxonomy.areas)) {
     if (!areaStates.has(state)) problems.push(`areas["${area}"] = "${state}" is not one of areaStates (${taxonomy.areaStates.join(", ")}).`);
+  }
+  for (const dir of taxonomy.exampleComponentDirs ?? []) {
+    if (!taxonomy.taxonomyLeafParentDirs.includes(dir)) {
+      problems.push(`exampleComponentDirs member "${dir}" should appear in taxonomyLeafParentDirs for leaf validation.`);
+    }
   }
   for (const dir of taxonomy.artifactComponentDirs) {
     if (!taxonomy.artifactChildDirs.includes(dir)) problems.push(`artifactComponentDirs member "${dir}" is missing from artifactChildDirs — the structural set must be a superset of the completeness set.`);

@@ -3013,36 +3013,6 @@
       "solution": "Remove the space between \"//\" and \"#endregion\" on line 125."
     },
     {
-      "id": "region-tests-label-✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/⚡️implementations/🦀️rust-25",
-      "summary": "Tests region labeled \"🔖️Tests\" must be exactly \"🧪️Tests\"",
-      "kind": "app-plugin/region-tests-label",
-      "scope": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/⚡️implementations/🦀️rust",
-      "line": 25,
-      "priority": "medium",
-      "reason": "Wave 4 V2 structure audit: the tests region sigil is reserved as 🧪️Tests.",
-      "solution": "Rename the region label at line 25 (and its matching //#endregion) to \"🧪️Tests\"."
-    },
-    {
-      "id": "region-tests-label-✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/⚡️implementations/🦀️rust-25",
-      "summary": "Tests region labeled \"🔖️Tests\" must be exactly \"🧪️Tests\"",
-      "kind": "app-plugin/region-tests-label",
-      "scope": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/⚡️implementations/🦀️rust",
-      "line": 25,
-      "priority": "medium",
-      "reason": "Wave 4 V2 structure audit: the tests region sigil is reserved as 🧪️Tests.",
-      "solution": "Rename the region label at line 25 (and its matching //#endregion) to \"🧪️Tests\"."
-    },
-    {
-      "id": "region-tests-label-✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/⚡️implementations/🦀️rust-25",
-      "summary": "Tests region labeled \"🔖️Tests\" must be exactly \"🧪️Tests\"",
-      "kind": "app-plugin/region-tests-label",
-      "scope": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/⚡️implementations/🦀️rust",
-      "line": 25,
-      "priority": "medium",
-      "reason": "Wave 4 V2 structure audit: the tests region sigil is reserved as 🧪️Tests.",
-      "solution": "Rename the region label at line 25 (and its matching //#endregion) to \"🧪️Tests\"."
-    },
-    {
       "id": "stray-cargo-artifact-✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust-Cargo.lock",
       "summary": "Stray \"Cargo.lock\" checked into ✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/",
       "kind": "app-plugin/stray-cargo-artifact",
@@ -3061,13 +3031,13 @@
       "solution": "Remove ✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/Cargo.lock (leftover of an isolated verification overlay)."
     },
     {
-      "id": "stray-cargo-artifact-✏️s/🔨️modules/◻2d/⚡️implementations/🦀️rust-Cargo.lock",
-      "summary": "Stray \"Cargo.lock\" checked into ✏️s/🔨️modules/◻2d/⚡️implementations/🦀️rust/",
+      "id": "stray-cargo-artifact-✏️s/🔨️modules/◻2d/📦️packages/🦀️rust-Cargo.lock",
+      "summary": "Stray \"Cargo.lock\" checked into ✏️s/🔨️modules/◻2d/📦️packages/🦀️rust/",
       "kind": "app-plugin/stray-cargo-artifact",
-      "scope": "✏️s/🔨️modules/◻2d/⚡️implementations/🦀️rust",
+      "scope": "✏️s/🔨️modules/◻2d/📦️packages/🦀️rust",
       "priority": "low",
       "reason": "Wave 4 V2 structure audit: crates must not carry their own Cargo.lock (workspace-managed) — a nested one silently pins a second dependency graph.",
-      "solution": "Remove ✏️s/🔨️modules/◻2d/⚡️implementations/🦀️rust/Cargo.lock (leftover of an isolated verification overlay)."
+      "solution": "Remove ✏️s/🔨️modules/◻2d/📦️packages/🦀️rust/Cargo.lock (leftover of an isolated verification overlay)."
     },
     {
       "id": "stray-cargo-artifact-✏️s/🔨️modules/💭️mindmap/📦️packages/🦀️rust-Cargo.lock",
@@ -3077,15 +3047,6 @@
       "priority": "low",
       "reason": "Wave 4 V2 structure audit: crates must not carry their own Cargo.lock (workspace-managed) — a nested one silently pins a second dependency graph.",
       "solution": "Remove ✏️s/🔨️modules/💭️mindmap/📦️packages/🦀️rust/Cargo.lock (leftover of an isolated verification overlay)."
-    },
-    {
-      "id": "stray-cargo-artifact-✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust-Cargo.lock",
-      "summary": "Stray \"Cargo.lock\" checked into ✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/",
-      "kind": "app-plugin/stray-cargo-artifact",
-      "scope": "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust",
-      "priority": "low",
-      "reason": "Wave 4 V2 structure audit: crates must not carry their own Cargo.lock (workspace-managed) — a nested one silently pins a second dependency graph.",
-      "solution": "Remove ✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/Cargo.lock (leftover of an isolated verification overlay)."
     },
     {
       "id": "stray-cargo-artifact-🌎️hub/📦️packages/🦀️rust-Cargo.lock",
@@ -3178,101 +3139,11 @@
       "solution": "Remove the \"fem_core\" dependency from ✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/Cargo.toml, or move the shared logic into a neutral domain crate outside any plugin's tree (e.g. under 🧰️framework)."
     },
     {
-      "id": "app-coupling-plugin-✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust-imperative_module_core",
-      "summary": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust depends directly on another plugin's crate (imperative_module_core -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core/⚡️implementations/🦀️rust)",
-      "kind": "app-plugin/app-coupling",
-      "scope": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust",
-      "priority": "medium",
-      "reason": "Wave 4 V3 coupling audit: no plugin crate may depend on another plugin's crate.",
-      "solution": "Remove the \"imperative_module_core\" dependency from ✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust/Cargo.toml, or move the shared logic into a neutral domain crate outside any plugin's tree (e.g. under 🧰️framework)."
-    },
-    {
-      "id": "app-coupling-plugin-✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust-imperative_module_text",
-      "summary": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust depends directly on another plugin's crate (imperative_module_text -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/⚡️implementations/🦀️rust)",
-      "kind": "app-plugin/app-coupling",
-      "scope": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust",
-      "priority": "medium",
-      "reason": "Wave 4 V3 coupling audit: no plugin crate may depend on another plugin's crate.",
-      "solution": "Remove the \"imperative_module_text\" dependency from ✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust/Cargo.toml, or move the shared logic into a neutral domain crate outside any plugin's tree (e.g. under 🧰️framework)."
-    },
-    {
-      "id": "app-coupling-plugin-✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust-imperative_module_math",
-      "summary": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust depends directly on another plugin's crate (imperative_module_math -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/⚡️implementations/🦀️rust)",
-      "kind": "app-plugin/app-coupling",
-      "scope": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust",
-      "priority": "medium",
-      "reason": "Wave 4 V3 coupling audit: no plugin crate may depend on another plugin's crate.",
-      "solution": "Remove the \"imperative_module_math\" dependency from ✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust/Cargo.toml, or move the shared logic into a neutral domain crate outside any plugin's tree (e.g. under 🧰️framework)."
-    },
-    {
-      "id": "app-coupling-plugin-✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust-imperative_module_logic",
-      "summary": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust depends directly on another plugin's crate (imperative_module_logic -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/⚡️implementations/🦀️rust)",
-      "kind": "app-plugin/app-coupling",
-      "scope": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust",
-      "priority": "medium",
-      "reason": "Wave 4 V3 coupling audit: no plugin crate may depend on another plugin's crate.",
-      "solution": "Remove the \"imperative_module_logic\" dependency from ✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust/Cargo.toml, or move the shared logic into a neutral domain crate outside any plugin's tree (e.g. under 🧰️framework)."
-    },
-    {
-      "id": "app-coupling-plugin-✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust-imperative_module_control",
-      "summary": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust depends directly on another plugin's crate (imperative_module_control -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/⚡️implementations/🦀️rust)",
-      "kind": "app-plugin/app-coupling",
-      "scope": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust",
-      "priority": "medium",
-      "reason": "Wave 4 V3 coupling audit: no plugin crate may depend on another plugin's crate.",
-      "solution": "Remove the \"imperative_module_control\" dependency from ✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust/Cargo.toml, or move the shared logic into a neutral domain crate outside any plugin's tree (e.g. under 🧰️framework)."
-    },
-    {
-      "id": "app-coupling-plugin-✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust-imperative_module_core",
-      "summary": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust depends directly on another plugin's crate (imperative_module_core -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core/⚡️implementations/🦀️rust)",
-      "kind": "app-plugin/app-coupling",
-      "scope": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust",
-      "priority": "medium",
-      "reason": "Wave 4 V3 coupling audit: no plugin crate may depend on another plugin's crate.",
-      "solution": "Remove the \"imperative_module_core\" dependency from ✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust/Cargo.toml, or move the shared logic into a neutral domain crate outside any plugin's tree (e.g. under 🧰️framework)."
-    },
-    {
-      "id": "app-coupling-plugin-✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust-imperative_module_text",
-      "summary": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust depends directly on another plugin's crate (imperative_module_text -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/⚡️implementations/🦀️rust)",
-      "kind": "app-plugin/app-coupling",
-      "scope": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust",
-      "priority": "medium",
-      "reason": "Wave 4 V3 coupling audit: no plugin crate may depend on another plugin's crate.",
-      "solution": "Remove the \"imperative_module_text\" dependency from ✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust/Cargo.toml, or move the shared logic into a neutral domain crate outside any plugin's tree (e.g. under 🧰️framework)."
-    },
-    {
-      "id": "app-coupling-plugin-✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust-imperative_module_math",
-      "summary": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust depends directly on another plugin's crate (imperative_module_math -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/⚡️implementations/🦀️rust)",
-      "kind": "app-plugin/app-coupling",
-      "scope": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust",
-      "priority": "medium",
-      "reason": "Wave 4 V3 coupling audit: no plugin crate may depend on another plugin's crate.",
-      "solution": "Remove the \"imperative_module_math\" dependency from ✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust/Cargo.toml, or move the shared logic into a neutral domain crate outside any plugin's tree (e.g. under 🧰️framework)."
-    },
-    {
-      "id": "app-coupling-plugin-✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust-imperative_module_logic",
-      "summary": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust depends directly on another plugin's crate (imperative_module_logic -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/⚡️implementations/🦀️rust)",
-      "kind": "app-plugin/app-coupling",
-      "scope": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust",
-      "priority": "medium",
-      "reason": "Wave 4 V3 coupling audit: no plugin crate may depend on another plugin's crate.",
-      "solution": "Remove the \"imperative_module_logic\" dependency from ✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust/Cargo.toml, or move the shared logic into a neutral domain crate outside any plugin's tree (e.g. under 🧰️framework)."
-    },
-    {
-      "id": "app-coupling-plugin-✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust-imperative_module_control",
-      "summary": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust depends directly on another plugin's crate (imperative_module_control -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/⚡️implementations/🦀️rust)",
-      "kind": "app-plugin/app-coupling",
-      "scope": "✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust",
-      "priority": "medium",
-      "reason": "Wave 4 V3 coupling audit: no plugin crate may depend on another plugin's crate.",
-      "solution": "Remove the \"imperative_module_control\" dependency from ✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust/Cargo.toml, or move the shared logic into a neutral domain crate outside any plugin's tree (e.g. under 🧰️framework)."
-    },
-    {
       "id": "app-coupling-plugin-✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust-imperative_module_core",
       "summary": "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust depends directly on another plugin's crate (imperative_module_core -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core/⚡️implementations/🦀️rust)",
       "kind": "app-plugin/app-coupling",
       "scope": "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust",
-      "priority": "medium",
+      "priority": "low",
       "reason": "Wave 4 V3 coupling audit: no plugin crate may depend on another plugin's crate.",
       "solution": "Remove the \"imperative_module_core\" dependency from ✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/Cargo.toml, or move the shared logic into a neutral domain crate outside any plugin's tree (e.g. under 🧰️framework)."
     },
@@ -3281,7 +3152,7 @@
       "summary": "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust depends directly on another plugin's crate (imperative_module_text -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/⚡️implementations/🦀️rust)",
       "kind": "app-plugin/app-coupling",
       "scope": "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust",
-      "priority": "medium",
+      "priority": "low",
       "reason": "Wave 4 V3 coupling audit: no plugin crate may depend on another plugin's crate.",
       "solution": "Remove the \"imperative_module_text\" dependency from ✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/Cargo.toml, or move the shared logic into a neutral domain crate outside any plugin's tree (e.g. under 🧰️framework)."
     },
@@ -3290,7 +3161,7 @@
       "summary": "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust depends directly on another plugin's crate (imperative_module_math -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/⚡️implementations/🦀️rust)",
       "kind": "app-plugin/app-coupling",
       "scope": "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust",
-      "priority": "medium",
+      "priority": "low",
       "reason": "Wave 4 V3 coupling audit: no plugin crate may depend on another plugin's crate.",
       "solution": "Remove the \"imperative_module_math\" dependency from ✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/Cargo.toml, or move the shared logic into a neutral domain crate outside any plugin's tree (e.g. under 🧰️framework)."
     },
@@ -3299,7 +3170,7 @@
       "summary": "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust depends directly on another plugin's crate (imperative_module_logic -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/⚡️implementations/🦀️rust)",
       "kind": "app-plugin/app-coupling",
       "scope": "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust",
-      "priority": "medium",
+      "priority": "low",
       "reason": "Wave 4 V3 coupling audit: no plugin crate may depend on another plugin's crate.",
       "solution": "Remove the \"imperative_module_logic\" dependency from ✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/Cargo.toml, or move the shared logic into a neutral domain crate outside any plugin's tree (e.g. under 🧰️framework)."
     },
@@ -3308,7 +3179,7 @@
       "summary": "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust depends directly on another plugin's crate (imperative_module_control -> ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/⚡️implementations/🦀️rust)",
       "kind": "app-plugin/app-coupling",
       "scope": "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust",
-      "priority": "medium",
+      "priority": "low",
       "reason": "Wave 4 V3 coupling audit: no plugin crate may depend on another plugin's crate.",
       "solution": "Remove the \"imperative_module_control\" dependency from ✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/Cargo.toml, or move the shared logic into a neutral domain crate outside any plugin's tree (e.g. under 🧰️framework)."
     },
@@ -3317,7 +3188,7 @@
       "summary": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu depends directly on another plugin's crate (puzzle -> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust)",
       "kind": "app-plugin/app-coupling",
       "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
-      "priority": "medium",
+      "priority": "low",
       "reason": "Wave 4 V3 coupling audit: no plugin crate may depend on another plugin's crate.",
       "solution": "Remove the \"puzzle\" dependency from 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml, or move the shared logic into a neutral domain crate outside any plugin's tree (e.g. under 🧰️framework)."
     },
@@ -6056,44 +5927,44 @@
       "solution": "Remove the \"db_actor\" dependency from 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️testkit/⚡️implementations/🦀️rust/Cargo.toml, or if this crate genuinely is a hub server, move/confirm it under db/, hub/, or a compose/**/hub/** directory."
     },
     {
-      "id": "no-budget-null-📜️script.ts-3144",
-      "summary": "\"📜️script.ts:3144\" passes budgetMs: null — use orchestratorBudgetOpts() or daemonBudgetOpts() instead",
+      "id": "no-budget-null-📜️script.ts-3146",
+      "summary": "\"📜️script.ts:3146\" passes budgetMs: null — use orchestratorBudgetOpts() or daemonBudgetOpts() instead",
       "kind": "budget/no-budget-null",
       "scope": "📜️script.ts",
-      "line": 3144,
+      "line": 3146,
       "priority": "high",
       "reason": "budgetMs: null disables wall-clock budgeting for that subprocess; named orchestrator/daemon budget classes keep long-running work bounded without anonymous unbounded escapes.",
-      "solution": "At 📜️script.ts:3144, replace budgetMs: null with orchestratorBudgetOpts() for nx/script fan-outs or daemonBudgetOpts() for dev servers/MCP stdio, or pass an explicit positive budgetMs."
+      "solution": "At 📜️script.ts:3146, replace budgetMs: null with orchestratorBudgetOpts() for nx/script fan-outs or daemonBudgetOpts() for dev servers/MCP stdio, or pass an explicit positive budgetMs."
     },
     {
-      "id": "no-budget-null-📜️script.ts-3161",
-      "summary": "\"📜️script.ts:3161\" passes budgetMs: null — use orchestratorBudgetOpts() or daemonBudgetOpts() instead",
+      "id": "no-budget-null-📜️script.ts-3163",
+      "summary": "\"📜️script.ts:3163\" passes budgetMs: null — use orchestratorBudgetOpts() or daemonBudgetOpts() instead",
       "kind": "budget/no-budget-null",
       "scope": "📜️script.ts",
-      "line": 3161,
+      "line": 3163,
       "priority": "high",
       "reason": "budgetMs: null disables wall-clock budgeting for that subprocess; named orchestrator/daemon budget classes keep long-running work bounded without anonymous unbounded escapes.",
-      "solution": "At 📜️script.ts:3161, replace budgetMs: null with orchestratorBudgetOpts() for nx/script fan-outs or daemonBudgetOpts() for dev servers/MCP stdio, or pass an explicit positive budgetMs."
+      "solution": "At 📜️script.ts:3163, replace budgetMs: null with orchestratorBudgetOpts() for nx/script fan-outs or daemonBudgetOpts() for dev servers/MCP stdio, or pass an explicit positive budgetMs."
     },
     {
-      "id": "no-budget-null-📜️script.ts-3166",
-      "summary": "\"📜️script.ts:3166\" passes budgetMs: null — use orchestratorBudgetOpts() or daemonBudgetOpts() instead",
+      "id": "no-budget-null-📜️script.ts-3168",
+      "summary": "\"📜️script.ts:3168\" passes budgetMs: null — use orchestratorBudgetOpts() or daemonBudgetOpts() instead",
       "kind": "budget/no-budget-null",
       "scope": "📜️script.ts",
-      "line": 3166,
+      "line": 3168,
       "priority": "high",
       "reason": "budgetMs: null disables wall-clock budgeting for that subprocess; named orchestrator/daemon budget classes keep long-running work bounded without anonymous unbounded escapes.",
-      "solution": "At 📜️script.ts:3166, replace budgetMs: null with orchestratorBudgetOpts() for nx/script fan-outs or daemonBudgetOpts() for dev servers/MCP stdio, or pass an explicit positive budgetMs."
+      "solution": "At 📜️script.ts:3168, replace budgetMs: null with orchestratorBudgetOpts() for nx/script fan-outs or daemonBudgetOpts() for dev servers/MCP stdio, or pass an explicit positive budgetMs."
     },
     {
-      "id": "no-budget-null-📜️script.ts-3167",
-      "summary": "\"📜️script.ts:3167\" passes budgetMs: null — use orchestratorBudgetOpts() or daemonBudgetOpts() instead",
+      "id": "no-budget-null-📜️script.ts-3169",
+      "summary": "\"📜️script.ts:3169\" passes budgetMs: null — use orchestratorBudgetOpts() or daemonBudgetOpts() instead",
       "kind": "budget/no-budget-null",
       "scope": "📜️script.ts",
-      "line": 3167,
+      "line": 3169,
       "priority": "high",
       "reason": "budgetMs: null disables wall-clock budgeting for that subprocess; named orchestrator/daemon budget classes keep long-running work bounded without anonymous unbounded escapes.",
-      "solution": "At 📜️script.ts:3167, replace budgetMs: null with orchestratorBudgetOpts() for nx/script fan-outs or daemonBudgetOpts() for dev servers/MCP stdio, or pass an explicit positive budgetMs."
+      "solution": "At 📜️script.ts:3169, replace budgetMs: null with orchestratorBudgetOpts() for nx/script fan-outs or daemonBudgetOpts() for dev servers/MCP stdio, or pass an explicit positive budgetMs."
     }
   ]
 }

@@ -10,7 +10,6 @@
     "build": "bun nx run @semio-tech/mit-bestand-praesentation-projektetage:build"
   },
   "dependencies": {
-    "@semio-tech/animate-present-core": "workspace:*",
     "@semio-tech/animate-js": "workspace:*"
   },
   "devDependencies": {

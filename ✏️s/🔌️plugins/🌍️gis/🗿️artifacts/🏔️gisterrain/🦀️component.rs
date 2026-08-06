@@ -12,7 +12,7 @@ pub const GIS_3D_TERRAIN_SCHEMA: &str = "gis.terrain";
 //#region 🔖️Types
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
-#[dsl(extension = "gisterrain", keyword = "gisterrain")]
+#[dsl(id = "gis.gisterrain", keyword = "gisterrain")]
 pub struct Gis3dTerrainDocument {
     pub exaggeration: f64,
     /// 🔌️ `map:in`'s insertion point (WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE

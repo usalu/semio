@@ -1,15 +1,18 @@
 [package]
 name = "semio-s-plugin-sourcing-slabs"
-version = "0.1.0"
-edition = "2021"
-rust-version = "1.88"
-
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Sourcing slabs module — contributes the slabs typology and demo catalogue kinds"
 
 [lints]
 workspace = true
+
 [package.metadata.component]
 package = "semio:sourcing-module-slabs"
 
+[package.metadata.semio]
+role = "extension"
 
 [package.metadata.wasm-pack.profile.dev]
 wasm-opt = false
@@ -19,13 +22,13 @@ wasm-opt = false
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "../../../../../../../✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/⚡️implementations/🦀️rust/📦️lib.rs"
+path = "📦️lib.rs"
 
 [dependencies]
 sourcing_curate = { path = "../../../../../../../✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust", package = "semio-s-plugin-sourcing" }
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-core = { path = "../../../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
-serde_json = "1.0.140"
+serde_json = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen = "0.2.106"
+wasm-bindgen = { workspace = true }

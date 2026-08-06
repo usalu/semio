@@ -11,6 +11,7 @@ use syn::{parse_macro_input, Data, DeriveInput, Fields, Type};
 #[derive(Default, Clone)]
 struct ContainerAttrs {
     extension: Option<String>,
+    id: Option<String>,
     keyword: Option<String>,
     lines_layout: bool,
 }
@@ -58,6 +59,9 @@ fn parse_container_attrs(input: &DeriveInput) -> ContainerAttrs {
             if meta.path.is_ident("extension") {
                 let value: syn::LitStr = meta.value()?.parse()?;
                 out.extension = Some(value.value());
+            } else if meta.path.is_ident("id") {
+                let value: syn::LitStr = meta.value()?.parse()?;
+                out.id = Some(value.value());
             } else if meta.path.is_ident("keyword") {
                 let value: syn::LitStr = meta.value()?.parse()?;
                 out.keyword = Some(value.value());
@@ -609,9 +613,13 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident.clone();
     let container = parse_container_attrs(&input);
-    let Some(extension) = &container.extension else {
-        return syn::Error::new_spanned(&input, "DslDocument requires #[dsl(extension = \"...\")]").to_compile_error().into();
-    };
+    let envelope_id = container
+        .id
+        .or(container.extension)
+        .ok_or_else(|| syn::Error::new_spanned(&input, "DslDocument requires #[dsl(id = \"plugin.artifact\")] or #[dsl(extension = \"...\")]"))?;
+    let extension_suffix = envelope_id.rsplit('.').next().unwrap_or(&envelope_id);
+    let envelope_id_lit = envelope_id.as_str();
+    let extension_suffix_lit = extension_suffix;
     let Data::Struct(data) = &input.data else {
         return syn::Error::new_spanned(&input, "DslDocument only supports structs").to_compile_error().into();
     };
@@ -643,13 +651,26 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
         }
 
         impl ::store::DocumentDsl for #name {
-            const EXTENSION: &'static str = #extension;
+            const EXTENSION: &'static str = #extension_suffix_lit;
+            fn envelope_id() -> &'static str {
+                #envelope_id_lit
+            }
             fn parse_dsl(text: &str) -> Result<Self, ::store::TextError> {
-                let record = ::dsl::__rt::parse_document_record(text, &Self::__dsl_spec())?;
+                let body = match ::store::semio_format::split_text_preamble(text) {
+                    Ok((_, rest)) => rest,
+                    Err(_) => text,
+                };
+                let record = ::dsl::__rt::parse_document_record(body, &Self::__dsl_spec())?;
                 Self::__dsl_from_record(&record)
             }
             fn print_dsl(&self) -> String {
-                ::dsl::__rt::print_document_record(&self.__dsl_to_record(), &Self::__dsl_spec())
+                let body = ::dsl::__rt::print_document_record(&self.__dsl_to_record(), &Self::__dsl_spec());
+                let envelope = ::store::semio_format::SemioEnvelope::from_envelope_id(
+                    Self::envelope_id(),
+                    ::store::semio_format::Component::Dsl,
+                    1,
+                ).expect("valid envelope_id");
+                ::store::semio_format::wrap_text(&envelope, &body)
             }
         }
 
@@ -677,10 +698,25 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
         // `store`) bridges `__dsl_from_record`'s `TextError` into `PackError`.
         impl ::store::DocumentPack for #name {
             fn encode_pack_with(&self, options: &::store::PackEncodeOptions) -> Result<Vec<u8>, ::store::PackError> {
-                ::store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)
+                let inner = ::store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+                let envelope = ::store::semio_format::SemioEnvelope::from_envelope_id(
+                    Self::envelope_id(),
+                    ::store::semio_format::Component::Pack,
+                    1,
+                ).map_err(|e| ::store::PackError::Schema(e.to_string()))?;
+                Ok(::store::semio_format::wrap_binary(&envelope, &inner))
             }
             fn decode_pack_with(bytes: &[u8], options: &::store::PackDecodeOptions) -> Result<Self, ::store::PackError> {
-                let (record, _report) = ::store::pack_rt::decode_document(bytes, &Self::__dsl_spec(), options)?;
+                let (envelope, inner) = ::store::semio_format::unwrap_binary(bytes)
+                    .map_err(|e| ::store::PackError::Schema(e.to_string()))?;
+                if envelope.envelope_id() != Self::envelope_id() {
+                    return Err(::store::PackError::Schema(format!(
+                        "pack envelope mismatch: expected {}, got {}",
+                        Self::envelope_id(),
+                        envelope.envelope_id()
+                    )));
+                }
+                let (record, _report) = ::store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
                 Self::__dsl_from_record(&record).map_err(::store::text_error_to_pack_error)
             }
             fn record_spec() -> Option<::dsl::RecordSpec> {

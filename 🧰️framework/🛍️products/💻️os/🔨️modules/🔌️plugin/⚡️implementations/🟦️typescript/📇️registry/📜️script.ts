@@ -1,5 +1,15 @@
 #!/usr/bin/env bun
-/** 📜️ `@semio-tech/plugin-registry` — single-source plugin registry codegen from workspace crates. */
+/**
+ * 📜️ `@semio-tech/plugin-registry` — single-source plugin/playground/framework catalog codegen from
+ * workspace packages. Discovery is the shared repo-wide contract (`🔣️taxonomy.json` +
+ * `discoverPackages()` in `🦑️repo/📚️lib`), not path regexes local to this script; the plugin area's
+ * declared `AreaState` decides how much pre-Shape-V2 layout is still tolerated.
+ *
+ * `generate` writes `🤖️generated/*` plus `.vscode/launch.json` (both derived from the same playground
+ * catalog); `check` byte-compares every one of those artifacts and never writes.
+ *
+ * @see .🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/REGISTRY-SCRIPT-REFACTOR-TO-VOCABULARY-DISCOVERY-LIBRARY
+ */
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import type { AreaState, DiscoveredPackage, PackageRole } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
@@ -51,6 +61,10 @@ function areaAdmitsLegacyShape(state: AreaState): boolean {
 /** @emoji 🎛️ Taxonomy tree segment names, single-sourced from the vocabulary: anything deriving an
  * app-root path (the constitutional gate, example discovery, the window audit) shares one value. */
 const APPS_DIRNAME = TAXONOMY.appsDirName;
+/** @emoji 📚️ Owner-root example data dir, cross-checked against the vocabulary's allowed root data dirs
+ * so a rename there cannot leave playground example discovery silently pointing at nothing. */
+const EXAMPLES_DIRNAME = "📚️examples";
+if (!TAXONOMY.rootDataDirNames.includes(EXAMPLES_DIRNAME)) throw new Error(`📇️registry: "${EXAMPLES_DIRNAME}" is not one of 🔣️taxonomy.json's rootDataDirNames (${TAXONOMY.rootDataDirNames.join(", ")})`);
 const RUST_LANG = "🦀️rust";
 const RUST_MANIFEST_FILENAME = TAXONOMY.ecosystems[RUST_LANG].manifestFilename ?? "Cargo.toml";
 
@@ -71,16 +85,6 @@ function discoverComponentPackages(repoRoot: string): DiscoveredPackage[] {
   return discoverPackages(repoRoot, TAXONOMY).filter((pkg) => pkg.lang === RUST_LANG && COMPONENT_ROLES.has(pkg.role));
 }
 
-/**
- * @emoji 🏚️ Pre-Shape-V2 component crates still on disk inside the plugin area: a
- * `<forbidden segment>/🦀️rust/Cargo.toml` sandwich (the legacy plugin bundle crate and its
- * `🧩️extensions` siblings). Selected structurally from the vocabulary — `forbiddenPathSegments` plus
- * the rust ecosystem's manifest filename — instead of the three hand-written path regexes this script
- * used to carry, and gated on the plugin area's declared state so the whole arm disappears by
- * vocabulary edit at the finalization flip. Crates matching the shape without a
- * `[package.metadata.component]` package are dropped downstream by `tryParsePluginCargo`, exactly as
- * before.
- */
 /** @emoji 🏚️ Absolute path of a legacy `<dir>/<forbidden segment>/🦀️rust/Cargo.toml` sandwich manifest
  * when one exists — the vocabulary-driven replacement for the `"⚡️implementations"` literals this
  * script used to splice into paths by hand (both spellings are covered, per
@@ -93,6 +97,16 @@ function legacyRustManifestIn(dir: string): string | undefined {
   return undefined;
 }
 
+/**
+ * @emoji 🏚️ Pre-Shape-V2 component crates still on disk inside the plugin area: a
+ * `<forbidden segment>/🦀️rust/Cargo.toml` sandwich (the legacy plugin bundle crate and its
+ * `🧩️extensions` siblings). Selected structurally from the vocabulary — `forbiddenPathSegments` plus
+ * the rust ecosystem's manifest filename — instead of the three hand-written path regexes this script
+ * used to carry, and gated on the plugin area's declared state so the whole arm disappears by
+ * vocabulary edit at the finalization flip. Crates matching the shape without a
+ * `[package.metadata.component]` package are dropped downstream by `tryParsePluginCargo`, exactly as
+ * before.
+ */
 function findLegacyComponentManifests(repoRoot: string): string[] {
   if (!areaAdmitsLegacyShape(PLUGINS_AREA_STATE)) return [];
   const forbidden = new Set(TAXONOMY.forbiddenPathSegments);
@@ -273,16 +287,18 @@ function discoverExamplesForPlayground(repoRoot: string, cratePath: string, plug
     return [...new Set(ids)].sort();
   };
   const segments = cratePath.split("/");
-  // 🏛️ Under `✏️s/🔌️plugins/<p>/...` the tech root is the plugin folder (3 segments), not `✏️s` itself.
-  const techRoot = segments[0] === "✏️s" && segments[1] === "🔌️plugins" ? segments.slice(0, 3).join("/") : segments[0];
-  const rootDir = join(repoRoot, techRoot, "📚️examples");
+  // 🏛️ Inside the plugin area the tech root is the plugin folder (area segments + 1), not `✏️s` itself.
+  const areaSegments = PLUGINS_AREA.split("/");
+  const inPluginArea = areaSegments.every((segment, index) => segments[index] === segment);
+  const techRoot = inPluginArea ? segments.slice(0, areaSegments.length + 1).join("/") : segments[0];
+  const rootDir = join(repoRoot, techRoot, EXAMPLES_DIRNAME);
   if (existsSync(rootDir)) return idsIn(rootDir);
   if (variant.startsWith(pluginId) && variant.length > pluginId.length) {
     const suffix = variant.slice(pluginId.length);
     // 🎛️ Uses the shared `APPS_DIRNAME` constant (not an independently hardcoded literal) so this
     // keeps resolving correctly once a plugin's crate path collapses to one crate per plugin — the
     // apps-container segment name is single-sourced against the constitutional gate below.
-    const dir = join(repoRoot, techRoot, APPS_DIRNAME, suffix, "📚️examples");
+    const dir = join(repoRoot, techRoot, APPS_DIRNAME, suffix, EXAMPLES_DIRNAME);
     if (existsSync(dir)) return idsIn(dir);
   }
   return [];
@@ -988,13 +1004,13 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
     }
 
     for (const file of componentFiles) {
-      if (!declaredAbs.has(file)) findings.push(`${pluginId}: ${relative(pluginRoot, file)} is not declared by any #[path] in 📦️lib.rs`);
+      if (!declaredAbs.has(file)) findings.push(`${pluginId}: ${relative(pluginRoot, file)} is not declared by any #[path] in ${RUST_ENTRY_FILENAME}`);
     }
     for (const p of danglingLeafPaths) {
-      findings.push(`${pluginId}: 📦️lib.rs declares #[path = "${p}"] but the file does not exist on disk`);
+      findings.push(`${pluginId}: ${RUST_ENTRY_FILENAME} declares #[path = "${p}"] but the file does not exist on disk`);
     }
   } else {
-    findings.push(`${pluginId}: missing 📦️lib.rs (checked plugin root and 📦️packages/🦀️rust/)`);
+    findings.push(`${pluginId}: missing ${RUST_ENTRY_FILENAME} (checked plugin root and ${TAXONOMY.rustEntryPathRules.entryDirFromOwner}/)`);
   }
 
   // 🚫️ no `📡️protocol` path segment may remain under a migrated plugin (renamed to `📡️spr`).

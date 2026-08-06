@@ -5133,3 +5133,9 @@ export async function exportAnimatedSvgToMp4(inputSvgPath: string, outputMp4Path
  * `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`. */
 export * from "./🟦️discovery.ts";
 //#endregion 🔣️TaxonomyDiscovery
+
+//#region 🗂️Workspaces
+/** 🗂️ Generated root `package.json` `workspaces` array from a real on-disk package scan — see
+ * `26/08/06/GENERATED-BUN-WORKSPACES-FROM-PACKAGE-CATALOG`. */
+export * from "./🗂️workspaces.ts";
+//#endregion 🗂️Workspaces

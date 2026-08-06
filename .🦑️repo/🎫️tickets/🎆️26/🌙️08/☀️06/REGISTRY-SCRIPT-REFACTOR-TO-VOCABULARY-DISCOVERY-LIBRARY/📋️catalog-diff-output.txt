@@ -1,0 +1,12 @@
+plugins  before=34 after=37
+playgrounds before=58 after=58
+plugin ids only-before: []
+plugin ids only-after:  ["sourcing-module-beams","sourcing-module-slabs","sourcing-module-windows"]
+playground variants only-before: []
+playground variants only-after:  []
+DIFFERENT — inspect 📋️catalog-before.json vs 📋️catalog-after.json
+RECOVERED sourcing-module-beams|semio-s-plugin-sourcing-beams  (✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust)
+RECOVERED sourcing-module-slabs|semio-s-plugin-sourcing-slabs  (✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust)
+RECOVERED sourcing-module-windows|semio-s-plugin-sourcing-windows  (✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust)
+shared rows with a real field mismatch: 0
+playground rows with a real field mismatch: 0

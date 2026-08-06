@@ -7,7 +7,12 @@
   "type": "module",
   "semio": {
     "role": "framework",
-    "id": "ui-styling-ts"
+    "id": "ui-styling-ts",
+    "storybook": {
+      "id": "styling",
+      "titlePrefix": "🎨️styling",
+      "sourceRoots": ["📦️packages/🟦️typescript"]
+    }
   },
   "exports": {
     ".": "./📦️index.ts",

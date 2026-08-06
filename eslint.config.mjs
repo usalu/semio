@@ -42,7 +42,12 @@ const CROSS_PACKAGE_FAMILIES = [
  * `patterns` match the literal specifier text (not the resolved path dep-cruiser sees), so this is
  * necessarily a name-based heuristic rather than a byte-for-byte port of the `$1`-capture regex — a
  * specifier is only ever written relative to the importing file, so "does it name a sibling" is the
- * closest equivalent ESLint's own resolution-free rule can check. */
+ * closest equivalent ESLint's own resolution-free rule can check.
+ * `📜️script.ts` is excluded the same way `.dependency-cruiser.cjs`'s twin rule excludes it: every such
+ * bootstrap script repo-wide already relative-imports repo-lib across a family boundary — the same
+ * sanctioned pattern the dep-cruiser config's `no-escaping-relative-imports` comment already carves out —
+ * so without this `ignores`, this override would flag ~30 files of noise on an already-litigated
+ * non-issue instead of a new real finding. */
 function crossPackageRelativeOverrides() {
   const overrides = [];
   for (const { root, members } of CROSS_PACKAGE_FAMILIES) {
@@ -51,6 +56,7 @@ function crossPackageRelativeOverrides() {
       if (siblings.length === 0) continue;
       overrides.push({
         files: [`${root}/${member}/**`],
+        ignores: ["**/📜️script.ts"],
         rules: {
           "no-restricted-imports": [
             "warn",

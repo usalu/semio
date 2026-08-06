@@ -4,7 +4,7 @@ import { join, relative } from "node:path";
 const workspaceRoot = process.cwd();
 const pluginDir = process.argv[2];
 
-const SKIP_DIRS = new Set(["node_modules", ".git", "target", "dist", ".nx", "pkg", ".venv"]);
+const SKIP_DIRS = new Set(["node_modules", ".git", "target", "dist", ".nx", "pkg", ".venv", "storybook-static"]);
 
 /** @param {string} dir @param {string[]} out */
 function walk(dir, out) {

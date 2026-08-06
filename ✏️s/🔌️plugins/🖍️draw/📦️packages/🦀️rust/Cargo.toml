@@ -24,8 +24,7 @@ path = "📦️lib.rs"
 
 [dependencies]
 fsm = { path = "../../🔄️fsm/📦️packages/🦀️rust", package = "semio-s-plugin-draw-fsm" }
-kernel_2d_engine = { path = "../../../../../✏️s/🔨️modules/◻2d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-kernel-geometry-2d-engine" }
-kernel_2d_rs = { path = "../../../../../✏️s/🔨️modules/◻2d/⚡️implementations/🦀️rust", package = "semio-s-kernel-geometry-2d" }
+semio_s_2d = { path = "../../../../../✏️s/🔨️modules/◻2d/📦️packages/🦀️rust", package = "semio-s-2d" }
 dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
 protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }

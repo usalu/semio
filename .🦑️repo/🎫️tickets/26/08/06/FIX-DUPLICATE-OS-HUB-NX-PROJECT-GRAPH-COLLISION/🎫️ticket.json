@@ -1,0 +1,15 @@
+{
+  "id": "26/08/06/FIX-DUPLICATE-OS-HUB-NX-PROJECT-GRAPH-COLLISION",
+  "title": "Fix Duplicate Os Hub Nx Project Graph Collision",
+  "status": "closed",
+  "created_at": "2026-08-06T06:08:00Z",
+  "closed_at": "2026-08-06T06:09:00Z",
+  "description": "Fix duplicate os-hub project definition in old vs new hub locations, update Cargo.toml workspace members and remove old hub implementation trees.",
+  "summary": "Resolved duplicate os-hub project graph collision in Nx. Removed old un-migrated hub implementation tree at 🌎️hub/⚡️implementations and 🌎️hub/🔨️modules. Updated root Cargo.toml workspace members line to point to the consolidated crate 🌎️hub/📦️packages/🦀️rust. Confirmed bun nx show projects and bun nx show project os-hub execute clean and resolve os-hub exclusively to 🌎️hub/📦️packages/🦀️rust.",
+  "goal": "AI-OPTIMIZED-REPO",
+  "files": [
+    "Cargo.toml",
+    "🌎️hub/⚡️implementations",
+    "🌎️hub/🔨️modules"
+  ]
+}
