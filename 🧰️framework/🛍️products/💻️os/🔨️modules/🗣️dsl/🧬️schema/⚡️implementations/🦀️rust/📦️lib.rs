@@ -2039,7 +2039,7 @@ pub fn from_dsl_value<T: serde::de::DeserializeOwned>(value: DslValue) -> Result
 
 //#region 🔖️Language
 /// @emoji 🎨️ Generic editor surface over any `RecordSpec` — the generalization of
-/// `mathematical_graph_dsl`'s hand-rolled `LanguageService`.
+/// `math::graph::dsl`'s hand-rolled `LanguageService`.
 pub struct LanguageService<'g> {
     pub spec: &'g RecordSpec,
 }

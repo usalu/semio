@@ -11,10 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
 import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { shellFloorPaints, shellFloorFillClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useSurface, SurfaceScope, NavbarTrailingFullscreenSlot, Label, Icon, useLabel, type IconName } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { shellFloorPaints, shellFloorFillClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { useSurface, SurfaceScope } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { Label, useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { NavbarTrailingFullscreenSlot, type IconName } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { Icon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🩺️Navbar

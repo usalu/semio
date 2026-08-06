@@ -39,6 +39,7 @@ rayon = { version = "1.10.0", optional = true }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+semio-framework-math = { workspace = true }
 semio-framework-core = { workspace = true, optional = true }
 brepkit-check = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
 brepkit-geometry = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
@@ -46,15 +47,9 @@ brepkit-io = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fe
 brepkit-math = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
 brepkit-operations = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
 brepkit-topology = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
-mathematical_algebra = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/➕️algebra/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-algebra" }
-mathematical_number = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🔢️number/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-number" }
-
 [dev-dependencies]
 criterion = { version = "0.5", default-features = false, features = ["html_reports"] }
-mathematical_random = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🎲️random/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-random" }
-
 [[bench]]
 name = "kernel"
 path = "benches/kernel.rs"
 harness = false
-

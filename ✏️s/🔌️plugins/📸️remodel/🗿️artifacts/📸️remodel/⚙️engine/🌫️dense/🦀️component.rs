@@ -6,8 +6,8 @@ use crate::artifacts::remodel::engine::{camera as remodel_camera, images as remo
 
 use std::collections::HashMap;
 
-use mathematical_algebra::{jacobi_eigen_symmetric, MatD};
-use mathematical_spatial::KdTree;
+use math::algebra::{jacobi_eigen_symmetric, MatD};
+use math::spatial::KdTree;
 
 // #region 🔖️PointCloud
 /// 🏷️ Per-point semantic classification label produced by ground/planar segmentation.

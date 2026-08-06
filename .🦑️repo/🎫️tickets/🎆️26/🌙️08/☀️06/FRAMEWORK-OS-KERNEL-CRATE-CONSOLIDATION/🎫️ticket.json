@@ -1,0 +1,9 @@
+{
+  "title": "Framework Os Kernel Crate Consolidation",
+  "emoji": "💻️",
+  "status": "open",
+  "summary": "W8c data-plane / OS-kernel consolidation: merge wasm-safe OS modules (store, spr←protocol rename, dsl, pack, infinite, flow, brep-related kernel pieces) into semio-framework-os-kernel at 💻️os/ Shape V2 owner root; keep guest SDK as semio-framework-plugin; defer host plane (db, workflow, neural, renderer, run) to follow-up. Wasm admission (cargo check --target wasm32-wasip2 -p semio-framework-os-kernel) required before old-crate deletion. Registrar-handoff only for root Cargo.toml.",
+  "description": "W8c (OS serial) slice 1 — kernel/data plane from spicy-umbrella plan Key merges → OS split. Three-crate guest/host boundary: semio-framework-plugin (guest SDK), semio-framework-os-kernel (wasm-safe), semio-framework-os (host, deferred). Exclusive ownership: 🧰️framework/🛍️products/💻️os/**.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": []
+}

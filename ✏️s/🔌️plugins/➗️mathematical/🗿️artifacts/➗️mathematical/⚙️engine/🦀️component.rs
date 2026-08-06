@@ -80,7 +80,7 @@ pub fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> U
 //#region 🔖️GraphAlgorithms
 /// 🕸️ Runs the selected algorithm over the current graph and returns a per-node label suffix overlay.
 pub fn algorithm_overlay(graph: &MathGraph) -> std::collections::HashMap<String, String> {
-    use mathematical_graph::algorithms::{adjacency, bfs_distances, connected_components, strongly_connected_components, topo_sort, IdIndex};
+    use math::graph::algorithms::{adjacency, bfs_distances, connected_components, strongly_connected_components, topo_sort, IdIndex};
 
     let index = IdIndex::from_ids(graph.nodes.iter().map(|n| n.id.as_str()));
     let edge_pairs: Vec<(usize, usize)> = graph.edges.iter().filter_map(|e| Some((index.index_of(&e.source)?, index.index_of(&e.target)?))).collect();
@@ -150,9 +150,9 @@ pub fn workflow_json(graph: &MathGraph) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGr
 
 //#region 🔖️Geometry
 pub fn geometry_layers_json(geometry: &MathGeometry) -> String {
-    let points: Vec<mathematical_geometry::Point> = geometry.points.iter().map(|p| mathematical_geometry::Point::new(p.x, p.y)).collect();
-    let hull = mathematical_geometry::convex_hull(&points);
-    let centroid = mathematical_geometry::polygon_centroid(&hull);
+    let points: Vec<math::geometry::Point> = geometry.points.iter().map(|p| math::geometry::Point::new(p.x, p.y)).collect();
+    let hull = math::geometry::convex_hull(&points);
+    let centroid = math::geometry::polygon_centroid(&hull);
 
     let mut layers: Vec<Value> = Vec::new();
     for (i, p) in points.iter().enumerate() {

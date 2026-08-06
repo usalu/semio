@@ -1,0 +1,16 @@
+Inventory remaining old 3d/mindmap crate references
+Date: 2026-08-06
+
+CARGO HITS: 20
+- Root + flow/infinite/os still alias old kernel_3d_* / reasoning_mindmap packages
+- Leaf impl crates under ✏️s/🔨️modules/3d and mindmap still self-name old packages
+- Plugin dependents: process, cad, demonstrator, procedural, playbook-procedural, lowpoly, reasoning, puzzle
+
+RS HITS: 31
+- Same families; remap targets:
+  kernel_3d_brepkit -> semio_s_3d::brep::kernel
+  kernel_3d_engine -> semio_s_3d::brep::engine
+  kernel_3d_mesh/scene/spatial -> semio_s_3d::{mesh,scene,spatial}
+  reasoning_mindmap -> semio_s_mindmap
+
+NOTE: ui-wgpu should stay on leaf kernel_3d_scene to avoid core↔ui_wgpu↔s-3d package cycle.

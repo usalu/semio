@@ -1,0 +1,10 @@
+# bun ./📜️script.ts build — 2026-08-06 (subagent finish pass)
+# cwd: 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript
+# DEVELOPER_DIR=/Library/Developer/CommandLineTools (set; no Rust crate in family)
+
+[asset] generated 1891 emoji + 249 catalog shortcodes
+[asset] generated 249 catalog icons + shortcodes
+[asset] generated 29 metabolism icons
+@semio-tech/assets build complete.
+
+exit: 0

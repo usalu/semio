@@ -12,10 +12,9 @@ import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx
 import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { Scrollable } from "../📜Scrollable/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { borderNormalBottomClass, surfaceClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useLabel, tableRowInteractiveClass, tableRowSelectedClass, useUiDriverDragSurface, useNativeDragArm } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { borderNormalBottomClass, surfaceClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { tableRowInteractiveClass, tableRowSelectedClass, useUiDriverDragSurface, useNativeDragArm } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { DragHandle } from "../🧱DragHandle/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

@@ -13,8 +13,7 @@ import * as dagre from "dagre";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
 import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { surfaceClass, loadingBorderClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { surfaceClass, loadingBorderClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 // 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
 import { HostReactFlow, HostReactFlowProvider } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { queryElement } from "../🖱️ContextMenu/🟦️component.tsx";

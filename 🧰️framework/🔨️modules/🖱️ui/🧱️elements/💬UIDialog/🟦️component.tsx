@@ -10,10 +10,10 @@ import * as React from "react";
 import { effectiveActionArgs, missingRequiredArgs, type ActionArgDef, type DialogDefinition } from "@semio-tech/framework-core";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { veilClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useControlKeybinding, useLabel, GLASS_OVERLAY_BOX_CLASS, Surface } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { veilClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { Surface } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { useControlKeybinding, GLASS_OVERLAY_BOX_CLASS } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { Button } from "../🔘Button/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

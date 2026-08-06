@@ -15,11 +15,11 @@ name = "semio-framework-os-run"
 path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/⚡️implementations/🦀️rust/📦️bin.rs"
 
 [dependencies]
-semio-framework-core = { path = "../../../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
+semio-framework-core = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core" }
 semio-framework-os = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
 workflow = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-workflow" }
 semio-framework-plugin = { path = "../../../🔌️plugin/⚡️implementations/🦀️rust", package = "semio-framework-plugin" }
-framework_hash = { path = "../../../../../../../🧰️framework/🔨️modules/#⃣hash/⚡️implementations/🦀️rust", package = "semio-framework-hash" }
+framework_hash = { path = "../../../../../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 store = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
 dsl = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 protocol = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }

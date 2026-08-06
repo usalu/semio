@@ -16,10 +16,15 @@ import { Scrollable } from "../📜Scrollable/🟦️component.tsx";
 import { Tree, type TreeDataItem, type TreeDataSection, type TreeDragAndDropController, type TreeSelectionMode } from "../🪵Tree/🟦️component.tsx";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { useFirstDraggableElementAlias } from "../🫀️core/🆔ElementId/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { borderNormalClass, dropZoneReadyFillClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { type Anchor, CloseIcon, FlowProvider, Icon, LevelProvider, PANEL_TREE_UNIT_MIME, PanelGhostRoot, PanelTabBar, type PanelTabNode, type PanelTreeUnit, WindowChrome, anchorHorizontal, anchorPositionStyle, beginPanelTreeUnitDrag, chromeHostedOpenPanelPositionStyle, endPanelTreeUnitDrag, findPanelTabNode, flowFromAnchor, getLevelZClass, progressPanelTabSelection, readActivePanelTreeUnitDrag, shellNavbarTrailingEndReserveStyle, useFlow, useLabel, useNativeDragArm, usePanelDockContext, usePanelTabSelection, usePanelTreeUnitDragActive, useShellNavbarTrailingEndWidthPx, useShellScopeOptional, useSurfaceActive, useUiDriverDragSurface, type UiStatus } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { borderNormalClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { dropZoneReadyFillClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { FlowProvider, useFlow } from "../🫀️core/🧭️Flow/🟦️component.tsx";
+import { LevelProvider, getLevelZClass, useSurfaceActive } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { useShellScopeOptional } from "../🫀️core/🐚️ShellScope/🟦️component.tsx";
+import { type Anchor, PANEL_TREE_UNIT_MIME, PanelGhostRoot, WindowChrome, anchorHorizontal, anchorPositionStyle, beginPanelTreeUnitDrag, chromeHostedOpenPanelPositionStyle, endPanelTreeUnitDrag, flowFromAnchor, readActivePanelTreeUnitDrag, shellNavbarTrailingEndReserveStyle, useNativeDragArm, usePanelDockContext, usePanelTreeUnitDragActive, useShellNavbarTrailingEndWidthPx, useUiDriverDragSurface, type UiStatus } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { PanelTabBar, type PanelTabNode, type PanelTreeUnit, findPanelTabNode, progressPanelTabSelection, usePanelTabSelection } from "../📑PanelTabBar/🟦️component.tsx";
+import { CloseIcon, Icon } from "../🔣Icons/🟦️component.tsx";
 import { DragHandle } from "../🧱DragHandle/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

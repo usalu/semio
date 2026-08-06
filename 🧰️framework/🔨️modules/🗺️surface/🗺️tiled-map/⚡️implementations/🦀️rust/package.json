@@ -1,9 +1,0 @@
-{
-  "name": "@semio-tech/framework-surface-tiled-map-rs",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./pkg/framework_surface_tiled_map.js",
-    "./pkg/framework_surface_tiled_map.js": "./pkg/framework_surface_tiled_map.js"
-  }
-}

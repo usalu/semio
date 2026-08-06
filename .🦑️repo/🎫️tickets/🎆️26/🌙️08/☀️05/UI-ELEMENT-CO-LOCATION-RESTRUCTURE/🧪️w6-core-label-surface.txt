@@ -1,280 +1,81 @@
-# W6 core Label/Surface inventory (NO barrel edits)
-status: PAUSED — parent serializing ui-react barrel extractions; inventory-only
-generated: 2026-08-06T10:17:33.646Z
-barrel: /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
-barrel_lines: 24890
-core_dir: /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core
-core_existing: ClassNames, ElementId, Label, Ports, UiLabel
+# W6 core Label/Surface/ElementProps/Flow/ShellScope (+ StyleClasses)
+
+status: DONE
+generated: 2026-08-06T11:07:27.059Z
 ticket: /Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE
+barrel lock: EXCLUSIVE (this session) — do NOT close master ticket
 
-## existing core/ClassNames
-  🟦️component.tsx lines=179
-  exports: cn, interactiveControlTransitionClass, hoverExcludingHandleTextEmphasizedClass, groupHoverExcludingHandleBgFillClass, interactiveHoverClass, loadingBorderClass, loadingBorderStateClass, waitingBorderClass, waitingBorderStateClass, chromeStatusBorderClass, interactiveOnClass, chromeStatusBorderClass, interactiveOnClass, interactiveActiveFillClass, interactiveTabActiveClass, menuListItemClassName, surfaceClass, shellFloorPaints, shellFloorFillClass, shellFloorFillClass, glassClass, veilClass, borderNormalClass, borderNormalBottomClass, borderElementClass, formControlFocusBorderClass, panelTabIconSlotClass, panelTabLabelClass, dropZoneReadyFillClass, dropZoneReadyTextClass, windowPaneChromeToggleClass, windowMeasureTreeGroupLabelClass, windowMeasureTreeLeafLabelClass, uiFormControlBrowserDefaultProps
-## existing core/ElementId
-  🟦️component.tsx lines=118
-  exports: ELEMENT_ID_PATTERN, isElementId, elementIdSegment, childElementId, assertElementId, elementIdSelector, useFirstDraggableElementAlias
-## existing core/Label
-  ⌨️component.rs lines=23
-  exports: (none)
-## existing core/Ports
-  🟦️component.tsx lines=141
-  exports: ReactHostPort, reactHostPort, setReactHostPort, SceneHostPort, sceneHostPort, setSceneHostPort
-## existing core/UiLabel
-  🟦️component.tsx lines=30
-  exports: UiLabel, uiDataLabel
+## Files created / updated
 
-## Symbol definition inventory
+### Created
+- 🎱️elements/🟡️core/🌈️Surface/🟦️component.tsx (243 lines)
+- 🎱️elements/🟡️core/🧭️Flow/🟦️component.tsx (45 lines)
+- 🎱️elements/🟡️core/🐹️ElementProps/🟦️component.tsx (55 lines)
+- 🎱️elements/🟡️core/🐚️ShellScope/🟦️component.tsx (212 lines)
+- 🎱️elements/🟡️core/🏷️Label/🟦️component.tsx (356 lines) — TS beside existing ⌨️component.rs
 
-### Label
-defs: 1
-  DEF L11278: export function Label({ id, rowId, label, labelElementId, className, children, labelLayoutKind = "property" }: LabelProps) {
-       innermost_regions: 🌥️Base Components@L11257-L11438
-  import_export_hits: 0
+### Updated
+- 🎱️elements/🟡️core/🏷️ClassNames/🟦️component.tsx — StyleClasses appended beside `cn` (topo-ordered; was cn-only)
+- 🎱️elements/🟡️core/🆔ElementId/🟦️component.tsx — fixed Ports import path (`../Ports` → `../🔌Ports`)
+- ui-react 📦️index.tsx — import-then-export wiring for all moved symbols; defs removed
+- 44 W3-interim leaves rewired (198 symbol refs) to direct core relatives
 
-### useLabel
-defs: 3
-  DEF L6161: export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey, options?: Record<string, unknown>): UiLabel;
-       innermost_regions: 🎼️Utilities@L808-L6421
-  DEF L6162: export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | undefined, options?: Record<string, unknown>): UiLabel | undefined;
-       innermost_regions: 🎼️Utilities@L808-L6421
-  DEF L6163: export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | undefined, options?: Record<string, unknown>): UiLabel | undefined {
-       innermost_regions: 🎼️Utilities@L808-L6421
-  import_export_hits: 0
+## Symbols moved
 
-### useIdLabel
-defs: 1
-  DEF L6201: export function useIdLabel(id: string | undefined): UiLabel | undefined {
-       innermost_regions: 🎼️Utilities@L808-L6421
-  import_export_hits: 0
+### ClassNames / StyleClasses
+cn (pre-existing), waitingBorderClass, waitingBorderActiveClass, loadingBorderClass, loadingBorderActiveClass,
+interactiveControlTransitionClass, formControlFocusBorderClass,
+groupHoverExcludingHandleBgFillClass, hoverExcludingHandleTextEmphasizedClass,
+interactiveHoverFillClass, interactiveHoverClass, interactiveActiveBorderClass, interactiveActiveFillClass,
+interactiveOnClass, interactiveTabActiveClass, uiFormControlBrowserDefaultProps,
+borderNormalClass, borderNormalBottomClass, borderElementClass,
+surfaceClass, glassClass, veilClass, menuListItemClassName,
+shellFloorPaints, shellFloorFillClass,
++ private hoverExcludingHandleBgFillClass / ActiveBg / ActiveBorder (Active* stay file-private; BgFill re-exported)
 
-### useControlAccessibleLabel
-defs: 1
-  DEF L3779: export function useControlAccessibleLabel(id: string | undefined, text?: string): string | undefined {
-       innermost_regions: 🎛️UiChromePrefs@L3422-L3812 | 🌈️SurfaceChrome@L3053-L3814 | 🎼️Utilities@L808-L6421
-  import_export_hits: 0
+### Surface
+Level, LEVELS, LevelProvider, useLevel, getLevelZClass,
+SurfaceFill, surfaceFillClass, SurfaceScopeValue, SurfaceScope, useSurface,
+SurfaceProps, Surface, isSurfaceActiveBackgroundPointer, SurfaceActiveBindProps, useSurfaceActive,
+setSurfaceActiveRoot (exported for Canvas)
 
-### useControlInlineText
-defs: 1
-  DEF L3796: export function useControlInlineText(id: string | undefined, text?: string): string | undefined {
-       innermost_regions: 🎛️UiChromePrefs@L3422-L3812 | 🌈️SurfaceChrome@L3053-L3814 | 🎼️Utilities@L808-L6421
-  import_export_hits: 0
-
-### resolveTranslationLabel
-defs: 1
-  DEF L6237: export function resolveTranslationLabel(value: unknown): string | undefined {
-       innermost_regions: 🎼️Utilities@L808-L6421
-  import_export_hits: 0
-
-### useUiTranslation
-defs: 1
-  DEF L6145: export function useUiTranslation(): { readonly t: UiTranslateFn; readonly i18n: typeof i18next } {
-       innermost_regions: 🔌️I18n Port@L5907-L6150 | 🪁️I18n Resources@L3816-L6152 | 🎼️Utilities@L808-L6421
-  import_export_hits: 0
-
-### SurfaceScope
-defs: 1
-  DEF L8584: export const SurfaceScope: React.FC<{
-       innermost_regions: 🎈️Level Context@L8505-L11088
-  related_regions:
-    🌈️SurfaceChrome L3053-L3814 depth=1 size=761
-    🚦️StatusSurface L11612-L11775 depth=1 size=163
-  import_export_hits: 0
-
-### useSurface
-defs: 1
-  DEF L8595: export function useSurface(): SurfaceScopeValue | null {
-       innermost_regions: 🎈️Level Context@L8505-L11088
-  import_export_hits: 0
-
-### useSurfaceActive
-defs: 1
-  DEF L10524: export function useSurfaceActive(ref: React.RefObject<HTMLElement | null>): readonly [boolean, SurfaceActiveBindProps] {
-       innermost_regions: 🪟️WindowChrome@L10447-L10876 | 🎈️Level Context@L8505-L11088
-  import_export_hits: 0
-
-### LevelProvider
-defs: 1
-  DEF L8515: export const LevelProvider: React.FC<{
-       innermost_regions: 🎈️Level Context@L8505-L11088
-  import_export_hits: 0
-
-### useLevel
-defs: 1
-  DEF L8521: export function useLevel(): Level {
-       innermost_regions: 🎈️Level Context@L8505-L11088
-  import_export_hits: 0
-
-### Level
-defs: 1
-  DEF L8507: export type Level = "base" | "window" | "pane" | "panel" | "dialog" | "menu";
-       innermost_regions: 🎈️Level Context@L8505-L11088
-  related_regions:
-    🎈️Level Context L8505-L11088 depth=0 size=2583
-  import_export_hits: 3
-    L8510: export const LEVELS: readonly Level[] = ["base", "window", "pane", "panel", "dialog", "menu"] as const;
-    L8521: export function useLevel(): Level {
-    L8526: export function getLevelZClass(level: Level): string {
-
-### getLevelZClass
-defs: 1
-  DEF L8526: export function getLevelZClass(level: Level): string {
-       innermost_regions: 🎈️Level Context@L8505-L11088
-  import_export_hits: 0
-
-### isSurfaceActiveBackgroundPointer
-defs: 1
-  DEF L10478: export function isSurfaceActiveBackgroundPointer(event: { readonly target: EventTarget | null; readonly clientX?: number; readonly clientY?: number }): boolean {
-       innermost_regions: 🪟️WindowChrome@L10447-L10876 | 🎈️Level Context@L8505-L11088
-  import_export_hits: 0
+### Flow
+FlowInline, FlowBlock, Flow, FlowProvider, useFlow
+(left flowFromAnchor / anchorPositionStyle in barrel — need Anchor)
 
 ### ElementProps
-defs: 1
-  DEF L11130: export interface ElementProps extends ElementBaseProps {}
-       innermost_regions: 🐹️Element@L11090-L11213
-  related_regions:
-    🧭️ElementState L11132-L11206 depth=1 size=74
-    🆔️ElementId L11208-L11211 depth=1 size=3
-    🐹️Element L11090-L11213 depth=0 size=123
-    🧭️UiElementRegistry L11777-L11780 depth=1 size=3
-  import_export_hits: 0
+Transaction, TransactionProvider, useTransaction, ElementBaseProps, ElementProps
+(ElementState / celebrate* stay in barrel Element region)
 
-### useTransaction
-defs: 1
-  DEF L11121: export const useTransaction = (): Transaction | undefined => reactHostPort.useContext(TransactionContext);
-       innermost_regions: 🐹️Element@L11090-L11213
-  import_export_hits: 0
+### Label
+Label, useLabel, useIdLabel, useControlAccessibleLabel, useControlInlineText,
+resolveTranslationLabel, useUiTranslation
 
-### useFlow
-defs: 1
-  DEF L8924: export function useFlow(): Flow {
-       innermost_regions: 🧭️Flow Context@L8895-L8985 | 🎈️Level Context@L8505-L11088
-  related_regions:
-    🧭️Flow Context L8895-L8985 depth=1 size=90
-    🎽️XY Flow (additions not already exported inline) L21107-L21109 depth=1 size=2
-  import_export_hits: 0
+### ShellScope (cohesive ShellScope + ShellActivity)
+SelectionModeStore, ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider,
+useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback,
+registerShellActivityRoot, activeShellRoot, useShellKeydown, NULL_SHELL_ROOT_REF
 
-### FlowProvider
-defs: 1
-  DEF L8913: export const FlowProvider: React.FC<{
-       innermost_regions: 🧭️Flow Context@L8895-L8985 | 🎈️Level Context@L8505-L11088
-  related_regions:
-    🧭️Flow Context L8895-L8985 depth=1 size=90
-    🎽️XY Flow (additions not already exported inline) L21107-L21109 depth=1 size=2
-  import_export_hits: 0
+SKIPPED (not cohesive with ShellScope): focusActiveSearchInput, routeWindowSearchEscape
+(still in 🔎️WindowSearch / 🧭️Shell)
 
-### FlowBlock
-defs: 1
-  DEF L8900: export type FlowBlock = "down" | "up";
-       innermost_regions: 🧭️Flow Context@L8895-L8985 | 🎈️Level Context@L8505-L11088
-  import_export_hits: 0
+## W3-interim file count
+before: 48
+after:  50  (+Label, +ShellScope; both still carry W3-interim for remaining barrel deps)
+net leaf rewires: 44 files / 198 symbols → direct core imports
 
-### FlowInline
-defs: 1
-  DEF L8897: export type FlowInline = "ltr" | "rtl";
-       innermost_regions: 🧭️Flow Context@L8895-L8985 | 🎈️Level Context@L8505-L11088
-  import_export_hits: 1
-    L8981: export function flowChevronIconName(inline: FlowInline, pointsOut: boolean): IconName {
+## Typecheck (react package `bun ./📜️script.ts typecheck`)
+before: 139 errors
+after:  120 errors
+delta:  -19 (net improvement)
+NEW errors in our leaves (Label/Surface/Flow/ElementProps/ShellScope/ClassNames): **0**
+ElementId Ports path fix removed 1 pre-existing error.
 
-### useShellScopeOptional
-defs: 1
-  DEF L336: export function useShellScopeOptional(): ShellScope | null {
-       innermost_regions: 🐚️ShellScope@L241-L346
-  related_regions:
-    🐚️ShellScope L241-L346 depth=0 size=105
-    🐚️ShellActivity L348-L435 depth=0 size=87
-    🐚️ShellI18n L5946-L5996 depth=3 size=50
-    🔎️ShellSearchDialog L11220-L11223 depth=0 size=3
-    🔎️ShellFindDialog L11225-L11228 depth=0 size=3
-    🧭️Shell L12889-L13785 depth=0 size=896
-  import_export_hits: 0
+Pre-existing elsewhere unchanged in kind (tableRow*, modeDockTabClassName TDZ, contextMenuContentClassName, generated manifest, etc.).
 
-### NULL_SHELL_ROOT_REF
-defs: 1
-  DEF L434: export const NULL_SHELL_ROOT_REF: { readonly current: HTMLElement | null } = { current: null };
-       innermost_regions: 🐚️ShellActivity@L348-L435
-  related_regions:
-    🐚️ShellScope L241-L346 depth=0 size=105
-    🐚️ShellActivity L348-L435 depth=0 size=87
-    🐚️ShellI18n L5946-L5996 depth=3 size=50
-    🔎️ShellSearchDialog L11220-L11223 depth=0 size=3
-    🔎️ShellFindDialog L11225-L11228 depth=0 size=3
-    🧭️Shell L12889-L13785 depth=0 size=896
-  import_export_hits: 0
-
-### useShellKeydown
-defs: 1
-  DEF L411: export function useShellKeydown(rootRef: { readonly current: HTMLElement | null }, handler: (event: KeyboardEvent) => void, deps: readonly unknown[]): void {
-       innermost_regions: 🐚️ShellActivity@L348-L435
-  import_export_hits: 0
-
-### focusActiveSearchInput
-defs: 1
-  DEF L13256: export function focusActiveSearchInput(): boolean {
-       innermost_regions: 🔎️WindowSearch@L13042-L13341 | 🧭️Shell@L12889-L13785
-  import_export_hits: 0
-
-### routeWindowSearchEscape
-defs: 1
-  DEF L13315: export function routeWindowSearchEscape(search: SearchSpec | undefined, event: Pick<KeyboardEvent, "key" | "defaultPrevented" | "isComposing" | "target">, zone: { readonly chromeVi
-       innermost_regions: 🔎️WindowSearch@L13042-L13341 | 🧭️Shell@L12889-L13785
-  import_export_hits: 0
-
-## Regions matching Label|Surface|Level|ElementProps|Flow|Shell|Transaction|UiLabel|Element
-L  241-L  346  depth=0  size=  105  🐚️ShellScope
-L  348-L  435  depth=0  size=   87  🐚️ShellActivity
-L 3053-L 3814  depth=1  size=  761  🌈️SurfaceChrome
-L 3828-L 3834  depth=3  size=    6  🎗️UiLabel
-L 5946-L 5996  depth=3  size=   50  🐚️ShellI18n
-L 8505-L11088  depth=0  size= 2583  🎈️Level Context
-L 8895-L 8985  depth=1  size=   90  🧭️Flow Context
-L11090-L11213  depth=0  size=  123  🐹️Element
-L11132-L11206  depth=1  size=   74  🧭️ElementState
-L11208-L11211  depth=1  size=    3  🆔️ElementId
-L11220-L11223  depth=0  size=    3  🔎️ShellSearchDialog
-L11225-L11228  depth=0  size=    3  🔎️ShellFindDialog
-L11612-L11775  depth=1  size=  163  🚦️StatusSurface
-L11777-L11780  depth=1  size=    3  🧭️UiElementRegistry
-L12889-L13785  depth=0  size=  896  🧭️Shell
-L21107-L21109  depth=1  size=    2  🎽️XY Flow (additions not already exported inline)
-
-## Region balance
-final_open_minus_close: 0 min_depth: 0 OK
-
-## Compact summary table
-symbol	def_lines	innermost_region	imp_exp	already_extracted
-Label	11278	🌥️Base Components@L11257-L11438	0	false
-useLabel	6161,6162,6163	🎼️Utilities@L808-L6421	0	false
-useIdLabel	6201	🎼️Utilities@L808-L6421	0	false
-useControlAccessibleLabel	3779	🎛️UiChromePrefs@L3422-L3812	0	false
-useControlInlineText	3796	🎛️UiChromePrefs@L3422-L3812	0	false
-resolveTranslationLabel	6237	🎼️Utilities@L808-L6421	0	false
-useUiTranslation	6145	🔌️I18n Port@L5907-L6150	0	false
-SurfaceScope	8584	🎈️Level Context@L8505-L11088	0	false
-useSurface	8595	🎈️Level Context@L8505-L11088	0	false
-useSurfaceActive	10524	🪟️WindowChrome@L10447-L10876	0	false
-LevelProvider	8515	🎈️Level Context@L8505-L11088	0	false
-useLevel	8521	🎈️Level Context@L8505-L11088	0	false
-Level	8507	🎈️Level Context@L8505-L11088	3	false
-getLevelZClass	8526	🎈️Level Context@L8505-L11088	0	false
-isSurfaceActiveBackgroundPointer	10478	🪟️WindowChrome@L10447-L10876	0	false
-ElementProps	11130	🐹️Element@L11090-L11213	0	false
-useTransaction	11121	🐹️Element@L11090-L11213	0	false
-useFlow	8924	🧭️Flow Context@L8895-L8985	0	false
-FlowProvider	8913	🧭️Flow Context@L8895-L8985	0	false
-FlowBlock	8900	🧭️Flow Context@L8895-L8985	0	false
-FlowInline	8897	🧭️Flow Context@L8895-L8985	1	false
-useShellScopeOptional	336	🐚️ShellScope@L241-L346	0	false
-NULL_SHELL_ROOT_REF	434	🐚️ShellActivity@L348-L435	0	false
-useShellKeydown	411	🐚️ShellActivity@L348-L435	0	false
-focusActiveSearchInput	13256	🔎️WindowSearch@L13042-L13341	0	false
-routeWindowSearchEscape	13315	🔎️WindowSearch@L13042-L13341	0	false
-
-## Suggested extraction clusters (NOT executed — waiting for parent)
-1. Label: extend core/Label and/or UiLabel — useLabel, useIdLabel, useControlAccessibleLabel, useControlInlineText, resolveTranslationLabel, useUiTranslation, Label
-2. Surface: new core/Surface — SurfaceScope, useSurface, useSurfaceActive, isSurfaceActiveBackgroundPointer
-3. Level: colocate with Surface or new core/Level — LevelProvider, useLevel, Level, getLevelZClass
-4. ElementProps: new core/ElementProps — ElementProps + tight base types
-5. Flow: new core/Flow — useTransaction, useFlow, FlowProvider, FlowBlock, FlowInline if small cohesive
-6. ShellScope: new core/ShellScope — useShellScopeOptional, NULL_SHELL_ROOT_REF, useShellKeydown, focusActiveSearchInput, routeWindowSearchEscape
-AVOID overlapping StyleClasses / Icons / Button / ContextMenu work
-NEXT: resume extraction when parent signals barrel lock available
+## Notes
+- ClassNames type-only imports SurfaceScopeValue for shellFloor* (no runtime cycle).
+- Label imports Tree layout helpers directly from 🪵Tree (avoids barrel cycle; Tree already imports Label).
+- ShellScope imports StoragePort/createBrowserStoragePort from @semio-tech/framework-core.
+- Region balance after edits: balanced.
+- Master ticket NOT closed.

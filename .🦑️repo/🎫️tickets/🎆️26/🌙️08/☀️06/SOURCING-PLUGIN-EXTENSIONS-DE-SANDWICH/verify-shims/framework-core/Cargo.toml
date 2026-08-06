@@ -1,0 +1,90 @@
+cargo-features = ["trim-paths"]
+
+[package]
+name = "semio-framework-core"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Render-independent framework kernel: Platform, ActionBus, declarative UiTree, layouts"
+
+[package.metadata.semio]
+role = "framework"
+id = "core"
+
+
+[lib]
+path = "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/📦️lib.rs"
+
+[dependencies]
+gltf = { version = "1.4.1", default-features = false, features = ["utils"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"
+ts-rs = { version = "10", optional = true }
+ui_wgpu = { path = "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/ui-wgpu", package = "semio-framework-ui-wgpu" }
+semio-framework-hash = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+# 🎞️ CW3 kernel cut-over: HybridLogicalTimestamp/UndoPolicy/MergeStrategyKind and the operation-
+# flavored id newtypes (OperationId/ActorId/DocumentId/DocumentVersion/SchemaId) now canonically
+# live in `protocol_core`; framework/core re-exports them under their existing names (see `kernel`
+# module) so every existing internal/external reference keeps resolving unchanged.
+protocol_core = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol-core" }
+# 🎯️ W6 kernel unification: `kernel::DocumentDiff` re-exports `protocol::DocumentDiff` (the binary
+# causal-envelope shape from W5), needing the full facade (protocol_causal's `DocumentDiff`, not
+# just protocol_core).
+protocol = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+dsl = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+
+[dev-dependencies]
+pretty_assertions = "1.4.1"
+
+[features]
+# 🧬️ Generates the TypeScript mirror for boundary/protocol types (see `<owner>/🤖️generated/🟦️manifest.ts`);
+# never enabled by default so `ts-rs` never affects the plain `cargo build`/`cargo test` path.
+typegen = ["dep:ts-rs", "ui_wgpu/typegen"]
+
+# ==== 🧪️ TEMPORARY VERIFICATION OVERLAY — delete this section + nested target/Cargo.lock at
+# registrar handoff (see TEMPLATE.md §3 "chicken-and-egg" verification recipe). Copied verbatim
+# from root Cargo.toml so artifact fingerprints match while this crate is not yet a workspace
+# member. ====
+[workspace]
+members = ["."]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[workspace.dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+wasm-bindgen = "0.2.106"
+thiserror = "2.0.18"
+ts-rs = "10"
+
+[profile.dev]
+debug = false
+incremental = true
+
+[profile.dev.build-override]
+opt-level = 3
+
+[profile.dev.package.semio-framework-os-kernel-store]
+codegen-units = 1
+
+[workspace.lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"
+# END TEMPORARY VERIFICATION OVERLAY

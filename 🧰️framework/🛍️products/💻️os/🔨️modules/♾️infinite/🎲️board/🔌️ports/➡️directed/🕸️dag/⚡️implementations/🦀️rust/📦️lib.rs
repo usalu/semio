@@ -7,8 +7,8 @@ use dsl::DslValue;
 use serde::{Deserialize, Serialize};
 
 #[cfg(test)]
-use mathematical_graph_manifest::PropertyValue;
-use mathematical_graph_manifest::{flow_dag::flow_dag_manifest, ManifestValidator, PropertyBag};
+use math::graph::manifest::PropertyValue;
+use math::graph::manifest::{flow_dag::flow_dag_manifest, ManifestValidator, PropertyBag};
 
 use graph::{handle_position, world_box_from_points, BoardEvent, WorldBox};
 pub use infinite_board_port_directed::{
@@ -1146,12 +1146,12 @@ fn io_node_rect_port_angle_for_node(node: &DagNodeSpec, port_index: usize, left:
 // #region 🔖️Acyclicity
 /// 🚫️ Returns true when adding `source -> target` would create a cycle.
 pub fn would_create_cycle(existing: &[(String, String)], source: &str, target: &str) -> bool {
-    mathematical_graph::algorithms::would_create_cycle_ids(existing, source, target)
+    math::graph::algorithms::would_create_cycle_ids(existing, source, target)
 }
 // #endregion 🔖️Acyclicity
 
 // #region 🔖️Layout
-use mathematical_graph_drawing::tidy_tree::buchheim_positions;
+use math::graph::drawing::tidy_tree::buchheim_positions;
 use serde_json::Value;
 
 /// 🧭️ Tree layout flow direction for layered DAG positions.
@@ -1915,7 +1915,7 @@ fn dag_visual_kind(node: &DagNodeSpec) -> String {
 
 /// 📝️ Render a DAG fixture as wire-literal compiled text.
 pub fn dag_fixture_to_wire_literal(fixture: &DagFixture) -> String {
-    use mathematical_graph_dsl::{wire_literal_from_dag, WireEdge, WireNode};
+    use math::graph::dsl::{wire_literal_from_dag, WireEdge, WireNode};
     let nodes = fixture.nodes.iter().map(|node| WireNode { id: node.id.clone(), kind: dag_visual_kind(node), port: None, properties: node.properties.clone() }).collect::<Vec<_>>();
     let edges = fixture
         .edges
@@ -1930,8 +1930,8 @@ pub fn dag_fixture_to_wire_literal(fixture: &DagFixture) -> String {
 }
 
 /// 🧵️ Build execution wire rows from an enriched DAG fixture.
-pub fn dag_fixture_execution_rows(fixture: &DagFixture) -> (Vec<mathematical_graph_dsl::WireNode>, Vec<mathematical_graph_dsl::WireEdge>) {
-    use mathematical_graph_dsl::{WireEdge, WireNode};
+pub fn dag_fixture_execution_rows(fixture: &DagFixture) -> (Vec<math::graph::dsl::WireNode>, Vec<math::graph::dsl::WireEdge>) {
+    use math::graph::dsl::{WireEdge, WireNode};
     use std::collections::HashSet;
     let executable: HashSet<String> = fixture.nodes.iter().filter_map(|node| node.operator_kind.as_ref().map(|_| node.id.clone())).collect();
     let nodes = fixture
@@ -7529,7 +7529,7 @@ pub type DagStore = DocumentStore<DagDocument, DagOperation>;
 // `dsl::Dsl*` macro directly or, where the real Rust field shape can't satisfy the derive engine
 // (a bare tagged-enum field where the engine requires `Box<T>`), converts through a small local
 // mirror type at the `parse_dsl`/`print_dsl`/`parse_op`/`print_op` boundary. This replaces the old
-// hand-rolled `mathematical_graph_dsl` wire-literal-based printer/parser that used to live in this
+// hand-rolled `math::graph::dsl` wire-literal-based printer/parser that used to live in this
 // region (deleted; `dag_fixture_to_wire_literal`/`dag_fixture_execution_rows` near {@link DagHost}
 // still use the wire-literal grammar directly for their own, unrelated purpose and are untouched).
 

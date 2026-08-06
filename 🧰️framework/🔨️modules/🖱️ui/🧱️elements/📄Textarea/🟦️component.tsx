@@ -12,10 +12,9 @@ import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
 import { PropertyValueColumnContext } from "../🪵Tree/🟦️component.tsx";
 import { type UiLabel, uiDataLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
 import { CollapsedFieldDisplay } from "../✏️Input/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { borderElementClass, formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useTransaction, type ElementProps, useIdLabel, useLabel, Label } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { borderElementClass, formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { useTransaction, type ElementProps } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
+import { useIdLabel, useLabel, Label } from "../🫀️core/🏷️Label/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🎏️Textarea

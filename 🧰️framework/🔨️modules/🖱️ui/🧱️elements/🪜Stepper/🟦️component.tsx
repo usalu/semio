@@ -11,10 +11,10 @@ import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
 import { PropertyValueColumnContext } from "../🪵Tree/🟦️component.tsx";
 import { formatNumber } from "../✏️Input/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { borderNormalClass, uiFormControlBrowserDefaultProps } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useTransaction, type ElementProps, useLabel, useInteractionCommands, RemoveIcon, AddIcon, Label } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { borderNormalClass, uiFormControlBrowserDefaultProps } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { useTransaction, type ElementProps } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
+import { useLabel, Label } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { useInteractionCommands, RemoveIcon, AddIcon } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🏬️Stepper

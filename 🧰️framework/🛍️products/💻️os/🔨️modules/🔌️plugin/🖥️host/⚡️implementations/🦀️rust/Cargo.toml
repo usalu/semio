@@ -11,7 +11,7 @@ workspace = true
 path = "../../../🖥️host/⚡️implementations/🦀️rust/📦️lib.rs"
 
 [dependencies]
-semio-framework-core = { path = "../../../../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
+semio-framework-core = { path = "../../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core" }
 ui_wgpu = { path = "../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu", package = "semio-framework-ui-wgpu" }
 vcs = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
 store = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }

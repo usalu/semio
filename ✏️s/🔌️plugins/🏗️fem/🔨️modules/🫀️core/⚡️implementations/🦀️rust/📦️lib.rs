@@ -12,7 +12,7 @@ pub mod analyses {
 
     use crate::sparse::{ldlt_factor, rcm_order, subspace_iteration, Coo, Csr, EigenPairs, LdltFactor};
     use crate::{BeamStation, Dof, Element, ElementContext, ElementResult, FemError, MemberUdl, NodalLoad, Node, NodeDisplacement, NodeReaction, PlaneStress, PlateMoments, ShellState, SolidStress, SolutionChecks, StaticResult, Support};
-    use mathematical_algebra::{MatD, VecD};
+    use math::algebra::{MatD, VecD};
     use std::collections::{HashMap, HashSet};
 
     // #region 🔖️Model
@@ -1164,7 +1164,7 @@ pub mod elements2d {
 
     use crate::formulation::{b_matrix_plane, d_matrix_plane_strain, d_matrix_plane_stress, gauss_quad, gauss_tri, jacobian_2d, shape_quad4, shape_quad8, shape_tri3, shape_tri6};
     use crate::{Dof, Element, ElementContext, ElementResult, MemberUdl, PlaneStress, PlateMoments};
-    use mathematical_algebra::{MatD, VecD};
+    use math::algebra::{MatD, VecD};
 
     // #region 🔖️Geometry
     fn segment_geometry(ctx: &ElementContext) -> (f64, f64, f64) {
@@ -2783,7 +2783,7 @@ pub mod elements3d {
 
     use crate::formulation::{b_matrix_plane, d_matrix_plane_stress, gauss_tri, jacobian_2d, shape_tri3};
     use crate::{BeamStation, Dof, Element, ElementContext, ElementResult, MemberUdl, ShellState, SolidStress};
-    use mathematical_algebra::{vec3d_cross, vec3d_length, vec3d_normalize, vec3d_sub, Mat3d, MatD, VecD};
+    use math::algebra::{vec3d_cross, vec3d_length, vec3d_normalize, vec3d_sub, Mat3d, MatD, VecD};
 
     // #region 🔖️Bar3
     /// 🪵️ Two-node 3D axial truss element — carries only translational DOFs, stiffness `k = EA/L`
@@ -4384,7 +4384,7 @@ pub mod formulation {
     //! their parametric derivatives, Jacobians, plane/solid B-matrices, and constitutive D-matrices —
     //! consumed by the continuum/plate/shell elements in `elements2d`/`elements3d`.
 
-    use mathematical_algebra::MatD;
+    use math::algebra::MatD;
 
     // #region 🔖️Quadrature
     /// 🎯️ 1D Gauss-Legendre points/weights on `[-1,1]`, `n = 1..=4`.
@@ -5510,10 +5510,10 @@ pub mod sparse {
     //! Jacobi-preconditioned conjugate-gradient iterative solver, a subspace-iteration eigensolver
     //! (modal/buckling `Kφ=λBφ`) backed by a dense cyclic-Jacobi eigensolver for its small projected
     //! subproblem, and reverse-Cuthill-McKee bandwidth-reduction ordering. No dependency beyond
-    //! `mathematical_algebra`'s dense `MatD`/`VecD`, used here as both scratch storage for small
+    //! `math::algebra`'s dense `MatD`/`VecD`, used here as both scratch storage for small
     //! projected problems and as the correctness oracle in this module's tests.
 
-    use mathematical_algebra::{MatD, VecD};
+    use math::algebra::{MatD, VecD};
     use std::collections::{BTreeMap, VecDeque};
 
     // #region 🔖️Coo
@@ -6499,7 +6499,7 @@ pub mod sparse {
 pub use elements2d::{Bar2, BeamEb2};
 pub use elements3d::{Bar3, Frame3};
 
-use mathematical_algebra::{MatD, VecD};
+use math::algebra::{MatD, VecD};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt;

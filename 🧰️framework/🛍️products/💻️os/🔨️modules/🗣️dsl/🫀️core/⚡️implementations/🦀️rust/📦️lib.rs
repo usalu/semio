@@ -499,7 +499,7 @@ impl TokenKind {
 }
 
 /// @emoji 🎨️ Editor-facing classification of a token — the highlighting/completion vocabulary,
-/// generalizing `mathematical_graph_dsl`'s `TokenClass`.
+/// generalizing `math::graph::dsl`'s `TokenClass`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TokenClass {
     Keyword,

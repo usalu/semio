@@ -6,15 +6,15 @@ use crate::artifacts::remodel::engine::{camera as remodel_camera, dense as remod
 
 use std::collections::HashMap;
 
-pub use mathematical_lie::Sim3;
+pub use math::lie::Sim3;
 pub use remodel_camera::{CameraPose, Intrinsics};
 pub use remodel_mesh::WatertightReport;
 pub use remodel_sfm::Reconstruction;
 
-use mathematical_algebra::{pseudo_inverse, solve_llsq, vec3d_normalize, vec3d_sub, MatD, VecD};
-use mathematical_lie::umeyama;
-use mathematical_optimize::{camera_covariances, LmConfig, ResidualTerm, SchurResult};
-use mathematical_spatial::KdTree;
+use math::algebra::{pseudo_inverse, solve_llsq, vec3d_normalize, vec3d_sub, MatD, VecD};
+use math::lie::umeyama;
+use math::optimize::{camera_covariances, LmConfig, ResidualTerm, SchurResult};
+use math::spatial::KdTree;
 use remodel_camera::{reproject, reprojection_jacobians, reprojection_residual};
 use remodel_dense::{PointClass, PointCloud};
 use remodel_image::ImageRgba8;
@@ -867,7 +867,7 @@ pub fn track_stats_from_observations(observations: &[(usize, usize, [f64; 2])], 
 }
 
 /// 🧮️ Per-camera marginal 6x6 covariance (flattened row-major), estimated by constructing a
-/// [`SfmBundleProblem`] from `recon`+`observations` and running [`mathematical_optimize::schur_lm`] for a
+/// [`SfmBundleProblem`] from `recon`+`observations` and running [`math::optimize::schur_lm`] for a
 /// single (already-near-optimal) iteration — the covariance-diagonal machinery `schur_lm`'s Schur
 /// complement always computes, just reused at the current solution rather than a fresh optimization.
 /// Empty when there are no cameras, points or observations to build a problem from.
@@ -891,7 +891,7 @@ pub fn camera_covariance_diagonals(recon: &Reconstruction, observations: &[(usiz
     let a0: Vec<VecD> = recon.cameras.iter().map(|&(_, pose)| VecD::from_vec(pose.0.log().to_vec())).collect();
     let b0: Vec<VecD> = recon.points.iter().map(|&p| VecD::from_vec(p.to_vec())).collect();
     let cfg = LmConfig { max_iters: 1, ..LmConfig::default() };
-    let result: SchurResult = mathematical_optimize::schur_lm(&problem, a0, b0, &cfg);
+    let result: SchurResult = math::optimize::schur_lm(&problem, a0, b0, &cfg);
     camera_covariances(&result)
         .iter()
         .map(|m| {
@@ -958,8 +958,8 @@ pub fn build_quality_report(recon: &Reconstruction, observations: &[(usize, usiz
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mathematical_lie::So3;
-    use mathematical_random::{normal, Rng};
+    use math::lie::So3;
+    use math::random::{normal, Rng};
 
     // #region 🔖️GeodesyTests
     #[test]
@@ -1084,8 +1084,8 @@ mod tests {
         // 0)` when the camera is centered over `(cx_world, cy_world)` — i.e. `t = (-cx_world,
         // -cy_world, height)`. Camera A centers over world x=5, camera B over world x=15, giving a
         // ~10m-wide overlap band in the middle of the 20m-wide raster.
-        let pose_a = CameraPose(mathematical_lie::Se3 { r: So3::identity(), t: [-5.0, -1.0, 20.0] });
-        let pose_b = CameraPose(mathematical_lie::Se3 { r: So3::identity(), t: [-15.0, -1.0, 20.0] });
+        let pose_a = CameraPose(math::lie::Se3 { r: So3::identity(), t: [-5.0, -1.0, 20.0] });
+        let pose_b = CameraPose(math::lie::Se3 { r: So3::identity(), t: [-15.0, -1.0, 20.0] });
         let mut img_a = ImageRgba8::new(200, 200);
         let mut img_b = ImageRgba8::new(200, 200);
         for px in img_a.data.as_chunks_mut::<4>().0.iter_mut() {

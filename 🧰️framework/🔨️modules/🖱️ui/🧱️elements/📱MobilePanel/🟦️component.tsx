@@ -13,10 +13,10 @@ import { useFirstDraggableElementAlias } from "../🫀️core/🆔ElementId/🟦
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { Scrollable } from "../📜Scrollable/🟦️component.tsx";
 import { PanelTreeUnitsPane, type PanelProps } from "../🖼️Panel/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { glassClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { type PanelTabNode, usePanelTabSelection, findPanelTabNode, LevelProvider, PanelGhostRoot, shellChromeFrameLayerClass, PanelTabBar, progressPanelTabSelection } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { glassClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { LevelProvider } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { PanelGhostRoot, shellChromeFrameLayerClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { type PanelTabNode, usePanelTabSelection, findPanelTabNode, PanelTabBar, progressPanelTabSelection } from "../📑PanelTabBar/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 💧️MobilePanel

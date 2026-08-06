@@ -18,5 +18,5 @@ role = "plugin"
 path = "📦️lib.rs"
 
 [dependencies]
-mathematical_algebra = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/➕️algebra/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-algebra" }
+math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 serde = { workspace = true }

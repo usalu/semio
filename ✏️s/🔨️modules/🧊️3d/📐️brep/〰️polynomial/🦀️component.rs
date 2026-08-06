@@ -430,7 +430,7 @@ mod tests {
 
         #[test]
         fn isolate_roots_plus_refine_matches_bisection_oracle_on_random_polynomials() {
-            let mut rng = mathematical_random::Rng::from_seed(23);
+            let mut rng = semio_framework_math::random::Rng::from_seed(23);
             for _ in 0..200 {
                 let degree = 1 + (rng.next_range(0, 4) as usize);
                 let coeffs: Vec<f64> = (0..=degree).map(|_| rng.next_f64() * 10.0 - 5.0).collect();
@@ -452,7 +452,7 @@ mod tests {
 
         #[test]
         fn bernstein_monomial_round_trip_holds_on_random_polynomials() {
-            let mut rng = mathematical_random::Rng::from_seed(29);
+            let mut rng = semio_framework_math::random::Rng::from_seed(29);
             for _ in 0..200 {
                 let degree = rng.next_range(0, 6) as usize;
                 let coeffs: Vec<f64> = (0..=degree).map(|_| rng.next_f64() * 10.0 - 5.0).collect();

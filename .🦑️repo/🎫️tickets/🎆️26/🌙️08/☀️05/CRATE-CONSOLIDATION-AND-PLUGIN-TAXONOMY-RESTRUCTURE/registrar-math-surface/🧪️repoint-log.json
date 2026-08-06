@@ -1,0 +1,155 @@
+{
+  "mathPkgRelFromRoot": "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust",
+  "cargoChangedCount": 21,
+  "cargoChanged": [
+    {
+      "cargo": "compose/client/lib/query/rs/Cargo.toml",
+      "removed": 2,
+      "addedMath": true
+    },
+    {
+      "cargo": "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/Cargo.toml",
+      "removed": 2,
+      "addedMath": true
+    },
+    {
+      "cargo": "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/Cargo.toml",
+      "removed": 1,
+      "addedMath": true
+    },
+    {
+      "cargo": "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/Cargo.toml",
+      "removed": 1,
+      "addedMath": true
+    },
+    {
+      "cargo": "✏️s/🔌️plugins/🏗️fem/🔨️modules/🫀️core/⚡️implementations/🦀️rust/Cargo.toml",
+      "removed": 1,
+      "addedMath": true
+    },
+    {
+      "cargo": "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/Cargo.toml",
+      "removed": 1,
+      "addedMath": true
+    },
+    {
+      "cargo": "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/Cargo.toml",
+      "removed": 2,
+      "addedMath": true
+    },
+    {
+      "cargo": "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/Cargo.toml",
+      "removed": 7,
+      "addedMath": true
+    },
+    {
+      "cargo": "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/Cargo.toml",
+      "removed": 1,
+      "addedMath": true
+    },
+    {
+      "cargo": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/Cargo.toml",
+      "removed": 4,
+      "addedMath": true
+    },
+    {
+      "cargo": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml",
+      "removed": 1,
+      "addedMath": true
+    },
+    {
+      "cargo": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml",
+      "removed": 1,
+      "addedMath": true
+    },
+    {
+      "cargo": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/⚡️implementations/🦀️rust/Cargo.toml",
+      "removed": 4,
+      "addedMath": true
+    },
+    {
+      "cargo": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/➕️normal/↔undirected/⚡️implementations/🦀️rust/Cargo.toml",
+      "removed": 3,
+      "addedMath": true
+    },
+    {
+      "cargo": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/⚡️implementations/🦀️rust/Cargo.toml",
+      "removed": 1,
+      "addedMath": true
+    },
+    {
+      "cargo": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust/Cargo.toml",
+      "removed": 1,
+      "addedMath": true
+    },
+    {
+      "cargo": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/⚡️implementations/🦀️rust/Cargo.toml",
+      "removed": 2,
+      "addedMath": true
+    },
+    {
+      "cargo": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust/Cargo.toml",
+      "removed": 4,
+      "addedMath": true
+    },
+    {
+      "cargo": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust/Cargo.toml",
+      "removed": 1,
+      "addedMath": true
+    },
+    {
+      "cargo": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust/Cargo.toml",
+      "removed": 1,
+      "addedMath": true
+    },
+    {
+      "cargo": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚡️implementations/🦀️rust/🕸️dag/Cargo.toml",
+      "removed": 2,
+      "addedMath": true
+    }
+  ],
+  "rsChangedCount": 41,
+  "rsChanged": [
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/⚙️engine/🦀️component.rs",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/⚙️engine/🦀️component.rs",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/⚙️engine/🎲️board-host/🦀️component.rs",
+    "✏️s/🔌️plugins/🔱️trinity/🫀️core/🦀️component.rs",
+    "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️component.rs",
+    "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🗣️dsl/🦀️component.rs",
+    "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔧️op/🦀️component.rs",
+    "✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🎮️commands/🗺️fixture/🦀️component.rs",
+    "✏️s/🔌️plugins/🔋️energy/⚙️engine/🦀️geometry.rs",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/🥽️mesh/🦀️component.rs",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/🗺️geo/🦀️component.rs",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/📸️sfm/🦀️component.rs",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/📷️camera/🦀️component.rs",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/🏭️reconstruction/🦀️component.rs",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/🏃️motion/🦀️component.rs",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/🌫️dense/🦀️component.rs",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/🌟️feature/🦀️component.rs",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🔍️construct/🦀️component.rs",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/⚙️engine/↔️adjacency/🦀️component.rs",
+    "✏️s/🔌️plugins/🏗️fem/🔨️modules/🫀️core/⚡️implementations/🦀️rust/📦️lib.rs",
+    "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/⚙️engine/🦀️component.rs",
+    "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs",
+    "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🦀️component.rs",
+    "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/⚙️engine/🦀️component.rs",
+    "✏️s/🔨️modules/🧊️3d/📐️brep/🚨️error/🦀️component.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚡️implementations/🦀️rust/🕸️dag/📦️lib.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust/📦️lib.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust/📦️lib.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/⚡️implementations/🦀️rust/📦️lib.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust/📦️lib.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/⚡️implementations/🦀️rust/📦️lib.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust/📦️lib.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust/📦️lib.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust/📦️lib.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/⚡️implementations/🦀️rust/📦️lib.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust/📦️lib.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/➕️normal/↔undirected/⚡️implementations/🦀️rust/📦️lib.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/⚡️implementations/🦀️rust/📦️lib.rs",
+    "🧰️framework/🔨️modules/🗺️surface/🎲️board-2d/🦀️component.rs",
+    "compose/client/lib/query/rs/lib.rs"
+  ]
+}

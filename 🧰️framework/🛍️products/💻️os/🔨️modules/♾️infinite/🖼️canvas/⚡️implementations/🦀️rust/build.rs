@@ -12,11 +12,11 @@ struct GeneratedShortcodes {
 }
 
 fn repo_ui_assets(manifest_dir: &Path) -> PathBuf {
-    manifest_dir.join("../../../../../../../🔨️modules/🖼️assets/⚡️implementations/🟦️typescript")
+    manifest_dir.join("../../../../../../../🔨️modules/🖼️assets/📦️packages/🟦️typescript")
 }
 
 fn metabolism_icons_dir(manifest_dir: &Path) -> PathBuf {
-    manifest_dir.join("../../../../../../../🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🌱️metabolism/🔣️icons")
+    manifest_dir.join("../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🔣️icons")
 }
 
 fn main() {

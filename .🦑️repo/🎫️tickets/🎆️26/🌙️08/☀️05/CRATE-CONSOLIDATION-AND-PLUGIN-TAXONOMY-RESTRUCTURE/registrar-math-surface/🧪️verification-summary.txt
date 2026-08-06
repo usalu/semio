@@ -1,0 +1,15 @@
+Math repoint (registrar-math-surface)
+=====================================
+Cargo.toml collapsed: 21 manifests → single `math = { path = …/🧮️math/📦️packages/🦀️rust, package = "semio-framework-math" }`
+Rust use-site rewrites: 41 files (`mathematical_*::` → `math::…` per handoff §4)
+Surface follow-up: vitest.config.ts, os-dev vite.config.ts, buildEngineWasm() in os-dev script.ts
+(WasmSessionLoader + renderer-react package.json were already on @semio-tech/framework-surface-rs)
+
+Stale math/⚡️implementations path deps in repo (excl. ticket scratch): 0
+
+cargo metadata --no-deps: FAILED (exit 101)
+  → missing `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml` (ui consolidation, unrelated to math)
+
+cargo check -p semio-s-plugin-cad -p semio-s-plugin-puzzle: FAILED (same workspace load error)
+
+Details: 🧪️repoint-log.json, 🧪️cargo-metadata-err.txt, 🧪️cargo-check-sample.txt

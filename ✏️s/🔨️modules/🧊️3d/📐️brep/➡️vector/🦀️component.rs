@@ -384,7 +384,7 @@ mod tests {
 
         #[test]
         fn cross_product_antisymmetric_on_random_vectors() {
-            let mut rng = mathematical_random::Rng::from_seed(1);
+            let mut rng = semio_framework_math::random::Rng::from_seed(1);
             for _ in 0..200 {
                 let a = Vec3::new(rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0);
                 let b = Vec3::new(rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0);

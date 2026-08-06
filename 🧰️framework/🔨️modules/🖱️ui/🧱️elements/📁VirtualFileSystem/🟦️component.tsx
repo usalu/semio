@@ -19,8 +19,8 @@ import { TableAvatar } from "../👤Avatar/🟦️component.tsx";
 import { Table } from "../🦴Skeletons/🧪️story.tsx";
 import { type TableColumn, type TableProps, type HierarchicalRowData, type DragDropConfig } from "../📊Table/🟦️component.tsx";
 import { type TreeSelectionMode, normalizeTreeSelectedIds, getTreeNextSelectionState } from "../🪵Tree/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useLabel, Icon } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { Icon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 📁️VirtualFileSystem

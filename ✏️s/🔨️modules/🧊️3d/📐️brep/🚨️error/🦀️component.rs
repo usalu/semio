@@ -1,5 +1,5 @@
 //! 🚨️ Flat, hand-rolled error enums for every kernel subsystem (no `thiserror` — matches the
-//! `mathematical_wfc` convention). Each variant carries just enough context to explain *why* an
+//! `math::wfc` convention). Each variant carries just enough context to explain *why* an
 //! operation refused to produce a result; the kernel's hard invariant is "never wrong, fail loud"
 //! rather than silently returning a plausible-looking but invalid shape.
 

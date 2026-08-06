@@ -9,8 +9,7 @@
 import * as React from "react";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { TableAvatar } from "../👤Avatar/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { type ElementProps } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { type ElementProps } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🗄️HistoryTable

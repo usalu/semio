@@ -25,6 +25,7 @@ crate-type = ["cdylib", "rlib"]
 path = "📦️lib.rs"
 
 [dependencies]
+math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 # 🧭️ `workspace = true` only works when this crate's local dependency KEY matches the key in root
 # `[workspace.dependencies]` verbatim — Cargo resolves workspace inheritance by that key, and a `package =`
 # override does NOT redirect the lookup (verified empirically: `cargo check` errors
@@ -34,8 +35,6 @@ path = "📦️lib.rs"
 dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
 protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
-mathematical_graph = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph" }
-mathematical_geometry = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📐️geometry/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-geometry" }
 ui_wgpu = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu", package = "semio-framework-ui-wgpu" }
 semio-framework-core = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }

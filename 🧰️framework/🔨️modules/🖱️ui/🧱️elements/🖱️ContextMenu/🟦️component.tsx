@@ -10,15 +10,12 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import {
-  floatingMenuItemClass,
-  ContextMenuChrome,
-  type IconSource,
-  Icon,
-  useLabel,
-} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { type UiLabel, uiDataLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
+import { Icon, type IconSource } from "../🔣Icons/🟦️component.tsx";
+import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { useShellScopeOptional } from "../🫀️core/🐚️ShellScope/🟦️component.tsx";
+import { useFlow } from "../🫀️core/🧭️Flow/🟦️component.tsx";
+import { floatingMenuItemClass, ContextMenuChrome, formatKeybindingShortcut } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🖱️ContextMenu

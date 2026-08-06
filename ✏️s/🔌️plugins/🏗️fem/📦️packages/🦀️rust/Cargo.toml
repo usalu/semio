@@ -37,7 +37,7 @@ pack = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨�
 protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
-semio-framework-core = { path = "../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
+semio-framework-core = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core" }
 spade = "2.15.1"
 thiserror.workspace = true
 serde.workspace = true
@@ -48,8 +48,3 @@ wasm-bindgen.workspace = true
 
 [dev-dependencies]
 vcs = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
-
-# 🚧️ TEMPORARY VERIFICATION OVERLAY — delete this whole block (and the nested target/Cargo.lock it
-# creates) at registrar handoff. Makes this manifest its own workspace root so `cargo check
-# --manifest-path …` works before the crate is a real root-workspace member (see TEMPLATE.md §3,
-# "The chicken-and-egg, and how to verify anyway"). Copied verbatim from root Cargo.toml.

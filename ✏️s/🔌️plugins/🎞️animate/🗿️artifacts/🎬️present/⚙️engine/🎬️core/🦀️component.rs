@@ -7,7 +7,7 @@ mod animation {
 
     use crate::artifacts::present::engine::animate_core::rate::{map_child_alpha, RateFunc};
     use crate::artifacts::present::engine::animate_core::sobject::{Sobject, VSobject};
-    use mathematical_geometry::{cubic_point_at, Affine, CubicBez, Point, Vec2};
+    use math::geometry::{cubic_point_at, Affine, CubicBez, Point, Vec2};
     use std::collections::HashMap;
     use std::time::Duration;
 
@@ -1029,7 +1029,7 @@ mod animations_catalog {
     use crate::artifacts::present::engine::animate_core::animation::{eased_alpha_for, with_vsobject, Animation};
     use crate::artifacts::present::engine::animate_core::rate::RateFunc;
     use crate::artifacts::present::engine::animate_core::sobject::Sobject;
-    use mathematical_geometry::{Affine, Point, Vec2};
+    use math::geometry::{Affine, Point, Vec2};
     use std::collections::HashMap;
 
     fn scale_about_center(base: Affine, center: Point, factor: f64) -> Affine {
@@ -2466,7 +2466,7 @@ mod axes {
     use crate::artifacts::present::engine::animate_core::geometry::{arrow, dot, line};
     use crate::artifacts::present::engine::animate_core::sobject::{Group, Sobject, VSobject};
     use crate::artifacts::present::engine::animate_core::text::Text;
-    use mathematical_geometry::{BezPath, Point};
+    use math::geometry::{BezPath, Point};
 
     /// 📈️ Cartesian axes with optional labels.
     pub struct Axes {
@@ -2716,7 +2716,7 @@ mod camera {
     //! 📷️ Scene cameras: static, moving, 3D, and zoomed views.
 
     use crate::artifacts::present::engine::animate_core::color::Color;
-    use mathematical_geometry::{Affine, Point, Vec2};
+    use math::geometry::{Affine, Point, Vec2};
 
     /// 📸️ Base camera framing the scene.
     #[derive(Clone, Debug)]
@@ -3249,7 +3249,7 @@ mod geometry {
 
     use crate::artifacts::present::engine::animate_core::color::Color;
     use crate::artifacts::present::engine::animate_core::sobject::{Group, Sobject, VSobject};
-    use mathematical_geometry::{append_shape_to_path, Arc, BezPath, Circle, Line, Point, Rect, RoundedRect, RoundedRectRadii, Vec2};
+    use math::geometry::{append_shape_to_path, Arc, BezPath, Circle, Line, Point, Rect, RoundedRect, RoundedRectRadii, Vec2};
     use std::f64::consts::PI;
 
     fn styled_path(path: BezPath, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
@@ -3707,7 +3707,7 @@ mod graph {
     use crate::artifacts::present::engine::animate_core::geometry::{arrow, circle, line};
     use crate::artifacts::present::engine::animate_core::sobject::{Group, Sobject};
     use crate::artifacts::present::engine::animate_core::text::Text;
-    use mathematical_geometry::Point;
+    use math::geometry::Point;
     use std::collections::HashMap;
 
     /// 🔵️ Undirected graph with circular layout.
@@ -3977,7 +3977,7 @@ mod matrix {
     use crate::artifacts::present::engine::animate_core::geometry::rectangle;
     use crate::artifacts::present::engine::animate_core::sobject::{arrange, Group, Sobject};
     use crate::artifacts::present::engine::animate_core::text::{MathText, Text};
-    use mathematical_geometry::{Point, Vec2};
+    use math::geometry::{Point, Vec2};
 
     fn arrange_grid(group: &mut Group, rows: usize, cols: usize, cell_size: (f64, f64)) {
         if group.children.is_empty() || rows == 0 || cols == 0 {
@@ -4175,7 +4175,7 @@ mod matrix {
 mod rate {
     //! 📈️ Rate functions mapping linear time α ∈ [0,1] to eased progress.
 
-    use mathematical_geometry::clamp_f64;
+    use math::geometry::clamp_f64;
 
     /// 📐️ Easing function signature used by animations.
     pub type RateFunc = fn(f64) -> f64;
@@ -5246,7 +5246,7 @@ mod sobject {
     use crate::artifacts::present::engine::animate_core::color::Color;
     use crate::artifacts::present::engine::animate_core::updater::Updater;
     use kurbo::{ParamCurve, ParamCurveArclen, PathSeg, Shape};
-    use mathematical_geometry::{append_shape_to_path, bounding_box, polygon_centroid, Affine, BezPath, PathEl, Point, Vec2};
+    use math::geometry::{append_shape_to_path, bounding_box, polygon_centroid, Affine, BezPath, PathEl, Point, Vec2};
     use std::sync::atomic::{AtomicU64, Ordering};
 
     static SOBJECT_ID: AtomicU64 = AtomicU64::new(1);
@@ -5401,7 +5401,7 @@ mod sobject {
             s
         }
 
-        pub fn from_shape<'a>(shape: impl Into<mathematical_geometry::ShapeRef<'a>>) -> Self {
+        pub fn from_shape<'a>(shape: impl Into<math::geometry::ShapeRef<'a>>) -> Self {
             let mut path = BezPath::new();
             append_shape_to_path(&mut path, shape, 0.01);
             Self::from_path(path)
@@ -5980,7 +5980,7 @@ mod sobject {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use mathematical_geometry::Circle;
+        use math::geometry::Circle;
 
         #[test]
         fn vobject_has_finite_bounds() {
@@ -6114,7 +6114,7 @@ mod text {
     use crate::artifacts::present::engine::animate_core::color::Color;
     use crate::artifacts::present::engine::animate_core::sobject::{Sobject, VSobject};
     use ecow::EcoString;
-    use mathematical_geometry::{append_shape_to_path, BezPath, Point, Rect};
+    use math::geometry::{append_shape_to_path, BezPath, Point, Rect};
     use std::path::PathBuf;
     use std::sync::OnceLock;
     use typst::foundations::{Bytes, Datetime};
@@ -6459,7 +6459,7 @@ mod three_d {
     use crate::artifacts::present::engine::animate_core::geometry::{circle, line, polygon, rectangle};
     use crate::artifacts::present::engine::animate_core::sobject::{Bounds, Group, Sobject, Style, VSobject};
     use crate::artifacts::present::engine::animate_core::updater::Updater;
-    use mathematical_geometry::{Affine, BezPath, Point};
+    use math::geometry::{Affine, BezPath, Point};
 
     /// 📦️ Base 3D Sobject with yaw/pitch and projection scale.
     #[derive(Clone)]
@@ -6838,7 +6838,7 @@ mod updater {
     mod tests {
         use super::*;
         use crate::artifacts::present::engine::animate_core::sobject::VSobject;
-        use mathematical_geometry::BezPath;
+        use math::geometry::BezPath;
 
         #[test]
         fn value_tracker_mutates() {
@@ -6951,4 +6951,4 @@ pub use text::*;
 pub use three_d::*;
 pub use updater::*;
 
-pub use mathematical_geometry::{Affine, BezPath, Circle as GeoCircle, Point as GeoPoint, Rect as GeoRect, Vec2 as GeoVec2};
+pub use math::geometry::{Affine, BezPath, Circle as GeoCircle, Point as GeoPoint, Rect as GeoRect, Vec2 as GeoVec2};

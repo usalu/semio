@@ -54,7 +54,7 @@ dsl = { path = "../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/
 serde = { version = "1.0.219", features = ["derive"], optional = true }
 serde_json = { version = "1.0.140", optional = true }
 ts-rs = { version = "10", optional = true }
-kernel_3d_scene = { path = "../../../../../✏️s/🔨️modules/🧊️3d/🎬️scene/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-scene", optional = true }
+kernel_3d_scene = { path = "../../../../../✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust", package = "semio-s-3d", optional = true }
 # 🖋️ Text shaping/font-fallback (parley) + rasterization (swash) for the `text` region's glyph
 # atlas — versions match what `layout_rs` already resolves in the workspace lockfile (parley
 # pulls fontique 0.5.0 transitively; accessed here via `parley::fontique`, not a direct dep).

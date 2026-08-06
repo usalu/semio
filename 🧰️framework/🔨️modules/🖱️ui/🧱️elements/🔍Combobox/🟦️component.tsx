@@ -14,8 +14,9 @@ import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx
 import { PropertyValueColumnContext } from "../🪵Tree/🟦️component.tsx";
 import { Popover, PopoverTrigger, PopoverContent } from "../🗨️Popover/🟦️component.tsx";
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "../⌨️Command/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useTransaction, type ElementProps, useIdLabel, useLabel, CheckIcon, Label } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { useTransaction, type ElementProps } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
+import { useIdLabel, useLabel, Label } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { CheckIcon } from "../🔣Icons/🟦️component.tsx";
 import { ButtonGroup, ButtonGroupItem } from "../🎛️ButtonGroup/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

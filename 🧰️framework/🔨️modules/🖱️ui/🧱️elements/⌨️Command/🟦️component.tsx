@@ -11,10 +11,9 @@ import { Command as CommandPrimitive } from "cmdk";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent } from "../💬Dialog/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { borderNormalBottomClass, uiFormControlBrowserDefaultProps, menuListItemClassName } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useLabel, SearchIcon } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { borderNormalBottomClass, uiFormControlBrowserDefaultProps, menuListItemClassName } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { SearchIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🪆️Command

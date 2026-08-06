@@ -32,12 +32,12 @@ pub(crate) mod testkit {
     }
 
     /// 🗂️ Board kind-catalog JSON for a compile-time manifest id — the catalogs live in the manifest
-    /// registry (`mathematical_graph_manifest`), not in fixture `meta.kindCatalogs`, so tests that
+    /// registry (`math::graph::manifest`), not in fixture `meta.kindCatalogs`, so tests that
     /// need real node/handle kinds read them from there. Each catalog row is the manifest row's
     /// `id`/`name` merged with its flattened `presentation` object.
     pub fn catalogs_json_from_manifest_id(manifest_id: &str) -> String {
-        let manifest = mathematical_graph_manifest::manifest_by_id(manifest_id).unwrap_or_else(|| panic!("unknown manifest id {manifest_id}"));
-        let rows = |kinds: &[mathematical_graph_manifest::KindDef]| -> Vec<serde_json::Value> {
+        let manifest = math::graph::manifest::manifest_by_id(manifest_id).unwrap_or_else(|| panic!("unknown manifest id {manifest_id}"));
+        let rows = |kinds: &[math::graph::manifest::KindDef]| -> Vec<serde_json::Value> {
             kinds
                 .iter()
                 .map(|kind| {
@@ -53,7 +53,7 @@ pub(crate) mod testkit {
                 })
                 .collect()
         };
-        let visual_port_kinds: Vec<mathematical_graph_manifest::KindDef> = manifest.port_kinds.iter().filter(|kind| kind.presentation.as_ref().is_some_and(|p| p.get("color").is_some())).cloned().collect();
+        let visual_port_kinds: Vec<math::graph::manifest::KindDef> = manifest.port_kinds.iter().filter(|kind| kind.presentation.as_ref().is_some_and(|p| p.get("color").is_some())).cloned().collect();
         json!({ "handleKinds": rows(&visual_port_kinds), "nodeKinds": rows(&manifest.node_kinds) }).to_string()
     }
 

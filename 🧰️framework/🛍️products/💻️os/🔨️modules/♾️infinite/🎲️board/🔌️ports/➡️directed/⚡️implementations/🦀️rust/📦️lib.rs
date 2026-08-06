@@ -157,7 +157,7 @@ pub mod types {
     }
     // #endregion 🔖️GraphPortMode
 
-    pub use mathematical_graph::NodeShape;
+    pub use math::graph::NodeShape;
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum BoardElementStyleKind {

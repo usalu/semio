@@ -13,7 +13,7 @@ name = "compiler_svg"
 path = "../../../../../../🧰️framework/🔨️modules/📚️compiler/📤️svg/⚡️implementations/🦀️rust/📦️lib.rs"
 
 [dependencies]
-compiler_math = { package = "semio-framework-compiler-math", path = "../../../../../../🧰️framework/🔨️modules/📚️compiler/🧮️math/⚡️implementations/🦀️rust" }
+compiler_math = { package = "semio-framework-compiler-math", path = "../../../🧮️math/⚡️implementations/🦀️rust" }
 compiler_text = { package = "semio-framework-compiler-text", path = "../../../../../../🧰️framework/🔨️modules/📚️compiler/🔤️text/⚡️implementations/🦀️rust" }
 base64 = "0.22.1"
 

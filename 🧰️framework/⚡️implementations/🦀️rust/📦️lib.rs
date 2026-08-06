@@ -2722,7 +2722,7 @@ mod tests {
     /// 🏙️ Puzzle GLBs may start with non-triangle guide geometry before their renderable surfaces.
     #[test]
     fn glb_import_collects_triangle_primitives_after_guides() {
-        let decoded = mesh_from_glb(include_bytes!("../../../🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🌱️metabolism/🎨️representation/🧊️capsule_J.glb")).expect("decode Puzzle GLB");
+        let decoded = mesh_from_glb(include_bytes!("../../../🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/🧊️capsule_J.glb")).expect("decode Puzzle GLB");
         assert_eq!(decoded.vertex_count(), 1472);
         assert_eq!(decoded.triangle_count(), 1750);
         assert!(decoded.indices.iter().all(|index| (*index as usize) < decoded.vertex_count()));

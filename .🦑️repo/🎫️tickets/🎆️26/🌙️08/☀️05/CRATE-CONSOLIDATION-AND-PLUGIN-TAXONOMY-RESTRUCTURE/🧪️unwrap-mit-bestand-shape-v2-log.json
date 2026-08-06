@@ -1,0 +1,31 @@
+{
+  "status": "ok",
+  "remainingImplDirs": [],
+  "filesChanged": [
+    "♻️mit-bestand/📋️bericht/📋️zwischenbericht",
+    "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript/package.json",
+    "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript/📋️project.json",
+    "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript/📜️script.ts",
+    "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript/📜️script.ts",
+    "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript/package.json",
+    "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript/📋️project.json",
+    "♻️mit-bestand/📋️bericht/⚡️implementation",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🎨️globals.css",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/package.json",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📋️project.json",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📜️script.ts",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📦️index.ts",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/⚙️vite.config.ts",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/🧪️vitest.config.ts",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/🌐️index.html",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📦️index.ts",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/⚙️vite.config.ts",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/🧪️vitest.config.ts",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/package.json",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📋️project.json",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/⚡️implementation",
+    "package.json"
+  ]
+}

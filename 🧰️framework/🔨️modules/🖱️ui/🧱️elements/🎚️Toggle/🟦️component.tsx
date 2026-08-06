@@ -15,8 +15,9 @@ import { cva } from "class-variance-authority";
 // caused a real bug).
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { chromeControlItemClass, chromeControlItemOnClass, type ElementProps, type ControlIcon } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { type ElementProps } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
+import { chromeControlItemClass, chromeControlItemOnClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { type ControlIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🗡️Toggle

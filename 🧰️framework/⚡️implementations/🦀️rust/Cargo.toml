@@ -9,7 +9,7 @@ description = "Render-independent framework kernel: Platform, ActionBus, declara
 [lints]
 workspace = true
 [lib]
-path = "../../../🧰️framework/⚡️implementations/🦀️rust/📦️lib.rs"
+path = "../../../🧰️framework/📦️packages/🦀️rust/📦️lib.rs"
 
 [dependencies]
 gltf = { version = "1.4.1", default-features = false, features = ["utils"] }
@@ -18,7 +18,7 @@ serde_json = "1.0.140"
 thiserror = "2.0.12"
 ts-rs = { version = "10", optional = true }
 ui_wgpu = { path = "../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu", package = "semio-framework-ui-wgpu" }
-semio-framework-hash = { path = "../../../🧰️framework/🔨️modules/#⃣hash/⚡️implementations/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 # 🎞️ CW3 kernel cut-over: HybridLogicalTimestamp/UndoPolicy/MergeStrategyKind and the operation-
 # flavored id newtypes (OperationId/ActorId/DocumentId/DocumentVersion/SchemaId) now canonically
 # live in `protocol_core`; framework/core re-exports them under their existing names (see `kernel`

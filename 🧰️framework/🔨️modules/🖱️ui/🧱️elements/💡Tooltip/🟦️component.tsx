@@ -12,10 +12,11 @@ import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { glassClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { SurfaceScope, useFlow, useUiDriverTooltips, useUiDriver, useControlHotkey, useControlHotkeyTooltipVisible, useLabel, useIdLabel, resolveControlLabelId, isInternalChromeControlId, humanizeControlId, BookIcon, TutorialIcon, type UiTranslationKey, type UiRegisteredTranslationKey } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { glassClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { SurfaceScope } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { useFlow } from "../🫀️core/🧭️Flow/🟦️component.tsx";
+import { useLabel, useIdLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { useUiDriverTooltips, useUiDriver, useControlHotkey, useControlHotkeyTooltipVisible, resolveControlLabelId, isInternalChromeControlId, humanizeControlId, BookIcon, TutorialIcon, type UiTranslationKey, type UiRegisteredTranslationKey } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🎙️Tooltip

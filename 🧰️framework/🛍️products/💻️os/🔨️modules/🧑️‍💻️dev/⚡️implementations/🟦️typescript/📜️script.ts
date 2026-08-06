@@ -1460,12 +1460,10 @@ export async function buildEngineWasm(variant: string, renderer: string): Promis
   // Each recurses into a crate's own `wasm` script (wasm-pack/cargo build under the hood) — budgeted at
   // the build class rather than the generic command default since those inner builds can legitimately
   // approach [[buildBudgetMs]] themselves.
-  const graphScript = join(repoRoot, "./🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/⚡️implementations/🦀️rust/📜️script.ts");
-  if (runCmdStatus("bun", [graphScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-surface-node-graph wasm build failed");
+  const surfaceScript = join(repoRoot, "./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/📜️script.ts");
+  if (runCmdStatus("bun", [surfaceScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-surface wasm build failed");
   const editorScript = join(repoRoot, "./🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust/📜️script.ts");
   if (runCmdStatus("bun", [editorScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-editor wasm build failed");
-  const boardScript = join(repoRoot, "./🧰️framework/🔨️modules/🗺️surface/🎲️board-2d/⚡️implementations/🦀️rust/📜️script.ts");
-  if (runCmdStatus("bun", [boardScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-surface-board-2d wasm build failed");
   // React renderer always `import("@semio-tech/flow-core")` for `createFlowSession`, so the
   // pkg must exist even when the active playground's `engines = []` (e.g. Aggregator / puzzle).
   const flowCoreScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust/📜️script.ts");

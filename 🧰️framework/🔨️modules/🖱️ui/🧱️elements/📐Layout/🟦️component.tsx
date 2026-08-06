@@ -12,10 +12,10 @@ import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { type PanelProps, Panel } from "../🖼️Panel/🟦️component.tsx";
 import { type MobilePanelProps, MobilePanel } from "../📱MobilePanel/🟦️component.tsx";
 import { CanvasSkeleton } from "../🦴Skeletons/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { surfaceClass, chromeStatusBorderClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { type Anchor, ANCHORS, UiMobileProvider, GhostProvider, SurfaceScope } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { surfaceClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { chromeStatusBorderClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { SurfaceScope } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { type Anchor, ANCHORS, UiMobileProvider, GhostProvider } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🪨️Layout

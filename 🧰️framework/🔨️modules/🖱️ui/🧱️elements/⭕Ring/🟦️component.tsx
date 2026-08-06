@@ -10,8 +10,9 @@ import * as React from "react";
 import { Orb } from "../../🧱️elements/🔮Orb/🟦️component.tsx";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { type ElementProps, useTransaction, usePanelGhost, Label } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { type ElementProps, useTransaction } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
+import { Label } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { usePanelGhost } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { createDOMEventBinding } from "../🖱️ContextMenu/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

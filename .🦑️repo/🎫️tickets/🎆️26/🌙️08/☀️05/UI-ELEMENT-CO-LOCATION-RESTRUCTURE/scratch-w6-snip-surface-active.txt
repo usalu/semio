@@ -1,0 +1,115 @@
+ 8454|
+ 8455|/** @emoji 🎯️ Tracks which panel, pane, window stack, or introduction step last received pointer or focus — exclusive active stroke without `:focus-within` CSS. Activating a root clears its `data-introduced` stamps so the primary active stroke can win. */
+ 8456|const surfaceActiveRoots = new Set<HTMLElement>();
+ 8457|let surfaceActiveRoot: HTMLElement | null = null;
+ 8458|const surfaceActiveSubscribers = new Set<() => void>();
+ 8459|let surfaceActiveListenersInstalled = false;
+ 8460|
+ 8461|/** @emoji 🎯️ Drops introduction stamps on an activated surface so the pulse cannot outrank the active stroke. */
+ 8462|function clearIntroducedStamps(root: HTMLElement): void {
+ 8463|  if (root.getAttribute("data-introduced") === "true") root.removeAttribute("data-introduced");
+ 8464|  root.querySelectorAll('[data-introduced="true"]').forEach((el) => el.removeAttribute("data-introduced"));
+ 8465|}
+ 8466|
+ 8467|export function setSurfaceActiveRoot(next: HTMLElement | null): void {
+ 8468|  if (surfaceActiveRoot === next) return;
+ 8469|  if (next) clearIntroducedStamps(next);
+ 8470|  surfaceActiveRoot = next;
+ 8471|  surfaceActiveSubscribers.forEach((notify) => notify());
+ 8472|}
+ 8473|
+ 8474|/** @emoji 🎯️ Silhouette gaps are holes onto the canvas, unless an explicit chrome chip is nested inside them. */
+ 8475|function isSurfaceActiveBackgroundTarget(target: EventTarget | null): boolean {
+ 8476|  if (!(target instanceof Element)) return false;
+ 8477|  const gap = target.closest<HTMLElement>('[data-window-silhouette-gap]');
+ 8478|  if (!gap) return false;
+ 8479|  const chip = target.closest<HTMLElement>('[data-window-silhouette-chip]');
+ 8480|  return !chip || !gap.contains(chip);
+ 8481|}
+ 8482|
+ 8483|/** @emoji 🎯️ Treats the visual cutout as canvas even when an app's absolute canvas extends beneath it and becomes the DOM pointer target. */
+ 8484|export function isSurfaceActiveBackgroundPointer(event: { readonly target: EventTarget | null; readonly clientX?: number; readonly clientY?: number }): boolean {
+ 8485|  if (isSurfaceActiveBackgroundTarget(event.target)) return true;
+ 8486|  if (typeof document === "undefined" || typeof event.clientX !== "number" || typeof event.clientY !== "number") return false;
+ 8487|  const target = event.target instanceof Element ? event.target : null;
+ 8488|  const stack = target?.closest<HTMLElement>('[data-slot="mode-dock-stack"]');
+ 8489|  const scope: Document | HTMLElement = stack ?? document;
+ 8490|  for (const gap of scope.querySelectorAll<HTMLElement>('[data-window-silhouette-gap]')) {
+ 8491|    if (stack && gap.closest('[data-slot="mode-dock-stack"]') !== stack) continue;
+ 8492|    const rect = gap.getBoundingClientRect();
+ 8493|    if (rect.width <= 0 || rect.height <= 0) continue;
+ 8494|    if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) return true;
+ 8495|  }
+ 8496|  return false;
+ 8497|}
+ 8498|
+ 8499|function resolveSurfaceActiveRoot(target: EventTarget | null): HTMLElement | null {
+ 8500|  if (isSurfaceActiveBackgroundTarget(target)) return null;
+ 8501|  if (!(target instanceof Element)) return null;
+ 8502|  let node: HTMLElement | null = target instanceof HTMLElement ? target : target.parentElement;
+ 8503|  let match: HTMLElement | null = null;
+ 8504|  while (node instanceof HTMLElement) {
+ 8505|    if (surfaceActiveRoots.has(node)) match = node;
+ 8506|    node = node.parentElement;
+ 8507|  }
+ 8508|  return match;
+ 8509|}
+ 8510|
+ 8511|function installSurfaceActiveDocumentListeners(): void {
+ 8512|  if (surfaceActiveListenersInstalled || typeof document === "undefined") return;
+ 8513|  surfaceActiveListenersInstalled = true;
+ 8514|  const onPointerDown = (event: Event): void => {
+ 8515|    setSurfaceActiveRoot(isSurfaceActiveBackgroundPointer(event) ? null : resolveSurfaceActiveRoot(event.target));
+ 8516|  };
+ 8517|  const onFocusIn = (event: Event): void => {
+ 8518|    setSurfaceActiveRoot(resolveSurfaceActiveRoot(event.target));
+ 8519|  };
+ 8520|  document.addEventListener("pointerdown", onPointerDown);
+ 8521|  document.addEventListener("focusin", onFocusIn);
+ 8522|}
+ 8523|
+ 8524|export interface SurfaceActiveBindProps {
+ 8525|  readonly onPointerDownCapture: (event: React.PointerEvent) => void;
+ 8526|  readonly onFocusCapture: (event: React.FocusEvent) => void;
+ 8527|}
+ 8528|
+ 8529|/** @emoji 🎯️ True when this surface root was the last panel, pane, window stack, or introduction step to receive pointer or keyboard focus. */
+ 8530|export function useSurfaceActive(ref: React.RefObject<HTMLElement | null>): readonly [boolean, SurfaceActiveBindProps] {
+ 8531|  const [, bump] = reactHostPort.useState(0);
+ 8532|  reactHostPort.useLayoutEffect(() => {
+ 8533|    installSurfaceActiveDocumentListeners();
+ 8534|    const element = ref.current;
+ 8535|    if (!element) return;
+ 8536|    surfaceActiveRoots.add(element);
+ 8537|    const notify = (): void => bump((value) => value + 1);
+ 8538|    surfaceActiveSubscribers.add(notify);
+ 8539|    return () => {
+ 8540|      surfaceActiveRoots.delete(element);
+ 8541|      surfaceActiveSubscribers.delete(notify);
+ 8542|      // 🎯️ Effect re-runs every commit (ref may attach late). Defer the clear so a same-commit
+ 8543|      // re-register can reclaim the root before we drop the active stroke.
+ 8544|      queueMicrotask(() => {
+ 8545|        if (surfaceActiveRoot === element && !surfaceActiveRoots.has(element)) setSurfaceActiveRoot(null);
+ 8546|      });
+ 8547|    };
+ 8548|  });
+ 8549|  const bind = reactHostPort.useMemo<SurfaceActiveBindProps>(
+ 8550|    () => ({
+ 8551|      onPointerDownCapture: (event: React.PointerEvent) => {
+ 8552|        if (isSurfaceActiveBackgroundPointer(event)) {
+ 8553|          setSurfaceActiveRoot(null);
+ 8554|          return;
+ 8555|        }
+ 8556|        const root = ref.current;
+ 8557|        if (root) setSurfaceActiveRoot(root);
+ 8558|      },
+ 8559|      onFocusCapture: (event: React.FocusEvent) => {
+ 8560|        const root = ref.current;
+ 8561|        if (root && event.target instanceof Element && root.contains(event.target)) setSurfaceActiveRoot(root);
+ 8562|      },
+ 8563|    }),
+ 8564|    [ref],
+ 8565|  );
+ 8566|  return [ref.current !== null && surfaceActiveRoot === ref.current, bind] as const;
+ 8567|}
+ 8568|

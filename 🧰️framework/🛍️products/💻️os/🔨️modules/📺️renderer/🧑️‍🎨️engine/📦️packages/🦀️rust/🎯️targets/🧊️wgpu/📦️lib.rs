@@ -1044,7 +1044,7 @@ async fn boot_runtime(
     #[cfg(not(target_arch = "wasm32"))]
     let css_height = size.height as f32 / dpr;
 
-    const ANTA_LATIN: &[u8] = include_bytes!("../../../../../../../../../🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🔤️fonts/🔤️anta/🔤️latin.ttf");
+    const ANTA_LATIN: &[u8] = include_bytes!("../../../../../../../../../🔨️modules/🖼️assets/🔤️fonts/🔤️anta/🔤️latin.ttf");
     let font_bytes = match fetch_font_bytes("/asset/font/anta/🔤️latin.ttf").await {
         Ok(bytes) if bytes.len() > 256 => bytes,
         _ => ANTA_LATIN.to_vec(),

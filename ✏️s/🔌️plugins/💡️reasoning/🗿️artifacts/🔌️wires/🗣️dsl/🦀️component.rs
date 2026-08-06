@@ -22,7 +22,7 @@ use crate::artifacts::wires::MindmapWiresDocument;
 
 /// 📄️ The `metabolism` example, handcrafted in the `.wires` DSL — source of truth for every
 /// "metabolism" example call site (`setActiveExample`, `.example` manifest registration, tests).
-pub const REASONING_WIRES_EXAMPLE_METABOLISM_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.reasoning.wires.dsl.semio");
+pub const REASONING_WIRES_EXAMPLE_METABOLISM_TEXT: &str = include_str!("../../../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.reasoning.wires.dsl.semio");
 
 /// 📖️ Parses `.wires` DSL text into a `MindmapWiresDocument`.
 pub fn parse_dsl(text: &str) -> Result<MindmapWiresDocument, store::TextError> {

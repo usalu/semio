@@ -1,7 +1,13 @@
 {
   "name": "@semio-tech/framework-math-js",
   "private": true,
+  "version": "0.1.0",
+  "description": "math · TypeScript surface of the semio math framework: the graph Jack DSL and the generated graph manifest catalog",
   "type": "module",
+  "semio": {
+    "role": "framework",
+    "id": "math-ts"
+  },
   "exports": {
     ".": "./📦️index.ts",
     "./🔣️manifest.schema.json": "../../🤖️generated/🔣️manifest.schema.json"

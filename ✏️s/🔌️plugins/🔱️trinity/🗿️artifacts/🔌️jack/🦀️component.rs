@@ -1,10 +1,10 @@
 //! 🔺️ `trinity.graph` artifact — in-memory directed property port graph with compile-time manifest.
 
-use mathematical_graph_manifest::{manifest_by_id, GraphManifest, ManifestValidationError, TrinityManifest};
+use math::graph::manifest::{manifest_by_id, GraphManifest, ManifestValidationError, TrinityManifest};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
-pub use mathematical_graph_manifest::{ManifestValidator, PortDirection, PropertyBag, PropertyDef, PropertyKind, PropertyValue};
+pub use math::graph::manifest::{ManifestValidator, PortDirection, PropertyBag, PropertyDef, PropertyKind, PropertyValue};
 
 /// 📜️ Compile-time trinity manifest (projection of {@link GraphManifest}).
 pub type Manifest = TrinityManifest;

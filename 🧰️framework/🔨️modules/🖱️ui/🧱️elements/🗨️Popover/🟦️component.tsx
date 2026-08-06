@@ -9,10 +9,9 @@
 import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { glassClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useFlow, SurfaceScope } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { glassClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { useFlow } from "../🫀️core/🧭️Flow/🟦️component.tsx";
+import { SurfaceScope } from "../🫀️core/🌈️Surface/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🌐️Popover

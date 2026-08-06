@@ -1,0 +1,45 @@
+rewired=9
+symbols=0
+w3before=50
+w3after=50
+topUnresolved=
+14	useLabel
+10	ElementProps
+8	surfaceClass
+8	useTransaction
+8	glassClass
+7	borderNormalClass
+7	interactiveHoverClass
+6	SurfaceScope
+4	uiFormControlBrowserDefaultProps
+4	borderElementClass
+4	formControlFocusBorderClass
+4	interactiveControlTransitionClass
+4	useFlow
+3	shellFloorFillClass
+3	menuListItemClassName
+3	interactiveActiveFillClass
+3	borderNormalBottomClass
+2	shellFloorPaints
+2	useSurface
+2	useIdLabel
+2	veilClass
+2	resolveTranslationLabel
+2	useUiTranslation
+2	FlowProvider
+2	loadingBorderClass
+1	Level
+1	useLevel
+1	StoragePort
+1	createBrowserStoragePort
+1	UiTranslationKey
+1	UiRegisteredTranslationKey
+1	UiTranslateFn
+1	activeUiDriver
+1	useUiDriver
+1	isInternalChromeControlId
+1	resolveControlLabelId
+1	panelKindFromPanelToggleControlId
+1	humanizeEngagementStepId
+1	humanizeControlId
+1	LevelProvider

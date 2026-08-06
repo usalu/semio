@@ -6,7 +6,7 @@ cd /Users/ueli/Documents/semio
 TICKET='.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/FRAMEWORK-MATH-FAMILY-CRATE-CONSOLIDATION'
 MANIFEST='🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/Cargo.toml'
 cp "$MANIFEST" "$TICKET/🧪️Cargo.toml.bak"
-trap 'cp "$TICKET/🧪️Cargo.toml.bak" "$MANIFEST"' EXIT
+trap 'cp "$TICKET/🧪️Cargo.toml.bak" "$MANIFEST"; rm -f "${MANIFEST%/*}/Cargo.lock"' EXIT
 cat >> "$MANIFEST" <<'TOML'
 
 [workspace]

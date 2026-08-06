@@ -23,17 +23,11 @@ crate-type = ["cdylib", "rlib"]
 path = "📦️lib.rs"
 
 [dependencies]
+math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
 pack = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-pack" }
-mathematical_algebra = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/➕️algebra/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-algebra" }
-mathematical_graph = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph" }
-mathematical_lie = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🔷️lie/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-lie" }
-mathematical_optimize = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🎯️optimize/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-optimize" }
-mathematical_random = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🎲️random/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-random" }
-mathematical_signal = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📶️signal/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-signal" }
-mathematical_spatial = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🗺️spatial/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-spatial" }
 semio-framework-core = { workspace = true }
 semio-framework-os = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }

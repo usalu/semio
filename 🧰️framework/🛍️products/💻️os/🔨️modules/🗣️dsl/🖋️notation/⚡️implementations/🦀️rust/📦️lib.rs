@@ -8,7 +8,7 @@
 //! `dsl_schema`. It is additive and standalone: nothing in the repo calls it yet. The existing
 //! `Shape::Wire`/`WireValue` in `dsl_schema` (the only current graph-arrow grammar, consumed by
 //! `flow`, `procedural2d/3d`, `sequence`, `mathematical`, `dag`, `pack_value`, and
-//! `mathematical_graph_dsl`) is intentionally left untouched here: several of those consumer
+//! `math::graph::dsl`) is intentionally left untouched here: several of those consumer
 //! trees have live uncommitted work in progress as of this writing, so migrating `Shape::Wire`
 //! onto this toolkit is deferred to when that work has landed (see the ticket's collision-map.txt
 //! and the `handcrafted-grammar-for-every-artifact` plan, wave W4e). This crate proves the

@@ -371,7 +371,7 @@ mod tests {
         fn de_boor_matches_bernstein_sum_oracle_on_random_bezier_span_curves() {
             // A single-span (no interior knots) clamped B-spline of degree p is exactly the
             // Bernstein-basis polynomial with the same control values — an independent oracle.
-            let mut rng = mathematical_random::Rng::from_seed(41);
+            let mut rng = semio_framework_math::random::Rng::from_seed(41);
             for _ in 0..200 {
                 let degree = 1 + rng.next_range(0, 5) as usize;
                 let n_cp = degree + 1;
@@ -389,7 +389,7 @@ mod tests {
 
         #[test]
         fn knot_insertion_is_geometrically_a_no_op_on_random_curves() {
-            let mut rng = mathematical_random::Rng::from_seed(43);
+            let mut rng = semio_framework_math::random::Rng::from_seed(43);
             for _ in 0..100 {
                 let degree = 1 + rng.next_range(0, 4) as usize;
                 let n_cp = degree + 2 + rng.next_range(0, 4) as usize;

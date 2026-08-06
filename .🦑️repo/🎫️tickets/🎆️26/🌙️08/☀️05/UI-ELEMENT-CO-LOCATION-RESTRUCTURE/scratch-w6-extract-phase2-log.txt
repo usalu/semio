@@ -1,0 +1,5 @@
+Flow /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🧭️Flow/🟦️component.tsx
+ElementProps /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🐹️ElementProps/🟦️component.tsx
+Label /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🏷️Label/🟦️component.tsx
+ShellScope /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx (skipped focusActiveSearchInput/routeWindowSearchEscape — not cohesive)
+balance 146/146 lines 21874

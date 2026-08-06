@@ -16,6 +16,6 @@ path = "../../../../../🧰️framework/🔨️modules/📚️compiler/⚡️imp
 compiler_syntax = { package = "semio-framework-compiler-syntax", path = "../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/⚡️implementations/🦀️rust" }
 compiler_world = { package = "semio-framework-compiler-world", path = "../../../../../🧰️framework/🔨️modules/📚️compiler/🌍️world/⚡️implementations/🦀️rust" }
 compiler_text = { package = "semio-framework-compiler-text", path = "../../../../../🧰️framework/🔨️modules/📚️compiler/🔤️text/⚡️implementations/🦀️rust" }
-compiler_math = { package = "semio-framework-compiler-math", path = "../../../../../🧰️framework/🔨️modules/📚️compiler/🧮️math/⚡️implementations/🦀️rust" }
+compiler_math = { package = "semio-framework-compiler-math", path = "../../🧮️math/⚡️implementations/🦀️rust" }
 compiler_svg = { package = "semio-framework-compiler-svg", path = "../../../../../🧰️framework/🔨️modules/📚️compiler/📤️svg/⚡️implementations/🦀️rust" }
 dsl_core = { package = "semio-framework-os-kernel-dsl-core", path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust" }

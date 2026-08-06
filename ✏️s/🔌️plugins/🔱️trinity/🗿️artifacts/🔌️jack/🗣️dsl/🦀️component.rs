@@ -4,7 +4,7 @@ use crate::artifacts::jack::{Camera, GraphFixture, Node, Port, PortDirection, Pr
 use store::{DocumentDsl, PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
 
 //#region 🔖️DslMirrors
-/// 🔒️ Local twin of `PortDirection` (foreign, re-exported from `mathematical_graph_manifest` and
+/// 🔒️ Local twin of `PortDirection` (foreign, re-exported from `math::graph::manifest` and
 /// consumed by the shared jack query kernel/`semio_s_plugin_trinity`/`framework::*` — this crate does
 /// not own the freedom to reshape it) purely so the DSL engine's derive macros have something local to
 /// bind: the orphan rule blocks `impl dsl::DslField for PortDirection` directly in this crate.

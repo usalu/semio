@@ -25,7 +25,7 @@ const brand = resolveShellBrandById(brandId);
  * plugin (the node-graph/editor host engines back shared studio chrome, not any one app) — kept as a
  * literal baseline rather than per-plugin metadata, mirroring the equally-unconditional pre-registry
  * build in `os/dev/script.ts`'s `buildEngineWasm`. */
-const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = ["@semio-tech/framework-surface-node-graph-rs", "@semio-tech/framework-surface-board-2d-rs", "@semio-tech/framework-editor-rs", "@semio-tech/flow-core"];
+const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = ["@semio-tech/framework-surface-rs", "@semio-tech/framework-editor-rs", "@semio-tech/flow-core"];
 
 /** @emoji 📦️ Maps a registry `engines` crate path (e.g. `framework/module/surface/tiled-map/rs`) to its wasm-pack
  * npm package name — read from the crate's own sibling `package.json`, not derived from its path, so a
@@ -74,7 +74,7 @@ export default defineConfig({
     alias: [
       ...playgroundSceneHostResolveAliases(repoRoot),
       { find: "@semio-tech/ui-react", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx") },
-      { find: "@semio-tech/assets", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/📦️index.ts") },
+      { find: "@semio-tech/assets", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts") },
       { find: "@semio-tech/ui-styling", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript") },
       { find: "@semio-tech/infinite-canvas-react-renderer", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementations/🟦️typescript/📦️index.tsx") },
       { find: "@semio-tech/infinite-world-r3f", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/⚡️implementations/🟦️typescript/📦️index.tsx") },
@@ -82,7 +82,7 @@ export default defineConfig({
       { find: "@semio-tech/framework-renderer-wgpu", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️index.ts") },
       { find: "@semio-tech/framework-core", replacement: path.resolve(repoRoot, "./🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts") },
       { find: "@semio-tech/framework-os-core", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/⚡️implementations/🟦️typescript/📦️index.ts") },
-      { find: "@semio-tech/framework-surface-board-2d-rs", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🗺️surface/🎲️board-2d/⚡️implementations/🦀️rust/pkg") },
+      { find: "@semio-tech/framework-surface-rs", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/pkg") },
       { find: "/plugin-modules", replacement: pluginModulesDir },
       { find: "/renderer-modules", replacement: rendererModulesDir },
     ],

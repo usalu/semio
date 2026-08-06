@@ -3362,10 +3362,10 @@
       }
     },
     {
-      "name": "📦️build🧮️math📜️manifest",
+      "name": "📦️build🧮️graph📜️manifest",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-math:generate",
+      "command": "bun nx run @semio-tech/graph-manifest:generate",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",

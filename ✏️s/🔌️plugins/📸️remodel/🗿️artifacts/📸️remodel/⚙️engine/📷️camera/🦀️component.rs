@@ -1,11 +1,11 @@
 //! 📷️ Camera models and calibration: pinhole, Brown-Conrady and fisheye distortion, rolling shutter, rigs, planar and self-calibration.
 
-pub use mathematical_algebra::{MatD, VecD};
-pub use mathematical_lie::Se3;
-pub use mathematical_optimize::{levenberg_marquardt, LeastSquaresProblem, LmConfig, LmResult, RobustLoss};
+pub use math::algebra::{MatD, VecD};
+pub use math::lie::Se3;
+pub use math::optimize::{levenberg_marquardt, LeastSquaresProblem, LmConfig, LmResult, RobustLoss};
 
-use mathematical_algebra::{pseudo_inverse, svd_nullvector, vec3d_cross, vec3d_length, Mat3d};
-use mathematical_lie::So3;
+use math::algebra::{pseudo_inverse, svd_nullvector, vec3d_cross, vec3d_length, Mat3d};
+use math::lie::So3;
 
 // #region 🔖️Intrinsics
 /// 📷️ Pinhole camera intrinsic parameters: focal lengths, principal point, pixel skew, and a lens distortion model.

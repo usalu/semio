@@ -10,7 +10,7 @@ use infinite_board_port_directed_dag as dag;
 
 use dag::{dag_fixture_to_wire_literal, would_create_cycle, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape};
 use imperative_engine::{compile_to_text as imperative_compile_to_text, imperative_catalogue_json, imperative_module_registry, Executor, Path, RunResult, Step};
-use mathematical_graph_manifest::PropertyBag;
+use math::graph::manifest::PropertyBag;
 use neural_engine::{ChannelSpec, Dictionary, Registry, Value};
 use std::collections::{BTreeMap, HashMap};
 use store::DocumentDsl;

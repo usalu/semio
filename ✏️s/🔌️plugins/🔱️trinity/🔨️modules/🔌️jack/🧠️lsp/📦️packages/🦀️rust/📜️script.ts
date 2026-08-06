@@ -23,7 +23,7 @@ class WasmScript extends BundleScript {
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    runCargoTestBudgeted(["trinity_jack_lsp"], this.repoRoot, rest);
+    runCargoTestBudgeted(["semio-s-plugin-trinity-jack-lsp"], this.repoRoot, rest);
   }
 }
 

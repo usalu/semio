@@ -5,11 +5,11 @@
 use crate::artifacts::program::kernel::EntityId;
 use crate::artifacts::program::Program;
 use crate::artifacts::program::registers::{Adjacency, AdjacencyKind, SeparationKind};
-use mathematical_graph::{orient_endpoints, Undirected};
+use math::graph::{orient_endpoints, Undirected};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖️PairNormalization
-/// @emoji 📐️ Canonical undirected endpoint order using `mathematical_graph::orient_endpoints`.
+/// @emoji 📐️ Canonical undirected endpoint order using `math::graph::orient_endpoints`.
 pub fn normalize_pair(a: &EntityId, b: &EntityId) -> (EntityId, EntityId) {
     let (left, right) = orient_endpoints::<&str, Undirected>(&a.0, &b.0);
     (EntityId(left.to_string()), EntityId(right.to_string()))

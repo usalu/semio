@@ -409,6 +409,7 @@ dependencies = [
  "semio-framework-os-kernel-dsl-schema",
  "semio-framework-os-kernel-pack",
  "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-semio",
  "serde_json",
 ]
 
@@ -431,10 +432,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-os-kernel-dsl-notation"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel-dsl-core",
+]
+
+[[package]]
 name = "semio-framework-os-kernel-dsl-schema"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-dsl-core",
+ "semio-framework-os-kernel-dsl-notation",
  "serde",
 ]
 
@@ -631,6 +640,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-os-kernel-semio"
+version = "0.1.0"
+dependencies = [
+ "thiserror",
+]
+
+[[package]]
 name = "semio-framework-os-kernel-store"
 version = "0.1.0"
 dependencies = [
@@ -642,6 +658,7 @@ dependencies = [
  "semio-framework-os-kernel-dsl-core",
  "semio-framework-os-kernel-pack",
  "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-semio",
  "semio-framework-os-kernel-vcs",
  "serde",
  "serde-wasm-bindgen",

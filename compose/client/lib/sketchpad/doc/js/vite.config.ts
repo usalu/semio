@@ -40,7 +40,7 @@ export default defineConfig(async () => {
       alias: {
         "@semio-tech/compose-js": path.resolve(__dirname, "../../js"),
         "@semio-tech/compose-sketchpad": path.resolve(__dirname, "../../sketchpad"),
-        "@semio-tech/assets": path.resolve(workspaceRoot, "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/📦️index.ts"),
+        "@semio-tech/assets": path.resolve(workspaceRoot, "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts"),
       },
     },
     plugins: [

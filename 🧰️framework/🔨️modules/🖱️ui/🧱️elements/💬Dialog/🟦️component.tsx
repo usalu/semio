@@ -9,10 +9,11 @@
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { veilClass, glassClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useFlow, useLabel, CloseIconAlt, SurfaceScope } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { veilClass, glassClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { useFlow } from "../🫀️core/🧭️Flow/🟦️component.tsx";
+import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { SurfaceScope } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { CloseIconAlt } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🧸️Dialog

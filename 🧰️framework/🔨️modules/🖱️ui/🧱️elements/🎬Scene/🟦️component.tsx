@@ -17,10 +17,10 @@ import { sceneHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
 import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { ActionDropdown } from "../⚡️ActionGroup/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { surfaceClass, loadingBorderClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { HostThreeCanvas, uiSpacingPx, resolveSemanticColorHex, resolveColorHex, themeColorVar, tokenVar, resolveSpatialAxisColors, useLabel, type ActionDropdownOption, CameraIcon, GripVerticalIcon, type Point, type Vector, type Plane, type Camera } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { surfaceClass, loadingBorderClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { HostThreeCanvas, uiSpacingPx, resolveSemanticColorHex, resolveColorHex, themeColorVar, tokenVar, resolveSpatialAxisColors, type ActionDropdownOption, CameraIcon, type Point, type Vector, type Plane, type Camera } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { GripVerticalIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 // #region 📍️Scene
 // 3D scene viewer built on React Three Fiber.

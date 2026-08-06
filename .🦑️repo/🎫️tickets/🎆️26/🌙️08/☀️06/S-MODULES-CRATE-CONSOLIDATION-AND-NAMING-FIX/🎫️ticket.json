@@ -1,7 +1,7 @@
 {
   "title": "S-Modules Crate Consolidation And Naming Fix",
   "emoji": "🧬️",
-  "status": "open",
+  "status": "closed",
   "description": "Consolidate ✏️s/🔨️modules shared-kernel crates from 9 rust crates + 2(+) TS packages down to 4 rust crates (semio-s-2d, semio-s-3d, semio-s-mindmap, semio-s-imperative) + 2 TS packages (@semio-tech/s-2d-js, @semio-tech/s-3d-js), applying Shape V2 tree-purity (entry file inside 📦️packages/\u003clang\u003e/, taxonomy component tree at owner root, data/docs at owner root). Fixes the wrong semio-framework-os-kernel-3d-* crate names (these live under ✏️s/, not framework). Fold cross-cutting dependents (🏭️process, 🏗️fem, plugins) to the new crate names/module paths. Delete old crate dirs only once new crates are green (cargo check/clippy/test matching old baselines exactly). Registrar handoff for root Cargo.toml member swap + workspace.dependencies renames + root package.json workspaces update.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2513"

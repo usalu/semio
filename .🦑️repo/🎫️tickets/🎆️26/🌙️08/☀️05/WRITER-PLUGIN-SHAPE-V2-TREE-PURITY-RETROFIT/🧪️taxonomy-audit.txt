@@ -1,0 +1,8 @@
+📦️ component files on disk: 32
+🗿️ artifacts: 1   🎛️ apps: 1
+❌️ 5 finding(s):
+   - 🎛️apps/✒️writer/⚙️engine/📚️examples/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️lib.rs
+   - 🗿️artifacts/✒️writer/📚️examples/♻️reuse/🔧️ops/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️lib.rs
+   - 🗿️artifacts/✒️writer/📚️examples/♻️reuse/📡️sprs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️lib.rs
+   - 🗿️artifacts/✒️writer/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️lib.rs
+   - 🗿️artifacts/✒️writer/📚️examples/♻️reuse/🎒️packs/♻️reuse/🦀️component.rs is not declared by any #[path] in 📦️lib.rs

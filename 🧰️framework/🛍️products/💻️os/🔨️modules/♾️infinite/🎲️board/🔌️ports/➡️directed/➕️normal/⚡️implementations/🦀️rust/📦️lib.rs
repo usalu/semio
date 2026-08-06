@@ -24,7 +24,7 @@ pub mod board_host {
         cubic_bezier_axis_bounds, cubic_bezier_point, inflate_world_box, point_in_polygon, polygon_contains_world_box, polygon_intersects_world_box, segment_intersects_polygon, segment_intersects_world_box, world_box_contains_box,
         world_box_contains_point, world_box_from_points, world_boxes_overlap, WorldBox,
     };
-    use mathematical_graph_manifest::manifest_by_id;
+    use math::graph::manifest::manifest_by_id;
 
     use std::cell::RefCell;
     use std::collections::HashMap;

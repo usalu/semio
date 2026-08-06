@@ -19,12 +19,14 @@ import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
 import { Popover, PopoverTrigger, PopoverContent } from "../🗨️Popover/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { interactiveHoverClass, interactiveActiveFillClass, menuListItemClassName, formControlFocusBorderClass, borderNormalClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { interactiveHoverClass, interactiveActiveFillClass, menuListItemClassName, formControlFocusBorderClass, borderNormalClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 // 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
 import { chromeControlItemBaseClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useTransaction, useLevel, type Level, type ControlIcon, useControlAccessibleLabel, useControlInlineText, renderControlIcon, CheckIcon, chromeControlGroupShellClass, loadingBorderElementClass, waitingBorderElementClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { useTransaction } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
+import { useLevel, type Level } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { useControlAccessibleLabel, useControlInlineText } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { chromeControlGroupShellClass, loadingBorderElementClass, waitingBorderElementClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { type ControlIcon, renderControlIcon, CheckIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🌩️ActionGroup

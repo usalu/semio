@@ -5,7 +5,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { reactHostPort } from "../Ports/🟦️component.tsx";
+import { reactHostPort } from "../🔌Ports/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🆔️ElementId

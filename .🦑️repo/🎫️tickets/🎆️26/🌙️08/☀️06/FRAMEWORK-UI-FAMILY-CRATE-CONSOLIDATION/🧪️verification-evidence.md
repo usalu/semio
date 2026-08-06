@@ -49,6 +49,20 @@ Nothing in this ticket touches test bodies: the only source edits here were the 
 `crate::` → `crate::{tui,wgpu}::` prefixing and the feature-gate renames (527 substitutions, script:
 `rewrite-target-paths.mjs`). Re-run `cargo test` after the split agent finishes.
 
+## TypeScript side
+
+No TS file was moved by this ticket — `@semio-tech/ui-react` was already at its Shape V2 path when this
+session resumed, and the 41 k-line `📦️index.tsx` (and `renderer-react`'s 32 k-line file, which lives
+under the os renderer family, not here) were deliberately **not** split: the plan tickets that as a
+separate follow-up.
+
+`bun nx run @semio-tech/ui-react:typecheck` cannot run right now: nx fails at project-graph construction
+with *"projects defined in multiple locations"* for `@semio-tech/framework-core-rs`,
+`@semio-tech/schema-rs` and `@semio-tech/dsl-family-catalog-rs` — all from the concurrent
+`FRAMEWORK-SINGLETONS-AND-CORE-DE-SANDWICH` / os-kernel work, none of them ui. Confirmed no ui project
+name is duplicated, so the `@semio-tech/ui-wgpu-rs` + `@semio-tech/ui-tui-rs` → `@semio-tech/ui-rs`
+rename introduces no collision.
+
 ## Storybook (C9)
 
 Static consistency check of `.storybook/scopes.ts` — every literal path in the hand-curated `ui` scope

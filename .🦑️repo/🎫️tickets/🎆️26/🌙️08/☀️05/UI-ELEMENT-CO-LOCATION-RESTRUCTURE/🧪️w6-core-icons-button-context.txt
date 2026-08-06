@@ -310,3 +310,34 @@ STOP. Awaiting parent barrel lock. No edits to ui-react barrel.
 - Extracting those clears high-fanout W3-interim deps for Panel (and MobilePanel et al.).
 
 STOP. Awaiting parent barrel lock. No edits to ui-react barrel.
+
+
+## Extraction results (lock session)
+
+generated: 2026-08-06T10:48:09.946Z
+
+### Extractions done
+1. Button (+ ButtonCycle) -> elements/Button (emoji-prefixed dir) component.tsx — ButtonGroup extracted first (dependency).
+2. ButtonGroup / ButtonGroupItem / buttonGroupItemVariants -> elements/ButtonGroup component.tsx
+3. ContextMenu menu body -> elements/ContextMenu component.tsx (preamble hover/border utils stayed in barrel)
+4. DragHandle + HANDLE_HOVER_SCOPE_ATTR -> elements/DragHandle component.tsx; restored dropZoneReadyClass in barrel
+5. Icons cluster (Icon/ControlIcon/renderControlIcon/IconSource/createIconComponent/individual icons) merged into elements/Icons (Cursor kept)
+6. PanelTabBar + PanelTabNode/selection/dock-skeleton helpers -> elements/PanelTabBar (Anchor/Flow stayed in barrel)
+
+### Stories moved
+- .storybook/stories/ui/Button.stories.tsx -> Button/story.tsx (byte-identical; meta.title unchanged)
+- ButtonGroup.stories.tsx -> ButtonGroup/story.tsx
+- ContextMenu.stories.tsx -> ContextMenu/story.tsx
+- PanelTabBar.stories.tsx: not found under .storybook at move time
+
+### W3-interim delta
+- Fanout scan: target symbols no longer imported via W3-interim from barrel in element leaves (empty).
+- Panel/MobilePanel/Tree/Canvas/etc. rewired to direct relative imports for moved symbols.
+
+### Typecheck delta
+- Final: 139 errors (within pre-existing ~96-142 band).
+- Our leaves: only pre-existing @semio-tech/assets resolution errors (also on barrel/Canvas/Tree).
+- Barrel #region/#endregion balanced (148/148). Barrel shrunk ~24940 -> ~22712 lines.
+
+STOP. Barrel lock work complete for this batch.
+

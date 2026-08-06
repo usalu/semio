@@ -446,7 +446,7 @@ mod tests {
 
         #[test]
         fn closest_point_matches_brute_force_dense_sampling_oracle() {
-            let mut rng = mathematical_random::Rng::from_seed(61);
+            let mut rng = semio_framework_math::random::Rng::from_seed(61);
             for _ in 0..100 {
                 let frame =
                     Frame3::from_normal(Pnt3::new(rng.next_f64() * 4.0 - 2.0, rng.next_f64() * 4.0 - 2.0, rng.next_f64() * 4.0 - 2.0), Vec3::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5, rng.next_f64() - 0.5).normalized().unwrap_or(Vec3::Z))

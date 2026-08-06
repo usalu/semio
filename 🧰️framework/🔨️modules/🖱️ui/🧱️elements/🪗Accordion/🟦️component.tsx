@@ -9,10 +9,8 @@
 import * as React from "react";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { borderNormalBottomClass, interactiveControlTransitionClass, interactiveHoverClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { ChevronDownIconAlt } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { borderNormalBottomClass, interactiveControlTransitionClass, interactiveHoverClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { ChevronDownIconAlt } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🛒️Accordion

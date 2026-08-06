@@ -16,12 +16,6 @@ workspace = true
 role = "tool"
 
 [dependencies]
-# 📌️ Repointed to the merged plugin crate by the CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE
-# migration (ticket 26/08/05/TRINITY-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION) — this
-# shell binary is a residual not itself restructured in that migration, only repointed so it keeps
-# building after the old `semio-s-plugin-trinity-jack`/`semio-s-plugin-trinity-ram` crates were
-# deleted; `trinity_jack::`/`trinity_ram::` call sites below now resolve via `trinity::core::`/
-# `trinity::artifacts::jack::`.
 trinity = { path = "../../../../../../../../✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust", package = "semio-s-plugin-trinity" }
 vcs = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
 store = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }

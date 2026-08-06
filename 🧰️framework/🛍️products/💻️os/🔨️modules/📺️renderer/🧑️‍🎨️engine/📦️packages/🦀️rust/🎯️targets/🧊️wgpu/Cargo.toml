@@ -18,8 +18,8 @@ crate-type = ["cdylib", "rlib"]
 path = "📦️lib.rs"
 
 [dependencies]
-semio-framework-core = { path = "../../../../../../../../../⚡️implementations/🦀️rust", package = "semio-framework-core" }
-framework_surface_node_graph = { path = "../../../../../../../../../🔨️modules/🗺️surface/🕸️node-graph/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-surface-node-graph" }
+semio-framework-core = { path = "../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework-core" }
+framework_surface_node_graph = { path = "../../../../../../../../../🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface" }
 framework_editor = { path = "../../../../../../../../../🔨️modules/✍️editor/⚡️implementations/🦀️rust", package = "semio-framework-editor" }
 infinite_canvas = { path = "../../../../../../♾️infinite/🖼️canvas/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
 infinite_world = { path = "../../../../../../♾️infinite/⚡️implementations/🦀️rust/🌍️world", package = "semio-framework-kernel-infinite-world" }
@@ -27,7 +27,7 @@ infinite_world = { path = "../../../../../../♾️infinite/⚡️implementation
 # so the Tutorial track's camera keyframes can convert to/from `OrbitController`/`Camera3d` — see
 # `//#region 🎬️Tutorial` in lib.rs.
 semio-s-3d = { path = "../../../../../../../../../../✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
-framework_surface_tiled_map = { path = "../../../../../../../../../🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-surface-tiled-map" }
+framework_surface_tiled_map = { path = "../../../../../../../../../🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface" }
 puzzle = { path = "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle" }
 flow_core = { path = "../../../../../../🌊️flow/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-flow-core" }
 ui_wgpu = { path = "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu", features = ["engine"], package = "semio-framework-ui-wgpu" }

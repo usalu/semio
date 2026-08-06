@@ -1,7 +1,7 @@
 //! 📐️ Surface geometry: area, orientation, zone volume, and coordinate transforms.
 
 use crate::units::rad_to_deg;
-use mathematical_algebra::Vec3;
+use math::algebra::Vec3;
 
 // #region 🔖️Types
 /// 📐️ Surface tilt [° from horizontal] and azimuth [° clockwise from north].
@@ -157,12 +157,12 @@ pub fn validate_polygon_planar(vertices_m: &[[f64; 3]], tolerance_m: f64) -> Pla
 
 // #region 🔖️Transform
 /// 🔄️ Apply 4×4 transform to polygon vertices (building ↔ world).
-pub fn transform_vertices(vertices_m: &[[f64; 3]], transform: mathematical_algebra::Mat4) -> Vec<[f64; 3]> {
+pub fn transform_vertices(vertices_m: &[[f64; 3]], transform: math::algebra::Mat4) -> Vec<[f64; 3]> {
     vertices_m.iter().map(|v| from_vec3(transform.transform_point(to_vec3(*v)))).collect()
 }
 
 /// 🔄️ Rotate direction vector (no translation).
-pub fn transform_direction(direction: [f64; 3], transform: mathematical_algebra::Mat4) -> [f64; 3] {
+pub fn transform_direction(direction: [f64; 3], transform: math::algebra::Mat4) -> [f64; 3] {
     from_vec3(transform.transform_direction(to_vec3(direction)))
 }
 // #endregion 🔖️Transform
@@ -170,7 +170,7 @@ pub fn transform_direction(direction: [f64; 3], transform: mathematical_algebra:
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mathematical_algebra::Mat4;
+    use math::algebra::Mat4;
 
     #[test]
     fn unit_square_area() {

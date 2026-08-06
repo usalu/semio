@@ -1,0 +1,17 @@
+    Updating crates.io index
+    Updating git repository `https://github.com/andymai/brepkit`
+error: failed to get `semio-framework-ui-wgpu` as a dependency of package `semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/⚡️implementations/🦀️rust)`
+    ... which satisfies path dependency `semio-framework-core` of package `semio-s-3d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust)`
+    ... which satisfies path dependency `kernel_3d_scene` of package `semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)`
+
+Caused by:
+  failed to load source for dependency `semio-framework-ui-wgpu`
+
+Caused by:
+  unable to update /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu
+
+Caused by:
+  failed to read `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)

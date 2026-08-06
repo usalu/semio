@@ -12,8 +12,8 @@ fn force_layout_fixture(fixture: &GraphFixture) -> Option<GraphFixture> {
     if fixture.nodes.is_empty() {
         return None;
     }
-    use mathematical_geometry::Vec2;
-    use mathematical_graph_drawing::force::{run_force_layout, ForceLayoutOptions};
+    use math::geometry::Vec2;
+    use math::graph::drawing::force::{run_force_layout, ForceLayoutOptions};
     use std::collections::HashMap;
     let mut positions: Vec<Vec2> = fixture.nodes.iter().map(|node| Vec2::new(node.x, node.y)).collect();
     let radii: Vec<f64> = fixture.nodes.iter().map(|node| (node.width.max(48.0) + node.height.max(24.0)) * 0.25).collect();

@@ -24,7 +24,7 @@ wasm-opt = ["-Oz", "--strip-debug", "--strip-producers", "--enable-bulk-memory",
 
 [lib]
 crate-type = ["rlib", "cdylib"]
-path = "../../../../../🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust/📦️lib.rs"
+path = "../../../../../🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/📦️lib.rs"
 
 [dependencies]
 vcs = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }

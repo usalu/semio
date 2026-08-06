@@ -29,7 +29,7 @@ variant = "puzzle2d"
 app = "puzzle2d-play"
 aliases = ["2d"]
 ports = { react = 6012, wgpu = 6112 }
-engines = ["🧰️framework/🔨️modules/🗺️surface/🎲️board-2d/⚡️implementations/🦀️rust"]
+engines = ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"]
 
 [[package.metadata.semio.playground]]
 variant = "puzzle3d"
@@ -71,15 +71,15 @@ path = "📦️lib.rs"
 serde_json.workspace = true
 
 [dependencies]
+math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 pack = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-pack" }
 protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
 infinite_board_port_directed_normal = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-normal" }
 infinite_canvas = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
-mathematical_graph_manifest = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph-manifest" }
 semio-s-mindmap = { path = "../../../../🔨️modules/💭️mindmap/📦️packages/🦀️rust" }
-semio-framework-core = { path = "../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
+semio-framework-core = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 nalgebra = { version = "0.33", default-features = false, features = ["std"] }
 parry3d = "0.17"

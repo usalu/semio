@@ -9,8 +9,7 @@
 import * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { interactiveTabActiveClass, interactiveHoverClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { interactiveTabActiveClass, interactiveHoverClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 
 // #endregion 🔌️Adapters
 

@@ -1,1 +1,0 @@
-REVERTED: StyleClasses extraction rolled back to HEAD cn-only ClassNames; style symbols restored in barrel; leaf imports returned to W3-interim. Extraction needs a cleaner pass (private hover* consts + topo order). Do not treat StyleClasses as done.

@@ -1,0 +1,33 @@
+ 2388|  if (!normalized) return segment;
+ 2389|  return normalized.replace(/\b\w/g, (char) => char.toUpperCase());
+ 2390|}
+ 2391|
+ 2392|/** @emoji 🔤️ Human-readable caption from the last segment of a dotted control id. */
+ 2393|export function humanizeControlId(id: string): string {
+ 2394|  const segment = id.split(".").filter(Boolean).pop() ?? id;
+ 2395|  return humanizeControlSegment(segment);
+ 2396|}
+ 2397|
+ 2398|/** @emoji 🏷️ Resolves the user-facing caption for a control (i18n, explicit text, or `ui.*` fallback). */
+ 2399|export function useControlAccessibleLabel(id: string | undefined, text?: string): string | undefined {
+ 2400|  if (text !== undefined && text !== "") return text;
+ 2401|  if (!id || isInternalChromeControlId(id)) return undefined;
+ 2402|  const labelId = resolveControlLabelId(id);
+ 2403|  const localized = useIdLabel(labelId);
+ 2404|  if (localized) return localized;
+ 2405|  const panelKind = panelKindFromPanelToggleControlId(id);
+ 2406|  if (panelKind) {
+ 2407|    const fromUiPanel = useIdLabel(`ui.panelToggle.${panelKind}`);
+ 2408|    if (fromUiPanel) return fromUiPanel;
+ 2409|    return humanizeEngagementStepId(panelKind);
+ 2410|  }
+ 2411|  if (labelId.startsWith("ui.")) return humanizeControlId(labelId);
+ 2412|  return undefined;
+ 2413|}
+ 2414|
+ 2415|/** @emoji 🏷️ Resolves inline icon+label caption for buttons/toggles; omitted when the driver hides labels. */
+ 2416|export function useControlInlineText(id: string | undefined, text?: string): string | undefined {
+ 2417|  const driver = useUiDriver();
+ 2418|  const accessibleLabel = useControlAccessibleLabel(id, text);
+ 2419|  return driver.labels === "icons" ? undefined : accessibleLabel;
+ 2420|}

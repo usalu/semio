@@ -1,0 +1,47 @@
+ 4856| **/
+ 4857|export function resolveTranslationLabel(value: unknown): string | undefined {
+ 4858|  const labelTier = activeUiDriver().labelTier;
+ 4859|
+ 4860|  if (typeof value === "string") {
+ 4861|    return value;
+ 4862|  }
+ 4863|
+ 4864|  if (value && typeof value === "object") {
+ 4865|    const obj = value as Record<string, unknown>;
+ 4866|
+ 4867|    if ("label" in obj) {
+ 4868|      const label = obj.label;
+ 4869|
+ 4870|      if (typeof label === "string") {
+ 4871|        return label;
+ 4872|      }
+ 4873|
+ 4874|      if (label && typeof label === "object") {
+ 4875|        const labelObj = label as Record<string, unknown>;
+ 4876|        if (labelTier === "beginner" && "beginner" in labelObj && labelObj.beginner !== undefined) {
+ 4877|          return String(labelObj.beginner);
+ 4878|        }
+ 4879|        if ("normal" in labelObj && labelObj.normal !== undefined) {
+ 4880|          return String(labelObj.normal);
+ 4881|        }
+ 4882|        if ("beginner" in labelObj && labelObj.beginner !== undefined) {
+ 4883|          return String(labelObj.beginner);
+ 4884|        }
+ 4885|      }
+ 4886|    }
+ 4887|
+ 4888|    if ("normal" in obj || "beginner" in obj) {
+ 4889|      if (labelTier === "beginner" && "beginner" in obj && obj.beginner !== undefined) {
+ 4890|        return String(obj.beginner);
+ 4891|      }
+ 4892|      if ("normal" in obj && obj.normal !== undefined) {
+ 4893|        return String(obj.normal);
+ 4894|      }
+ 4895|      if ("beginner" in obj && obj.beginner !== undefined) {
+ 4896|        return String(obj.beginner);
+ 4897|      }
+ 4898|    }
+ 4899|  }
+ 4900|
+ 4901|  return undefined;
+ 4902|}

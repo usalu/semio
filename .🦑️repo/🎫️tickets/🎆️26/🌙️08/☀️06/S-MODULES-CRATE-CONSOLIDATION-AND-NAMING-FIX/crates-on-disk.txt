@@ -1,0 +1,5 @@
+✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust/Cargo.toml
+✏️s/🔨️modules/🗣️lang/📦️packages/🦀️rust/Cargo.toml
+✏️s/🔨️modules/◻2d/📦️packages/🦀️rust/Cargo.toml
+✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/Cargo.toml
+✏️s/🔨️modules/💭️mindmap/📦️packages/🦀️rust/Cargo.toml

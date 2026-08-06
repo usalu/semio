@@ -28,10 +28,14 @@ import { Stepper } from "../🪜Stepper/🟦️component.tsx";
 import { Textarea } from "../📄Textarea/🟦️component.tsx";
 import { Toggle } from "../🎛️ToggleGroup/🟦️component.tsx";
 import { childElementId } from "../🫀️core/🆔ElementId/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { borderNormalClass, dropZoneReadyFillClass, dropZoneReadyTextClass, interactiveActiveFillClass, interactiveControlTransitionClass, loadingBorderStateClass, waitingBorderStateClass, panelTabIconSlotClass, panelTabLabelClass, surfaceClass, windowMeasureTreeGroupLabelClass, windowMeasureTreeLeafLabelClass, windowPaneChromeToggleClass, hoverExcludingHandleTextEmphasizedClass, groupHoverExcludingHandleBgFillClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useLabel, Icon, Label, useFlow, FlowProvider, type FlowBlock, type FlowInline, type ElementProps, resolveTranslationLabel, useIdLabel, useUiTranslation, useShellScopeOptional, usePanelGhost, useUiDriverDragSurface, useControlAccessibleLabel, useControlInlineText, renderControlIcon, type ControlIcon, TREE_SECTION_REORDER_MIME, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, CloseIcon, DocumentIcon, FolderIcon } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { borderNormalClass, interactiveActiveFillClass, interactiveControlTransitionClass, surfaceClass, hoverExcludingHandleTextEmphasizedClass, groupHoverExcludingHandleBgFillClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { dropZoneReadyFillClass, dropZoneReadyTextClass, loadingBorderStateClass, waitingBorderStateClass, panelTabIconSlotClass, panelTabLabelClass, windowMeasureTreeGroupLabelClass, windowMeasureTreeLeafLabelClass, windowPaneChromeToggleClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { useLabel, Label, resolveTranslationLabel, useIdLabel, useUiTranslation, useControlAccessibleLabel, useControlInlineText } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { useFlow, FlowProvider, type FlowBlock, type FlowInline } from "../🫀️core/🧭️Flow/🟦️component.tsx";
+import { type ElementProps } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
+import { useShellScopeOptional } from "../🫀️core/🐚️ShellScope/🟦️component.tsx";
+import { usePanelGhost, useUiDriverDragSurface, TREE_SECTION_REORDER_MIME } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { Icon, renderControlIcon, type ControlIcon, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, CloseIcon, DocumentIcon, FolderIcon } from "../🔣Icons/🟦️component.tsx";
 import { DragHandle } from "../🧱DragHandle/🟦️component.tsx";
 import { ContextMenu, type ContextMenuItem } from "../🖱️ContextMenu/🟦️component.tsx";
 import { Button } from "../🔘Button/🟦️component.tsx";

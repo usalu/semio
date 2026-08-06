@@ -19,14 +19,14 @@ variant = "gis2d"
 aliases = ["gis 2d"]
 app = "gis2d-play"
 ports = { react = 6040, wgpu = 6140 }
-engines = ["./🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust"]
+engines = ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"]
 
 [[package.metadata.semio.playground]]
 variant = "gis3d"
 aliases = ["gis 3d"]
 app = "gis3d-play"
 ports = { react = 6083, wgpu = 6183 }
-engines = ["./🧰️framework/🔨️modules/🗺️surface/🏔️terrain/⚡️implementations/🦀️rust"]
+engines = ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"]
 
 # 🎪️ The `verfolgen` demonstrator row moved to
 # ✏️s/🔌️plugins/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
@@ -64,13 +64,13 @@ dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨�
 pack = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-pack" }
 protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
-framework_surface_tiled_map = { path = "../../../../../🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-surface-tiled-map", default-features = false }
-framework_surface_terrain = { path = "../../../../../🧰️framework/🔨️modules/🗺️surface/🏔️terrain/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-surface-terrain" }
+framework_surface_tiled_map = { path = "../../../../../🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface", default-features = false }
+framework_surface_terrain = { path = "../../../../../🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface" }
 semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 # 🔌️ `PortMultiplicity` isn't re-exported by `semio-framework-plugin` (WORKFLOWS-END-TO-END-TYPED-PORTS
 # port recipe) — a direct dependency on the core crate is the minimal fix, mirroring `shooting`.
-semio-framework-core = { path = "../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
+semio-framework-core = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core" }
 serde.workspace = true
 serde_json.workspace = true
 

@@ -1,8 +1,8 @@
-//! @emoji 🏛️ `architect` — semio_compose_rs query language: Jack (mathematical_graph_dsl) is the parsing
+//! @emoji 🏛️ `architect` — semio_compose_rs query language: Jack (math::graph::dsl) is the parsing
 //! front end, this crate owns only the GraphQL planner/executor that lowers Jack's AST into
 //! `Transport` calls. See `plans/every-dsl-must-be-crispy-shell.md` (Wave 2 / P9) for the
 //! repo-wide unified-DSL-syntax rationale: Architect used to carry its own hand-rolled `nom`
-//! lexer/parser/AST; that is gone now, replaced by `mathematical_graph_dsl::parse`.
+//! lexer/parser/AST; that is gone now, replaced by `math::graph::dsl::parse`.
 
 #![allow(clippy::too_many_lines, reason = "planner/wasm_api export match arms enumerate every AST/Step variant inline; splitting them up would scatter one concept across helper fns for no clarity gain")]
 
@@ -18,10 +18,10 @@ pub use transport::{MemoryTransport, OpKind, Transport, TransportError};
 #[cfg(target_arch = "wasm32")]
 pub use wasm_api::{architect_compile, architect_run};
 
-/// 🌉️ `mathematical_graph_manifest::PropertyValue` (Jack literal values) <-> `serde_json::Value`
+/// 🌉️ `math::graph::manifest::PropertyValue` (Jack literal values) <-> `serde_json::Value`
 /// (GraphQL/row values) — `PropertyValue` is `#[serde(untagged)]`, so this is exactly its JSON
 /// shape; shared by `schema::call_variables`, `executor`'s `WHERE` comparisons, and `wasm_api`.
-fn property_value_to_json(value: &mathematical_graph_manifest::PropertyValue) -> serde_json::Value {
+fn property_value_to_json(value: &math::graph::manifest::PropertyValue) -> serde_json::Value {
     serde_json::to_value(value).unwrap_or(serde_json::Value::Null)
 }
 
@@ -46,8 +46,8 @@ mod errors {
 
 //#region 🔖️Schema
 mod schema {
-    use mathematical_graph_dsl as jack;
-    use mathematical_graph_manifest::PropertyValue;
+    use math::graph::dsl as jack;
+    use math::graph::manifest::PropertyValue;
 
     /// @emoji 🏷️ GraphQL object label in architect patterns.
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -438,7 +438,7 @@ mod planner {
     use super::errors::ArchitectError;
     use super::schema::{self, Label};
     use super::transport::OpKind;
-    use mathematical_graph_dsl as jack;
+    use math::graph::dsl as jack;
     use serde_json::{json, Value};
     use std::collections::{BTreeMap, BTreeSet};
 
@@ -664,8 +664,8 @@ mod executor {
     use super::planner::{JsonPath, OpPlan, PathSeg, Step};
     use super::transport::{OpKind, Transport};
     use futures_util::{stream, StreamExt};
-    use mathematical_graph_dsl as jack;
-    use mathematical_graph_manifest::PropertyValue;
+    use math::graph::dsl as jack;
+    use math::graph::manifest::PropertyValue;
     use serde_json::Value;
     use std::collections::BTreeMap;
     use std::pin::Pin;
@@ -955,9 +955,9 @@ mod api {
     use super::planner::{plan_query, OpPlan};
     use super::transport::Transport;
     use futures_util::StreamExt;
-    use mathematical_graph_dsl as jack;
+    use math::graph::dsl as jack;
 
-    /// 🔍️ Parse architect source — literally Jack's own parser (`mathematical_graph_dsl::parse`);
+    /// 🔍️ Parse architect source — literally Jack's own parser (`math::graph::dsl::parse`);
     /// architect no longer carries any lexer/parser/AST of its own.
     pub fn parse(text: &str) -> Result<jack::Query, ArchitectError> {
         jack::parse(text).map_err(|e| ArchitectError::Parse(e.to_string()))
@@ -994,8 +994,8 @@ mod wasm_api {
     use super::api;
     use super::planner::{OpPlan, PathSeg, Step};
     use super::transport::JsTransport;
-    use mathematical_graph_dsl as jack;
-    use mathematical_graph_manifest::PropertyValue;
+    use math::graph::dsl as jack;
+    use math::graph::manifest::PropertyValue;
     use serde_json::{json, Value};
     use wasm_bindgen::prelude::*;
 
@@ -1102,7 +1102,7 @@ mod wasm_api {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mathematical_graph_dsl as jack;
+    use math::graph::dsl as jack;
     use std::collections::HashMap;
     use std::path::PathBuf;
 
@@ -1299,7 +1299,7 @@ mod tests {
     //#endregion 🧪️architect_cases
 
     //#region 🧪️unified_jack_syntax_round_trips
-    // 🌱️ Architect's `parse()` is literally `mathematical_graph_dsl::parse` now — these tests
+    // 🌱️ Architect's `parse()` is literally `math::graph::dsl::parse` now — these tests
     // verify that identity directly, and that Jack's own formatter/parser pair (shared with every
     // other Jack consumer in the repo) round-trips the query shapes architect relies on.
     #[test]

@@ -1,13 +1,13 @@
 //! 🎯️ Robust geometric predicates: a cheap `f64` evaluation plus a conservative forward
 //! error bound decides the sign whenever possible; only when the true value could be smaller
-//! than the accumulated roundoff does the predicate escalate to exact [`mathematical_number::Rational`]
+//! than the accumulated roundoff does the predicate escalate to exact [`semio_framework_math::number::Rational`]
 //! arithmetic (lossless for any finite `f64`, per `Rational::from_f64`). This is deliberately
 //! simpler than Shewchuk-style adaptive expansions — the exact path is cold, so raw simplicity
 //! beats squeezing out its last microsecond. The hard invariant: a predicate here never returns a
 //! wrong sign, only (rarely) pays for a certain one.
 
 use crate::brep::vec::{Pnt2, Pnt3, Vec3};
-use mathematical_number::Rational;
+use semio_framework_math::number::Rational;
 use std::cmp::Ordering;
 
 // #region 🔖️Filtered
@@ -295,7 +295,7 @@ mod tests {
 
         #[test]
         fn orient2d_filtered_agrees_with_exact_on_random_and_near_degenerate_triples() {
-            let mut rng = mathematical_random::Rng::from_seed(11);
+            let mut rng = semio_framework_math::random::Rng::from_seed(11);
             for _ in 0..5000 {
                 let a = Pnt2::new(rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0);
                 let b = Pnt2::new(rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0);
@@ -314,7 +314,7 @@ mod tests {
 
         #[test]
         fn orient3d_filtered_agrees_with_exact_on_random_and_near_degenerate_quadruples() {
-            let mut rng = mathematical_random::Rng::from_seed(13);
+            let mut rng = semio_framework_math::random::Rng::from_seed(13);
             for _ in 0..3000 {
                 let a = Pnt3::new(rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0);
                 let b = Pnt3::new(rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0);
@@ -333,7 +333,7 @@ mod tests {
 
         #[test]
         fn in_circle2d_filtered_agrees_with_exact_on_random_configurations() {
-            let mut rng = mathematical_random::Rng::from_seed(17);
+            let mut rng = semio_framework_math::random::Rng::from_seed(17);
             for _ in 0..3000 {
                 let pts: Vec<Pnt2> = (0..4).map(|_| Pnt2::new(rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0)).collect();
                 assert_eq!(in_circle2d(pts[0], pts[1], pts[2], pts[3]), in_circle2d_exact(pts[0], pts[1], pts[2], pts[3]));

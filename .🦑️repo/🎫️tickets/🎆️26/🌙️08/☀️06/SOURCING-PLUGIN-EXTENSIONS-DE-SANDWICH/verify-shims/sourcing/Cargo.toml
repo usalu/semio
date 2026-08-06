@@ -1,0 +1,50 @@
+cargo-features = ["trim-paths"]
+
+[package]
+name = "semio-s-plugin-sourcing"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Sourcing plugin - one crate for the curate artifact (diff/op/dsl/pack/spr/engine) and the curate app (commands/modes/windows)"
+
+
+[package.metadata.component]
+package = "semio:sourcing"
+
+[package.metadata.semio]
+role = "plugin"
+
+[[package.metadata.semio.playground]]
+variant = "sourcing"
+app = "sourcing-curate"
+aliases = ["curate"]
+ports = { react = 6081, wgpu = 6181 }
+
+# 🎪️ The `aussuchen` demonstrator row moved to
+# ✏️s/🔌️plugins/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
+# crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT).
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/📦️lib.rs"
+
+[dependencies]
+dsl = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+store = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+protocol = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+pack = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-pack" }
+semio-framework-core = { path = "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/framework-core", package = "semio-framework-core" }
+semio-framework-plugin = { path = "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/plugin", features = ["component-guest"], package = "semio-framework-plugin" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.106"
+
+[workspace]

@@ -9,7 +9,7 @@ description = "Content-addressing and Merkle hash utilities for the framework ke
 [lints]
 workspace = true
 [lib]
-path = "../../../../../🧰️framework/🔨️modules/#⃣hash/⚡️implementations/🦀️rust/📦️lib.rs"
+path = "../../../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust/📦️lib.rs"
 
 [dependencies]
 blake3 = "1.8.2"

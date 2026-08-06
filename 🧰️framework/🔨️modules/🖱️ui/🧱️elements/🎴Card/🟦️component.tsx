@@ -7,8 +7,8 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useLabel, Icon, type IconSource } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { Icon, type IconSource } from "../🔣Icons/🟦️component.tsx";
 import { ContextMenu, type ContextMenuItem } from "../🖱️ContextMenu/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

@@ -10,10 +10,10 @@ import * as React from "react";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { borderNormalClass, interactiveHoverClass, interactiveControlTransitionClass, glassClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { ChromeControlHint, ChevronDownIcon, ChevronRightIcon, SurfaceScope } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { borderNormalClass, interactiveHoverClass, interactiveControlTransitionClass, glassClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { SurfaceScope } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { ChromeControlHint } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { ChevronDownIcon, ChevronRightIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 💡️Breadcrumb

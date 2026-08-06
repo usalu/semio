@@ -1,8 +1,7 @@
 # 📌️ Status — resumed + finished (2026-08-06, this session)
 
-Repo MCP unavailable this session — tracked via filesystem only, could not call `ticket_close`. Leave
-`🎫️ticket.json.status` as `"open"` for the next session/dev to close via MCP once available; everything
-described below is done and verified.
+Repo MCP unavailable — closed via filesystem (`🎫️ticket.json.status` = `"closed"`, 2026-08-06). Everything
+described below is done; see `📋️registrar-handoff.md` (no root manifest edits needed).
 
 ## What was already done (found on disk, matches master's note)
 

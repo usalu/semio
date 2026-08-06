@@ -10,10 +10,12 @@ import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { borderElementClass, formControlFocusBorderClass, interactiveHoverClass, glassClass, menuListItemClassName } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useTransaction, type ElementProps, CheckIconAlt, ChevronDownIconAlt, ChevronUpIcon, type IconSource, SurfaceScope, Label, useLevel, Icon, useFlow } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { borderElementClass, formControlFocusBorderClass, interactiveHoverClass, glassClass, menuListItemClassName } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { useTransaction, type ElementProps } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
+import { SurfaceScope, useLevel } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { Label } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { useFlow } from "../🫀️core/🧭️Flow/🟦️component.tsx";
+import { CheckIconAlt, ChevronDownIconAlt, ChevronUpIcon, type IconSource, Icon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🔎️Select

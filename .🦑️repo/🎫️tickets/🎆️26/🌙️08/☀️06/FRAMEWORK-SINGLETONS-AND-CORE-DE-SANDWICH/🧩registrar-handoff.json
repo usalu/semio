@@ -1,0 +1,66 @@
+{
+  "status": "ready_for_registrar",
+  "blockers": [
+    {
+      "crate": "semio-framework-core",
+      "reason": "standalone cargo check fails compiling transitive semio-framework-ui-wgpu (unresolved crate::wgpu — UI family restructure in flight, out of ticket scope)"
+    },
+    {
+      "crate": "semio-framework-editor",
+      "reason": "standalone cargo check fails resolving semio-framework-compiler-math at math/📦️packages/🦀️rust (math family consolidation incomplete, out of ticket scope)"
+    }
+  ],
+  "verification": {
+    "semio-framework-hash": "cargo check pass (standalone overlay)",
+    "semio-framework-schema": "cargo check pass; bun script.ts check pass (58 entity kinds)",
+    "semio-framework-editor": "blocked (see blockers)",
+    "semio-framework-core": "blocked (see blockers)"
+  },
+  "remainingImplDirs": [
+    "🧰️framework/⚡️implementations/🦀️rust",
+    "🧰️framework/🔨️modules/#⃣hash/⚡️implementations/🦀️rust",
+    "🧰️framework/🔨️modules/🧬️schema/⚡️implementations/🦀️rust",
+    "🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust"
+  ],
+  "oldMemberLines": [
+    "🧰️framework/⚡️implementations/🦀️rust",
+    "🧰️framework/🔨️modules/#⃣hash/⚡️implementations/🦀️rust",
+    "🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust",
+    "🧰️framework/🔨️modules/🧬️schema/⚡️implementations/🦀️rust"
+  ],
+  "newCrates": [
+    {
+      "package": "semio-framework-core",
+      "path": "🧰️framework/📦️packages/🦀️rust"
+    },
+    {
+      "package": "semio-framework-hash",
+      "path": "🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust"
+    },
+    {
+      "package": "semio-framework-schema",
+      "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"
+    },
+    {
+      "package": "semio-framework-editor",
+      "path": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust"
+    }
+  ],
+  "workspaceDependencyLine": {
+    "old": "semio-framework-core = { path = \"🧰️framework/⚡️implementations/🦀️rust\" }",
+    "new": "semio-framework-core = { path = \"🧰️framework/📦️packages/🦀️rust\" }"
+  },
+  "packageJsonWorkspaces": [
+    {
+      "old": "🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust",
+      "new": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust"
+    },
+    {
+      "old": "🧰️framework/🔨️modules/🧬️schema/⚡️implementations/🦀️rust",
+      "new": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"
+    }
+  ],
+  "sessionFixes": [
+    "Completed truncated 🧪️ TEMPORARY VERIFICATION OVERLAY blocks in hash and schema 📦️packages/🦀️rust/Cargo.toml"
+  ]
+}

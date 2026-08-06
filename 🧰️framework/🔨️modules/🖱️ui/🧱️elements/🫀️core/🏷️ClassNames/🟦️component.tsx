@@ -7,6 +7,8 @@
 // #region 🔌️Adapters
 import { ClassValue, clsx } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
+import * as React from "react";
+import type { SurfaceScopeValue } from "../🌈️Surface/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🎨️ClassNames
@@ -42,3 +44,129 @@ export function cn(...inputs: ClassValue[]) {
   return twMergeUi(clsx(inputs));
 }
 //#endregion 🎨️ClassNames
+
+//#region 🎨️StyleClasses
+/** @emoji 🌀️ Dashed, slow-spinning + gently pulsing waiting ring in the element's normal border color. */
+export const waitingBorderClass = "border-waiting";
+
+/** @emoji 🌀️ Waiting ring recolored to the active stroke; pair with selected/active elements. */
+export const waitingBorderActiveClass = cn(waitingBorderClass, "border-waiting-active");
+
+/** @emoji 🌀️ Clockwise spinning + pulsing loading ring in the element's normal border color. */
+export const loadingBorderClass = "border-loading";
+
+/** @emoji 🌀️ Loading ring recolored to the active stroke; pair with selected/active elements. */
+export const loadingBorderActiveClass = cn(loadingBorderClass, "border-loading-active");
+
+/** @emoji 🎨️ Shared transition for interactive chrome (hover, focus, active backgrounds). */
+export const interactiveControlTransitionClass = "transition-[color,border-color,background-color]";
+
+/** @emoji 🎯️ Focus/open on form controls: accent border color only, never extra ring width. */
+export const formControlFocusBorderClass = cn("outline-none", interactiveControlTransitionClass, "focus-visible:border-accent data-[state=open]:border-accent aria-invalid:border-destructive focus-visible:ring-0 shadow-none");
+
+/**
+ * @emoji 🫳️ Hover-reactive utilities suppressed while a nested DragHandle is hovered — hovering the grip
+ * then only highlights the grip, not the whole element. Pair with `{HANDLE_HOVER_SCOPE_ATTR}` on the same element
+ * (the handle toggles `data-handle-hovered` on its nearest `data-hover-scope` ancestor via plain DOM writes, no
+ * re-render). Deliberately avoids `:has()` — it isn't reliably supported across every environment this ships to
+ * (older embedded webviews), and `:has()`-based ancestor exclusion also matches ANY ancestor with a matching
+ * class, not necessarily the nearest one, which is wrong once tree rows nest.
+ *
+ * These MUST be written as complete literal strings, not built via `${}` interpolation in a helper function —
+ * Tailwind's build only discovers classes by scanning source files for literal text, it never executes JS, so a
+ * class name assembled from a template placeholder at runtime is invisible to it and silently generates no CSS
+ * at all (this broke hover entirely here once already).
+ */
+const hoverExcludingHandleBgFillClass = "hover:not-data-[handle-hovered=true]:bg-hover-interactive-fill";
+const hoverExcludingHandleActiveBgClass = "hover:not-data-[handle-hovered=true]:bg-active-base/90";
+const hoverExcludingHandleActiveBorderClass = "hover:not-data-[handle-hovered=true]:border-active-base";
+
+export const groupHoverExcludingHandleBgFillClass = "group-hover/tree-row:not-group-data-[handle-hovered=true]/tree-row:bg-hover-interactive-fill";
+
+export const hoverExcludingHandleTextEmphasizedClass = "hover:not-data-[handle-hovered=true]:text-emphasized";
+
+/** @emoji 🎨️ Normal-border gray fill for interactive hover states. */
+export const interactiveHoverFillClass = "hover:bg-hover-interactive-fill";
+
+/** @emoji 🎨️ Interactive hover: normal-border fill + emphasized content. */
+export const interactiveHoverClass = cn(interactiveHoverFillClass, "hover:text-emphasized");
+
+/** @emoji 📏️ Active stroke paired with {@link interactiveActiveFillClass}. */
+export const interactiveActiveBorderClass = "border-active-base";
+
+/** @emoji 🎨️ Shared active fill for pressed tabs, toggles, and nav selection. */
+export const interactiveActiveFillClass = cn("bg-active-base", interactiveActiveBorderClass, "text-emphasized", hoverExcludingHandleActiveBgClass, hoverExcludingHandleActiveBorderClass, hoverExcludingHandleTextEmphasizedClass);
+
+/** @emoji 🎨️ Active/on: primary fill + active border + emphasized content (never the transient hover fill). */
+export const interactiveOnClass = cn(
+  "data-[state=on]:bg-active-base",
+  "data-[state=on]:border-active-base",
+  "data-[state=on]:text-emphasized",
+  "data-[state=on]:hover:bg-active-base/90",
+  "data-[state=on]:hover:border-active-base",
+  "data-[state=on]:hover:text-emphasized",
+);
+
+/** @emoji 🎨️ Active tab: primary fill + active border + emphasized content. */
+export const interactiveTabActiveClass = cn(
+  "data-[state=active]:bg-active-base",
+  "data-[state=active]:border-active-base",
+  "data-[state=active]:text-emphasized",
+  "data-[state=active]:hover:bg-active-base/90",
+  "data-[state=active]:hover:border-active-base",
+  "data-[state=active]:hover:text-emphasized",
+);
+
+/** @emoji 🚫️ React props that disable native browser affordances on editable UI controls. */
+export const uiFormControlBrowserDefaultProps = {
+  autoComplete: "off",
+  autoCorrect: "off",
+  autoCapitalize: "off",
+  spellCheck: false,
+  "data-1p-ignore": true,
+  "data-lpignore": "true",
+} as const satisfies Pick<React.InputHTMLAttributes<HTMLInputElement>, "autoComplete" | "autoCorrect" | "autoCapitalize" | "spellCheck"> & { readonly "data-1p-ignore": boolean; readonly "data-lpignore": string };
+
+/** @emoji 📏️ Subtle normal stroke for controls, windows, dividers, and in-chrome separators. */
+export const borderNormalClass = "!border-normal";
+
+/** @emoji 📏️ Normal bottom edge utility for in-chrome dividers (not shell navbar — navbar uses a CSS `::after` stroke). */
+export const borderNormalBottomClass = `border-b ${borderNormalClass}`;
+
+/** @emoji 📏️ Implicit element border color (controls, dropdowns, dividers). */
+export const borderElementClass = "border-element";
+
+/** @emoji 🎨️ Opaque per-level fill — background-color only, no blur (see `[data-level]` cascade in 🎨️ui.css). */
+export const surfaceClass = "ui-surface";
+
+export const glassClass = "ui-glass";
+
+/** @emoji 🎨️ Fullscreen scrim; host element must carry `data-level="dialog"` for correct tint. */
+export const veilClass = "ui-veil";
+
+/** @emoji 📋️ Hover row styling for menus, selects, comboboxes, and context menus. */
+export const menuListItemClassName = cn(
+  "text-element",
+  interactiveHoverClass,
+  "focus:bg-hover-interactive-fill focus:text-emphasized",
+  "data-[active=true]:bg-hover-interactive-fill data-[active=true]:text-emphasized",
+  "data-[selected=true]:bg-active-base data-[selected=true]:border-active-base data-[selected=true]:text-emphasized",
+);
+
+/** @emoji 🎨️ Whether a base-floor chrome row (navbar/footer/canvas/mode-body) must paint its own
+ * {@link surfaceClass}, or stay transparent so Layout's one continuous base surface shows through.
+ * Nested same-level paints are the "navbar ≠ canvas ≠ footer" bug class — one base floor, one fill. */
+export function shellFloorPaints(parent: SurfaceScopeValue | null): boolean {
+  return !(parent?.level === "base" && parent.fill !== "none");
+}
+
+/** @emoji 🎨️ Fill class for base-floor chrome — {@link surfaceClass} when standalone, transparent on Layout's painted base. */
+export function shellFloorFillClass(parent: SurfaceScopeValue | null): string {
+  return shellFloorPaints(parent) ? surfaceClass : "bg-transparent";
+}
+
+/** @emoji Re-export private handle-hover fill for chrome tab cells still composing in the barrel. */
+export { hoverExcludingHandleBgFillClass };
+//#endregion 🎨️StyleClasses
+
+

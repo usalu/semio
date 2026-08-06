@@ -20,7 +20,7 @@ crate-type = ["cdylib", "rlib"]
 path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust/📦️lib.rs"
 
 [dependencies]
-semio-framework-core = { path = "../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
+semio-framework-core = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", package = "semio-framework-plugin" }
 ui_wgpu = { path = "../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu", package = "semio-framework-ui-wgpu" }
 semio-s-3d = { path = "../../../../../✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust" }

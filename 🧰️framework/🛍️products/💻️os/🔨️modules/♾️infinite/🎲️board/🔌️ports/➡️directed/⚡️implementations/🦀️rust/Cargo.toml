@@ -13,11 +13,11 @@ crate-type = ["rlib"]
 path = "../../../../../🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust/📦️lib.rs"
 
 [dependencies]
+math = { path = "../../../../../../../../../🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 ui_styling = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 infinite_board = { path = "../../../../../🎲️board/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board" }
 infinite_board_port = { path = "../../../../../🎲️board/🔌️ports/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port" }
 infinite_board_normal_undirected = { path = "../../../../../🎲️board/➕️normal/↔undirected/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-normal-undirected" }
-mathematical_graph = { path = "../../../../../../../../../🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph" }
 infinite_canvas = { path = "../../../../../🖼️canvas/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

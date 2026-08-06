@@ -1,0 +1,20 @@
+Shape V2 tree-purity audit — 💡️reasoning, ticket 26/08/05/REASONING-PLUGIN-SHAPE-V2-TREE-PURITY-RETROFIT
+
+1. Non-compliant rs/ts (outside 📦️packages, not component.*): 0 hits
+2. Nested 📚️examples/🧫️fixtures (not at owner maxdepth 1): 0 hits after relocate
+3. Owner-root 📚️examples present: ✏️s/🔌️plugins/💡️reasoning/📚️examples/♻️reuse/...
+4. 🛂️manifest.json at owner root: present
+5. Entry 📦️lib.rs at 📦️packages/🦀️rust/📦️lib.rs; [lib] path = "📦️lib.rs"
+6. Grouping #[path = "."] unprefixed; leaf #[path] use ../../ prefix (style A)
+
+Moves (examples relocate):
+- 🗿️artifacts/🔌️wires/📚️examples → 📚️examples (owner root)
+- 🎛️apps/🔌️wires/⚙️engine/📚️examples/♻️reuse/* → 📚️examples/♻️reuse/🎮️commands/♻️reuse/
+
+include_str fix:
+- 🗿️artifacts/🔌️wires/🗣️dsl/🦀️component.rs → ../../../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.reasoning.wires.dsl.semio
+
+Cargo verification attempts (DEVELOPER_DIR=/Library/Developer/CommandLineTools):
+- cargo check -p semio-s-plugin-reasoning-mindmap: blocked (workspace: semio-framework-compiler-math missing at math packages path)
+- cargo check --manifest-path + temporary overlay: blocked (semio-framework-ui-wgpu Cargo.toml missing at ui wgpu target path)
+See 🧪️verify-check.txt

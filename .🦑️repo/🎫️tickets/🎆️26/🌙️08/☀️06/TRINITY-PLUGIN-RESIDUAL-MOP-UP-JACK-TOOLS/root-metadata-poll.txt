@@ -1,0 +1,18 @@
+=== poll 1 11:08:21 ===
+Caused by:
+  failed to read `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/📦️packages/🦀️rust/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)
+=== poll 2 11:08:51 ===
+Caused by:
+  failed to read `/Users/ueli/Documents/semio/✏️s/🔨️modules/🧊️3d/🎬️scene/⚡️implementations/🦀️rust/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)
+=== poll 3 11:09:22 ===
+Caused by:
+  failed to read `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)

@@ -1,0 +1,160 @@
+ 9277|// [🏘️compose📚️js🗃️sketchpad💻️elements🔖️basecomponents🪨️label](repo://p/u/compose/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components/d/i/Label)
+ 9278|export function Label({ id, rowId, label, labelElementId, className, children, labelLayoutKind = "property" }: LabelProps) {
+ 9279|  const localizedLabel = useIdLabel(id);
+ 9280|  const resolvedLabel = label ?? localizedLabel;
+ 9281|  const fallbackLabel = reactHostPort.useMemo(() => {
+ 9282|    if (!id) return "";
+ 9283|    const trailingToken = id.split(".").pop() ?? id;
+ 9284|    const normalizedToken = trailingToken.replace(/[-_]+/g, " ").trim();
+ 9285|    if (!normalizedToken) return id;
+ 9286|    return normalizedToken
+ 9287|      .split(/\s+/)
+ 9288|      .map((word) => (word.length > 0 ? `${word[0].toUpperCase()}${word.slice(1)}` : word))
+ 9289|      .join(" ");
+ 9290|  }, [id]);
+ 9291|  const displayLabel = resolvedLabel ?? fallbackLabel;
+ 9292|  const controlHint = useControlAccessibleLabel(id);
+ 9293|  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
+ 9294|  const isInsideTreeRow = reactHostPort.useContext(TreeRowAlignmentContext);
+ 9295|  const treePropertyRowOffsetPx = detailPanelIndentPx(level, indentMultiplier);
+ 9296|  const propertyRowRef = reactHostPort.useRef<HTMLDivElement>(null);
+ 9297|  const propertyLabelRef = reactHostPort.useRef<HTMLDivElement>(null);
+ 9298|  const propertyControlRef = reactHostPort.useRef<HTMLDivElement>(null);
+ 9299|  const [propertyRowStacked, setPropertyRowStacked] = reactHostPort.useState(false);
+ 9300|  const propertyRowStackedRef = reactHostPort.useRef(propertyRowStacked);
+ 9301|  propertyRowStackedRef.current = propertyRowStacked;
+ 9302|
+ 9303|  reactHostPort.useEffect(() => {
+ 9304|    const rowElement = propertyRowRef.current;
+ 9305|    const labelElement = propertyLabelRef.current;
+ 9306|    const controlElement = propertyControlRef.current;
+ 9307|    if (!rowElement || !labelElement || !controlElement) {
+ 9308|      return;
+ 9309|    }
+ 9310|
+ 9311|    let animationFrame = 0;
+ 9312|    const resolvePropertyLayout = () => {
+ 9313|      animationFrame = 0;
+ 9314|      const rowWidthPx = rowElement.clientWidth;
+ 9315|      const labelWidthPx = Math.ceil(labelElement.scrollWidth);
+ 9316|      const controlMinWidthPx = Math.ceil(controlElement.scrollWidth);
+ 9317|      const minimumInlineWidthPx = labelWidthPx + controlMinWidthPx + detailPanelPropertyInlineGapPx;
+ 9318|      const labelRect = labelElement.getBoundingClientRect();
+ 9319|      const controlRect = controlElement.getBoundingClientRect();
+ 9320|      const overlaps = labelRect.right + detailPanelPropertyInlineGapPx > controlRect.left;
+ 9321|      const stacked = propertyRowStackedRef.current;
+ 9322|      const shouldStack = stacked ? overlaps || minimumInlineWidthPx > rowWidthPx - detailPanelPropertyStackedToInlineHysteresisPx : overlaps || minimumInlineWidthPx > rowWidthPx;
+ 9323|      setPropertyRowStacked((current) => (current === shouldStack ? current : shouldStack));
+ 9324|    };
+ 9325|
+ 9326|    const scheduleResolvePropertyLayout = () => {
+ 9327|      if (animationFrame !== 0) {
+ 9328|        cancelAnimationFrame(animationFrame);
+ 9329|      }
+ 9330|      animationFrame = requestAnimationFrame(resolvePropertyLayout);
+ 9331|    };
+ 9332|
+ 9333|    const observer = new ResizeObserver(() => scheduleResolvePropertyLayout());
+ 9334|    observer.observe(rowElement);
+ 9335|    observer.observe(labelElement);
+ 9336|    observer.observe(controlElement);
+ 9337|    scheduleResolvePropertyLayout();
+ 9338|
+ 9339|    return () => {
+ 9340|      observer.disconnect();
+ 9341|      if (animationFrame !== 0) {
+ 9342|        cancelAnimationFrame(animationFrame);
+ 9343|      }
+ 9344|    };
+ 9345|  }, [id, label, level, treePropertyRowOffsetPx]);
+ 9346|
+ 9347|  if (labelLayoutKind === "treeGroupHeader") {
+ 9348|    const treeGroupHeaderLabel = (
+ 9349|      <span data-slot="tree-label" id={labelElementId} title={controlHint} className="flex min-w-0 flex-1 items-center text-xs font-normal text-start truncate h-medium" style={treeItemLabelStyle}>
+ 9350|        {displayLabel}
+ 9351|      </span>
+ 9352|    );
+ 9353|
+ 9354|    const treeGroupHeaderInner = (
+ 9355|      <div id={rowId} data-slot="tree-group-header-row" className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName, className)}>
+ 9356|        <div className={cn(treeHeaderMainClassName, "min-h-medium items-center")}>
+ 9357|          {treeGroupHeaderLabel}
+ 9358|          <div data-slot="tree-group-header-control" className="ms-auto flex min-w-0 shrink-0 items-center justify-end">
+ 9359|            {children}
+ 9360|          </div>
+ 9361|        </div>
+ 9362|      </div>
+ 9363|    );
+ 9364|
+ 9365|    if (!isTree) {
+ 9366|      return <TreeRowAlignmentContext.Provider value={false}>{treeGroupHeaderInner}</TreeRowAlignmentContext.Provider>;
+ 9367|    }
+ 9368|
+ 9369|    if (isInsideTreeRow) {
+ 9370|      return <TreeRowAlignmentContext.Provider value={false}>{treeGroupHeaderInner}</TreeRowAlignmentContext.Provider>;
+ 9371|    }
+ 9372|
+ 9373|    return (
+ 9374|      <TreeRowAlignmentContext.Provider value={false}>
+ 9375|        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
+ 9376|          {treeGroupHeaderInner}
+ 9377|        </TreeAlignedRow>
+ 9378|      </TreeRowAlignmentContext.Provider>
+ 9379|    );
+ 9380|  }
+ 9381|
+ 9382|  const propertyLabelElement = isTree ? (
+ 9383|    <div ref={propertyLabelRef} data-slot="property-label-tree" className="min-w-0" style={{ paddingInlineStart: detailPanelIndentLen(level, indentMultiplier) }}>
+ 9384|      <div className="inline-flex min-w-0 h-medium">
+ 9385|        <span data-slot="property-label" id={labelElementId} title={controlHint} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-start truncate cursor-pointer transition-colors h-medium ps-single">
+ 9386|          {resolvedLabel}
+ 9387|        </span>
+ 9388|      </div>
+ 9389|    </div>
+ 9390|  ) : (
+ 9391|    <div ref={propertyLabelRef} data-slot="property-label-inline" className="min-w-0">
+ 9392|      <span
+ 9393|        data-slot="property-label"
+ 9394|        id={labelElementId}
+ 9395|        title={controlHint}
+ 9396|        className="inline-flex items-center text-xs font-medium flex-shrink-0 text-start truncate cursor-pointer transition-colors text-element hover:bg-hover-interactive-fill hover:text-emphasized h-medium"
+ 9397|      >
+ 9398|        {resolvedLabel}
+ 9399|      </span>
+ 9400|    </div>
+ 9401|  );
+ 9402|
+ 9403|  const propertyRowElement = (
+ 9404|    <div
+ 9405|      ref={propertyRowRef}
+ 9406|      id={rowId}
+ 9407|      data-dim
+ 9408|      data-slot="property-row"
+ 9409|      data-property-layout={propertyRowStacked ? "stacked" : "inline"}
+ 9410|      style={{
+ 9411|        ...(isTree ? { marginInlineStart: `calc(-1 * ${detailPanelIndentLen(level, indentMultiplier)})`, width: level > 0 ? `calc(100% + ${detailPanelIndentLen(level, indentMultiplier)})` : "100%" } : {}),
+ 9412|        gridTemplateColumns: propertyRowStacked ? "minmax(0, 1fr)" : `${sizeVar("layoutLabel")} minmax(0, 1fr)`,
+ 9413|        rowGap: propertyRowStacked ? sizeVar("spacingSingle") : "0",
+ 9414|      }}
+ 9415|      className={cn(detailPanelPropertyRowClassName, !isTree && "w-full", className)}
+ 9416|    >
+ 9417|      {propertyLabelElement}
+ 9418|      <div ref={propertyControlRef} data-slot="property-control" className={detailPanelPropertyControlClassName} style={propertyRowStacked ? { paddingInlineStart: `calc(${sizeVar("layoutLabel")} + ${sizeVar("spacingDouble")})` } : undefined}>
+ 9419|        <PropertyValueColumnContext.Provider value={true}>{children}</PropertyValueColumnContext.Provider>
+ 9420|      </div>
+ 9421|    </div>
+ 9422|  );
+ 9423|
+ 9424|  if (isTree) {
+ 9425|    if (isInsideTreeRow) {
+ 9426|      return propertyRowElement;
+ 9427|    }
+ 9428|    return (
+ 9429|      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align="start" connectCurrentLevel={level > 0} anchorOffsetPx={detailPanelHeaderLineCenterPx}>
+ 9430|        {propertyRowElement}
+ 9431|      </TreeAlignedRow>
+ 9432|    );
+ 9433|  }
+ 9434|
+ 9435|  return propertyRowElement;
+ 9436|}

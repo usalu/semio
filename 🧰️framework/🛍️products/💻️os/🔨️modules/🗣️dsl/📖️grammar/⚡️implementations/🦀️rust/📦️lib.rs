@@ -8,7 +8,7 @@
 //! covers today and what it does not yet).
 //!
 //! Depends on `dsl_core` only, following the same "own pre-scan lexer delegating the shared
-//! alphabet to `dsl_core::lex`" pattern `mathematical_graph_dsl` (Jack) established — `?` and `|`
+//! alphabet to `dsl_core::lex`" pattern `math::graph::dsl` (Jack) established — `?` and `|`
 //! aren't in the shared token alphabet (a structural-DSL alphabet has no need for them), so this
 //! crate's lexer pre-scans those two characters itself and hands every other run of characters to
 //! `dsl_core::lex` unchanged.
@@ -93,7 +93,7 @@ struct GToken {
 }
 
 /// @emoji 🔬️ Pre-scans `?`/`|` (not in `dsl_core`'s alphabet) and delegates every other run of
-/// characters whole to `dsl_core::lex`, exactly like `mathematical_graph_dsl::lex_spanned` does
+/// characters whole to `dsl_core::lex`, exactly like `math::graph::dsl::lex_spanned` does
 /// for its own two Cypher-specific extras.
 fn lex(text: &str) -> Result<Vec<GToken>, TextError> {
     let bytes = text.as_bytes();

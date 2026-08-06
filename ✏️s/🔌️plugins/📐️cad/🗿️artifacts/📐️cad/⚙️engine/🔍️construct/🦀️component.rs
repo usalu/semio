@@ -1,5 +1,5 @@
 //! 🕸️ "Construct" — CAD's topology query capability — is NOT a new parser: it is Jack
-//! (`mathematical_graph_dsl`, an already-complete Cypher-like language with its own parser,
+//! (`math::graph::dsl`, an already-complete Cypher-like language with its own parser,
 //! executor, formatter, and LSP) applied to brep topology through this `QueryableGraph`
 //! implementation. Every editable entity (`CadVertex`/`CadEdge`/`CadWire`/`CadFace`/`CadShell`/
 //! `CadSolid`) becomes a Jack node labeled by its kind (`"Vertex"`/`"Edge"`/.../`"Solid"`);
@@ -7,11 +7,11 @@
 //! `[:CONTAINS]` reaches the entities that directly compose a boundary member (Wire->Edge,
 //! Edge->Vertex) — exactly the relationship vocabulary `.🦑️repo/✍️notes/construct.md`'s TopoCypher
 //! design calls for. A query like `MATCH (f:Face)-[:BOUNDED_BY]->(w:Wire)-[:CONTAINS]->(e:Edge)`
-//! runs against this today via `mathematical_graph_dsl::run_query`, with zero new grammar.
+//! runs against this today via `math::graph::dsl::run_query`, with zero new grammar.
 
 use crate::artifacts::cad::CadGeometry;
-use mathematical_graph_dsl::{QueryableEdge, QueryableGraph};
-use mathematical_graph_manifest::PropertyValue;
+use math::graph::dsl::{QueryableEdge, QueryableGraph};
+use math::graph::manifest::PropertyValue;
 use std::collections::BTreeSet;
 
 /// @emoji 🏷️ The Jack node-label vocabulary for brep entities — mirrors TopoCypher's
@@ -42,10 +42,10 @@ impl<'a> CadTopologyGraph<'a> {
 }
 
 impl QueryableGraph for CadTopologyGraph<'_> {
-    fn manifest(&self) -> Option<&mathematical_graph_manifest::GraphManifest> {
+    fn manifest(&self) -> Option<&math::graph::manifest::GraphManifest> {
         // No compile-time schema for a dynamically-shaped brep pane — every query resolves
         // purely against `node_kind`/`node_property`, matching `EmptyGraph`'s precedent in
-        // `mathematical_graph_dsl`'s own idiom-hooks completion path.
+        // `math::graph::dsl`'s own idiom-hooks completion path.
         None
     }
 
@@ -107,7 +107,7 @@ impl QueryableGraph for CadTopologyGraph<'_> {
         let mut next_id = 0usize;
         let mut push = |kind: &str, source_node_id: String, target_node_id: String| {
             next_id += 1;
-            out.push(QueryableEdge { id: format!("{kind}-{next_id}"), kind: kind.to_string(), source_node_id, target_node_id, source_port: None, target_port: None, properties: mathematical_graph_manifest::PropertyBag::default() });
+            out.push(QueryableEdge { id: format!("{kind}-{next_id}"), kind: kind.to_string(), source_node_id, target_node_id, source_port: None, target_port: None, properties: math::graph::manifest::PropertyBag::default() });
         };
         for solid in &g.solids {
             for shell_id in &solid.shell_ids {
@@ -146,11 +146,11 @@ impl QueryableGraph for CadTopologyGraph<'_> {
 
 /// @emoji 🔍️ Runs a Jack query against one `CadGeometry` pane and returns its JSON result —
 /// the single entry point `cad-ui`/an MCP tool calls for topology queries (`saved selections`,
-/// non-manifold-edge checks, adjacency lookups), reusing `mathematical_graph_dsl::run_query_json`
+/// non-manifold-edge checks, adjacency lookups), reusing `math::graph::dsl::run_query_json`
 /// unchanged.
-pub fn run_construct_query(geometry: &CadGeometry, source: &str) -> Result<String, mathematical_graph_dsl::GraphDslError> {
+pub fn run_construct_query(geometry: &CadGeometry, source: &str) -> Result<String, math::graph::dsl::GraphDslError> {
     let graph = CadTopologyGraph::new(geometry);
-    mathematical_graph_dsl::run_query_json(&graph, source)
+    math::graph::dsl::run_query_json(&graph, source)
 }
 
 #[cfg(test)]

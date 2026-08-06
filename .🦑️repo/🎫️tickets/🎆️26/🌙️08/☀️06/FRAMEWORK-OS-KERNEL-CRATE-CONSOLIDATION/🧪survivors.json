@@ -1,0 +1,522 @@
+[
+  {
+    "pkg": "semio-framework-kernel-infinite-world",
+    "oldDir": "🔨️modules/♾️infinite/⚡️implementations/🦀️rust/🌍️world",
+    "dest": "🔨️modules/♾️infinite/🌍️world/🦀️component.rs",
+    "mod": "infinite::world",
+    "lib": "infinite_world",
+    "cfg": "not(all(target_arch = \"wasm32\", target_os = \"wasi\"))",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/⚡️implementations/🦀️rust/🌍️world/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/⚡️implementations/🦀️rust/🌍️world/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl",
+    "oldDir": "🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🗣️dsl/🦀️component.rs",
+    "mod": "dsl",
+    "lib": "dsl",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-core",
+    "oldDir": "🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🗣️dsl/🫀️core/🦀️component.rs",
+    "mod": "dsl::core",
+    "lib": "dsl_core",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-family-catalog",
+    "oldDir": "🔨️modules/🗣️dsl/👪️family/🗂️catalog/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🗣️dsl/👪️family/🗂️catalog/🦀️component.rs",
+    "mod": "dsl::family::catalog",
+    "lib": "dsl_family_catalog",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🗂️catalog/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🗂️catalog/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-family-embed",
+    "oldDir": "🔨️modules/🗣️dsl/👪️family/📎️embed/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🗣️dsl/👪️family/📎️embed/🦀️component.rs",
+    "mod": "dsl::family::embed",
+    "lib": "dsl_family_embed",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📎️embed/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📎️embed/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-family-geo",
+    "oldDir": "🔨️modules/🗣️dsl/👪️family/🌍️geo/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🗣️dsl/👪️family/🌍️geo/🦀️component.rs",
+    "mod": "dsl::family::geo",
+    "lib": "dsl_family_geo",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🌍️geo/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🌍️geo/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-family-graph",
+    "oldDir": "🔨️modules/🗣️dsl/👪️family/🕸️graph/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️component.rs",
+    "mod": "dsl::family::graph",
+    "lib": "dsl_family_graph",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🕸️graph/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🕸️graph/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-family-recipe",
+    "oldDir": "🔨️modules/🗣️dsl/👪️family/🧑‍🍳️recipe/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🗣️dsl/👪️family/🧑‍🍳️recipe/🦀️component.rs",
+    "mod": "dsl::family::recipe",
+    "lib": "dsl_family_recipe",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🧑‍🍳️recipe/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🧑‍🍳️recipe/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-family-scene",
+    "oldDir": "🔨️modules/🗣️dsl/👪️family/🎬️scene/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🗣️dsl/👪️family/🎬️scene/🦀️component.rs",
+    "mod": "dsl::family::scene",
+    "lib": "dsl_family_scene",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🎬️scene/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🎬️scene/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-family-sheet",
+    "oldDir": "🔨️modules/🗣️dsl/👪️family/📊️sheet/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🗣️dsl/👪️family/📊️sheet/🦀️component.rs",
+    "mod": "dsl::family::sheet",
+    "lib": "dsl_family_sheet",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📊️sheet/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📊️sheet/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-fixture-sweep",
+    "oldDir": "🔨️modules/🗣️dsl/🧪️fixture-sweep/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs",
+    "mod": "dsl::fixture_sweep",
+    "lib": "dsl_fixture_sweep",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-grammar",
+    "oldDir": "🔨️modules/🗣️dsl/📖️grammar/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs",
+    "mod": "dsl::grammar",
+    "lib": "dsl_grammar",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-lsp",
+    "oldDir": "🔨️modules/🗣️dsl/🧠️lsp/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🗣️dsl/🧠️lsp/🦀️component.rs",
+    "mod": "dsl::lsp",
+    "lib": "dsl_lsp",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧠️lsp/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧠️lsp/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-notation",
+    "oldDir": "🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs",
+    "mod": "dsl::notation",
+    "lib": "dsl_notation",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-registry",
+    "oldDir": "🔨️modules/🗣️dsl/📇️registry/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🗣️dsl/📇️registry/🦀️component.rs",
+    "mod": "dsl::registry",
+    "lib": "dsl_registry",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📇️registry/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📇️registry/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-schema",
+    "oldDir": "🔨️modules/🗣️dsl/🧬️schema/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs",
+    "mod": "dsl::schema",
+    "lib": "dsl_schema",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-flow-core",
+    "oldDir": "🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🌊️flow/🫀️core/🦀️component.rs",
+    "mod": "flow",
+    "lib": "flow_core",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-infinite-board",
+    "oldDir": "🔨️modules/♾️infinite/🎲️board/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/♾️infinite/🎲️board/🦀️component.rs",
+    "mod": "infinite::board",
+    "lib": "infinite_board",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-infinite-board-normal-directed",
+    "oldDir": "🔨️modules/♾️infinite/🎲️board/➕️normal/➡️directed/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/♾️infinite/🎲️board/➕️normal/➡️directed/🦀️component.rs",
+    "mod": "infinite::board::normal::directed",
+    "lib": "infinite_board_normal_directed",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/➕️normal/➡️directed/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/➕️normal/➡️directed/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-infinite-board-normal-undirected",
+    "oldDir": "🔨️modules/♾️infinite/🎲️board/➕️normal/↔undirected/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/♾️infinite/🎲️board/➕️normal/↔undirected/🦀️component.rs",
+    "mod": "infinite::board::normal::undirected",
+    "lib": "infinite_board_normal_undirected",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/➕️normal/↔undirected/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/➕️normal/↔undirected/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-infinite-board-port",
+    "oldDir": "🔨️modules/♾️infinite/🎲️board/🔌️ports/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/♾️infinite/🎲️board/🔌️ports/🦀️component.rs",
+    "mod": "infinite::board::ports",
+    "lib": "infinite_board_port",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-infinite-board-port-directed",
+    "oldDir": "🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🦀️component.rs",
+    "mod": "infinite::board::ports::directed",
+    "lib": "infinite_board_port_directed",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-infinite-board-port-directed-dag",
+    "oldDir": "🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️component.rs",
+    "mod": "infinite::board::ports::directed::dag",
+    "lib": "infinite_board_port_directed_dag",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-infinite-board-port-directed-normal",
+    "oldDir": "🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🦀️component.rs",
+    "mod": "infinite::board::ports::directed::normal",
+    "lib": "infinite_board_port_directed_normal",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-infinite-board-port-undirected",
+    "oldDir": "🔨️modules/♾️infinite/🎲️board/🔌️ports/↔undirected/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/♾️infinite/🎲️board/🔌️ports/↔undirected/🦀️component.rs",
+    "mod": "infinite::board::ports::undirected",
+    "lib": "infinite_board_port_undirected",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/↔undirected/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/↔undirected/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-infinite-canvas",
+    "oldDir": "🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/♾️infinite/🖼️canvas/🦀️component.rs",
+    "mod": "infinite::canvas",
+    "lib": "infinite_canvas",
+    "cfg": "not(all(target_arch = \"wasm32\", target_os = \"wasi\"))",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack",
+    "oldDir": "🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🎒️pack/🦀️component.rs",
+    "mod": "pack",
+    "lib": "pack",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack-async",
+    "oldDir": "🔨️modules/🎒️pack/⏳️async/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🎒️pack/⏳️async/🦀️component.rs",
+    "mod": "pack::async_",
+    "lib": "pack_async",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⏳️async/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⏳️async/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack-cli",
+    "oldDir": "🔨️modules/🎒️pack/⌨️cli/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🎒️pack/⌨️cli/🦀️component.rs",
+    "mod": "pack::cli",
+    "lib": "pack_cli",
+    "cfg": "not(target_arch = \"wasm32\")",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⌨️cli/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⌨️cli/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack-core",
+    "oldDir": "🔨️modules/🎒️pack/🫀️core/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🎒️pack/🫀️core/🦀️component.rs",
+    "mod": "pack::core",
+    "lib": "pack_core",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🫀️core/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🫀️core/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack-format",
+    "oldDir": "🔨️modules/🎒️pack/📐️format/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🎒️pack/📐️format/🦀️component.rs",
+    "mod": "pack::format",
+    "lib": "pack_format",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📐️format/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📐️format/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack-http",
+    "oldDir": "🔨️modules/🎒️pack/🌐️http/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🎒️pack/🌐️http/🦀️component.rs",
+    "mod": "pack::http",
+    "lib": "pack_http",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌐️http/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌐️http/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack-index",
+    "oldDir": "🔨️modules/🎒️pack/🔢️index/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🎒️pack/🔢️index/🦀️component.rs",
+    "mod": "pack::index",
+    "lib": "pack_index",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️index/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️index/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack-io",
+    "oldDir": "🔨️modules/🎒️pack/🔌️io/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🎒️pack/🔌️io/🦀️component.rs",
+    "mod": "pack::io",
+    "lib": "pack_io",
+    "cfg": "not(target_arch = \"wasm32\")",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔌️io/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔌️io/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack-testkit",
+    "oldDir": "🔨️modules/🎒️pack/🧪️testkit/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs",
+    "mod": "pack::testkit",
+    "lib": "pack_testkit",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🧪️testkit/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🧪️testkit/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack-value",
+    "oldDir": "🔨️modules/🎒️pack/🔢️value/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🎒️pack/🔢️value/🦀️component.rs",
+    "mod": "pack::value",
+    "lib": "pack_value",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️value/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️value/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol",
+    "oldDir": "🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/📡️spr/🦀️component.rs",
+    "mod": "spr",
+    "lib": "protocol",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-causal",
+    "oldDir": "🔨️modules/📡️protocol/🔗️causal/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/📡️spr/🔗️causal/🦀️component.rs",
+    "mod": "spr::causal",
+    "lib": "protocol_causal",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔗️causal/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔗️causal/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-channel",
+    "oldDir": "🔨️modules/📡️protocol/🧵️channel/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/📡️spr/🧵️channel/🦀️component.rs",
+    "mod": "spr::channel",
+    "lib": "protocol_channel",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧵️channel/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧵️channel/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-cli",
+    "oldDir": "🔨️modules/📡️protocol/⌨️cli/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/📡️spr/⌨️cli/🦀️component.rs",
+    "mod": "spr::cli",
+    "lib": "protocol_cli",
+    "cfg": "not(target_arch = \"wasm32\")",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⌨️cli/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⌨️cli/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-command",
+    "oldDir": "🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/📡️spr/🎮️command/🦀️component.rs",
+    "mod": "spr::command",
+    "lib": "protocol_command",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-core",
+    "oldDir": "🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/📡️spr/🫀️core/🦀️component.rs",
+    "mod": "spr::core",
+    "lib": "protocol_core",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-crdt",
+    "oldDir": "🔨️modules/📡️protocol/🔀️crdt/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/📡️spr/🔀️crdt/🦀️component.rs",
+    "mod": "spr::crdt",
+    "lib": "protocol_crdt",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔀️crdt/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔀️crdt/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-format",
+    "oldDir": "🔨️modules/📡️protocol/📐️format/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/📡️spr/📐️format/🦀️component.rs",
+    "mod": "spr::format",
+    "lib": "protocol_format",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📐️format/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📐️format/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-history",
+    "oldDir": "🔨️modules/📡️protocol/📜️history/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/📡️spr/📜️history/🦀️component.rs",
+    "mod": "spr::history",
+    "lib": "protocol_history",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📜️history/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📜️history/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-io",
+    "oldDir": "🔨️modules/📡️protocol/🔌️io/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/📡️spr/🔌️io/🦀️component.rs",
+    "mod": "spr::io",
+    "lib": "protocol_io",
+    "cfg": "not(target_arch = \"wasm32\")",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔌️io/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔌️io/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-materialize",
+    "oldDir": "🔨️modules/📡️protocol/💎️materialize/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/📡️spr/💎️materialize/🦀️component.rs",
+    "mod": "spr::materialize",
+    "lib": "protocol_materialize",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/💎️materialize/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/💎️materialize/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-testkit",
+    "oldDir": "🔨️modules/📡️protocol/🧪️testkit/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/📡️spr/🧪️testkit/🦀️component.rs",
+    "mod": "spr::testkit",
+    "lib": "protocol_testkit",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧪️testkit/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧪️testkit/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-wire",
+    "oldDir": "🔨️modules/📡️protocol/📡️wire/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/📡️spr/📡️wire/🦀️component.rs",
+    "mod": "spr::wire",
+    "lib": "protocol_wire",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📡️wire/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📡️wire/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-store",
+    "oldDir": "🔨️modules/🏪️store/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🏪️store/🦀️component.rs",
+    "mod": "store",
+    "lib": "store",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-store-sync",
+    "oldDir": "🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🏪️store/🔄️sync/🦀️component.rs",
+    "mod": "store::sync",
+    "lib": "store_sync",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/📦️lib.rs"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-store-worker",
+    "oldDir": "🔨️modules/🏪️store/👷️worker/⚡️implementations/🦀️rust",
+    "dest": "🔨️modules/🏪️store/👷️worker/🦀️component.rs",
+    "mod": "store::worker",
+    "lib": "store_worker",
+    "cfg": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/⚡️implementations/🦀️rust/Cargo.toml",
+    "libPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/⚡️implementations/🦀️rust/📦️lib.rs"
+  }
+]

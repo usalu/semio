@@ -1,0 +1,11 @@
+{
+  "surfacePkg": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
+  "removed": 0,
+  "changed": [
+    "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/⚡️implementations/🦀️rust/🌍️world/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml"
+  ]
+}

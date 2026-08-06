@@ -239,200 +239,12 @@ export function configureHostPorts(overrides: HostPortOverrides): () => void {
 // #endregion 🔌️PortWiring
 
 // #region 🐚️ShellScope
-/** @emoji 🐚️ Per-shell replacement for the old `(globalThis).__selectionMode` global plus its
- * `window`-wide `"semio:selectionOptionsChanged"` broadcast — those meant one shell's selection-mode
- * change silently reconfigured every other mounted shell's WASM session too. Keyed by the same
- * {@link SelectionMergeMode} union `marqueeModeFromModifiers`/`selectionMergeIds` already use (declared
- * further down in this file — a `type` reference resolves module-wide, so the forward reference is fine). */
-export interface SelectionModeStore {
-  get(): SelectionMergeMode;
-  set(mode: SelectionMergeMode): void;
-  /** Registers a callback invoked whenever `set` changes the mode. Returns an unsubscribe function. */
-  subscribe(callback: () => void): () => void;
-}
-
-function createSelectionModeStore(): SelectionModeStore {
-  let mode: SelectionMergeMode = "default";
-  const subscribers = new Set<() => void>();
-  return {
-    get: () => mode,
-    set: (next) => {
-      if (next === mode) return;
-      mode = next;
-      for (const callback of subscribers) callback();
-    },
-    subscribe: (callback) => {
-      subscribers.add(callback);
-      return () => subscribers.delete(callback);
-    },
-  };
-}
-
-/** @emoji 🐚️ Per-mounted-`FrameworkOsShell` scope — the seam every document-global mechanism (element
- * ids, theming, i18n, keybindings, storage, portals, ...) threads through so several shells can coexist
- * on one page. Populated incrementally: theming/i18n/keyboard fields land with their own waves. */
-export interface ShellScope {
-  readonly shellId: string;
-  /** The shell's own root element (the `.semio-scope` div `FrameworkOsShell` renders into). */
-  readonly rootRef: { current: HTMLElement | null };
-  /** Fixed-position overlay layer, last child of the shell root — the portal target for menus, drag
-   * ghosts, and dialogs so they never escape to `document.body` and collide with another shell. */
-  readonly portalLayerRef: { current: HTMLElement | null };
-  readonly storage: StoragePort;
-  /** True only for the shell `bootFrameworkOs` mounts as the sole app on its own page — gates the
-   * handful of behaviors that are legitimately page-global (document title, browser history sync). */
-  readonly ownsPage: boolean;
-  /** `querySelector` scoped to this shell's root, replacing document-wide lookups. */
-  query(selector: string): HTMLElement | null;
-  /** `querySelectorAll` scoped to this shell's root, replacing document-wide lookups. */
-  queryAll(selector: string): HTMLElement[];
-  readonly selection: SelectionModeStore;
-  /** This shell's own i18next instance (see `createShellI18nInstance`) — `useUiTranslation`/`useLabel`
-   * pick it up automatically via the nearest `I18nextProvider` ancestor (`FrameworkOsShell` renders one
-   * around its subtree), so no call site outside `ShellScope` plumbing itself needs to change. */
-  readonly i18n: typeof i18next;
-}
-
-let shellScopeAutoIdSeq = 0;
-
-/** @emoji 🐚️ Creates a fresh {@link ShellScope}. Call once per shell mount (e.g. from a lazy `useState`
- * initializer) — the scope's identity must stay stable for the shell instance's lifetime. */
-export function createShellScope(options: { readonly shellId?: string; readonly storage: StoragePort; readonly ownsPage?: boolean; readonly initialLocale?: UiLocale }): ShellScope {
-  const shellId = options.shellId ?? `shell-${(shellScopeAutoIdSeq += 1)}`;
-  const rootRef: { current: HTMLElement | null } = { current: null };
-  const portalLayerRef: { current: HTMLElement | null } = { current: null };
-  return {
-    shellId,
-    rootRef,
-    portalLayerRef,
-    storage: options.storage,
-    ownsPage: options.ownsPage ?? false,
-    query: (selector) => rootRef.current?.querySelector<HTMLElement>(selector) ?? null,
-    queryAll: (selector) => (rootRef.current ? Array.from(rootRef.current.querySelectorAll<HTMLElement>(selector)) : []),
-    selection: createSelectionModeStore(),
-    i18n: createShellI18nInstance(options.initialLocale ?? "en"),
-  };
-}
-
-export const ShellScopeContext = React.createContext<ShellScope | null>(null);
-
-/** @emoji 🐚️ Also wraps `children` in an `I18nextProvider` bound to `scope.i18n` — the only wiring
- * `useUiTranslation`/`useLabel` (which call plain `useTranslation()`) need to resolve this shell's own
- * translations instead of the shared `uiI18n` singleton; no call site elsewhere changes. */
-export function ShellScopeProvider({ scope, children }: { readonly scope: ShellScope; readonly children: React.ReactNode }): React.ReactElement {
-  return React.createElement(ShellScopeContext.Provider, { value: scope }, React.createElement(I18nextProvider, { i18n: scope.i18n }, children));
-}
-
-/** @emoji 🐚️ Reads the enclosing shell's scope — throws outside a {@link ShellScopeProvider} rather than
- * silently falling back to page-global state, so a missing provider fails loudly during development. */
-export function useShellScope(): ShellScope {
-  const scope = React.useContext(ShellScopeContext);
-  if (!scope) throw new Error("[DEBUG] useShellScope called outside a ShellScopeProvider");
-  return scope;
-}
-
-/** @emoji 🐚️ Like {@link useShellScope} but returns `null` outside a provider — for the rare leaf element
- * usable both inside a shell and standalone (e.g. a docs-site embed of a single component). */
-export function useShellScopeOptional(): ShellScope | null {
-  return React.useContext(ShellScopeContext);
-}
-
-/** @emoji 🐚️ Falls back to a plain (unnamespaced) browser storage port for the handful of standalone
- * hooks (`useUiTerminology`, `setUiLocale`, …) usable both inside a `ShellScopeProvider` and outside one
- * (a "TS-native product" that hasn't been wrapped yet) — matches pre-scoping behavior for the latter. */
-function shellScopeStorageOrBrowserFallback(scope: ShellScope | null): StoragePort {
-  return scope?.storage ?? createBrowserStoragePort();
-}
+import { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider, useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback } from "../../../../🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx";
+export { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider, useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback };
 // #endregion 🐚️ShellScope
 
-// #region 🐚️ShellActivity
-/** @emoji 🐚️ Which registered shell root most recently received a `pointerdown`/`focusin` — generalizes
- * the `🪟️WindowChrome` region's `surfaceActiveRoots` tracker (which does the same thing for
- * panel/pane/window activity within ONE page) to the shell level, so a page hosting several mounted
- * shells can tell which one the user is actually interacting with. */
-const shellActivityRoots = new Set<HTMLElement>();
-let activeShellRootValue: HTMLElement | null = null;
-const shellActivitySubscribers = new Set<() => void>();
-let shellActivityListenersInstalled = false;
-
-function setActiveShellRoot(next: HTMLElement | null): void {
-  if (activeShellRootValue === next) return;
-  activeShellRootValue = next;
-  shellActivitySubscribers.forEach((notify) => notify());
-}
-
-function resolveActiveShellRoot(target: EventTarget | null): HTMLElement | null {
-  let node: Node | null = target instanceof Node ? target : null;
-  while (node) {
-    if (node instanceof HTMLElement && shellActivityRoots.has(node)) return node;
-    node = node.parentNode;
-  }
-  return null;
-}
-
-function installShellActivityListeners(): void {
-  if (shellActivityListenersInstalled || typeof document === "undefined") return;
-  shellActivityListenersInstalled = true;
-  const onActivity = (event: Event) => {
-    const root = resolveActiveShellRoot(event.target);
-    if (root) setActiveShellRoot(root);
-  };
-  document.addEventListener("pointerdown", onActivity, true);
-  document.addEventListener("focusin", onActivity, true);
-}
-
-/** @emoji 🐚️ Registers `root` as a candidate "active shell" — called once per mounted `FrameworkOsShell`.
- * The first (and, on a single-shell page, only) registered root starts active so keyboard dispatch works
- * immediately, before any pointer/focus activity. Returns an unregister function. */
-export function registerShellActivityRoot(root: HTMLElement): () => void {
-  installShellActivityListeners();
-  shellActivityRoots.add(root);
-  if (activeShellRootValue === null) setActiveShellRoot(root);
-  return () => {
-    shellActivityRoots.delete(root);
-    if (activeShellRootValue === root) setActiveShellRoot(shellActivityRoots.values().next().value ?? null);
-  };
-}
-
-/** @emoji 🐚️ The shell root most recently interacted with, among registered roots — `null` before any
- * shell has registered. */
-export function activeShellRoot(): HTMLElement | null {
-  return activeShellRootValue;
-}
-
-/**
- * @emoji 🐚️ A `document`-level `keydown` listener gated to one shell: fires `handler` only when the
- * event's target is inside `rootRef.current`, or — for a keystroke that lands on `document`/`body` with
- * nothing focused (the common case for a global hotkey) — when this shell is {@link activeShellRoot}.
- * Replaces the old pattern of an unconditional `window`/`document` keydown listener per shell, under
- * which every mounted shell fired its bound action (and could `preventDefault()` out from under another
- * shell) for every keystroke on the page regardless of which shell the user was actually using.
- */
-export function useShellKeydown(rootRef: { readonly current: HTMLElement | null }, handler: (event: KeyboardEvent) => void, deps: readonly unknown[]): void {
-  const handlerRef = React.useRef(handler);
-  handlerRef.current = handler;
-  const root = rootRef.current;
-  React.useEffect(() => {
-    if (!root) return;
-    const unregister = registerShellActivityRoot(root);
-    const onKeyDown = (event: KeyboardEvent) => {
-      const target = event.target;
-      const withinThisRoot = target instanceof Node && root.contains(target);
-      if (!withinThisRoot && activeShellRoot() !== root) return;
-      handlerRef.current(event);
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      unregister();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `deps` is the caller's own dependency list, spread intentionally
-  }, [root, ...deps]);
-}
-
-/** 🐚️ Stable no-op root for {@link useShellKeydown} call sites rendered outside a `ShellScopeProvider` (unit tests, storybook) — the hook's `if (!root) return;` guard makes this permanently inert rather than throwing. */
-export const NULL_SHELL_ROOT_REF: { readonly current: HTMLElement | null } = { current: null };
-// #endregion 🐚️ShellActivity
+import { registerShellActivityRoot, activeShellRoot, useShellKeydown, NULL_SHELL_ROOT_REF } from "../../../../🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx";
+export { registerShellActivityRoot, activeShellRoot, useShellKeydown, NULL_SHELL_ROOT_REF };
 
 // #region 🔖️IconRenderPort
 export type { IconRenderCamera, IconRenderFormat, IconRenderShape, IconRenderLights, IconRenderMaterial, IconRenderPort, IconRenderRequest, IconRenderResult, ThemeAppearanceName, ThemePaletteGroup, UiTheme } from "@semio-tech/ui-styling";
@@ -803,58 +615,14 @@ export const HostReactFlowProvider = flowHostPort.provider;
 export const HostThreeCanvas = threeHostPort.canvas;
 export const HostSceneCanvas = sceneHostPort.fiber.canvas;
 export type { ThreeEvent };
-// #endregion 🔌️PortWiring
 
-// #region 🎼️Utilities
 
-// Generic utility and type definitions that make @semio-tech/ui-react self-contained.
-// These MUST NOT depend on any external compose package.
 
-/** @emoji 🌀️ Dashed, slow-spinning + gently pulsing waiting ring in the element's normal border color. */
-export const waitingBorderClass = "border-waiting";
 
-/** @emoji 🌀️ Waiting ring recolored to the active stroke; pair with selected/active elements. */
-export const waitingBorderActiveClass = cn(waitingBorderClass, "border-waiting-active");
 
-/** @emoji 🌀️ Loading ring recolored to the active stroke; pair with selected/active elements. */
-export const loadingBorderActiveClass = cn(loadingBorderClass, "border-loading-active");
 
-/** @emoji 🌀️ Clockwise spinning + pulsing loading ring in the element's normal border color. */
-export const loadingBorderClass = "border-loading";
 
-/** @emoji 🎨️ Active/on: primary fill + active border + emphasized content (never the transient hover fill). */
-export const interactiveOnClass = cn(
-  "data-[state=on]:bg-active-base",
-  "data-[state=on]:border-active-base",
-  "data-[state=on]:text-emphasized",
-  "data-[state=on]:hover:bg-active-base/90",
-  "data-[state=on]:hover:border-active-base",
-  "data-[state=on]:hover:text-emphasized",
-);
 
-/** @emoji 🚫️ React props that disable native browser affordances on editable UI controls. */
-export const uiFormControlBrowserDefaultProps = {
-  autoComplete: "off",
-  autoCorrect: "off",
-  autoCapitalize: "off",
-  spellCheck: false,
-  "data-1p-ignore": true,
-  "data-lpignore": "true",
-} as const satisfies Pick<React.InputHTMLAttributes<HTMLInputElement>, "autoComplete" | "autoCorrect" | "autoCapitalize" | "spellCheck"> & { readonly "data-1p-ignore": boolean; readonly "data-lpignore": string };
-
-/** @emoji 🎨️ Active tab: primary fill + active border + emphasized content. */
-export const interactiveTabActiveClass = cn(
-  "data-[state=active]:bg-active-base",
-  "data-[state=active]:border-active-base",
-  "data-[state=active]:text-emphasized",
-  "data-[state=active]:hover:bg-active-base/90",
-  "data-[state=active]:hover:border-active-base",
-  "data-[state=active]:hover:text-emphasized",
-);
-
-export const groupHoverExcludingHandleBgFillClass = "group-hover/tree-row:not-group-data-[handle-hovered=true]/tree-row:bg-hover-interactive-fill";
-
-export const hoverExcludingHandleTextEmphasizedClass = "hover:not-data-[handle-hovered=true]:text-emphasized";
 
 /** @emoji 🪟️ Pane chrome toggle — same layout as {@link panelAnchorTabButtonClass}: leading semantic icon, label, trailing {@link DragHandle}. */
 export const windowPaneChromeToggleClass = cn(
@@ -867,11 +635,7 @@ export const windowPaneChromeToggleClass = cn(
 /** @emoji 🪟️ Default mode-dock tab label — element gray; emphasize on hover/active only. */
 export const modeDockTabClassName = cn(chromeControlTabItemClass, "group max-w-[12rem] shrink-0 cursor-pointer items-center px-single select-none transition-colors");
 
-/** @emoji 🎯️ Focus/open on form controls: accent border color only, never extra ring width. */
-export const formControlFocusBorderClass = cn("outline-none", interactiveControlTransitionClass, "focus-visible:border-accent data-[state=open]:border-accent aria-invalid:border-destructive focus-visible:ring-0 shadow-none");
 
-/** @emoji 🎨️ Shared transition for interactive chrome (hover, focus, active backgrounds). */
-export const interactiveControlTransitionClass = "transition-[color,border-color,background-color]";
 
 /** @emoji 🌳️ Typography for measure tree leaf labels. */
 export const windowMeasureTreeLeafLabelClass = "text-tiny font-normal text-element group-hover:text-emphasized transition-colors";
@@ -890,6 +654,9 @@ export const dropZoneReadyTextClass = "text-emphasized";
 
 /** @emoji 🎯️ Passive drop-zone fill — secondary accent, kept visually distinct from the stronger primary-accent indicator on the actively hovered target. */
 export const dropZoneReadyFillClass = "bg-[var(--accent-secondary)]";
+
+/** @emoji Combined passive drop-zone treatment (fill + emphasized text/icons). */
+export const dropZoneReadyClass = cn(dropZoneReadyFillClass, dropZoneReadyTextClass);
 
 /** @emoji 🌀️ Maps shell chrome {@link UiStatus} to the shared border ring utilities. */
 export function chromeStatusBorderClass(status: UiStatus | undefined, active = false): string {
@@ -912,60 +679,75 @@ export function loadingBorderStateClass(loading: boolean, active = false): strin
   return loading ? (active ? loadingBorderActiveClass : loadingBorderClass) : "";
 }
 
-/** @emoji 🌀️ Dashed, slow-spinning + gently pulsing waiting ring in the element's normal border color. */
 
-export function shellFloorPaints(parent: SurfaceScopeValue | null): boolean {
-  return !(parent?.level === "base" && parent.fill !== "none");
-}
 
-/** @emoji 🎨️ Fill class for base-floor chrome — {@link surfaceClass} when standalone, transparent on Layout's painted base. */
 
-/** @emoji 🎨️ Opaque per-level fill — background-color only, no blur (see `[data-level]` cascade in 🎨️ui.css). */
-export const surfaceClass = "ui-surface";
 
-/** @emoji 🎨️ Fill class for base-floor chrome — {@link surfaceClass} when standalone, transparent on Layout's painted base. */
-export function shellFloorFillClass(parent: SurfaceScopeValue | null): string {
-  return shellFloorPaints(parent) ? surfaceClass : "bg-transparent";
-}
 
-/** @emoji 🎨️ Per-level glass fill (blur + alpha) — used identically by a level's body AND its
- * attached chrome (title caps, ribbons, tab bars, rails); there is deliberately no separate
 
-/** @emoji 📋️ Hover row styling for menus, selects, comboboxes, and context menus. */
-export const menuListItemClassName = cn(
-  "text-element",
-  interactiveHoverClass,
-  "focus:bg-hover-interactive-fill focus:text-emphasized",
-  "data-[active=true]:bg-hover-interactive-fill data-[active=true]:text-emphasized",
-  "data-[selected=true]:bg-active-base data-[selected=true]:border-active-base data-[selected=true]:text-emphasized",
-);
 
-/** @emoji 🎨️ Interactive hover: normal-border fill + emphasized content. */
-export const interactiveHoverClass = cn(interactiveHoverFillClass, "hover:text-emphasized");
 
-/** @emoji 📏️ Normal bottom edge utility for in-chrome dividers (not shell navbar — navbar uses a CSS `::after` stroke). */
-export const borderNormalBottomClass = `border-b ${borderNormalClass}`;
 
-/** @emoji 📏️ Subtle normal stroke for controls, windows, dividers, and in-chrome separators. */
-export const borderNormalClass = "!border-normal";
 
-/** @emoji 📏️ Implicit element border color (controls, dropdowns, dividers). */
-export const borderElementClass = "border-element";
 
-/** @emoji 🎨️ Shared active fill for pressed tabs, toggles, and nav selection. */
-export const interactiveActiveFillClass = cn("bg-active-base", interactiveActiveBorderClass, "text-emphasized", hoverExcludingHandleActiveBgClass, hoverExcludingHandleActiveBorderClass, hoverExcludingHandleTextEmphasizedClass);
-
-/** @emoji 📏️ Active stroke paired with {@link interactiveActiveFillClass}. */
-export const interactiveActiveBorderClass = "border-active-base";
-
-/** @emoji 🎨️ Fullscreen scrim; host element must carry `data-level="dialog"` for correct tint. */
-export const veilClass = "ui-veil";
-
-export const glassClass = "ui-glass";
 
 // 🧱️core: cn/twMergeUi extracted to 🧱️elements/🫀️core/🏷️ClassNames/🟦️component.tsx — ActionGroup/Toggle call
 import { cn } from "../../../../🧱️elements/🫀️core/🏷️ClassNames/🟦️component.tsx";
 export { cn };
+import {
+  waitingBorderClass,
+  waitingBorderActiveClass,
+  loadingBorderClass,
+  loadingBorderActiveClass,
+  interactiveOnClass,
+  uiFormControlBrowserDefaultProps,
+  interactiveTabActiveClass,
+  groupHoverExcludingHandleBgFillClass,
+  hoverExcludingHandleTextEmphasizedClass,
+  hoverExcludingHandleBgFillClass,
+  formControlFocusBorderClass,
+  interactiveControlTransitionClass,
+  interactiveHoverClass,
+  interactiveHoverFillClass,
+  borderNormalBottomClass,
+  borderNormalClass,
+  borderElementClass,
+  interactiveActiveFillClass,
+  interactiveActiveBorderClass,
+  veilClass,
+  glassClass,
+  surfaceClass,
+  menuListItemClassName,
+  shellFloorPaints,
+  shellFloorFillClass,
+} from "../../../../🧱️elements/🫀️core/🏷️ClassNames/🟦️component.tsx";
+export {
+  waitingBorderClass,
+  waitingBorderActiveClass,
+  loadingBorderClass,
+  loadingBorderActiveClass,
+  interactiveOnClass,
+  uiFormControlBrowserDefaultProps,
+  interactiveTabActiveClass,
+  groupHoverExcludingHandleBgFillClass,
+  hoverExcludingHandleTextEmphasizedClass,
+  hoverExcludingHandleBgFillClass,
+  formControlFocusBorderClass,
+  interactiveControlTransitionClass,
+  interactiveHoverClass,
+  interactiveHoverFillClass,
+  borderNormalBottomClass,
+  borderNormalClass,
+  borderElementClass,
+  interactiveActiveFillClass,
+  interactiveActiveBorderClass,
+  veilClass,
+  glassClass,
+  surfaceClass,
+  menuListItemClassName,
+  shellFloorPaints,
+  shellFloorFillClass,
+};
 // cn(...) at module top level, which requires a non-circular import (see that file's header comment for
 // why the barrel definition caused a real bug).
 
@@ -1319,651 +1101,9 @@ export function useCanvasPickInteraction({ resolveTargetsAtClient, onHoverFocus,
 // #endregion 🔖️CanvasPickMenu
 
 // #region 🔖️Icon
-/** @emoji 📐️ Named size tokens for {@link Icon}. */
-export type IconSizeToken = "tiny" | "small" | "base" | "large";
+import { resolveIconSizePx, decodeIcon, encodeIcon, classifyIconSelectorMode, resolveIconUrlsInBoardJson, resolveCatalogIconSvg, resolveMetabolismIconSvg, renderControlIcon, iconSvgMarkup, iconMaskImage, Icon, createIconComponent, AddIcon, AlertCircleIcon, ArrowLeftIcon, AwardIcon, BookIcon, BoxIcon, CameraIcon, ChatIcon, CheckIcon, CheckIconAlt, ChevronDownIcon, ChevronDownIconAlt, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronsUpDownIcon, CircleDotIcon, CloseIcon, CloseIconAlt, CodeIcon, ComponentIcon, ConnectionIcon, ConnectorIcon, CopyIcon, DetailsIcon, DiagramIcon, DisconnectIcon, DocumentIcon, ExternalLinkIcon, FileArchiveIcon, FileCodeIcon, FileImageIcon, FileJsonIcon, FileSpreadsheetIcon, FileTypeIcon, FileVideoIcon, FilterIcon, FindInViewIcon, FocusIcon, FolderIcon, FolderOpenIcon, GlobeIcon, GripVerticalIcon, HandIcon, HashIcon, HomeIcon, HudIcon, HudPanelIcon, InfoIcon, IntersectIcon, LandmarkIcon, LassoIcon, LayoutIcon, LayoutGridIcon, LeftSidePanelIcon, LightbulbIcon, LinkIcon, LoaderIcon, LocalKitIcon, Maximize2Icon, MessageCircle, MessageSquareIcon, Minimize2Icon, MonitorIcon, MoonIcon, MoreHorizontalIcon, MousePointerIcon, MoveIcon, NavigateBackIcon, NavigateForwardIcon, NavigateUpIcon, PanelRightIcon, PauseIcon, PieceIcon, PlayIcon, PlugIcon, PlusIcon, PortIcon, Puzzle2dIconFileImportIcon, Puzzle2dIconMathGlyphIcon, Puzzle2dIconRasterGlyphIcon, RecordIcon, RemoteKitIcon, RemoveIcon, ResetIcon, RightSidePanelIcon, SceneIcon, SearchIcon, SelectUtilityIcon, Settings2Icon, SettingsIcon, SkipBackIcon, SkipForwardIcon, SmartphoneIcon, SortAscendingIcon, SortDescendingIcon, StatsIcon, StopIcon, SunIcon, TabletIcon, TableViewIcon, TemporaryKitIcon, TriangleAlertIcon, TutorialIcon, TypeIcon, UserIcon, UsersIcon, UtilitiesIcon, UtilityBarIcon, WorkbenchIcon, Cursor, type IconSizeToken, type Icon, type IconSelectorMode, type IconSource, type ControlIcon, type IconProps } from "../../../../🧱️elements/🔣Icons/🟦️component.tsx";
+export { resolveIconSizePx, decodeIcon, encodeIcon, classifyIconSelectorMode, resolveIconUrlsInBoardJson, resolveCatalogIconSvg, resolveMetabolismIconSvg, renderControlIcon, iconSvgMarkup, iconMaskImage, Icon, createIconComponent, AddIcon, AlertCircleIcon, ArrowLeftIcon, AwardIcon, BookIcon, BoxIcon, CameraIcon, ChatIcon, CheckIcon, CheckIconAlt, ChevronDownIcon, ChevronDownIconAlt, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronsUpDownIcon, CircleDotIcon, CloseIcon, CloseIconAlt, CodeIcon, ComponentIcon, ConnectionIcon, ConnectorIcon, CopyIcon, DetailsIcon, DiagramIcon, DisconnectIcon, DocumentIcon, ExternalLinkIcon, FileArchiveIcon, FileCodeIcon, FileImageIcon, FileJsonIcon, FileSpreadsheetIcon, FileTypeIcon, FileVideoIcon, FilterIcon, FindInViewIcon, FocusIcon, FolderIcon, FolderOpenIcon, GlobeIcon, GripVerticalIcon, HandIcon, HashIcon, HomeIcon, HudIcon, HudPanelIcon, InfoIcon, IntersectIcon, LandmarkIcon, LassoIcon, LayoutIcon, LayoutGridIcon, LeftSidePanelIcon, LightbulbIcon, LinkIcon, LoaderIcon, LocalKitIcon, Maximize2Icon, MessageCircle, MessageSquareIcon, Minimize2Icon, MonitorIcon, MoonIcon, MoreHorizontalIcon, MousePointerIcon, MoveIcon, NavigateBackIcon, NavigateForwardIcon, NavigateUpIcon, PanelRightIcon, PauseIcon, PieceIcon, PlayIcon, PlugIcon, PlusIcon, PortIcon, Puzzle2dIconFileImportIcon, Puzzle2dIconMathGlyphIcon, Puzzle2dIconRasterGlyphIcon, RecordIcon, RemoteKitIcon, RemoveIcon, ResetIcon, RightSidePanelIcon, SceneIcon, SearchIcon, SelectUtilityIcon, Settings2Icon, SettingsIcon, SkipBackIcon, SkipForwardIcon, SmartphoneIcon, SortAscendingIcon, SortDescendingIcon, StatsIcon, StopIcon, SunIcon, TabletIcon, TableViewIcon, TemporaryKitIcon, TriangleAlertIcon, TutorialIcon, TypeIcon, UserIcon, UsersIcon, UtilitiesIcon, UtilityBarIcon, WorkbenchIcon, Cursor, type IconSizeToken, type Icon, type IconSelectorMode, type IconSource, type ControlIcon, type IconProps };
 
-const ICON_SIZE_PX: Record<IconSizeToken, number> = {
-  tiny: domSizePx("iconTinyUiSpacing"),
-  small: domSizePx("iconSmallUiSpacing"),
-  base: domSizePx("iconBaseUiSpacing"),
-  large: domSizePx("iconLargeUiSpacing"),
-};
-
-/** @emoji 📐️ Resolves {@link Icon} `size` to pixel dimensions. */
-export function resolveIconSizePx(size?: number | IconSizeToken): number {
-  if (size === undefined) return ICON_SIZE_PX.base;
-  if (typeof size === "number") return size;
-  return ICON_SIZE_PX[size];
-}
-
-// #region 🖼️IconCodec
-
-/** @emoji 🖼️ Canonical structured icon payload shared across canvases and UI chrome. */
-export type Icon =
-  | { readonly kind: "url"; readonly url: string }
-  | { readonly kind: "shortcode"; readonly code: string }
-  | { readonly kind: "data"; readonly data: string }
-  | { readonly kind: "emoji"; readonly emoji: string }
-  | { readonly kind: "typst"; readonly src: string }
-  | { readonly kind: "text"; readonly text: string }
-  | { readonly kind: "svg"; readonly svg: string }
-  | { readonly kind: "catalog"; readonly key: IconName }
-  | { readonly kind: "themed"; readonly key: MetabolismIconName }
-  | { readonly kind: "node"; readonly node: React.ReactNode };
-
-/** @emoji 🎛️ Shared icon editor tab buckets aligned with {@link Icon}. */
-export type IconSelectorMode = "url" | "shortcode" | "data" | "emoji" | "math" | "text" | "vector";
-
-function isRasterDataUrlPayloadForIcon(s: string): boolean {
-  const u = s.trim().toLowerCase();
-  return u.startsWith("data:image/png;base64,") || u.startsWith("data:image/jpeg;base64,") || u.startsWith("data:image/jpg;base64,") || u.startsWith("data:image/webp;base64,") || u.startsWith("data:image/gif;base64,");
-}
-
-function isSvgDataUrlPayloadForIcon(s: string): boolean {
-  return s.trim().toLowerCase().startsWith("data:image/svg+xml");
-}
-
-function looksLikeShortcodeToken(t: string): boolean {
-  return t.length >= 3 && t.startsWith(":") && t.endsWith(":") && /^:[\w+-]+:$/.test(t);
-}
-
-function looksLikeAsciiCatalogishStemForIcon(s: string): boolean {
-  const t = s.trim();
-  if (t === "" || !/^[\w.-]+$/.test(t)) {
-    return false;
-  }
-  return /[._-]/.test(t) || t.length > 48;
-}
-
-function looksLikeBareUrlForIcon(s: string): boolean {
-  const lower = s.trim().toLowerCase();
-  return lower.startsWith("http://") || lower.startsWith("https://");
-}
-
-function looksLikeBareEmojiForIcon(s: string): boolean {
-  return /\p{Extended_Pictographic}/u.test(s.trim());
-}
-
-/** @emoji 🔤️ Decodes a canonical icon string into a structured {@link Icon}. */
-export function decodeIcon(encoded: string): Icon | undefined {
-  const t = encoded.trim();
-  if (t === "") {
-    return undefined;
-  }
-  if (t.startsWith("url:")) {
-    const url = t.slice("url:".length).trim();
-    return url === "" ? undefined : { kind: "url", url };
-  }
-  if (looksLikeBareUrlForIcon(t)) {
-    return { kind: "url", url: t };
-  }
-  if (looksLikeShortcodeToken(t)) {
-    return { kind: "shortcode", code: t.slice(1, -1) };
-  }
-  if (t.startsWith("typst:")) {
-    const src = t.slice("typst:".length).trim();
-    return src === "" ? undefined : { kind: "typst", src };
-  }
-  if (t.startsWith("$")) {
-    return { kind: "typst", src: t };
-  }
-  if (t.startsWith("emoji:")) {
-    const emoji = t.slice("emoji:".length).trim();
-    return emoji === "" ? undefined : { kind: "emoji", emoji };
-  }
-  if (t.startsWith("text:")) {
-    const text = t.slice("text:".length).trim();
-    return text === "" ? undefined : { kind: "text", text };
-  }
-  if (isRasterDataUrlPayloadForIcon(t) || isSvgDataUrlPayloadForIcon(t) || t.toLowerCase().startsWith("data:")) {
-    return { kind: "data", data: t };
-  }
-  const lower = t.toLowerCase();
-  if (lower.startsWith("<?xml") || lower.includes("<svg")) {
-    return { kind: "svg", svg: t };
-  }
-  if (isMetabolismIconName(t)) {
-    return { kind: "themed", key: t };
-  }
-  if (isIconName(t)) {
-    return { kind: "catalog", key: t };
-  }
-  if (looksLikeAsciiCatalogishStemForIcon(t)) {
-    return undefined;
-  }
-  if (looksLikeBareEmojiForIcon(t)) {
-    return { kind: "emoji", emoji: t };
-  }
-  if ([...t].length <= 16) {
-    return { kind: "text", text: t };
-  }
-  return undefined;
-}
-
-/** @emoji 🔤️ Encodes a structured {@link Icon} into the canonical wire string. */
-export function encodeIcon(icon: Icon): string {
-  switch (icon.kind) {
-    case "url":
-      return `url:${icon.url.trim()}`;
-    case "shortcode":
-      return `:${icon.code.trim()}:`;
-    case "data":
-      return icon.data.trim();
-    case "emoji":
-      return `emoji:${icon.emoji.trim()}`;
-    case "typst":
-      return icon.src.trim().startsWith("$") ? icon.src.trim() : `typst:${icon.src.trim()}`;
-    case "text":
-      return `text:${icon.text.trim()}`;
-    case "svg":
-      return icon.svg.trim();
-    case "catalog":
-      return icon.key;
-    case "themed":
-      return icon.key;
-    case "node":
-      return "";
-  }
-}
-
-/** @emoji 🧭️ Picks an {@link IconSelectorMode} tab for a stored icon string. */
-export function classifyIconSelectorMode(raw: string): IconSelectorMode {
-  const icon = decodeIcon(raw);
-  if (!icon) {
-    return "math";
-  }
-  switch (icon.kind) {
-    case "url":
-      return "url";
-    case "shortcode":
-      return "shortcode";
-    case "data":
-      return "data";
-    case "emoji":
-      return "emoji";
-    case "typst":
-      return "math";
-    case "text":
-      return "text";
-    case "svg":
-    case "catalog":
-    case "themed":
-      return "vector";
-    case "node":
-      return "vector";
-  }
-}
-
-function resolveShortcodeIcon(code: string): Icon {
-  const key = code.trim();
-  const lower = key.toLowerCase();
-  const emoji = shortcodeEmoji(lower);
-  if (emoji) {
-    return { kind: "emoji", emoji };
-  }
-  const catalog = shortcodeCatalogKey(key);
-  if (catalog) {
-    return { kind: "catalog", key: catalog };
-  }
-  return { kind: "shortcode", code: key };
-}
-
-const iconUrlDataCache = new Map<string, string>();
-
-async function fetchIconUrlAsDataUrl(url: string): Promise<string | undefined> {
-  const cached = iconUrlDataCache.get(url);
-  if (cached) {
-    return cached;
-  }
-  try {
-    const res = await fetch(url);
-    if (!res.ok) {
-      return undefined;
-    }
-    const blob = await res.blob();
-    const data = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(blob);
-    });
-    const trimmed = data.trim();
-    if (trimmed !== "") {
-      iconUrlDataCache.set(url, trimmed);
-    }
-    return trimmed || undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-/** @emoji 🌐️ Prefetches `url:`/`http(s)` icons in board JSON to inline `data:` payloads before WASM sync. */
-export async function resolveIconUrlsInBoardJson(json: string): Promise<string> {
-  let root: unknown;
-  try {
-    root = JSON.parse(json);
-  } catch {
-    return json;
-  }
-  if (!root || typeof root !== "object") {
-    return json;
-  }
-  const record = root as Record<string, unknown>;
-  const pending: Promise<void>[] = [];
-  const visit = (iconKind: unknown, apply: (next: string) => void) => {
-    if (typeof iconKind !== "string" || iconKind.trim() === "") {
-      return;
-    }
-    const icon = decodeIcon(iconKind);
-    if (!icon || icon.kind !== "url") {
-      return;
-    }
-    const cached = iconUrlDataCache.get(icon.url);
-    if (cached) {
-      apply(cached);
-      return;
-    }
-    pending.push(
-      fetchIconUrlAsDataUrl(icon.url).then((data) => {
-        if (data) {
-          apply(data);
-        }
-      }),
-    );
-  };
-  for (const bucket of ["nodes", "handles"] as const) {
-    const rows = record[bucket];
-    if (!Array.isArray(rows)) {
-      continue;
-    }
-    for (const row of rows) {
-      if (!row || typeof row !== "object") {
-        continue;
-      }
-      const obj = row as Record<string, unknown>;
-      visit(obj.iconKind, (next) => {
-        obj.iconKind = next;
-      });
-    }
-  }
-  if (pending.length === 0) {
-    return json;
-  }
-  await Promise.all(pending);
-  return JSON.stringify(root);
-}
-
-/** @emoji 🖼️ Icon payload: canonical union, vendored catalog name, or legacy shorthand. */
-export type IconSource = Icon | IconName | { readonly name: IconName } | { readonly svg: string } | { readonly url: string } | { readonly node: React.ReactNode };
-
-/** @emoji 🎛️ Required icon slot for chrome controls (buttons, toggles, actions). */
-export type ControlIcon = IconSource | React.ReactElement;
-
-function isIconSource(value: ControlIcon): value is IconSource {
-  if (typeof value === "string") return true;
-  if (typeof value === "object" && value !== null && !React.isValidElement(value)) {
-    return "kind" in value || "name" in value || "svg" in value || "url" in value || "node" in value;
-  }
-  return false;
-}
-
-function useThemeIcons(): UiTheme["icons"] {
-  return React.useSyncExternalStore(
-    subscribeActiveUiTheme,
-    () => activeUiTheme().icons,
-    () => activeUiTheme().icons,
-  );
-}
-
-/** @emoji 🖼️ Resolves catalog icon SVG for the active theme. */
-export function resolveCatalogIconSvg(name: IconName, icons: UiTheme["icons"] = activeUiTheme().icons): string {
-  return resolveCatalogIconSvgFromTheme(name, icons);
-}
-
-/** @emoji 🖼️ Resolves metabolism icon SVG for the active theme. */
-export function resolveMetabolismIconSvg(name: MetabolismIconName, icons: UiTheme["icons"] = activeUiTheme().icons): string {
-  return resolveMetabolismIconSvgFromTheme(name, icons);
-}
-
-const CATALOG_ICON_ALIASES: Partial<Record<string, IconName>> = {
-  trash: "trash-2",
-  menu: "list",
-  "circle-off": "eye-off",
-  "square-pen": "pencil",
-  trees: "list-tree",
-  gauge: "sliders-horizontal",
-  "building-2": "building",
-  compass: "focus",
-  microscope: "search",
-  "drafting-compass": "cad-shape",
-  "search-check": "search",
-  "file-chart-column": "bar-chart-3",
-  blocks: "component",
-  "flask-conical": "cylinder",
-  blend: "combine",
-  "user-plus": "user",
-  "clipboard-paste": "clipboard",
-  "clipboard-copy": "copy",
-  "git-branch-plus": "git-branch",
-  "git-compare": "git-branch",
-  history: "clock",
-  house: "home",
-  "list-filter": "list",
-  "notebook-pen": "book-open",
-  pointer: "mouse-pointer",
-  "scan-eye": "eye",
-  "square-dashed-mouse-pointer": "mouse-pointer-2",
-  upload: "hard-drive",
-  video: "camera",
-  "folder-tree": "folder",
-  "layout-panel-left": "panel-left",
-  "refresh-cw": "rotate-cw",
-  "text-cursor-input": "typography",
-  terminal: "code",
-  zap: "sparkles",
-  calculator: "hash",
-};
-
-function coerceIconSource(source: IconSource): Icon {
-  if (typeof source === "string") {
-    const key = source.trim();
-    const alias = CATALOG_ICON_ALIASES[key];
-    if (alias) {
-      return { kind: "catalog", key: alias };
-    }
-    if ((ICONS as Record<string, string>)[key]) {
-      return { kind: "catalog", key };
-    }
-    const emoji = shortcodeEmoji(key.toLowerCase());
-    if (emoji) {
-      return { kind: "emoji", emoji };
-    }
-    const catalog = shortcodeCatalogKey(key);
-    if (catalog) {
-      return { kind: "catalog", key: catalog };
-    }
-    const decoded = decodeIcon(key);
-    if (decoded) {
-      return decoded;
-    }
-    return { kind: "text", text: key };
-  }
-  if ("kind" in source) {
-    return source;
-  }
-  if ("node" in source) {
-    return { kind: "node", node: source.node };
-  }
-  if ("svg" in source) {
-    return { kind: "svg", svg: source.svg };
-  }
-  if ("url" in source) {
-    return { kind: "url", url: source.url };
-  }
-  return { kind: "catalog", key: source.name };
-}
-
-/** @emoji 🎛️ Renders a control icon or a visible missing-icon placeholder. */
-export function renderControlIcon(icon: ControlIcon | undefined | null | false, size: number | IconSizeToken = "small"): React.ReactNode {
-  if (icon === undefined || icon === null || icon === false) {
-    return <span data-missing-icon data-icon-kind="missing" className="inline-flex size-small shrink-0 rounded-sm bg-destructive/30" aria-hidden />;
-  }
-  if (isIconSource(icon)) return <Icon icon={icon} size={size} />;
-  return icon;
-}
-
-export interface IconProps {
-  icon: IconSource;
-  size?: number | IconSizeToken;
-  className?: string;
-  title?: UiLabel;
-}
-
-/** @emoji 🖼️ Raw vendored SVG markup for an icon name, or `undefined` when the name is not a vendored {@link IconName}. */
-export function iconSvgMarkup(name: IconName): string {
-  return resolveCatalogIconSvg(name);
-}
-
-const ICON_MASK_CACHE = new Map<string, string>();
-
-/** @emoji 🩻️ Alpha-mask image for an icon's own resolved SVG — lets CSS paint gradients (e.g. the celebrate conic) through the glyph instead of behind it. `currentColor` is baked to opaque black because a mask image renders in its own context and only its alpha channel is read. */
-export function iconMaskImage(svgMarkup: string): string {
-  const cached = ICON_MASK_CACHE.get(svgMarkup);
-  if (cached) return cached;
-  const forMask = svgMarkup.replace(/currentColor/gi, "#000");
-  const url = `url("data:image/svg+xml,${encodeURIComponent(forMask)}")`;
-  ICON_MASK_CACHE.set(svgMarkup, url);
-  return url;
-}
-
-const ICON_SIZE_CLASS: Record<IconSizeToken, string> = {
-  tiny: "size-tiny",
-  small: "size-small",
-  base: "size-workbench",
-  large: "size-xl",
-};
-
-function iconBoxStyle(size: number | IconSizeToken): React.CSSProperties | undefined {
-  if (typeof size !== "number") {
-    return undefined;
-  }
-  return { width: uiSpacingLen(size / (STYLING_COMPACT_ROOT_PX * 0.2)), height: uiSpacingLen(size / (STYLING_COMPACT_ROOT_PX * 0.2)) };
-}
-
-function iconBoxClassName(size: number | IconSizeToken, className?: string): string {
-  return cn(typeof size === "string" ? ICON_SIZE_CLASS[size] : undefined, className);
-}
-
-/** @emoji 🖼️ Renders canonical icons without depending on an external icon library. */
-export function Icon({ icon, size = "base", className, title }: IconProps): React.ReactElement {
-  const themeIcons = useThemeIcons();
-  const boxStyle = iconBoxStyle(size);
-  const boxClass = iconBoxClassName(size, className);
-  let normalized = coerceIconSource(icon);
-  if (normalized.kind === "shortcode") {
-    normalized = resolveShortcodeIcon(normalized.code);
-  }
-  if (normalized.kind === "node") {
-    return (
-      <span data-icon-kind="node" className={cn("inline-flex shrink-0 items-center justify-center", boxClass)} style={boxStyle} title={title}>
-        {normalized.node}
-      </span>
-    );
-  }
-  if (normalized.kind === "url" || normalized.kind === "data") {
-    const src = normalized.kind === "url" ? normalized.url : normalized.data;
-    return <img src={src} alt="" data-icon-kind="image" className={cn("shrink-0 object-contain", boxClass)} style={boxStyle} title={title} />;
-  }
-  if (normalized.kind === "emoji") {
-    return (
-      <span
-        data-icon-kind="emoji"
-        className={cn("inline-flex shrink-0 items-center justify-center text-base leading-none", boxClass)}
-        style={{ ...boxStyle, fontFamily: "'Noto Color Emoji','Segoe UI Emoji',sans-serif" }}
-        title={title}
-        aria-hidden={title ? undefined : true}
-      >
-        {normalized.emoji}
-      </span>
-    );
-  }
-  if (normalized.kind === "text" || normalized.kind === "typst") {
-    const label = normalized.kind === "text" ? normalized.text : normalized.src;
-    return (
-      <span data-icon-kind={normalized.kind} className={cn("inline-flex shrink-0 items-center justify-center font-mono text-xs", boxClass)} style={boxStyle} title={title}>
-        {label}
-      </span>
-    );
-  }
-  const svgMarkup =
-    normalized.kind === "svg" ? normalized.svg : normalized.kind === "catalog" ? resolveCatalogIconSvgFromTheme(normalized.key, themeIcons) : normalized.kind === "themed" ? resolveMetabolismIconSvgFromTheme(normalized.key, themeIcons) : undefined;
-  if (!svgMarkup) {
-    return (
-      <span data-icon-kind={normalized.kind === "shortcode" ? "shortcode" : "missing"} className={cn("inline-flex shrink-0 items-center justify-center font-mono text-2xs text-muted-foreground", boxClass)} style={boxStyle} title={title}>
-        {normalized.kind === "catalog" || normalized.kind === "themed" ? normalized.key.slice(0, 3) : "?"}
-      </span>
-    );
-  }
-  return (
-    <span
-      className={cn("inline-flex shrink-0 items-center justify-center [&>svg]:size-full", boxClass)}
-      style={{ ...boxStyle, ["--icon-mask" as string]: iconMaskImage(svgMarkup) }}
-      title={title}
-      data-icon={normalized.kind === "catalog" ? normalized.key : normalized.kind === "themed" ? normalized.key : undefined}
-      data-icon-kind={normalized.kind === "catalog" ? "catalog" : normalized.kind === "themed" ? "themed" : "svg"}
-      dangerouslySetInnerHTML={{ __html: svgMarkup }}
-      aria-hidden={title ? undefined : true}
-    />
-  );
-}
-
-// #endregion 🖼️IconCodec
-
-/** @emoji 🔗️ Binds a built-in {@link IconName} for APIs expecting `ComponentType<{ size?: number }>`. */
-export function createIconComponent(name: IconName): React.ComponentType<{ size?: number; className?: string }> {
-  return function BoundIcon({ size = 16, className }: { size?: number; className?: string }) {
-    return <Icon icon={name} size={size} className={className} />;
-  };
-}
-
-export const AddIcon = createIconComponent("plus");
-export const AlertCircleIcon = createIconComponent("alert-circle");
-export const ArrowLeftIcon = createIconComponent("arrow-left");
-export const AwardIcon = createIconComponent("award");
-export const BookIcon = createIconComponent("book-open");
-export const BoxIcon = createIconComponent("box");
-export const CameraIcon = createIconComponent("camera");
-export const ChatIcon = createIconComponent("message-circle");
-export const CheckIcon = createIconComponent("check");
-export const CheckIconAlt = CheckIcon;
-export const ChevronDownIcon = createIconComponent("chevron-down");
-export const ChevronDownIconAlt = ChevronDownIcon;
-export const ChevronLeftIcon = createIconComponent("chevron-left");
-export const ChevronRightIcon = createIconComponent("chevron-right");
-export const ChevronUpIcon = createIconComponent("chevron-up");
-export const ChevronsUpDownIcon = createIconComponent("chevrons-up-down");
-export const CircleDotIcon = createIconComponent("circle-dot");
-export const CloseIcon = createIconComponent("x");
-export const CloseIconAlt = CloseIcon;
-export const CodeIcon = createIconComponent("code");
-export const ComponentIcon = createIconComponent("component");
-export const ConnectionIcon = createIconComponent("network");
-export const ConnectorIcon = createIconComponent("crosshair");
-export const CopyIcon = createIconComponent("copy");
-export const DetailsIcon = createIconComponent("info");
-export const DiagramIcon = createIconComponent("grid-3x3");
-export const DisconnectIcon = createIconComponent("link-2-off");
-export const DocumentIcon = createIconComponent("file-text");
-export const ExternalLinkIcon = createIconComponent("external-link");
-export const FileArchiveIcon = createIconComponent("file-archive");
-export const FileCodeIcon = createIconComponent("file-code");
-export const FileImageIcon = createIconComponent("file-image");
-export const FileJsonIcon = createIconComponent("file-json");
-export const FileSpreadsheetIcon = createIconComponent("file-spreadsheet");
-export const FileTypeIcon = createIconComponent("file-type");
-export const FileVideoIcon = createIconComponent("file-video");
-export const FilterIcon = createIconComponent("filter");
-export const FindInViewIcon = createIconComponent("text-search");
-export const FocusIcon = createIconComponent("focus");
-export const FolderIcon = createIconComponent("folder");
-export const FolderOpenIcon = createIconComponent("folder-open");
-export const GlobeIcon = createIconComponent("globe");
-export const GripVerticalIcon = createIconComponent("grip-vertical");
-export const HandIcon = createIconComponent("hand");
-export const HashIcon = createIconComponent("hash");
-export const HomeIcon = createIconComponent("home");
-export const HudIcon = createIconComponent("hud-overlay");
-export const HudPanelIcon = createIconComponent("panel-top");
-export const InfoIcon = createIconComponent("info");
-export const IntersectIcon = createIconComponent("combine");
-export const LandmarkIcon = createIconComponent("landmark");
-export const LassoIcon = createIconComponent("lasso");
-export const LayoutIcon = createIconComponent("layout");
-export const LayoutGridIcon = createIconComponent("layout-grid");
-export const LeftSidePanelIcon = createIconComponent("panel-left");
-export const LightbulbIcon = createIconComponent("lightbulb");
-export const LinkIcon = createIconComponent("link");
-export const LoaderIcon = createIconComponent("loader-2");
-export const LocalKitIcon = createIconComponent("hard-drive");
-export const Maximize2Icon = createIconComponent("maximize-2");
-export const MessageCircle = createIconComponent("message-circle");
-export const MessageSquareIcon = createIconComponent("message-square");
-export const Minimize2Icon = createIconComponent("minimize-2");
-export const MonitorIcon = createIconComponent("monitor");
-export const MoonIcon = createIconComponent("moon");
-export const MoreHorizontalIcon = createIconComponent("more-horizontal");
-export const MousePointerIcon = createIconComponent("mouse-pointer-2");
-export const MoveIcon = createIconComponent("move");
-export const NavigateBackIcon = createIconComponent("arrow-left");
-export const NavigateForwardIcon = createIconComponent("arrow-right");
-export const NavigateUpIcon = createIconComponent("arrow-up");
-export const PanelRightIcon = createIconComponent("panel-right");
-export const PauseIcon = createIconComponent("pause");
-export const PieceIcon = createIconComponent("puzzle");
-export const PlayIcon = createIconComponent("play");
-export const PlugIcon = createIconComponent("plug");
-export const PlusIcon = createIconComponent("plus");
-export const PortIcon = createIconComponent("plug");
-export const Puzzle2dIconFileImportIcon = createIconComponent("image-plus");
-export const Puzzle2dIconMathGlyphIcon = createIconComponent("sigma");
-export const Puzzle2dIconRasterGlyphIcon = createIconComponent("image");
-export const RecordIcon = createIconComponent("circle");
-export const RemoteKitIcon = createIconComponent("cloud");
-export const RemoveIcon = createIconComponent("minus");
-export const ResetIcon = createIconComponent("rotate-ccw");
-export const RightSidePanelIcon = createIconComponent("panel-right");
-export const SceneIcon = createIconComponent("scene-3d");
-export const SearchIcon = createIconComponent("search");
-export const SelectUtilityIcon = createIconComponent("mouse-pointer-2");
-export const Settings2Icon = createIconComponent("settings-2");
-export const SettingsIcon = createIconComponent("settings");
-export const SkipBackIcon = createIconComponent("skip-back");
-export const SkipForwardIcon = createIconComponent("skip-forward");
-export const SmartphoneIcon = createIconComponent("smartphone");
-export const SortAscendingIcon = createIconComponent("arrow-up");
-export const SortDescendingIcon = createIconComponent("arrow-down");
-export const StatsIcon = createIconComponent("bar-chart-3");
-export const StopIcon = createIconComponent("square");
-export const SunIcon = createIconComponent("sun");
-export const TabletIcon = createIconComponent("tablet");
-export const TableViewIcon = createIconComponent("table-2");
-export const TemporaryKitIcon = createIconComponent("clock");
-export const TriangleAlertIcon = createIconComponent("triangle-alert");
-export const TutorialIcon = createIconComponent("graduation-cap");
-export const TypeIcon = createIconComponent("typography");
-export const UserIcon = createIconComponent("user");
-export const UsersIcon = createIconComponent("users");
-export const UtilitiesIcon = createIconComponent("wrench");
-export const UtilityBarIcon = createIconComponent("hammer");
-export const WorkbenchIcon = createIconComponent("workbench");
-// #endregion 🔖️Icon
-
-// #region 🖱️ContextMenu
-
-/** @emoji 🎨️ Shared transition for interactive chrome (hover, focus, active backgrounds). */
-
-/** @emoji 🫳️ `data-hover-scope` marks the element {@link DragHandle} should toggle `data-handle-hovered` on — the nearest ancestor styled by the `hoverExcludingHandle*`/`groupHoverExcludingHandle*` classes below. */
-
-/**
- * @emoji 🫳️ Hover-reactive utilities suppressed while a nested {@link DragHandle} is hovered — hovering the grip
- * then only highlights the grip, not the whole element. Pair with `{HANDLE_HOVER_SCOPE_ATTR}` on the same element
- * (the handle toggles `data-handle-hovered` on its nearest `data-hover-scope` ancestor via plain DOM writes, no
- * re-render). Deliberately avoids `:has()` — it isn't reliably supported across every environment this ships to
- * (older embedded webviews), and `:has()`-based ancestor exclusion also matches ANY ancestor with a matching
- * class, not necessarily the nearest one, which is wrong once tree rows nest.
- *
- * These MUST be written as complete literal strings, not built via `${}` interpolation in a helper function —
- * Tailwind's build only discovers classes by scanning source files for literal text, it never executes JS, so a
- * class name assembled from a template placeholder at runtime is invisible to it and silently generates no CSS
- * at all (this broke hover entirely here once already).
- */
-const hoverExcludingHandleBgFillClass = "hover:not-data-[handle-hovered=true]:bg-hover-interactive-fill";
-const hoverExcludingHandleActiveBgClass = "hover:not-data-[handle-hovered=true]:bg-active-base/90";
-const hoverExcludingHandleActiveBorderClass = "hover:not-data-[handle-hovered=true]:border-active-base";
-
-/** @emoji 🎨️ Normal-border gray fill for interactive hover states. */
-/** @emoji 🎨️ Normal-border gray fill for interactive hover states. */
-export const interactiveHoverFillClass = "hover:bg-hover-interactive-fill";
 
 
 /** @emoji 🎨️ Interactive hover: normal-border fill + emphasized content. */
@@ -3006,29 +2146,7 @@ export function humanizeControlId(id: string): string {
   return humanizeControlSegment(segment);
 }
 
-/** @emoji 🏷️ Resolves the user-facing caption for a control (i18n, explicit text, or `ui.*` fallback). */
-export function useControlAccessibleLabel(id: string | undefined, text?: string): string | undefined {
-  if (text !== undefined && text !== "") return text;
-  if (!id || isInternalChromeControlId(id)) return undefined;
-  const labelId = resolveControlLabelId(id);
-  const localized = useIdLabel(labelId);
-  if (localized) return localized;
-  const panelKind = panelKindFromPanelToggleControlId(id);
-  if (panelKind) {
-    const fromUiPanel = useIdLabel(`ui.panelToggle.${panelKind}`);
-    if (fromUiPanel) return fromUiPanel;
-    return humanizeEngagementStepId(panelKind);
-  }
-  if (labelId.startsWith("ui.")) return humanizeControlId(labelId);
-  return undefined;
-}
 
-/** @emoji 🏷️ Resolves inline icon+label caption for buttons/toggles; omitted when the driver hides labels. */
-export function useControlInlineText(id: string | undefined, text?: string): string | undefined {
-  const driver = useUiDriver();
-  const accessibleLabel = useControlAccessibleLabel(id, text);
-  return driver.labels === "icons" ? undefined : accessibleLabel;
-}
 
 /** @emoji 🏷️ Native title/aria-label for chrome controls (avoids Radix tooltip `setTrigger` ref update loops). */
 export function ChromeControlHint({ id, text, children }: { readonly id?: string; readonly text?: string; readonly children: React.ReactElement }): React.ReactElement {
@@ -5372,145 +4490,13 @@ export function initUiLocaleSync(locale: ShellLocale): void {
   if (i18next.language !== locale) void i18next.changeLanguage(locale);
 }
 
-/** @emoji 🪁️ Typed {@link useTranslation} bound to {@link UiTranslationKey} and registered product bundles. */
-export function useUiTranslation(): { readonly t: UiTranslateFn; readonly i18n: typeof i18next } {
-  const { t, i18n } = useTranslation();
-  return { t: t as UiTranslateFn, i18n };
-}
 
 // #endregion 🔌️I18n Port
 
 // #endregion 🪁️I18n Resources
 
-/**
- * React hook that resolves a localized label by i18n key and driver label tier. Strict: `id` must be a
- * real key from the domain-neutral chrome schema or a product's {@link registerUiTranslationBundles}
- * bundle — both are guaranteed complete for every {@link UiLocale}, so a defined `id` always yields a
- * `string`. For ids that may or may not be a registered key (e.g. resolved from an arbitrary DOM/control
- * id), use {@link useIdLabel} instead — it is the only place a lookup is allowed to come up empty.
- **/
-export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey, options?: Record<string, unknown>): UiLabel;
-export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | undefined, options?: Record<string, unknown>): UiLabel | undefined;
-export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | undefined, options?: Record<string, unknown>): UiLabel | undefined {
-  const { t } = useUiTranslation();
-  const labelTier = activeUiDriver().labelTier;
-  if (!id) return undefined;
-  const value = t(id as UiTranslationKey, options);
 
-  if (typeof value === "string") return value as UiLabel;
 
-  if (value && typeof value === "object" && "label" in value) {
-    const label = value.label;
-
-    if (typeof label === "string") {
-      return label as UiLabel;
-    }
-
-    if (label && typeof label === "object") {
-      if (labelTier === "beginner" && "beginner" in label && label.beginner !== undefined) {
-        return String(label.beginner) as UiLabel;
-      }
-      if ("normal" in label && label.normal !== undefined) {
-        return String(label.normal) as UiLabel;
-      }
-      if ("beginner" in label && label.beginner !== undefined) {
-        return String(label.beginner) as UiLabel;
-      }
-    }
-  }
-
-  return undefined;
-}
-
-/**
- * @emoji 🏷️ Resolves a label only when `id` happens to be a registered translation key — the deliberate
- * dynamic port for generic components whose `id` is not a key contract (e.g. resolved from an arbitrary
- * DOM/control id via `resolveControlLabelId`). Chrome call sites with a known key must use the strict
- * {@link useLabel} instead. Checks existence first, so it never echoes an unresolved id back as if it
- * were a translation — unlike i18next's default missing-key behavior.
- **/
-export function useIdLabel(id: string | undefined): UiLabel | undefined {
-  const { t, i18n } = useUiTranslation();
-  const labelTier = activeUiDriver().labelTier;
-  if (!id || !i18n.exists(id)) return undefined;
-  const value = t(id as UiTranslationKey);
-
-  if (typeof value === "string") return value as UiLabel;
-
-  if (value && typeof value === "object" && "label" in value) {
-    const label = value.label;
-
-    if (typeof label === "string") {
-      return label as UiLabel;
-    }
-
-    if (label && typeof label === "object") {
-      if (labelTier === "beginner" && "beginner" in label && label.beginner !== undefined) {
-        return String(label.beginner) as UiLabel;
-      }
-      if ("normal" in label && label.normal !== undefined) {
-        return String(label.normal) as UiLabel;
-      }
-      if ("beginner" in label && label.beginner !== undefined) {
-        return String(label.beginner) as UiLabel;
-      }
-    }
-  }
-
-  return undefined;
-}
-
-/**
- * Resolves a localized string from a raw translation value and driver label tier.
- * Pure function (non-hook) variant of useLabel for use outside React render context.
- * Handles: string, {label: string}, {label: {normal, beginner}}, {normal, beginner}.
- **/
-export function resolveTranslationLabel(value: unknown): string | undefined {
-  const labelTier = activeUiDriver().labelTier;
-
-  if (typeof value === "string") {
-    return value;
-  }
-
-  if (value && typeof value === "object") {
-    const obj = value as Record<string, unknown>;
-
-    if ("label" in obj) {
-      const label = obj.label;
-
-      if (typeof label === "string") {
-        return label;
-      }
-
-      if (label && typeof label === "object") {
-        const labelObj = label as Record<string, unknown>;
-        if (labelTier === "beginner" && "beginner" in labelObj && labelObj.beginner !== undefined) {
-          return String(labelObj.beginner);
-        }
-        if ("normal" in labelObj && labelObj.normal !== undefined) {
-          return String(labelObj.normal);
-        }
-        if ("beginner" in labelObj && labelObj.beginner !== undefined) {
-          return String(labelObj.beginner);
-        }
-      }
-    }
-
-    if ("normal" in obj || "beginner" in obj) {
-      if (labelTier === "beginner" && "beginner" in obj && obj.beginner !== undefined) {
-        return String(obj.beginner);
-      }
-      if ("normal" in obj && obj.normal !== undefined) {
-        return String(obj.normal);
-      }
-      if ("beginner" in obj && obj.beginner !== undefined) {
-        return String(obj.beginner);
-      }
-    }
-  }
-
-  return undefined;
-}
 
 /**
  * Hook binding a keyboard shortcut from the control registry, shell table, or a raw chord literal.
@@ -7735,120 +6721,42 @@ export { UIDialog, type UIDialogProps };
 
 // #region 🎈️Level Context
 /** @emoji 📚️ Semantic UI depth layer for background/glass/z-index tokens (base=0 .. menu=5, formula-derived — see contract at .🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt). */
-export type Level = "base" | "window" | "pane" | "panel" | "dialog" | "menu";
-
-/** @emoji 📚️ Every {@link Level}, ordered base..menu (Storybook/tests). */
-export const LEVELS: readonly Level[] = ["base", "window", "pane", "panel", "dialog", "menu"] as const;
-
-const LevelContext = reactHostPort.createContext<Level>("base");
-
-/** @emoji 🎈️ Sets the current UI depth level for descendant chrome. */
-export const LevelProvider: React.FC<{
-  readonly level: Level;
-  readonly children: React.ReactNode;
-}> = ({ level, children }) => <LevelContext.Provider value={level}>{children}</LevelContext.Provider>;
-
-/** @emoji 🪝️ Returns the nearest {@link LevelProvider} level. */
-export function useLevel(): Level {
-  return reactHostPort.useContext(LevelContext);
-}
-
-/** @emoji 🎨️ Tailwind z-index class for a {@link Level}. */
-export function getLevelZClass(level: Level): string {
-  switch (level) {
-    case "window":
-      return "z-window";
-    case "pane":
-      return "z-pane";
-    case "panel":
-      return "z-panel";
-    case "dialog":
-      return "z-dialog";
-    case "menu":
-      return "z-menu";
-    default:
-      return "z-base";
-  }
-}
-
-/** @emoji 🎨️ Opaque per-level fill — background-color only, no blur (see `[data-level]` cascade in 🎨️ui.css). */
-
-/** @emoji 🎨️ Whether a base-floor chrome row (navbar/footer/canvas/mode-body) must paint its own
- * {@link surfaceClass}, or stay transparent so Layout's one continuous base surface shows through.
- * Nested same-level paints are the "navbar ≠ canvas ≠ footer" bug class — one base floor, one fill. */
-/** @emoji 🎨️ Fullscreen scrim; host element must carry `data-level="dialog"` for correct tint. */
-
-/** @emoji 🪟️ Which fill a painted surface uses — maps 1:1 to {@link surfaceClass}/{@link glassClass}/{@link veilClass}. */
-export type SurfaceFill = "surface" | "glass" | "veil";
-
-/** @emoji 🎨️ Literal-safe fill lookup for a {@link SurfaceFill} (Tailwind's static scanner only finds complete literal class strings, never a `${}`-built name). */
-export function surfaceFillClass(fill: SurfaceFill): string {
-  switch (fill) {
-    case "glass":
-      return glassClass;
-    case "veil":
-      return veilClass;
-    default:
-      return surfaceClass;
-  }
-}
-
-/** @emoji 🪟️ The nearest painted surface's level + fill, or `"none"` for a level root that intentionally defers painting to a descendant. */
-export interface SurfaceScopeValue {
-  readonly level: Level;
-  readonly fill: SurfaceFill | "none";
-}
-
-const SurfaceContext = reactHostPort.createContext<SurfaceScopeValue | null>(null);
-
-/** @emoji 🪟️ Opens a {@link LevelProvider} and records the level's fill for descendants — the "you
- * are already inside a painted surface" signal that {@link Surface} uses to warn on accidental
- * double-painting. Prefer {@link Surface} for a DOM-backed level root; use `SurfaceScope` directly
- * only when the level root isn't a plain `<div>` (e.g. `WindowChrome`, which stamps `data-level`
- * on its own stack element). */
-export const SurfaceScope: React.FC<{
-  readonly level: Level;
-  readonly fill?: SurfaceFill | "none";
-  readonly children: React.ReactNode;
-}> = ({ level, fill = "none", children }) => (
-  <LevelProvider level={level}>
-    <SurfaceContext.Provider value={{ level, fill }}>{children}</SurfaceContext.Provider>
-  </LevelProvider>
-);
-
-/** @emoji 🪝️ Returns the nearest {@link SurfaceScope}/{@link Surface} value, or `null` outside any. */
-export function useSurface(): SurfaceScopeValue | null {
-  return reactHostPort.useContext(SurfaceContext);
-}
-
-export interface SurfaceProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "className"> {
-  readonly level: Level;
-  readonly fill?: SurfaceFill | "none";
-  readonly className?: string;
-}
-
-/** @emoji 🪟️ The one reusable "level root" primitive: stamps `data-level`, paints exactly one
- * {@link SurfaceFill}, and opens a {@link SurfaceScope} for its children. This is the enforcement
- * mechanism for "one level = one appearance" — a component that needs a new painted surface uses
- * `Surface` (or `SurfaceScope` + the fill class, for `WindowChrome`-style non-div roots) instead of
- * hand-composing `data-level` + a fill class, so nested same-level surfaces are structurally
- * visible via {@link useSurface} rather than silently drifting. Dev-only: warns when nested inside
- * an ancestor already painting the same level (that ancestor already painted — the "3 different
- * backgrounds in one dialog" bug class). */
-export const Surface = reactHostPort.forwardRef<HTMLDivElement, SurfaceProps>(({ level, fill = "surface", className, children, ...rest }, ref) => {
-  const parent = useSurface();
-  if (process.env.NODE_ENV !== "production" && parent && parent.level === level && parent.fill !== "none" && fill !== "none") {
-    console.warn(`Surface: nested "${level}" surface painted inside an ancestor Surface already painting "${level}" — one level must render one appearance. Pass fill="none" on the inner Surface, or remove it and let the ancestor's fill show through.`);
-  }
-  return (
-    <div ref={ref} data-level={level} className={cn(fill === "none" ? undefined : surfaceFillClass(fill), className)} {...rest}>
-      <SurfaceScope level={level} fill={fill}>
-        {children}
-      </SurfaceScope>
-    </div>
-  );
-});
-Surface.displayName = "Surface";
+import {
+  type Level,
+  LEVELS,
+  LevelProvider,
+  useLevel,
+  getLevelZClass,
+  type SurfaceFill,
+  surfaceFillClass,
+  type SurfaceScopeValue,
+  SurfaceScope,
+  useSurface,
+  type SurfaceProps,
+  Surface,
+  isSurfaceActiveBackgroundPointer,
+  type SurfaceActiveBindProps,
+  useSurfaceActive,
+  setSurfaceActiveRoot,
+} from "../../../../🧱️elements/🫀️core/🌈️Surface/🟦️component.tsx";
+export {
+  type Level,
+  LEVELS,
+  LevelProvider,
+  useLevel,
+  getLevelZClass,
+  type SurfaceFill,
+  surfaceFillClass,
+  type SurfaceScopeValue,
+  SurfaceScope,
+  useSurface,
+  type SurfaceProps,
+  Surface,
+  isSurfaceActiveBackgroundPointer,
+  type SurfaceActiveBindProps,
+  useSurfaceActive,
+  setSurfaceActiveRoot,
+};
 
 /** @emoji 📏️ Emphasized shell stroke for active/selected chrome accents. */
 export const borderEmphasizedClass = "!border-emphasized";
@@ -8020,22 +6928,11 @@ export { DragHandle, HANDLE_HOVER_SCOPE_ATTR };
 
 /** @emoji 📑️ Shared panel/mobile panel tab bar variant. */
 /** @emoji 📑️ `"chrome"` is a host alias for `"panel"` — folded chrome-hosted bars render via {@link WindowChrome} chipOnly, not a separate visual variant. */
-export type PanelTabBarVariant = "panel" | "mobile" | "chrome";
+// #region 📑PanelTabBar
+import { reconcileActivePath, singleTreeLeaf, panelTabChildren, findPanelTabNode, findPanelTabPath, progressPanelTabSelection, usePanelTabSelection, dockSkeletonOf, dockSkeletonsEqual, applyDockSkeleton, PanelTabBar, type PanelTabBarVariant, type PanelTreeUnit, type PanelTabLeaf, type PanelTabBranch, type PanelTabNode, type PanelTabSelectionResult, type PanelTabSelectionOptions, type PanelDock, type PanelTabBarProps } from "../../../../🧱️elements/📑PanelTabBar/🟦️component.tsx";
+export { reconcileActivePath, singleTreeLeaf, panelTabChildren, findPanelTabNode, findPanelTabPath, progressPanelTabSelection, usePanelTabSelection, dockSkeletonOf, dockSkeletonsEqual, applyDockSkeleton, PanelTabBar, type PanelTabBarVariant, type PanelTreeUnit, type PanelTabLeaf, type PanelTabBranch, type PanelTabNode, type PanelTabSelectionResult, type PanelTabSelectionOptions, type PanelDock, type PanelTabBarProps };
+// #endregion 📑PanelTabBar
 
-/** @emoji 🧭️ Validates a path's segments against a node tree, truncating at the first segment that no longer exists at its level — no first-sibling substitution, no auto-descend (progressive reveal owns how deep a path goes). `[]` is a valid result. */
-export function reconcileActivePath<T extends { readonly id: string }>(nodes: readonly T[], path: readonly string[], childrenOf: (node: T) => readonly T[] | undefined): string[] {
-  let current = nodes;
-  const reconciled: string[] = [];
-  for (const id of path) {
-    const node = current.find((candidate) => candidate.id === id);
-    if (!node) break;
-    reconciled.push(id);
-    current = childrenOf(node) ?? [];
-  }
-  return reconciled;
-}
-
-/** @emoji 🧭️ Eight anchors a panel or pane can grow from: the display's four corners, plus the four edge middles (top/bottom/left/right) — no center anchor, since floating chrome must never fully occlude the canvas. */
 export const ANCHORS = ["top-left", "top-middle", "top-right", "right-middle", "bottom-right", "bottom-middle", "bottom-left", "left-middle"] as const;
 
 /** @emoji 🧭️ One of the eight anchors a panel or pane can grow from. */
@@ -8066,36 +6963,8 @@ export function anchorHorizontal(anchor: Anchor): "left" | "middle" | "right" {
 
 // #region 🧭️Flow Context
 /** @emoji 🧭️ Horizontal reading direction — `"rtl"` mirrors icon/label order and rides on native CSS `dir`. */
-export type FlowInline = "ltr" | "rtl";
-
-/** @emoji 🧭️ Vertical stacking direction — `"up"` grows content toward the display center (see {@link Ribbon}). */
-export type FlowBlock = "down" | "up";
-
-/** @emoji 🧭️ The flow descendant chrome mirrors against. */
-export interface Flow {
-  readonly inline: FlowInline;
-  readonly block: FlowBlock;
-}
-
-const DEFAULT_FLOW: Flow = { inline: "ltr", block: "down" };
-
-const FlowContext = reactHostPort.createContext<Flow>(DEFAULT_FLOW);
-
-/** @emoji 🧭️ Sets the flow for descendant chrome, merging partial overrides onto the parent flow (nesting overrides). */
-export const FlowProvider: React.FC<{
-  readonly inline?: FlowInline;
-  readonly block?: FlowBlock;
-  readonly children: React.ReactNode;
-}> = ({ inline, block, children }) => {
-  const parent = reactHostPort.useContext(FlowContext);
-  const value = reactHostPort.useMemo((): Flow => ({ inline: inline ?? parent.inline, block: block ?? parent.block }), [inline, block, parent]);
-  return <FlowContext.Provider value={value}>{children}</FlowContext.Provider>;
-};
-
-/** @emoji 🪝️ Returns the nearest {@link FlowProvider} flow (defaults to LTR/down). */
-export function useFlow(): Flow {
-  return reactHostPort.useContext(FlowContext);
-}
+import { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow } from "../../../../🧱️elements/🫀️core/🧭️Flow/🟦️component.tsx";
+export { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow };
 
 /** @emoji 🧭️ The mirrored {@link Flow} a {@link Panel} or {@link Pane} grows into — right anchors flip inline, bottom anchors flip block; middle anchors (row or column) never mirror. */
 export function flowFromAnchor(anchor: Anchor): Flow {
@@ -8157,549 +7026,6 @@ export function flowChevronIconName(inline: FlowInline, pointsOut: boolean): Ico
 // #endregion 🧭️Flow Context
 
 /** @emoji 🌱️ One draggable tree granule inside a leaf tab — dockable between leaf tabs, rendered as its own collapsible section. */
-export interface PanelTreeUnit {
-  readonly id: string;
-  readonly tree: TreePanelSource;
-  readonly label?: UiLabel;
-  readonly icon?: React.ComponentType<{ size?: number }>;
-  readonly order?: number;
-}
-
-/** @emoji 🍃️ Leaf tab — its `trees` are the panel-body units shown when active, each rendered as its own section. */
-export interface PanelTabLeaf {
-  readonly kind: "leaf";
-  readonly id: string;
-  readonly icon: React.ComponentType<{ size?: number }>;
-  /** @emoji 🏷️ Mandatory tab label shown after the icon. */
-  readonly name: string;
-  readonly order?: number;
-  /** @emoji 🌲️ Tree units for this tab — draggable between leaf tabs, rendered as sections. */
-  readonly trees: readonly PanelTreeUnit[];
-}
-
-/** @emoji 🍃️ Builds a {@link PanelTabLeaf} with exactly one tree, wrapped as a single {@link PanelTreeUnit} (unit id: `` `${id}.tree` ``). */
-export function singleTreeLeaf(leaf: { readonly id: string; readonly icon: React.ComponentType<{ size?: number }>; readonly name: string; readonly order?: number; readonly tree: TreePanelSource }): PanelTabLeaf {
-  return { kind: "leaf", id: leaf.id, icon: leaf.icon, name: leaf.name, order: leaf.order, trees: [{ id: `${leaf.id}.tree`, tree: leaf.tree }] };
-}
-
-/** @emoji 🌳️ Branch tab — its `children` render as the row below this one when active. */
-export interface PanelTabBranch {
-  readonly kind: "branch";
-  readonly id: string;
-  readonly icon: React.ComponentType<{ size?: number }>;
-  readonly name: string;
-  readonly order?: number;
-  readonly children: readonly PanelTabNode[];
-}
-
-/** @emoji 🌲️ One node in the arbitrarily nestable panel tab tree. */
-export type PanelTabNode = PanelTabLeaf | PanelTabBranch;
-
-/** @emoji 🌳️ `childrenOf` for {@link reconcileActivePath} over a {@link PanelTabNode} tree. */
-export function panelTabChildren(node: PanelTabNode): readonly PanelTabNode[] | undefined {
-  return node.kind === "branch" ? node.children : undefined;
-}
-
-/** @emoji 🔍️ Walks a path from the root, returning the node at its end (or undefined if the path doesn't resolve). */
-export function findPanelTabNode(tabs: readonly PanelTabNode[], path: readonly string[]): PanelTabNode | undefined {
-  let nodes = tabs;
-  let found: PanelTabNode | undefined;
-  for (const id of path) {
-    found = nodes.find((node) => node.id === id);
-    if (!found) return undefined;
-    nodes = panelTabChildren(found) ?? [];
-  }
-  return found;
-}
-
-/** @emoji 🔍️ Depth-first path from the root to the tab with `id`, or undefined if absent. */
-export function findPanelTabPath(tabs: readonly PanelTabNode[], id: string): string[] | undefined {
-  for (const node of tabs) {
-    if (node.id === id) return [node.id];
-    if (node.kind === "branch") {
-      const childPath = findPanelTabPath(node.children, id);
-      if (childPath) return [node.id, ...childPath];
-    }
-  }
-  return undefined;
-}
-
-/** @emoji 🌱️ A node's own id plus every descendant's id — the memory entries a collapsed/reset branch must forget. */
-function panelTabSubtreeIds(node: PanelTabNode): string[] {
-  const children = panelTabChildren(node);
-  return children ? [node.id, ...children.flatMap(panelTabSubtreeIds)] : [node.id];
-}
-
-/** @emoji 🌱️ Result of interpreting one raw tab press: the next active path, the next per-branch drill-down memory, and whether the press should fold the hosting panel instead. */
-export interface PanelTabSelectionResult {
-  readonly path: readonly string[];
-  readonly memory: Readonly<Record<string, string>>;
-  readonly fold: boolean;
-}
-
-/**
- * 🌱️ Interprets a raw tab press for progressive reveal (see {@link PanelTabBar}): re-pressing the already-active
- * segment collapses it; a root re-press always folds the panel without changing its path or remembered state; a fresh pick adopts
- * the pressed path and extends it from `memory` — each branch remembers the last child drilled into, pruning stale
- * entries that no longer match the tree — recording a fresh hop for every step of the resulting path.
- **/
-export function progressPanelTabSelection(tabs: readonly PanelTabNode[], currentPath: readonly string[], selectedPath: readonly string[], memory: Readonly<Record<string, string>>): PanelTabSelectionResult {
-  const validatedSelected = reconcileActivePath(tabs, selectedPath, panelTabChildren);
-  const d = validatedSelected.length - 1;
-  if (d < 0) return { path: currentPath, memory, fold: false };
-  const pressed = validatedSelected[d];
-
-  const clearSubtreeMemory = (node: PanelTabNode | undefined, fallbackId: string): Readonly<Record<string, string>> => {
-    const clearedIds = new Set(node ? panelTabSubtreeIds(node) : [fallbackId]);
-    return Object.fromEntries(Object.entries(memory).filter(([key]) => !clearedIds.has(key)));
-  };
-
-  if (currentPath[d] === pressed) {
-    if (d === 0) {
-      return { path: currentPath, memory, fold: true };
-    }
-    return { path: currentPath.slice(0, d), memory: clearSubtreeMemory(findPanelTabNode(tabs, validatedSelected), pressed), fold: false };
-  }
-
-  let path: readonly string[] = validatedSelected;
-  let nextMemory: Record<string, string> = { ...memory };
-  let tailNode = findPanelTabNode(tabs, path);
-  while (tailNode && tailNode.kind === "branch") {
-    const remembered = nextMemory[tailNode.id];
-    if (!remembered) break;
-    const child = tailNode.children.find((candidate) => candidate.id === remembered);
-    if (!child) {
-      const { [tailNode.id]: _stale, ...rest } = nextMemory;
-      nextMemory = rest;
-      break;
-    }
-    path = [...path, child.id];
-    tailNode = child;
-  }
-  for (let i = 0; i < path.length - 1; i++) nextMemory[path[i]] = path[i + 1];
-  return { path, memory: nextMemory, fold: false };
-}
-
-/** @emoji 🌱️ Controlled/uncontrolled selection state shared by every {@link PanelTabBar} host ({@link Panel}, {@link PanelChromeTabBar}, {@link MobilePanel}). */
-export interface PanelTabSelectionOptions {
-  readonly tabs: readonly PanelTabNode[];
-  readonly visible: boolean;
-  /** @emoji 🎛️ Fired when a tab press opens or folds the hosting surface (see {@link usePanelTabSelection}). */
-  readonly onVisibleChange?: (visible: boolean) => void;
-  readonly activeTabPath?: readonly string[];
-  readonly onActiveTabPathChange?: (path: readonly string[]) => void;
-  /** @emoji 🌱️ Per-branch drill-down memory (see {@link progressPanelTabSelection}) — which child was last active under each branch, so returning to it restores the drill-down. */
-  readonly pathMemory?: Readonly<Record<string, string>>;
-  readonly onPathMemoryChange?: (memory: Readonly<Record<string, string>>) => void;
-}
-
-/**
- * 🌱️ Shared fold/open/drill-down state machine for every {@link PanelTabBar} host: resolves the active path
- * against `tabs`, and interprets a raw tab press via {@link progressPanelTabSelection} — opening a closed host
- * on first press (swallowing that same press if it only re-selects the already-active leaf), folding it on an
- * active-root re-press, and otherwise advancing the path/memory (controlled when the matching `on*Change` is
- * given, else internal state). One instance of this state must back a single anchor's tabs, however many
- * hosts (panel chrome, navbar/footer chrome bar, mobile) render it — hosting is presentation-only.
- **/
-export function usePanelTabSelection({ tabs, visible, onVisibleChange, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange }: PanelTabSelectionOptions): {
-  readonly resolvedPath: readonly string[];
-  readonly memory: Readonly<Record<string, string>>;
-  readonly handlePathChange: (raw: readonly string[]) => void;
-} {
-  const [internalActivePath, setInternalActivePath] = reactHostPort.useState<readonly string[]>(() => reconcileActivePath(tabs, [], panelTabChildren));
-  const [internalMemory, setInternalMemory] = reactHostPort.useState<Readonly<Record<string, string>>>({});
-  const memory = pathMemory ?? internalMemory;
-  const resolvedPath = reactHostPort.useMemo(() => reconcileActivePath(tabs, activeTabPath ?? internalActivePath, panelTabChildren), [tabs, activeTabPath, internalActivePath]);
-
-  const handlePathChange = (raw: readonly string[]) => {
-    if (!visible) {
-      onVisibleChange?.(true);
-      if (raw[raw.length - 1] === resolvedPath[raw.length - 1]) return;
-    }
-    const result = progressPanelTabSelection(tabs, resolvedPath, raw, memory);
-    if (visible && result.fold) {
-      onVisibleChange?.(false);
-      return;
-    }
-    if (onActiveTabPathChange) {
-      onActiveTabPathChange(result.path);
-    } else {
-      setInternalActivePath(result.path);
-    }
-    if (onPathMemoryChange) {
-      onPathMemoryChange(result.memory);
-    } else {
-      setInternalMemory(result.memory);
-    }
-  };
-
-  return { resolvedPath, memory, handlePathChange };
-}
-
-/** @emoji 🗄️ Full arrangement of tabs across all eight anchors — the pure, draggable dock model. */
-export interface PanelDock {
-  readonly anchors: Record<Anchor, readonly PanelTabNode[]>;
-}
-
-function panelTabNodeToSkeleton(node: PanelTabNode): DockTabSkeleton {
-  if (node.kind === "branch") return { id: node.id, children: node.children.map(panelTabNodeToSkeleton) };
-  return node.trees.length > 0 ? { id: node.id, trees: node.trees.map((unit) => unit.id) } : { id: node.id };
-}
-
-/** @emoji 🗄️ Reduces a full {@link PanelDock} to the id-only {@link DockSkeleton} persisted across sessions. */
-export function dockSkeletonOf(dock: PanelDock): DockSkeleton {
-  const anchors = {} as Record<Anchor, readonly DockTabSkeleton[]>;
-  for (const anchor of ANCHORS) anchors[anchor] = dock.anchors[anchor].map(panelTabNodeToSkeleton);
-  return { version: 3, anchors };
-}
-
-function dockTabSkeletonsEqual(a: DockTabSkeleton, b: DockTabSkeleton): boolean {
-  if (a.id !== b.id) return false;
-  const aChildren = a.children ?? [];
-  const bChildren = b.children ?? [];
-  if (aChildren.length !== bChildren.length || !aChildren.every((child, index) => dockTabSkeletonsEqual(child, bChildren[index]!))) return false;
-  const aTrees = a.trees ?? [];
-  const bTrees = b.trees ?? [];
-  return aTrees.length === bTrees.length && aTrees.every((id, index) => id === bTrees[index]);
-}
-
-/** @emoji 🗄️ Structural equality between two {@link DockSkeleton} values — used to decide whether an arrangement equals its computed default and therefore needs no persistence. */
-export function dockSkeletonsEqual(a: DockSkeleton | null, b: DockSkeleton | null): boolean {
-  if (a === b) return true;
-  if (!a || !b) return false;
-  return ANCHORS.every((anchor) => {
-    const aTabs = a.anchors[anchor] ?? [];
-    const bTabs = b.anchors[anchor] ?? [];
-    return aTabs.length === bTabs.length && aTabs.every((tab, index) => dockTabSkeletonsEqual(tab, bTabs[index]!));
-  });
-}
-
-/** @emoji 🗄️ Every node/unit in a default {@link PanelDock}, indexed by id, for identity-preserving reconciliation. */
-function indexPanelDockById(dock: PanelDock): { readonly nodes: Map<string, PanelTabNode>; readonly units: Map<string, PanelTreeUnit> } {
-  const nodes = new Map<string, PanelTabNode>();
-  const units = new Map<string, PanelTreeUnit>();
-  const visit = (node: PanelTabNode) => {
-    nodes.set(node.id, node);
-    if (node.kind === "branch") node.children.forEach(visit);
-    else node.trees.forEach((unit) => units.set(unit.id, unit));
-  };
-  for (const anchor of ANCHORS) dock.anchors[anchor].forEach(visit);
-  return { nodes, units };
-}
-
-/**
- * 🗄️ Rearranges (never reconstructs) `defaultDock`'s nodes/units to match a persisted {@link DockSkeleton} diff:
- * ids the default no longer declares are dropped, a tab whose kind no longer matches its default shape falls back
- * to the default's own shape, and any default tab/unit the skeleton doesn't mention is appended at its default
- * location. Subtrees untouched by the skeleton keep their exact default object identity.
- **/
-/** @emoji 🗄️ Collects every tab id and tree-unit id the skeleton explicitly mentions (across all anchors), gated by whether the corresponding default node's own kind agrees — a mismatched entry's `children`/`trees` are never recursed into. */
-function collectDockSkeletonMentions(entries: readonly DockTabSkeleton[], nodes: ReadonlyMap<string, PanelTabNode>, tabIds: Set<string>, unitIds: Set<string>): void {
-  for (const entry of entries) {
-    tabIds.add(entry.id);
-    const defaultNode = nodes.get(entry.id);
-    if (defaultNode?.kind === "branch" && entry.children) collectDockSkeletonMentions(entry.children, nodes, tabIds, unitIds);
-    if (defaultNode?.kind === "leaf" && entry.trees) entry.trees.forEach((id) => unitIds.add(id));
-  }
-}
-
-/** @emoji 🗄️ True if `node` itself, or any node in its default subtree, is explicitly mentioned somewhere in the persisted skeleton — distinguishes "this whole branch was deliberately emptied out by a move" (some descendant reappears elsewhere) from "this branch is simply missing from a stale skeleton" (nothing under it is mentioned anywhere, safe to re-seed from defaults). */
-function defaultSubtreeMentioned(node: PanelTabNode, mentionedTabIds: ReadonlySet<string>): boolean {
-  if (mentionedTabIds.has(node.id)) return true;
-  return node.kind === "branch" && node.children.some((child) => defaultSubtreeMentioned(child, mentionedTabIds));
-}
-
-export function applyDockSkeleton(defaultDock: PanelDock, skeleton: DockSkeleton | null): PanelDock {
-  if (!skeleton) return defaultDock;
-  const { nodes, units } = indexPanelDockById(defaultDock);
-  // Mentions are collected up front across the WHOLE skeleton (not incrementally during resolution) so that which
-  // anchor/branch gets processed first never affects which default children/units get auto-appended back — a tab
-  // moved to an anchor processed later must not be reclaimed by its old branch's "append missing" pass.
-  const mentionedTabIds = new Set<string>();
-  const mentionedUnitIds = new Set<string>();
-  for (const anchor of ANCHORS) collectDockSkeletonMentions(skeleton.anchors[anchor] ?? [], nodes, mentionedTabIds, mentionedUnitIds);
-  const resolvedTabIds = new Set<string>(); // guards only against the same id appearing twice in the skeleton
-
-  const resolveNode = (entry: DockTabSkeleton): PanelTabNode | null => {
-    const defaultNode = nodes.get(entry.id);
-    if (!defaultNode || resolvedTabIds.has(entry.id)) return null;
-    resolvedTabIds.add(entry.id);
-    if (defaultNode.kind === "branch") {
-      if (!entry.children) return defaultNode;
-      const explicit = entry.children.map(resolveNode).filter((node): node is PanelTabNode => node !== null);
-      const appended = defaultNode.children.filter((child) => !defaultSubtreeMentioned(child, mentionedTabIds));
-      appended.forEach((child) => resolvedTabIds.add(child.id));
-      const merged = [...explicit, ...appended];
-      const unchanged = merged.length === defaultNode.children.length && merged.every((child, index) => child === defaultNode.children[index]);
-      return unchanged ? defaultNode : { ...defaultNode, children: merged };
-    }
-    if (!entry.trees) return defaultNode;
-    const explicitUnits = entry.trees.map((id) => units.get(id)).filter((unit): unit is PanelTreeUnit => unit !== undefined);
-    const appendedUnits = defaultNode.trees.filter((unit) => !mentionedUnitIds.has(unit.id));
-    const mergedUnits = [...explicitUnits, ...appendedUnits];
-    const unchanged = mergedUnits.length === defaultNode.trees.length && mergedUnits.every((unit, index) => unit === defaultNode.trees[index]);
-    return unchanged ? defaultNode : { ...defaultNode, trees: mergedUnits };
-  };
-
-  const anchors = {} as Record<Anchor, readonly PanelTabNode[]>;
-  for (const anchor of ANCHORS) {
-    const explicit = (skeleton.anchors[anchor] ?? []).map(resolveNode).filter((node): node is PanelTabNode => node !== null);
-    const defaultTabs = defaultDock.anchors[anchor];
-    const appended = defaultTabs.filter((tab) => !defaultSubtreeMentioned(tab, mentionedTabIds));
-    appended.forEach((tab) => resolvedTabIds.add(tab.id));
-    const merged = [...explicit, ...appended];
-    const unchanged = merged.length === defaultTabs.length && merged.every((tab, index) => tab === defaultTabs[index]);
-    anchors[anchor] = unchanged ? defaultTabs : merged;
-  }
-  return { anchors };
-}
-
-/** @emoji ↔ Insert-position indicator shown between tab buttons while a drag hovers a row. */
-const panelTabInsertPreviewClass = "w-0.5 self-stretch rounded-full bg-accent shrink-0";
-
-/** @emoji 📑️ One tab button; a child component (not inlined in {@link PanelTabRow}'s `.map`) so it can call driver-aware hooks per tab. */
-const PanelTabButton: React.FC<{
-  readonly tab: PanelTabNode;
-  readonly variant: PanelTabBarVariant;
-  readonly buttonClass: string;
-  readonly tabSlot: string;
-  readonly isActive: boolean;
-  readonly showActiveColor: boolean;
-  readonly stackIndex: number;
-  readonly stackSize: number;
-  readonly isDragSource: boolean;
-  readonly isChildDropTarget: boolean;
-  readonly isUnitDropReady: boolean;
-  readonly anchor?: Anchor;
-  readonly dock: PanelDockContextValue | null;
-  readonly onSelect: (tabId: string) => void;
-}> = ({ tab, variant, buttonClass, tabSlot, isActive, showActiveColor, stackIndex, stackSize, isDragSource, isChildDropTarget, isUnitDropReady, anchor, dock, onSelect }) => {
-  const Icon = tab.icon;
-  const inlineText = useControlInlineText(tab.id, tab.name);
-  const surfaceDrag = useUiDriverDragSurface();
-  const level = useLevel();
-  const draggable = Boolean(anchor && dock);
-  const windowTabChrome = variant === "panel" || variant === "chrome";
-  const inactiveTabChromeClass = windowTabChrome ? panelWindowInactiveTabClass : stackIndex === stackSize - 1 ? modeDockInactiveTabBeforeGapClass : modeDockInactiveTabClass;
-  return (
-    <ChromeControlHint id={tab.id} text={tab.name}>
-      <button
-        data-slot={`${tabSlot}-tab-button`}
-        data-hover-scope
-        data-tab-id={tab.id}
-        data-tab-kind={tab.kind}
-        data-drag-source={isDragSource ? "true" : undefined}
-        data-drop-nest={isChildDropTarget ? "true" : undefined}
-        id={tab.id}
-        data-level={level}
-        data-active={isActive ? "true" : undefined}
-        data-state={isActive && showActiveColor ? "on" : undefined}
-        onClick={() => onSelect(tab.id)}
-        onPointerDown={draggable && surfaceDrag ? (event) => dock!.startTabDrag(anchor!, tab.id, tab.name, event) : undefined}
-        onDragOver={
-          anchor && dock && tab.kind === "leaf"
-            ? (event) => {
-                if (event.dataTransfer.types.includes(PANEL_TREE_UNIT_MIME)) event.preventDefault();
-              }
-            : undefined
-        }
-        onDrop={
-          anchor && dock && tab.kind === "leaf"
-            ? (event) => {
-                if (!event.dataTransfer.types.includes(PANEL_TREE_UNIT_MIME)) return;
-                event.preventDefault();
-                const session = readActivePanelTreeUnitDrag();
-                if (!session) return;
-                dock.onTreeUnitDockDrop({ unitId: session.unitId, fromTabId: session.tabId, target: { anchor, tabId: tab.id, index: Number.MAX_SAFE_INTEGER } });
-                endPanelTreeUnitDrag();
-              }
-            : undefined
-        }
-        className={cn(
-          windowTabChrome ? modeDockTabClassName : buttonClass,
-          windowTabChrome && "h-full",
-          windowTabChrome && !isActive && inactiveTabChromeClass,
-          windowTabChrome && isActive && showActiveColor && modeDockActiveTabClass,
-          !windowTabChrome && isActive && showActiveColor && modeDockActiveTabFillClass,
-          windowTabChrome && panelTabButtonDividerClass,
-          isDragSource && "opacity-40",
-          isChildDropTarget && "ring-2 ring-accent",
-          isUnitDropReady && dropZoneReadyClass,
-        )}
-      >
-        {windowTabChrome ? (
-          <div className={modeDockTabLabelClassName}>
-            <Icon size={12} className="shrink-0" />
-            {inlineText !== undefined ? (
-              <span data-slot="inline-label" className="truncate">
-                {inlineText}
-              </span>
-            ) : null}
-          </div>
-        ) : (
-          <>
-            <span className={panelTabIconSlotClass}>
-              <Icon size={12} />
-            </span>
-            {inlineText !== undefined ? (
-              <span data-slot="inline-label" className={panelTabLabelClass}>
-                {inlineText}
-              </span>
-            ) : null}
-          </>
-        )}
-        {draggable && !surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" onPointerDown={(event) => dock!.startTabDrag(anchor!, tab.id, tab.name, event)} onClick={(event) => event.stopPropagation()} emphasized={(isActive && showActiveColor) || isUnitDropReady} /> : null}
-      </button>
-    </ChromeControlHint>
-  );
-};
-
-/** @emoji 📑️ Props for {@link PanelTabRow}. */
-interface PanelTabRowProps {
-  readonly variant: PanelTabBarVariant;
-  /** @emoji 🧲️ Present only for {@link Panel} rows — enables drag-and-drop wiring via {@link usePanelDockContext}. */
-  readonly anchor?: Anchor;
-  readonly parentPath?: readonly string[];
-  readonly tabs: readonly PanelTabNode[];
-  readonly activeId?: string;
-  readonly onSelect: (tabId: string) => void;
-  /** @emoji 🎨️ Paints the active tab's fill/border — off for a folded {@link Panel}, whose button group shouldn't claim a tab is "active" while nothing is showing. */
-  readonly showActiveColor?: boolean;
-  /** @emoji 🎀️ Stacking direction from {@link PanelTabBar} — flips the row's divider to the content-facing side for `"panel"` variant. */
-  readonly direction?: "up" | "down";
-  /** @emoji 📏️ Extends a body-hosted tab line across the panel instead of sizing it like a silhouette cap chip. */
-  readonly fullWidth?: boolean;
-}
-
-/** @emoji 📑️ One row of sibling tabs; stacked by {@link PanelTabBar} into a {@link Ribbon}. Tab rows keep declared left-to-right order independently of a right anchor's spatially mirrored panel flow, so folding and unfolding never reverses visual or keyboard progression. */
-const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath = [], tabs, activeId, onSelect, showActiveColor = true, direction = "down", fullWidth = false }) => {
-  const barRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const dock = usePanelDockContext();
-  const tabSlot = variant === "mobile" ? "mobile-panel" : "panel";
-  const sortedTabs = reactHostPort.useMemo(() => [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [tabs]);
-  const resolvedActiveId = activeId;
-
-  reactHostPort.useLayoutEffect(() => {
-    const bar = barRef.current;
-    if (!bar) return;
-    bar.scrollLeft = 0;
-    const activeButton = bar.querySelector<HTMLElement>(`[data-slot="${tabSlot}-tab-button"][data-active="true"]`);
-    activeButton?.scrollIntoView({ block: "nearest", inline: "nearest" });
-  }, [resolvedActiveId, sortedTabs, tabSlot]);
-
-  const parentPathKey = parentPath.join("/");
-  const setRowRef = reactHostPort.useCallback(
-    (element: HTMLDivElement | null) => {
-      barRef.current = element;
-      if (anchor && dock) dock.registerTabRowDropTarget(anchor, parentPath, element);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [anchor, dock, parentPathKey],
-  );
-
-  if (sortedTabs.length === 0) return null;
-
-  const resolvedVariant = variant === "chrome" ? "panel" : variant;
-  const barClass = resolvedVariant === "panel" ? panelAnchorTabBarClass(direction, showActiveColor) : mobilePanelTabBarClass;
-  const buttonClass = resolvedVariant === "mobile" ? mobilePanelTabButtonClass : panelAnchorTabButtonClass;
-  const dropTarget = dock?.dropTarget;
-  const isDropRow = Boolean(anchor && dropTarget?.kind === "insert" && dropTarget.anchor === anchor && dropTarget.parentPath.length === parentPath.length && dropTarget.parentPath.every((id, index) => id === parentPath[index]));
-  const dropInsertIndex = isDropRow && dropTarget?.kind === "insert" ? dropTarget.index : null;
-  const tabDragActive = Boolean(dock?.dragTabId);
-  const rowDropReady = tabDragActive && Boolean(anchor) && !parentPath.some((id) => dock?.draggedSubtreeIds?.has(id));
-  const unitDragActive = usePanelTreeUnitDragActive();
-  // 👻️ Navbar/footer chrome toggles and folded panel root rows stay visible during canvas ghost; only open panel tab strips dim.
-  const ghostDim = showActiveColor;
-
-  return (
-    <div ref={setRowRef} {...(ghostDim ? { "data-dim": true } : {})} dir="ltr" data-slot={`${tabSlot}-tabs`} className={cn(barClass, fullWidth && "w-full", rowDropReady && dropZoneReadyClass)}>
-      {sortedTabs.map((tab, index) => {
-        const isActive = tab.id === resolvedActiveId;
-        const isDragSource = Boolean(anchor && dock?.dragTabId === tab.id);
-        const isChildDropTarget = Boolean(anchor && dropTarget?.kind === "child" && dropTarget.anchor === anchor && dropTarget.parentId === tab.id);
-        const isUnitDropReady = unitDragActive && Boolean(anchor) && tab.kind === "leaf";
-        return (
-          <React.Fragment key={tab.id}>
-            {dropInsertIndex === index ? <div data-slot="panel-tab-insert-preview" aria-hidden className={panelTabInsertPreviewClass} /> : null}
-            <PanelTabButton
-              tab={tab}
-              variant={variant}
-              buttonClass={buttonClass}
-              tabSlot={tabSlot}
-              isActive={isActive}
-              showActiveColor={showActiveColor}
-              stackIndex={index}
-              stackSize={sortedTabs.length}
-              isDragSource={isDragSource}
-              isChildDropTarget={isChildDropTarget}
-              isUnitDropReady={isUnitDropReady}
-              anchor={anchor}
-              dock={dock}
-              onSelect={onSelect}
-            />
-          </React.Fragment>
-        );
-      })}
-      {dropInsertIndex === sortedTabs.length ? <div data-slot="panel-tab-insert-preview" aria-hidden className={panelTabInsertPreviewClass} /> : null}
-    </div>
-  );
-};
-
-/** @emoji 📑️ Props for {@link PanelTabBar}. */
-export interface PanelTabBarProps {
-  readonly variant: PanelTabBarVariant;
-  /** @emoji 🧲️ Present only when hosted by a {@link Panel} under a {@link PanelDockProvider}. */
-  readonly anchor?: Anchor;
-  readonly tabs: readonly PanelTabNode[];
-  readonly activePath: readonly string[];
-  readonly onActivePathChange: (path: readonly string[]) => void;
-  /** @emoji 🎀️ Stacking direction for nested rows — `"up"` for bottom panels (rows grow toward the display center), `"down"` otherwise. */
-  readonly direction?: "up" | "down";
-  /** @emoji 🗜️ Skips rows above this depth without skipping the descent through them — used when a host intentionally starts mid-tree (e.g. a secondary strip that continues after another bar already showed shallower rows). */
-  readonly startDepth?: number;
-  /** @emoji 🗜️ Stops after this many emitted rows — `1` is the generalization of the old "root row only" (a folded {@link Panel}'s button group, or a chrome-hosted bar, both of which only ever show one row). */
-  readonly maxRows?: number;
-  /** @emoji 🎨️ Paints the active tab's fill/border — off for a folded {@link Panel}, whose button group shouldn't claim a tab is "active" while nothing is showing. */
-  readonly showActiveColor?: boolean;
-}
-
-/** @emoji 📑️ Panel tab strip shared by {@link Panel}, {@link PanelChromeTabBar} and {@link MobilePanel} — one {@link PanelTabRow} per tree level (within `[startDepth, startDepth + maxRows)`), stacked in a {@link Ribbon}. */
-export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, anchor, tabs, activePath, onActivePathChange, direction = "down", startDepth = 0, maxRows = Infinity, showActiveColor = true }) => {
-  const rows: RibbonRow[] = [];
-  let level = tabs;
-  let depth = 0;
-  while (level.length > 0) {
-    const sorted = [...level].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    const activeId = sorted.some((tab) => tab.id === activePath[depth]) ? activePath[depth] : undefined;
-    const rowDepth = depth;
-    const parentPath = activePath.slice(0, rowDepth);
-    if (depth >= startDepth) {
-      rows.push({
-        key: `${variant}-row-${rowDepth}`,
-        content: (
-          <PanelTabRow
-            variant={variant}
-            anchor={anchor}
-            parentPath={parentPath}
-            tabs={sorted}
-            activeId={activeId}
-            onSelect={(tabId) => onActivePathChange([...activePath.slice(0, rowDepth), tabId])}
-            showActiveColor={showActiveColor}
-            direction={direction}
-            fullWidth={startDepth > 0}
-          />
-        ),
-      });
-      if (rows.length >= maxRows) break;
-    }
-    const active = activeId ? sorted.find((tab) => tab.id === activeId) : undefined;
-    level = (active && panelTabChildren(active)) ?? [];
-    depth++;
-  }
-  if (rows.length === 0) return null;
-  return <Ribbon direction={direction} rows={rows} className={variant === "panel" ? (startDepth > 0 ? "w-full max-w-full" : "w-fit max-w-full") : undefined} />;
-};
-
 // #region 🧲️PanelDock
 // Composable drag-and-drop: tabs dock between all eight anchors (pointer-capture drag, mirrors 🧭️ModeDockDrag);
 // tree units dock between leaf tabs (native HTML5 drag-and-drop, mirrors the window-template palette-drag session).
@@ -9617,120 +7943,6 @@ export const windowControlsCapActiveSplitClass = "relative flex shrink-0 items-s
 
 //#region 🪟️WindowChrome
 
-/** @emoji 🎯️ Tracks which panel, pane, window stack, or introduction step last received pointer or focus — exclusive active stroke without `:focus-within` CSS. Activating a root clears its `data-introduced` stamps so the primary active stroke can win. */
-const surfaceActiveRoots = new Set<HTMLElement>();
-let surfaceActiveRoot: HTMLElement | null = null;
-const surfaceActiveSubscribers = new Set<() => void>();
-let surfaceActiveListenersInstalled = false;
-
-/** @emoji 🎯️ Drops introduction stamps on an activated surface so the pulse cannot outrank the active stroke. */
-function clearIntroducedStamps(root: HTMLElement): void {
-  if (root.getAttribute("data-introduced") === "true") root.removeAttribute("data-introduced");
-  root.querySelectorAll('[data-introduced="true"]').forEach((el) => el.removeAttribute("data-introduced"));
-}
-
-export function setSurfaceActiveRoot(next: HTMLElement | null): void {
-  if (surfaceActiveRoot === next) return;
-  if (next) clearIntroducedStamps(next);
-  surfaceActiveRoot = next;
-  surfaceActiveSubscribers.forEach((notify) => notify());
-}
-
-/** @emoji 🎯️ Silhouette gaps are holes onto the canvas, unless an explicit chrome chip is nested inside them. */
-function isSurfaceActiveBackgroundTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof Element)) return false;
-  const gap = target.closest<HTMLElement>('[data-window-silhouette-gap]');
-  if (!gap) return false;
-  const chip = target.closest<HTMLElement>('[data-window-silhouette-chip]');
-  return !chip || !gap.contains(chip);
-}
-
-/** @emoji 🎯️ Treats the visual cutout as canvas even when an app's absolute canvas extends beneath it and becomes the DOM pointer target. */
-export function isSurfaceActiveBackgroundPointer(event: { readonly target: EventTarget | null; readonly clientX?: number; readonly clientY?: number }): boolean {
-  if (isSurfaceActiveBackgroundTarget(event.target)) return true;
-  if (typeof document === "undefined" || typeof event.clientX !== "number" || typeof event.clientY !== "number") return false;
-  const target = event.target instanceof Element ? event.target : null;
-  const stack = target?.closest<HTMLElement>('[data-slot="mode-dock-stack"]');
-  const scope: Document | HTMLElement = stack ?? document;
-  for (const gap of scope.querySelectorAll<HTMLElement>('[data-window-silhouette-gap]')) {
-    if (stack && gap.closest('[data-slot="mode-dock-stack"]') !== stack) continue;
-    const rect = gap.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) continue;
-    if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) return true;
-  }
-  return false;
-}
-
-function resolveSurfaceActiveRoot(target: EventTarget | null): HTMLElement | null {
-  if (isSurfaceActiveBackgroundTarget(target)) return null;
-  if (!(target instanceof Element)) return null;
-  let node: HTMLElement | null = target instanceof HTMLElement ? target : target.parentElement;
-  let match: HTMLElement | null = null;
-  while (node instanceof HTMLElement) {
-    if (surfaceActiveRoots.has(node)) match = node;
-    node = node.parentElement;
-  }
-  return match;
-}
-
-function installSurfaceActiveDocumentListeners(): void {
-  if (surfaceActiveListenersInstalled || typeof document === "undefined") return;
-  surfaceActiveListenersInstalled = true;
-  const onPointerDown = (event: Event): void => {
-    setSurfaceActiveRoot(isSurfaceActiveBackgroundPointer(event) ? null : resolveSurfaceActiveRoot(event.target));
-  };
-  const onFocusIn = (event: Event): void => {
-    setSurfaceActiveRoot(resolveSurfaceActiveRoot(event.target));
-  };
-  document.addEventListener("pointerdown", onPointerDown);
-  document.addEventListener("focusin", onFocusIn);
-}
-
-export interface SurfaceActiveBindProps {
-  readonly onPointerDownCapture: (event: React.PointerEvent) => void;
-  readonly onFocusCapture: (event: React.FocusEvent) => void;
-}
-
-/** @emoji 🎯️ True when this surface root was the last panel, pane, window stack, or introduction step to receive pointer or keyboard focus. */
-export function useSurfaceActive(ref: React.RefObject<HTMLElement | null>): readonly [boolean, SurfaceActiveBindProps] {
-  const [, bump] = reactHostPort.useState(0);
-  reactHostPort.useLayoutEffect(() => {
-    installSurfaceActiveDocumentListeners();
-    const element = ref.current;
-    if (!element) return;
-    surfaceActiveRoots.add(element);
-    const notify = (): void => bump((value) => value + 1);
-    surfaceActiveSubscribers.add(notify);
-    return () => {
-      surfaceActiveRoots.delete(element);
-      surfaceActiveSubscribers.delete(notify);
-      // 🎯️ Effect re-runs every commit (ref may attach late). Defer the clear so a same-commit
-      // re-register can reclaim the root before we drop the active stroke.
-      queueMicrotask(() => {
-        if (surfaceActiveRoot === element && !surfaceActiveRoots.has(element)) setSurfaceActiveRoot(null);
-      });
-    };
-  });
-  const bind = reactHostPort.useMemo<SurfaceActiveBindProps>(
-    () => ({
-      onPointerDownCapture: (event: React.PointerEvent) => {
-        if (isSurfaceActiveBackgroundPointer(event)) {
-          setSurfaceActiveRoot(null);
-          return;
-        }
-        const root = ref.current;
-        if (root) setSurfaceActiveRoot(root);
-      },
-      onFocusCapture: (event: React.FocusEvent) => {
-        const root = ref.current;
-        if (root && event.target instanceof Element && root.contains(event.target)) setSurfaceActiveRoot(root);
-      },
-    }),
-    [ref],
-  );
-  return [ref.current !== null && surfaceActiveRoot === ref.current, bind] as const;
-}
-
 /** @emoji 🪟️ Optional right-cap control on {@link WindowChrome} (enlarge / close). */
 export interface WindowChromeControlAction {
   readonly id: string;
@@ -10020,7 +8232,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
 WindowChrome.displayName = "WindowChrome";
 
 /** @emoji 🪟️ Context menu with U-cutout chrome — title chip only, no enlarge/close; gap punches through. Forwards its ref to the outer window-chrome stack so callers (e.g. {@link ContextMenuController}'s on-screen clamp) can measure/adjust the rendered surface. */
-const ContextMenuChrome = reactHostPort.forwardRef<HTMLDivElement, { readonly title: string; readonly icon: IconSource; readonly children: React.ReactNode; readonly className?: string; readonly style?: React.CSSProperties }>(
+export const ContextMenuChrome = reactHostPort.forwardRef<HTMLDivElement, { readonly title: string; readonly icon: IconSource; readonly children: React.ReactNode; readonly className?: string; readonly style?: React.CSSProperties }>(
   ({ title, icon, children, className, style }, ref) => {
     return (
       <WindowChrome
@@ -10253,46 +8465,8 @@ export const windowMeasureToggleCompactClass =
 // #endregion 🎈️Level Context
 
 // #region 🐹️Element
-// Core element types, transaction context, and level-based CSS class helpers.
-// Consumers MUST use level functions for consistent styling.
-
-/**
- * Interface for start/finalize/abort lifecycle of a UI transaction.
- **/
-export interface Transaction {
-  start?: () => void;
-  finalize?: () => void;
-  abort?: () => void;
-}
-
-/**
- * TransactionContext holds the data fields for a TransactionContext record.
- **/
-const TransactionContext = reactHostPort.createContext<Transaction | undefined>(undefined);
-
-/**
- * Context provider that supplies a Transaction to descendants.
- **/
-export const TransactionProvider: React.FC<{
-  transaction?: Transaction;
-  children: React.ReactNode;
-}> = ({ transaction, children }) => {
-  return <TransactionContext.Provider value={transaction}>{children}</TransactionContext.Provider>;
-};
-
-/**
- * Hook returning the current Transaction context.
- **/
-export const useTransaction = (): Transaction | undefined => reactHostPort.useContext(TransactionContext);
-
-/**
- * Base props interface requiring an id string.
- **/
-export interface ElementBaseProps {
-  id: string;
-}
-
-export interface ElementProps extends ElementBaseProps {}
+import { type Transaction, TransactionProvider, useTransaction, type ElementBaseProps, type ElementProps } from "../../../../🧱️elements/🫀️core/🐹️ElementProps/🟦️component.tsx";
+export { type Transaction, TransactionProvider, useTransaction, type ElementBaseProps, type ElementProps };
 
 //#region 🧭️ElementState
 /** @emoji 🧭️ The shared, compile-time-enforced state model every rendered UI element carries — explicit
@@ -10420,185 +8594,10 @@ export type { TooltipConfig, DescriptionTooltipData };
 // #endregion 🎙️Tooltip
 
 // #region 🌥️Base Components
-// Foundational internal components like Label.
-// Consumers MUST use these as building blocks for inputs.
-
-/**
- * LabelProps holds the data fields for a LabelProps record.
- **/
-interface LabelProps {
-  id?: string;
-  rowId?: string;
-  label?: React.ReactNode;
-  labelElementId?: string;
-  className?: string;
-  /**
-   * Property rows use the label/value grid; tree group headers mirror TreeItem header geometry
-   * (gutter, tree-label slot, trailing control) so collection rows do not drift into the value column.
-   */
-  labelLayoutKind?: "property" | "treeGroupHeader";
-  children?: React.ReactNode;
-}
-// [🏘️compose📚️js🗃️sketchpad💻️elements🔖️basecomponents🪨️label](repo://p/u/compose/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components/d/i/Label)
-export function Label({ id, rowId, label, labelElementId, className, children, labelLayoutKind = "property" }: LabelProps) {
-  const localizedLabel = useIdLabel(id);
-  const resolvedLabel = label ?? localizedLabel;
-  const fallbackLabel = reactHostPort.useMemo(() => {
-    if (!id) return "";
-    const trailingToken = id.split(".").pop() ?? id;
-    const normalizedToken = trailingToken.replace(/[-_]+/g, " ").trim();
-    if (!normalizedToken) return id;
-    return normalizedToken
-      .split(/\s+/)
-      .map((word) => (word.length > 0 ? `${word[0].toUpperCase()}${word.slice(1)}` : word))
-      .join(" ");
-  }, [id]);
-  const displayLabel = resolvedLabel ?? fallbackLabel;
-  const controlHint = useControlAccessibleLabel(id);
-  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
-  const isInsideTreeRow = reactHostPort.useContext(TreeRowAlignmentContext);
-  const treePropertyRowOffsetPx = detailPanelIndentPx(level, indentMultiplier);
-  const propertyRowRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const propertyLabelRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const propertyControlRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const [propertyRowStacked, setPropertyRowStacked] = reactHostPort.useState(false);
-  const propertyRowStackedRef = reactHostPort.useRef(propertyRowStacked);
-  propertyRowStackedRef.current = propertyRowStacked;
-
-  reactHostPort.useEffect(() => {
-    const rowElement = propertyRowRef.current;
-    const labelElement = propertyLabelRef.current;
-    const controlElement = propertyControlRef.current;
-    if (!rowElement || !labelElement || !controlElement) {
-      return;
-    }
-
-    let animationFrame = 0;
-    const resolvePropertyLayout = () => {
-      animationFrame = 0;
-      const rowWidthPx = rowElement.clientWidth;
-      const labelWidthPx = Math.ceil(labelElement.scrollWidth);
-      const controlMinWidthPx = Math.ceil(controlElement.scrollWidth);
-      const minimumInlineWidthPx = labelWidthPx + controlMinWidthPx + detailPanelPropertyInlineGapPx;
-      const labelRect = labelElement.getBoundingClientRect();
-      const controlRect = controlElement.getBoundingClientRect();
-      const overlaps = labelRect.right + detailPanelPropertyInlineGapPx > controlRect.left;
-      const stacked = propertyRowStackedRef.current;
-      const shouldStack = stacked ? overlaps || minimumInlineWidthPx > rowWidthPx - detailPanelPropertyStackedToInlineHysteresisPx : overlaps || minimumInlineWidthPx > rowWidthPx;
-      setPropertyRowStacked((current) => (current === shouldStack ? current : shouldStack));
-    };
-
-    const scheduleResolvePropertyLayout = () => {
-      if (animationFrame !== 0) {
-        cancelAnimationFrame(animationFrame);
-      }
-      animationFrame = requestAnimationFrame(resolvePropertyLayout);
-    };
-
-    const observer = new ResizeObserver(() => scheduleResolvePropertyLayout());
-    observer.observe(rowElement);
-    observer.observe(labelElement);
-    observer.observe(controlElement);
-    scheduleResolvePropertyLayout();
-
-    return () => {
-      observer.disconnect();
-      if (animationFrame !== 0) {
-        cancelAnimationFrame(animationFrame);
-      }
-    };
-  }, [id, label, level, treePropertyRowOffsetPx]);
-
-  if (labelLayoutKind === "treeGroupHeader") {
-    const treeGroupHeaderLabel = (
-      <span data-slot="tree-label" id={labelElementId} title={controlHint} className="flex min-w-0 flex-1 items-center text-xs font-normal text-start truncate h-medium" style={treeItemLabelStyle}>
-        {displayLabel}
-      </span>
-    );
-
-    const treeGroupHeaderInner = (
-      <div id={rowId} data-slot="tree-group-header-row" className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName, className)}>
-        <div className={cn(treeHeaderMainClassName, "min-h-medium items-center")}>
-          {treeGroupHeaderLabel}
-          <div data-slot="tree-group-header-control" className="ms-auto flex min-w-0 shrink-0 items-center justify-end">
-            {children}
-          </div>
-        </div>
-      </div>
-    );
-
-    if (!isTree) {
-      return <TreeRowAlignmentContext.Provider value={false}>{treeGroupHeaderInner}</TreeRowAlignmentContext.Provider>;
-    }
-
-    if (isInsideTreeRow) {
-      return <TreeRowAlignmentContext.Provider value={false}>{treeGroupHeaderInner}</TreeRowAlignmentContext.Provider>;
-    }
-
-    return (
-      <TreeRowAlignmentContext.Provider value={false}>
-        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
-          {treeGroupHeaderInner}
-        </TreeAlignedRow>
-      </TreeRowAlignmentContext.Provider>
-    );
-  }
-
-  const propertyLabelElement = isTree ? (
-    <div ref={propertyLabelRef} data-slot="property-label-tree" className="min-w-0" style={{ paddingInlineStart: detailPanelIndentLen(level, indentMultiplier) }}>
-      <div className="inline-flex min-w-0 h-medium">
-        <span data-slot="property-label" id={labelElementId} title={controlHint} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-start truncate cursor-pointer transition-colors h-medium ps-single">
-          {resolvedLabel}
-        </span>
-      </div>
-    </div>
-  ) : (
-    <div ref={propertyLabelRef} data-slot="property-label-inline" className="min-w-0">
-      <span
-        data-slot="property-label"
-        id={labelElementId}
-        title={controlHint}
-        className="inline-flex items-center text-xs font-medium flex-shrink-0 text-start truncate cursor-pointer transition-colors text-element hover:bg-hover-interactive-fill hover:text-emphasized h-medium"
-      >
-        {resolvedLabel}
-      </span>
-    </div>
-  );
-
-  const propertyRowElement = (
-    <div
-      ref={propertyRowRef}
-      id={rowId}
-      data-dim
-      data-slot="property-row"
-      data-property-layout={propertyRowStacked ? "stacked" : "inline"}
-      style={{
-        ...(isTree ? { marginInlineStart: `calc(-1 * ${detailPanelIndentLen(level, indentMultiplier)})`, width: level > 0 ? `calc(100% + ${detailPanelIndentLen(level, indentMultiplier)})` : "100%" } : {}),
-        gridTemplateColumns: propertyRowStacked ? "minmax(0, 1fr)" : `${sizeVar("layoutLabel")} minmax(0, 1fr)`,
-        rowGap: propertyRowStacked ? sizeVar("spacingSingle") : "0",
-      }}
-      className={cn(detailPanelPropertyRowClassName, !isTree && "w-full", className)}
-    >
-      {propertyLabelElement}
-      <div ref={propertyControlRef} data-slot="property-control" className={detailPanelPropertyControlClassName} style={propertyRowStacked ? { paddingInlineStart: `calc(${sizeVar("layoutLabel")} + ${sizeVar("spacingDouble")})` } : undefined}>
-        <PropertyValueColumnContext.Provider value={true}>{children}</PropertyValueColumnContext.Provider>
-      </div>
-    </div>
-  );
-
-  if (isTree) {
-    if (isInsideTreeRow) {
-      return propertyRowElement;
-    }
-    return (
-      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align="start" connectCurrentLevel={level > 0} anchorOffsetPx={detailPanelHeaderLineCenterPx}>
-        {propertyRowElement}
-      </TreeAlignedRow>
-    );
-  }
-
-  return propertyRowElement;
-}
+// #region 🏷️Label
+import { Label, useLabel, useIdLabel, useControlAccessibleLabel, useControlInlineText, resolveTranslationLabel, useUiTranslation } from "../../../../🧱️elements/🫀️core/🏷️Label/🟦️component.tsx";
+export { Label, useLabel, useIdLabel, useControlAccessibleLabel, useControlInlineText, resolveTranslationLabel, useUiTranslation };
+// #endregion 🏷️Label
 
 // #endregion 🌥️Base Components
 

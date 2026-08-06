@@ -1,5 +1,8 @@
 # Master tracking doc — Crate Consolidation & Plugin Taxonomy Restructure
 
+
+
+**🚀 ORCHESTRATOR DISPATCH (2026-08-06 ~13:00):** Restored green `cargo metadata` after math+surface registrar passes; stripped nested workspace overlays; repointed math/surface/3d-scene consumers. Parallel agents (Grok 4.5 + Composer 2.5): fem, writer/reasoning Shape V2, SPACE/RASTER mop, sourcing ext, trinity residual, s-modules, assets, UI family, singletons/core. Surface renderer-react imports collapsed to `@semio-tech/framework-surface-rs`.
 **✅ WORKFORCE PLAN FINISHED (2026-08-06 ~12:00):** live-reconciled dispatch plan is `📋️workforce-plan-finished.md` in this ticket (mirrored at `~/.claude/plans/the-codebase-still-has-spicy-umbrella.md`). Supersedes the Aug-5 draft for remaining work. Delta: plugins+demonstrator+most Shape V2+most W4 mechanisms+hub+flow/cad residuals DONE; ~201 `⚡️implementations` remain (os 92, math 52, fem 17). Next: fem finish + writer/reasoning retrofit closers + stale SPACE/RASTER mop + sourcing/trinity residuals (≤6 parallel), then W7/W8b.
 
 Full plan: `/Users/ueli/.claude/plans/the-codebase-has-currently-declarative-ritchie.md` (approved).

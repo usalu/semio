@@ -2,6 +2,8 @@ cargo-features = ["trim-paths"]
 
 [workspace]
 members = [
+    "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust",
+    "✏️s/🔨️modules/💭️mindmap/📦️packages/🦀️rust",
     "✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/⚡️implementations/🦀️rust",
@@ -26,8 +28,8 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🧪️testkit/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⌨️cli/⚡️implementations/🦀️rust",
-    "🧰️framework/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/#⃣hash/⚡️implementations/🦀️rust",
+    "🧰️framework/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/📚️compiler/⚡️implementations/🦀️rust",
     "🧰️framework/🔨️modules/📚️compiler/📖️syntax/⚡️implementations/🦀️rust",
     "🧰️framework/🔨️modules/📚️compiler/🌍️world/⚡️implementations/🦀️rust",
@@ -92,69 +94,12 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🖊️drawing/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🗣️dsl/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/📐️geometry/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/➕️algebra/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🎲️random/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🔷️lie/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🎯️optimize/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🗺️spatial/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/📶️signal/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🔢️number/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/📈️polynomial/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🧮️cas/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/📋️tabular/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🎲️probability/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/📊️statistics/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🔗️causal/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🌫️fuzzy/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🎯️sampling/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🎲️entropy/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🧩️wfc/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🚶️traversal/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🧩️components/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🕸️dag/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔄️cycles/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🛤️paths/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔧️operators/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🎨️coloring/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🎲️generate/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🎲️generate/🎲️random/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔌️io/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🏗️structure/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔺️cliques/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🧩️clustering/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🤝️matching/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔀️bipartite/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🌳️trees/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🗺️planarity/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🌊️flow/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🎯️centrality/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🎯️similarity/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🪞️isomorphism/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔗️connectivity/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🏘️community/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🎯️approximation/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/📊️spectral/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/➕️normal/↔undirected/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/➕️normal/➡️directed/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔌️ports/↔undirected/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔌️ports/➡️directed/➕️normal/⚡️implementations/🦀️rust",
-    "✏️s/🔨️modules/🧊️3d/🎬️scene/⚡️implementations/🦀️rust",
-    "✏️s/🔨️modules/🧊️3d/🥽️mesh/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust",
     "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
-    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/⚡️implementations/🦀️rust",
-    "✏️s/🔨️modules/💭️mindmap/⚡️implementations/🦀️rust",
     "✏️s/🔨️modules/◻2d/📦️packages/🦀️rust",
-    "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🗺️surface/🏔️terrain/⚡️implementations/🦀️rust",
-    "🧰️framework/🔨️modules/🗺️surface/🎲️board-2d/⚡️implementations/🦀️rust",
+    "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust",
@@ -165,8 +110,6 @@ members = [
     "✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust",
-    "✏️s/🔨️modules/🧊️3d/📐️brep/⚡️implementations/🦀️rust",
-    "✏️s/🔨️modules/🧊️3d/📐️brep/⚙️engine/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust",
@@ -174,41 +117,22 @@ members = [
     "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust",
-    "✏️s/🔌️plugins/🏗️fem/🔨️modules/🫀️core/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🏗️fem/🔨️modules/🤝️shared/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🔨️modules/🔧️op/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust",
-    "✏️s/🔌️plugins/🏗️fem/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🐚️shell/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust",
-    "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
     "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust",
-    "🧰️framework/🔨️modules/🗺️surface/🎨️paint/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🖍️draw/🔄️fsm/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🖍️draw/🔄️fsm/✨️macros/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust",
-    "🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust",
+    "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust",
     "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust",
@@ -223,8 +147,8 @@ members = [
     # 🧹️ Adopted 2026-07-18 (RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN): these crates lived
     # inside the workspace dir but were neither members nor excluded, so they could
     # not run any cargo command standalone. Adoption fixes real breakage.
-    "🧰️framework/🔨️modules/🧬️schema/⚡️implementations/🦀️rust",
-    "✏️s/🔨️modules/🧊️3d/🗺️spatial/⚡️implementations/🦀️rust",
+    "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust",
     "🌎️hub/📦️packages/🦀️rust",
     "compose/client/lib/rs",
     "compose/client/lib/query/rs",
@@ -248,6 +172,7 @@ edition = "2021"
 rust-version = "1.88"
 
 [workspace.dependencies]
+semio-framework-math = { path = "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust" }
 # 🌐️ Canonical versions for the highest-fanout external deps, chosen as the newest
 # explicit requirement string already used somewhere in the 630 manifests (matches what
 # Cargo.lock already resolves to, so adopting `.workspace = true` later is a no-op for
@@ -265,7 +190,7 @@ ts-rs = "10"
 # a drop-in, or repoint ONE line here when a crate merges/moves instead of editing every
 # consumer. `# N refs` is the survey count. Grouped: os-kernel/core, math, ui, plugin-internal.
 # ---- core (24) ----
-semio-framework-core = { path = "🧰️framework/⚡️implementations/🦀️rust" }  # 58 refs
+semio-framework-core = { path = "🧰️framework/📦️packages/🦀️rust" }  # 58 refs
 semio-framework-os = { path = "🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust" }  # 35 refs
 semio-framework-os-kernel-db-core = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🫀️core/⚡️implementations/🦀️rust" }  # 22 refs
 semio-framework-os-kernel-db-state = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔘️state/⚡️implementations/🦀️rust" }  # 9 refs
@@ -292,32 +217,16 @@ semio-framework-plugin = { path = "🧰️framework/🛍️products/💻️os/�
 semio-s-kernel-flow-extension-wasm = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/🕸️wasm" }  # 10 refs
 
 # ---- math (13) ----
-semio-framework-os-kernel-math-algebra = { path = "🧰️framework/🔨️modules/🧮️math/➕️algebra/⚡️implementations/🦀️rust" }  # 26 refs
-semio-framework-os-kernel-math-geometry = { path = "🧰️framework/🔨️modules/🧮️math/📐️geometry/⚡️implementations/🦀️rust" }  # 10 refs
-semio-framework-os-kernel-math-graph = { path = "🧰️framework/🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust" }  # 40 refs
-semio-framework-os-kernel-math-graph-cliques = { path = "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔺️cliques/⚡️implementations/🦀️rust" }  # 6 refs
-semio-framework-os-kernel-math-graph-components = { path = "🧰️framework/🔨️modules/🧮️math/🕸️graph/🧩️components/⚡️implementations/🦀️rust" }  # 9 refs
-semio-framework-os-kernel-math-graph-dsl = { path = "🧰️framework/🔨️modules/🧮️math/🕸️graph/🗣️dsl/⚡️implementations/🦀️rust" }  # 6 refs
-semio-framework-os-kernel-math-graph-manifest = { path = "🧰️framework/🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust" }  # 14 refs
-semio-framework-os-kernel-math-graph-matching = { path = "🧰️framework/🔨️modules/🧮️math/🕸️graph/🤝️matching/⚡️implementations/🦀️rust" }  # 6 refs
-semio-framework-os-kernel-math-graph-paths = { path = "🧰️framework/🔨️modules/🧮️math/🕸️graph/🛤️paths/⚡️implementations/🦀️rust" }  # 8 refs
-semio-framework-os-kernel-math-graph-traversal = { path = "🧰️framework/🔨️modules/🧮️math/🕸️graph/🚶️traversal/⚡️implementations/🦀️rust" }  # 12 refs
-semio-framework-os-kernel-math-lie = { path = "🧰️framework/🔨️modules/🧮️math/🔷️lie/⚡️implementations/🦀️rust" }  # 6 refs
-semio-framework-os-kernel-math-random = { path = "🧰️framework/🔨️modules/🧮️math/🎲️random/⚡️implementations/🦀️rust" }  # 27 refs
-semio-framework-os-kernel-math-spatial = { path = "🧰️framework/🔨️modules/🧮️math/🗺️spatial/⚡️implementations/🦀️rust" }  # 6 refs
 
 # ---- ui (2) ----
 semio-framework-ui-styling = { path = "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust" }  # 15 refs
 semio-framework-ui-wgpu = { path = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu" }  # 15 refs
+semio-framework-surface = { path = "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust" }
 
 # ---- plugin (62) ----
-semio-framework-os-kernel-3d-brep = { path = "✏️s/🔨️modules/🧊️3d/📐️brep/⚡️implementations/🦀️rust" }  # 8 refs
-semio-framework-os-kernel-3d-brep-engine = { path = "✏️s/🔨️modules/🧊️3d/📐️brep/⚙️engine/⚡️implementations/🦀️rust" }  # 10 refs
 semio-s-plugin-animate = { path = "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust" }
 semio-s-plugin-cad = { path = "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust" }
 semio-s-plugin-draw = { path = "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust" }
-semio-s-app-fem-2d = { path = "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/⚡️implementations/🦀️rust" }  # 8 refs
-semio-s-app-fem-3d = { path = "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/⚡️implementations/🦀️rust" }  # 8 refs
 semio-s-plugin-flow = { path = "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust" }
 semio-s-plugin-layout = { path = "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust" }
 semio-s-plugin-lowpoly = { path = "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust" }
@@ -333,7 +242,6 @@ semio-s-plugin-space = { path = "✏️s/🔌️plugins/🪐️space/📦️pack
 semio-s-plugin-trinity = { path = "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust" }
 semio-s-plugin-vcs = { path = "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust" }
 semio-s-plugin-writer = { path = "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust" }
-semio-s-plugin-fem-core = { path = "✏️s/🔌️plugins/🏗️fem/🔨️modules/🫀️core/⚡️implementations/🦀️rust" }  # 9 refs
 
 [profile.dev]
 debug = false

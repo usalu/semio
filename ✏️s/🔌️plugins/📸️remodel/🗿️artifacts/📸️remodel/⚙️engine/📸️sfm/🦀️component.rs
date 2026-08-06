@@ -4,14 +4,14 @@
 // this file is byte-identical to the crate it was moved from (see 📦️lib.rs for the wiring).
 use crate::artifacts::remodel::engine::{camera as remodel_camera, feature as remodel_feature, images as remodel_image};
 
-pub use mathematical_lie::{Se3, Sim3, So3};
-pub use mathematical_optimize::RobustLoss;
+pub use math::lie::{Se3, Sim3, So3};
+pub use math::optimize::RobustLoss;
 pub use remodel_camera::{CameraPose, Distortion, Intrinsics};
 
-use mathematical_algebra::{jacobi_eigen_symmetric, poly_roots_companion, real_eigenvalues, svd, svd_nullvector, vec3d_length, vec3d_normalize, vec3d_sub, Mat3d, MatD, VecD};
-use mathematical_lie::umeyama;
-use mathematical_optimize::{lo_ransac, numeric_jacobian, ransac, schur_lm, BipartiteResiduals, LeastSquaresProblem, LmConfig, MinimalSolver, RansacConfig, RansacScoring, ResidualTerm, SchurResult};
-use mathematical_random::{normal, Rng};
+use math::algebra::{jacobi_eigen_symmetric, poly_roots_companion, real_eigenvalues, svd, svd_nullvector, vec3d_length, vec3d_normalize, vec3d_sub, Mat3d, MatD, VecD};
+use math::lie::umeyama;
+use math::optimize::{lo_ransac, numeric_jacobian, ransac, schur_lm, BipartiteResiduals, LeastSquaresProblem, LmConfig, MinimalSolver, RansacConfig, RansacScoring, ResidualTerm, SchurResult};
+use math::random::{normal, Rng};
 use remodel_camera::reproject;
 use remodel_feature::{match_brute, Descriptor256, Keypoint, Match};
 use remodel_image::ImageGray;
@@ -419,7 +419,7 @@ impl MinimalSolver for FundamentalSolver {
 }
 
 /// 📐️ Normalized 8-point fundamental-matrix estimation robustified by locally-optimized RANSAC
-/// ([`mathematical_optimize::lo_ransac`]): the local optimization step refits [`fit_fundamental_dlt`]
+/// ([`math::optimize::lo_ransac`]): the local optimization step refits [`fit_fundamental_dlt`]
 /// over the current inlier set (which accepts any `n >= 8`, not just the minimal 8), which is a fast,
 /// closed-form stand-in for a full Sampson-error LM polish.
 pub fn estimate_fundamental(matches: &[([f64; 2], [f64; 2])]) -> Option<TwoViewResult> {
@@ -660,7 +660,7 @@ fn refine_essential_lm(initial: &Se3, corr: &[([f64; 2], [f64; 2])]) -> Se3 {
     let problem = EssentialRefineProblem { corr, t0, tangent_u, tangent_v };
     let x0 = VecD::from_vec(vec![initial.r.log()[0], initial.r.log()[1], initial.r.log()[2], 0.0, 0.0]);
     let cfg = LmConfig { max_iters: 50, ..LmConfig::default() };
-    let result = mathematical_optimize::levenberg_marquardt(&problem, x0, &cfg);
+    let result = math::optimize::levenberg_marquardt(&problem, x0, &cfg);
     let omega: [f64; 3] = std::array::from_fn(|k| result.x.get(k));
     let phi = [result.x.get(3), result.x.get(4)];
     Se3 { r: So3::exp(omega), t: sphere_retract(t0, tangent_u, tangent_v, phi) }
@@ -1090,7 +1090,7 @@ pub fn refine_point_lm(poses: &[(CameraPose, Intrinsics)], obs_px: &[[f64; 2]], 
     x0.set(1, initial[1]);
     x0.set(2, initial[2]);
     let cfg = LmConfig { max_iters: 50, ..LmConfig::default() };
-    let result = mathematical_optimize::levenberg_marquardt(&problem, x0, &cfg);
+    let result = math::optimize::levenberg_marquardt(&problem, x0, &cfg);
     [result.x.get(0), result.x.get(1), result.x.get(2)]
 }
 
@@ -1147,7 +1147,7 @@ fn real_roots_of(coeffs: &[f64]) -> Vec<f64> {
 /// ambiguity in `s3`'s quadratic root and potential extraneous roots), every candidate `(s1, s2, s3)` is
 /// re-validated against all three *original* (unsquared) law-of-cosines equations before being accepted —
 /// a defensive check that also naturally discards numerically spurious roots. Each accepted candidate's
-/// absolute pose is recovered via [`mathematical_lie::umeyama`] (no scale) between the world points and
+/// absolute pose is recovered via [`math::lie::umeyama`] (no scale) between the world points and
 /// their now-known camera-frame positions `s_i * f_i`. Returns up to 4 poses (after deduplicating
 /// near-identical candidates), or none for degenerate (collinear/coincident) input points.
 /// <https://en.wikipedia.org/wiki/Perspective-n-Point#P3P>
@@ -1224,7 +1224,7 @@ pub fn p3p_grunert(cam_rays: &[[f64; 3]; 3], world_pts: &[[f64; 3]; 3]) -> Vec<S
 }
 
 /// 🎲️ [`MinimalSolver`] wrapping [`p3p_grunert`] (`SAMPLE_SIZE = 3`) so it plugs into
-/// [`mathematical_optimize::ransac`]/[`lo_ransac`] for outlier-robust PnP.
+/// [`math::optimize::ransac`]/[`lo_ransac`] for outlier-robust PnP.
 struct P3pSolver {
     intr: Intrinsics,
 }
@@ -1430,7 +1430,7 @@ pub fn refine_pose_lm(intr: &Intrinsics, world_pts: &[[f64; 3]], obs_px: &[[f64;
     let problem = PoseRefineProblem { intr, world_pts, obs_px };
     let x0 = VecD::from_vec(initial.log().to_vec());
     let cfg = LmConfig { max_iters: 50, ..LmConfig::default() };
-    let result = mathematical_optimize::levenberg_marquardt(&problem, x0, &cfg);
+    let result = math::optimize::levenberg_marquardt(&problem, x0, &cfg);
     let xi: [f64; 6] = std::array::from_fn(|k| result.x.get(k));
     Se3::exp(xi)
 }
@@ -1808,7 +1808,7 @@ pub fn pose_graph_optimize(poses: &[Se3], edges: &[(usize, usize, Sim3)]) -> Vec
         }
     }
     let cfg = LmConfig { max_iters: 100, ..LmConfig::default() };
-    let result = mathematical_optimize::levenberg_marquardt(&problem, x0, &cfg);
+    let result = math::optimize::levenberg_marquardt(&problem, x0, &cfg);
     (0..n).map(|node| problem.pose_at(&result.x, node)).collect()
 }
 // #endregion 🔖️LoopClosure
@@ -1818,7 +1818,7 @@ pub fn pose_graph_optimize(poses: &[Se3], edges: &[(usize, usize, Sim3)]) -> Vec
 /// scale-free) reconstruction to real-world measurements. `GpsPosition`/`GravityUp` pin a camera frame's
 /// pose; `Gcp` (ground control point) pins a triangulated point's world position. The natural extension
 /// point for injecting these into bundle adjustment is as extra `a_index: None`/`b_index: None`-paired
-/// [`mathematical_optimize::ResidualTerm`]s inside a [`mathematical_optimize::BipartiteResiduals`]
+/// [`math::optimize::ResidualTerm`]s inside a [`math::optimize::BipartiteResiduals`]
 /// problem — a `GpsPosition`/`GravityUp` prior becomes an A-only term (touching just that camera's
 /// 6-dof block), a `Gcp` prior a B-only term (touching just that point's 3-dof block, see
 /// [`apply_gcp_prior_residual`]) — added to [`SfmBundleProblem`]'s `residual_terms`/`evaluate` alongside
@@ -1850,8 +1850,8 @@ pub fn align_to_priors(recon: &Reconstruction, gps_priors: &[(usize, [f64; 3])])
 
 /// 📌️ GCP (ground control point) prior residual: `(point - known_world) / sigma`, the extension-point
 /// primitive described on [`PosePrior`] — usable as the payload of a B-only
-/// ([`mathematical_optimize::ResidualTerm`] with `a_index: None`) term inside a
-/// [`mathematical_optimize::BipartiteResiduals`] problem. Returns `(residual, jacobian_wrt_point)`;
+/// ([`math::optimize::ResidualTerm`] with `a_index: None`) term inside a
+/// [`math::optimize::BipartiteResiduals`] problem. Returns `(residual, jacobian_wrt_point)`;
 /// `sigma <= 0` is treated as `1.0` (an un-weighted prior) rather than dividing by zero.
 pub fn apply_gcp_prior_residual(point: [f64; 3], known_world: [f64; 3], sigma: f64) -> (VecD, MatD) {
     let inv_sigma = if sigma > 1e-12 { 1.0 / sigma } else { 1.0 };

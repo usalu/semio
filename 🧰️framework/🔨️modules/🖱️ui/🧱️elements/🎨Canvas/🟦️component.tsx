@@ -21,12 +21,15 @@ import { Navbar, type NavbarItem } from "../🔝Navbar/🟦️component.tsx";
 import { Window, type WindowConfig } from "../🪟Window/🟦️component.tsx";
 import { type TreeDragAndDropController } from "../🪵Tree/🟦️component.tsx";
 import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { interactiveHoverClass, interactiveActiveFillClass, glassClass, surfaceClass, chromeStatusBorderClass, shellFloorFillClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { interactiveHoverClass, interactiveActiveFillClass, glassClass, surfaceClass, shellFloorFillClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { chromeStatusBorderClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
 import { modeDockTabClassName } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useLabel, useShellKeydown, useShellScopeOptional, isSurfaceActiveBackgroundPointer, createEvenWindowLayout, focusActiveSearchInput, modeDockChromeGridPlacement, resolveTranslationLabel, routeWindowSearchEscape, routeWindowSearchKeydown, routeWindowSearchSpace, setSurfaceActiveRoot, useSurface, useSurfaceActive, useUiTranslation, LevelProvider, NULL_SHELL_ROOT_REF, WindowChromeSilhouetteBorder, CloseIcon, Maximize2Icon, Minimize2Icon, Icon, SurfaceScope, dropZoneReadyClass, modeDockTabLabelClassName, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockInactiveTabBeforeGapClass, modeDockInactiveTabClass, windowBodyFrameActiveClass, windowBodyFrameClass, windowCapFrameActiveClass, windowCapFrameClass, windowControlsCapActiveClass, windowControlsCapActiveSplitClass, windowControlsCapClass, windowGapFrameActiveClass, windowGapFrameClass, type ModeDockChromeGrid, type WindowLayoutAxisNode, type WindowLayoutNode, type WindowLayoutStackNode, type UiStatus, type PanelGhostValue, type ControlIcon } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { useLabel, resolveTranslationLabel, useUiTranslation } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { useShellKeydown, useShellScopeOptional, NULL_SHELL_ROOT_REF } from "../🫀️core/🐚️ShellScope/🟦️component.tsx";
+import { isSurfaceActiveBackgroundPointer, useSurface, useSurfaceActive, LevelProvider, SurfaceScope } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { createEvenWindowLayout, focusActiveSearchInput, modeDockChromeGridPlacement, routeWindowSearchEscape, routeWindowSearchKeydown, routeWindowSearchSpace, setSurfaceActiveRoot, WindowChromeSilhouetteBorder, dropZoneReadyClass, modeDockTabLabelClassName, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockInactiveTabBeforeGapClass, modeDockInactiveTabClass, windowBodyFrameActiveClass, windowBodyFrameClass, windowCapFrameActiveClass, windowCapFrameClass, windowControlsCapActiveClass, windowControlsCapActiveSplitClass, windowControlsCapClass, windowGapFrameActiveClass, windowGapFrameClass, type ModeDockChromeGrid, type WindowLayoutAxisNode, type WindowLayoutNode, type WindowLayoutStackNode, type UiStatus, type PanelGhostValue } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { CloseIcon, Maximize2Icon, Minimize2Icon, Icon, type ControlIcon } from "../🔣Icons/🟦️component.tsx";
 import { DragHandle } from "../🧱DragHandle/🟦️component.tsx";
 import { ButtonGroup, ButtonGroupItem } from "../🎛️ButtonGroup/🟦️component.tsx";
 // #endregion 🔌️Adapters

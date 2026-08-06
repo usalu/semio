@@ -11,8 +11,8 @@ import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../☑️Select/🟦️component.tsx";
 import { Textarea } from "../📄Textarea/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useLabel, type IconSelectorMode, decodeIcon, encodeIcon, classifyIconSelectorMode, Icon } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { type IconSelectorMode, decodeIcon, encodeIcon, classifyIconSelectorMode, Icon } from "../🔣Icons/🟦️component.tsx";
 import { Button } from "../🔘Button/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

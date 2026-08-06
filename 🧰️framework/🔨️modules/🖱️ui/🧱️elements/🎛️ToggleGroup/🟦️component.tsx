@@ -16,10 +16,11 @@ import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { Action } from "../⚡️ActionGroup/🟦️component.tsx";
 import { Popover, PopoverTrigger, PopoverContent } from "../🗨️Popover/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { surfaceClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { type Level, useLevel, chromeControlGroupClass, Label, useControlInlineText, useControlAccessibleLabel, ControlHotkeyBadge, renderControlIcon, ChevronDownIcon, ChromeControlHint, type ControlIcon } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { surfaceClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { type Level, useLevel } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { Label, useControlInlineText, useControlAccessibleLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { chromeControlGroupClass, ControlHotkeyBadge, ChromeControlHint } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { renderControlIcon, ChevronDownIcon, type ControlIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🧩️ToggleGroup

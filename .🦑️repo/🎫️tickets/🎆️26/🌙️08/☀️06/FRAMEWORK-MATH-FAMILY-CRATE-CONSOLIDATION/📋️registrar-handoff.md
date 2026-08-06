@@ -90,10 +90,19 @@ deleted with no replacement module. Any consumer manifest still naming them just
 ## 5. npm packages
 
 `@semio-tech/graph-dsl-core` and `@semio-tech/graph-manifest` are replaced by
-`@semio-tech/framework-math-js` (`🧰️framework/🔨️modules/🧮️math/📦️packages/🟦️typescript`). Consumers to
-repoint: `🧰️framework/🛍️products/💻️os/⚡️implementations/🟦️typescript/package.json`,
-`🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts`, plus the root
-`📜️script.ts` and `bun.lock` regeneration.
+`@semio-tech/framework-math-js` (`🧰️framework/🔨️modules/🧮️math/📦️packages/🟦️typescript`). Three
+references remain outside this ticket's tree, plus a `bun.lock` regeneration:
+
+- `🧰️framework/🛍️products/💻️os/⚡️implementations/🟦️typescript/package.json:14` — dependency
+  `"@semio-tech/graph-manifest": "workspace:*"` → `"@semio-tech/framework-math-js": "workspace:*"`.
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts:1668` — vite alias
+  `find: "@semio-tech/graph-dsl-core"` → `"@semio-tech/framework-math-js"`.
+- `📜️script.ts:281` — `runNx("@semio-tech/graph-manifest:generate")` →
+  `runNx("@semio-tech/framework-math:generate")`.
+
+`.vscode/launch.json:3365` — the `📦️build🧮️graph📜️manifest` entry should become `📦️build🧮️math📜️manifest`
+running `bun nx run @semio-tech/framework-math:generate`. Left untouched here because this ticket's
+constraints put `.vscode/launch.json` out of scope.
 
 The manifest schema export moved: `@semio-tech/graph-manifest/🔣️manifest.schema.json` →
 `@semio-tech/framework-math-js/🔣️manifest.schema.json`.

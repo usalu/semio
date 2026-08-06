@@ -1,0 +1,267 @@
+[
+  {
+    "pkg": "semio-framework-kernel-infinite-world",
+    "lib": "infinite_world",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/⚡️implementations/🦀️rust/🌍️world/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl",
+    "lib": "dsl",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-core",
+    "lib": "dsl_core",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-derive",
+    "lib": "dsl_derive",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-family-catalog",
+    "lib": "dsl_family_catalog",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🗂️catalog/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-family-embed",
+    "lib": "dsl_family_embed",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📎️embed/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-family-geo",
+    "lib": "dsl_family_geo",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🌍️geo/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-family-graph",
+    "lib": "dsl_family_graph",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🕸️graph/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-family-recipe",
+    "lib": "dsl_family_recipe",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🧑‍🍳️recipe/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-family-scene",
+    "lib": "dsl_family_scene",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🎬️scene/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-family-sheet",
+    "lib": "dsl_family_sheet",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📊️sheet/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-fixture-sweep",
+    "lib": null,
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-grammar",
+    "lib": "dsl_grammar",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-lsp",
+    "lib": "dsl_lsp",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧠️lsp/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-notation",
+    "lib": "dsl_notation",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-registry",
+    "lib": "dsl_registry",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📇️registry/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-dsl-schema",
+    "lib": "dsl_schema",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-flow-core",
+    "lib": "flow_core",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-infinite-board",
+    "lib": "infinite_board",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-infinite-board-normal-directed",
+    "lib": "infinite_board_normal_directed",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/➕️normal/➡️directed/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-infinite-board-normal-undirected",
+    "lib": "infinite_board_normal_undirected",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/➕️normal/↔undirected/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-infinite-board-port",
+    "lib": "infinite_board_port",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-infinite-board-port-directed",
+    "lib": "infinite_board_port_directed",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-infinite-board-port-directed-dag",
+    "lib": "infinite_board_port_directed_dag",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-infinite-board-port-directed-normal",
+    "lib": "infinite_board_port_directed_normal",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-infinite-board-port-undirected",
+    "lib": "infinite_board_port_undirected",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/↔undirected/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-infinite-canvas",
+    "lib": "infinite_canvas",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack",
+    "lib": "pack",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack-async",
+    "lib": "pack_async",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⏳️async/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack-cli",
+    "lib": "pack_cli",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⌨️cli/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack-core",
+    "lib": "pack_core",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🫀️core/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack-format",
+    "lib": "pack_format",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📐️format/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack-http",
+    "lib": "pack_http",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌐️http/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack-index",
+    "lib": "pack_index",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️index/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack-io",
+    "lib": "pack_io",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔌️io/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack-testkit",
+    "lib": "pack_testkit",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🧪️testkit/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-pack-value",
+    "lib": "pack_value",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️value/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol",
+    "lib": "protocol",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-causal",
+    "lib": "protocol_causal",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔗️causal/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-channel",
+    "lib": "protocol_channel",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧵️channel/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-cli",
+    "lib": "protocol_cli",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⌨️cli/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-command",
+    "lib": "protocol_command",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-core",
+    "lib": "protocol_core",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-crdt",
+    "lib": "protocol_crdt",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔀️crdt/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-format",
+    "lib": "protocol_format",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📐️format/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-history",
+    "lib": "protocol_history",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📜️history/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-io",
+    "lib": "protocol_io",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔌️io/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-materialize",
+    "lib": "protocol_materialize",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/💎️materialize/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-testkit",
+    "lib": "protocol_testkit",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧪️testkit/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-protocol-wire",
+    "lib": "protocol_wire",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📡️wire/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-store",
+    "lib": "store",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-store-sync",
+    "lib": "store_sync",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/Cargo.toml"
+  },
+  {
+    "pkg": "semio-framework-os-kernel-store-worker",
+    "lib": "store_worker",
+    "cargo": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/⚡️implementations/🦀️rust/Cargo.toml"
+  }
+]

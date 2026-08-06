@@ -66,7 +66,7 @@ app = "gis2d-play"
 brand = "entwerfen-mit-bestand-verfolgen"
 aliases = ["entwerfen-mit-bestand-verfolgen"]
 ports = { react = 6032, wgpu = 6132 }
-engines = ["./🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust"]
+engines = ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"]
 
 [[package.metadata.semio.assets]]
 kind = "static-dir"

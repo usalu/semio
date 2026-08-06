@@ -883,7 +883,7 @@ export function statusSurfaceHtml(spec: { readonly kind: "empty" | "error" | "lo
 //#endregion 🔖️StatusSurfaceHtml
 
 /** @emoji 🗂️ Canonical repo-relative root of `@semio-tech/assets`, the only tree served at `/asset/*`. */
-export const SEMIO_ASSET_ROOT = "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript";
+export const SEMIO_ASSET_ROOT = "🧰️framework/🔨️modules/🖼️assets";
 
 /** @emoji 📂 Resolves and validates the merged Semio asset package root (fonts required). */
 export function resolveSemioAssetRoot(repoRoot: string): string {

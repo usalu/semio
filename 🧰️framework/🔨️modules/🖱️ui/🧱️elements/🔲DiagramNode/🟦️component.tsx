@@ -8,8 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { Handle, Position } from "@xyflow/react";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useLabel, useIdLabel } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { useLabel, useIdLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
 import { ContextMenu, type ContextMenuItem } from "../🖱️ContextMenu/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

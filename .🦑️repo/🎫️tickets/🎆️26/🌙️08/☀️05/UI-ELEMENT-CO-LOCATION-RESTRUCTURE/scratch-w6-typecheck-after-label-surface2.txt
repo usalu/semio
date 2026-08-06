@@ -1,0 +1,153 @@
+../../../../../../⚡️implementations/🟦️typescript/📦️index.ts(8,31): error TS2307: Cannot find module '@semio-tech/assets' or its corresponding type declarations.
+../../../../../../⚡️implementations/🟦️typescript/📦️index.ts(66,33): error TS2307: Cannot find module '../🦀️rust/bindings/UiPresence' or its corresponding type declarations.
+../../../../../../⚡️implementations/🟦️typescript/📦️index.ts(67,30): error TS2307: Cannot find module '../🦀️rust/bindings/UiState' or its corresponding type declarations.
+../../../../../../⚡️implementations/🟦️typescript/📦️index.ts(68,31): error TS2307: Cannot find module '../🦀️rust/bindings/UiStatus' or its corresponding type declarations.
+../../../../../../⚡️implementations/🟦️typescript/📦️index.ts(69,33): error TS2307: Cannot find module '../🦀️rust/bindings/UiPresence' or its corresponding type declarations.
+../../../../../../⚡️implementations/🟦️typescript/📦️index.ts(70,31): error TS2307: Cannot find module '../🦀️rust/bindings/UiStatus' or its corresponding type declarations.
+../../../../../../⚡️implementations/🟦️typescript/📦️index.ts(2945,23): error TS2358: The left-hand side of an 'instanceof' expression must be of type 'any', an object type or a type parameter.
+../../../../../../⚡️implementations/🟦️typescript/📦️index.ts(2945,96): error TS2352: Conversion of type 'string' to type 'ArrayBuffer' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(226,29): error TS2540: Cannot assign to 'aliases' because it is a read-only property.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(227,30): error TS2540: Cannot assign to 'variants' because it is a read-only property.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(228,35): error TS2540: Cannot assign to 'themedAliases' because it is a read-only property.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(229,36): error TS2540: Cannot assign to 'themedVariants' because it is a read-only property.
+📦️index.tsx(149,155): error TS2307: Cannot find module '@semio-tech/assets' or its corresponding type declarations.
+📦️index.tsx(150,116): error TS2307: Cannot find module '@semio-tech/assets' or its corresponding type declarations.
+📦️index.tsx(629,3): error TS2448: Block-scoped variable 'modeDockTabClassName' used before its declaration.
+📦️index.tsx(629,3): error TS2454: Variable 'modeDockTabClassName' is used before being assigned.
+📦️index.tsx(636,40): error TS2448: Block-scoped variable 'chromeControlTabItemClass' used before its declaration.
+📦️index.tsx(636,40): error TS2454: Variable 'chromeControlTabItemClass' is used before being assigned.
+📦️index.tsx(1104,205): error TS2300: Duplicate identifier 'Icon'.
+📦️index.tsx(1104,1808): error TS2300: Duplicate identifier 'Cursor'.
+📦️index.tsx(1104,1841): error TS2300: Duplicate identifier 'Icon'.
+📦️index.tsx(1105,205): error TS2300: Duplicate identifier 'Icon'.
+📦️index.tsx(1105,1808): error TS2300: Duplicate identifier 'Cursor'.
+📦️index.tsx(1105,1841): error TS2300: Duplicate identifier 'Icon'.
+📦️index.tsx(1590,24): error TS2345: Argument of type 'import("/Users/ueli/Documents/semio/node_modules/@xyflow/react/dist/esm/types/nodes").Node | null' is not assignable to parameter of type 'Node | null'.
+  Type 'Node' is not assignable to type 'Node | null'.
+📦️index.tsx(1601,49): error TS2345: Argument of type 'Node' is not assignable to parameter of type 'Node | null'.
+📦️index.tsx(4919,11): error TS2322: Type 'HTMLElement' is not assignable to type 'Node'.
+  Type 'HTMLElement' is missing the following properties from type '{ id: string; position: XYPosition; data: Record<string, unknown>; sourcePosition?: Position | undefined; targetPosition?: Position | undefined; ... 19 more ...; measured?: { ...; } | undefined; }': position, data
+📦️index.tsx(4989,30): error TS2345: Argument of type 'import("/Users/ueli/Documents/semio/node_modules/@xyflow/react/dist/esm/types/nodes").Node' is not assignable to parameter of type 'Node'.
+  Type 'Node' is missing the following properties from type 'Node': baseURI, childNodes, firstChild, isConnected, and 46 more.
+📦️index.tsx(5032,11): error TS2322: Type 'HTMLElement' is not assignable to type 'Node'.
+  Type 'HTMLElement' is missing the following properties from type '{ id: string; position: XYPosition; data: Record<string, unknown>; sourcePosition?: Position | undefined; targetPosition?: Position | undefined; ... 19 more ...; measured?: { ...; } | undefined; }': position, data
+📦️index.tsx(5070,30): error TS2345: Argument of type 'import("/Users/ueli/Documents/semio/node_modules/@xyflow/react/dist/esm/types/nodes").Node' is not assignable to parameter of type 'Node'.
+  Type 'Node' is missing the following properties from type 'Node': baseURI, childNodes, firstChild, isConnected, and 46 more.
+📦️index.tsx(6072,58): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+📦️index.tsx(6099,15): error TS2322: Type 'unknown' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+📦️index.tsx(7500,10): error TS2741: Property 'children' is missing in type '{ ref: RefObject<HTMLDivElement | null>; sessionGhost: false; "data-level": string; "data-slot": string; "data-anchor": "top-left" | "top-middle" | "top-right" | ... 4 more ... | "left-middle"; "data-panel-chrome-tab-bar-placeholder": string; "aria-hidden": "true"; className: string; style: { ...; } | undefined; }' but required in type 'GhostRegionShellProps'.
+📦️index.tsx(7663,15): error TS2540: Cannot assign to 'right' because it is a read-only property.
+📦️index.tsx(8048,16): error TS2322: Type '{ xmlns: string; className: string; style: { width: string; height: string; }; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>'.
+  Property 'xmlns' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>'.
+📦️index.tsx(8243,20): error TS2304: Cannot find name 'contextMenuContentClassName'.
+📦️index.tsx(8991,10): error TS2300: Duplicate identifier 'Cursor'.
+📦️index.tsx(8992,10): error TS2300: Duplicate identifier 'Cursor'.
+📦️index.tsx(11584,15): error TS2741: Property 'iconId' is missing in type '{ id: string; title: UiLabel; utilityBar: React.JSX.Element; utilityBarFolded: false; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+📦️index.tsx(11644,15): error TS2741: Property 'iconId' is missing in type '{ id: string; title: UiLabel; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+📦️index.tsx(12296,34): error TS2322: Type '"click"' is not assignable to type '"panel" | "tool" | "action" | "expand" | "zoom" | "orbit" | "utility" | "pan"'.
+📦️index.tsx(12569,34): error TS2322: Type '"click"' is not assignable to type '"panel" | "tool" | "action" | "expand" | "zoom" | "orbit" | "utility" | "pan"'.
+📦️index.tsx(12591,34): error TS2322: Type '"click"' is not assignable to type '"panel" | "tool" | "action" | "expand" | "zoom" | "orbit" | "utility" | "pan"'.
+📦️index.tsx(12837,44): error TS2345: Argument of type '{ kind: "drag"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; }' is not assignable to parameter of type 'IntroductionGesture'.
+  Type '{ kind: "drag"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; }' is missing the following properties from type '{ kind: "drag"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }': button, modifiers
+📦️index.tsx(12838,44): error TS2345: Argument of type '{ kind: "drag"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; button: "middle"; }' is not assignable to parameter of type 'IntroductionGesture'.
+  Property 'modifiers' is missing in type '{ kind: "drag"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; button: "middle"; }' but required in type '{ kind: "drag"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }'.
+📦️index.tsx(12839,44): error TS2345: Argument of type '{ kind: "orbit"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; }' is not assignable to parameter of type 'IntroductionGesture'.
+  Type '{ kind: "orbit"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; }' is missing the following properties from type '{ kind: "orbit"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }': button, modifiers
+📦️index.tsx(12979,23): error TS2352: Conversion of type '{ id: string; title: string; body: string; introduce: null; show: never[]; placement: "center"; interactions: never[]; ordered: false; logos: never[]; }[]' to type 'IntroductionStepDefinition[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'demonstrations' is missing in type '{ id: string; title: string; body: string; introduce: null; show: never[]; placement: "center"; interactions: never[]; ordered: false; logos: never[]; }' but required in type 'IntroductionStepDefinition'.
+📦️index.tsx(13055,13): error TS2322: Type '{ kind: "drag"; from: { kind: "element"; id: string; }; to: { kind: "element"; id: string; }; button: "middle"; }' is not assignable to type 'IntroductionGesture'.
+  Property 'modifiers' is missing in type '{ kind: "drag"; from: { kind: "element"; id: string; }; to: { kind: "element"; id: string; }; button: "middle"; }' but required in type '{ kind: "drag"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }'.
+📦️index.tsx(13056,13): error TS2322: Type '{ kind: "orbit"; from: { kind: "element"; id: string; }; to: { kind: "element"; id: string; }; }' is not assignable to type 'IntroductionGesture'.
+  Type '{ kind: "orbit"; from: { kind: "element"; id: string; }; to: { kind: "element"; id: string; }; }' is missing the following properties from type '{ kind: "orbit"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }': button, modifiers
+📦️index.tsx(16013,49): error TS2345: Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'readonly { id: string; title: string; iconId: IconName; }[]'.
+  Property 'iconId' is missing in type '{ id: string; title: string; }' but required in type '{ id: string; title: string; iconId: IconName; }'.
+📦️index.tsx(16016,44): error TS2345: Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'readonly { id: string; title: string; iconId: IconName; }[]'.
+  Property 'iconId' is missing in type '{ id: string; title: string; }' but required in type '{ id: string; title: string; iconId: IconName; }'.
+📦️index.tsx(16024,49): error TS2345: Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'readonly { id: string; title: string; iconId: IconName; }[]'.
+  Property 'iconId' is missing in type '{ id: string; title: string; }' but required in type '{ id: string; title: string; iconId: IconName; }'.
+📦️index.tsx(16973,21): error TS2741: Property 'iconId' is missing in type '{ id: string; title: UiLabel; active: true; search: { input: { id: string; value: string; placeholder: UiLabel; onChange: React.Dispatch<React.SetStateAction<string>>; }; }; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+📦️index.tsx(17162,19): error TS2741: Property 'iconId' is missing in type '{ id: string; title: UiLabel; active: true; search: { input: { value: string; placeholder: UiLabel; onChange: () => void; onAbort: () => number; }; }; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+../../../../🧱️elements/🎨Canvas/🟦️component.tsx(11,31): error TS2307: Cannot find module '@semio-tech/assets' or its corresponding type declarations.
+../../../../🧱️elements/🎨Canvas/🟦️component.tsx(1227,7): error TS2322: Type 'number[]' is not assignable to type 'Layout'.
+  Index signature for type 'string' is missing in type 'number[]'.
+../../../../🧱️elements/💬UIDialog/🟦️component.tsx(55,55): error TS2322: Type 'unknown' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+../../../../🧱️elements/💬UIDialog/🟦️component.tsx(56,9): error TS2322: Type 'unknown' is not assignable to type 'string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<...> | null | undefined'.
+../../../../🧱️elements/💬UIDialog/🟦️component.tsx(56,80): error TS2322: Type '{}' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+../../../../🧱️elements/💬UIDialog/🟦️component.tsx(61,65): error TS2322: Type 'unknown' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+../../../../🧱️elements/💬UIDialog/🟦️component.tsx(68,66): error TS2322: Type '{}' is not assignable to type 'string'.
+../../../../🧱️elements/💬UIDialog/🟦️component.tsx(69,54): error TS2322: Type 'unknown' is not assignable to type 'string | undefined'.
+../../../../🧱️elements/📁VirtualFileSystem/🟦️component.tsx(11,31): error TS2307: Cannot find module '@semio-tech/assets' or its corresponding type declarations.
+../../../../🧱️elements/📁VirtualFileSystem/🟦️component.tsx(541,6): error TS2604: JSX element type 'Table' does not have any construct or call signatures.
+../../../../🧱️elements/📁VirtualFileSystem/🟦️component.tsx(541,6): error TS2786: 'Table' cannot be used as a JSX component.
+  Its type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>' is not a valid JSX element type.
+../../../../🧱️elements/📁VirtualFileSystem/🟦️component.tsx(545,18): error TS7006: Parameter 'row' implicitly has an 'any' type.
+../../../../🧱️elements/📊Diagram/🟦️component.tsx(602,9): error TS2322: Type '(event: React.MouseEvent, node: Node) => void' is not assignable to type 'OnNodeDrag<Node>'.
+  Types of parameters 'event' and 'event' are incompatible.
+    Type 'MouseEvent | TouchEvent' is not assignable to type 'MouseEvent<Element, MouseEvent>'.
+      Type 'MouseEvent' is missing the following properties from type 'MouseEvent<Element, MouseEvent>': nativeEvent, isDefaultPrevented, isPropagationStopped, persist
+../../../../🧱️elements/📊Diagram/🟦️component.tsx(603,9): error TS2322: Type '(event: React.MouseEvent, node: Node) => void' is not assignable to type 'OnNodeDrag<Node>'.
+  Types of parameters 'event' and 'event' are incompatible.
+    Type 'MouseEvent | TouchEvent' is not assignable to type 'MouseEvent<Element, MouseEvent>'.
+      Type 'MouseEvent' is missing the following properties from type 'MouseEvent<Element, MouseEvent>': nativeEvent, isDefaultPrevented, isPropagationStopped, persist
+../../../../🧱️elements/📊Diagram/🟦️component.tsx(604,9): error TS2322: Type '(event: React.MouseEvent, node: Node) => void' is not assignable to type 'OnNodeDrag<Node>'.
+  Types of parameters 'event' and 'event' are incompatible.
+    Type 'MouseEvent | TouchEvent' is not assignable to type 'MouseEvent<Element, MouseEvent>'.
+      Type 'MouseEvent' is missing the following properties from type 'MouseEvent<Element, MouseEvent>': nativeEvent, isDefaultPrevented, isPropagationStopped, persist
+../../../../🧱️elements/📊Table/🟦️component.tsx(19,10): error TS2305: Module '"../../\uD83D\uDCE6\uFE0Fpackages/\uD83D\uDFE6\uFE0Ftypescript/\uD83C\uDFAF\uFE0Ftargets/\u269B\uFE0Freact/\uD83D\uDCE6\uFE0Findex.tsx"' has no exported member 'tableRowInteractiveClass'.
+../../../../🧱️elements/📊Table/🟦️component.tsx(19,36): error TS2305: Module '"../../\uD83D\uDCE6\uFE0Fpackages/\uD83D\uDFE6\uFE0Ftypescript/\uD83C\uDFAF\uFE0Ftargets/\u269B\uFE0Freact/\uD83D\uDCE6\uFE0Findex.tsx"' has no exported member 'tableRowSelectedClass'.
+../../../../🧱️elements/📑PanelTabBar/🟦️component.tsx(10,31): error TS2307: Cannot find module '@semio-tech/assets' or its corresponding type declarations.
+../../../../🧱️elements/🔣Icons/🟦️component.tsx(18,8): error TS2307: Cannot find module '@semio-tech/assets' or its corresponding type declarations.
+../../../../🧱️elements/🔣Icons/🟦️component.tsx(24,8): error TS2307: Cannot find module '@semio-tech/assets' or its corresponding type declarations.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(40,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(49,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(58,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(68,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(77,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(86,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(95,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🪵Tree/🟦️component.tsx(15,31): error TS2307: Cannot find module '@semio-tech/assets' or its corresponding type declarations.
+../../../../🧱️elements/🪵Tree/🟦️component.tsx(768,54): error TS2339: Property 'escape' does not exist on type 'Readonly<{ Translate: { toString(transform: Transform | null): string | undefined; }; Scale: { toString(transform: Transform | null): string | undefined; }; Transform: { ...; }; Transition: { ...; }; }>'.
+../../../../../../🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts(1420,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../../../🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts(1421,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../../../🤖️generated/🟦️manifest.ts(129,9): error TS2304: Cannot find name 'ConfigSpec'.
+../../../../../../🤖️generated/🟦️manifest.ts(134,17): error TS2304: Cannot find name 'CommandGrammar'.
+../../../../../../🤖️generated/🟦️manifest.ts(140,5): error TS2304: Cannot find name 'AppIo'.
+../../../../../../🤖️generated/🟦️manifest.ts(697,68): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(697,109): error TS2304: Cannot find name 'StyleSpec'.
+../../../../../../🤖️generated/🟦️manifest.ts(697,150): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(704,42): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(704,55): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(706,136): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(708,161): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(710,60): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(710,97): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(712,89): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(712,231): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(714,40): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(716,95): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(718,183): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(729,124): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(731,52): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(733,99): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(733,164): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(735,63): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(737,170): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(752,35): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(752,140): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(754,67): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(754,132): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(756,60): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(756,105): error TS2304: Cannot find name 'UiTreeActionPlacement'.
+../../../../../../🤖️generated/🟦️manifest.ts(758,51): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(768,8): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(770,222): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(772,55): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(831,9): error TS2304: Cannot find name 'Locale'.
+../../../../../../🤖️generated/🟦️manifest.ts(835,14): error TS2304: Cannot find name 'Terminology'.

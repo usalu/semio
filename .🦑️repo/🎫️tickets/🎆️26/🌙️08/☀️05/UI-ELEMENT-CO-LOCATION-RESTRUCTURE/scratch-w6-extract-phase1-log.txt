@@ -1,0 +1,9 @@
+fixed ElementId Ports import
+phase1 done [
+  'created /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🌈️Surface/🟦️component.tsx',
+  'expanded ClassNames with StyleClasses',
+  'wired Surface in barrel',
+  'removed surfaceActive cluster from barrel',
+  'wired StyleClasses in barrel'
+]
+barrel lines 22457

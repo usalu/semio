@@ -1,0 +1,3 @@
+error: package `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/Cargo.toml` is a member of the wrong workspace
+expected: /Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/FRAMEWORK-UI-FAMILY-CRATE-CONSOLIDATION/🧪️members-workspace/Cargo.toml
+actual:   /Users/ueli/Documents/semio/Cargo.toml

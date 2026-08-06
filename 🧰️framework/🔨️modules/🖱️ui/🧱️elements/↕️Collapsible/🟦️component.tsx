@@ -9,8 +9,7 @@
 import * as React from "react";
 import * as CollapsiblePrimitive from "@radix-ui/react-collapsible";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { interactiveControlTransitionClass, interactiveHoverClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { interactiveControlTransitionClass, interactiveHoverClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 
 // #endregion 🔌️Adapters
 

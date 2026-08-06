@@ -20,7 +20,7 @@ crate-type = ["rlib"]
 path = "../../../🖼️canvas/⚡️implementations/🦀️rust/📦️lib.rs"
 
 [dependencies]
-mathematical_geometry = { path = "../../../../../../../🔨️modules/🧮️math/📐️geometry/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-geometry" }
+math = { path = "../../../../../../../🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 ui_styling = { path = "../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 compiler = { path = "../../../../../../../🔨️modules/📚️compiler/⚡️implementations/🦀️rust", package = "semio-framework-compiler" }
 serde = { version = "1.0.219", features = ["derive"] }

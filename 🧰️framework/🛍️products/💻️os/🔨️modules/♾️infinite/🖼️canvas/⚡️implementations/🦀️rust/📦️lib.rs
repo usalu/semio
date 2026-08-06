@@ -18,7 +18,7 @@ mod renderer {
     }
     // #endregion 🏷️VelloBackend
 
-    use mathematical_geometry::{Affine, ShapeRef};
+    use math::geometry::{Affine, ShapeRef};
     use std::sync::Arc as SharedArc;
     use vello_backend as backend;
 
@@ -220,7 +220,7 @@ mod renderer {
             let style: backend::peniko::Fill = rule.into();
             let blend: backend::peniko::Mix = blend.into();
             let transform = transform.to_kurbo();
-            mathematical_geometry::with_shape_ref!(clip.into(), |s| {
+            math::geometry::with_shape_ref!(clip.into(), |s| {
                 self.0.push_layer(style, blend, alpha, transform, &s.to_kurbo());
             });
         }
@@ -230,7 +230,7 @@ mod renderer {
         pub fn push_clip_layer<'a>(&mut self, rule: FillRule, transform: Affine, clip: impl Into<ShapeRef<'a>>) {
             let style: backend::peniko::Fill = rule.into();
             let transform = transform.to_kurbo();
-            mathematical_geometry::with_shape_ref!(clip.into(), |s| {
+            math::geometry::with_shape_ref!(clip.into(), |s| {
                 self.0.push_clip_layer(style, transform, &s.to_kurbo());
             });
         }
@@ -270,7 +270,7 @@ mod renderer {
     }
 }
 
-pub use mathematical_geometry::{append_shape_to_path, geom_sel, Affine, Arc, BezPath, Circle, CubicBez, Line, PathEl, Point, Rect, RoundedRect, RoundedRectRadii, ShapeRef, Vec2};
+pub use math::geometry::{append_shape_to_path, geom_sel, Affine, Arc, BezPath, Circle, CubicBez, Line, PathEl, Point, Rect, RoundedRect, RoundedRectRadii, ShapeRef, Vec2};
 pub(crate) use renderer::vello_backend::usvg;
 pub use renderer::{append_svg_document, BlendMode, Cap, Color, FillRule, Paint, RasterImage, Rgba8, Scene, Stroke, SvgDocument};
 // #endregion 🔖️Renderer
@@ -1212,10 +1212,10 @@ pub mod gpu_session {
 // #endregion 🔖️GpuSession
 
 // #region 🔖️IconCodec
-#[path = "../../../../../../../🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🌱️metabolism/🔣️icons/🤖️generated/🦀️metabolism_icon_name.rs"]
+#[path = "../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🤖️generated/🦀️metabolism_icon_name.rs"]
 mod metabolism_icon_name_gen;
 
-#[path = "../../../../../../../🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🔣️icons/🤖️generated/🦀️icon_name.rs"]
+#[path = "../../../../../../../🔨️modules/🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs"]
 mod catalog_icon_name_gen;
 
 pub use catalog_icon_name_gen::IconName;

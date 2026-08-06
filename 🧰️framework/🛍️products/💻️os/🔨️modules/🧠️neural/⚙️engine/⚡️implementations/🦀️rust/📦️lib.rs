@@ -1937,8 +1937,8 @@ fn topo_order(tree: &Tree) -> Result<Vec<String>, EvalError> {
     Ok(topo_levels(tree)?.into_iter().flatten().collect())
 }
 
-// 🚧️ Not migrated to `mathematical_graph::algorithms::topo_levels`: doing so would create a circular crate
-// dependency (`neural_engine` → `mathematical_graph` → `mathematical_graph_manifest` → `neural_engine`,
+// 🚧️ Not migrated to `math::graph::algorithms::topo_levels`: doing so would create a circular crate
+// dependency (`neural_engine` → `math::graph` → `math::graph::manifest` → `neural_engine`,
 // via manifest's `PropertyValue` → `neural_engine::Value` conversion). Fixing that requires relocating
 // `Value`/`Atom` out of `neural_engine` into a shared lower crate — out of this ticket's scope.
 fn topo_levels(tree: &Tree) -> Result<Vec<Vec<String>>, EvalError> {

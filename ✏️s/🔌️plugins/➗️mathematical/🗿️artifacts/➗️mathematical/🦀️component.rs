@@ -86,7 +86,7 @@ impl Default for MathGraph {
 /// 📍️ A single geometry point — the DSL engine's `DslField` binding has no impl for raw Rust
 /// tuples (only named types deriving `DslRecord`/`DslScalar`), so `MathGeometry::points` uses this
 /// named record instead of a bare `(f64, f64)`; `From`/`Into` conversions keep the rest of the
-/// crate's tuple-based call sites (JSON args, `mathematical_geometry::Point`) unchanged.
+/// crate's tuple-based call sites (JSON args, `math::geometry::Point`) unchanged.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct MathPoint {
     pub x: f64,

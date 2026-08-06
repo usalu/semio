@@ -4,8 +4,8 @@ pub mod fixture_layout {
     // #region fixture_layout
     //! ↔ Normal undirected fixture layout: node-id edges, symmetric springs, no port handles.
 
-    use mathematical_geometry::Vec2;
-    use mathematical_graph_drawing::force::{self, ForceLayoutOptions as CoreForceLayoutOptions};
+    use math::geometry::Vec2;
+    use math::graph::drawing::force::{self, ForceLayoutOptions as CoreForceLayoutOptions};
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
     use std::collections::{HashMap, HashSet};

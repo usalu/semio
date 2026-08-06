@@ -57,7 +57,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@semio-tech/assets": path.resolve(__dirname, "../../../../../../../../🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/📦️index.ts"),
+      "@semio-tech/assets": path.resolve(__dirname, "../../../../../../../../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts"),
     },
   },
 });

@@ -10,8 +10,8 @@
     "resolveJsonModule": true,
     "noEmit": true,
     "paths": {
-      "@semio-tech/assets/*": ["../../../../../../../../🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/*"],
-      "@semio-tech/assets": ["../../../../../../../../🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/📦️index.ts"]
+      "@semio-tech/assets/*": ["../../../../../../../../🧰️framework/🔨️modules/🖼️assets/*"],
+      "@semio-tech/assets": ["../../../../../../../../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts"]
     }
   },
   "include": ["🟦️extension.test.ts", "🟦️extension.ts"],

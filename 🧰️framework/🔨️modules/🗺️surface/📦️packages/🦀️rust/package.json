@@ -1,0 +1,9 @@
+{
+  "name": "@semio-tech/framework-surface-rs",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./pkg/framework_surface.js",
+    "./pkg/framework_surface.js": "./pkg/framework_surface.js"
+  }
+}

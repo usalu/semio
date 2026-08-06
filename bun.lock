@@ -379,7 +379,7 @@
         "@semio-tech/cad-js-module-spatial-shape": "workspace:*",
         "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/infinite-world-r3f": "workspace:*",
-        "@semio-tech/kernel-3d-js": "workspace:*",
+        "@semio-tech/s-3d-js": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
         "@semio-tech/ui-styling": "workspace:*",
         "brepjs": "^18.20.3",
@@ -461,8 +461,8 @@
       "name": "@semio-tech/s-2d-js",
       "version": "0.1.0",
     },
-    "✏️s/🔨️modules/🧊️3d/📐️brep/⚡️implementations/🟦️typescript": {
-      "name": "@semio-tech/kernel-3d-js",
+    "✏️s/🔨️modules/🧊️3d/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/s-3d-js",
       "version": "0.1.0",
       "dependencies": {
         "@semio-tech/flow-module-brep": "workspace:*",
@@ -571,210 +571,33 @@
         "vitest": "^4.0.17",
       },
     },
-    "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript": {
+    "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript": {
       "name": "@semio-tech/assets",
       "version": "1.0.0",
-    },
-    "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🏛️compose/🔣️icons": {
-      "name": "@semio-tech/icons",
-      "version": "1.0.0",
-      "devDependencies": {
-        "@semio-tech/logos": "*",
-      },
-    },
-    "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🖼️images": {
-      "name": "@semio-tech/images",
-      "version": "1.0.0",
-    },
-    "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🪧️logos": {
-      "name": "@semio-tech/logos",
-      "version": "1.0.0",
-      "dependencies": {
-        "jsdom": "^24.1.3",
-      },
       "devDependencies": {
         "@types/jsdom": "^21.1.7",
         "@types/node": "^20.0.0",
+        "jsdom": "^24.1.3",
         "tsx": "^4.21.0",
       },
     },
-    "🧰️framework/🔨️modules/🗺️surface/🎨️paint/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/framework-surface-paint-rs",
-    },
-    "🧰️framework/🔨️modules/🗺️surface/🎲️board-2d/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/framework-surface-board-2d-rs",
-      "version": "0.1.0",
-    },
-    "🧰️framework/🔨️modules/🗺️surface/🏔️terrain/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/framework-surface-terrain-rs",
-    },
-    "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/framework-surface-node-graph-rs",
-      "version": "0.1.0",
-    },
-    "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/framework-surface-tiled-map-rs",
+    "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust": {
+      "name": "@semio-tech/framework-surface-rs",
     },
     "🧰️framework/🔨️modules/🧬️schema/⚡️implementations/🦀️rust": {
       "name": "@semio-tech/framework-schema",
       "version": "0.1.0",
     },
-    "🧰️framework/🔨️modules/🧮️math/➕️algebra/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-algebra",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🌫️fuzzy/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-fuzzy",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🎯️optimize/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-optimize",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🎯️sampling/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-sampling",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🎲️entropy/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-entropy",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🎲️probability/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-probability",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🎲️random/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-random",
-    },
-    "🧰️framework/🔨️modules/🧮️math/📈️polynomial/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-polynomial",
-    },
-    "🧰️framework/🔨️modules/🧮️math/📊️statistics/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-statistics",
-    },
-    "🧰️framework/🔨️modules/🧮️math/📋️tabular/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-tabular",
-    },
-    "🧰️framework/🔨️modules/🧮️math/📶️signal/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-signal",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🔗️causal/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-causal",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🔢️number/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-number",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🔷️lie/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-lie",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-core",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/➕️normal/↔undirected/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-normal-undirected",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/➕️normal/➡️directed/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-normal-directed",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🌊️flow/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-flow",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🌳️trees/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-trees",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🎨️coloring/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-coloring",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🎯️approximation/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-approximation",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🎯️centrality/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-centrality",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🎯️similarity/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-similarity",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🎲️generate/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-generate",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🎲️generate/🎲️random/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-generate-random",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🏗️structure/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-structure",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🏘️community/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-community",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/📊️spectral/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-spectral",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔀️bipartite/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-bipartite",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔄️cycles/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-cycles",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔌️io/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-io",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔌️ports/↔undirected/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-port-undirected",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔌️ports/➡️directed/➕️normal/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-port-directed-normal",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔗️connectivity/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-connectivity",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔧️operators/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-operators",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🔺️cliques/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-cliques",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🕸️dag/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-dag",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🗣️dsl/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/graph-dsl",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/⚡️implementations/🟦️typescript": {
-      "name": "@semio-tech/graph-dsl-core",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🗺️planarity/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-planarity",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🚶️traversal/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-traversal",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/graph-manifest",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🛤️paths/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-paths",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🤝️matching/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-matching",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🧩️clustering/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-clustering",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🧩️components/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-components",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🕸️graph/🪞️isomorphism/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-graph-isomorphism",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🗺️spatial/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-spatial",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🧩️wfc/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-wfc",
-    },
-    "🧰️framework/🔨️modules/🧮️math/🧮️cas/⚡️implementations/🦀️rust": {
-      "name": "@semio-tech/math-cas",
+    "🧰️framework/🔨️modules/🧮️math/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/framework-math-js",
+      "version": "0.1.0",
     },
     "🧰️framework/🛍️products/💻️os/⚡️implementations/🟦️typescript": {
       "name": "@semio-tech/framework-os-core",
       "version": "0.1.0",
       "dependencies": {
         "@semio-tech/framework-core": "workspace:*",
-        "@semio-tech/graph-manifest": "workspace:*",
+        "@semio-tech/framework-math-js": "workspace:*",
       },
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -876,11 +699,7 @@
         "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-editor-rs": "workspace:*",
         "@semio-tech/framework-os-core": "workspace:*",
-        "@semio-tech/framework-surface-board-2d-rs": "workspace:*",
-        "@semio-tech/framework-surface-node-graph-rs": "workspace:*",
-        "@semio-tech/framework-surface-paint-rs": "workspace:*",
-        "@semio-tech/framework-surface-terrain-rs": "workspace:*",
-        "@semio-tech/framework-surface-tiled-map-rs": "workspace:*",
+        "@semio-tech/framework-surface-rs": "workspace:*",
         "@semio-tech/infinite-canvas-react-renderer": "workspace:*",
         "@semio-tech/infinite-world-r3f": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
@@ -945,7 +764,7 @@
         "vitest": "^4.0.17",
       },
     },
-    "🧰️framework/🛍️products/📓️print/⚡️implementations/🟦️typescript": {
+    "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript": {
       "name": "@semio-tech/print",
       "version": "0.1.0",
       "dependencies": {
@@ -2056,7 +1875,7 @@
 
     "@semio-tech/animate-js": ["@semio-tech/animate-js@workspace:✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript"],
 
-    "@semio-tech/assets": ["@semio-tech/assets@workspace:🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript"],
+    "@semio-tech/assets": ["@semio-tech/assets@workspace:🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript"],
 
     "@semio-tech/cad-js": ["@semio-tech/cad-js@workspace:✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript"],
 
@@ -2138,6 +1957,8 @@
 
     "@semio-tech/framework-editor-rs": ["@semio-tech/framework-editor-rs@workspace:🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust"],
 
+    "@semio-tech/framework-math-js": ["@semio-tech/framework-math-js@workspace:🧰️framework/🔨️modules/🧮️math/📦️packages/🟦️typescript"],
+
     "@semio-tech/framework-os-core": ["@semio-tech/framework-os-core@workspace:🧰️framework/🛍️products/💻️os/⚡️implementations/🟦️typescript"],
 
     "@semio-tech/framework-os-dev": ["@semio-tech/framework-os-dev@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript"],
@@ -2148,127 +1969,11 @@
 
     "@semio-tech/framework-schema": ["@semio-tech/framework-schema@workspace:🧰️framework/🔨️modules/🧬️schema/⚡️implementations/🦀️rust"],
 
-    "@semio-tech/framework-surface-board-2d-rs": ["@semio-tech/framework-surface-board-2d-rs@workspace:🧰️framework/🔨️modules/🗺️surface/🎲️board-2d/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/framework-surface-node-graph-rs": ["@semio-tech/framework-surface-node-graph-rs@workspace:🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/framework-surface-paint-rs": ["@semio-tech/framework-surface-paint-rs@workspace:🧰️framework/🔨️modules/🗺️surface/🎨️paint/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/framework-surface-terrain-rs": ["@semio-tech/framework-surface-terrain-rs@workspace:🧰️framework/🔨️modules/🗺️surface/🏔️terrain/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/framework-surface-tiled-map-rs": ["@semio-tech/framework-surface-tiled-map-rs@workspace:🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/graph-dsl": ["@semio-tech/graph-dsl@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🗣️dsl/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/graph-dsl-core": ["@semio-tech/graph-dsl-core@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/⚡️implementations/🟦️typescript"],
-
-    "@semio-tech/graph-manifest": ["@semio-tech/graph-manifest@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/icons": ["@semio-tech/icons@workspace:🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🏛️compose/🔣️icons"],
-
-    "@semio-tech/images": ["@semio-tech/images@workspace:🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🖼️images"],
+    "@semio-tech/framework-surface-rs": ["@semio-tech/framework-surface-rs@workspace:🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"],
 
     "@semio-tech/infinite-canvas-react-renderer": ["@semio-tech/infinite-canvas-react-renderer@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementations/🟦️typescript"],
 
     "@semio-tech/infinite-world-r3f": ["@semio-tech/infinite-world-r3f@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/⚡️implementations/🟦️typescript"],
-
-    "@semio-tech/kernel-3d-js": ["@semio-tech/kernel-3d-js@workspace:✏️s/🔨️modules/🧊️3d/📐️brep/⚡️implementations/🟦️typescript"],
-
-    "@semio-tech/logos": ["@semio-tech/logos@workspace:🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🪧️logos"],
-
-    "@semio-tech/math-algebra": ["@semio-tech/math-algebra@workspace:🧰️framework/🔨️modules/🧮️math/➕️algebra/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-cas": ["@semio-tech/math-cas@workspace:🧰️framework/🔨️modules/🧮️math/🧮️cas/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-causal": ["@semio-tech/math-causal@workspace:🧰️framework/🔨️modules/🧮️math/🔗️causal/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-entropy": ["@semio-tech/math-entropy@workspace:🧰️framework/🔨️modules/🧮️math/🎲️entropy/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-fuzzy": ["@semio-tech/math-fuzzy@workspace:🧰️framework/🔨️modules/🧮️math/🌫️fuzzy/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-approximation": ["@semio-tech/math-graph-approximation@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🎯️approximation/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-bipartite": ["@semio-tech/math-graph-bipartite@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🔀️bipartite/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-centrality": ["@semio-tech/math-graph-centrality@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🎯️centrality/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-cliques": ["@semio-tech/math-graph-cliques@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🔺️cliques/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-clustering": ["@semio-tech/math-graph-clustering@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🧩️clustering/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-coloring": ["@semio-tech/math-graph-coloring@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🎨️coloring/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-community": ["@semio-tech/math-graph-community@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🏘️community/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-components": ["@semio-tech/math-graph-components@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🧩️components/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-connectivity": ["@semio-tech/math-graph-connectivity@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🔗️connectivity/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-core": ["@semio-tech/math-graph-core@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-cycles": ["@semio-tech/math-graph-cycles@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🔄️cycles/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-dag": ["@semio-tech/math-graph-dag@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🕸️dag/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-flow": ["@semio-tech/math-graph-flow@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🌊️flow/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-generate": ["@semio-tech/math-graph-generate@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🎲️generate/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-generate-random": ["@semio-tech/math-graph-generate-random@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🎲️generate/🎲️random/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-io": ["@semio-tech/math-graph-io@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🔌️io/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-isomorphism": ["@semio-tech/math-graph-isomorphism@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🪞️isomorphism/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-matching": ["@semio-tech/math-graph-matching@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🤝️matching/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-normal-directed": ["@semio-tech/math-graph-normal-directed@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/➕️normal/➡️directed/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-normal-undirected": ["@semio-tech/math-graph-normal-undirected@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/➕️normal/↔undirected/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-operators": ["@semio-tech/math-graph-operators@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🔧️operators/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-paths": ["@semio-tech/math-graph-paths@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🛤️paths/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-planarity": ["@semio-tech/math-graph-planarity@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🗺️planarity/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-port-directed-normal": ["@semio-tech/math-graph-port-directed-normal@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🔌️ports/➡️directed/➕️normal/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-port-undirected": ["@semio-tech/math-graph-port-undirected@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🔌️ports/↔undirected/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-similarity": ["@semio-tech/math-graph-similarity@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🎯️similarity/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-spectral": ["@semio-tech/math-graph-spectral@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/📊️spectral/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-structure": ["@semio-tech/math-graph-structure@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🏗️structure/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-traversal": ["@semio-tech/math-graph-traversal@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🚶️traversal/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-graph-trees": ["@semio-tech/math-graph-trees@workspace:🧰️framework/🔨️modules/🧮️math/🕸️graph/🌳️trees/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-lie": ["@semio-tech/math-lie@workspace:🧰️framework/🔨️modules/🧮️math/🔷️lie/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-number": ["@semio-tech/math-number@workspace:🧰️framework/🔨️modules/🧮️math/🔢️number/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-optimize": ["@semio-tech/math-optimize@workspace:🧰️framework/🔨️modules/🧮️math/🎯️optimize/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-polynomial": ["@semio-tech/math-polynomial@workspace:🧰️framework/🔨️modules/🧮️math/📈️polynomial/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-probability": ["@semio-tech/math-probability@workspace:🧰️framework/🔨️modules/🧮️math/🎲️probability/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-random": ["@semio-tech/math-random@workspace:🧰️framework/🔨️modules/🧮️math/🎲️random/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-sampling": ["@semio-tech/math-sampling@workspace:🧰️framework/🔨️modules/🧮️math/🎯️sampling/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-signal": ["@semio-tech/math-signal@workspace:🧰️framework/🔨️modules/🧮️math/📶️signal/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-spatial": ["@semio-tech/math-spatial@workspace:🧰️framework/🔨️modules/🧮️math/🗺️spatial/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-statistics": ["@semio-tech/math-statistics@workspace:🧰️framework/🔨️modules/🧮️math/📊️statistics/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-tabular": ["@semio-tech/math-tabular@workspace:🧰️framework/🔨️modules/🧮️math/📋️tabular/⚡️implementations/🦀️rust"],
-
-    "@semio-tech/math-wfc": ["@semio-tech/math-wfc@workspace:🧰️framework/🔨️modules/🧮️math/🧩️wfc/⚡️implementations/🦀️rust"],
 
     "@semio-tech/mit-bestand-bericht": ["@semio-tech/mit-bestand-bericht@workspace:♻️mit-bestand/📋️bericht/⚡️implementation/🟦️typescript"],
 
@@ -2278,7 +1983,7 @@
 
     "@semio-tech/plugin-registry": ["@semio-tech/plugin-registry@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry"],
 
-    "@semio-tech/print": ["@semio-tech/print@workspace:🧰️framework/🛍️products/📓️print/⚡️implementations/🟦️typescript"],
+    "@semio-tech/print": ["@semio-tech/print@workspace:🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript"],
 
     "@semio-tech/repo-client": ["@semio-tech/repo-client@workspace:🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/⚡️implementations/🟦️typescript"],
 
@@ -2291,6 +1996,8 @@
     "@semio-tech/repo-vscode": ["@semio-tech/repo-vscode@workspace:🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/⚡️implementations/🟦️typescript"],
 
     "@semio-tech/s-2d-js": ["@semio-tech/s-2d-js@workspace:✏️s/🔨️modules/◻2d/📦️packages/🟦️typescript"],
+
+    "@semio-tech/s-3d-js": ["@semio-tech/s-3d-js@workspace:✏️s/🔨️modules/🧊️3d/📦️packages/🟦️typescript"],
 
     "@semio-tech/store-rs": ["@semio-tech/store-rs@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust"],
 
@@ -4934,6 +4641,8 @@
 
     "@secretlint/formatter/strip-ansi": ["strip-ansi@7.2.0", "", { "dependencies": { "ansi-regex": "^6.2.2" } }, "sha512-yDPMNjp4WyfYBkHnjIRLfca1i6KMyGCtsVgoKe/z1+6vukgaENdgGBZt+ZmKPc4gavvEZ5OgHfHdrazhgNyG7w=="],
 
+    "@semio-tech/assets/@types/node": ["@types/node@20.19.43", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-6oYBAi5ikg4Pl+kGsoYtawUMBT2zZMCvPNF7pVLnHZfd1zf38DRiWn/gT01RYCdUqkv7Fhr+C9ot4/tb+2sVvA=="],
+
     "@semio-tech/compose-algorithm/@types/node": ["@types/node@25.9.5", "", { "dependencies": { "undici-types": ">=7.24.0 <7.24.7" } }, "sha512-OScDchr2fwuUmWdf4kZ9h7PcJiYDVInhJizG/biAq3cAvqwYktuy/TYGGdZNMtNTFUP7rnb0NU4TUdm82kt4Rg=="],
 
     "@semio-tech/compose-js/@types/node": ["@types/node@25.9.5", "", { "dependencies": { "undici-types": ">=7.24.0 <7.24.7" } }, "sha512-OScDchr2fwuUmWdf4kZ9h7PcJiYDVInhJizG/biAq3cAvqwYktuy/TYGGdZNMtNTFUP7rnb0NU4TUdm82kt4Rg=="],
@@ -4945,8 +4654,6 @@
     "@semio-tech/framework-renderer-react/@types/three": ["@types/three@0.180.0", "", { "dependencies": { "@dimforge/rapier3d-compat": "~0.12.0", "@tweenjs/tween.js": "~23.1.3", "@types/stats.js": "*", "@types/webxr": "*", "@webgpu/types": "*", "fflate": "~0.8.2", "meshoptimizer": "~0.22.0" } }, "sha512-ykFtgCqNnY0IPvDro7h+9ZeLY+qjgUWv+qEvUt84grhenO60Hqd4hScHE7VTB9nOQ/3QM8lkbNE+4vKjEpUxKg=="],
 
     "@semio-tech/infinite-world-r3f/@types/three": ["@types/three@0.180.0", "", { "dependencies": { "@dimforge/rapier3d-compat": "~0.12.0", "@tweenjs/tween.js": "~23.1.3", "@types/stats.js": "*", "@types/webxr": "*", "@webgpu/types": "*", "fflate": "~0.8.2", "meshoptimizer": "~0.22.0" } }, "sha512-ykFtgCqNnY0IPvDro7h+9ZeLY+qjgUWv+qEvUt84grhenO60Hqd4hScHE7VTB9nOQ/3QM8lkbNE+4vKjEpUxKg=="],
-
-    "@semio-tech/logos/@types/node": ["@types/node@20.19.43", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-6oYBAi5ikg4Pl+kGsoYtawUMBT2zZMCvPNF7pVLnHZfd1zf38DRiWn/gT01RYCdUqkv7Fhr+C9ot4/tb+2sVvA=="],
 
     "@semio-tech/repo-coordinator/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
 

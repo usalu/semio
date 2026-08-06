@@ -1,0 +1,60 @@
+{
+  "members": {
+    "core": "replaced",
+    "hash": "replaced",
+    "schema": "replaced",
+    "editor": "replaced"
+  },
+  "deps": [
+    "Cargo.toml",
+    "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/⚡️implementations/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/#⃣hash/⚡️implementations/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🧬️schema/⚡️implementations/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/⚡️implementations/🦀️rust/🌍️world/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/📐️brep/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/⚡️implementations/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/⚡️implementations/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️implementations/🦀️rust/Cargo.toml"
+  ],
+  "workspaces": [
+    {
+      "old": "🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust",
+      "neu": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust"
+    },
+    {
+      "old": "🧰️framework/🔨️modules/🧬️schema/⚡️implementations/🦀️rust",
+      "neu": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"
+    }
+  ],
+  "errors": []
+}

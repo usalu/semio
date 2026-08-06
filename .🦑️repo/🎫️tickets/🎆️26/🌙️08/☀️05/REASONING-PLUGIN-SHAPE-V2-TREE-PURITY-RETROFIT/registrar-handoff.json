@@ -1,0 +1,12 @@
+{
+  "owner": "cursor-chat",
+  "ticketPath": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/REASONING-PLUGIN-SHAPE-V2-TREE-PURITY-RETROFIT",
+  "tests": {
+    "baselineExpected": 43,
+    "cargoCheck": "blocked_external",
+    "cargoTest": "not_run",
+    "details": "cargo check -p semio-s-plugin-reasoning-mindmap fails on workspace load (semio-framework-compiler-math path missing). Isolated --manifest-path overlay fails on semio-framework-ui-wgpu missing Cargo.toml. No reasoning-only compile completed this session."
+  },
+  "status": "retrofit_complete_verify_blocked",
+  "notes": "Shape V2 tree-purity mechanical retrofit done under ✏️s/🔌️plugins/💡️reasoning only: entry lib in packages/rust, config/terminology already folded, nested 📚️examples relocated to owner root (artifact tree + app engine cmd under 📚️examples/♻️reuse/🎮️commands/♻️reuse), dsl include_str path updated. #[path=.\"] grouping resets unprefixed; leaf paths use ../../. Registrar handoff empty — no external refs to old paths. Re-run cargo check -p once workspace blockers (compiler-math, ui-wgpu) land; expect 43/43 --lib test count."
+}

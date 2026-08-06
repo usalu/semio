@@ -9,10 +9,8 @@
 import * as React from "react";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { type NavbarItem } from "../🔝Navbar/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { shellFloorPaints, shellFloorFillClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useSurface, SurfaceScope } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { shellFloorPaints, shellFloorFillClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { useSurface, SurfaceScope } from "../🫀️core/🌈️Surface/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🎮️Footer

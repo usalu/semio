@@ -1,0 +1,48 @@
+{
+  "changed": [
+    "package.json",
+    "package.json(workspaces-final)",
+    "📜️script.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts",
+    "compose/client/lib/sketchpad/doc/js/vite.config.ts",
+    "storybook-static/asset/🏛️compose/🔣️icons/📋️project.json",
+    "storybook-static/asset/📋️project.json",
+    "storybook-static/asset/🟦️icon_concepts.ts",
+    "storybook-static/asset/🪧️logos/📋️project.json",
+    "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts",
+    "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/build.rs",
+    "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/⚡️implementations/🦀️rust/📦️lib.rs",
+    "🧰️framework/🔺️mesh/🦀️component.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/⚡️implementations/🦀️rust/🌍️world/📦️lib.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust/build.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust/📦️lib.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️vitest.config.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/build.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️lib.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🔣️playgrounds.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/⚙️vite.config.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/⚡️implementations/🟦️typescript/tsconfig.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/⚡️implementations/🟦️typescript/⚙️vite.config.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/⚡️implementations/🟦️typescript/🟦️vite.test.config.ts"
+  ],
+  "skipped": [
+    {
+      "file": "package.json",
+      "reason": "no-change"
+    },
+    {
+      "file": "️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts",
+      "reason": "missing"
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts",
+      "reason": "no-change"
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,9 @@
+   Compiling libc v0.2.189
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+error: couldn't read `🎯️targets/⌨️tui/../../../../🧱️elements/Select/⌨️component.rs`: No such file or directory (os error 2)
+    --> 🎯️targets/⌨️tui/📦️lib.rs:1332:1
+     |
+1332 | mod select;
+     | ^^^^^^^^^^^
+
+error: could not compile `semio-framework-ui` (lib) due to 1 previous error

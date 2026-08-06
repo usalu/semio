@@ -1,0 +1,51 @@
+{
+  "ticket": "2026/08/06/S-MODULES-CRATE-CONSOLIDATION-AND-NAMING-FIX",
+  "status": "exclusive_scope_complete",
+  "timestamp": "2026-08-06T11:07:20Z",
+  "remaining_implementations_under_s_modules": 0,
+  "remaining_implementation_paths": [],
+  "crates_on_disk": {
+    "target_four": {
+      "semio-s-2d": "✏️s/🔨️modules/◻2d/📦️packages/🦀️rust",
+      "semio-s-3d": "✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust",
+      "semio-s-mindmap": "✏️s/🔨️modules/💭️mindmap/📦️packages/🦀️rust",
+      "semio-s-imperative": "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust"
+    },
+    "out_of_ticket_target": {
+      "semio-s-language-bundle": "✏️s/🔨️modules/🗣️lang/📦️packages/🦀️rust"
+    },
+    "cargo_toml_count": 5
+  },
+  "npm_packages": {
+    "@semio-tech/s-2d-js": "✏️s/🔨️modules/◻2d/📦️packages/🟦️typescript",
+    "@semio-tech/s-3d-js": "✏️s/🔨️modules/🧊️3d/📦️packages/🟦️typescript"
+  },
+  "npm_rename_done_this_session": {
+    "from": "@semio-tech/kernel-3d-js",
+    "to": "@semio-tech/s-3d-js",
+    "files": [
+      "✏️s/🔨️modules/🧊️3d/📦️packages/🟦️typescript/package.json",
+      "✏️s/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📋️project.json",
+      "✏️s/🔨️modules/🧊️3d/📦️packages/🟦️typescript/🧪️vitest.config.ts"
+    ]
+  },
+  "hygiene": {
+    "nested_workspace_in_s_3d": false,
+    "wrong_semio_framework_os_kernel_3d_names_under_modules": false,
+    "root_cargo_members_for_four_crates": "present_at_packages_paths",
+    "root_workspace_dependencies_aliases": "absent_optional_c4_add"
+  },
+  "verification": {
+    "cargo_metadata": "blocked_by_concurrent_framework_ui_wgpu_missing_manifest",
+    "cargo_check_four_crates": "blocked_same_reason",
+    "note": "Earlier this session metadata was green with all four members; later concurrent FRAMEWORK-UI work removed semio-framework-ui-wgpu manifest. Outside exclusive scope."
+  },
+  "orchestrator_remaining": [
+    "Repoint ~32 plugin package.json deps @semio-tech/kernel-3d-js → @semio-tech/s-3d-js (outside exclusive ✏️s/🔨️modules)",
+    "Apply Rust consumer use-path rewrites from 🧭️orchestrator-dependent-map.md (many already path-repointed to semio-s-3d)",
+    "Avoid cycle: scene-only consumers of semio-s-3d must use default-features=false; brep feature pulls semio-framework-core which depends on ui_wgpu",
+    "Optional registrar: add workspace.dependencies aliases for the four crates"
+  ],
+  "root_cargo_edits_this_session": [],
+  "exclusive_scope": "✏️s/🔨️modules/**"
+}

@@ -8,8 +8,8 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandShortcut } from "../⌨️Command/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useLabel, renderControlIcon, type ControlIcon } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { renderControlIcon, type ControlIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🔎️ShellSearchDialog

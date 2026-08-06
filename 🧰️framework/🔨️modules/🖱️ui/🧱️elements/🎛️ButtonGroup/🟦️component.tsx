@@ -11,20 +11,11 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva } from "class-variance-authority";
 import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import {
-  chromeControlItemClass,
-  chromeControlGroupClass,
-  borderElementClass,
-  useLevel,
-  type Level,
-  Label,
-  type ControlIcon,
-  useControlInlineText,
-  useControlAccessibleLabel,
-  ControlHotkeyBadge,
-  renderControlIcon,
-} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { borderElementClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { useLevel, type Level } from "../🫀️core/🌈️Surface/🟦️component.tsx";
+import { Label, useControlInlineText, useControlAccessibleLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
+import { chromeControlItemClass, chromeControlGroupClass, ControlHotkeyBadge } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { type ControlIcon, renderControlIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🌩️ButtonGroup

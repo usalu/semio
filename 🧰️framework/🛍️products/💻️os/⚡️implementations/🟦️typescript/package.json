@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@semio-tech/framework-core": "workspace:*",
-    "@semio-tech/graph-manifest": "workspace:*"
+    "@semio-tech/framework-math-js": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
