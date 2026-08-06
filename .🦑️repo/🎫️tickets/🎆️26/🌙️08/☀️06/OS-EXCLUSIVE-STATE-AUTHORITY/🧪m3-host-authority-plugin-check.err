@@ -1,0 +1,134 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:7:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:13:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:345:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:351:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9: warning: ambiguous glob re-exports: the name `canonicalize` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9: warning: ambiguous glob re-exports: the name `test_support` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9: warning: ambiguous glob re-exports: the name `core` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9: warning: ambiguous glob re-exports: the name `Symbol` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `cli` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `format` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `io` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `testkit` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `read_varint_u64` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `write_varint_u64` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `recover_file` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `RecoveryReport` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `VerificationLevel` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `WriteOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `DecodeOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `EncodeOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:198:9: warning: ambiguous glob re-exports: the name `Alternative` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:199:9: warning: unused import: `crate::os_dsl::core::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:1083:21: warning: unused variable: `len`: help: if this is intentional, prefix it with an underscore: `_len`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4: warning: function `print_edge_label` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2075:19: warning: method `set_envelope` is never used
+warning: `semio-framework-os-kernel` (lib) generated 27 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+    Checking semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:5:1
+  |
+5 | extern crate semio_framework_os_kernel as pack;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+5 - extern crate semio_framework_os_kernel as pack;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1
+  |
+6 | extern crate semio_framework_os_kernel as spr;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+6 - extern crate semio_framework_os_kernel as spr;
+  |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3327:61
+     |
+3327 |         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                             ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3327 -         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3327 +         fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4822:34
+     |
+4822 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4872:34
+     |
+4872 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4833:34
+     |
+4833 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4847:34
+     |
+4847 |             let VcsDocumentApp { app, cache, registry, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4857:34
+     |
+4857 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4600:38
+     |
+4600 |                 let VcsDocumentApp { app, cache, .. } = self;
+     |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4791:34
+     |
+4791 |             let VcsDocumentApp { app, cache, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4564:38
+     |
+4564 |                 let VcsDocumentApp { app, cache, .. } = self;
+     |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4480:42
+     |
+4480 |                     let VcsDocumentApp { app, cache, .. } = self;
+     |                                          ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1679:17
+     |
+1679 |             let app = A::default();
+     |                 ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: `semio-framework-plugin` (lib) generated 13 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 13 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 1.41s
+EXIT:0

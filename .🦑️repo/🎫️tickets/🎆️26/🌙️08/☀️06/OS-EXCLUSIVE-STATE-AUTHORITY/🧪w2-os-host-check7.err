@@ -1,0 +1,41 @@
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📖️playbook/🦀️component.rs:551:9: error[E0433]: cannot find module or crate `ui_wgpu` in this scope: use of unresolved module or unlinked crate `ui_wgpu`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📖️playbook/🦀️component.rs:1101:9: error[E0433]: cannot find module or crate `ui_wgpu` in this scope: use of unresolved module or unlinked crate `ui_wgpu`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📖️playbook/🦀️component.rs:1003:116: error[E0433]: cannot find module or crate `ui_wgpu` in this scope: use of unresolved module or unlinked crate `ui_wgpu`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📖️playbook/🦀️component.rs:589:55: error[E0425]: cannot find function `dsl_value_to_json` in the crate root: not found in the crate root
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📖️playbook/🦀️component.rs:867:80: error[E0425]: cannot find function `dsl_value_to_json` in the crate root: not found in the crate root
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:7:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:13:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:345:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:351:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:9: warning: ambiguous glob re-exports: the name `canonicalize` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:9: warning: ambiguous glob re-exports: the name `test_support` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:9: warning: ambiguous glob re-exports: the name `core` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:9: warning: ambiguous glob re-exports: the name `Symbol` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:194:9: warning: ambiguous glob re-exports: the name `apply_collection_operation` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:194:9: warning: ambiguous glob re-exports: the name `collection_diff_from_operation` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:194:9: warning: ambiguous glob re-exports: the name `invert_collection_operation` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:194:9: warning: ambiguous glob re-exports: the name `Identified` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:194:9: warning: ambiguous glob re-exports: the name `Patchable` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:194:9: warning: ambiguous glob re-exports: the name `cli` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:194:9: warning: ambiguous glob re-exports: the name `format` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:194:9: warning: ambiguous glob re-exports: the name `io` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:194:9: warning: ambiguous glob re-exports: the name `testkit` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:195:9: warning: ambiguous glob re-exports: the name `read_varint_u64` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:195:9: warning: ambiguous glob re-exports: the name `write_varint_u64` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:195:9: warning: ambiguous glob re-exports: the name `recover_file` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:195:9: warning: ambiguous glob re-exports: the name `RecoveryReport` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:195:9: warning: ambiguous glob re-exports: the name `VerificationLevel` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:195:9: warning: ambiguous glob re-exports: the name `WriteOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:195:9: warning: ambiguous glob re-exports: the name `DecodeOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:195:9: warning: ambiguous glob re-exports: the name `EncodeOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:199:9: warning: ambiguous glob re-exports: the name `ItemPatch` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:199:9: warning: ambiguous glob re-exports: the name `CollectionDiff` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:199:9: warning: ambiguous glob re-exports: the name `CollectionOperation` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:205:9: warning: ambiguous glob re-exports: the name `Alternative` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:206:9: warning: unused import: `crate::os_dsl::core::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:1083:21: warning: unused variable: `len`: help: if this is intentional, prefix it with an underscore: `_len`
+warning: `semio-framework-os-kernel` (lib) generated 33 warnings
+error: could not compile `semio-framework-os-kernel` (lib) due to 5 previous errors; 33 warnings emitted

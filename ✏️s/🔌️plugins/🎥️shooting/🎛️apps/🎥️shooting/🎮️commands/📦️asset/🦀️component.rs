@@ -74,7 +74,7 @@ pub mod add_asset {
         let format = &payload.format;
         let asset = ShootingAsset { id: id.clone(), name: format!("Asset {}", fixture.assets.len() + 1), url: format!("/mesh/placeholder.{format}"), format: format.clone(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None };
         Ok(Emit {
-            document_operations: vec![ShootingOperation::Assets(CollectionOperation::Add { id: id.clone(), item: asset, at: fixture.assets.len() }), ShootingOperation::SetActiveAsset { asset_id: Some(id.clone()) }],
+            document_operations: vec![ShootingOperation::Assets(CollectionOperation::Add { index: fixture.assets.len(), item: asset }), ShootingOperation::SetActiveAsset { asset_id: Some(id.clone()) }],
             config_operations: vec![ShootingConfigOperation::SetSelection { shot_ids: Vec::new(), asset_ids: vec![id] }],
             ..Default::default()
         })
@@ -99,7 +99,7 @@ pub mod import_asset {
         let resolved_name = payload.name.as_deref().map(|name| name.trim_end_matches(".glb").to_string()).filter(|name| !name.is_empty()).unwrap_or_else(|| format!("Asset {}", fixture.assets.len() + 1));
         let asset = ShootingAsset { id: id.clone(), name: resolved_name, url: payload.payload.clone(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None };
         Ok(Emit {
-            document_operations: vec![ShootingOperation::Assets(CollectionOperation::Add { id: id.clone(), item: asset, at: fixture.assets.len() }), ShootingOperation::SetActiveAsset { asset_id: Some(id.clone()) }],
+            document_operations: vec![ShootingOperation::Assets(CollectionOperation::Add { index: fixture.assets.len(), item: asset }), ShootingOperation::SetActiveAsset { asset_id: Some(id.clone()) }],
             config_operations: vec![ShootingConfigOperation::SetSelection { shot_ids: Vec::new(), asset_ids: vec![id] }, ShootingConfigOperation::SetFitRevision { value: cfg.projection.fit_revision + 1 }],
             ..Default::default()
         })

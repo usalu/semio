@@ -13,7 +13,7 @@ fn add_workshop_machine_operation(fixture: &Process3dDocument, machine: Workshop
         return None;
     }
     let at = fixture.workshop.machines.len();
-    Some(Process3dOperation::Machines { collection: CollectionOperation::Add { id: machine.id.clone(), item: machine, at } })
+    Some(Process3dOperation::Machines { collection: CollectionOperation::Add { index: at, item: machine } })
 }
 
 fn remove_workshop_machine_operation(fixture: &Process3dDocument, id: &str) -> Option<Process3dOperation> {

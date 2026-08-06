@@ -26,7 +26,7 @@ extern crate semio_framework_os_kernel as vcs;
 // `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
-#![allow(clippy::result_large_err)]
+#[allow(clippy::result_large_err)]
 
 //#region 🫀️Core
 #[path = "."]
@@ -214,8 +214,8 @@ fn bundle() -> semio_framework_plugin::PluginBundle {
     register_s_exports();
     semio_framework_plugin::PluginBundle::new("s", "S Studio", "0.1.0")
         .local_backbone_storage()
-        .register_document_app(apps::home::create_home_app(), || apps::home::HomeApp::default())
-        .register_document_app(apps::space::create_space_app(), || apps::space::SpaceApp::default())
+        .register_document_app::<apps::home::HomeApp>(apps::home::create_home_app())
+        .register_document_app::<apps::space::SpaceApp>(apps::space::create_space_app())
 }
 semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖️Manifest

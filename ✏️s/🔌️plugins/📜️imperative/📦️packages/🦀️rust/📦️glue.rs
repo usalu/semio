@@ -20,7 +20,7 @@ extern crate semio_framework_os_kernel as vcs;
 // error type; boxing it here would diverge from the trait it must satisfy, and the lint does not fire on
 // the trait impl itself (only on the free functions the taxonomy split creates), so this is a pure
 // artefact of decomposition.
-#![allow(clippy::result_large_err)]
+#[allow(clippy::result_large_err)]
 
 //#region 🗿️Artifacts
 #[path = "."]

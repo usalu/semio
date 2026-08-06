@@ -1,0 +1,36 @@
+updated ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/⚙️engine/🦀️component.rs
+updated ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📡️spr/🦀️component.rs
+updated ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🔧️op/🦀️component.rs
+updated ✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/⌨️engagement/🦀️component.rs
+updated ✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/🀄️tile/🦀️component.rs
+updated ✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🦀️component.rs
+updated ✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔧️op/🦀️component.rs
+updated ✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/🎥️camera/🦀️component.rs
+updated ✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/📦️asset/🦀️component.rs
+updated ✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/📷️shot/🦀️component.rs
+updated ✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📡️spr/🦀️component.rs
+updated ✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs
+updated ✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🔧️op/🦀️component.rs
+updated ✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎮️commands/🏗️element/🦀️component.rs
+updated ✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎮️commands/🔬️analysis/🦀️component.rs
+updated ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/⚙️engine/📐️template/🦀️component.rs
+updated ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🔧️op/🦀️component.rs
+updated ✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs
+updated ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs
+updated ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔧️op/🦀️component.rs
+updated ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🔧️op/🦀️component.rs
+updated ✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🎮️commands/✏️author/🦀️component.rs
+updated ✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📡️spr/🦀️component.rs
+updated ✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🔧️op/🦀️component.rs
+updated ✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/🎮️commands/🔧️step/🦀️component.rs
+updated ✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/📡️spr/🦀️component.rs
+updated ✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🔧️op/🦀️component.rs
+updated ✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🎮️commands/🔧️nodes/🦀️component.rs
+updated ✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🎮️commands/🕸️graph/🦀️component.rs
+updated 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️component.rs
+updated 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🦀️component.rs
+updated 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs
+{
+  "changedFiles": 32,
+  "sites": 185
+}

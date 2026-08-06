@@ -25,7 +25,6 @@ use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef,
 use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashSet;
-use std::sync::atomic::{AtomicU32, Ordering};
 
 //#region 🔖️Constants
 pub const PRESENT_PLAY_APP_ID: &str = "animate-present-play";
@@ -34,7 +33,6 @@ pub use document::PRESENT_PLAY_BODY_DOCUMENT;
 pub use inspection::PRESENT_PLAY_BODY_DETAILS;
 pub use tile_editor::PRESENT_PLAY_BODY_MAIN;
 
-static TILE_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
@@ -47,7 +45,10 @@ pub fn animate_present_action(action: &str, args: Option<Value>) -> ActionDescri
 /// 🔢️ Mints a fresh, process-unique tile id — shared by `🎮️commands/🀄️tile::add_tile` and
 /// `🎮️commands/⌨️engagement::engagement_submit`'s `"add"` keyword.
 pub(crate) fn new_tile_id(prefix: &str) -> String {
-    let serial = TILE_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
+    let serial = {
+        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
+        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
+    };
     format!("{prefix}-{serial}")
 }
 
@@ -169,12 +170,12 @@ impl DocumentApp for AnimatePresentPlayApp {
         let crop = next_frame_tile_crop(count);
         let name = frame_media_name(port, media)?;
         let tile = FigureTileDraft { id: id.clone(), name, crop };
-        Ok(Emit::operations(vec![PresentOperation::Tiles(CollectionOperation::Add { id, item: tile, at: count })]))
+        Ok(Emit::operations(vec![PresentOperation::Tiles(CollectionOperation::Add { index: count, item: tile })]))
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(command: &PresentCommand) -> &str {
+    fn command_id(command: &PresentCommand) -> &'static str {
         command.command_id()
     }
 

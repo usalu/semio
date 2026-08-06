@@ -223,7 +223,7 @@ mod tests {
         let doc = sample_doc();
         let mut page_2 = doc.pages[0].clone();
         page_2.id = "page-2".into();
-        let add = LayoutOperation::Pages(CollectionOperation::Add { id: page_2.id.clone(), item: page_2, at: 1 });
+        let add = LayoutOperation::Pages(CollectionOperation::Add { index: 1, item: page_2 });
         let with_page = round_trip(&doc, &add);
         assert_eq!(with_page.pages.len(), 2);
 

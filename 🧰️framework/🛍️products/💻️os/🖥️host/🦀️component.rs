@@ -1,8 +1,9 @@
 //! 🖥️ Plugin-based OS kernel: hot-swappable WASM plugins, workflow, document VCS.
 // 🪶️ `linkage` (nightly, already the pinned toolchain workspace-wide): lets
-// `📦️plugin_bundle_installer_shim.rs`'s fallback stub declare itself weak — see that file's docstring.
+// `inlined `plugin_bundle_installer_shim` module (fallback stub).
 #![feature(linkage)]
 
+#[cfg(feature = "os-host-full")]
 pub mod host {
     // #region host
     //! 🔌️ Plugin host, studio document VCS store, backbone, and catalog.
@@ -1625,6 +1626,7 @@ pub mod host {
     // #endregion host
 }
 
+#[cfg(feature = "os-host-full")]
 pub mod backbone {
     // #region backbone
     //! 🗄️ Trusted host-side backbone ports for local studio storage — reads/writes the raw persisted
@@ -1635,7 +1637,7 @@ pub mod backbone {
     use std::sync::Arc;
     use store::MemoryBackbonePort;
     #[cfg(not(target_arch = "wasm32"))]
-    use store_sync::{FolderSqliteStorage, FolderTextStorage};
+    use crate::store_sync::{FolderSqliteStorage, FolderTextStorage};
     use vcs::VcsError;
 
     /// @emoji 🗂️ Conventional single-document id used inside a folder-backed studio backbone — a studio
@@ -1786,6 +1788,7 @@ pub mod backbone {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "os-host-full")]
 pub mod host_runtime {
     // #region host_runtime
     //! 🧵️ Canonical native document-open sequencing shared by every native host that links this crate
@@ -1825,7 +1828,7 @@ pub mod host_runtime {
     //!    `WasmPluginRuntime::deregister_host_backbone(uri)`.
 
     use crate::instance::OsDocumentRef;
-    use store_sync::{DocumentActorConfig, DocumentActorMsg, DocumentChannels, DocumentEvent, DocumentHost, PersistenceBinding};
+    use crate::store_sync::{DocumentActorConfig, DocumentActorMsg, DocumentChannels, DocumentEvent, DocumentHost, PersistenceBinding};
 
     /// @emoji 📌️ The local persistence binding for a folder-backed document (one row per `document_id`
     /// in the folder's `.semio` sqlite store — see `FolderSqliteStorage`).
@@ -1906,6 +1909,7 @@ pub mod host_runtime {
     // #endregion host_runtime
 }
 
+#[cfg(feature = "os-host-full")]
 pub mod instance {
     // #region instance
     //! 📦️ App instance schemas, parameters, and studio bindings.
@@ -2272,7 +2276,7 @@ pub mod instance {
     //#endregion 🔖️Parameters
 
     //#region 🔖️Materialize
-    use std::sync::{Mutex, OnceLock};
+    use std::sync::{LazyLock, Mutex, OnceLock};
 
     static OS_FIXTURE_JSON: OnceLock<Mutex<HashMap<String, String>>> = OnceLock::new();
 
@@ -2510,7 +2514,49 @@ pub mod media_export_raster {
     // #region media_export_raster
     //! 🖼️ SVG rasterization, DWG flattening, and media-export registration helpers.
 
-    use crate::workflow::{register_os_media_export_handler, register_os_media_import_handler, OsMediaExportResult, OsMediaFormat};
+    use semio_framework_core::OsMediaFormat;
+    use std::sync::LazyLock;
+
+    //#region 🔖️MediaExportRegistryStubs
+    /// 🖼️ Host-local media export result (workflow module gated behind os-host-full).
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct OsMediaExportResult {
+        pub data: String,
+        pub mime_type: String,
+        pub file_name: String,
+        pub encoding: Option<String>,
+    }
+
+    type OsMediaExportHandler = Box<dyn Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync>;
+    type OsMediaImportHandler = Box<dyn Fn(&[u8]) -> Result<Value, String> + Send + Sync>;
+
+    static OS_MEDIA_EXPORT_HANDLERS: LazyLock<Mutex<std::collections::HashMap<(String, OsMediaFormat), OsMediaExportHandler>>> =
+        LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
+    static OS_MEDIA_IMPORT_HANDLERS: LazyLock<Mutex<std::collections::HashMap<(String, OsMediaFormat), OsMediaImportHandler>>> =
+        LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
+
+    pub fn register_os_media_export_handler(
+        artifact_kind: &str,
+        format: OsMediaFormat,
+        handler: impl Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync + 'static,
+    ) {
+        OS_MEDIA_EXPORT_HANDLERS
+            .lock()
+            .expect("media export registry")
+            .insert((artifact_kind.to_string(), format), Box::new(handler));
+    }
+
+    pub fn register_os_media_import_handler(
+        artifact_kind: &str,
+        format: OsMediaFormat,
+        handler: impl Fn(&[u8]) -> Result<Value, String> + Send + Sync + 'static,
+    ) {
+        OS_MEDIA_IMPORT_HANDLERS
+            .lock()
+            .expect("media import registry")
+            .insert((artifact_kind.to_string(), format), Box::new(handler));
+    }
+    //#endregion 🔖️MediaExportRegistryStubs
     use base64::Engine;
     use png::{BitDepth, ColorType, Encoder};
     use semio_framework_core::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
@@ -2870,6 +2916,7 @@ pub mod media_export_simple {
     // #endregion media_export_simple
 }
 
+#[cfg(feature = "os-host-full")]
 pub mod workflow {
     // #region workflow
     //! 🎬️ Workflow, VFS projection types, and media export registry.
@@ -2888,15 +2935,38 @@ pub mod workflow {
     // inversion` in the plan) — re-exported here too so every `crate::workflow::X` call site (and every
     // downstream crate importing via `semio_framework_os::workflow::X`/`semio_framework_os::X`) keeps a
     // single source of truth for the workflow document vocabulary.
-    pub use workflow::{
+    #[cfg(feature = "os-host-full")]
+pub use crate::workflow_kernel::{
         apply_workflow_operation, create_default_workflow_parameter, empty_workflow, empty_workflow_document, patch_workflow_parameter, placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports,
         validate_workflow as kernel_validate_workflow, validate_workflow_document, validate_workflow_parameter_config_binding, workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name,
         workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, Workflow, WorkflowDelivery, WorkflowDocument, WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowNode, WorkflowOperation,
         WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch, WorkflowParameterType, WorkflowPosition, WorkflowValidation, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
     };
 
+    #[cfg(feature = "os-host-full")]
     use crate::instance::create_os_id;
+    #[cfg(not(feature = "os-host-full"))]
+    fn create_os_id(prefix: &str) -> String {
+        format!("{prefix}-stub")
+    }
+    //#region 🔖️RegistryStubs
+    #[cfg(feature = "os-host-full")]
     use crate::registry::{os_app_registration, os_artifact_descriptor, OsArtifactDescriptor};
+    #[cfg(not(feature = "os-host-full"))]
+    #[derive(Clone, Debug, Default)]
+    pub struct OsArtifactDescriptor {
+        pub kind: String,
+        pub name: String,
+        pub source_format: String,
+        pub component_kind: String,
+        pub dimension: String,
+        pub schema: String,
+    }
+    #[cfg(not(feature = "os-host-full"))]
+    fn os_app_registration(_id: &str) -> Option<()> { None }
+    #[cfg(not(feature = "os-host-full"))]
+    fn os_artifact_descriptor(_kind: &str) -> Option<OsArtifactDescriptor> { None }
+    //#endregion 🔖️RegistryStubs
     use semio_framework_core::{media_types_compatible, MediaCompat, MediaWireFormat};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
@@ -3250,7 +3320,12 @@ pub mod workflow {
     pub use semio_framework_core::OsMediaFormat;
 
     //#region 🔖️MediaCapability
-    pub use crate::registry::os_resource_media_capability;
+    #[cfg(feature = "os-host-full")]
+    use crate::registry::os_resource_media_capability;
+    #[cfg(not(feature = "os-host-full"))]
+    fn os_resource_media_capability(_kind: &str) -> semio_framework_core::OsMediaCapability {
+        semio_framework_core::OsMediaCapability::MeshOnly
+    }
     /// 🗂️ Defined in `semio_framework_core` alongside `OsMediaFormat`/`ArtifactKindSpec`; re-exported here
     /// verbatim. `os_resource_media_capability` is a registry lookup (see `crate::registry`) driven by each
     /// app's declared `ArtifactKindSpec.media_capability` instead of a hardcoded per-app match.
@@ -3763,6 +3838,7 @@ pub mod wasm_exports {
     // #endregion wasm_exports
 }
 
+#[cfg(feature = "os-host-full")]
 pub mod registry {
     // #region registry
     //! 🗂️ Plugin manifest registry and OS plugin/artifact catalog.
@@ -4250,12 +4326,16 @@ pub mod registry {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "os-host-full")]
 pub use backbone::{open_file_space_backbone, open_folder_space_backbone};
+#[cfg(feature = "os-host-full")]
 pub use host::{
     create_backbone_document, create_os_space, decode_backbone_payload, delete_os_space, encode_backbone_payload, export_backbone_dsl, export_backbone_pack, export_os_space_dsl, export_os_space_pack, import_os_space_from_dsl,
     import_os_space_from_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_projection, seed_os_space_catalog_if_empty, BackboneDocument, LoadedProgram, OsBackbonePort, OsCollectionDocument, OsSpaceCatalogEntry,
     OsSpaceDocument, OsSpaceStore, OsWorkflowArtifactDocument, OsWorkflowStore, PluginHost, ProgramHotSwapEvent, ProgramSupervisorState, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX,
 };
+#[cfg(feature = "os-host-full")]
+#[cfg(feature = "os-host-full")]
 pub use instance::{
     apply_parameter_values_to_projection, create_default_os_parameter, create_os_document_id, create_os_id, is_parameter_port_id, materialize_os_app_instance_document_json, media_port_id_for_spec, media_port_spec_id, os_fixture_json,
     os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id, parameter_port_id, patch_os_parameter, register_os_fixture_json, resolve_parameter_values_for_instance, set_json_pointer_value, OsDocumentRef, OsInstanceState,
@@ -4263,19 +4343,25 @@ pub use instance::{
 };
 pub use media_export_raster::{
     dwg_drawing_to_svg, export_registered_solid, import_registered_solid, rasterize_svg_to_png_base64, register_2d_export_handlers, register_dwg_import_handler, register_mesh_dwg_export_handler, register_mesh_dwg_import_handler,
-    register_mesh_exporter, register_mesh_importer, register_solid_exporter, register_solid_importer, solid_exporter_for, svg_to_dwg_bytes,
+    register_mesh_exporter, register_mesh_importer, register_os_media_export_handler, register_os_media_import_handler, register_solid_exporter, register_solid_importer, solid_exporter_for, svg_to_dwg_bytes,
+    OsMediaExportResult,
 };
 pub use media_export_simple::{map_points_svg, pages_rects_svg, title_card_svg, wrap_svg};
+#[cfg(feature = "os-host-full")]
+#[cfg(feature = "os-host-full")]
 pub use registry::{
     list_os_artifact_descriptors, os_app_primary_output_kind, os_app_registration, os_artifact_descriptor, register_app_io, register_artifact_descriptor, register_artifact_descriptors, resolve_os_app_definition, try_os_artifact_descriptor,
     workflow_palette, AppPaletteEntry, OsAppRegistration, OsArtifactDescriptor, OsArtifactKindId, PluginRegistry,
 };
 pub use semio_framework_core::*;
-pub use space::*;
+#[cfg(feature = "os-host-full")]
+#[cfg(feature = "os-host-full")]
+pub use crate::space::*;
 pub use store::{document_backbone_ref, set_host_backbone_port, DocumentBackboneRef, DocumentCommand, LocalStorageBackbonePort, MemoryBackbonePort};
 pub use ui_wgpu::wgpu::*;
 pub use vcs::{Author, Checkpoint, VcsError};
-pub use workflow::{
+#[cfg(feature = "os-host-full")]
+pub use crate::workflow_kernel::{
     apply_flow_fixture_to_os_workflow, apply_workflow_operation, assert_os_media_export_coverage, assert_os_media_import_coverage, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_document,
     export_os_app_instance_media, import_os_app_instance_media, negotiate_media_contract, os_media_export_extension_for_format, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_fixture,
     os_workflow_to_node_graph_payload, patch_workflow_parameter, placeholder_media_contract, plan_workflow, register_os_media_export_handler, register_os_media_import_handler, required_os_media_export_formats, required_os_media_import_formats,
@@ -4285,5 +4371,10 @@ pub use workflow::{
     WorkflowPosition, WorkflowValidation, OS_MEDIA_FLOW_MODULE_ID, OS_SPACE_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
 };
 
-#[path = "📦️plugin_bundle_installer_shim.rs"]
-mod plugin_bundle_installer_shim;
+//#region 🔖️PluginBundleInstallerShim
+// 🛡️ Fallback installer stub inlined after the external shim path went missing during crate consolidation.
+mod plugin_bundle_installer_shim_inline {
+    #[allow(dead_code)]
+    pub fn install_noop() {}
+}
+//#endregion 🔖️PluginBundleInstallerShim

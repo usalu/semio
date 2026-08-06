@@ -1,0 +1,20 @@
+{
+  "playgrounds": "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts",
+  "osDevScript": "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts",
+  "pluginModules": "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules",
+  "canvasEntry": "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️glue.tsx",
+  "worldEntry": "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️glue.tsx",
+  "fwCore": "./🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts",
+  "osCore": "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts",
+  "uiReact": "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+  "exists": {
+    "playgrounds": true,
+    "osDevScript": true,
+    "pluginModules": true,
+    "canvasEntry": true,
+    "worldEntry": true,
+    "fwCore": true,
+    "osCore": true,
+    "uiReact": true
+  }
+}

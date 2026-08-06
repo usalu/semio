@@ -106,9 +106,9 @@ pub enum LowpolyOperation {
 /// `protocol::invert_collection_operation`) back into its flat `LowpolyOperation` variant.
 fn objects_operation_from_collection(operation: CollectionOperation<String, LowpolyObject, LowpolyObjectPatch>) -> LowpolyOperation {
     match operation {
-        CollectionOperation::Add { id: _id, item, at } => LowpolyOperation::ObjectsAdd { index: at, item },
+        CollectionOperation::Add { index: at, item } => LowpolyOperation::ObjectsAdd { index: at, item },
         CollectionOperation::Remove { id } => LowpolyOperation::ObjectsRemove { id },
-        CollectionOperation::Move { id, to } => LowpolyOperation::ObjectsMove { id, to_index: to },
+        CollectionOperation::Move { id, to_index: to } => LowpolyOperation::ObjectsMove { id, to_index: to },
         CollectionOperation::Patch { id, patch } => LowpolyOperation::ObjectsPatch { id, patch },
     }
 }
@@ -148,9 +148,9 @@ fn apply_pixel_runs(pixels: &mut [u8], runs: &[PixelRun]) {
 /// before calling so this never observes shared state.
 pub fn apply_lowpoly_operation(projection: &mut LowpolyProjection, operation: &LowpolyOperation) {
     match operation {
-        LowpolyOperation::ObjectsAdd { index, item } => apply_collection_operation(&mut projection.objects, &CollectionOperation::Add { id: item.id.clone(), item: item.clone(), at: *index }),
+        LowpolyOperation::ObjectsAdd { index, item } => apply_collection_operation(&mut projection.objects, &CollectionOperation::Add { index: *index, item: item.clone() }),
         LowpolyOperation::ObjectsRemove { id } => apply_collection_operation(&mut projection.objects, &CollectionOperation::Remove { id: id.clone() }),
-        LowpolyOperation::ObjectsMove { id, to_index } => apply_collection_operation(&mut projection.objects, &CollectionOperation::Move { id: id.clone(), to: *to_index }),
+        LowpolyOperation::ObjectsMove { id, to_index } => apply_collection_operation(&mut projection.objects, &CollectionOperation::Move { id: id.clone(), to_index: *to_index }),
         LowpolyOperation::ObjectsPatch { id, patch } => apply_collection_operation(&mut projection.objects, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() }),
         LowpolyOperation::AddPaintLayer { object_id, index, layer } => {
             if let Some(object) = object_mut(projection, object_id) {
@@ -190,9 +190,9 @@ pub fn apply_lowpoly_operation(projection: &mut LowpolyProjection, operation: &L
 /// merely "clear paint").
 pub fn invert_lowpoly_operation(projection: &LowpolyProjection, operation: &LowpolyOperation) -> LowpolyOperation {
     match operation {
-        LowpolyOperation::ObjectsAdd { index, item } => objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Add { id: item.id.clone(), item: item.clone(), at: *index })),
+        LowpolyOperation::ObjectsAdd { index, item } => objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Add { index: *index, item: item.clone() })),
         LowpolyOperation::ObjectsRemove { id } => objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Remove { id: id.clone() })),
-        LowpolyOperation::ObjectsMove { id, to_index } => objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Move { id: id.clone(), to: *to_index })),
+        LowpolyOperation::ObjectsMove { id, to_index } => objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Move { id: id.clone(), to_index: *to_index })),
         LowpolyOperation::ObjectsPatch { id, patch } => objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() })),
         LowpolyOperation::AddPaintLayer { object_id, index, .. } => LowpolyOperation::RemovePaintLayer { object_id: object_id.clone(), index: *index },
         LowpolyOperation::RemovePaintLayer { object_id, index } => {

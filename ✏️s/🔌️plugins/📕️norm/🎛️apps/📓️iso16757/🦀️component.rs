@@ -71,7 +71,7 @@ impl DocumentApp for Iso16757PlayApp {
         Some(crate::core::app::norm_io(VARIANT, DOCUMENT_SCHEMA))
     }
 
-    fn command_id(command: &Iso16757Command) -> &str {
+    fn command_id(command: &Iso16757Command) -> &'static str {
         command.command_id()
     }
 

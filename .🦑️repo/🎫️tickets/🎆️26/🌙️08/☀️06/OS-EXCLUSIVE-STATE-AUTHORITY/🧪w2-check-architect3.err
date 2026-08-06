@@ -1,0 +1,502 @@
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:7:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:13:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:345:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:351:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9: warning: ambiguous glob re-exports: the name `canonicalize` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9: warning: ambiguous glob re-exports: the name `test_support` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9: warning: ambiguous glob re-exports: the name `core` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9: warning: ambiguous glob re-exports: the name `Symbol` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `apply_collection_operation` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `collection_diff_from_operation` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `invert_collection_operation` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `Identified` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `Patchable` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `cli` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `format` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `io` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `testkit` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `read_varint_u64` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `write_varint_u64` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `recover_file` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `RecoveryReport` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `VerificationLevel` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `WriteOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `DecodeOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `EncodeOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:9: warning: ambiguous glob re-exports: the name `ItemPatch` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:9: warning: ambiguous glob re-exports: the name `CollectionDiff` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:9: warning: ambiguous glob re-exports: the name `CollectionOperation` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:198:9: warning: ambiguous glob re-exports: the name `Alternative` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:199:9: warning: unused import: `crate::os_dsl::core::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:1083:21: warning: unused variable: `len`: help: if this is intentional, prefix it with an underscore: `_len`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4: warning: function `print_edge_label` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2075:19: warning: method `set_envelope` is never used
+warning: `semio-framework-os-kernel` (lib) generated 35 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+    Checking semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking semio-framework-math v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust)
+    Checking semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+    Checking semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:5:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3327:61: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4870:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4820:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4598:38: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4831:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4562:38: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4845:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4855:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1679:17: warning: unused variable: `app`: help: if this is intentional, prefix it with an underscore: `_app`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4789:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4478:42: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+warning: `semio-framework-plugin` (lib) generated 13 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 13 suggestions)
+    Checking semio-s-plugin-architect v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust)
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🗄️registers/🦀️component.rs:7:16: warning: `Identified` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🗄️registers/🦀️component.rs:7:28: warning: `Patchable` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:12:16: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:12:44: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:12:73: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:12:105: warning: `Patchable` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🗿️artifacts/🏛️program/⚙️engine/📐️template/🦀️component.rs:13:15: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🎛️apps/🏛️architect/🗂️catalog/🦀️component.rs:19:15: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🎛️apps/🏛️architect/🎮️commands/🏗️element/🦀️component.rs:9:19: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🎛️apps/🏛️architect/🎮️commands/🏗️element/🦀️component.rs:38:19: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🎛️apps/🏛️architect/🎮️commands/🔬️analysis/🦀️component.rs:30:19: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🎛️apps/🏛️architect/🎮️commands/🔬️analysis/🦀️component.rs:63:19: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🎛️apps/🏛️architect/🎮️commands/🕸️graph/🦀️component.rs:9:19: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🧱️kernel/🦀️component.rs:260:16: warning: `Identified` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🗄️registers/🦀️component.rs:528:6: warning: `Patchable` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🗄️registers/🦀️component.rs:634:6: warning: `Identified` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🗄️registers/🦀️component.rs:60:14: warning: `Patchable` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🗄️registers/🦀️component.rs:50:14: warning: `Identified` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🗄️registers/🦀️component.rs:7196:6: warning: `Identified` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:24:18: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:25:11: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:26:16: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:27:15: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:28:14: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:29:16: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:30:19: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:31:17: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:32:15: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:33:11: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:34:17: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:35:16: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:36:15: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:37:15: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:38:13: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:39:19: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:40:18: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:41:19: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:42:13: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:43:12: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:44:14: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:45:16: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:46:17: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:47:20: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:48:14: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:49:20: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:50:17: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:51:19: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:52:16: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:53:15: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:54:17: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:55:12: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:56:20: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:57:16: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:58:11: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:59:14: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:60:11: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:61:15: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:62:18: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:63:16: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:64:15: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:65:13: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:66:15: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:67:17: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:68:17: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:69:13: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:70:15: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:71:13: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:72:19: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:73:14: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:74:13: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:75:19: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:76:19: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:77:15: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:78:13: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:79:12: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:80:17: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:81:15: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:82:15: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:83:16: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:84:17: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:85:17: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:86:23: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:87:15: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:88:14: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:89:12: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:145:6: warning: `Patchable` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:171:65: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:172:58: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:173:63: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:174:62: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:175:61: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:176:63: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:177:66: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:178:64: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:179:62: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:180:58: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:181:64: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:182:63: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:183:62: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:184:62: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:185:60: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:186:66: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:187:65: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:188:66: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:189:60: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:190:59: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:191:61: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:192:63: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:193:64: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:194:67: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:195:61: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:196:67: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:197:64: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:198:66: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:199:63: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:200:62: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:201:64: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:202:59: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:203:67: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:204:63: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:205:58: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:206:61: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:207:58: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:208:62: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:209:65: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:210:63: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:211:62: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:212:60: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:213:62: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:214:64: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:215:64: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:216:60: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:217:62: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:218:60: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:219:66: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:220:61: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:221:60: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:222:66: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:223:66: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:224:62: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:225:60: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:226:59: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:227:64: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:228:62: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:229:62: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:230:63: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:231:64: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:232:64: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:234:13: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:236:62: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:237:61: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:238:59: warning: `apply_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:257:96: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:258:82: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:259:92: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:260:90: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:261:88: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:262:92: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:263:98: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:264:94: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:265:90: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:266:82: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:267:94: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:268:92: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:269:90: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:270:90: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:271:86: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:272:98: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:273:96: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:274:98: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:275:86: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:276:84: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:277:88: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:278:92: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:279:94: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:280:100: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:281:88: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:282:100: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:283:94: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:284:98: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:285:92: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:286:90: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:287:94: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:288:84: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:289:100: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:290:92: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:291:82: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:292:88: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:293:82: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:294:90: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:295:96: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:296:92: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:297:90: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:298:86: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:299:90: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:300:94: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:301:94: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:302:86: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:303:90: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:304:86: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:305:98: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:306:88: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:307:86: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:308:98: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:309:98: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:310:90: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:311:86: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:312:84: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:313:94: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:314:90: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:315:90: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:316:92: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:317:94: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:318:94: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:319:106: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:320:90: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:321:88: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:322:84: warning: `invert_collection_operation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🗿️artifacts/🏛️program/⚙️engine/📐️template/🦀️component.rs:61:64: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🗿️artifacts/🏛️program/⚙️engine/📐️template/🦀️component.rs:92:57: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🗿️artifacts/🏛️program/⚙️engine/📐️template/🦀️component.rs:123:62: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🗿️artifacts/🏛️program/⚙️engine/📐️template/🦀️component.rs:152:61: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🗿️artifacts/🏛️program/⚙️engine/📐️template/🦀️component.rs:184:60: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🗿️artifacts/🏛️program/⚙️engine/📐️template/🦀️component.rs:212:64: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🗿️artifacts/🏛️program/⚙️engine/📐️template/🦀️component.rs:238:57: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🗿️artifacts/🏛️program/⚙️engine/📐️template/🦀️component.rs:268:61: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🗿️artifacts/🏛️program/⚙️engine/📐️template/🦀️component.rs:299:61: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🎛️apps/🏛️architect/🗂️catalog/🦀️component.rs:530:41: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🎛️apps/🏛️architect/🗂️catalog/🦀️component.rs:523:43: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🎛️apps/🏛️architect/🗂️catalog/🦀️component.rs:579:39: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🎛️apps/🏛️architect/🗂️catalog/🦀️component.rs:588:42: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🎛️apps/🏛️architect/🗂️catalog/🦀️component.rs:665:42: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🎛️apps/🏛️architect/🎮️commands/🏗️element/🦀️component.rs:27:66: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🎛️apps/🏛️architect/🎮️commands/🏗️element/🦀️component.rs:53:62: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🎛️apps/🏛️architect/🎮️commands/🔬️analysis/🦀️component.rs:50:66: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🎛️apps/🏛️architect/🎮️commands/🔬️analysis/🦀️component.rs:82:65: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/./././../../🎛️apps/🏛️architect/🎮️commands/🕸️graph/🦀️component.rs:39:69: warning: `CollectionOperation` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:171:119: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:172:105: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:173:115: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:174:113: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:175:111: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:176:115: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:177:121: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:178:117: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:179:113: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:180:105: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:181:118: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:182:115: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:183:113: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:184:113: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:185:109: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:186:121: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:187:120: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:188:121: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:189:109: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:190:107: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:191:111: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:192:115: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:193:118: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:194:123: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:195:111: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:196:123: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:197:117: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:198:121: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:199:115: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:200:113: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:201:117: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:202:107: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:203:123: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:204:115: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:205:105: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:206:111: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:207:105: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, Risk, ...>`, found a different `CollectionOperation<EntityId, Risk, ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:208:113: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:209:119: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:210:115: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:211:113: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:212:109: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:213:113: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:214:117: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:215:117: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:216:109: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:217:113: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:218:109: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:219:121: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:220:111: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:221:109: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:222:122: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:223:122: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:224:113: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:225:109: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:226:107: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:227:118: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:228:113: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:229:113: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:230:115: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:231:117: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:232:117: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:234:73: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:236:113: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:237:111: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:238:107: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:240:26: warning: Use of ambiguously glob imported trait `Patchable`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:243:29: warning: Use of ambiguously glob imported trait `Patchable`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:246:32: warning: Use of ambiguously glob imported trait `Patchable`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:257:147: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:257:96: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:258:126: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:258:82: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:259:141: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:259:92: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:260:138: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:260:90: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:261:135: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:261:88: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:262:141: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:262:92: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:263:150: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:263:98: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:264:144: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:264:94: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:265:138: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:265:90: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:266:126: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:266:82: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:267:145: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:267:94: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:268:141: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:268:92: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:269:138: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:269:90: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:270:138: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:270:90: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:271:132: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:271:86: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:272:150: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:272:98: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:273:148: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:273:96: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:274:150: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:274:98: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:275:132: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:275:86: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:276:129: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:276:84: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:277:135: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:277:88: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:278:141: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:278:92: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:279:145: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:279:94: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:280:153: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:280:100: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:281:135: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:281:88: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:282:153: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:282:100: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:283:144: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:283:94: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:284:150: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:284:98: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:285:141: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:285:92: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:286:138: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:286:90: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:287:144: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:287:94: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:288:129: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:288:84: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:289:153: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:289:100: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:290:141: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:290:92: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:291:126: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:291:82: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:292:135: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:292:88: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:293:126: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, Risk, ...>`, found a different `CollectionOperation<EntityId, Risk, ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:293:82: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, Risk, ...>`, found a different `CollectionOperation<EntityId, Risk, ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:294:138: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:294:90: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:295:147: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:295:96: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:296:141: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:296:92: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:297:138: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:297:90: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:298:132: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:298:86: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:299:138: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:299:90: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:300:144: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:300:94: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:301:144: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:301:94: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:302:132: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:302:86: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:303:138: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:303:90: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:304:132: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:304:86: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:305:150: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:305:98: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:306:135: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:306:88: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:307:132: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:307:86: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:308:151: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:308:98: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:309:151: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:309:98: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:310:138: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:310:90: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:311:132: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:311:86: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:312:129: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:312:84: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:313:145: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:313:94: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:314:138: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:314:90: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:315:138: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:315:90: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:316:141: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:316:92: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:317:144: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:317:94: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:318:144: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:318:94: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:319:163: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:319:106: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:320:138: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:320:90: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:321:135: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:321:88: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:322:129: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:322:84: error[E0308]: mismatched types: expected `CollectionOperation<EntityId, ..., ...>`, found a different `CollectionOperation<EntityId, ..., ...>`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:326:19: warning: Use of ambiguously glob imported trait `Patchable`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:327:33: warning: Use of ambiguously glob imported trait `Patchable`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:333:19: warning: Use of ambiguously glob imported trait `Patchable`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:334:33: warning: Use of ambiguously glob imported trait `Patchable`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:340:19: warning: Use of ambiguously glob imported trait `Patchable`
+✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/././../../🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:341:33: warning: Use of ambiguously glob imported trait `Patchable`
+warning: `semio-s-plugin-architect` (lib) generated 462 warnings (216 duplicates)
+error: could not compile `semio-s-plugin-architect` (lib) due to 198 previous errors; 915 warnings emitted

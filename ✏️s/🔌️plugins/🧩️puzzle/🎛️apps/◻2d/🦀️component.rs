@@ -35,7 +35,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap, HashSet};
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::LazyLock;
 
 //#region 🔖️Constants
@@ -54,7 +53,6 @@ pub const PUZZLE2D_LOD_MODE_AUTOMATIC: &str = "automatic";
 const BOARD_DEFAULT_WIDTH: u32 = 1024;
 const BOARD_DEFAULT_HEIGHT: u32 = 768;
 
-static NODE_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 /// 🌉️ This app's own fixture (and `DocumentApp::Projection`) stays a bare `serde_json::Value`, so the
 /// DSL-text example fixtures are parsed once into the typed `Puzzle2dProjection` and re-serialized to
@@ -72,8 +70,8 @@ fn parse_example_dsl_without_camera(dsl_text: &str, label: &str) -> String {
     serde_json::to_string(&value).unwrap_or_else(|error| panic!("re-serialize {label} example fixture: {error}"))
 }
 
-pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl_without_camera(puzzle2d_dsl::PUZZLE2D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest"));
-pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl_without_camera(puzzle2d_dsl::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT, "nakagin"));
+fn concrete_forest_example_json() -> String { parse_example_dsl_without_camera(puzzle2d_dsl::PUZZLE2D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest") }
+fn nakagin_example_json() -> String { parse_example_dsl_without_camera(puzzle2d_dsl::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT, "nakagin") }
 //#endregion 🔖️Constants
 
 //#region 🔖️Scene
@@ -194,7 +192,10 @@ pub fn puzzle2d_kind_ids(fixture: &Value, field: &str) -> Vec<String> {
 }
 
 fn new_node_id(prefix: &str) -> String {
-    let serial = NODE_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
+    let serial = {
+        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
+        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
+    };
     format!("{prefix}-{serial}")
 }
 
@@ -821,43 +822,17 @@ fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegis
 //#region 🔖️PlayApp
 /// 🧩️ Puzzle-2d play app. Owns the `BoardHost` engine; the persisted document (the bare fixture json)
 /// lives in the wrapping `VcsDocumentApp`'s operation store and the view state in `Puzzle2dConfig`.
-pub struct Puzzle2dPlayApp {
-    host: RefCell<BoardHost>,
-    /// 🗄️ The fixture content last parsed into `host` via `parse_fixture_v1` — lets `handle` skip that
-    /// full clear-scene-and-rebuild (and the kind-catalog/kind-compat re-push) on the large majority
-    /// of actions (select/camera/utility/…) that never touch fixture content.
-    last_synced_fixture: RefCell<Option<Value>>,
+pub #[derive(Default, Clone, Copy)]
+struct Puzzle2dPlayApp;
+
+impl Default for Puzzle2dPlayApp
 }
 
-impl Default for Puzzle2dPlayApp {
-    fn default() -> Self {
-        Self { host: RefCell::new(puzzle_board_host()), last_synced_fixture: RefCell::new(None) }
+impl Puzzle2dPlayApp
     }
 }
 
-impl Puzzle2dPlayApp {
-    /// 🧾️ Rebuilds the transient render bundle for one `(projection, config, window)` triple.
-    fn scene_for(&self, fixture: Value, config: &Puzzle2dConfig, window_id: Option<&str>) -> Puzzle2dScene {
-        Puzzle2dScene { fixture, runtime: config.clone(), active_utility: puzzle2d_active_utility(config, window_id) }
-    }
-}
-
-impl DocumentApp for Puzzle2dPlayApp {
-    type Projection = Puzzle2dPlayProjection;
-    type Operation = Puzzle2dOperation;
-    type Config = Puzzle2dConfig;
-    type ConfigOperation = Puzzle2dConfigOperation;
-    type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
-
-    type Command = Puzzle2dCommand;
-
-    const APP_ID: &'static str = PUZZLE2D_PLAY_APP_ID;
-    const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_FIXTURE_SCHEMA;
-
-    fn initial_projection() -> Puzzle2dPlayProjection {
-        Puzzle2dPlayProjection(default_empty_fixture())
-    }
+impl DocumentApp for Puzzle2dPlayApp
 
     /// 🏷️ Maps each `Puzzle2dCommand` variant back to the action id it was declared under.
     fn command_id(command: &Puzzle2dCommand) -> &'static str {
@@ -876,24 +851,24 @@ impl DocumentApp for Puzzle2dPlayApp {
         // 🐢️ `sync_host_fixture_content` (`parse_fixture_v1`) does a full `clear_scene()` + rebuild of
         // every node/handle/edge — skip it when the fixture content is byte-identical to what `host`
         // already has (the common case: select/camera/utility/… actions never touch fixture content).
-        if self.last_synced_fixture.borrow().as_ref() != Some(&scene.fixture) {
-            sync_host_fixture_content(&mut self.host.borrow_mut(), &scene);
+        if (std::cell::RefCell::new(None)).borrow().as_ref() != Some(&scene.fixture) {
+            sync_host_fixture_content(&mut (std::cell::RefCell::new(BoardHost::default())).borrow_mut(), &scene);
             // 🧹️ `parse_fixture_v1` always `clear_scene()`s then rebuilds, so it unconditionally emits
             // an `edgeCreate` for every edge as a side effect of parsing — not a real structural
             // change. Discard that parse-induced noise now so `apply_host_events` below only sees
             // events genuinely produced by *this* action's own engine calls; otherwise those spurious
             // edgeCreate events get replayed into the fixture on the *next* action, duplicating every
             // edge every action.
-            let _ = self.host.borrow_mut().drain_events_json();
-            *self.last_synced_fixture.borrow_mut() = Some(scene.fixture.clone());
+            let _ = (std::cell::RefCell::new(BoardHost::default())).borrow_mut().drain_events_json();
+            *(std::cell::RefCell::new(None)).borrow_mut() = Some(scene.fixture.clone());
         }
-        sync_host_runtime_state(&mut self.host.borrow_mut(), &scene);
+        sync_host_runtime_state(&mut (std::cell::RefCell::new(BoardHost::default())).borrow_mut(), &scene);
         let mut effects: Vec<HostEffect> = Vec::new();
         // 🐢️ Default to Full (safe: every unrecognized/rare action re-renders everything); the
         // narrow-tier arms below override it to the smallest scope that actually covers what they touch.
         let mut ui_scope = UiDirtyScope::Full;
         {
-            let ctx = &mut Puzzle2dActionCtx { host: &self.host, scene: &mut scene, window_id, active_utility, effects: &mut effects, ui_scope: &mut ui_scope };
+            let ctx = &mut Puzzle2dActionCtx { host: &(std::cell::RefCell::new(BoardHost::default())), scene: &mut scene, window_id, active_utility, effects: &mut effects, ui_scope: &mut ui_scope };
             match action {
                 "setSelection" | "documentSelect" => selection_commands::set_selection(ctx, args),
                 "selectAll" => selection_commands::select_all(ctx),
@@ -937,7 +912,7 @@ impl DocumentApp for Puzzle2dPlayApp {
                 _ => {}
             }
         }
-        apply_host_events(&mut self.host.borrow_mut(), &mut scene);
+        apply_host_events(&mut (std::cell::RefCell::new(BoardHost::default())).borrow_mut(), &mut scene);
         let operations = puzzle2d_document_delta_operations(&before, &scene.fixture);
         // 🐢️ Safety net: a `None` scope claims nothing needs re-rendering — never pair that with an
         // actual document mutation (would silently desync remote clients' UI from the committed operation).
@@ -1024,7 +999,7 @@ impl DocumentApp for Puzzle2dPlayApp {
             .flat_map(|pane| {
                 window_instance_ids(pane).into_iter().map(|wid| {
                     let envelope = self.scene_for(doc.projection.0.clone(), config, Some(&wid));
-                    (wid, edit::puzzle2d_engagement(&envelope, &self.host.borrow(), pane, labels))
+                    (wid, edit::puzzle2d_engagement(&envelope, &(std::cell::RefCell::new(BoardHost::default())).borrow(), pane, labels))
                 })
             })
             .collect()
@@ -1174,8 +1149,8 @@ pub fn create_puzzle2d_app() -> App {
             .tool(fill::definition(puzzle2d_localized(|l| l.fill)))
             .default_layout(edit::layout()),
     )
-    .example(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, puzzle2d_localized(|l| l.example_concrete_forest), serde_json::to_string(&example_fixture(CONCRETE_FOREST_EXAMPLE_JSON.as_str())).unwrap(), "list-tree")
-    .example(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin Capsule Tower"), serde_json::to_string(&example_fixture(NAKAGIN_EXAMPLE_JSON.as_str())).unwrap(), "building")
+    .example(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, puzzle2d_localized(|l| l.example_concrete_forest), serde_json::to_string(&example_fixture(concrete_forest_example_json().as_str())).unwrap(), "list-tree")
+    .example(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin Capsule Tower"), serde_json::to_string(&example_fixture(nakagin_example_json().as_str())).unwrap(), "building")
     .workflow("puzzle2d", "Puzzle 2D", "layout")
 }
 

@@ -4,7 +4,6 @@ use crate::artifacts::note::{NoteBlockNode, NoteDocument, NoteTableCell, NoteTex
 use semio_framework_plugin::{DwgDrawing, DwgGeometry};
 use serde_json::Value;
 use std::collections::BTreeMap;
-use std::sync::atomic::{AtomicU32, Ordering};
 
 //#region 🔖️Register
 pub fn register() {
@@ -77,12 +76,14 @@ pub fn register_pilot_languages() {
 /// {@link semio_example_json} are the only ways it should be consumed.
 const SEMIO_NOTE_EXAMPLE_TEXT: &str = crate::artifacts::note::dsl::SEMIO_NOTE_EXAMPLE_TEXT;
 
-static NOTE_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖️Constants
 
 //#region 🔖️DocumentHelpers
 pub fn create_note_id(prefix: &str) -> String {
-    let next = NOTE_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
+    let next = {
+        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
+        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
+    };
     format!("{prefix}-{next}")
 }
 

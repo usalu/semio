@@ -178,13 +178,13 @@ enum Process3dOperationDsl {
 
 fn process3d_operation_to_dsl(operation: &Process3dOperation) -> Process3dOperationDsl {
     match operation {
-        Process3dOperation::Steps { collection: CollectionOperation::Add { id: _id, item, at } } => Process3dOperationDsl::StepsAdd { index: *at, item: item.clone() },
+        Process3dOperation::Steps { collection: CollectionOperation::Add { index: at, item } } => Process3dOperationDsl::StepsAdd { index: *at, item: item.clone() },
         Process3dOperation::Steps { collection: CollectionOperation::Remove { id } } => Process3dOperationDsl::StepsRemove { id: id.clone() },
-        Process3dOperation::Steps { collection: CollectionOperation::Move { id, to } } => Process3dOperationDsl::StepsMove { id: id.clone(), to_index: *to },
+        Process3dOperation::Steps { collection: CollectionOperation::Move { id, to_index: to } } => Process3dOperationDsl::StepsMove { id: id.clone(), to_index: *to },
         Process3dOperation::Steps { collection: CollectionOperation::Patch { id, patch } } => Process3dOperationDsl::StepsPatch { id: id.clone(), patch: process_step_patch_to_dsl(patch) },
-        Process3dOperation::Machines { collection: CollectionOperation::Add { id: _id, item, at } } => Process3dOperationDsl::MachinesAdd { index: *at, item: item.clone() },
+        Process3dOperation::Machines { collection: CollectionOperation::Add { index: at, item } } => Process3dOperationDsl::MachinesAdd { index: *at, item: item.clone() },
         Process3dOperation::Machines { collection: CollectionOperation::Remove { id } } => Process3dOperationDsl::MachinesRemove { id: id.clone() },
-        Process3dOperation::Machines { collection: CollectionOperation::Move { id, to } } => Process3dOperationDsl::MachinesMove { id: id.clone(), to_index: *to },
+        Process3dOperation::Machines { collection: CollectionOperation::Move { id, to_index: to } } => Process3dOperationDsl::MachinesMove { id: id.clone(), to_index: *to },
         Process3dOperation::Machines { collection: CollectionOperation::Patch { id, patch } } => Process3dOperationDsl::MachinesPatch { id: id.clone(), patch: patch.clone() },
         Process3dOperation::SetStock { stock } => Process3dOperationDsl::SetStock { stock: stock.clone() },
         Process3dOperation::SetCursor { resolved_up_to } => Process3dOperationDsl::SetCursor { value: *resolved_up_to },
@@ -194,13 +194,13 @@ fn process3d_operation_to_dsl(operation: &Process3dOperation) -> Process3dOperat
 
 fn process3d_operation_from_dsl(operation: Process3dOperationDsl) -> Process3dOperation {
     match operation {
-        Process3dOperationDsl::StepsAdd { index, item } => Process3dOperation::Steps { collection: CollectionOperation::Add { id: item.id.clone(), item, at: index } },
+        Process3dOperationDsl::StepsAdd { index, item } => Process3dOperation::Steps { collection: CollectionOperation::Add { index: index, item } },
         Process3dOperationDsl::StepsRemove { id } => Process3dOperation::Steps { collection: CollectionOperation::Remove { id } },
-        Process3dOperationDsl::StepsMove { id, to_index } => Process3dOperation::Steps { collection: CollectionOperation::Move { id, to: to_index } },
+        Process3dOperationDsl::StepsMove { id, to_index } => Process3dOperation::Steps { collection: CollectionOperation::Move { id, to_index: to_index } },
         Process3dOperationDsl::StepsPatch { id, patch } => Process3dOperation::Steps { collection: CollectionOperation::Patch { id, patch: process_step_patch_from_dsl(patch) } },
-        Process3dOperationDsl::MachinesAdd { index, item } => Process3dOperation::Machines { collection: CollectionOperation::Add { id: item.id.clone(), item, at: index } },
+        Process3dOperationDsl::MachinesAdd { index, item } => Process3dOperation::Machines { collection: CollectionOperation::Add { index: index, item } },
         Process3dOperationDsl::MachinesRemove { id } => Process3dOperation::Machines { collection: CollectionOperation::Remove { id } },
-        Process3dOperationDsl::MachinesMove { id, to_index } => Process3dOperation::Machines { collection: CollectionOperation::Move { id, to: to_index } },
+        Process3dOperationDsl::MachinesMove { id, to_index } => Process3dOperation::Machines { collection: CollectionOperation::Move { id, to_index: to_index } },
         Process3dOperationDsl::MachinesPatch { id, patch } => Process3dOperation::Machines { collection: CollectionOperation::Patch { id, patch } },
         Process3dOperationDsl::SetStock { stock } => Process3dOperation::SetStock { stock },
         Process3dOperationDsl::SetCursor { value } => Process3dOperation::SetCursor { resolved_up_to: value },
@@ -298,7 +298,7 @@ mod tests {
     #[test]
     fn backwards_of_add_is_remove() {
         let projection = empty_process3d_projection();
-        let operation = Process3dOperation::Steps { collection: CollectionOperation::Add { id: "a".into(), item: cut_step("a"), at: 0 } };
+        let operation = Process3dOperation::Steps { collection: CollectionOperation::Add { index: 0, item: cut_step("a") } };
         let inverse = operation.backwards(&projection);
         assert_eq!(inverse.len(), 1);
         match &inverse[0] {
@@ -310,7 +310,7 @@ mod tests {
     //#region 🔖️OpTextTests
     #[test]
     fn process3d_op_text_round_trips_steps_add() {
-        store::test_support::assert_op_line_round_trip(&Process3dOperation::Steps { collection: CollectionOperation::Add { id: "cut-1".into(), item: cut_step("cut-1"), at: 0 } });
+        store::test_support::assert_op_line_round_trip(&Process3dOperation::Steps { collection: CollectionOperation::Add { index: 0, item: cut_step("cut-1") } });
     }
 
     #[test]
@@ -320,7 +320,7 @@ mod tests {
 
     #[test]
     fn process3d_op_text_round_trips_steps_move() {
-        store::test_support::assert_op_line_round_trip(&Process3dOperation::Steps { collection: CollectionOperation::Move { id: "cut-1".into(), to: 2 } });
+        store::test_support::assert_op_line_round_trip(&Process3dOperation::Steps { collection: CollectionOperation::Move { id: "cut-1".into(), to_index: 2 } });
     }
 
     #[test]
@@ -368,7 +368,7 @@ mod tests {
 
     #[test]
     fn process3d_op_text_round_trips_machines_add() {
-        store::test_support::assert_op_line_round_trip(&Process3dOperation::Machines { collection: CollectionOperation::Add { id: "circularSaw".into(), item: circular_saw_machine(), at: 0 } });
+        store::test_support::assert_op_line_round_trip(&Process3dOperation::Machines { collection: CollectionOperation::Add { index: 0, item: circular_saw_machine() } });
     }
 
     #[test]
@@ -378,7 +378,7 @@ mod tests {
 
     #[test]
     fn process3d_op_text_round_trips_machines_move() {
-        store::test_support::assert_op_line_round_trip(&Process3dOperation::Machines { collection: CollectionOperation::Move { id: "circularSaw".into(), to: 2 } });
+        store::test_support::assert_op_line_round_trip(&Process3dOperation::Machines { collection: CollectionOperation::Move { id: "circularSaw".into(), to_index: 2 } });
     }
 
     #[test]
@@ -395,7 +395,7 @@ mod tests {
     #[test]
     fn backwards_of_machines_add_is_remove() {
         let projection = empty_process3d_projection();
-        let operation = Process3dOperation::Machines { collection: CollectionOperation::Add { id: "circularSaw".into(), item: circular_saw_machine(), at: 0 } };
+        let operation = Process3dOperation::Machines { collection: CollectionOperation::Add { index: 0, item: circular_saw_machine() } };
         let inverse = operation.backwards(&projection);
         assert_eq!(inverse.len(), 1);
         match &inverse[0] {

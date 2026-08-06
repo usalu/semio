@@ -458,7 +458,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let projection = <RewriteRuleState as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                match self.whole_document_operation(projection) {
+                match Self::whole_document_operation(projection) {
                     Some(operation) => Ok(Emit::operations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
                 }

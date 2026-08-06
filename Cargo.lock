@@ -7164,6 +7164,7 @@ dependencies = [
 name = "semio-s-plugin-architect"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "semio-framework-math",
  "semio-framework-os-kernel",
  "semio-framework-plugin",

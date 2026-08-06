@@ -42,7 +42,7 @@ mod tests {
 
         let mut store = store::DocumentStore::<ShootingFixture, ShootingOperation>::new(store::create_document_envelope(crate::artifacts::shooting::SHOOTING_FIXTURE_SCHEMA, "shooting", crate::artifacts::shooting::empty_shooting_fixture(), None));
         let asset = crate::artifacts::shooting::ShootingAsset { id: "a1".into(), name: "Asset".into(), url: "/mesh/a1.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None };
-        store.dispatch(DocumentCommand::Apply { operations: vec![ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: asset, at: 0 })], description: None }).expect("apply");
+        store.dispatch(DocumentCommand::Apply { operations: vec![ShootingOperation::Assets(CollectionOperation::Add { index: 0, item: asset })], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

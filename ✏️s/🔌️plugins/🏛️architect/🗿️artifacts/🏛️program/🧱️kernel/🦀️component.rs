@@ -6,21 +6,21 @@
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::fmt;
-use std::sync::atomic::{AtomicU64, Ordering as AtomicOrdering};
-
 // #region 🔖️EntityId
-static ID_COUNTER: AtomicU64 = AtomicU64::new(0);
-
 /// @emoji 🆔️ Stable string identity for any program entity or register row.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct EntityId(pub String);
 
 impl EntityId {
-    /// @emoji 🔢️ Allocates the next serial id under `prefix` (e.g. `element-1`).
-    pub fn new_serial(prefix: &str) -> Self {
-        let n = ID_COUNTER.fetch_add(1, AtomicOrdering::Relaxed) + 1;
-        Self(format!("{prefix}-{n}"))
+    /// @emoji 🔢️ Content-addressed id under `prefix` (blake3 of prefix + material).
+    pub fn new_serial(prefix: &str, material: impl AsRef<[u8]>) -> Self {
+        let mut hasher = blake3::Hasher::new();
+        hasher.update(prefix.as_bytes());
+        hasher.update(&[0]);
+        hasher.update(material.as_ref());
+        let hex = hasher.finalize().to_hex();
+        Self(format!("{prefix}-{}", &hex[..12]))
     }
 }
 
@@ -253,7 +253,7 @@ pub struct TraceLink {
 
 impl TraceLink {
     pub fn new(from_id: EntityId, to_id: EntityId, kind: TraceKind) -> Self {
-        Self { id: EntityId::new_serial("trace"), from_id, to_id, kind, label: None }
+        Self { id: EntityId::new_serial("trace", "trace"), from_id, to_id, kind, label: None }
     }
 }
 
@@ -322,8 +322,8 @@ mod tests {
 
     #[test]
     fn entity_id_serial_increments() {
-        let first = EntityId::new_serial("test");
-        let second = EntityId::new_serial("test");
+        let first = EntityId::new_serial("test", "test");
+        let second = EntityId::new_serial("test", "test");
         assert_ne!(first, second);
         assert!(first.to_string().starts_with("test-"));
     }

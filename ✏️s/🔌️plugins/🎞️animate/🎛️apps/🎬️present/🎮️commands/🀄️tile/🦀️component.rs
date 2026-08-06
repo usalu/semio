@@ -27,7 +27,7 @@ pub mod add_tile {
         let crop = payload.crop.clone().unwrap_or(FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
         let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop };
         Ok(Emit {
-            document_operations: vec![PresentOperation::Tiles(CollectionOperation::Add { id: tile.id.clone(), at: deck.tiles.len(), item: tile })],
+            document_operations: vec![PresentOperation::Tiles(CollectionOperation::Add { index: deck.tiles.len(), item: tile })],
             config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: vec![id] }],
             ..Default::default()
         })

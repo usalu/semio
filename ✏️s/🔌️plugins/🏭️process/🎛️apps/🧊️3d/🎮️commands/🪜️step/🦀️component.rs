@@ -109,7 +109,7 @@ pub mod move_step {
 
     pub fn handle(payload: &MoveStep, doc: &DocumentView<'_, Process3dDocument>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dOperation, Process3dConfigOperation>, Fault> {
         if doc.projection.steps.iter().any(|step| step.id == payload.id) {
-            Ok(Emit::operations(vec![Process3dOperation::Steps { collection: CollectionOperation::Move { id: payload.id.clone(), to: payload.index } }]))
+            Ok(Emit::operations(vec![Process3dOperation::Steps { collection: CollectionOperation::Move { id: payload.id.clone(), to_index: payload.index } }]))
         } else {
             Ok(Emit::default())
         }

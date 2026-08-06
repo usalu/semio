@@ -4845,7 +4845,7 @@ pub fn flow_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec
     for (index, widget) in after.widgets.iter().enumerate() {
         let id = widget_id_for(widget);
         match before.widgets.iter().find(|entry| widget_id_for(entry) == id) {
-            None => operations.push(FlowOperation::Widgets(CollectionOperation::Add { id: id.to_string(), item: widget.clone(), at: index })),
+            None => operations.push(FlowOperation::Widgets(CollectionOperation::Add { index: index, item: widget.clone() })),
             Some(prev) if prev != widget => operations.push(FlowOperation::Widgets(CollectionOperation::Patch { id: id.to_string(), patch: widget.clone() })),
             Some(_) => {}
         }
@@ -4858,7 +4858,7 @@ pub fn flow_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec
     }
     for (index, synapse) in after.synapses.iter().enumerate() {
         match before.synapses.iter().find(|entry| entry.id == synapse.id) {
-            None => operations.push(FlowOperation::Synapses(CollectionOperation::Add { id: synapse.id.clone(), item: synapse.clone(), at: index })),
+            None => operations.push(FlowOperation::Synapses(CollectionOperation::Add { index: index, item: synapse.clone() })),
             Some(prev) if *prev != *synapse => operations.push(FlowOperation::Synapses(CollectionOperation::Patch { id: synapse.id.clone(), patch: synapse.clone() })),
             Some(_) => {}
         }
@@ -5288,13 +5288,13 @@ enum FlowOperationDsl {
 
 fn flow_operation_to_dsl(operation: &FlowOperation) -> FlowOperationDsl {
     match operation {
-        FlowOperation::Widgets(CollectionOperation::Add { id: _id, item, at }) => FlowOperationDsl::WidgetsAdd { index: *at, item: widget_to_widget_dsl(item) },
+        FlowOperation::Widgets(CollectionOperation::Add { index: at, item }) => FlowOperationDsl::WidgetsAdd { index: *at, item: widget_to_widget_dsl(item) },
         FlowOperation::Widgets(CollectionOperation::Remove { id }) => FlowOperationDsl::WidgetsRemove { id: id.clone() },
-        FlowOperation::Widgets(CollectionOperation::Move { id, to }) => FlowOperationDsl::WidgetsMove { id: id.clone(), to_index: *to },
+        FlowOperation::Widgets(CollectionOperation::Move { id, to_index: to }) => FlowOperationDsl::WidgetsMove { id: id.clone(), to_index: *to },
         FlowOperation::Widgets(CollectionOperation::Patch { id, patch }) => FlowOperationDsl::WidgetsPatch { id: id.clone(), patch: widget_to_widget_dsl(patch) },
-        FlowOperation::Synapses(CollectionOperation::Add { id: _id, item, at }) => FlowOperationDsl::SynapsesAdd { index: *at, item: synapse_to_dsl(item) },
+        FlowOperation::Synapses(CollectionOperation::Add { index: at, item }) => FlowOperationDsl::SynapsesAdd { index: *at, item: synapse_to_dsl(item) },
         FlowOperation::Synapses(CollectionOperation::Remove { id }) => FlowOperationDsl::SynapsesRemove { id: id.clone() },
-        FlowOperation::Synapses(CollectionOperation::Move { id, to }) => FlowOperationDsl::SynapsesMove { id: id.clone(), to_index: *to },
+        FlowOperation::Synapses(CollectionOperation::Move { id, to_index: to }) => FlowOperationDsl::SynapsesMove { id: id.clone(), to_index: *to },
         FlowOperation::Synapses(CollectionOperation::Patch { id, patch }) => FlowOperationDsl::SynapsesPatch { id: id.clone(), patch: synapse_to_dsl(patch) },
         FlowOperation::SetLayout { entries } => FlowOperationDsl::SetLayout { entries: entries.clone() },
         FlowOperation::SetFixture { fixture } => FlowOperationDsl::SetFixture { fixture: flow_fixture_to_dsl(fixture) },
@@ -5305,14 +5305,14 @@ fn flow_operation_from_dsl(operation: FlowOperationDsl) -> Result<FlowOperation,
     Ok(match operation {
         FlowOperationDsl::WidgetsAdd { index, item } => {
             let item = widget_dsl_to_widget(item)?;
-            FlowOperation::Widgets(CollectionOperation::Add { id: widget_id_for(&item).to_string(), item, at: index })
+            FlowOperation::Widgets(CollectionOperation::Add { index: index, item })
         }
         FlowOperationDsl::WidgetsRemove { id } => FlowOperation::Widgets(CollectionOperation::Remove { id }),
         FlowOperationDsl::WidgetsMove { id, to_index } => FlowOperation::Widgets(CollectionOperation::Move { id, to: to_index }),
         FlowOperationDsl::WidgetsPatch { id, patch } => FlowOperation::Widgets(CollectionOperation::Patch { id, patch: widget_dsl_to_widget(patch)? }),
         FlowOperationDsl::SynapsesAdd { index, item } => {
             let item = synapse_from_dsl(item)?;
-            FlowOperation::Synapses(CollectionOperation::Add { id: item.id.clone(), item, at: index })
+            FlowOperation::Synapses(CollectionOperation::Add { index: index, item })
         }
         FlowOperationDsl::SynapsesRemove { id } => FlowOperation::Synapses(CollectionOperation::Remove { id }),
         FlowOperationDsl::SynapsesMove { id, to_index } => FlowOperation::Synapses(CollectionOperation::Move { id, to: to_index }),
@@ -5634,7 +5634,7 @@ mod flow_vcs_tests {
     #[test]
     fn widget_add_patch_remove_round_trip() {
         let fixture = FlowFixture { widgets: Vec::new(), synapses: Vec::new(), ..FlowFixture::default() };
-        let add = FlowOperation::Widgets(CollectionOperation::Add { id: "w1".into(), item: sample_widget("w1"), at: 0 });
+        let add = FlowOperation::Widgets(CollectionOperation::Add { index: 0, item: sample_widget("w1") });
         let with_widget = round_trip(&fixture, &add);
         assert_eq!(with_widget.widgets.len(), 1);
 
@@ -5714,14 +5714,14 @@ mod flow_vcs_tests {
     /// `🔖️OpText` region's `FlowOperationDsl` twin.
     #[test]
     fn flow_operation_op_text_round_trips_every_variant() {
-        crate::os_store::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Add { id: "w1".into(), item: sample_widget("w1"), at: 0 }));
+        crate::os_store::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Add { index: 0, item: sample_widget("w1") }));
         crate::os_store::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Remove { id: "w1".into() }));
-        crate::os_store::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Move { id: "w1".into(), to: 2 }));
+        crate::os_store::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Move { id: "w1".into(), to_index: 2 }));
         crate::os_store::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Patch { id: "w1".into(), patch: sample_widget("w1") }));
         let synapse = SynapseSpec { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "y".into() };
-        crate::os_store::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Add { id: "s1".into(), item: synapse.clone(), at: 0 }));
+        crate::os_store::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Add { index: 0, item: synapse.clone() }));
         crate::os_store::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Remove { id: "s1".into() }));
-        crate::os_store::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Move { id: "s1".into(), to: 1 }));
+        crate::os_store::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Move { id: "s1".into(), to_index: 1 }));
         crate::os_store::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Patch { id: "s1".into(), patch: synapse }));
         crate::os_store::test_support::assert_op_line_round_trip(&FlowOperation::SetLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: 1.0, y: 2.0 }) }] });
         crate::os_store::test_support::assert_op_line_round_trip(&FlowOperation::SetLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: None }] });
@@ -5734,7 +5734,7 @@ mod flow_vcs_tests {
     #[test]
     fn flow_fixture_satisfies_vcs_test_support_store_roundtrip() {
         let document = FlowFixture::default();
-        let operation = FlowOperation::Widgets(CollectionOperation::Add { id: "w1".into(), item: sample_widget("w1"), at: 0 });
+        let operation = FlowOperation::Widgets(CollectionOperation::Add { index: 0, item: sample_widget("w1") });
         crate::os_store::test_support::assert_store_roundtrip(document, operation);
     }
 
@@ -5746,7 +5746,7 @@ mod flow_vcs_tests {
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         let envelope = create_document_envelope("test/v1", "test", FlowFixture::default(), None);
         let mut store = DocumentStore::new(envelope);
-        let operation = FlowOperation::Widgets(CollectionOperation::Add { id: "w1".into(), item: sample_widget("w1"), at: 0 });
+        let operation = FlowOperation::Widgets(CollectionOperation::Add { index: 0, item: sample_widget("w1") });
         store.dispatch(DocumentCommand::Apply { operations: vec![operation], description: None }).expect("apply");
         let edit: &Edit<FlowOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         crate::os_store::test_support::assert_command_envelope_round_trip::<FlowFixture, FlowOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));

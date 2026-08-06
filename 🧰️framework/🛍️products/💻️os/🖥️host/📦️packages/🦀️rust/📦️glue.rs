@@ -8,6 +8,10 @@ extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_os_kernel as pack;
 extern crate semio_framework_os_kernel as spr;
 
-#[path = "../../../🦀️component.rs"]
+#[cfg(feature = "os-host-full")]
+#[path = "../../../🔨️modules/🔁️workflow/🦀️component.rs"]
+pub mod workflow_kernel;
+
+#[path = "../../🦀️component.rs"]
 mod host_core;
 pub use host_core::*;

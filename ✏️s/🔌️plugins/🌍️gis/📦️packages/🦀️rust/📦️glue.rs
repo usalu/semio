@@ -19,7 +19,7 @@ extern crate framework_surface_tiled_map as framework_surface_terrain;
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
-#![allow(clippy::result_large_err)]
+#[allow(clippy::result_large_err)]
 
 //#region 🗿️Artifacts
 #[path = "."]

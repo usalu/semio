@@ -25,7 +25,6 @@ use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView,
 use store::EngineHandles;
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use std::sync::Mutex;
 
 //#region 🔖️Constants
 pub const FLOW_PLAY_APP_ID: &str = "flow-play";
@@ -206,12 +205,6 @@ fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowFixture, 
 #[derive(Default)]
 pub struct FlowPlayApp;
 
-static FLOWPLAYAPP_EVAL_SESSION: std::sync::LazyLock<std::sync::Mutex<FlowEvalSession>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(<FlowEvalSession>::default()));
-
-fn eval_session_lock() -> std::sync::MutexGuard<'static, FlowEvalSession> {
-    FLOWPLAYAPP_EVAL_SESSION.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
-}
-
 impl DocumentApp for FlowPlayApp {
     type Projection = FlowFixture;
     type Operation = FlowOperation;
@@ -232,12 +225,12 @@ impl DocumentApp for FlowPlayApp {
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`. `setLocale`/`flowEvalTick`/`flowEvalResolve` have no
     /// manifest declaration (host-pushed/internally-chained, not user-facing actions).
-    fn command_id(command: &FlowCommand) -> &str {
+    fn command_id(command: &FlowCommand) -> &'static str {
         command.command_id()
     }
 
     fn handle(command: &FlowCommand, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FlowOperation, FlowConfigOperation, Self::DraftOperation>, Fault> {
-        let mut session = eval_session_lock();
+        let mut session = FlowEvalSession::default();
         command.dispatch(doc, cfg, &mut session)
     }
 
@@ -245,7 +238,7 @@ impl DocumentApp for FlowPlayApp {
     /// every mutation path (edits, undo/redo, example load, remote operations) in one place. Pure:
     /// recomputes the probe fresh from the fixture and the driver's persisted baseline each call.
     fn pending_effects(doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> Vec<HostEffect> {
-        let mut session = eval_session_lock();
+        let mut session = FlowEvalSession::default();
         eval::evaluate_result(doc.projection, cfg.projection, &mut session).effects
     }
 
@@ -253,7 +246,7 @@ impl DocumentApp for FlowPlayApp {
         let fixture = doc.projection;
         let config = cfg.projection;
         let labels = flow_play_labels(config);
-        let session = eval_session_lock();
+        let session = FlowEvalSession::default();
         match body_key {
             FLOW_PLAY_BODY_MAIN => main::render(fixture, config, &session),
             FLOW_PLAY_BODY_COMPILED => compiled::render(fixture, config, &session),

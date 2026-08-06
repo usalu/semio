@@ -178,17 +178,17 @@ enum LayoutOperationDsl {
 
 fn layout_operation_to_dsl(operation: &LayoutOperation) -> LayoutOperationDsl {
     match operation {
-        LayoutOperation::Pages(CollectionOperation::Add { id: _id, item, at }) => LayoutOperationDsl::PagesAdd { index: *at, item: item.clone() },
+        LayoutOperation::Pages(CollectionOperation::Add { index: at, item }) => LayoutOperationDsl::PagesAdd { index: *at, item: item.clone() },
         LayoutOperation::Pages(CollectionOperation::Remove { id }) => LayoutOperationDsl::PagesRemove { id: id.clone() },
-        LayoutOperation::Pages(CollectionOperation::Move { id, to }) => LayoutOperationDsl::PagesMove { id: id.clone(), to_index: *to },
+        LayoutOperation::Pages(CollectionOperation::Move { id, to_index: to }) => LayoutOperationDsl::PagesMove { id: id.clone(), to_index: *to },
         LayoutOperation::Pages(CollectionOperation::Patch { id, patch }) => LayoutOperationDsl::PagesPatch { id: id.clone(), patch: patch.clone() },
-        LayoutOperation::Stories(CollectionOperation::Add { id: _id, item, at }) => LayoutOperationDsl::StoriesAdd { index: *at, item: item.clone() },
+        LayoutOperation::Stories(CollectionOperation::Add { index: at, item }) => LayoutOperationDsl::StoriesAdd { index: *at, item: item.clone() },
         LayoutOperation::Stories(CollectionOperation::Remove { id }) => LayoutOperationDsl::StoriesRemove { id: id.clone() },
-        LayoutOperation::Stories(CollectionOperation::Move { id, to }) => LayoutOperationDsl::StoriesMove { id: id.clone(), to_index: *to },
+        LayoutOperation::Stories(CollectionOperation::Move { id, to_index: to }) => LayoutOperationDsl::StoriesMove { id: id.clone(), to_index: *to },
         LayoutOperation::Stories(CollectionOperation::Patch { id, patch }) => LayoutOperationDsl::StoriesPatch { id: id.clone(), patch: patch.clone() },
-        LayoutOperation::Links(CollectionOperation::Add { id: _id, item, at }) => LayoutOperationDsl::LinksAdd { index: *at, item: item.clone() },
+        LayoutOperation::Links(CollectionOperation::Add { index: at, item }) => LayoutOperationDsl::LinksAdd { index: *at, item: item.clone() },
         LayoutOperation::Links(CollectionOperation::Remove { id }) => LayoutOperationDsl::LinksRemove { id: id.clone() },
-        LayoutOperation::Links(CollectionOperation::Move { id, to }) => LayoutOperationDsl::LinksMove { id: id.clone(), to_index: *to },
+        LayoutOperation::Links(CollectionOperation::Move { id, to_index: to }) => LayoutOperationDsl::LinksMove { id: id.clone(), to_index: *to },
         LayoutOperation::Links(CollectionOperation::Patch { id, patch }) => LayoutOperationDsl::LinksPatch { id: id.clone(), patch: patch.clone() },
         LayoutOperation::AddFrame { page_id, index, frame, layer_id } => LayoutOperationDsl::AddFrame { page_id: page_id.clone(), index: *index, frame: Box::new(frame.clone()), layer_id: layer_id.clone() },
         LayoutOperation::RemoveFrame { page_id, frame_id } => LayoutOperationDsl::RemoveFrame { page_id: page_id.clone(), frame_id: frame_id.clone() },
@@ -199,17 +199,17 @@ fn layout_operation_to_dsl(operation: &LayoutOperation) -> LayoutOperationDsl {
 
 fn layout_operation_from_dsl(operation: LayoutOperationDsl) -> LayoutOperation {
     match operation {
-        LayoutOperationDsl::PagesAdd { index, item } => LayoutOperation::Pages(CollectionOperation::Add { id: item.id.clone(), item, at: index }),
+        LayoutOperationDsl::PagesAdd { index, item } => LayoutOperation::Pages(CollectionOperation::Add { index: index, item }),
         LayoutOperationDsl::PagesRemove { id } => LayoutOperation::Pages(CollectionOperation::Remove { id }),
-        LayoutOperationDsl::PagesMove { id, to_index } => LayoutOperation::Pages(CollectionOperation::Move { id, to: to_index }),
+        LayoutOperationDsl::PagesMove { id, to_index } => LayoutOperation::Pages(CollectionOperation::Move { id, to_index: to_index }),
         LayoutOperationDsl::PagesPatch { id, patch } => LayoutOperation::Pages(CollectionOperation::Patch { id, patch }),
-        LayoutOperationDsl::StoriesAdd { index, item } => LayoutOperation::Stories(CollectionOperation::Add { id: item.id.clone(), item, at: index }),
+        LayoutOperationDsl::StoriesAdd { index, item } => LayoutOperation::Stories(CollectionOperation::Add { index: index, item }),
         LayoutOperationDsl::StoriesRemove { id } => LayoutOperation::Stories(CollectionOperation::Remove { id }),
-        LayoutOperationDsl::StoriesMove { id, to_index } => LayoutOperation::Stories(CollectionOperation::Move { id, to: to_index }),
+        LayoutOperationDsl::StoriesMove { id, to_index } => LayoutOperation::Stories(CollectionOperation::Move { id, to_index: to_index }),
         LayoutOperationDsl::StoriesPatch { id, patch } => LayoutOperation::Stories(CollectionOperation::Patch { id, patch }),
-        LayoutOperationDsl::LinksAdd { index, item } => LayoutOperation::Links(CollectionOperation::Add { id: item.id.clone(), item, at: index }),
+        LayoutOperationDsl::LinksAdd { index, item } => LayoutOperation::Links(CollectionOperation::Add { index: index, item }),
         LayoutOperationDsl::LinksRemove { id } => LayoutOperation::Links(CollectionOperation::Remove { id }),
-        LayoutOperationDsl::LinksMove { id, to_index } => LayoutOperation::Links(CollectionOperation::Move { id, to: to_index }),
+        LayoutOperationDsl::LinksMove { id, to_index } => LayoutOperation::Links(CollectionOperation::Move { id, to_index: to_index }),
         LayoutOperationDsl::LinksPatch { id, patch } => LayoutOperation::Links(CollectionOperation::Patch { id, patch }),
         LayoutOperationDsl::AddFrame { page_id, index, frame, layer_id } => LayoutOperation::AddFrame { page_id, index, frame: *frame, layer_id },
         LayoutOperationDsl::RemoveFrame { page_id, frame_id } => LayoutOperation::RemoveFrame { page_id, frame_id },
@@ -287,25 +287,25 @@ mod tests {
 
         let mut page_2 = doc.pages[0].clone();
         page_2.id = "page-3".into();
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Add { id: page_2.id.clone(), item: page_2, at: 1 }));
+        store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Add { index: 1, item: page_2 }));
         store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Remove { id: "page-1".into() }));
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Move { id: "page-1".into(), to: 1 }));
+        store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Move { id: "page-1".into(), to_index: 1 }));
         store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Patch { id: "page-1".into(), patch: PagePatch { name: Some("Renamed".into()), width: Some(300.0), columns_count: Some(3), ..Default::default() } }));
         store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Patch { id: "page-1".into(), patch: PagePatch::default() }));
 
         let mut story_2 = doc.stories[0].clone();
         story_2.id = "story-2".into();
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Add { id: story_2.id.clone(), item: story_2, at: 1 }));
+        store::test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Add { index: 1, item: story_2 }));
         store::test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Remove { id: "story-1".into() }));
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Move { id: "story-1".into(), to: 0 }));
+        store::test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Move { id: "story-1".into(), to_index: 0 }));
         store::test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Patch { id: "story-1".into(), patch: TextStoryPatch { content: Some("Edited".into()) } }));
         store::test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Patch { id: "story-1".into(), patch: TextStoryPatch { content: None } }));
 
         let mut link_2 = doc.links[0].clone();
         link_2.id = "link-2".into();
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Add { id: link_2.id.clone(), item: link_2, at: 1 }));
+        store::test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Add { index: 1, item: link_2 }));
         store::test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Remove { id: "link-missing".into() }));
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Move { id: "link-missing".into(), to: 0 }));
+        store::test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Move { id: "link-missing".into(), to_index: 0 }));
         store::test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Patch { id: "link-missing".into(), patch: ImageLinkPatch { path: Some("b.png".into()) } }));
         store::test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Patch { id: "link-missing".into(), patch: ImageLinkPatch { path: None } }));
 

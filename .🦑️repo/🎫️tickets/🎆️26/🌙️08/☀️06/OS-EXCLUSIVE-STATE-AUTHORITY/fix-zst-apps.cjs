@@ -1,0 +1,7 @@
+zst LowpolyPlayApp fields scratch
+zst CadPlayApp fields preview_seq
+zst HomeApp fields studio_ports
+zst SpaceApp fields presence_peers
+zst Puzzle2dPlayApp fields host,last_synced_fixture
+zst Puzzle5dPlayApp fields precompute,registered_mesh_urls
+zst Puzzle3dPlayApp fields precompute,transform_drag_active,transform_base,transform_scratch,preview_seq,fill_display_memo,geometry_cache,document_sections_cache,mesh_registry

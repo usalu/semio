@@ -113,6 +113,18 @@ pub enum AppCommand {
         port: String,
     },
     Bye,
+    /// 🧾 Host-authoritative command: document/config/draft packs travel with the command; guest
+    /// returns `AppFrame::Emit` ops only (host applies). CHANNEL_VERSION 5 wire addition.
+    PureCommand {
+        seq: u64,
+        command: Vec<u8>,
+        document: Vec<u8>,
+        document_spr: Vec<u8>,
+        config: Vec<u8>,
+        config_spr: Vec<u8>,
+        draft: Vec<u8>,
+        draft_spr: Vec<u8>,
+    },
 }
 //#endregion 🔖️AppCommand
 
@@ -134,6 +146,22 @@ pub enum AppFrame {
     Media { in_reply_to: u64, port: String, descriptor: Vec<u8>, data: Vec<u8> },
     MediaFingerprint { in_reply_to: u64, port: String, fingerprint: Vec<u8> },
     Error { in_reply_to: Option<u64>, fault: Vec<u8> },
+    /// 📤️ Guest Emit bytes for host-applied store authority (document/config/draft op packs).
+    Emit {
+        in_reply_to: u64,
+        document_ops: Vec<u8>,
+        config_ops: Vec<u8>,
+        draft_ops: Vec<u8>,
+        output: Vec<u8>,
+        diagnostics: Vec<u8>,
+    },
+    /// 📝️ Draft-lane pack snapshot (volatile; never enters a Change/Checkpoint).
+    Draft {
+        in_reply_to: u64,
+        pack: Vec<u8>,
+        spr: Vec<u8>,
+        ops: String,
+    },
 }
 //#endregion 🔖️AppFrame
 
@@ -324,6 +352,17 @@ pub fn encode_app_command(command: &AppCommand) -> Vec<u8> {
             crate::os_spr::core::write_str(&mut out, port);
         }
         AppCommand::Bye => out.push(17),
+        AppCommand::PureCommand { seq, command, document, document_spr, config, config_spr, draft, draft_spr } => {
+            out.push(18);
+            crate::os_spr::core::write_varint_u64(&mut out, *seq);
+            crate::os_spr::core::write_bytes(&mut out, command);
+            crate::os_spr::core::write_bytes(&mut out, document);
+            crate::os_spr::core::write_bytes(&mut out, document_spr);
+            crate::os_spr::core::write_bytes(&mut out, config);
+            crate::os_spr::core::write_bytes(&mut out, config_spr);
+            crate::os_spr::core::write_bytes(&mut out, draft);
+            crate::os_spr::core::write_bytes(&mut out, draft_spr);
+        }
     }
     out
 }
@@ -356,6 +395,16 @@ pub fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate::os_spr::cor
         15 => AppCommand::MediaOut { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::core::read_str(bytes, &mut pos)?, request: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
         16 => AppCommand::MediaFingerprint { seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::core::read_str(bytes, &mut pos)? },
         17 => AppCommand::Bye,
+        18 => AppCommand::PureCommand {
+            seq: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?,
+            command: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
+            document: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
+            document_spr: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
+            config: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
+            config_spr: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
+            draft: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
+            draft_spr: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
+        },
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(command)
@@ -446,6 +495,22 @@ pub fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             write_opt_u64(&mut out, in_reply_to);
             crate::os_spr::core::write_bytes(&mut out, fault);
         }
+        AppFrame::Emit { in_reply_to, document_ops, config_ops, draft_ops, output, diagnostics } => {
+            out.push(14);
+            crate::os_spr::core::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::core::write_bytes(&mut out, document_ops);
+            crate::os_spr::core::write_bytes(&mut out, config_ops);
+            crate::os_spr::core::write_bytes(&mut out, draft_ops);
+            crate::os_spr::core::write_bytes(&mut out, output);
+            crate::os_spr::core::write_bytes(&mut out, diagnostics);
+        }
+        AppFrame::Draft { in_reply_to, pack, spr, ops } => {
+            out.push(15);
+            crate::os_spr::core::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::core::write_bytes(&mut out, pack);
+            crate::os_spr::core::write_bytes(&mut out, spr);
+            crate::os_spr::core::write_str(&mut out, ops);
+        }
     }
     out
 }
@@ -479,6 +544,20 @@ pub fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::core::P
         }
         12 => AppFrame::MediaFingerprint { in_reply_to: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::core::read_str(bytes, &mut pos)?, fingerprint: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
         13 => AppFrame::Error { in_reply_to: read_opt_u64(bytes, &mut pos)?, fault: crate::os_spr::core::read_bytes(bytes, &mut pos)? },
+        14 => AppFrame::Emit {
+            in_reply_to: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?,
+            document_ops: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
+            config_ops: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
+            draft_ops: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
+            output: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
+            diagnostics: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
+        },
+        15 => AppFrame::Draft {
+            in_reply_to: crate::os_spr::core::read_varint_u64(bytes, &mut pos)?,
+            pack: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
+            spr: crate::os_spr::core::read_bytes(bytes, &mut pos)?,
+            ops: crate::os_spr::core::read_str(bytes, &mut pos)?,
+        },
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(frame)
@@ -612,6 +691,20 @@ mod tests {
     fn app_command_bye_round_trips() {
         assert_command_round_trips(&AppCommand::Bye);
     }
+
+    #[test]
+    fn app_command_pure_command_round_trips() {
+        assert_command_round_trips(&AppCommand::PureCommand {
+            seq: 18,
+            command: vec![1],
+            document: vec![2],
+            document_spr: vec![3],
+            config: vec![4],
+            config_spr: vec![5],
+            draft: vec![6],
+            draft_spr: vec![7],
+        });
+    }
     //#endregion 🔖️AppCommand
 
     //#region 🔖️AppFrame
@@ -691,6 +784,23 @@ mod tests {
     fn app_frame_error_round_trips() {
         assert_frame_round_trips(&AppFrame::Error { in_reply_to: Some(9), fault: b"rejected:bad command".to_vec() });
         assert_frame_round_trips(&AppFrame::Error { in_reply_to: None, fault: b"rejected:bad command".to_vec() });
+    }
+
+    #[test]
+    fn app_frame_emit_round_trips() {
+        assert_frame_round_trips(&AppFrame::Emit {
+            in_reply_to: 14,
+            document_ops: vec![1],
+            config_ops: vec![2],
+            draft_ops: vec![3],
+            output: vec![4],
+            diagnostics: vec![5],
+        });
+    }
+
+    #[test]
+    fn app_frame_draft_round_trips() {
+        assert_frame_round_trips(&AppFrame::Draft { in_reply_to: 15, pack: vec![1], spr: vec![2], ops: "d".to_string() });
     }
     //#endregion 🔖️AppFrame
 
@@ -800,6 +910,16 @@ mod tests {
             ("MediaOut", AppCommand::MediaOut { seq: 1, port: "p".to_string(), request: vec![1] }),
             ("MediaFingerprint", AppCommand::MediaFingerprint { seq: 1, port: "p".to_string() }),
             ("Bye", AppCommand::Bye),
+            ("PureCommand", AppCommand::PureCommand {
+                seq: 1,
+                command: vec![1],
+                document: vec![2],
+                document_spr: vec![3],
+                config: vec![4],
+                config_spr: vec![5],
+                draft: vec![6],
+                draft_spr: vec![7],
+            }),
         ]
     }
 
@@ -820,6 +940,15 @@ mod tests {
             ("Media", AppFrame::Media { in_reply_to: 1, port: "p".to_string(), descriptor: vec![1], data: vec![2] }),
             ("MediaFingerprint", AppFrame::MediaFingerprint { in_reply_to: 1, port: "p".to_string(), fingerprint: vec![1] }),
             ("Error", AppFrame::Error { in_reply_to: None, fault: vec![99] }),
+            ("Emit", AppFrame::Emit {
+                in_reply_to: 1,
+                document_ops: vec![1],
+                config_ops: vec![],
+                draft_ops: vec![],
+                output: vec![2],
+                diagnostics: vec![],
+            }),
+            ("Draft", AppFrame::Draft { in_reply_to: 1, pack: vec![1], spr: vec![2], ops: "d".to_string() }),
         ]
     }
 
@@ -847,6 +976,7 @@ mod tests {
             "MediaOut" => "0f0101700101",
             "MediaFingerprint" => "10010170",
             "Bye" => "11",
+            "PureCommand" => "12010101010201030104010501060107",
             other => panic!("channel_command_fixture_hex: no golden hex registered for label {other:?}"),
         }
     }
@@ -869,6 +999,8 @@ mod tests {
             "Media" => "0b01017001010102",
             "MediaFingerprint" => "0c0101700101",
             "Error" => "0d000163",
+            "Emit" => "0e0101010000010200",
+            "Draft" => "0f01010101020164",
             other => panic!("channel_frame_fixture_hex: no golden hex registered for label {other:?}"),
         }
     }

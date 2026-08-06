@@ -34,7 +34,6 @@ use store::EngineHandles;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{LazyLock, Mutex};
 
 //#region 🔖️Constants
@@ -59,7 +58,6 @@ pub const PUZZLE3D_VORTEX_DIRECTION_OUTWARDS: &str = "outwards";
 pub const PUZZLE3D_VORTEX_DIRECTION_INWARDS: &str = "inwards";
 
 /// 🔢️ Monotone serial behind every app-minted object / attraction / target-volume id.
-pub static PUZZLE3D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 /// 🗃️ One registered mesh's raw `(positions, indices)` triangle buffers, as the renderer hands them
 /// over through `registerBrushMesh`.
@@ -70,8 +68,8 @@ pub type Puzzle3dMeshBuffers = (Vec<f32>, Vec<u32>);
 /// local structural-twin mirror of `crate::artifacts::puzzle3d::Puzzle3dProjection`, so the DSL-text
 /// example fixtures are parsed once into the typed projection and re-serialized to the JSON string
 /// this module's `serde_json::from_str::<Puzzle3dFixture>`/`.example(...)` call sites expect.
-pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::artifacts::puzzle3d::dsl::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest"));
-pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::artifacts::puzzle3d::dsl::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT, "nakagin"));
+fn concrete_forest_example_json() -> String { parse_example_dsl(crate::artifacts::puzzle3d::dsl::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest") }
+fn nakagin_example_json() -> String { parse_example_dsl(crate::artifacts::puzzle3d::dsl::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT, "nakagin") }
 
 fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
     let projection = <Puzzle3dProjection as store::DocumentDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
@@ -238,11 +236,11 @@ pub fn empty_fixture() -> Puzzle3dFixture {
 }
 
 pub fn default_fixture() -> Puzzle3dFixture {
-    serde_json::from_str::<Puzzle3dFixture>(CONCRETE_FOREST_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| empty_fixture())
+    serde_json::from_str::<Puzzle3dFixture>(concrete_forest_example_json().as_str()).unwrap_or_else(|_| empty_fixture())
 }
 
 pub fn nakagin_fixture() -> Puzzle3dFixture {
-    serde_json::from_str::<Puzzle3dFixture>(NAKAGIN_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| empty_fixture())
+    serde_json::from_str::<Puzzle3dFixture>(nakagin_example_json().as_str()).unwrap_or_else(|_| empty_fixture())
 }
 
 /// 🧾️ Materializes the transient scene from the persisted projection (bare fixture json) and the
@@ -477,7 +475,10 @@ pub fn puzzle3d_kind_ids(fixture: &Puzzle3dFixture, section: &str) -> Vec<String
 }
 
 pub fn next_object_id() -> String {
-    let next = PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
+    let next = {
+        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
+        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
+    };
     format!("object-{next}")
 }
 
@@ -1851,49 +1852,20 @@ fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels
 /// 🧲️ Gumball drags use a scratch-commit session (`transform_drag_active` + `transform_base` /
 /// `transform_scratch`): mid-drag ticks accumulate incremental deltas onto the scratch and emit no
 /// operations; `transformEnd` commits the base→scratch fixture delta once.
-pub struct Puzzle3dPlayApp {
-    pub(crate) precompute: std::cell::RefCell<Puzzle3dPrecomputeSession>,
-    pub(crate) transform_drag_active: std::cell::RefCell<bool>,
-    pub(crate) transform_base: std::cell::RefCell<Option<Puzzle3dFixture>>,
-    pub(crate) transform_scratch: std::cell::RefCell<Option<Puzzle3dFixture>>,
-    preview_seq: std::cell::RefCell<u64>,
-    fill_display_memo: Mutex<Option<FillDisplayMemo>>,
-    geometry_cache: Mutex<Option<(u64, String, String)>>,
-    document_sections_cache: Mutex<Option<(u64, Vec<UiTreeSectionNode>)>>,
-    mesh_registry: Mutex<HashMap<String, Puzzle3dMeshBuffers>>,
+pub #[derive(Default, Clone, Copy)]
+struct Puzzle3dPlayApp;
+
+impl Default for Puzzle3dPlayApp
 }
 
-impl Default for Puzzle3dPlayApp {
-    fn default() -> Self {
-        Self {
-            precompute: std::cell::RefCell::new(Puzzle3dPrecomputeSession::new()),
-            transform_drag_active: std::cell::RefCell::new(false),
-            transform_base: std::cell::RefCell::new(None),
-            transform_scratch: std::cell::RefCell::new(None),
-            preview_seq: std::cell::RefCell::new(0),
-            fill_display_memo: Mutex::new(None),
-            geometry_cache: Mutex::new(None),
-            document_sections_cache: Mutex::new(None),
-            mesh_registry: Mutex::new(HashMap::new()),
-        }
-    }
-}
-
-impl Puzzle3dPlayApp {
-    fn geometry_jsons(&self, fixture: &Puzzle3dFixture) -> (String, String) {
-        let fingerprint = main::fixture_geometry_fingerprint(fixture);
-        let mut cache = self.geometry_cache.lock().expect("geometry cache");
-        if cache.as_ref().is_none_or(|(fp, _, _)| *fp != fingerprint) {
-            *cache = Some((fingerprint, main::world_instances_geometry_json(fixture), main::world_meshes_json(fixture)));
-            *self.document_sections_cache.lock().expect("document cache") = None;
-        }
+impl Puzzle3dPlayApp
         let (_, instances, meshes) = cache.as_ref().expect("geometry cache populated");
         (instances.clone(), meshes.clone())
     }
 
     fn document_sections_cached(&self, fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Vec<UiTreeSectionNode> {
         let fingerprint = main::fixture_geometry_fingerprint(fixture);
-        let mut cache = self.document_sections_cache.lock().expect("document cache");
+        let mut cache = (std::sync::Mutex::new(None)).lock().expect("document cache");
         if cache.as_ref().is_none_or(|(fp, _)| *fp != fingerprint) {
             *cache = Some((fingerprint, document::sections(fixture, labels)));
         }
@@ -1903,27 +1875,27 @@ impl Puzzle3dPlayApp {
     /// 🎬️ Snapshots the live fixture as the gumball drag base and clears any prior scratch.
     fn begin_transform_session(&self, projection: &Value) {
         let fixture = serde_json::from_value::<Puzzle3dFixture>(projection.clone()).unwrap_or_else(|_| empty_fixture());
-        *self.transform_drag_active.borrow_mut() = true;
-        *self.transform_base.borrow_mut() = Some(fixture);
-        *self.transform_scratch.borrow_mut() = None;
+        *(std::cell::RefCell::new(false)).borrow_mut() = true;
+        *(std::cell::RefCell::new(None)).borrow_mut() = Some(fixture);
+        *(std::cell::RefCell::new(None)).borrow_mut() = None;
     }
 
     /// 🧹️ Drops an in-progress gumball scratch without committing.
     pub(crate) fn clear_transform_session(&self) {
-        *self.transform_drag_active.borrow_mut() = false;
-        *self.transform_base.borrow_mut() = None;
-        *self.transform_scratch.borrow_mut() = None;
+        *(std::cell::RefCell::new(false)).borrow_mut() = false;
+        *(std::cell::RefCell::new(None)).borrow_mut() = None;
+        *(std::cell::RefCell::new(None)).borrow_mut() = None;
     }
 
     /// 🧲️ One mid-drag gumball tick: accumulates an incremental delta onto `transform_scratch`
     /// (seeded from the drag-start base) and emits zero operations (scratch-commit pattern b).
     pub(crate) fn transform_drag_tick(&self, action: &str, args: Option<&Value>, projection: &Value, config: &Puzzle3dConfig) -> Emit<Puzzle3dOperation, Puzzle3dConfigOperation> {
-        if self.transform_base.borrow().is_none() {
+        if (std::cell::RefCell::new(None)).borrow().is_none() {
             self.begin_transform_session(projection);
         }
         let object_ids = mesh_selection_ids(args, &config.selection.object_ids);
         let volume_ids = config.selection.target_volume_ids.to_vec();
-        let mut scratch = self.transform_scratch.borrow().clone().or_else(|| self.transform_base.borrow().clone()).unwrap_or_else(empty_fixture);
+        let mut scratch = (std::cell::RefCell::new(None)).borrow().clone().or_else(|| (std::cell::RefCell::new(None)).borrow().clone()).unwrap_or_else(empty_fixture);
         let axis = |key: &str, fallback: f64| args.and_then(|value| value.get(key)).and_then(|value| value.as_f64()).unwrap_or(fallback);
         match action {
             "translateSelection" => puzzle3d_apply_translate(&mut scratch, &object_ids, &volume_ids, axis("dx", 0.0), axis("dy", 0.0), axis("dz", 0.0)),
@@ -1931,22 +1903,22 @@ impl Puzzle3dPlayApp {
             "scaleSelection" => puzzle3d_apply_scale(&mut scratch, &object_ids, &volume_ids, axis("sx", 1.0), axis("sy", 1.0), axis("sz", 1.0)),
             _ => {}
         }
-        *self.transform_scratch.borrow_mut() = Some(scratch);
+        *(std::cell::RefCell::new(None)).borrow_mut() = Some(scratch);
         {
-            let next = self.preview_seq.borrow().wrapping_add(1);
-            *self.preview_seq.borrow_mut() = next;
+            let next = (std::cell::RefCell::new(0u64)).borrow().wrapping_add(1);
+            *(std::cell::RefCell::new(0u64)).borrow_mut() = next;
         }
         Emit { ui_scope: puzzle3d_transform_drag_scope(), ..Default::default() }
     }
 
     /// 📌️ Commits the whole gumball drag as ONE fixture delta (base → scratch), resolving attractions once.
     pub(crate) fn commit_transform(&self, projection: &Value, config: &Puzzle3dConfig) -> Emit<Puzzle3dOperation, Puzzle3dConfigOperation> {
-        *self.transform_drag_active.borrow_mut() = false;
-        let Some(mut scratch) = self.transform_scratch.borrow_mut().take() else {
-            *self.transform_base.borrow_mut() = None;
+        *(std::cell::RefCell::new(false)).borrow_mut() = false;
+        let Some(mut scratch) = (std::cell::RefCell::new(None)).borrow_mut().take() else {
+            *(std::cell::RefCell::new(None)).borrow_mut() = None;
             return Emit::default();
         };
-        *self.transform_base.borrow_mut() = None;
+        *(std::cell::RefCell::new(None)).borrow_mut() = None;
         let object_ids = config.selection.object_ids.to_vec();
         let incoming = resolve_puzzle3d_attractions(&mut scratch);
         puzzle3d_rederive_moved_attractions(&mut scratch, &object_ids, &incoming);
@@ -1961,7 +1933,7 @@ impl Puzzle3dPlayApp {
 
     /// 🖼️ Fixture used for world render — live scratch while a gumball drag is in progress.
     fn render_fixture(&self, projection: &Value) -> Puzzle3dFixture {
-        if let Some(scratch) = self.transform_scratch.borrow().as_ref() {
+        if let Some(scratch) = (std::cell::RefCell::new(None)).borrow().as_ref() {
             return scratch.clone();
         }
         serde_json::from_value::<Puzzle3dFixture>(projection.clone()).unwrap_or_else(|_| empty_fixture())
@@ -1982,14 +1954,14 @@ impl Puzzle3dPlayApp {
     /// `#[allow(dead_code)]`: exercised by `🧪️Tests` only until a host bridge exists.
     #[allow(dead_code)]
     pub(crate) fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
-        let base_binding = self.transform_base.borrow();
+        let base_binding = (std::cell::RefCell::new(None)).borrow();
         let base = base_binding.as_ref()?;
-        let scratch_binding = self.transform_scratch.borrow();
+        let scratch_binding = (std::cell::RefCell::new(None)).borrow();
         let scratch = scratch_binding.as_ref()?;
         let before = serde_json::to_value(base).ok()?;
         let operations = puzzle3d_operations_from_fixture_change(&before, scratch);
         let payload = json!({ "operations": operations });
-        Some(("gesture:transform", *self.preview_seq.borrow(), serde_json::to_vec(&payload).ok()?))
+        Some(("gesture:transform", *(std::cell::RefCell::new(0u64)).borrow(), serde_json::to_vec(&payload).ok()?))
     }
     //#endregion 🔖️GesturePreview
 
@@ -2019,7 +1991,7 @@ impl Puzzle3dPlayApp {
         if action == "transformEnd" {
             return self.commit_transform(&doc.projection.0, config);
         }
-        if *self.transform_drag_active.borrow() && matches!(action, "translateSelection" | "rotateSelection" | "scaleSelection") {
+        if *(std::cell::RefCell::new(false)).borrow() && matches!(action, "translateSelection" | "rotateSelection" | "scaleSelection") {
             return self.transform_drag_tick(action, args, &doc.projection.0, config);
         }
         let document_action = puzzle3d_action_document_intent(action);
@@ -2044,7 +2016,7 @@ impl Puzzle3dPlayApp {
         let preserve_fill_plan = matches!(action, "setFillCount" | "fillBuildTick");
         let skip_precompute_sync = matches!(action, "worldPick" | "worldSelect" | "setSelection" | "clearSelection" | "selectAll");
         if !preserve_fill_plan && !skip_precompute_sync {
-            sync_precompute_session(&mut self.precompute.borrow_mut(), &scene);
+            sync_precompute_session(&mut (std::cell::RefCell::new(Puzzle3dPrecomputeSession::default())).borrow_mut(), &scene);
         }
         let mut ctx = Puzzle3dActionCtx { app: self, scene: &mut scene, window_id: &wid, config, ui_scope: &mut ui_scope, abort: false };
         dispatch_puzzle3d_action(&mut ctx, action, args);
@@ -2176,22 +2148,7 @@ fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args:
     }
 }
 
-impl DocumentApp for Puzzle3dPlayApp {
-    type Projection = Puzzle3dPlayProjection;
-    type Operation = Puzzle3dOperation;
-    type Config = Puzzle3dConfig;
-    type ConfigOperation = Puzzle3dConfigOperation;
-    type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
-
-    type Command = Puzzle3dCommand;
-
-    const APP_ID: &'static str = PUZZLE3D_PLAY_APP_ID;
-    const DOCUMENT_SCHEMA: &'static str = PUZZLE3D_FIXTURE_SCHEMA;
-
-    fn initial_projection() -> Puzzle3dPlayProjection {
-        Puzzle3dPlayProjection(serde_json::to_value(default_fixture()).unwrap_or_else(|_| serde_json::to_value(empty_fixture()).unwrap_or(Value::Null)))
-    }
+impl DocumentApp for Puzzle3dPlayApp
 
     /// 🏷️ Maps each `Puzzle3dCommand` variant back to the action id it was declared under.
     fn command_id(command: &Puzzle3dCommand) -> &'static str {
@@ -2279,16 +2236,16 @@ impl DocumentApp for Puzzle3dPlayApp {
         // 🪣️ Additive-only: appends just the not-yet-committed fill-plan tail onto the live fixture —
         // safe even during a live gumball scratch drag, since it never touches/replaces any
         // already-present object (the dragged one included).
-        let fill_available = self.precompute.borrow().fill_available_count();
-        let fixture = puzzle3d_fixture_with_fill_display_memo(self.render_fixture(&doc.projection.0), &self.precompute.borrow(), runtime_for_window.fill_count, fill_available, &self.fill_display_memo);
+        let fill_available = (std::cell::RefCell::new(Puzzle3dPrecomputeSession::default())).borrow().fill_available_count();
+        let fixture = puzzle3d_fixture_with_fill_display_memo(self.render_fixture(&doc.projection.0), &(std::cell::RefCell::new(Puzzle3dPrecomputeSession::default())).borrow(), runtime_for_window.fill_count, fill_available, &(std::sync::Mutex::new(None)));
         let envelope = Puzzle3dScene { fixture, runtime: runtime_for_window, active_utility };
         let labels = puzzle3d_labels(config);
         match base_body_key {
             main::BODY_KEY => {
                 let (instances_json, meshes_json) = self.geometry_jsons(&envelope.fixture);
-                main::render(&envelope, &self.precompute.borrow(), instances_json, meshes_json)
+                main::render(&envelope, &(std::cell::RefCell::new(Puzzle3dPrecomputeSession::default())).borrow(), instances_json, meshes_json)
             }
-            document::BODY_KEY => document::render(self.document_sections_cached(&envelope.fixture, labels), &envelope.runtime.selection),
+            document::BODY_KEY => document::render((std::sync::Mutex::new(None))d(&envelope.fixture, labels), &envelope.runtime.selection),
             catalogue::BODY_KEY => catalogue::render(&envelope, labels),
             inspection::BODY_KEY => inspection::render(&envelope, labels),
             settings_panel::BODY_KEY => settings_panel::render(&envelope, labels),
@@ -2317,7 +2274,7 @@ impl DocumentApp for Puzzle3dPlayApp {
             .into_iter()
             .map(|wid| {
                 let envelope = self.scene_for(&doc.projection.0, config, &wid);
-                (wid, main::window_measures(&envelope, &self.precompute.borrow(), labels))
+                (wid, main::window_measures(&envelope, &(std::cell::RefCell::new(Puzzle3dPrecomputeSession::default())).borrow(), labels))
             })
             .collect()
     }
@@ -2327,7 +2284,7 @@ impl DocumentApp for Puzzle3dPlayApp {
         let wid = config.window_ids.first().map_or(main::WINDOW_KIND_ID, String::as_str);
         let labels = puzzle3d_labels(config);
         let envelope = self.scene_for(&doc.projection.0, config, wid);
-        HashMap::from([(fill_tool::TOOL_ID.to_string(), fill_tool::measures(&envelope, &self.precompute.borrow(), labels))])
+        HashMap::from([(fill_tool::TOOL_ID.to_string(), fill_tool::measures(&envelope, &(std::cell::RefCell::new(Puzzle3dPrecomputeSession::default())).borrow(), labels))])
     }
 
     fn context_menu(

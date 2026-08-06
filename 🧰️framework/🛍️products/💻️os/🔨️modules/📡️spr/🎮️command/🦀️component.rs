@@ -182,145 +182,12 @@ pub struct Edit<Op> {
 //#endregion 🔖️Meta
 
 //#region 🔖️Collection
-/// @emoji 🏷️ Identifies an item within a `Vec` by a stable id, for generic collection operations.
-/// Moved verbatim from `vcs::Identified`.
-pub trait Identified<TId> {
-    fn id(&self) -> &TId;
-}
+/// 🧬️ Collection identity/patch/diff/ops — single source of truth in VCS (`crate::os_vcs`).
+pub use crate::os_vcs::{
+    apply_collection_operation, collection_diff_from_operation, invert_collection_operation, CollectionDiff,
+    CollectionOperation, Identified, ItemPatch, Patchable,
+};
 
-/// @emoji 🩹️ In-place patch application plus a structural diff between two states of `Self`. The
-/// frozen contract splits `vcs::Patchable`'s single `apply_patch(&mut self, &TPatch) -> TPatch`
-/// (mutate-and-return-inverse) into two methods: `apply_patch` (mutate only) and `diff_patch`
-/// (compute a patch from `self` to `other`, direction chosen to match `Operation::diff(&self,
-/// base)`'s "self relative to an argument" convention) — `invert_collection_operation` below
-/// composes them (`after.diff_patch(&prior)`) to recover the same inverse-patch behavior.
-pub trait Patchable<TPatch> {
-    fn apply_patch(&mut self, patch: &TPatch);
-    fn diff_patch(&self, other: &Self) -> Option<TPatch>;
-}
-
-/// @emoji 🧩️ Sparse collection patch entry (mirrors semio_compose_rs `XModified`). Moved verbatim from
-/// `vcs::ItemPatch`.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ItemPatch<TId, TPatch> {
-    pub id: TId,
-    pub patch: TPatch,
-}
-
-/// @emoji 🧩️ Sparse collection diff (mirrors semio_compose_rs `XCollectionDiff`). Moved verbatim from
-/// `vcs::CollectionDiff`.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CollectionDiff<TId, TPatch, TAdded> {
-    pub removed: Vec<TId>,
-    pub modified: Vec<ItemPatch<TId, TPatch>>,
-    pub added: Vec<TAdded>,
-}
-
-impl<TId, TPatch, TAdded> Default for CollectionDiff<TId, TPatch, TAdded> {
-    fn default() -> Self {
-        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
-    }
-}
-
-/// @emoji 🧺️ Generic ordered-collection operation (add/remove/move/patch) with mechanical
-/// pre-state inverses. Frozen-contract shape: `Add` now carries its own `id` (was implied via
-/// `TItem: Identified`), and `Move`'s target field is named `to` (was `to_index`).
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
-pub enum CollectionOperation<TId, TItem, TPatch> {
-    Add { id: TId, item: TItem, at: usize },
-    Remove { id: TId },
-    Move { id: TId, to: usize },
-    Patch { id: TId, patch: TPatch },
-}
-
-/// @emoji ▶️ Applies a `CollectionOperation` to a `Vec` in place. Moved from
-/// `vcs::apply_collection_operation`, adapted to the `Add { at, .. }`/`Move { to, .. }` field names.
-pub fn apply_collection_operation<TId, TItem, TPatch>(items: &mut Vec<TItem>, operation: &CollectionOperation<TId, TItem, TPatch>)
-where
-    TId: PartialEq + Clone,
-    TItem: Identified<TId> + Clone + Patchable<TPatch>,
-{
-    match operation {
-        CollectionOperation::Add { item, at, .. } => {
-            let pos = (*at).min(items.len());
-            items.insert(pos, item.clone());
-        }
-        CollectionOperation::Remove { id } => {
-            items.retain(|item| item.id() != id);
-        }
-        CollectionOperation::Move { id, to } => {
-            if let Some(from) = items.iter().position(|item| item.id() == id) {
-                let item = items.remove(from);
-                let pos = (*to).min(items.len());
-                items.insert(pos, item);
-            }
-        }
-        CollectionOperation::Patch { id, patch } => {
-            if let Some(item) = items.iter_mut().find(|item| item.id() == id) {
-                item.apply_patch(patch);
-            }
-        }
-    }
-}
-
-/// @emoji ↩️ Computes the inverse `CollectionOperation` from the pre-state `items`. Panics if
-/// `operation` targets an id absent from `items` (`Remove`/`Move`/`Patch` always target an existing
-/// item by construction) or if a `Patch`'s `apply_patch` is a genuine no-op that `diff_patch`
-/// cannot express as an inverse (a technology whose `Patchable` impl can produce a no-op patch
-/// should have `diff_patch` return `Some(unchanged-patch)`, not `None`, in that case).
-pub fn invert_collection_operation<TId, TItem, TPatch>(items: &[TItem], operation: &CollectionOperation<TId, TItem, TPatch>) -> CollectionOperation<TId, TItem, TPatch>
-where
-    TId: PartialEq + Clone,
-    TItem: Identified<TId> + Clone + Patchable<TPatch>,
-    TPatch: Clone,
-{
-    match operation {
-        CollectionOperation::Add { id, .. } => CollectionOperation::Remove { id: id.clone() },
-        CollectionOperation::Remove { id } => {
-            let index = items.iter().position(|item| item.id() == id).expect("remove target must exist in pre-state");
-            CollectionOperation::Add { id: id.clone(), item: items[index].clone(), at: index }
-        }
-        CollectionOperation::Move { id, .. } => {
-            let index = items.iter().position(|item| item.id() == id).expect("move target must exist in pre-state");
-            CollectionOperation::Move { id: id.clone(), to: index }
-        }
-        CollectionOperation::Patch { id, patch } => {
-            let prior = items.iter().find(|item| item.id() == id).cloned().expect("patch target must exist in pre-state");
-            let mut after = prior.clone();
-            after.apply_patch(patch);
-            let inverse_patch = after.diff_patch(&prior).expect("a patch that changed state must yield a computable inverse");
-            CollectionOperation::Patch { id: id.clone(), patch: inverse_patch }
-        }
-    }
-}
-
-/// @emoji 🧮️ Projects a `CollectionOperation` onto a sparse `CollectionDiff`. Moved from
-/// `vcs::collection_diff_from_operation`, adapted to the new field names. `Add` → `added`,
-/// `Remove` → `removed`, `Patch` → `modified`. `CollectionDiff` has no positional-move channel, so
-/// `Move` is encoded as `removed` + `added` (delete then re-add by identity).
-pub fn collection_diff_from_operation<TId, TItem, TPatch>(items: &[TItem], operation: &CollectionOperation<TId, TItem, TPatch>) -> CollectionDiff<TId, TPatch, TItem>
-where
-    TId: PartialEq + Clone,
-    TItem: Identified<TId> + Clone,
-    TPatch: Clone,
-{
-    let mut diff = CollectionDiff::default();
-    match operation {
-        CollectionOperation::Add { item, .. } => diff.added.push(item.clone()),
-        CollectionOperation::Remove { id } => diff.removed.push(id.clone()),
-        CollectionOperation::Patch { id, patch } => diff.modified.push(ItemPatch { id: id.clone(), patch: patch.clone() }),
-        CollectionOperation::Move { id, .. } => {
-            if let Some(item) = items.iter().find(|item| item.id() == id) {
-                diff.removed.push(id.clone());
-                diff.added.push(item.clone());
-            }
-        }
-    }
-    diff
-}
 //#endregion 🔖️Collection
 
 //#region 🔖️Descriptor
@@ -585,10 +452,10 @@ mod tests {
     fn apply_add_remove_move_patch() {
         let mut items = vec![Item { id: "a".into(), value: 1 }, Item { id: "b".into(), value: 2 }];
 
-        apply_collection_operation(&mut items, &CollectionOperation::Add { id: "c".into(), item: Item { id: "c".into(), value: 3 }, at: 1 });
+        apply_collection_operation(&mut items, &CollectionOperation::Add { index: 1, item: Item { id: "c".into(), value: 3 } });
         assert_eq!(items.iter().map(|i| i.id.clone()).collect::<Vec<_>>(), vec!["a", "c", "b"]);
 
-        apply_collection_operation(&mut items, &CollectionOperation::Move { id: "c".into(), to: 2 });
+        apply_collection_operation(&mut items, &CollectionOperation::Move { id: "c".into(), to_index: 2 });
         assert_eq!(items.iter().map(|i| i.id.clone()).collect::<Vec<_>>(), vec!["a", "b", "c"]);
 
         apply_collection_operation::<String, Item, i64>(&mut items, &CollectionOperation::Patch { id: "b".into(), patch: 10 });
@@ -602,7 +469,7 @@ mod tests {
     fn invert_collection_operation_round_trips_every_kind() {
         let original = vec![Item { id: "a".into(), value: 1 }, Item { id: "b".into(), value: 2 }];
 
-        let add = CollectionOperation::Add { id: "c".into(), item: Item { id: "c".into(), value: 3 }, at: 2 };
+        let add = CollectionOperation::Add { index: 2, item: Item { id: "c".into(), value: 3 } };
         let mut items = original.clone();
         apply_collection_operation(&mut items, &add);
         let inverse = invert_collection_operation(&original, &add);

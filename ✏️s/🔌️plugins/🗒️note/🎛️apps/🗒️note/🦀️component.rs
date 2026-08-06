@@ -142,7 +142,7 @@ impl DocumentApp for NotePlayApp {
     /// 🏷️ Maps each `NoteCommand` variant back to the action id it was declared under in
     /// `create_note_app` — used by `VcsDocumentApp` for command-log labeling and the registry's
     /// View/Shell kind-discipline check.
-    fn command_id(command: &NoteCommand) -> &str {
+    fn command_id(command: &NoteCommand) -> &'static str {
         command.command_id()
     }
 

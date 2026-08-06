@@ -5,10 +5,8 @@
 
 use crate::artifacts::shooting::{empty_shooting_fixture, ShootingAsset, ShootingCamera, ShootingFixture, ShootingShot};
 use serde_json::{json, Value};
-use std::sync::atomic::{AtomicU32, Ordering};
 
 //#region 🔖️Constants
-static SHOOTING_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖️Constants
 
 //#region 🔖️Register
@@ -70,7 +68,10 @@ pub fn shooting_photo_media(fixture: &ShootingFixture) -> Result<semio_framework
 
 //#region 🔖️DocumentHelpers
 pub fn next_shooting_id(prefix: &str) -> String {
-    let next = SHOOTING_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
+    let next = {
+        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
+        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
+    };
     format!("{prefix}-{next}")
 }
 

@@ -64,7 +64,7 @@ pub fn build_report(program: &Program, kind: ReportKind) -> ProgramReport {
 pub fn build_report_and_record(program: &mut Program, kind: ReportKind) -> ProgramReport {
     let report = build_report(program, kind);
     let record = ReportRecord {
-        header: EntityHeader::new(EntityId::new_serial("report"), report.title.clone()),
+        header: EntityHeader::new(EntityId::new_serial("report", "report"), report.title.clone()),
         kind,
         title: report.title.clone(),
         audience: Vec::new(),

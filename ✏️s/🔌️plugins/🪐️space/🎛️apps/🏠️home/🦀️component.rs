@@ -41,7 +41,7 @@ const OS_BOOT_STUDIO_ID: &str = "default";
 /// wiring) — both blanket-impl'd over the SAME `store::BackbonePort`, and unsizing coercion never
 /// reallocates, so `Arc::as_ptr`-keyed registries (`space::draft_catalog_for`'s port identity key)
 /// still line up correctly across both views.
-static CATALOG_PORT_CONCRETE: LazyLock<Arc<LocalStorageBackbonePort>> = LazyLock::new(|| {
+fn catalog_port_concrete() -> Arc<LocalStorageBackbonePort> {
     ensure_space_fixtures_registered();
     let port = Arc::new(LocalStorageBackbonePort::new());
     let os_port: Arc<dyn OsBackbonePort> = port.clone();
@@ -54,17 +54,17 @@ static CATALOG_PORT_CONCRETE: LazyLock<Arc<LocalStorageBackbonePort>> = LazyLock
         // workflow artifact — that stays a later, explicit user action).
         let demo_name = { let demo = parse_demo_space_document(); if demo.name.trim().is_empty() { "Demo Studio".into() } else { demo.name } };
         let mut projection = empty_space_projection(&demo_name, SpaceKind::Atelier, SpaceVisibility::Private);
-        projection.users.push(SpaceUser { id: "local".into(), name: demo_name.clone(), avatar: None, role: SpaceRole::Author });
+        projection.users.push(SpaceUser { id: "local".into(), name: demo_name.clone(), avatar: None, role: SpaceRole::Author }
         let seed: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, OS_BOOT_STUDIO_ID, &demo_name, projection);
         let _ = seed_os_space_catalog_if_empty(seed, os_port);
     }
     port
 });
 
-/// 🧬️ Session-local, ephemeral (in-memory only) counterpart to `CATALOG_PORT_CONCRETE` — every draft
+/// 🧬️ Session-local, ephemeral (in-memory only) counterpart to `catalog_port_concrete()` — every draft
 /// space a user creates from Home lives here at `space::draft_uri(id)` until it's promoted (bound to a
 /// file or a real catalog), matching the "never persisted" semantics of a pure ephemeral registry.
-static TEMP_CATALOG_PORT_CONCRETE: LazyLock<Arc<MemoryBackbonePort>> = LazyLock::new(|| Arc::new(MemoryBackbonePort::new()));
+fn temp_catalog_port_concrete() -> Arc<MemoryBackbonePort> { Arc::new(MemoryBackbonePort::new()) }
 
 fn shared_studio_ports() -> Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>> {
     static REGISTRY: OnceLock<Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>>> = OnceLock::new();
@@ -75,22 +75,22 @@ fn shared_studio_ports() -> Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>>
 /// port — see `apps::space`'s `openSpace`/`exportStudioPack`/`exportStudioDsl`/`importSpacePackPayload`
 /// commands.
 pub fn catalog_port() -> Arc<dyn OsBackbonePort> {
-    CATALOG_PORT_CONCRETE.clone()
+    catalog_port_concrete().clone()
 }
 
 pub(crate) fn temp_catalog_port() -> Arc<dyn OsBackbonePort> {
-    TEMP_CATALOG_PORT_CONCRETE.clone()
+    TEMP_catalog_port_concrete().clone()
 }
 
 /// 🔌️ `space::SpaceBackbonePort` view over the SAME ephemeral port `temp_catalog_port` uses — the port
 /// every draft studio's real envelope bytes are relocated through by `space::DraftCatalog`.
 pub(crate) fn draft_backbone_port() -> Arc<dyn SpaceBackbonePort> {
-    TEMP_CATALOG_PORT_CONCRETE.clone()
+    TEMP_catalog_port_concrete().clone()
 }
 
 /// 🗄️ The port-keyed `space::DraftCatalog` for `draft_backbone_port` — every draft studio's
 /// bookkeeping (id, kind, TTL) lives here; `space::draft_catalog_for` guarantees the SAME instance is
-/// returned every call since `draft_backbone_port` always unsizes the SAME `TEMP_CATALOG_PORT_CONCRETE`
+/// returned every call since `draft_backbone_port` always unsizes the SAME `TEMP_catalog_port_concrete()`
 /// allocation.
 pub(crate) fn ephemeral_draft_catalog() -> Arc<DraftCatalog> {
     draft_catalog_for(&draft_backbone_port())
@@ -319,31 +319,13 @@ app_commands! {
 //#region 🔖️HomeApp
 /// 🧪️ Unit struct — the Home launcher holds catalog bootstrap ports plus per-session studio port
 /// bindings for folder/file-backed studios.
-pub struct HomeApp {
-    studio_ports: Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>>,
+pub #[derive(Default, Clone, Copy)]
+struct HomeApp;
+
+impl Default for HomeApp
 }
 
-impl Default for HomeApp {
-    fn default() -> Self {
-        Self { studio_ports: shared_studio_ports() }
-    }
-}
-
-impl DocumentApp for HomeApp {
-    type Projection = SHomeDocument;
-    type Operation = crate::artifacts::home::op::SHomeOperation;
-    type Config = HomeConfig;
-    type ConfigOperation = crate::apps::home::config::HomeConfigOperation;
-    type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
-
-    type Command = HomeCommand;
-
-    const APP_ID: &'static str = S_HOME_APP_ID;
-    const DOCUMENT_SCHEMA: &'static str = "s.home";
-
-    fn initial_projection() -> SHomeDocument {
-        SHomeDocument { schema: "s.home".into(), catalog_generation: 0 }
+impl DocumentApp for HomeApp
     }
 
     fn command_id(command: &HomeCommand) -> &str {

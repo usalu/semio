@@ -71,7 +71,7 @@ impl DocumentApp for Vdi3805PlayApp {
         Some(crate::core::app::norm_io(VARIANT, DOCUMENT_SCHEMA))
     }
 
-    fn command_id(command: &Vdi3805Command) -> &str {
+    fn command_id(command: &Vdi3805Command) -> &'static str {
         command.command_id()
     }
 

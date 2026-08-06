@@ -13,7 +13,6 @@ use crate::artifacts::remodel::{
 use base64::Engine as _;
 use semio_framework_plugin::{MeshData, MeshExporter, OsMediaFormat};
 use serde_json::Value;
-use std::sync::atomic::{AtomicU32, Ordering};
 
 //#region 🔖️Register
 /// 🗂️ Host registration for this artifact — the pack<->dsl document codec (keyed by the real
@@ -34,14 +33,16 @@ pub fn register() {
 //#endregion 🔖️Register
 
 //#region 🔖️Ids
-static REMODEL_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 /// 🔢️ Replaces every former `RemodelPlayRuntime` id counter (`stream_counter`/`job_counter`/
 /// `gcp_counter`/`import_counter`) — mirrors `shooting_engine::next_shooting_id`'s precedent (a plain
 /// global monotonic counter, not VCS-tracked config state: uniqueness is all id generation needs, and
 /// the generated id itself becomes real, undoable document content the moment an operation stores it).
 pub fn next_remodel_id(prefix: &str) -> String {
-    let next = REMODEL_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
+    let next = {
+        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
+        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
+    };
     format!("{prefix}-{next}")
 }
 //#endregion 🔖️Ids

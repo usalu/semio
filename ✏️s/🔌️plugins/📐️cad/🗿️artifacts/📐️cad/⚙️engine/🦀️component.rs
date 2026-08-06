@@ -33,7 +33,6 @@ const CAD_MODEL_INDEX_ENERGY: usize = 2;
 
 const CAD_MODEL_INDEX_STRUCTURE_CLASSIC: usize = 3;
 
-static CAD_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 const FOREST_LEFT_MODEL_JSON: &str = include_str!("../../../🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
 
@@ -275,7 +274,10 @@ pub fn forest_play_scene() -> CadScene {
 }
 
 pub fn next_cad_id(prefix: &str) -> String {
-    let next = CAD_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
+    let next = {
+        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
+        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
+    };
     format!("{prefix}-{next}")
 }
 

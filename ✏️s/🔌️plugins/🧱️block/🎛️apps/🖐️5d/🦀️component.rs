@@ -82,7 +82,7 @@ impl DocumentApp for Block5dPlayApp {
         Some(crate::artifacts::block5d::engine::block5d_io())
     }
 
-    fn command_id(command: &Block5dCommand) -> &str {
+    fn command_id(command: &Block5dCommand) -> &'static str {
         command.command_id()
     }
 

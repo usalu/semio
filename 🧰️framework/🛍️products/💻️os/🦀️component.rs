@@ -1635,7 +1635,7 @@ pub mod backbone {
     use std::sync::Arc;
     use store::MemoryBackbonePort;
     #[cfg(not(target_arch = "wasm32"))]
-    use store_sync::{FolderSqliteStorage, FolderTextStorage};
+    use crate::store_sync::{FolderSqliteStorage, FolderTextStorage};
     use vcs::VcsError;
 
     /// @emoji 🗂️ Conventional single-document id used inside a folder-backed studio backbone — a studio
@@ -1825,7 +1825,7 @@ pub mod host_runtime {
     //!    `WasmPluginRuntime::deregister_host_backbone(uri)`.
 
     use crate::instance::OsDocumentRef;
-    use store_sync::{DocumentActorConfig, DocumentActorMsg, DocumentChannels, DocumentEvent, DocumentHost, PersistenceBinding};
+    use crate::store_sync::{DocumentActorConfig, DocumentActorMsg, DocumentChannels, DocumentEvent, DocumentHost, PersistenceBinding};
 
     /// @emoji 📌️ The local persistence binding for a folder-backed document (one row per `document_id`
     /// in the folder's `.semio` sqlite store — see `FolderSqliteStorage`).
@@ -2888,7 +2888,7 @@ pub mod workflow {
     // inversion` in the plan) — re-exported here too so every `crate::workflow::X` call site (and every
     // downstream crate importing via `semio_framework_os::workflow::X`/`semio_framework_os::X`) keeps a
     // single source of truth for the workflow document vocabulary.
-    pub use workflow::{
+    pub use crate::workflow_kernel::{
         apply_workflow_operation, create_default_workflow_parameter, empty_workflow, empty_workflow_document, patch_workflow_parameter, placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports,
         validate_workflow as kernel_validate_workflow, validate_workflow_document, validate_workflow_parameter_config_binding, workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name,
         workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, Workflow, WorkflowDelivery, WorkflowDocument, WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowNode, WorkflowOperation,
@@ -4271,11 +4271,11 @@ pub use registry::{
     workflow_palette, AppPaletteEntry, OsAppRegistration, OsArtifactDescriptor, OsArtifactKindId, PluginRegistry,
 };
 pub use semio_framework_core::*;
-pub use space::*;
+pub use crate::space::*;
 pub use store::{document_backbone_ref, set_host_backbone_port, DocumentBackboneRef, DocumentCommand, LocalStorageBackbonePort, MemoryBackbonePort};
 pub use ui_wgpu::wgpu::*;
 pub use vcs::{Author, Checkpoint, VcsError};
-pub use workflow::{
+pub use crate::workflow_kernel::{
     apply_flow_fixture_to_os_workflow, apply_workflow_operation, assert_os_media_export_coverage, assert_os_media_import_coverage, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_document,
     export_os_app_instance_media, import_os_app_instance_media, negotiate_media_contract, os_media_export_extension_for_format, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_fixture,
     os_workflow_to_node_graph_payload, patch_workflow_parameter, placeholder_media_contract, plan_workflow, register_os_media_export_handler, register_os_media_import_handler, required_os_media_export_formats, required_os_media_import_formats,
@@ -4285,5 +4285,10 @@ pub use workflow::{
     WorkflowPosition, WorkflowValidation, OS_MEDIA_FLOW_MODULE_ID, OS_SPACE_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
 };
 
-#[path = "📦️plugin_bundle_installer_shim.rs"]
-mod plugin_bundle_installer_shim;
+//#region 🔖️PluginBundleInstallerShim
+/// 🛡️ Fallback installer stub inlined — external shim path removed during crate consolidation.
+mod plugin_bundle_installer_shim {
+    #[allow(dead_code)]
+    pub fn install_noop() {}
+}
+//#endregion 🔖️PluginBundleInstallerShim

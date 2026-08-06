@@ -131,7 +131,7 @@ pub mod add_page {
             overrides: Vec::new(),
         };
         Ok(Emit {
-            document_operations: vec![LayoutOperation::Pages(CollectionOperation::Add { id: page.id.clone(), item: page, at: document.pages.len() })],
+            document_operations: vec![LayoutOperation::Pages(CollectionOperation::Add { index: document.pages.len(), item: page })],
             config_operations: vec![LayoutConfigOperation::SetActivePage { page_id: page_id.clone() }, LayoutConfigOperation::SetSelection { ids: vec![page_id] }],
             ..Default::default()
         })

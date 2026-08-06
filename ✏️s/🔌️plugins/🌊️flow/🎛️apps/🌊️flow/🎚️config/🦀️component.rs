@@ -21,8 +21,8 @@ use std::collections::HashMap;
 /// `extension_enabled_json`/`generation_json` hold JSON-encoded `HashMap<String, bool>`/
 /// `playbook::GenerationPlayState` payloads rather than nested `#[dsl(block)]`/`#[dsl(table)]` fields:
 /// none of those types derive `dsl::DslRecord`, mirroring `procedural_3d`'s identical `sun_json` escape
-/// hatch for the same reason. Off-main-thread eval state lives in `FlowPlayApp::eval_session`
-/// (`FlowEvalSession`), not in config. `generation_json` stays config-tracked rather than becoming a
+/// hatch for the same reason. Per-dispatch eval scratch uses a local `FlowEvalSession` in `handle` /
+/// `pending_effects` / `render` (not process globals). `generation_json` stays config-tracked rather than becoming a
 /// document operation (unlike the sibling `procedural_3d`/`procedural_2d` apps' `GenerationOperation`-backed
 /// generations): flow's document model (`flow_core::FlowOperation`) is a shared kernel crate out of scope
 /// for that conversion. `camera` stays a real `#[dsl(block)]` field since `flow_core::CameraJson` DOES

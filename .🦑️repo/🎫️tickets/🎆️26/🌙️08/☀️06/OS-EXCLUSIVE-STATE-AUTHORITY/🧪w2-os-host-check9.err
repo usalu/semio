@@ -1,0 +1,98 @@
+    Blocking waiting for file lock on build directory
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:7:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:13:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:345:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:351:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9: warning: ambiguous glob re-exports: the name `canonicalize` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9: warning: ambiguous glob re-exports: the name `test_support` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9: warning: ambiguous glob re-exports: the name `core` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9: warning: ambiguous glob re-exports: the name `Symbol` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `apply_collection_operation` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `collection_diff_from_operation` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `invert_collection_operation` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `Identified` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `Patchable` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `cli` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `format` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `io` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `testkit` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `read_varint_u64` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `write_varint_u64` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `recover_file` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `RecoveryReport` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `VerificationLevel` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `WriteOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `DecodeOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `EncodeOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:9: warning: ambiguous glob re-exports: the name `ItemPatch` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:9: warning: ambiguous glob re-exports: the name `CollectionDiff` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:9: warning: ambiguous glob re-exports: the name `CollectionOperation` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:198:9: warning: ambiguous glob re-exports: the name `Alternative` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:199:9: warning: unused import: `crate::os_dsl::core::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:1083:21: warning: unused variable: `len`: help: if this is intentional, prefix it with an underscore: `_len`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4: warning: function `print_edge_label` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2075:19: warning: method `set_envelope` is never used
+warning: `semio-framework-os-kernel` (lib) generated 35 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:5:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3327:61: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1679:17: warning: unused variable: `app`: help: if this is intentional, prefix it with an underscore: `_app`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4870:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4820:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4789:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4598:38: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4562:38: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4478:42: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4831:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4845:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4855:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+warning: `semio-framework-plugin` (lib) generated 13 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 13 suggestions)
+    Checking semio-framework-os v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4320:5: error[E0432]: unresolved imports `crate::workflow_kernel::apply_flow_fixture_to_os_workflow`, `crate::workflow_kernel::assert_os_media_export_coverage`, `crate::workflow_kernel::assert_os_media_import_coverage`, `crate::workflow_kernel::build_os_workflow_operator_infos`, `crate::workflow_kernel::export_os_app_instance_media`, `crate::workflow_kernel::import_os_app_instance_media`, `crate::workflow_kernel::negotiate_media_contract`, `crate::workflow_kernel::os_media_export_extension_for_format`, `crate::workflow_kernel::os_media_neuron_kind_for_node`, `crate::workflow_kernel::os_resource_media_capability`, `crate::workflow_kernel::os_workflow_to_flow_fixture`, `crate::workflow_kernel::os_workflow_to_node_graph_payload`, `crate::workflow_kernel::register_os_media_export_handler`, `crate::workflow_kernel::register_os_media_import_handler`, `crate::workflow_kernel::required_os_media_export_formats`, `crate::workflow_kernel::required_os_media_import_formats`, `crate::workflow_kernel::OsMediaCapability`, `crate::workflow_kernel::OsMediaExportResult`, `crate::workflow_kernel::OsWorkflowCamera`, `crate::workflow_kernel::OsWorkflowNodeGraphPayload`, `crate::workflow_kernel::OsWorkflowOperatorInfo`, `crate::workflow_kernel::OS_MEDIA_FLOW_MODULE_ID`, `crate::workflow_kernel::OS_SPACE_SCHEMA`, `crate::workflow_kernel::OS_WORKFLOW_VFS_ROOT_ID`: no `apply_flow_fixture_to_os_workflow` in `workflow_kernel`, no `assert_os_media_export_coverage` in `workflow_kernel`, no `assert_os_media_import_coverage` in `workflow_kernel`, no `build_os_workflow_operator_infos` in `workflow_kernel`, no `export_os_app_instance_media` in `workflow_kernel`, no `import_os_app_instance_media` in `workflow_kernel`, no `negotiate_media_contract` in `workflow_kernel`, no `os_media_export_extension_for_format` in `workflow_kernel`, no `os_media_neuron_kind_for_node` in `workflow_kernel`, no `os_resource_media_capability` in `workflow_kernel`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3332:34: error[E0433]: cannot find `registry` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3385:34: error[E0433]: cannot find `registry` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:2944:51: error[E0425]: cannot find type `WorkflowMediaPort` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:2944:84: error[E0425]: cannot find type `WorkflowMediaPort` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:2944:113: error[E0425]: cannot find type `MediaContract` in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:2959:12: error[E0422]: cannot find struct, variant or union type `MediaContract` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:2975:38: error[E0425]: cannot find type `Workflow` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:2975:51: error[E0425]: cannot find type `WorkflowValidation` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:2982:40: error[E0425]: cannot find type `WorkflowNode` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3016:48: error[E0425]: cannot find type `Workflow` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3060:54: error[E0425]: cannot find type `Workflow` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3060:91: error[E0425]: cannot find type `WorkflowOperation` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3074:37: error[E0433]: cannot find type `WorkflowOperation` in this scope: use of undeclared type `WorkflowOperation`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3084:37: error[E0433]: cannot find type `WorkflowOperation` in this scope: use of undeclared type `WorkflowOperation`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3091:38: error[E0425]: cannot find type `WorkflowEdge` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3095:40: error[E0425]: cannot find type `WorkflowNode` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3109:29: error[E0433]: cannot find type `WorkflowOperation` in this scope: use of undeclared type `WorkflowOperation`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3109:69: error[E0422]: cannot find struct, variant or union type `WorkflowEdge` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3119:33: error[E0433]: cannot find type `WorkflowOperation` in this scope: use of undeclared type `WorkflowOperation`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3140:54: error[E0425]: cannot find type `Workflow` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3220:40: error[E0425]: cannot find type `WorkflowMediaPort` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3233:53: error[E0425]: cannot find type `Workflow` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3233:77: error[E0425]: cannot find type `WorkflowParameter` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3234:75: error[E0425]: cannot find function `workflow_parameter_id` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3252:48: error[E0425]: cannot find function `workflow_parameter_id_from_port_id` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3253:118: error[E0425]: cannot find function `workflow_parameter_name` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3347:48: error[E0425]: cannot find type `WorkflowNode` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3401:48: error[E0425]: cannot find type `WorkflowNode` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4324:123: error[E0603]: enum import `OsMediaFormat` is private: private enum import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📦️glue.rs:8:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📦️glue.rs:9:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3283:53: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3284:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4:1: warning: the `#![feature]` attribute can only be used at the crate root
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:2969:16: error[E0609]: no field `export_formats` on type `&OsArtifactDescriptor`: unknown field
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:2969:59: error[E0609]: no field `import_formats` on type `&OsArtifactDescriptor`: unknown field
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:2976:30: error[E0425]: cannot find function `kernel_validate_workflow` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3239:36: error[E0061]: this function takes 1 argument but 2 arguments were supplied
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3246:74: error[E0609]: no field `component_kind` on type `()`: unknown field
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:2957:20: error[E0308]: arguments to this function are incorrect
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:2958:92: error[E0609]: no field `kind` on type `std::option::Option<OsArtifactDescriptor>`: unknown field
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3253:165: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3261:41: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+warning: `semio-framework-os` (lib) generated 5 warnings
+error: could not compile `semio-framework-os` (lib) due to 39 previous errors; 5 warnings emitted

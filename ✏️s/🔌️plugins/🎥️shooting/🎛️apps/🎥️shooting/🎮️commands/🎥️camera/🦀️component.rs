@@ -48,7 +48,7 @@ pub mod save_camera {
         let label = if draft.is_empty() { format!("Camera {}", fixture.saved_cameras.len() + 1) } else { draft };
         let saved_camera = ShootingSavedCamera { id: next_shooting_id("camera"), label, camera: config.camera.clone() };
         Ok(Emit {
-            document_operations: vec![ShootingOperation::SavedCameras(CollectionOperation::Add { id: saved_camera.id.clone(), item: saved_camera, at: fixture.saved_cameras.len() })],
+            document_operations: vec![ShootingOperation::SavedCameras(CollectionOperation::Add { index: fixture.saved_cameras.len(), item: saved_camera })],
             config_operations: vec![ShootingConfigOperation::SetCameraDraftLabel { value: String::new() }],
             ..Default::default()
         })

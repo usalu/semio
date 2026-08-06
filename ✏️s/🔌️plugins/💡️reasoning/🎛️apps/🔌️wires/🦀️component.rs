@@ -93,7 +93,7 @@ impl DocumentApp for ReasoningWiresPlayApp {
     }
 
     /// 🏷️ Supplied wholesale by `app_commands!`'s generated `command_id()`.
-    fn command_id(command: &WiresCommand) -> &str {
+    fn command_id(command: &WiresCommand) -> &'static str {
         command.command_id()
     }
 

@@ -3,14 +3,12 @@
 use crate::artifacts::raster::{RasterImageAsset, RasterLayerNode, RasterLayerPatch, RasterProjection, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use serde_json::Value;
 use std::collections::BTreeMap;
-use std::sync::atomic::{AtomicU32, Ordering};
 
 //#region 🔖️Constants
 /// 📄️ The `semio` example document, handcrafted in the `.raster` DSL — {@link semio_example_document}/
 /// {@link semio_example_json} are the only ways it should be consumed.
 const SEMIO_RASTER_EXAMPLE_TEXT: &str = crate::artifacts::raster::dsl::SEMIO_RASTER_EXAMPLE_TEXT;
 
-static RASTER_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖️Constants
 
 //#region 🔖️Register
@@ -25,7 +23,10 @@ pub fn register() {
 
 //#region 🔖️DocumentHelpers
 pub fn create_raster_id(prefix: &str) -> String {
-    let next = RASTER_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
+    let next = {
+        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
+        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
+    };
     format!("{prefix}-{next}")
 }
 

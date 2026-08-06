@@ -8,7 +8,7 @@ extern crate infinite_canvas as infinite_board_port_directed;
 //! back out to the owner-root tree). The grouping modules carry `#[path = "."]` so their own names
 //! are not spliced into that base directory.
 
-#![allow(clippy::result_large_err)]
+#[allow(clippy::result_large_err)]
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;

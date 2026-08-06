@@ -908,48 +908,13 @@ semio_framework_plugin::app_commands! {
 /// surviving interior-mutable field — it backs `gesture_preview`'s never-VCS'd, never-config'd live
 /// rubber-band tick counter, not app state.
 #[derive(Default)]
-pub struct CadPlayApp {
-    /// 👻️ Per-`key` monotone counter for `gesture_preview`.
-    preview_seq: std::cell::RefCell<u64>,
+pub #[derive(Default, Clone, Copy)]
+struct CadPlayApp;
+
+impl CadPlayApp
 }
 
-impl CadPlayApp {
-    /// 👻️ CW7 db+protocol+vcs-slimming campaign, "preview law for gesture apps": the live rubber-band
-    /// engagement session, shaped as the exact payload
-    /// `framework_sync::SyncSession::publish_preview(key, seq, payload)` expects, ready to hand off the
-    /// instant a transport exists. `None` outside an active engagement session; reads
-    /// `CadEngagementSession` only, never `CadScene`/`CadOperation` — a preview can never become
-    /// persistent state.
-    ///
-    /// 🚧️ Deliberately unwired beyond this accessor — `framework/sync::SyncSession::publish_preview`
-    /// is host-only and unreachable from this WASI-P2 sandboxed plugin crate, and
-    /// `store::BackboneMessage` has no preview-shaped variant to relay one through. See
-    /// `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
-    /// `#[allow(dead_code)]`: exercised by `🧪️Tests` only until a host bridge exists.
-    #[allow(dead_code)]
-    fn gesture_preview(&self, config: &CadConfig) -> Option<(&'static str, u64, Vec<u8>)> {
-        let runtime = cad_runtime_from_config(config);
-        let session = runtime.engagement_session?;
-        Some(("gesture:engagement", *self.preview_seq.borrow(), serde_json::to_vec(&session).ok()?))
-    }
-}
-
-impl DocumentApp for CadPlayApp {
-    type Projection = CadScene;
-    type Operation = CadOperation;
-    type Config = CadConfig;
-    type ConfigOperation = CadConfigOperation;
-    type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
-
-    type Command = CadCommand;
-
-    const APP_ID: &'static str = CAD_PLAY_APP_ID;
-    const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;
-
-    fn initial_projection() -> CadScene {
-        forest_play_scene()
-    }
+impl DocumentApp for CadPlayApp
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(cad_io())

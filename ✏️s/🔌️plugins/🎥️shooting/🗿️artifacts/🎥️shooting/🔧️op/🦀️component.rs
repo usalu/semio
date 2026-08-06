@@ -341,21 +341,21 @@ enum ShootingOperationDsl {
 fn shooting_operation_to_dsl(operation: &ShootingOperation) -> ShootingOperationDsl {
     match operation {
         ShootingOperation::Assets(op) => match op {
-            CollectionOperation::Add { id: _id, item, at } => ShootingOperationDsl::AssetsAdd { index: *at, item: Box::new(ShootingAssetNode::Asset(item.clone())) },
+            CollectionOperation::Add { index: at, item } => ShootingOperationDsl::AssetsAdd { index: *at, item: Box::new(ShootingAssetNode::Asset(item.clone())) },
             CollectionOperation::Remove { id } => ShootingOperationDsl::AssetsRemove { id: id.clone() },
-            CollectionOperation::Move { id, to } => ShootingOperationDsl::AssetsMove { id: id.clone(), to_index: *to },
+            CollectionOperation::Move { id, to_index: to } => ShootingOperationDsl::AssetsMove { id: id.clone(), to_index: *to },
             CollectionOperation::Patch { id, patch } => ShootingOperationDsl::AssetsPatch { id: id.clone(), patch: patch.clone() },
         },
         ShootingOperation::Shots(op) => match op {
-            CollectionOperation::Add { id: _id, item, at } => ShootingOperationDsl::ShotsAdd { index: *at, item: Box::new(ShootingShotNode::Shot(item.clone())) },
+            CollectionOperation::Add { index: at, item } => ShootingOperationDsl::ShotsAdd { index: *at, item: Box::new(ShootingShotNode::Shot(item.clone())) },
             CollectionOperation::Remove { id } => ShootingOperationDsl::ShotsRemove { id: id.clone() },
-            CollectionOperation::Move { id, to } => ShootingOperationDsl::ShotsMove { id: id.clone(), to_index: *to },
+            CollectionOperation::Move { id, to_index: to } => ShootingOperationDsl::ShotsMove { id: id.clone(), to_index: *to },
             CollectionOperation::Patch { id, patch } => ShootingOperationDsl::ShotsPatch { id: id.clone(), patch: patch.clone() },
         },
         ShootingOperation::SavedCameras(op) => match op {
-            CollectionOperation::Add { id: _id, item, at } => ShootingOperationDsl::SavedCamerasAdd { index: *at, item: Box::new(ShootingSavedCameraNode::SavedCamera(item.clone())) },
+            CollectionOperation::Add { index: at, item } => ShootingOperationDsl::SavedCamerasAdd { index: *at, item: Box::new(ShootingSavedCameraNode::SavedCamera(item.clone())) },
             CollectionOperation::Remove { id } => ShootingOperationDsl::SavedCamerasRemove { id: id.clone() },
-            CollectionOperation::Move { id, to } => ShootingOperationDsl::SavedCamerasMove { id: id.clone(), to_index: *to },
+            CollectionOperation::Move { id, to_index: to } => ShootingOperationDsl::SavedCamerasMove { id: id.clone(), to_index: *to },
             CollectionOperation::Patch { id, patch } => ShootingOperationDsl::SavedCamerasPatch { id: id.clone(), patch: patch.clone() },
         },
         ShootingOperation::SetActiveShot { shot_id } => ShootingOperationDsl::SetActiveShot { shot_id: shot_id.clone() },
@@ -373,24 +373,24 @@ fn shooting_operation_from_dsl(dsl_op: ShootingOperationDsl) -> ShootingOperatio
     match dsl_op {
         ShootingOperationDsl::AssetsAdd { index, item } => {
             let ShootingAssetNode::Asset(asset) = *item;
-            ShootingOperation::Assets(CollectionOperation::Add { id: asset.id.clone(), item: asset, at: index })
+            ShootingOperation::Assets(CollectionOperation::Add { index: index, item: asset })
         }
         ShootingOperationDsl::AssetsRemove { id } => ShootingOperation::Assets(CollectionOperation::Remove { id }),
-        ShootingOperationDsl::AssetsMove { id, to_index } => ShootingOperation::Assets(CollectionOperation::Move { id, to: to_index }),
+        ShootingOperationDsl::AssetsMove { id, to_index } => ShootingOperation::Assets(CollectionOperation::Move { id, to_index: to_index }),
         ShootingOperationDsl::AssetsPatch { id, patch } => ShootingOperation::Assets(CollectionOperation::Patch { id, patch }),
         ShootingOperationDsl::ShotsAdd { index, item } => {
             let ShootingShotNode::Shot(shot) = *item;
-            ShootingOperation::Shots(CollectionOperation::Add { id: shot.id.clone(), item: shot, at: index })
+            ShootingOperation::Shots(CollectionOperation::Add { index: index, item: shot })
         }
         ShootingOperationDsl::ShotsRemove { id } => ShootingOperation::Shots(CollectionOperation::Remove { id }),
-        ShootingOperationDsl::ShotsMove { id, to_index } => ShootingOperation::Shots(CollectionOperation::Move { id, to: to_index }),
+        ShootingOperationDsl::ShotsMove { id, to_index } => ShootingOperation::Shots(CollectionOperation::Move { id, to_index: to_index }),
         ShootingOperationDsl::ShotsPatch { id, patch } => ShootingOperation::Shots(CollectionOperation::Patch { id, patch }),
         ShootingOperationDsl::SavedCamerasAdd { index, item } => {
             let ShootingSavedCameraNode::SavedCamera(entry) = *item;
-            ShootingOperation::SavedCameras(CollectionOperation::Add { id: entry.id.clone(), item: entry, at: index })
+            ShootingOperation::SavedCameras(CollectionOperation::Add { index: index, item: entry })
         }
         ShootingOperationDsl::SavedCamerasRemove { id } => ShootingOperation::SavedCameras(CollectionOperation::Remove { id }),
-        ShootingOperationDsl::SavedCamerasMove { id, to_index } => ShootingOperation::SavedCameras(CollectionOperation::Move { id, to: to_index }),
+        ShootingOperationDsl::SavedCamerasMove { id, to_index } => ShootingOperation::SavedCameras(CollectionOperation::Move { id, to_index: to_index }),
         ShootingOperationDsl::SavedCamerasPatch { id, patch } => ShootingOperation::SavedCameras(CollectionOperation::Patch { id, patch }),
         ShootingOperationDsl::SetActiveShot { shot_id } => ShootingOperation::SetActiveShot { shot_id },
         ShootingOperationDsl::SetActiveAsset { asset_id } => ShootingOperation::SetActiveAsset { asset_id },
@@ -483,7 +483,7 @@ mod tests {
     #[test]
     fn assets_add_remove_patch_round_trip() {
         let fixture = crate::artifacts::shooting::empty_shooting_fixture();
-        let add = ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: sample_asset("a1"), at: 0 });
+        let add = ShootingOperation::Assets(CollectionOperation::Add { index: 0, item: sample_asset("a1") });
         let with_asset = round_trip(&fixture, &add);
         assert_eq!(with_asset.assets.len(), 1);
 
@@ -509,7 +509,7 @@ mod tests {
     #[test]
     fn saved_cameras_add_round_trip() {
         let fixture = crate::artifacts::shooting::empty_shooting_fixture();
-        let add = ShootingOperation::SavedCameras(CollectionOperation::Add { id: "cam1".into(), item: ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() }, at: 0 });
+        let add = ShootingOperation::SavedCameras(CollectionOperation::Add { index: 0, item: ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() } });
         let added = round_trip(&fixture, &add);
         assert_eq!(added.saved_cameras.len(), 1);
     }
@@ -599,27 +599,27 @@ mod tests {
     #[test]
     fn shooting_op_text_round_trips_collection_variants() {
         let asset = sample_asset("a1");
-        store::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: asset, at: 0 }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Add { index: 0, item: asset }));
         store::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Remove { id: "a1".into() }));
-        store::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Move { id: "a1".into(), to: 2 }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Move { id: "a1".into(), to_index: 2 }));
         store::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Patch {
             id: "a1".into(),
             patch: ShootingAssetPatch { name: Some("Renamed".into()), url: None, origin: Some([1.0, 2.0, 3.0]), orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: Some([2.5, 2.5, 2.5]) },
         }));
 
         let shot = sample_shot("s1");
-        store::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Add { id: "s1".into(), item: shot, at: 0 }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Add { index: 0, item: shot }));
         store::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Remove { id: "s1".into() }));
-        store::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Move { id: "s1".into(), to: 1 }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Move { id: "s1".into(), to_index: 1 }));
         store::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Patch {
             id: "s1".into(),
             patch: ShootingShotPatch { label: Some("Hero".into()), width: Some(512), height: None, format: None, shape: Some("ellipse".into()) },
         }));
 
         let saved_camera = ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() };
-        store::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Add { id: "cam1".into(), item: saved_camera, at: 0 }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Add { index: 0, item: saved_camera }));
         store::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Remove { id: "cam1".into() }));
-        store::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Move { id: "cam1".into(), to: 0 }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Move { id: "cam1".into(), to_index: 0 }));
         store::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Patch {
             id: "cam1".into(),
             patch: ShootingSavedCameraPatch { label: Some("Renamed".into()), camera: Some(ShootingCamera { position: [1.0, 2.0, 3.0], ..Default::default() }) },

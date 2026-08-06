@@ -75,11 +75,7 @@ mod tests {
         let mut store = PresentStore::new(create_document_envelope(PRESENT_DECK_SCHEMA, "animate-present", empty_present_deck(), None));
         store
             .dispatch(DocumentCommand::Apply {
-                operations: vec![PresentOperation::Tiles(CollectionOperation::Add {
-                    id: "t1".into(),
-                    item: crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } },
-                    at: 0,
-                })],
+                operations: vec![PresentOperation::Tiles(CollectionOperation::Add { index: 0, item: crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
                 description: None,
             })
             .expect("apply");
@@ -92,11 +88,7 @@ mod tests {
         let mut store = PresentStore::new(create_document_envelope(PRESENT_DECK_SCHEMA, "animate-present", crate::artifacts::present::default_present_deck(), None));
         store
             .dispatch(DocumentCommand::Apply {
-                operations: vec![PresentOperation::Tiles(CollectionOperation::Add {
-                    id: "t1".into(),
-                    item: crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } },
-                    at: 0,
-                })],
+                operations: vec![PresentOperation::Tiles(CollectionOperation::Add { index: 0, item: crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
                 description: None,
             })
             .expect("apply");

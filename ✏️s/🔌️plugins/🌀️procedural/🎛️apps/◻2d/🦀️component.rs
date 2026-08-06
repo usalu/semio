@@ -21,7 +21,6 @@ use flow_core::FlowEvalSession;
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
-use std::sync::Mutex;
 
 //#region 🔖️Constants
 pub const PROCEDURAL2D_PLAY_APP_ID: &str = "procedural2d-play";
@@ -87,12 +86,6 @@ use widget::{add_widget, remove_widget};
 #[derive(Default)]
 pub struct Procedural2dPlayApp;
 
-static PROCEDURAL2DPLAYAPP_EVAL_SESSION: std::sync::LazyLock<std::sync::Mutex<FlowEvalSession>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(<FlowEvalSession>::default()));
-
-fn eval_session_lock() -> std::sync::MutexGuard<'static, FlowEvalSession> {
-    PROCEDURAL2DPLAYAPP_EVAL_SESSION.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
-}
-
 impl DocumentApp for Procedural2dPlayApp {
     type Projection = Procedural2dDocument;
     type Operation = Procedural2dOperation;
@@ -114,7 +107,7 @@ impl DocumentApp for Procedural2dPlayApp {
         Some(procedural2d_io())
     }
 
-    fn command_id(command: &Procedural2dCommand) -> &str {
+    fn command_id(command: &Procedural2dCommand) -> &'static str {
         command.command_id()
     }
 
@@ -190,7 +183,7 @@ impl DocumentApp for Procedural2dPlayApp {
     }
 
     fn handle(command: &Procedural2dCommand, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation, Self::DraftOperation>, Fault> {
-        let mut session = eval_session_lock();
+        let mut session = FlowEvalSession::default();
         command.dispatch(doc, cfg, &mut session)
     }
 
@@ -198,7 +191,7 @@ impl DocumentApp for Procedural2dPlayApp {
     /// covers every mutation path (edits, undo/redo, remote operations) in one place instead of each
     /// action re-checking.
     fn pending_effects(doc: &DocumentView<'_, Procedural2dDocument>, _cfg: &ConfigView<'_, Procedural2dConfig>) -> Vec<HostEffect> {
-        let mut session = eval_session_lock();
+        let mut session = FlowEvalSession::default();
         let host = crate::artifacts::procedural2d::engine::host_from_fixture_with_session(&doc.projection.fixture, &session);
         if session.sync(&host) {
             vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
@@ -211,7 +204,7 @@ impl DocumentApp for Procedural2dPlayApp {
         let document = doc.projection;
         let config = cfg.projection;
         let labels = procedural2d_labels(config);
-        let session = eval_session_lock();
+        let session = FlowEvalSession::default();
         match body_key {
             flow::PROCEDURAL2D_PLAY_BODY_MAIN => flow::render(document, config, &session),
             edit_preview::PROCEDURAL2D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, &session),

@@ -139,7 +139,7 @@ pub mod add_shot {
         let id = next_shooting_id("shot");
         let shot = ShootingShot { id: id.clone(), label: format!("Shot {}", fixture.shots.len() + 1), width: 256, height: 256, format: payload.format.clone(), shape: payload.shape.clone(), background: None, camera_id: None };
         Ok(Emit {
-            document_operations: vec![ShootingOperation::Shots(CollectionOperation::Add { id: id.clone(), item: shot, at: fixture.shots.len() }), ShootingOperation::SetActiveShot { shot_id: Some(id.clone()) }],
+            document_operations: vec![ShootingOperation::Shots(CollectionOperation::Add { index: fixture.shots.len(), item: shot }), ShootingOperation::SetActiveShot { shot_id: Some(id.clone()) }],
             config_operations: vec![ShootingConfigOperation::SetSelection { shot_ids: vec![id], asset_ids: Vec::new() }],
             ..Default::default()
         })

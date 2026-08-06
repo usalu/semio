@@ -47,7 +47,7 @@ pub mod run_analysis {
         next.last_analysis_json = result_json.clone();
         next.last_result_json = result_json;
         Ok(Emit {
-            document_operations: vec![ProgramOperation::Analyses(CollectionOperation::Add { id: record.header.id.clone(), at: program.analyses.len(), item: record })],
+            document_operations: vec![ProgramOperation::Analyses(CollectionOperation::Add { index: program.analyses.len(), item: record })],
             config_operations: snapshot(next),
             ..Default::default()
         })
@@ -79,7 +79,7 @@ pub mod run_report {
         next.active_report_json = serde_json::to_string(&report).unwrap_or_else(|_| "{}".into());
         next.last_result_json = serde_json::to_string_pretty(&report).unwrap_or_else(|_| "{}".into());
         Ok(Emit {
-            document_operations: vec![ProgramOperation::Reports(CollectionOperation::Add { id: record.header.id.clone(), at: program.reports.len(), item: record })],
+            document_operations: vec![ProgramOperation::Reports(CollectionOperation::Add { index: program.reports.len(), item: record })],
             config_operations: snapshot(next),
             ..Default::default()
         })

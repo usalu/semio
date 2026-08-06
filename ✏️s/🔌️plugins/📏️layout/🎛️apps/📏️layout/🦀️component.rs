@@ -29,7 +29,6 @@ use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView,
 use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
-use std::sync::Mutex;
 
 use crate::artifacts::layout::engine::scene::LayoutEngine;
 
@@ -150,7 +149,7 @@ impl DocumentApp for LayoutPlayApp {
     }
 
     /// 🏷️ Supplied wholesale by `app_commands!`'s generated `command_id()`.
-    fn command_id(command: &LayoutCommand) -> &str {
+    fn command_id(command: &LayoutCommand) -> &'static str {
         command.command_id()
     }
 
@@ -601,7 +600,7 @@ mod tests {
 
     #[test]
     fn layout_io_exposes_declared_ports() {
-        let io = LayoutPlayApp::default().io().expect("layout declares io");
+        let io = LayoutPlayApp::io().expect("layout declares io");
         assert!(io.ports.iter().any(|port| port.id == "fields:in"));
         assert!(io.ports.iter().any(|port| port.id == "layout:out"));
     }

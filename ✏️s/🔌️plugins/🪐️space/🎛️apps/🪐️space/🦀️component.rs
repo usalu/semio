@@ -259,27 +259,10 @@ app_commands! {
 /// 🧪️ Unit struct — every former `StudioRuntimeState`/`self.config` field now lives in `SpaceConfig`,
 /// written through `SpaceConfigOperation`s. Ephemeral presence heartbeats live on the app instance.
 #[derive(Default)]
-pub struct SpaceApp {
-    presence_peers: Mutex<HashMap<String, HashMap<String, SPresencePeerLocal>>>,
-}
+pub #[derive(Default, Clone, Copy)]
+struct SpaceApp;
 
-impl DocumentApp for SpaceApp {
-    type Projection = WorkflowDocument;
-    type Operation = WorkflowOperation;
-    type Config = SpaceConfig;
-    type ConfigOperation = crate::apps::space::config::SpaceConfigOperation;
-    type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
-
-    type Command = SpaceCommand;
-
-    const APP_ID: &'static str = S_PLAY_APP_ID;
-
-    const DOCUMENT_SCHEMA: &'static str = semio_framework_os::S_WORKFLOW_SCHEMA;
-
-    fn initial_projection() -> WorkflowDocument {
-        empty_workflow_document()
-    }
+impl DocumentApp for SpaceApp
 
     fn command_id(command: &SpaceCommand) -> &str {
         command.command_id()

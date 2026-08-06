@@ -100,7 +100,7 @@ mod tests {
     #[test]
     fn adds_and_removes_steps() {
         let mut store = new_store();
-        store.dispatch(DocumentCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { id: "cut-1".into(), item: cut_step("cut-1"), at: 0 } }], description: None }).expect("add step");
+        store.dispatch(DocumentCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { index: 0, item: cut_step("cut-1") } }], description: None }).expect("add step");
         let projection = store.projection().expect("projection");
         assert_eq!(projection.steps.len(), 1);
         assert_eq!(projection.steps[0].id, "cut-1");
@@ -112,7 +112,7 @@ mod tests {
     #[test]
     fn patches_a_step_and_undo_restores_it() {
         let mut store = new_store();
-        store.dispatch(DocumentCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { id: "cut-1".into(), item: cut_step("cut-1"), at: 0 } }], description: None }).expect("add step");
+        store.dispatch(DocumentCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { index: 0, item: cut_step("cut-1") } }], description: None }).expect("add step");
         store
             .dispatch(DocumentCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Patch { id: "cut-1".into(), patch: ProcessStepPatch { enabled: Some(false), ..Default::default() } } }], description: None })
             .expect("patch step");
@@ -125,7 +125,7 @@ mod tests {
     #[test]
     fn patches_origin_and_undo_restores_it() {
         let mut store = new_store();
-        store.dispatch(DocumentCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { id: "cut-1".into(), item: cut_step("cut-1"), at: 0 } }], description: None }).expect("add step");
+        store.dispatch(DocumentCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { index: 0, item: cut_step("cut-1") } }], description: None }).expect("add step");
         assert!(store.projection().expect("projection").steps[0].origin.is_none());
 
         let origin = StepOrigin { machine_id: "circularSaw".into(), capability_id: "crosscut".into() };
@@ -147,8 +147,8 @@ mod tests {
         store
             .dispatch(DocumentCommand::Apply {
                 operations: vec![
-                    Process3dOperation::Steps { collection: CollectionOperation::Add { id: "a".into(), item: cut_step("a"), at: 0 } },
-                    Process3dOperation::Steps { collection: CollectionOperation::Add { id: "b".into(), item: cut_step("b"), at: 1 } },
+                    Process3dOperation::Steps { collection: CollectionOperation::Add { index: 0, item: cut_step("a") } },
+                    Process3dOperation::Steps { collection: CollectionOperation::Add { index: 1, item: cut_step("b") } },
                     Process3dOperation::SetCursor { resolved_up_to: Some(2) },
                 ],
                 description: None,
@@ -195,8 +195,8 @@ mod tests {
             .dispatch(DocumentCommand::Apply {
                 operations: vec![
                     Process3dOperation::SetStock { stock: Stock { id: "beam".into(), label: "Timber Beam".into(), solid: SolidSpec::Box { width: 2.4, depth: 0.12, height: 0.24 }, pose: Pose::default() } },
-                    Process3dOperation::Steps { collection: CollectionOperation::Add { id: "cut-1".into(), item: cut_step("cut-1"), at: 0 } },
-                    Process3dOperation::Steps { collection: CollectionOperation::Add { id: "drill-1".into(), item: drill_step("drill-1"), at: 1 } },
+                    Process3dOperation::Steps { collection: CollectionOperation::Add { index: 0, item: cut_step("cut-1") } },
+                    Process3dOperation::Steps { collection: CollectionOperation::Add { index: 1, item: drill_step("drill-1") } },
                     Process3dOperation::SetCursor { resolved_up_to: Some(1) },
                 ],
                 description: Some("build timeline".into()),

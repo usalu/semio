@@ -184,7 +184,7 @@ impl DocumentApp for VcsPlayApp {
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`. `setLocale` isn't declared in the manifest (mirrors
     /// `ShootingCommand::SetLocale` — see `shooting_ui`'s identical doc), so it skips enforcement.
-    fn command_id(command: &VcsCommand) -> &str {
+    fn command_id(command: &VcsCommand) -> &'static str {
         command.command_id()
     }
 

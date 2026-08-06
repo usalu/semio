@@ -263,7 +263,7 @@ impl DocumentApp for FormsPlayApp {
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`. `setLocale`/`setContributions` have no manifest
     /// declaration (host-pushed, not user-facing actions).
-    fn command_id(command: &FormsCommand) -> &str {
+    fn command_id(command: &FormsCommand) -> &'static str {
         command.command_id()
     }
 

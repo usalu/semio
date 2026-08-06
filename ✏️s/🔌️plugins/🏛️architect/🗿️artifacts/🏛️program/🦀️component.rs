@@ -164,13 +164,13 @@ pub struct Program {
 // #region 🔖️Factories
 /// @emoji 📭️ Empty program with schema, meta, project, and governance initialized.
 pub fn empty_plugin() -> Program {
-    let project_id = EntityId::new_serial("project");
-    let governance_id = EntityId::new_serial("governance");
+    let project_id = EntityId::new_serial("project", "project");
+    let governance_id = EntityId::new_serial("governance", "governance");
     Program {
         schema: ARCHITECT_PROGRAM_SCHEMA.into(),
         meta: ProgramMeta {
             schema: ARCHITECT_PROGRAM_SCHEMA.into(),
-            document_id: EntityId::new_serial("document").0,
+            document_id: EntityId::new_serial("document", "document").0,
             title: String::new(),
             subtitle: None,
             purpose: TextField::plain(""),
@@ -320,8 +320,8 @@ pub fn sample_plugin() -> Program {
     program.project.code = "CLN-001".into();
     program.project.client_name = "Sample Health".into();
 
-    let reception_id = EntityId::new_serial("element");
-    let waiting_id = EntityId::new_serial("element");
+    let reception_id = EntityId::new_serial("element", "element");
+    let waiting_id = EntityId::new_serial("element", "element");
     program.elements.push(ProgramElement {
         header: EntityHeader::new(reception_id.clone(), "Reception"),
         code: "REC".into(),
@@ -379,7 +379,7 @@ pub fn sample_plugin() -> Program {
         environmental_zone: None,
     });
 
-    let stakeholder_id = EntityId::new_serial("stakeholder");
+    let stakeholder_id = EntityId::new_serial("stakeholder", "stakeholder");
     program.stakeholders.push(Stakeholder {
         header: EntityHeader::new(stakeholder_id, "Facilities Director"),
         role: "Owner".into(),
@@ -410,7 +410,7 @@ pub fn sample_plugin() -> Program {
 
     let (a, b) = crate::artifacts::program::engine::adjacency::normalize_pair(&reception_id, &waiting_id);
     program.adjacencies.push(Adjacency {
-        header: EntityHeader::new(EntityId::new_serial("adjacency"), "Reception ↔ Waiting"),
+        header: EntityHeader::new(EntityId::new_serial("adjacency", "Reception ↔ Waiting"), "Reception ↔ Waiting"),
         element_a_id: a,
         element_b_id: b,
         kind: AdjacencyKind::Required,

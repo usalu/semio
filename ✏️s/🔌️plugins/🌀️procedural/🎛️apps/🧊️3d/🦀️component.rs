@@ -20,7 +20,6 @@ use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, ActionArgDef,
 use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
-use std::sync::Mutex;
 
 //#region 🔖️Constants
 pub const PROCEDURAL_3D_PLAY_APP_ID: &str = "procedural3d-play";
@@ -98,12 +97,6 @@ use widget::{add_widget, delete_selection, patch_flow_widgets, remove_widget};
 /// written through [`Procedural3dConfigOperation`]s.
 #[derive(Default)]
 pub struct Procedural3dPlayApp;
-
-static PROCEDURAL3DPLAYAPP_EVAL_SESSION: std::sync::LazyLock<std::sync::Mutex<FlowEvalSession>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(<FlowEvalSession>::default()));
-
-fn eval_session_lock() -> std::sync::MutexGuard<'static, FlowEvalSession> {
-    PROCEDURAL3DPLAYAPP_EVAL_SESSION.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
-}
 
 /// 🎥️ Parses the flow-graph camera out of `command_from_action`'s JSON args — either a nested
 /// `{camera: {...}}` object or flat `x`/`y`/`zoom` keys.
@@ -189,7 +182,7 @@ impl DocumentApp for Procedural3dPlayApp {
         }
     }
 
-    fn command_id(command: &Procedural3dCommand) -> &str {
+    fn command_id(command: &Procedural3dCommand) -> &'static str {
         command.command_id()
     }
 
@@ -310,13 +303,13 @@ impl DocumentApp for Procedural3dPlayApp {
     }
 
     fn handle(command: &Procedural3dCommand, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural3dOperation, Procedural3dConfigOperation, Self::DraftOperation>, Fault> {
-        let mut session = eval_session_lock();
+        let mut session = FlowEvalSession::default();
         command.dispatch(doc, cfg, &mut session)
     }
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes.
     fn pending_effects(doc: &DocumentView<'_, Procedural3dDocument>, _cfg: &ConfigView<'_, Procedural3dConfig>) -> Vec<HostEffect> {
-        let mut session = eval_session_lock();
+        let mut session = FlowEvalSession::default();
         let host = flow_core::flow_host_with_session(&doc.projection.fixture, &session);
         if session.sync(&host) {
             vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
@@ -330,7 +323,7 @@ impl DocumentApp for Procedural3dPlayApp {
         let config = cfg.projection;
         let labels = procedural3d_labels(config);
         let active_utility = config.active_utility_id.as_str();
-        let session = eval_session_lock();
+        let session = FlowEvalSession::default();
         match body_key {
             flow::PROCEDURAL_3D_PLAY_BODY_MAIN => flow::render(document, config, &session),
             edit_preview::PROCEDURAL_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, &session, active_utility),

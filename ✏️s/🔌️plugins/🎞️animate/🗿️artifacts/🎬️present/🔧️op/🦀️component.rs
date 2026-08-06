@@ -82,9 +82,9 @@ enum PresentOperationDsl {
 impl From<&PresentOperation> for PresentOperationDsl {
     fn from(operation: &PresentOperation) -> Self {
         match operation {
-            PresentOperation::Tiles(CollectionOperation::Add { id: _id, item, at }) => PresentOperationDsl::TilesAdd { index: *at, item: item.clone() },
+            PresentOperation::Tiles(CollectionOperation::Add { index: at, item }) => PresentOperationDsl::TilesAdd { index: *at, item: item.clone() },
             PresentOperation::Tiles(CollectionOperation::Remove { id }) => PresentOperationDsl::TilesRemove { id: id.clone() },
-            PresentOperation::Tiles(CollectionOperation::Move { id, to }) => PresentOperationDsl::TilesMove { id: id.clone(), to_index: *to },
+            PresentOperation::Tiles(CollectionOperation::Move { id, to_index: to }) => PresentOperationDsl::TilesMove { id: id.clone(), to_index: *to },
             PresentOperation::Tiles(CollectionOperation::Patch { id, patch }) => PresentOperationDsl::TilesPatch { id: id.clone(), patch: patch.clone() },
             PresentOperation::SetSource { source } => PresentOperationDsl::SetSource { source: source.clone() },
             PresentOperation::SetTiles { tiles } => PresentOperationDsl::SetTiles { tiles: tiles.clone() },
@@ -96,9 +96,9 @@ impl From<&PresentOperation> for PresentOperationDsl {
 impl From<PresentOperationDsl> for PresentOperation {
     fn from(operation: PresentOperationDsl) -> Self {
         match operation {
-            PresentOperationDsl::TilesAdd { index, item } => PresentOperation::Tiles(CollectionOperation::Add { id: item.id.clone(), item, at: index }),
+            PresentOperationDsl::TilesAdd { index, item } => PresentOperation::Tiles(CollectionOperation::Add { index: index, item }),
             PresentOperationDsl::TilesRemove { id } => PresentOperation::Tiles(CollectionOperation::Remove { id }),
-            PresentOperationDsl::TilesMove { id, to_index } => PresentOperation::Tiles(CollectionOperation::Move { id, to: to_index }),
+            PresentOperationDsl::TilesMove { id, to_index } => PresentOperation::Tiles(CollectionOperation::Move { id, to_index: to_index }),
             PresentOperationDsl::TilesPatch { id, patch } => PresentOperation::Tiles(CollectionOperation::Patch { id, patch }),
             PresentOperationDsl::SetSource { source } => PresentOperation::SetSource { source },
             PresentOperationDsl::SetTiles { tiles } => PresentOperation::SetTiles { tiles },
@@ -165,7 +165,7 @@ mod tests {
     fn tile_add_patch_remove_round_trip() {
         let deck = default_present_deck();
         let tile = FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
-        let added = round_trip(&deck, &PresentOperation::Tiles(CollectionOperation::Add { id: tile.id.clone(), item: tile, at: 0 }));
+        let added = round_trip(&deck, &PresentOperation::Tiles(CollectionOperation::Add { index: 0, item: tile }));
         assert_eq!(added.tiles.len(), 1);
         let renamed = round_trip(&added, &PresentOperation::Tiles(CollectionOperation::Patch { id: "t1".into(), patch: FigureTileDraftPatch { name: Some("Renamed".into()), crop: None } }));
         assert_eq!(renamed.tiles[0].name, "Renamed");
@@ -179,7 +179,7 @@ mod tests {
     #[test]
     fn op_text_round_trip_tiles_add() {
         let tile = FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
-        test_support::assert_op_line_round_trip(&PresentOperation::Tiles(CollectionOperation::Add { id: tile.id.clone(), item: tile, at: 0 }));
+        test_support::assert_op_line_round_trip(&PresentOperation::Tiles(CollectionOperation::Add { index: 0, item: tile }));
     }
 
     #[test]
@@ -189,7 +189,7 @@ mod tests {
 
     #[test]
     fn op_text_round_trip_tiles_move() {
-        test_support::assert_op_line_round_trip(&PresentOperation::Tiles(CollectionOperation::Move { id: "t1".into(), to: 2 }));
+        test_support::assert_op_line_round_trip(&PresentOperation::Tiles(CollectionOperation::Move { id: "t1".into(), to_index: 2 }));
     }
 
     #[test]

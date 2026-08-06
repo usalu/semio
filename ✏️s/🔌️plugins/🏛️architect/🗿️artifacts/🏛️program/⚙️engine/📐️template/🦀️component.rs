@@ -28,7 +28,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
     let mut operations = Vec::new();
     let mut element_ids = Vec::new();
     for field in &template.default_fields {
-        let id = EntityId::new_serial("template-entity");
+        let id = EntityId::new_serial("template-entity", "template-entity");
         match field.as_str() {
             "stakeholder" => {
                 let item = Stakeholder {
@@ -58,7 +58,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     communication_channels: Vec::new(),
                     success_metrics: Vec::new(),
                 };
-                operations.push(ProgramOperation::Stakeholders(CollectionOperation::Add { id: id.clone(), item: item.clone(), at: program.stakeholders.len() }));
+                operations.push(ProgramOperation::Stakeholders(CollectionOperation::Add { index: program.stakeholders.len(), item: item.clone() }));
                 program.stakeholders.push(item);
             }
             "user" => {
@@ -89,7 +89,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     validated: false,
                     stakeholder_ids: Vec::new(),
                 };
-                operations.push(ProgramOperation::Users(CollectionOperation::Add { id: id.clone(), item: item.clone(), at: program.users.len() }));
+                operations.push(ProgramOperation::Users(CollectionOperation::Add { index: program.users.len(), item: item.clone() }));
                 program.users.push(item);
             }
             "activity" => {
@@ -120,7 +120,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     temporal_pattern: None,
                     supervision_level: None,
                 };
-                operations.push(ProgramOperation::Activities(CollectionOperation::Add { id: id.clone(), item: item.clone(), at: program.activities.len() }));
+                operations.push(ProgramOperation::Activities(CollectionOperation::Add { index: program.activities.len(), item: item.clone() }));
                 program.activities.push(item);
             }
             "function" => {
@@ -149,7 +149,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     hierarchy_parent_id: None,
                     conflict_ids: Vec::new(),
                 };
-                operations.push(ProgramOperation::Functions(CollectionOperation::Add { id: id.clone(), item: item.clone(), at: program.functions.len() }));
+                operations.push(ProgramOperation::Functions(CollectionOperation::Add { index: program.functions.len(), item: item.clone() }));
                 program.functions.push(item);
             }
             "element" | "room" => {
@@ -181,7 +181,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     adjacency_preferences: Vec::new(),
                     environmental_zone: None,
                 };
-                operations.push(ProgramOperation::Elements(CollectionOperation::Add { id: id.clone(), item: item.clone(), at: program.elements.len() }));
+                operations.push(ProgramOperation::Elements(CollectionOperation::Add { index: program.elements.len(), item: item.clone() }));
                 program.elements.push(item);
                 element_ids.push(id.clone());
             }
@@ -209,7 +209,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     trace_links: Vec::new(),
                     superseded_by: None,
                 };
-                operations.push(ProgramOperation::Requirements(CollectionOperation::Add { id: id.clone(), item: item.clone(), at: program.requirements.len() }));
+                operations.push(ProgramOperation::Requirements(CollectionOperation::Add { index: program.requirements.len(), item: item.clone() }));
                 program.requirements.push(item);
             }
             "risk" => {
@@ -235,7 +235,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     escalation_path: Vec::new(),
                     monitoring_plan: None,
                 };
-                operations.push(ProgramOperation::Risks(CollectionOperation::Add { id: id.clone(), item: item.clone(), at: program.risks.len() }));
+                operations.push(ProgramOperation::Risks(CollectionOperation::Add { index: program.risks.len(), item: item.clone() }));
                 program.risks.push(item);
             }
             "process" => {
@@ -265,7 +265,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     handoff_points: Vec::new(),
                     quality_gates: Vec::new(),
                 };
-                operations.push(ProgramOperation::Processes(CollectionOperation::Add { id: id.clone(), item: item.clone(), at: program.processes.len() }));
+                operations.push(ProgramOperation::Processes(CollectionOperation::Add { index: program.processes.len(), item: item.clone() }));
                 program.processes.push(item);
             }
             "equipment" => {
@@ -296,7 +296,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     commissioning_notes: Vec::new(),
                     spare_parts: Vec::new(),
                 };
-                operations.push(ProgramOperation::Equipment(CollectionOperation::Add { id: id.clone(), item: item.clone(), at: program.equipment.len() }));
+                operations.push(ProgramOperation::Equipment(CollectionOperation::Add { index: program.equipment.len(), item: item.clone() }));
                 program.equipment.push(item);
             }
             "adjacency" | "adjacency_bundle" if element_ids.len() >= 2 => {
@@ -349,7 +349,7 @@ mod tests {
     fn apply_template_returns_plugin_operations() {
         let mut program = empty_plugin();
         let template = TemplateRecord {
-            header: EntityHeader::new(EntityId::new_serial("template"), "Clinic Starter"),
+            header: EntityHeader::new(EntityId::new_serial("template", "Clinic Starter"), "Clinic Starter"),
             template_type: "sector".into(),
             sector: Some("healthcare".into()),
             project_type: None,
@@ -381,7 +381,7 @@ mod tests {
     fn template_ops_replay_on_empty_plugin() {
         let mut source = empty_plugin();
         let template = TemplateRecord {
-            header: EntityHeader::new(EntityId::new_serial("template"), "Replay"),
+            header: EntityHeader::new(EntityId::new_serial("template", "Replay"), "Replay"),
             template_type: "sector".into(),
             sector: None,
             project_type: None,

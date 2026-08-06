@@ -641,8 +641,8 @@ pub trait ConfigRecord: DocumentDsl {}
 #[macro_export]
 macro_rules! impl_whole_record_config {
     ($ty:ty) => {
-        impl $self::ConfigRecord for $ty {}
-        impl crate::os_spr::OperationDiff<$ty> for $ty {
+        impl $crate::ConfigRecord for $ty {}
+        impl ::protocol::OperationDiff<$ty> for $ty {
             fn apply(&self, _base: &$ty) -> $ty {
                 self.clone()
             }

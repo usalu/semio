@@ -100,7 +100,7 @@ pub mod node_graph_edit {
                 }
                 DagNodeGraphEditOp::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
                     if let Ok(edge) = engine::connect_edge(document, source_node_id, source_port_id, target_node_id, target_port_id) {
-                        document_operations.push(DagOperation::Edges(CollectionOperation::Add { id: edge.id.clone(), at: document.edges.len(), item: edge }));
+                        document_operations.push(DagOperation::Edges(CollectionOperation::Add { index: document.edges.len(), item: edge }));
                     }
                 }
             }
@@ -126,7 +126,7 @@ pub mod connect_media_ports {
     pub fn handle(payload: &ConnectMediaPorts, doc: &DocumentView<'_, DagDocument>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
         let document = doc.projection;
         match engine::connect_edge(document, &payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id) {
-            Ok(edge) => Ok(Emit::operations(vec![DagOperation::Edges(CollectionOperation::Add { id: edge.id.clone(), at: document.edges.len(), item: edge })])),
+            Ok(edge) => Ok(Emit::operations(vec![DagOperation::Edges(CollectionOperation::Add { index: document.edges.len(), item: edge })])),
             Err(_) => Ok(Emit::default()),
         }
     }

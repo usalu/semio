@@ -51,7 +51,7 @@ mod tests {
     #[test]
     fn add_step_op_round_trips() {
         let document = crate::artifacts::imperative::engine::default_document();
-        let operation = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Add { id: "step-x".to_string(), item: step("step-x", "log.print"), at: 0 } };
+        let operation = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Add { index: 0, item: step("step-x", "log.print") } };
         store::test_support::assert_operation_round_trip(&document, operation.clone());
         store::test_support::assert_op_line_round_trip(&operation);
         store::test_support::assert_store_roundtrip(document, operation);
@@ -69,7 +69,7 @@ mod tests {
     #[test]
     fn move_step_op_round_trips() {
         let document = crate::artifacts::imperative::engine::default_document();
-        let operation = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Move { id: "step-1".into(), to: 1 } };
+        let operation = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Move { id: "step-1".into(), to_index: 1 } };
         store::test_support::assert_operation_round_trip(&document, operation.clone());
         store::test_support::assert_op_line_round_trip(&operation);
         store::test_support::assert_store_roundtrip(document, operation);
@@ -90,7 +90,7 @@ mod tests {
         let mut document = crate::artifacts::imperative::engine::default_document();
         document.path.steps.push(step("step-if", "control.if"));
         let path_ref = PathRef { owner: Some("step-if".into()), slot: Some("then".into()) };
-        let operation = ImperativeOperation { path_ref, collection: protocol::CollectionOperation::Add { id: "step-nested".to_string(), item: step("step-nested", "log.print"), at: 0 } };
+        let operation = ImperativeOperation { path_ref, collection: protocol::CollectionOperation::Add { index: 0, item: step("step-nested", "log.print") } };
         store::test_support::assert_operation_round_trip(&document, operation.clone());
         store::test_support::assert_op_line_round_trip(&operation);
         let post = vcs::apply_operation(&document, &operation);

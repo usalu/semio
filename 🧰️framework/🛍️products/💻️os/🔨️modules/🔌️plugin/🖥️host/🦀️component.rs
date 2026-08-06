@@ -46,20 +46,66 @@ fn host_fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<
 }
 
 //#region 🔖️DocumentSession
-/// 🧾 Host-owned per-instance document authority. Typed `DocumentStore` / `ConfigStore` / `DraftStore`
-/// and the command log still live in guest `VcsDocumentApp` until CHANNEL_VERSION 5 moves packs onto
-/// the host; this session already owns the engine cache and generation counters so the ownership seam
-/// exists in-tree (`store` / `config_store` / `draft_store` / `command_log` land here next).
+/// 📦️ Opaque pack triple for one artifact lane (document / config / draft). Typed `DocumentStore`
+/// still lives in guest `VcsDocumentApp` until `AppCommand::PureCommand` + host `dispatch` land;
+/// the host already mirrors these bytes as the authority seam.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct SessionLanePack {
+    pub pack: Vec<u8>,
+    pub spr: Vec<u8>,
+    pub ops: String,
+    /// 🧾 Binary op packs from guest `AppFrame::Emit` awaiting host typed apply.
+    pub pending_binary_ops: Vec<u8>,
+}
+
+impl SessionLanePack {
+    /// 🏗️ Empty lane (no snapshot yet).
+    pub fn empty() -> Self {
+        Self::default()
+    }
+
+    /// 🏗️ From a full pack+spr+ops snapshot.
+    pub fn from_files(pack: Vec<u8>, spr: Vec<u8>, ops: String) -> Self {
+        Self { pack, spr, ops, pending_binary_ops: Vec::new() }
+    }
+
+    /// 📥 Replaces this lane's opaque snapshot.
+    pub fn adopt(&mut self, pack: Vec<u8>, spr: Vec<u8>, ops: String) {
+        self.pack = pack;
+        self.spr = spr;
+        self.ops = ops;
+        self.pending_binary_ops.clear();
+    }
+
+    /// 🧾 Records Emit op bytes for this lane (host-authoritative apply pending).
+    pub fn record_emit_ops(&mut self, ops: Vec<u8>) {
+        if !ops.is_empty() {
+            self.pending_binary_ops = ops;
+        }
+    }
+
+    /// 📭 True when no pack bytes have been adopted.
+    pub fn is_empty(&self) -> bool {
+        self.pack.is_empty() && self.spr.is_empty()
+    }
+}
+
+/// 🧾 Host-owned per-instance document authority: opaque document/config/draft packs plus generation
+/// counters. The plugin-wide {@link EngineCache} lives on `HostState` (WIT `engine-derive`/`engine-read`
+/// have no instance id). Typed stores and the command log remain guest-side until PureCommand apply.
+#[derive(Clone, Debug, Default)]
 pub struct DocumentSession {
     pub generation: u64,
     pub command_log_len: u64,
-    pub engines: store::EngineCache,
+    pub document: SessionLanePack,
+    pub config: SessionLanePack,
+    pub draft: SessionLanePack,
 }
 
 impl DocumentSession {
-    /// 🏗️ Empty session with a fresh engine cache under `budget_bytes`.
-    pub fn new(budget_bytes: usize) -> Self {
-        Self { generation: 0, command_log_len: 0, engines: store::EngineCache::new(budget_bytes) }
+    /// 🏗️ Empty per-instance session (no packs yet).
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
@@ -77,8 +123,10 @@ struct HostState {
     /// {@link WasmPluginRuntime::register_host_blob_store} — `None` until a caller registers one
     /// (mirrors `backbones`' explicit-registration convention, not a stub-forever like `read-asset`).
     blob_store: Option<Arc<dyn store::BlobStore>>,
-    /// @emoji 🧾 Host-authoritative document session (generation + engine cache).
-    session: DocumentSession,
+    /// @emoji ⚙️ Plugin-wide host engine cache (content-addressed; not per document instance).
+    engines: store::EngineCache,
+    /// @emoji 🧾 Per-instance opaque pack authority (`create_app` inserts; `destroy_app` removes).
+    sessions: HashMap<u32, DocumentSession>,
 }
 
 impl WasiView for HostState {
@@ -107,6 +155,28 @@ impl HostState {
     /// `sync::DocumentHost`-backed backbone in here; until then this is an explicit-registration map.
     fn backbone_for(&mut self, uri: &str) -> Result<&mut Box<dyn store::Backbone>, String> {
         self.backbones.get_mut(uri).ok_or_else(|| format!("no host backbone registered for {uri}; call register_host_backbone (WS-E wires DocumentHost here)"))
+    }
+
+    fn ensure_session(&mut self, instance_id: u32) -> &mut DocumentSession {
+        self.sessions.entry(instance_id).or_insert_with(DocumentSession::new)
+    }
+
+    fn adopt_document(&mut self, instance_id: u32, pack: Vec<u8>, spr: Vec<u8>, ops: String) {
+        let session = self.ensure_session(instance_id);
+        session.document.adopt(pack, spr, ops);
+        session.generation = session.generation.saturating_add(1);
+    }
+
+    fn adopt_config(&mut self, instance_id: u32, pack: Vec<u8>, spr: Vec<u8>, ops: String) {
+        let session = self.ensure_session(instance_id);
+        session.config.adopt(pack, spr, ops);
+        session.generation = session.generation.saturating_add(1);
+    }
+
+    fn adopt_draft(&mut self, instance_id: u32, pack: Vec<u8>, spr: Vec<u8>, ops: String) {
+        let session = self.ensure_session(instance_id);
+        session.draft.adopt(pack, spr, ops);
+        session.generation = session.generation.saturating_add(1);
     }
 }
 
@@ -178,7 +248,6 @@ impl semio::framework::host::Host for HostState {
             return Err(host_fault_bytes("os.host.engine-derive", "engine invoke capability missing"));
         }
         let handle = self
-            .session
             .engines
             .derive(&engine_id, &input)
             .map_err(|error| host_fault_bytes("os.host.engine-derive", error.to_string()))?;
@@ -197,11 +266,11 @@ impl semio::framework::host::Host for HostState {
             key: store::EngineKey(key_bytes),
             engine_id,
         };
-        self.session
-            .engines
+        self.engines
             .read(&handle)
             .map_err(|error| host_fault_bytes("os.host.engine-read", error.to_string()))
     }
+
 }
 //#endregion 🔖️HostState
 
@@ -269,7 +338,8 @@ impl WasmPluginRuntime {
             plugin_id: plugin_id.to_string(),
             backbones: HashMap::new(),
             blob_store: None,
-            session: DocumentSession::new(DEFAULT_ENGINE_CACHE_BUDGET_BYTES),
+            engines: store::EngineCache::new(DEFAULT_ENGINE_CACHE_BUDGET_BYTES),
+            sessions: HashMap::new(),
         }
     }
 
@@ -316,10 +386,22 @@ impl WasmPluginRuntime {
         let bindings = self.bindings_guard()?;
         Self::prepare_call(&mut store);
         let result = bindings.semio_framework_plugin().call_instantiate_app(&mut *store, app_id, app_id).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        Self::plugin_result(result)
+        let instance_id = Self::plugin_result(result)?;
+        store.data_mut().ensure_session(instance_id);
+        Ok(instance_id)
     }
 
-    pub fn destroy_app(&self, _instance_id: u32) {}
+    pub fn destroy_app(&self, instance_id: u32) {
+        if let Ok(mut store) = self.store_guard() {
+            store.data_mut().sessions.remove(&instance_id);
+        }
+    }
+
+    /// 👁 Host-authoritative opaque packs for `instance_id`, if a session was allocated.
+    pub fn document_session(&self, instance_id: u32) -> Result<Option<DocumentSession>, PluginHostError> {
+        let store = self.store_guard()?;
+        Ok(store.data().sessions.get(&instance_id).cloned())
+    }
 
     /// @emoji 🔗️ Registers the native-side backbone endpoint the sandboxed plugin's `backbone-send`/
     /// `backbone-poll`/`backbone-status` host calls operate against, keyed by uri. WS-E calls this
@@ -358,7 +440,7 @@ impl WasmPluginRuntime {
     /// @emoji ⚙️ Registers a compute kernel on the host `EngineCache` under its `ENGINE_ID`.
     pub fn register_engine<E: store::Engine>(&self, engine: E) -> Result<(), PluginHostError> {
         let mut plugin_store = self.store_guard()?;
-        plugin_store.data_mut().session.engines.register(engine);
+        plugin_store.data_mut().engines.register(engine);
         Ok(())
     }
 
@@ -368,13 +450,84 @@ impl WasmPluginRuntime {
     /// `attach/detach-backbone`, `consume/produce-media`) is now just a caller-encoded
     /// `protocol_channel::AppCommand` batch forwarded here; the result is every `AppFrame` the batch
     /// produced plus anything queued since the previous call. `exchange(id, [])` is a pure drain, the
-    /// heartbeat tick.
+    /// heartbeat tick. Host mirrors LoadDocument/LoadConfig inputs and Document/Config/Draft/Emit
+    /// outputs into the per-instance {@link DocumentSession} pack authority.
     pub fn exchange(&self, instance_id: u32, commands: Vec<Vec<u8>>) -> Result<Vec<Vec<u8>>, PluginHostError> {
         let mut store = self.store_guard()?;
+        store.data_mut().ensure_session(instance_id);
+        Self::pre_adopt_command_packs(store.data_mut(), instance_id, &commands);
         let bindings = self.bindings_guard()?;
         Self::prepare_call(&mut store);
         let result = bindings.semio_framework_plugin().call_exchange(&mut *store, instance_id, &commands).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        Self::plugin_result(result)
+        let frames = Self::plugin_result(result)?;
+        Self::post_adopt_frame_packs(store.data_mut(), instance_id, &frames);
+        Ok(frames)
+    }
+
+    fn pre_adopt_command_packs(host: &mut HostState, instance_id: u32, commands: &[Vec<u8>]) {
+        use protocol::{decode_app_command, AppCommand};
+        for bytes in commands {
+            let Ok(command) = decode_app_command(bytes) else { continue };
+            match command {
+                AppCommand::LoadDocument { pack, spr, .. } => {
+                    host.adopt_document(instance_id, pack, spr, String::new());
+                }
+                AppCommand::LoadConfig { pack, spr, .. } => {
+                    host.adopt_config(instance_id, pack, spr, String::new());
+                }
+                AppCommand::Hello { config, .. } if !config.is_empty() => {
+                    if let Ok((pack, spr)) = store::decode_document_pack_bytes(&config) {
+                        host.adopt_config(instance_id, pack, spr, String::new());
+                    }
+                }
+                AppCommand::PureCommand { document, document_spr, config, config_spr, draft, draft_spr, .. } => {
+                    if !document.is_empty() || !document_spr.is_empty() {
+                        host.adopt_document(instance_id, document, document_spr, String::new());
+                    }
+                    if !config.is_empty() || !config_spr.is_empty() {
+                        host.adopt_config(instance_id, config, config_spr, String::new());
+                    }
+                    if !draft.is_empty() || !draft_spr.is_empty() {
+                        host.adopt_draft(instance_id, draft, draft_spr, String::new());
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn post_adopt_frame_packs(host: &mut HostState, instance_id: u32, frames: &[Vec<u8>]) {
+        use protocol::{decode_app_frame, AppFrame};
+        for bytes in frames {
+            let Ok(frame) = decode_app_frame(bytes) else { continue };
+            match frame {
+                AppFrame::Document { pack, spr, ops, .. } => {
+                    host.adopt_document(instance_id, pack, spr, ops);
+                }
+                AppFrame::Config { pack, spr, ops, .. } => {
+                    host.adopt_config(instance_id, pack, spr, ops);
+                }
+                AppFrame::Draft { pack, spr, ops, .. } => {
+                    host.adopt_draft(instance_id, pack, spr, ops);
+                }
+                AppFrame::Emit { document_ops, config_ops, draft_ops, .. } => {
+                    let session = host.ensure_session(instance_id);
+                    session.document.record_emit_ops(document_ops);
+                    session.config.record_emit_ops(config_ops);
+                    session.draft.record_emit_ops(draft_ops);
+                    session.command_log_len = session.command_log_len.saturating_add(1);
+                    session.generation = session.generation.saturating_add(1);
+                    eprintln!(
+                        "[DEBUG] host Emit recorded pending ops doc={} cfg={} draft={} gen={}",
+                        session.document.pending_binary_ops.len(),
+                        session.config.pending_binary_ops.len(),
+                        session.draft.pending_binary_ops.len(),
+                        session.generation
+                    );
+                }
+                _ => {}
+            }
+        }
     }
 
     /// 🖱️ On-demand context menu via `AppCommand::ContextMenu` on the plugin exchange channel.

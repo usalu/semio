@@ -14,7 +14,6 @@ use crate::artifacts::forms::op::FormOperation;
 use crate::artifacts::forms::dsl as forms_dsl;
 use crate::artifacts::forms::{FormQuestion, FormSpec, FormStep, FORMS_DOCUMENT_SCHEMA};
 use serde_json::Value;
-use std::sync::atomic::{AtomicU32, Ordering};
 
 //#region 🔖️Types
 pub use playbook::{
@@ -130,12 +129,14 @@ pub fn update_block_operation(spec: &FormSpec, question_id: &str, mutate: impl F
 //#endregion 🔖️QuestionLocation
 
 //#region 🔖️Ids
-static FORM_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 /// 🆔️ A process-unique id for a newly created step/question/option — shared by every command that
 /// creates one (`addStep`, `addQuestion`, `dropQuestionKind`, `addQuestionOption`).
 pub fn create_form_id(prefix: &str) -> String {
-    let serial = FORM_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
+    let serial = {
+        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
+        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
+    };
     format!("{prefix}-{serial}")
 }
 

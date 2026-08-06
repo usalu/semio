@@ -40,9 +40,9 @@ pub enum SequenceOperation {
 /// back into its flat `SequenceOperation` variant.
 fn steps_operation_from_collection(operation: CollectionOperation<String, SequenceStep, SequenceStepPatch>) -> SequenceOperation {
     match operation {
-        CollectionOperation::Add { id: _id, item, at } => SequenceOperation::StepsAdd { index: at, item },
+        CollectionOperation::Add { index: at, item } => SequenceOperation::StepsAdd { index: at, item },
         CollectionOperation::Remove { id } => SequenceOperation::StepsRemove { id },
-        CollectionOperation::Move { id, to } => SequenceOperation::StepsMove { id, to_index: to },
+        CollectionOperation::Move { id, to_index: to } => SequenceOperation::StepsMove { id, to_index: to },
         CollectionOperation::Patch { id, patch } => SequenceOperation::StepsPatch { id, patch },
     }
 }
@@ -50,9 +50,9 @@ fn steps_operation_from_collection(operation: CollectionOperation<String, Sequen
 /// 🔁️ Edge counterpart of {@link steps_operation_from_collection}.
 fn edges_operation_from_collection(operation: CollectionOperation<String, SequenceEdge, SequenceEdgePatch>) -> SequenceOperation {
     match operation {
-        CollectionOperation::Add { id: _id, item, at } => SequenceOperation::EdgesAdd { index: at, item },
+        CollectionOperation::Add { index: at, item } => SequenceOperation::EdgesAdd { index: at, item },
         CollectionOperation::Remove { id } => SequenceOperation::EdgesRemove { id },
-        CollectionOperation::Move { id, to } => SequenceOperation::EdgesMove { id, to_index: to },
+        CollectionOperation::Move { id, to_index: to } => SequenceOperation::EdgesMove { id, to_index: to },
         CollectionOperation::Patch { id, patch } => SequenceOperation::EdgesPatch { id, patch },
     }
 }
@@ -62,31 +62,31 @@ impl Operation<SequenceFixture> for SequenceOperation {
 
     fn diff(&self, projection: &SequenceFixture) -> SequenceDiff {
         match self {
-            SequenceOperation::StepsAdd { index, item } => SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Add { id: item.id.clone(), item: item.clone(), at: *index })), ..Default::default() },
+            SequenceOperation::StepsAdd { index, item } => SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Add { index: *index, item: item.clone() })), ..Default::default() },
             SequenceOperation::StepsRemove { id } => SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Remove { id: id.clone() })), ..Default::default() },
-            SequenceOperation::StepsMove { id, to_index } => SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Move { id: id.clone(), to: *to_index })), ..Default::default() },
+            SequenceOperation::StepsMove { id, to_index } => SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Move { id: id.clone(), to_index: *to_index })), ..Default::default() },
             SequenceOperation::StepsPatch { id, patch } => SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() })), ..Default::default() },
-            SequenceOperation::EdgesAdd { index, item } => SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Add { id: item.id.clone(), item: item.clone(), at: *index })), ..Default::default() },
+            SequenceOperation::EdgesAdd { index, item } => SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Add { index: *index, item: item.clone() })), ..Default::default() },
             SequenceOperation::EdgesRemove { id } => SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Remove { id: id.clone() })), ..Default::default() },
-            SequenceOperation::EdgesMove { id, to_index } => SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Move { id: id.clone(), to: *to_index })), ..Default::default() },
+            SequenceOperation::EdgesMove { id, to_index } => SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Move { id: id.clone(), to_index: *to_index })), ..Default::default() },
             SequenceOperation::EdgesPatch { id, patch } => SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() })), ..Default::default() },
         }
     }
 
     fn backwards(&self, projection: &SequenceFixture) -> Vec<Self> {
         match self {
-            SequenceOperation::StepsAdd { index, item } => vec![steps_operation_from_collection(invert_collection_operation(&projection.steps, &CollectionOperation::Add { id: item.id.clone(), item: item.clone(), at: *index }))],
+            SequenceOperation::StepsAdd { index, item } => vec![steps_operation_from_collection(invert_collection_operation(&projection.steps, &CollectionOperation::Add { index: *index, item: item.clone() }))],
             SequenceOperation::StepsRemove { id } => vec![steps_operation_from_collection(invert_collection_operation(&projection.steps, &CollectionOperation::Remove { id: id.clone() }))],
             SequenceOperation::StepsMove { id, to_index } => {
-                vec![steps_operation_from_collection(invert_collection_operation(&projection.steps, &CollectionOperation::Move { id: id.clone(), to: *to_index }))]
+                vec![steps_operation_from_collection(invert_collection_operation(&projection.steps, &CollectionOperation::Move { id: id.clone(), to_index: *to_index }))]
             }
             SequenceOperation::StepsPatch { id, patch } => {
                 vec![steps_operation_from_collection(invert_collection_operation(&projection.steps, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() }))]
             }
-            SequenceOperation::EdgesAdd { index, item } => vec![edges_operation_from_collection(invert_collection_operation(&projection.edges, &CollectionOperation::Add { id: item.id.clone(), item: item.clone(), at: *index }))],
+            SequenceOperation::EdgesAdd { index, item } => vec![edges_operation_from_collection(invert_collection_operation(&projection.edges, &CollectionOperation::Add { index: *index, item: item.clone() }))],
             SequenceOperation::EdgesRemove { id } => vec![edges_operation_from_collection(invert_collection_operation(&projection.edges, &CollectionOperation::Remove { id: id.clone() }))],
             SequenceOperation::EdgesMove { id, to_index } => {
-                vec![edges_operation_from_collection(invert_collection_operation(&projection.edges, &CollectionOperation::Move { id: id.clone(), to: *to_index }))]
+                vec![edges_operation_from_collection(invert_collection_operation(&projection.edges, &CollectionOperation::Move { id: id.clone(), to_index: *to_index }))]
             }
             SequenceOperation::EdgesPatch { id, patch } => {
                 vec![edges_operation_from_collection(invert_collection_operation(&projection.edges, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() }))]

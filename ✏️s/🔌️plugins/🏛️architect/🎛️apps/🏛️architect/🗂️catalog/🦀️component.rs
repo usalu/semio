@@ -107,7 +107,7 @@ pub fn find_adjacency<'a>(program: &'a Program, a: &EntityId, b: &EntityId) -> O
 
 pub fn default_element(name: impl Into<String>) -> ProgramElement {
     ProgramElement {
-        header: EntityHeader::new(EntityId::new_serial("element"), name),
+        header: EntityHeader::new(EntityId::new_serial("element", "element"), name),
         code: String::new(),
         kind: ProgramElementKind::Room,
         parent_id: None,
@@ -139,7 +139,7 @@ pub fn default_element(name: impl Into<String>) -> ProgramElement {
 pub fn new_adjacency(program: &Program, a: &EntityId, b: &EntityId, kind: AdjacencyKind) -> Adjacency {
     let (left, right) = normalize_pair(a, b);
     Adjacency {
-        header: EntityHeader::new(EntityId::new_serial("adjacency"), format!("{} ↔ {}", element_label(program, &left), element_label(program, &right))),
+        header: EntityHeader::new(EntityId::new_serial("adjacency", "adjacency"), format!("{} ↔ {}", element_label(program, &left), element_label(program, &right))),
         element_a_id: left,
         element_b_id: right,
         kind,
@@ -336,7 +336,7 @@ pub fn find_register_for_entity(program: &Program, id: &EntityId) -> Option<&'st
 
 pub fn default_entity_header(register: &str, label: &str) -> EntityHeader {
     let prefix = register.trim_end_matches('s').trim_end_matches("_records");
-    EntityHeader::new(EntityId::new_serial(prefix), label)
+    EntityHeader::new(EntityId::new_serial(prefix, prefix), label)
 }
 
 pub fn default_stakeholder(label: &str) -> Stakeholder {
@@ -509,7 +509,7 @@ pub fn default_from_json<T: DeserializeOwned>(register: &str, label: &str, extra
         _ => Value::Object(serde_json::Map::new()),
     };
     if let Value::Object(ref mut map) = value {
-        map.insert("id".into(), json!(EntityId::new_serial(register)));
+        map.insert("id".into(), json!(EntityId::new_serial(register, register)));
         map.insert("name".into(), json!(label));
     }
     serde_json::from_value(value).ok()
@@ -520,14 +520,14 @@ pub fn add_register_item_operation(program: &Program, register: &str, label: &st
         ($field:ident, $operation:ident, $item:expr) => {{
             let item = $item;
             let id = item.header.id.clone();
-            (ProgramOperation::$operation(CollectionOperation::Add { id: id.clone(), at: program.$field.len(), item }), id)
+            (ProgramOperation::$operation(CollectionOperation::Add { index: program.$field.len(), item: item }), id)
         }};
     }
     Some(match register {
         "elements" => {
             let item = default_element(label);
             let id = item.header.id.clone();
-            (ProgramOperation::Elements(CollectionOperation::Add { id: id.clone(), at: program.elements.len(), item }), id)
+            (ProgramOperation::Elements(CollectionOperation::Add { index: program.elements.len(), item: item }), id)
         }
         "stakeholders" => add!(stakeholders, Stakeholders, default_stakeholder(label)),
         "requirements" => add!(requirements, Requirements, default_requirement(label)),
@@ -562,8 +562,7 @@ pub fn add_register_item_operation(program: &Program, register: &str, label: &st
                 label,
                 json!({
                     "approvalType": "general",
-                    "subjectId": EntityId::new_serial("subject"),
-                    "approvalStatus": "draft"
+                    "subjectId": EntityId::new_serial("subject", "approvalStatus"), "approvalStatus": "draft"
                 }),
             )?
         ),
@@ -572,11 +571,11 @@ pub fn add_register_item_operation(program: &Program, register: &str, label: &st
         "reports" => add!(reports, Reports, default_from_json::<ReportRecord>("report", label, json!({ "kind": "executiveSummary", "title": label, "approvalStatus": "pending", "version": "0" }),)?),
         "templates" => add!(templates, Templates, default_from_json::<crate::artifacts::program::TemplateRecord>("template", label, json!({ "templateType": "sector", "version": "1", "approvalStatus": "pending", "usageCount": 0 }),)?),
         "traces" => {
-            let from = program.elements.first().map_or_else(|| EntityId::new_serial("from"), |element| element.header.id.clone());
-            let to = program.elements.get(1).map_or_else(|| EntityId::new_serial("to"), |element| element.header.id.clone());
+            let from = program.elements.first().map_or_else(|| EntityId::new_serial("from", "from"), |element| element.header.id.clone());
+            let to = program.elements.get(1).map_or_else(|| EntityId::new_serial("to", "to"), |element| element.header.id.clone());
             let item = TraceLink::new(from, to, TraceKind::FunctionToProgramElement);
             let id = item.id.clone();
-            (ProgramOperation::Traces(CollectionOperation::Add { id: id.clone(), at: program.traces.len(), item }), id)
+            (ProgramOperation::Traces(CollectionOperation::Add { index: program.traces.len(), item: item }), id)
         }
         _ => return None,
     })
@@ -680,7 +679,7 @@ pub fn patch_register_item_operation(register: &str, entity_id: EntityId, patch:
 
 pub fn analysis_record_from(program: &Program, kind: AnalysisKind, result: &AnalysisResult) -> AnalysisRecord {
     AnalysisRecord {
-        header: EntityHeader::new(EntityId::new_serial("analysis"), result.title.clone()),
+        header: EntityHeader::new(EntityId::new_serial("analysis", "analysis"), result.title.clone()),
         kind,
         title: result.title.clone(),
         parameters: Vec::new(),
@@ -704,7 +703,7 @@ pub fn analysis_record_from(program: &Program, kind: AnalysisKind, result: &Anal
 
 pub fn report_record_from(program: &Program, kind: ReportKind, report: &ProgramReport) -> ReportRecord {
     ReportRecord {
-        header: EntityHeader::new(EntityId::new_serial("report"), report.title.clone()),
+        header: EntityHeader::new(EntityId::new_serial("report", "report"), report.title.clone()),
         kind,
         title: report.title.clone(),
         audience: Vec::new(),

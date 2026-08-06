@@ -1,0 +1,563 @@
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:7:1
+  |
+7 | extern crate self as dsl_grammar;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+7 - extern crate self as dsl_grammar;
+  |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1
+   |
+11 | extern crate self as pack;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+11 - extern crate self as pack;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1
+   |
+12 | extern crate self as spr;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+12 - extern crate self as spr;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:13:1
+   |
+13 | extern crate self as vcs;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+13 - extern crate self as vcs;
+   |
+
+warning: private item shadows public glob re-export
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:14:1
+    |
+ 14 | extern crate self as semio_format;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+note: the name `semio_format` in the type namespace is supposed to be publicly re-exported here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:186:9
+    |
+186 | pub use crate::os_store::*;
+    |         ^^^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:14:1
+    |
+ 14 | extern crate self as semio_format;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(hidden_glob_reexports)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:345:11
+    |
+345 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:351:11
+    |
+351 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `canonicalize` in the value namespace is first re-exported here
+...
+198 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `canonicalize` in the value namespace is also re-exported here
+    |
+    = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `test_support` in the type namespace is first re-exported here
+186 | pub use crate::os_store::*;
+    |         ------------------ but the name `test_support` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `core` in the type namespace is first re-exported here
+...
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `core` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Symbol` in the type namespace is first re-exported here
+...
+198 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `Symbol` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `apply_collection_operation` in the value namespace is first re-exported here
+...
+192 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `apply_collection_operation` in the value namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `collection_diff_from_operation` in the value namespace is first re-exported here
+...
+192 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `collection_diff_from_operation` in the value namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `invert_collection_operation` in the value namespace is first re-exported here
+...
+192 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `invert_collection_operation` in the value namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Identified` in the type namespace is first re-exported here
+...
+192 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `Identified` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Patchable` in the type namespace is first re-exported here
+...
+192 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `Patchable` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `cli` in the type namespace is first re-exported here
+...
+194 | pub use crate::os_semio::*;
+    |         ------------------ but the name `cli` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `format` in the type namespace is first re-exported here
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `format` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `io` in the type namespace is first re-exported here
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `io` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `testkit` in the type namespace is first re-exported here
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `testkit` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `read_varint_u64` in the value namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `read_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `write_varint_u64` in the value namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `write_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `recover_file` in the value namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `recover_file` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `RecoveryReport` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `RecoveryReport` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `VerificationLevel` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `VerificationLevel` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `WriteOptions` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `WriteOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `DecodeOptions` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `DecodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `EncodeOptions` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `EncodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `ItemPatch` in the type namespace is also re-exported here
+...
+192 | pub use crate::os_vcs::*;
+    |         ^^^^^^^^^^^^^^^^ the name `ItemPatch` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `CollectionDiff` in the type namespace is also re-exported here
+...
+192 | pub use crate::os_vcs::*;
+    |         ^^^^^^^^^^^^^^^^ the name `CollectionDiff` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:192:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `CollectionOperation` in the type namespace is also re-exported here
+...
+192 | pub use crate::os_vcs::*;
+    |         ^^^^^^^^^^^^^^^^ the name `CollectionOperation` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:198:9
+    |
+186 | pub use crate::os_store::*;
+    |         ------------------ but the name `Alternative` in the type namespace is also re-exported here
+...
+198 | pub use crate::os_dsl::grammar::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^ the name `Alternative` in the type namespace is first re-exported here
+
+warning: unused import: `crate::os_dsl::core::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:199:9
+    |
+199 | pub use crate::os_dsl::core::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `len`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:1083:21
+     |
+1083 |                 let len = end_j - i;
+     |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `print_edge_label` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2075:19
+     |
+1969 | / impl<P, Operation> DocumentStore<P, Operation>
+1970 | | where
+1971 | |     P: Clone + Serialize + DeserializeOwned + DocumentPack,
+1972 | |     Operation: Clone + Serialize + DeserializeOwned + self::Operation<P> + OpBinary + OpText,
+     | |_____________________________________________________________________________________________- method in this implementation
+...
+2075 |       pub(crate) fn set_envelope(&mut self, envelope: DocumentEnvelope<P, Operation>, applied_edit_ids: Vec<String>) {
+     |                     ^^^^^^^^^^^^
+
+warning: `semio-framework-os-kernel` (lib) generated 36 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+    Checking semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:5:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3327:61: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4820:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4870:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4831:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4845:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4562:38: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4598:38: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4855:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1679:17: warning: unused variable: `app`: help: if this is intentional, prefix it with an underscore: `_app`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4789:34: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4478:42: warning: unused variable: `app`: help: try ignoring the field: `app: _`
+warning: `semio-framework-plugin` (lib) generated 13 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 13 suggestions)
+    Checking semio-framework-os v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:679:16: error[E0432]: unresolved import `tokio::time`: could not find `time` in `tokio`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:17:12: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:16:12: error[E0432]: unresolved import `crate::os_spr`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:18:12: error[E0432]: unresolved import `crate::os_spr`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:21:12: error[E0432]: unresolved import `crate::os_store`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:37:16: error[E0432]: unresolved import `crate::os_spr`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:291:12: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:212:16: error[E0432]: unresolved import `crate::os_dsl`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:680:9: error[E0433]: cannot find module or crate `tokio_tungstenite` in this scope: use of unresolved module or unlinked crate `tokio_tungstenite`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:675:9: error[E0432]: unresolved import `futures_util`: use of unresolved module or unlinked crate `futures_util`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1299:13: error[E0432]: unresolved import `notify`: use of unresolved module or unlinked crate `notify`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4279:5: error[E0432]: unresolved imports `crate::workflow_kernel::apply_flow_fixture_to_os_workflow`, `crate::workflow_kernel::assert_os_media_export_coverage`, `crate::workflow_kernel::assert_os_media_import_coverage`, `crate::workflow_kernel::build_os_workflow_operator_infos`, `crate::workflow_kernel::export_os_app_instance_media`, `crate::workflow_kernel::import_os_app_instance_media`, `crate::workflow_kernel::negotiate_media_contract`, `crate::workflow_kernel::os_media_export_extension_for_format`, `crate::workflow_kernel::os_media_neuron_kind_for_node`, `crate::workflow_kernel::os_resource_media_capability`, `crate::workflow_kernel::os_workflow_to_flow_fixture`, `crate::workflow_kernel::os_workflow_to_node_graph_payload`, `crate::workflow_kernel::register_os_media_export_handler`, `crate::workflow_kernel::register_os_media_import_handler`, `crate::workflow_kernel::required_os_media_export_formats`, `crate::workflow_kernel::required_os_media_import_formats`, `crate::workflow_kernel::OsMediaCapability`, `crate::workflow_kernel::OsMediaExportResult`, `crate::workflow_kernel::OsWorkflowCamera`, `crate::workflow_kernel::OsWorkflowNodeGraphPayload`, `crate::workflow_kernel::OsWorkflowOperatorInfo`, `crate::workflow_kernel::OS_MEDIA_FLOW_MODULE_ID`, `crate::workflow_kernel::OS_SPACE_SCHEMA`, `crate::workflow_kernel::OS_WORKFLOW_VFS_ROOT_ID`: no `apply_flow_fixture_to_os_workflow` in `workflow_kernel`, no `assert_os_media_export_coverage` in `workflow_kernel`, no `assert_os_media_import_coverage` in `workflow_kernel`, no `build_os_workflow_operator_infos` in `workflow_kernel`, no `export_os_app_instance_media` in `workflow_kernel`, no `import_os_app_instance_media` in `workflow_kernel`, no `negotiate_media_contract` in `workflow_kernel`, no `os_media_export_extension_for_format` in `workflow_kernel`, no `os_media_neuron_kind_for_node` in `workflow_kernel`, no `os_resource_media_capability` in `workflow_kernel`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:683:19: error[E0433]: cannot find module or crate `futures_util` in this scope: use of unresolved module or unlinked crate `futures_util`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:684:19: error[E0433]: cannot find module or crate `futures_util` in this scope: use of unresolved module or unlinked crate `futures_util`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:852:35: error[E0433]: cannot find `time` in `tokio`: could not find `time` in `tokio`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:853:50: error[E0433]: cannot find `time` in `tokio`: could not find `time` in `tokio`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1099:76: error[E0433]: cannot find module or crate `tokio_tungstenite` in this scope: use of unresolved module or unlinked crate `tokio_tungstenite`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1309:36: error[E0433]: cannot find module or crate `notify` in this scope: use of unresolved module or unlinked crate `notify`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1313:77: error[E0433]: cannot find module or crate `tokio_tungstenite` in this scope: use of unresolved module or unlinked crate `tokio_tungstenite`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1329:38: error[E0433]: cannot find `time` in `tokio`: could not find `time` in `tokio`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1198:17: error[E0433]: cannot find module or crate `zip` in this scope: use of unresolved module or unlinked crate `zip`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1217:26: error[E0433]: cannot find module or crate `zip` in this scope: use of unresolved module or unlinked crate `zip`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1220:5: error[E0433]: cannot find module or crate `zip` in this scope: use of unresolved module or unlinked crate `zip`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1220:65: error[E0433]: cannot find module or crate `zip` in this scope: use of unresolved module or unlinked crate `zip`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1220:118: error[E0433]: cannot find module or crate `zip` in this scope: use of unresolved module or unlinked crate `zip`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1223:112: error[E0433]: cannot find module or crate `zip` in this scope: use of unresolved module or unlinked crate `zip`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1248:22: error[E0433]: cannot find module or crate `zip` in this scope: use of unresolved module or unlinked crate `zip`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1279:23: error[E0433]: cannot find module or crate `zip` in this scope: use of unresolved module or unlinked crate `zip`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:255:29: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:264:26: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:271:29: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:280:26: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:300:28: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:322:25: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:322:66: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:337:46: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:345:93: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:345:202: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:352:26: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:352:64: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:353:29: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:353:71: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:365:71: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:366:12: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:373:26: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:374:93: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:375:32: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:426:22: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:427:25: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:436:12: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:441:12: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:470:59: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:472:12: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:482:72: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:483:80: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:483:110: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:483:136: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:493:72: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:494:80: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:494:110: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:494:136: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:554:48: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:555:36: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:682:102: error[E0425]: cannot find type `TcpStream` in module `tokio::net`: not found in `tokio::net`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:719:46: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:735:46: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:736:49: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:740:45: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:765:40: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1006:39: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1010:38: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1030:41: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1030:83: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1209:44: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1209:112: error[E0433]: cannot find `os_spr` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1336:39: error[E0433]: cannot find `Builder` in `runtime`: could not find `Builder` in `runtime`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1877:26: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1877:98: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1882:26: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1882:98: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1888:26: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1888:98: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1894:26: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1894:98: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1998:13: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1999:68: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2003:19: error[E0433]: cannot find `os_store` in `crate`: unresolved import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:338:49: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:338:73: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:340:54: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:340:83: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:343:60: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:343:88: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:350:43: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:350:67: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:444:50: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:444:82: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:447:40: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:521:75: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:522:19: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:530:26: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:539:47: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:539:79: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:541:13: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:541:60: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:542:13: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:542:64: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:543:13: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:543:59: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:544:13: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:544:57: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:554:49: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:554:117: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:567:50: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:613:30: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:613:58: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:633:44: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:640:60: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:658:58: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:676:28: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:677:28: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:681:38: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:682:76: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:686:58: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:687:29: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:688:38: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:689:38: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:693:78: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:695:71: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:696:24: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:697:38: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:797:19: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:798:25: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:849:79: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:860:46: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:860:76: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:860:107: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:863:36: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:865:43: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:866:72: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:867:82: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:867:134: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:869:25: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:870:30: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:880:19: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:884:42: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:898:28: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:909:27: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:910:46: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:910:70: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:910:93: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:911:60: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:916:47: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:916:71: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:934:28: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:939:43: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:948:28: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1700:55: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1701:86: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1701:110: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1701:133: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1729:63: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1729:87: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1737:72: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:2374:18: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3851:13: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3854:27: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3856:36: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3860:29: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3868:13: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3871:27: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3873:36: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3877:29: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3885:13: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3888:27: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3890:36: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3894:29: error[E0433]: cannot find module or crate `space` in this scope: use of unresolved module or unlinked crate `space`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4283:123: error[E0603]: enum import `OsMediaFormat` is private: private enum import
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1336:30: error[E0603]: module `runtime` is private: private module
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:102:59: error[E0603]: crate `semio_format` is private: private crate
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:438:59: error[E0603]: crate `semio_format` is private: private crate
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:454:59: error[E0603]: crate `semio_format` is private: private crate
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:628:59: error[E0603]: crate `semio_format` is private: private crate
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:1018:59: error[E0603]: crate `semio_format` is private: private crate
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:1778:59: error[E0603]: crate `semio_format` is private: private crate
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📦️glue.rs:8:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📦️glue.rs:9:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:20:5: warning: unused import: `serde_json::Value`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:482:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:483:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:493:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:494:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1276:37: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4:1: warning: the `#![feature]` attribute can only be used at the crate root
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:314:5: error[E0433]: cannot find module or crate `semio_framework_hash` in this scope: use of unresolved module or unlinked crate `semio_framework_hash`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:682:21: error[E0433]: cannot find module or crate `tokio_tungstenite` in this scope: use of unresolved module or unlinked crate `tokio_tungstenite`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:682:56: error[E0433]: cannot find module or crate `tokio_tungstenite` in this scope: use of unresolved module or unlinked crate `tokio_tungstenite`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:785:25: error[E0433]: cannot find module or crate `notify` in this scope: use of unresolved module or unlinked crate `notify`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1066:19: error[E0433]: cannot find module or crate `tokio_tungstenite` in this scope: use of unresolved module or unlinked crate `tokio_tungstenite`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1298:54: error[E0433]: cannot find module or crate `notify` in this scope: use of unresolved module or unlinked crate `notify`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1303:27: error[E0433]: cannot find module or crate `notify` in this scope: use of unresolved module or unlinked crate `notify`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1303:76: error[E0433]: cannot find module or crate `notify` in this scope: use of unresolved module or unlinked crate `notify`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1303:91: error[E0433]: cannot find module or crate `notify` in this scope: use of unresolved module or unlinked crate `notify`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2000:20: error[E0433]: cannot find module or crate `semio_framework_hash` in this scope: use of unresolved module or unlinked crate `semio_framework_hash`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1223:58: error[E0433]: cannot find module or crate `zip` in this scope: use of unresolved module or unlinked crate `zip`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🪐️space/🦀️component.rs:1229:58: error[E0433]: cannot find module or crate `zip` in this scope: use of unresolved module or unlinked crate `zip`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3226:165: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3234:41: error[E0433]: cannot find module or crate `workflow` in this scope: use of unresolved module or unlinked crate `workflow`
+warning: `semio-framework-os` (lib) generated 9 warnings
+error: could not compile `semio-framework-os` (lib) due to 199 previous errors; 9 warnings emitted

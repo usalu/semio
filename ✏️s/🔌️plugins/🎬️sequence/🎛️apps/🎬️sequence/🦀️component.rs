@@ -129,7 +129,7 @@ impl DocumentApp for SequencePlayApp {
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(command: &SequenceCommand) -> &str {
+    fn command_id(command: &SequenceCommand) -> &'static str {
         command.command_id()
     }
 

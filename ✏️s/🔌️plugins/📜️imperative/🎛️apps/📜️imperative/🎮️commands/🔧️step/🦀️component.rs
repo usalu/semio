@@ -69,7 +69,7 @@ pub mod add_step {
         let id = next_step_id(document);
         let step = Step { id: id.clone(), kind: payload.kind.clone(), params: Dictionary::new(), bodies: BTreeMap::new() };
         Ok(Emit {
-            document_operations: vec![ImperativeOperation { path_ref: PathRef::default(), collection: CollectionOperation::Add { id: id.clone(), at: payload.index.unwrap_or(usize::MAX), item: step } }],
+            document_operations: vec![ImperativeOperation { path_ref: PathRef::default(), collection: CollectionOperation::Add { index: payload.index.unwrap_or(usize::MAX), item: step } }],
             config_operations: vec![ImperativeConfigOperation::SetSelectedSteps { ids: vec![id] }],
             ..Default::default()
         })
@@ -96,7 +96,7 @@ pub mod add_step_at {
         let id = next_step_id(document);
         let step = Step { id: id.clone(), kind: payload.kind.clone(), params: Dictionary::new(), bodies: BTreeMap::new() };
         Ok(Emit {
-            document_operations: vec![ImperativeOperation { path_ref, collection: CollectionOperation::Add { id: id.clone(), at: payload.index.unwrap_or(usize::MAX), item: step } }],
+            document_operations: vec![ImperativeOperation { path_ref, collection: CollectionOperation::Add { index: payload.index.unwrap_or(usize::MAX), item: step } }],
             config_operations: vec![ImperativeConfigOperation::SetSelectedSteps { ids: vec![id] }],
             ..Default::default()
         })
@@ -177,7 +177,7 @@ pub mod move_step {
     pub fn handle(payload: &MoveStep, doc: &DocumentView<'_, ImperativeDocument>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeOperation, ImperativeConfigOperation>, Fault> {
         let document = doc.projection;
         if resolve_contains(document, None, None, &payload.id) {
-            Ok(Emit::operations(vec![ImperativeOperation { path_ref: PathRef::default(), collection: CollectionOperation::Move { id: payload.id.clone(), to: payload.index } }]))
+            Ok(Emit::operations(vec![ImperativeOperation { path_ref: PathRef::default(), collection: CollectionOperation::Move { id: payload.id.clone(), to_index: payload.index } }]))
         } else {
             Ok(Emit::default())
         }
@@ -202,7 +202,7 @@ pub mod move_step_at {
         let document = doc.projection;
         if resolve_contains(document, payload.owner.as_deref(), payload.slot.as_deref(), &payload.id) {
             let path_ref = path_ref_from(payload.owner.as_deref(), payload.slot.as_deref(), document);
-            Ok(Emit::operations(vec![ImperativeOperation { path_ref, collection: CollectionOperation::Move { id: payload.id.clone(), to: payload.index } }]))
+            Ok(Emit::operations(vec![ImperativeOperation { path_ref, collection: CollectionOperation::Move { id: payload.id.clone(), to_index: payload.index } }]))
         } else {
             Ok(Emit::default())
         }

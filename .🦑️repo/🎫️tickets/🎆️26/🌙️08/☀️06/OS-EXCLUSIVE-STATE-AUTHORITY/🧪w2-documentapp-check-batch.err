@@ -1,0 +1,24 @@
+norm exit=101 errors=5
+error[E0603]: crate `semio_format` is private
+error[E0603]: crate `semio_format` is private
+draw exit=101 errors=97
+error[E0432]: unresolved imports `crate::store_sync::FolderSqliteStorage`, `crate::store_sync::FolderTextStorage`
+error[E0432]: unresolved imports `crate::store_sync::DocumentActorConfig`, `crate::store_sync::DocumentActorMsg`, `crate::store_sync::DocumentChannels`, `crate::store_sync::DocumentEvent`, `crate::store_sync::DocumentHost`, `crate::store_sync::PersistenceBinding`
+flow exit=101 errors=189
+error: couldn't read `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/./../../../🧩️extensions/📃️list/🦀️component.rs`: No such file or directory (os error 2)
+error: could not compile `semio-framework-os-flow` (lib) due to 1 previous error
+fem exit=101 errors=5
+error[E0603]: crate `semio_format` is private
+error[E0603]: crate `semio_format` is private
+note exit=101 errors=97
+error[E0432]: unresolved imports `crate::store_sync::FolderSqliteStorage`, `crate::store_sync::FolderTextStorage`
+error[E0432]: unresolved imports `crate::store_sync::DocumentActorConfig`, `crate::store_sync::DocumentActorMsg`, `crate::store_sync::DocumentChannels`, `crate::store_sync::DocumentEvent`, `crate::store_sync::DocumentHost`, `crate::store_sync::PersistenceBinding`
+forms exit=101 errors=10
+error[E0432]: unresolved import `playbook`
+error[E0432]: unresolved import `playbook`
+sequence exit=101 errors=190
+error[E0119]: conflicting implementations of trait `vcs::os_spr::Identified<std::string::String>` for type `engine::Step`
+error[E0119]: conflicting implementations of trait `vcs::os_spr::Patchable<neural_engine::Dictionary>` for type `engine::Step`
+mathematical exit=101 errors=3
+error[E0603]: crate `semio_format` is private
+error[E0603]: crate `semio_format` is private

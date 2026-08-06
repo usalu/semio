@@ -196,7 +196,7 @@ impl DocumentApp for RasterPlayApp {
         Some(RasterOperation::ReplaceDocument { document: projection })
     }
 
-    fn command_id(command: &RasterCommand) -> &str {
+    fn command_id(command: &RasterCommand) -> &'static str {
         command.command_id()
     }
 

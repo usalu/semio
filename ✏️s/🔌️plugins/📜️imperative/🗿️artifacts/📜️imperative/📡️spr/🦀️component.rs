@@ -56,9 +56,9 @@ fn imperative_operation_to_dsl(operation: &ImperativeOperation) -> ImperativeOpe
     match &operation.collection {
         // 🔒️ `id` is intentionally dropped in the DSL's `Add` shape (unchanged on-disk text
         // format) — `Step.id` round-trips it losslessly, recovered on the reverse conversion below.
-        protocol::CollectionOperation::Add { id: _id, item, at } => ImperativeOperationDsl::Add { owner, slot, index: *at, item: Box::new(step_to_step_node_dsl(item)) },
+        protocol::CollectionOperation::Add { index: at, item } => ImperativeOperationDsl::Add { owner, slot, index: *at, item: Box::new(step_to_step_node_dsl(item)) },
         protocol::CollectionOperation::Remove { id } => ImperativeOperationDsl::Remove { owner, slot, id: id.clone() },
-        protocol::CollectionOperation::Move { id, to } => ImperativeOperationDsl::Move { owner, slot, id: id.clone(), to_index: *to },
+        protocol::CollectionOperation::Move { id, to_index: to } => ImperativeOperationDsl::Move { owner, slot, id: id.clone(), to_index: *to },
         protocol::CollectionOperation::Patch { id, patch } => ImperativeOperationDsl::Patch { owner, slot, id: id.clone(), patch: dictionary_to_value_dsl_map(patch) },
     }
 }
@@ -68,10 +68,10 @@ fn imperative_operation_from_dsl(dsl_op: ImperativeOperationDsl) -> ImperativeOp
         ImperativeOperationDsl::Add { owner, slot, index, item } => {
             let item = step_node_dsl_to_step(*item);
             let id = item.id.clone();
-            ImperativeOperation { path_ref: PathRef { owner, slot }, collection: protocol::CollectionOperation::Add { id, item, at: index } }
+            ImperativeOperation { path_ref: PathRef { owner, slot }, collection: protocol::CollectionOperation::Add { index: index, item } }
         }
         ImperativeOperationDsl::Remove { owner, slot, id } => ImperativeOperation { path_ref: PathRef { owner, slot }, collection: protocol::CollectionOperation::Remove { id } },
-        ImperativeOperationDsl::Move { owner, slot, id, to_index } => ImperativeOperation { path_ref: PathRef { owner, slot }, collection: protocol::CollectionOperation::Move { id, to: to_index } },
+        ImperativeOperationDsl::Move { owner, slot, id, to_index } => ImperativeOperation { path_ref: PathRef { owner, slot }, collection: protocol::CollectionOperation::Move { id, to_index: to_index } },
         ImperativeOperationDsl::Patch { owner, slot, id, patch } => ImperativeOperation { path_ref: PathRef { owner, slot }, collection: protocol::CollectionOperation::Patch { id, patch: value_dsl_map_to_dictionary(&patch) } },
     }
 }
@@ -134,7 +134,7 @@ mod tests {
         let envelope = store::create_document_envelope::<ImperativeDocument, ImperativeOperation>("imperative.document/v1", "test", document, None);
         let mut doc_store = store::DocumentStore::new(envelope);
         let step = Step { id: "step-x".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: BTreeMap::new() };
-        let operation = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Add { id: "step-x".to_string(), item: step, at: 0 } };
+        let operation = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Add { index: 0, item: step } };
         doc_store.dispatch(store::DocumentCommand::Apply { operations: vec![operation], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&doc_store);
         store::test_support::assert_document_pack_round_trip(&doc_store);
@@ -151,7 +151,7 @@ mod tests {
         use crate::artifacts::imperative::{Dictionary, Step};
         use std::collections::BTreeMap;
         let item = Step { id: "step-nested".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: BTreeMap::new() };
-        let operation = ImperativeOperation { path_ref: PathRef { owner: Some("step-if".into()), slot: Some("then".into()) }, collection: protocol::CollectionOperation::Add { id: "step-nested".to_string(), item, at: 0 } };
+        let operation = ImperativeOperation { path_ref: PathRef { owner: Some("step-if".into()), slot: Some("then".into()) }, collection: protocol::CollectionOperation::Add { index: 0, item } };
         let printed = <ImperativeOperation as protocol::OpText>::print_op(&operation);
         assert!(printed.contains("owner=step-if"), "printed: {printed}");
         assert!(printed.contains("slot=then"), "printed: {printed}");

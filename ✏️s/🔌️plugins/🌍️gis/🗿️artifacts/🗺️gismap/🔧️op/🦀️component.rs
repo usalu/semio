@@ -78,7 +78,7 @@ mod tests {
     #[test]
     fn positions_add_patch_remove_round_trip() {
         let document = GisMapDocument::default();
-        let added = round_trip(&document, &GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: feature("p1"), at: 0 }));
+        let added = round_trip(&document, &GisMapOperation::Positions(CollectionOperation::Add { index: 0, item: feature("p1") }));
         assert_eq!(added.positions.len(), 1);
         let patched = round_trip(&added, &GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(&json!({ "id": "p1", "label": "Home" }))) } }));
         assert_eq!(patched.positions[0].data.get("label").and_then(|value| value.as_str()), Some("Home"));
@@ -99,7 +99,7 @@ mod tests {
     #[test]
     fn gis_map_document_vcs_replays_operations() {
         let mut store = GisMapStore::new(create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_projection(), None));
-        store.dispatch(DocumentCommand::Apply { operations: vec![GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: feature("p1"), at: 0 })], description: None }).expect("apply");
+        store.dispatch(DocumentCommand::Apply { operations: vec![GisMapOperation::Positions(CollectionOperation::Add { index: 0, item: feature("p1") })], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").positions.len(), 1);
     }
 }

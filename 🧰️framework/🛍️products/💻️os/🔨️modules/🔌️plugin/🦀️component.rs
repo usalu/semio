@@ -3530,6 +3530,14 @@ pub mod app {
         /// `command_bytes` directly as the app's typed `DocumentApp::Command` via `OpBinary::decode_op`
         /// and calls the pure `DocumentApp::handle`.
         fn handle_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+        /// 🧾 Drains the last Emit op packs captured during `handle_command_frame` (PureCommand path).
+        fn take_last_emit_wire(&mut self) -> Option<(Vec<u8>, Vec<u8>, Vec<u8>)>;
+        /// 📥 Hydrate document lane from host pack bytes (PureCommand / host authority).
+        fn hydrate_document_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault>;
+        /// 📥 Hydrate config lane from host pack bytes.
+        fn hydrate_config_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault>;
+        /// 📥 Hydrate draft lane from host pack bytes.
+        fn hydrate_draft_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault>;
         /// 🧮️ Object-safe counterpart to `DocumentApp::Config`'s binary-pack encoding — the config-store
         /// twin of `document_pack` below.
         fn config_pack(&self) -> Result<store::DocumentPackFiles, Fault>;
@@ -3904,6 +3912,8 @@ pub mod app {
     /// `InvocationResult` whose inverses come from the just-recorded `Edit.backwards`. A projection+history
     /// cache keyed on `(store generation, log generation, history filter)` keeps renders O(1). Holds an
     /// {@link AppActionRegistry} to enforce the actions contract before/after delegating to the app.
+    /// Host `DocumentSession` already mirrors opaque document/config/draft packs; typed stores here
+    /// remain guest-owned until `AppCommand::PureCommand` returns `AppFrame::Emit` for host apply.
     pub struct VcsDocumentApp<A: DocumentApp> {
         app: A,
         store: DocumentStore<A::Projection, A::Operation>,
@@ -3911,6 +3921,8 @@ pub mod app {
         /// @emoji 📝️ Volatile draft lane — never checkpoints; prune via `DocumentCommand::PruneDrafts`.
         /// Moves to host `DocumentSession` when CHANNEL_VERSION 5 exchange lands.
         draft_store: store::DraftStore<A::Draft, A::DraftOperation>,
+        /// 🧾 Last Emit op packs produced by `dispatch_emit` — consumed by `AppCommand::PureCommand`.
+        last_emit_wire: Option<(Vec<u8>, Vec<u8>, Vec<u8>)>,
         /// @emoji 🗂️ Keyed on `(store.generation(), log_generation, history_filter)` — any of the three
         /// changing invalidates the cached projection/`HistoryView` pair.
         cache: Option<((u64, u64, u64, HistoryCommandFilter), A::Projection, A::Config, HistoryView)>,
@@ -3949,7 +3961,7 @@ pub mod app {
             let config_store = ConfigStore::new(config_envelope);
             let draft_store = store::DraftStore::new(draft_envelope);
             A::seed(&mut store);
-            Self { app, store, config_store, draft_store, cache: None, registry, command_log: Vec::new(), next_command_seq: 0, log_generation: 0, history_filter: HistoryCommandFilter::default() }
+            Self { app, store, config_store, draft_store, last_emit_wire: None, cache: None, registry, command_log: Vec::new(), next_command_seq: 0, log_generation: 0, history_filter: HistoryCommandFilter::default() }
         }
 
         #[cfg(test)]
@@ -4275,6 +4287,11 @@ pub mod app {
         fn dispatch_emit(&mut self, verb: &str, emit: Emit<A::Operation, A::ConfigOperation, A::DraftOperation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let Emit { document_operations, config_operations, draft_operations, description, coalesce_key, effects, events, ui_scope } = emit;
             eprintln!("[DEBUG] dispatch_emit doc_ops={} cfg_ops={} draft_ops={}", document_operations.len(), config_operations.len(), draft_operations.len());
+            self.last_emit_wire = Some((
+                protocol::encode_ops_vec(&document_operations.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>()),
+                protocol::encode_ops_vec(&config_operations.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>()),
+                protocol::encode_ops_vec(&draft_operations.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>()),
+            ));
 
             // 📝️ Draft lane — ephemeral; applied without command-log rows (never checkpoints).
             if !draft_operations.is_empty() {
@@ -4681,6 +4698,37 @@ pub mod app {
             Ok(self.finish_recorded(log_generation_before, "typed-command", result))
         }
 
+        fn take_last_emit_wire(&mut self) -> Option<(Vec<u8>, Vec<u8>, Vec<u8>)> {
+            self.last_emit_wire.take()
+        }
+
+        fn hydrate_document_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault> {
+            if pack.is_empty() && spr.is_empty() {
+                return Ok(());
+            }
+            self.load_document_pack(&store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() })
+        }
+
+        fn hydrate_config_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault> {
+            if pack.is_empty() && spr.is_empty() {
+                return Ok(());
+            }
+            self.load_config_pack(&store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() })
+        }
+
+        fn hydrate_draft_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault> {
+            if pack.is_empty() && spr.is_empty() {
+                return Ok(());
+            }
+            let parsed: store::ParsedDocumentText<A::Draft, A::DraftOperation> = store::parse_document_pack(pack, spr).map_err(|error| error.into_fault())?;
+            let (applied, redo) = match &parsed.envelope.cursor {
+                Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
+                None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
+            };
+            self.draft_store.reset(parsed.envelope, applied, redo).map_err(|error| error.into_fault())?;
+            Ok(())
+        }
+
         fn config_pack(&self) -> Result<store::DocumentPackFiles, Fault> {
             store::print_document_pack(self.config_store.envelope()).map_err(|error| error.into_fault())
         }
@@ -4990,10 +5038,6 @@ pub mod plugin_runtime {
         /// frame's `ActionMeta` — see `plugin_exchange`. Never cleared on `Bye`/instance destruction (Wave
         /// 1 scope: a destroyed instance id is never reused within one plugin's lifetime today).
         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
-        /// 🪟️ Per-instance last-seen `ViewState`, updated by every `AppCommand::Command` and read back by
-        /// `AppCommand::RefreshUi`/`AppCommand::DocumentCommand` (`RefreshUi` carries `view_state`; DocumentCommand still
-        /// the new channel) — see `plugin_exchange`'s doc comment for this Wave 1 scoping.
-        static INSTANCE_VIEW_STATES: RefCell<std::collections::HashMap<u32, ViewState>> = RefCell::new(std::collections::HashMap::new());
     }
 
     fn encode_wire_serialized<T: Serialize>(value: &T) -> Vec<u8> {
@@ -5034,18 +5078,14 @@ pub mod plugin_runtime {
         INSTANCE_ACTORS.with(|slot| slot.borrow().get(&instance_id).cloned()).unwrap_or_else(|| "local".to_string())
     }
 
-    /// 🪟️ Records `view_state` as the last-seen `ViewState` for `instance_id` (from `AppCommand::Command`).
-    fn set_instance_view_state(instance_id: u32, view_state: ViewState) {
-        INSTANCE_VIEW_STATES.with(|slot| {
-            slot.borrow_mut().insert(instance_id, view_state);
-        });
-    }
-
-    /// 🗣️ Decodes a packed `ViewState` payload (empty → default) and records it for `instance_id`.
-    fn adopt_instance_view_state(instance_id: u32, view_state_bytes: &[u8]) -> ViewState {
-        let view_state = if view_state_bytes.is_empty() { ViewState::default() } else { store::pack_rt::decode_wire_value(view_state_bytes).ok().and_then(|value| from_dsl_value::<ViewState>(value).ok()).unwrap_or_default() };
-        set_instance_view_state(instance_id, view_state.clone());
-        view_state
+    /// 🗣️ Decodes a packed `ViewState` payload (empty → default). No process-global    /// 🗣️ Decodes a packed `ViewState` payload (empty → default). No process-global cache —
+    /// host-authoritative chrome/draft owns locale; every command/refresh carries view_state on the wire.
+    fn decode_view_state(view_state_bytes: &[u8]) -> ViewState {
+        if view_state_bytes.is_empty() {
+            ViewState::default()
+        } else {
+            store::pack_rt::decode_wire_value(view_state_bytes).ok().and_then(|value| from_dsl_value::<ViewState>(value).ok()).unwrap_or_default()
+        }
     }
 
     struct InstanceGuard;
@@ -5646,8 +5686,7 @@ pub mod plugin_runtime {
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
                     }
                 }
-                protocol::AppCommand::Command { seq, command, view_state } => {
-                    adopt_instance_view_state(instance_id, &view_state);
+                protocol::AppCommand::Command { seq, command, view_state: _view_state } => {
                     let meta = ActionMeta { actor: instance_actor(instance_id), instance_id };
                     let dispatched = with_instances_mut(|list| {
                         let instance = find_instance(list, instance_id)?;
@@ -5669,7 +5708,7 @@ pub mod plugin_runtime {
                     push_os_fault(&mut frames, Some(seq), "unsupported", "CommandText not yet wired".into());
                 }
                 protocol::AppCommand::RefreshUi { seq, sections, view_state } => {
-                    let view_state = adopt_instance_view_state(instance_id, &view_state);
+                    let view_state = decode_view_state(&view_state);
                     let outcome = with_instances_mut(|list| {
                         let instance = find_instance(list, instance_id)?;
                         let mut section_frames = Vec::new();
@@ -5825,6 +5864,44 @@ pub mod plugin_runtime {
                         Ok(fingerprint) => {
                             let value = serde_json::to_value(&fingerprint).unwrap_or_default();
                             frames.push(protocol::AppFrame::MediaFingerprint { in_reply_to: seq, port, fingerprint: encode_wire_serialized(&value) });
+                        }
+                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
+                    }
+                }
+                protocol::AppCommand::PureCommand {
+                    seq,
+                    command,
+                    document,
+                    document_spr,
+                    config,
+                    config_spr,
+                    draft,
+                    draft_spr,
+                } => {
+                    let meta = ActionMeta { actor: instance_actor(instance_id), instance_id };
+                    let dispatched = with_instances_mut(|list| {
+                        let instance = find_instance(list, instance_id)?;
+                        instance.app.hydrate_document_lane(&document, &document_spr)?;
+                        instance.app.hydrate_config_lane(&config, &config_spr)?;
+                        instance.app.hydrate_draft_lane(&draft, &draft_spr)?;
+                        let result = instance.app.handle_command_frame(&command, &meta)?;
+                        let emit_wire = instance.app.take_last_emit_wire().unwrap_or_default();
+                        Ok((result, emit_wire))
+                    });
+                    match dispatched {
+                        Ok((result, (document_ops, config_ops, draft_ops))) => {
+                            mutated = true;
+                            let output = encode_wire_serialized(&result.output);
+                            let diagnostics = encode_wire_serialized(&result.diagnostics);
+                            frames.push(protocol::AppFrame::Emit {
+                                in_reply_to: seq,
+                                document_ops,
+                                config_ops,
+                                draft_ops,
+                                output,
+                                diagnostics,
+                            });
+                            push_invocation_side_frames(&mut frames, seq, &result);
                         }
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
                     }

@@ -11,7 +11,7 @@ extern crate self as protocol;
 extern crate self as pack;
 extern crate self as spr;
 extern crate self as vcs;
-extern crate self as semio_format;
+pub extern crate self as semio_format;
 
 
 // 🏷️ Former standalone crate names — proc-macros (`dsl_derive`) and in-tree `use store::` /

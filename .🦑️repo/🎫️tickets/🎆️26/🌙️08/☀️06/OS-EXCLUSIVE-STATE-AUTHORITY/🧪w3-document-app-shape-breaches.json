@@ -1,0 +1,37 @@
+[
+  {
+    "scope": "✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🦀️component.rs",
+    "line": 242,
+    "summary": "\"✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🦀️component.rs\" impl DocumentApp for LowpolyPlayApp but LowpolyPlayApp declares fields (must be a ZST)"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🦀️component.rs",
+    "line": 911,
+    "summary": "\"✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🦀️component.rs\" impl DocumentApp for CadPlayApp but CadPlayApp declares fields (must be a ZST)"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🦀️component.rs",
+    "line": 824,
+    "summary": "\"✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🦀️component.rs\" impl DocumentApp for Puzzle2dPlayApp but Puzzle2dPlayApp declares fields (must be a ZST)"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🦀️component.rs",
+    "line": 1269,
+    "summary": "\"✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🦀️component.rs\" impl DocumentApp for Puzzle5dPlayApp but Puzzle5dPlayApp declares fields (must be a ZST)"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs",
+    "line": 1854,
+    "summary": "\"✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs\" impl DocumentApp for Puzzle3dPlayApp but Puzzle3dPlayApp declares fields (must be a ZST)"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🦀️component.rs",
+    "line": 322,
+    "summary": "\"✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🦀️component.rs\" impl DocumentApp for HomeApp but HomeApp declares fields (must be a ZST)"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🦀️component.rs",
+    "line": 262,
+    "summary": "\"✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🦀️component.rs\" impl DocumentApp for SpaceApp but SpaceApp declares fields (must be a ZST)"
+  }
+]

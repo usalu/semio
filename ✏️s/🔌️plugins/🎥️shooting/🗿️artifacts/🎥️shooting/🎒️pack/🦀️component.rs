@@ -86,7 +86,7 @@ mod tests {
         let mut store: DocumentStore<ShootingFixture, ShootingOperation> = DocumentStore::new(create_document_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", crate::artifacts::shooting::empty_shooting_fixture(), None));
         store
             .dispatch(DocumentCommand::Apply {
-                operations: vec![ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: ShootingAsset { id: "a1".into(), name: "Asset".into(), url: "/mesh/a1.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None }, at: 0 })],
+                operations: vec![ShootingOperation::Assets(CollectionOperation::Add { index: 0, item: ShootingAsset { id: "a1".into(), name: "Asset".into(), url: "/mesh/a1.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None } })],
                 description: None,
             })
             .expect("apply");

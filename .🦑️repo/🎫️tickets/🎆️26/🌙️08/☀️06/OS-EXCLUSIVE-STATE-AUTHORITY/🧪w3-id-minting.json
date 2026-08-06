@@ -1,0 +1,132 @@
+[
+  {
+    "scope": "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🦀️component.rs",
+    "line": 28,
+    "summary": "\"✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🦀️component.rs:28\" mints ids via AtomicU32/64 outside the OS product"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🦀️component.rs",
+    "line": 37,
+    "summary": "\"✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🦀️component.rs:37\" mints ids via AtomicU32/64 outside the OS product"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs",
+    "line": 5250,
+    "summary": "\"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs:5250\" mints ids via AtomicU32/64 out"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs",
+    "line": 5252,
+    "summary": "\"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs:5252\" mints ids via AtomicU32/64 out"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs",
+    "line": 6762,
+    "summary": "\"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/⚙️engine/🎬️core/🦀️component.rs:6762\" mints ids via AtomicU32/64 out"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/⚙️engine/🦀️component.rs",
+    "line": 8,
+    "summary": "\"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/⚙️engine/🦀️component.rs:8\" mints ids via AtomicU32/64 outside the "
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/⚙️engine/🦀️component.rs",
+    "line": 11,
+    "summary": "\"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/⚙️engine/🦀️component.rs:11\" mints ids via AtomicU32/64 outside the"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🧱️kernel/🦀️component.rs",
+    "line": 9,
+    "summary": "\"✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🧱️kernel/🦀️component.rs:9\" mints ids via AtomicU32/64 outside the"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🧱️kernel/🦀️component.rs",
+    "line": 12,
+    "summary": "\"✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🧱️kernel/🦀️component.rs:12\" mints ids via AtomicU32/64 outside th"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs",
+    "line": 16,
+    "summary": "\"✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs:16\" mints ids via AtomicU32/64 outside the"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs",
+    "line": 60,
+    "summary": "\"✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs:60\" mints ids via AtomicU32/64 outside the"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/⚙️engine/🦀️component.rs",
+    "line": 17,
+    "summary": "\"✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/⚙️engine/🦀️component.rs:17\" mints ids via AtomicU32/64 outside the OS pr"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/⚙️engine/🦀️component.rs",
+    "line": 133,
+    "summary": "\"✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/⚙️engine/🦀️component.rs:133\" mints ids via AtomicU32/64 outside the OS p"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🦀️component.rs",
+    "line": 36,
+    "summary": "\"✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/⚙️engine/🦀️component.rs:36\" mints ids via AtomicU32/64 outside the OS produc"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/🦀️component.rs",
+    "line": 16,
+    "summary": "\"✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/🦀️component.rs:16\" mints ids via AtomicU32/64 outside the O"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/🦀️component.rs",
+    "line": 37,
+    "summary": "\"✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/⚙️engine/🦀️component.rs:37\" mints ids via AtomicU32/64 outside the O"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/⚙️engine/🦀️component.rs",
+    "line": 6,
+    "summary": "\"✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/⚙️engine/🦀️component.rs:6\" mints ids via AtomicU32/64 outside the OS p"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/⚙️engine/🦀️component.rs",
+    "line": 13,
+    "summary": "\"✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/⚙️engine/🦀️component.rs:13\" mints ids via AtomicU32/64 outside the OS "
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/⚙️engine/🦀️component.rs",
+    "line": 7,
+    "summary": "\"✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/⚙️engine/🦀️component.rs:7\" mints ids via AtomicU32/64 outside the OS produ"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/⚙️engine/🦀️component.rs",
+    "line": 80,
+    "summary": "\"✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/⚙️engine/🦀️component.rs:80\" mints ids via AtomicU32/64 outside the OS prod"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🦀️component.rs",
+    "line": 38,
+    "summary": "\"✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🦀️component.rs:38\" mints ids via AtomicU32/64 outside the OS product"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🦀️component.rs",
+    "line": 57,
+    "summary": "\"✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🦀️component.rs:57\" mints ids via AtomicU32/64 outside the OS product"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🦀️component.rs",
+    "line": 34,
+    "summary": "\"✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🦀️component.rs:34\" mints ids via AtomicU32/64 outside the OS product"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🦀️component.rs",
+    "line": 71,
+    "summary": "\"✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🦀️component.rs:71\" mints ids via AtomicU32/64 outside the OS product"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs",
+    "line": 37,
+    "summary": "\"✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:37\" mints ids via AtomicU32/64 outside the OS product"
+  },
+  {
+    "scope": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs",
+    "line": 62,
+    "summary": "\"✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:62\" mints ids via AtomicU32/64 outside the OS product"
+  }
+]

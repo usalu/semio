@@ -164,7 +164,7 @@ mod tests {
     fn audit_trail_sorted_newest_first() {
         let mut program = sample_plugin();
         program.audit_events.push(AuditEvent {
-            header: crate::artifacts::program::kernel::EntityHeader::new(EntityId::new_serial("audit"), "older"),
+            header: crate::artifacts::program::kernel::EntityHeader::new(EntityId::new_serial("audit", "older"), "older"),
             action: crate::artifacts::program::registers::AuditAction::Created,
             actor_id: None,
             subject_id: program.elements[0].header.id.clone(),
@@ -185,7 +185,7 @@ mod tests {
             retention_until: None,
         });
         program.audit_events.push(AuditEvent {
-            header: crate::artifacts::program::kernel::EntityHeader::new(EntityId::new_serial("audit"), "newer"),
+            header: crate::artifacts::program::kernel::EntityHeader::new(EntityId::new_serial("audit", "newer"), "newer"),
             action: crate::artifacts::program::registers::AuditAction::Updated,
             actor_id: None,
             subject_id: program.elements[0].header.id.clone(),
@@ -212,7 +212,7 @@ mod tests {
     #[test]
     fn trace_impact_collects_upstream() {
         let mut program = sample_plugin();
-        let req_id = EntityId::new_serial("requirement");
+        let req_id = EntityId::new_serial("requirement", "requirement");
         let elem_id = program.elements[0].header.id.clone();
         add_trace_link(&mut program, req_id.clone(), elem_id.clone(), TraceKind::ObjectiveToRequirement);
         let impact = trace_impact(&mut program, &elem_id);

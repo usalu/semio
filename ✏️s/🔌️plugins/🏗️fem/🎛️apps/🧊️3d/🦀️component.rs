@@ -191,7 +191,7 @@ impl DocumentApp for Fem3dPlayApp {
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let projection = <Fem3dDocument as store::DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                match self.whole_document_operation(projection) {
+                match Self::whole_document_operation(projection) {
                     Some(operation) => Ok(Emit::operations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
                 }
@@ -226,7 +226,7 @@ impl DocumentApp for Fem3dPlayApp {
         ConfigSpec::empty()
     }
 
-    fn command_id(command: &Fem3dCommand) -> &str {
+    fn command_id(command: &Fem3dCommand) -> &'static str {
         command.command_id()
     }
 

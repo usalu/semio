@@ -22,7 +22,6 @@ use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView,
 };
 use store::EngineHandles;
 use serde_json::Value;
-use std::sync::Mutex;
 use store::DocumentPack;
 
 pub use catalogue_panel::DRAW_PLAY_BODY_CATALOGUE;
@@ -110,12 +109,6 @@ use canvas::{canvas_commit_draft, canvas_double_click, canvas_escape, canvas_poi
 #[derive(Default)]
 pub struct DrawPlayApp;
 
-static DRAWPLAYAPP_SESSION: std::sync::LazyLock<std::sync::Mutex<DrawSession>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(<DrawSession>::default()));
-
-fn session_lock() -> std::sync::MutexGuard<'static, DrawSession> {
-    DRAWPLAYAPP_SESSION.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
-}
-
 impl DocumentApp for DrawPlayApp {
     type Projection = DrawDocument;
     type Operation = DrawOperation;
@@ -157,12 +150,12 @@ impl DocumentApp for DrawPlayApp {
     }
 
     /// 🏷️ `app_commands!`'s generated `command_id()`.
-    fn command_id(command: &DrawCommand) -> &str {
+    fn command_id(command: &DrawCommand) -> &'static str {
         command.command_id()
     }
 
     fn handle(command: &DrawCommand, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DrawOperation, DrawConfigOperation, Self::DraftOperation>, Fault> {
-        let mut session = session_lock();
+        let mut session = DrawSession::default();
         command.dispatch(doc, cfg, &mut session)
     }
 
@@ -171,7 +164,7 @@ impl DocumentApp for DrawPlayApp {
         let config = cfg.projection;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<DrawPlayLabels>(&config.locale);
         let active_utility = config.active_utility_id.as_str();
-        let session = session_lock();
+        let session = DrawSession::default();
         match body_key {
             DRAW_PLAY_BODY_COMPOSITE => canvas_window::render(document, config, &session.gesture, active_utility),
             DRAW_PLAY_BODY_LAYERS => layers_panel::render(document, config, labels),

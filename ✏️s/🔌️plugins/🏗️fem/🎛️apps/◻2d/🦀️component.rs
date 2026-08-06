@@ -206,7 +206,7 @@ impl DocumentApp for Fem2dPlayApp {
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let projection = <Fem2dDocument as store::DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                match self.whole_document_operation(projection) {
+                match Self::whole_document_operation(projection) {
                     Some(operation) => Ok(Emit::operations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
                 }
@@ -233,7 +233,7 @@ impl DocumentApp for Fem2dPlayApp {
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(command: &Fem2dCommand) -> &str {
+    fn command_id(command: &Fem2dCommand) -> &'static str {
         command.command_id()
     }
 

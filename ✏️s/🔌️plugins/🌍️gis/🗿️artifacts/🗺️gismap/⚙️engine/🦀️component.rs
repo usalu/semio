@@ -82,7 +82,7 @@ fn feature_collection_operations(before: &[MapFeature], after: &[MapFeature], wr
     }
     for (index, feature) in after.iter().enumerate() {
         match before.iter().find(|entry| entry.id == feature.id) {
-            None => operations.push(wrap(CollectionOperation::Add { id: feature.id.clone(), item: feature.clone(), at: index })),
+            None => operations.push(wrap(CollectionOperation::Add { index: index, item: feature.clone() })),
             Some(prev) if prev.data != feature.data => operations.push(wrap(CollectionOperation::Patch { id: feature.id.clone(), patch: MapFeaturePatch { data: Some(feature.data.clone()) } })),
             Some(_) => {}
         }

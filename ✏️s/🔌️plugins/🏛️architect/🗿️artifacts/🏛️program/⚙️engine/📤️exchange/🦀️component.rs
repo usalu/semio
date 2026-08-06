@@ -405,7 +405,7 @@ fn upsert_relationship_stub(program: &mut Program, row: RegisterCsvRow) {
     if program.relationships.iter().any(|r| r.header.id == row.id) {
         return;
     }
-    let fallback = program.elements.first().map_or_else(|| EntityId::new_serial("element"), |e| e.header.id.clone());
+    let fallback = program.elements.first().map_or_else(|| EntityId::new_serial("element", "element"), |e| e.header.id.clone());
     program.relationships.push(Relationship {
         header: EntityHeader::new(row.id, row.name),
         source_id: fallback.clone(),
@@ -439,7 +439,7 @@ fn upsert_adjacency_stub(program: &mut Program, row: RegisterCsvRow) {
     if program.adjacencies.iter().any(|a| a.header.id == row.id) {
         return;
     }
-    let a = program.elements.first().map_or_else(|| EntityId::new_serial("element"), |e| e.header.id.clone());
+    let a = program.elements.first().map_or_else(|| EntityId::new_serial("element", "element"), |e| e.header.id.clone());
     let b = program.elements.get(1).map_or_else(|| a.clone(), |e| e.header.id.clone());
     let (left, right) = crate::artifacts::program::engine::adjacency::normalize_pair(&a, &b);
     program.adjacencies.push(Adjacency {

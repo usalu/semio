@@ -1,0 +1,272 @@
+[
+  {
+    "f": "✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🦀️component.rs",
+    "name": "WriterPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/🦀️component.rs",
+    "name": "MathematicalPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🦀️component.rs",
+    "name": "Procedural2dPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🦀️component.rs",
+    "name": "Procedural3dPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🦀️component.rs",
+    "name": "FlowPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🦀️component.rs",
+    "name": "Gis2dPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/🦀️component.rs",
+    "name": "Gis3dPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🦀️component.rs",
+    "name": "VcsPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🦀️component.rs",
+    "name": "AnimatePresentPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🦀️component.rs",
+    "name": "ShootingPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🦀️component.rs",
+    "name": "SequencePlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🦀️component.rs",
+    "name": "Fem2dPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🦀️component.rs",
+    "name": "Fem3dPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🦀️component.rs",
+    "name": "ArchitectPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🦀️component.rs",
+    "name": "Process3dPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🦀️component.rs",
+    "name": "LowpolyPlayApp",
+    "blocked": "non-ZST fields"
+  },
+  {
+    "f": "✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🦀️component.rs",
+    "name": "ReasoningWiresPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🦀️component.rs",
+    "name": "FormsPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🦀️component.rs",
+    "name": "LayoutPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🦀️component.rs",
+    "name": "CadPlayApp",
+    "blocked": "non-ZST fields"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📕️norm/🎛️apps/📓️iso16757/🦀️component.rs",
+    "name": "Iso16757PlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📕️norm/🎛️apps/📔️vdi3805/🦀️component.rs",
+    "name": "Vdi3805PlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📕️norm/🎛️apps/📕️din4108/🦀️component.rs",
+    "name": "Din4108PlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📕️norm/🎛️apps/📗️din16798/🦀️component.rs",
+    "name": "Din16798PlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1990/🦀️component.rs",
+    "name": "En1990PlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1991/🦀️component.rs",
+    "name": "En1991PlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1992/🦀️component.rs",
+    "name": "En1992PlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1993/🦀️component.rs",
+    "name": "En1993PlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1994/🦀️component.rs",
+    "name": "En1994PlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1995/🦀️component.rs",
+    "name": "En1995PlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1996/🦀️component.rs",
+    "name": "En1996PlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1997/🦀️component.rs",
+    "name": "En1997PlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1998/🦀️component.rs",
+    "name": "En1998PlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1999/🦀️component.rs",
+    "name": "En1999PlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📕️norm/🎛️apps/📙️din18599/🦀️component.rs",
+    "name": "Din18599PlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🦀️component.rs",
+    "name": "PlaybookPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️component.rs",
+    "name": "ModuleApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/🦀️component.rs",
+    "name": "ImperativePlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🦀️component.rs",
+    "name": "RemodelPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🦀️component.rs",
+    "name": "TrinityRewritePlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🦀️component.rs",
+    "name": "TrinityJackPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🦀️component.rs",
+    "name": "DagPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🦀️component.rs",
+    "name": "DrawPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🦀️component.rs",
+    "name": "RasterPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🦀️component.rs",
+    "name": "NotePlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🦀️component.rs",
+    "name": "Puzzle2dPlayApp",
+    "blocked": "non-ZST fields"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🦀️component.rs",
+    "name": "Puzzle5dPlayApp",
+    "blocked": "non-ZST fields"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs",
+    "name": "Puzzle3dPlayApp",
+    "blocked": "non-ZST fields"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🦀️component.rs",
+    "name": "Block2dPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🦀️component.rs",
+    "name": "Block5dPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🦀️component.rs",
+    "name": "Block3dPlayApp",
+    "blocked": "migrated"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🦀️component.rs",
+    "name": "HomeApp",
+    "blocked": "non-ZST fields"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🦀️component.rs",
+    "name": "SpaceApp",
+    "blocked": "non-ZST fields"
+  },
+  {
+    "f": "✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🦀️component.rs",
+    "name": "SourcingCurateApp",
+    "blocked": "migrated"
+  }
+]

@@ -125,3 +125,9 @@
 **Depends on:** `🧪w2-framework.md`, Wave 2 🧊3d engine ticket
 
 **Status:** open
+
+## OS host: store_sync / space / workflow remount (2026-08-06)
+- `semio-framework-os` host_core still imports dissolved crates `store_sync`, `space`, `workflow`.
+- Implementations live under `🛍️products/💻️os/🔨️modules/{🏪️store/🔄️sync,🪐️space,🔁️workflow}` and expect `crate::os_*` (kernel).
+- Registrar must path-mount them into `semio-framework-os-kernel` glue and re-export; host then `use store::…` / kernel aliases. Do not mount into host facade.
+- Host Cargo.toml needs tokio/time, futures_util, tokio-tungstenite, notify, zip if sync/space stay host-side (not recommended).

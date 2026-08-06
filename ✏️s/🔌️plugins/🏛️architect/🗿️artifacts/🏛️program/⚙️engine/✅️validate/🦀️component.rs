@@ -451,7 +451,7 @@ mod tests {
     fn detects_orphan_requirement() {
         let mut program = sample_plugin();
         program.requirements.push(Requirement {
-            header: EntityHeader::new(EntityId::new_serial("requirement"), "Orphan"),
+            header: EntityHeader::new(EntityId::new_serial("requirement", "Orphan"), "Orphan"),
             code: "OR-1".into(),
             kind: crate::artifacts::program::registers::RequirementKind::Functional,
             statement: crate::artifacts::program::kernel::TextField::plain("orphan req"),
@@ -481,7 +481,7 @@ mod tests {
     fn detects_broken_relationship_target() {
         let mut program = sample_plugin();
         program.relationships.push(crate::artifacts::program::registers::Relationship {
-            header: EntityHeader::new(EntityId::new_serial("relationship"), "broken"),
+            header: EntityHeader::new(EntityId::new_serial("relationship", "broken"), "broken"),
             source_id: program.elements[0].header.id.clone(),
             target_id: EntityId("missing-target".into()),
             kind: crate::artifacts::program::registers::RelationshipKind::DependsOn,

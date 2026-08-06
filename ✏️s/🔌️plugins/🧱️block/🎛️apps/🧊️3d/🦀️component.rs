@@ -138,7 +138,7 @@ impl DocumentApp for Block3dPlayApp {
         Some(crate::artifacts::block3d::engine::block3d_io())
     }
 
-    fn command_id(command: &Block3dCommand) -> &str {
+    fn command_id(command: &Block3dCommand) -> &'static str {
         command.command_id()
     }
 

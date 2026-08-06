@@ -32,7 +32,7 @@ pub mod add_node {
         let id = engine::next_node_id(document);
         let node = engine::default_node_for_kind(&payload.kind, &id, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0));
         Ok(Emit {
-            document_operations: vec![DagOperation::Nodes(CollectionOperation::Add { id: node.id.clone(), at: document.nodes.len(), item: node })],
+            document_operations: vec![DagOperation::Nodes(CollectionOperation::Add { index: document.nodes.len(), item: node })],
             config_operations: vec![DagConfigOperation::SetSelection { node_ids: vec![id] }],
             ..Default::default()
         })

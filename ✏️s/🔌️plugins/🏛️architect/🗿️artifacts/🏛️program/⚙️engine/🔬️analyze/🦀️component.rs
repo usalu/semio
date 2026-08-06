@@ -64,7 +64,7 @@ pub fn run_analysis(program: &Program, kind: AnalysisKind) -> AnalysisResult {
 pub fn run_analysis_and_record(program: &mut Program, kind: AnalysisKind) -> AnalysisResult {
     let result = run_analysis(program, kind);
     let record = AnalysisRecord {
-        header: EntityHeader::new(EntityId::new_serial("analysis"), result.title.clone()),
+        header: EntityHeader::new(EntityId::new_serial("analysis", "analysis"), result.title.clone()),
         kind,
         title: result.title.clone(),
         parameters: Vec::new(),

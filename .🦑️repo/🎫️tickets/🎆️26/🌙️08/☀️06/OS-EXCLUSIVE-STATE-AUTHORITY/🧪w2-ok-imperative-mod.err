@@ -1,0 +1,38 @@
+    Checking semio-s-plugin-imperative-control v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:7:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:13:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:345:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:351:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9: warning: ambiguous glob re-exports: the name `canonicalize` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9: warning: ambiguous glob re-exports: the name `test_support` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9: warning: ambiguous glob re-exports: the name `core` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9: warning: ambiguous glob re-exports: the name `Symbol` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `cli` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `format` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `io` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9: warning: ambiguous glob re-exports: the name `testkit` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `read_varint_u64` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `write_varint_u64` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `recover_file` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `RecoveryReport` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `VerificationLevel` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `WriteOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `DecodeOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9: warning: ambiguous glob re-exports: the name `EncodeOptions` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:198:9: warning: ambiguous glob re-exports: the name `Alternative` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:199:9: warning: unused import: `crate::os_dsl::core::*`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:1083:21: warning: unused variable: `len`: help: if this is intentional, prefix it with an underscore: `_len`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4: warning: function `print_edge_label` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2075:19: warning: method `set_envelope` is never used
+    Checking semio-s-plugin-imperative-core v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core/📦️packages/🦀️rust)
+    Checking semio-s-plugin-imperative-math v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust)
+    Checking semio-s-plugin-imperative-logic v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust)
+    Checking semio-s-plugin-imperative-text v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust)
+warning: `semio-framework-os-kernel` (lib) generated 27 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+    Checking semio-s-imperative v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust)
+✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/📦️glue.rs:3:1: warning: unused extern crate: unused
+✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/📦️glue.rs:4:1: warning: unused extern crate: unused
+warning: `semio-s-imperative` (lib) generated 2 warnings (run `cargo fix --lib -p semio-s-imperative` to apply 2 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 0.72s

@@ -24,7 +24,7 @@ pub mod add_element {
         next.selected_ids = vec![id];
         next.active_register = "elements".into();
         Ok(Emit {
-            document_operations: vec![ProgramOperation::Elements(CollectionOperation::Add { id: element.header.id.clone(), at: program.elements.len(), item: element })],
+            document_operations: vec![ProgramOperation::Elements(CollectionOperation::Add { index: program.elements.len(), item: element })],
             config_operations: snapshot(next),
             ..Default::default()
         })

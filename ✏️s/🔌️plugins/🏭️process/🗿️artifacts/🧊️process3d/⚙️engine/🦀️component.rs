@@ -13,7 +13,6 @@ use serde_json::Value;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Mutex;
 use store::DocumentDsl;
 
@@ -57,10 +56,9 @@ pub fn plate_document() -> Process3dDocument {
 //#endregion 🔖️ExampleFixtures
 
 //#region 🔖️IdGeneration
-static PROCESS3D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 pub fn next_step_id() -> String {
-    format!("step-{}", PROCESS3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed))
+    format!("step-{}", &blake3::hash(concat!(file!(), line!(), "step-{}").as_bytes()).to_hex()[..12])
 }
 //#endregion 🔖️IdGeneration
 
@@ -537,7 +535,7 @@ pub fn insert_step_operations(fixture: &Process3dDocument, step: ProcessStep) ->
     use protocol::CollectionOperation;
     let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len()).min(fixture.steps.len());
     let id = step.id.clone();
-    vec![Process3dOperation::Steps { collection: CollectionOperation::Add { id, item: step, at: cursor } }, Process3dOperation::SetCursor { resolved_up_to: Some(cursor + 1) }]
+    vec![Process3dOperation::Steps { collection: CollectionOperation::Add { index: cursor, item: step } }, Process3dOperation::SetCursor { resolved_up_to: Some(cursor + 1) }]
 }
 
 pub fn remove_step_operations(fixture: &Process3dDocument, id: &str) -> Option<Vec<crate::artifacts::process3d::op::Process3dOperation>> {

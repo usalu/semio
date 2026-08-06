@@ -190,8 +190,9 @@ pub trait Identified<TId> {
 }
 
 /// @emoji 🩹️ Applies a patch in place and returns the patch that undoes it (captured from prior state).
-pub trait Patchable<TPatch> {
-    fn apply_patch(&mut self, patch: &TPatch) -> TPatch;
+pub trait Patchable<TPatch>: Sized {
+    fn apply_patch(&mut self, patch: &TPatch);
+    fn diff_patch(&self, other: &Self) -> Option<TPatch>;
 }
 
 /// @emoji 🧺️ Generic ordered-collection operation (add/remove/move/patch) with mechanical pre-state inverses.
@@ -255,8 +256,10 @@ where
             CollectionOperation::Move { id: id.clone(), to_index: index }
         }
         CollectionOperation::Patch { id, patch } => {
-            let mut prior = items.iter().find(|item| item.id() == id).cloned().expect("patch target must exist in pre-state");
-            let inverse_patch = prior.apply_patch(patch);
+            let prior = items.iter().find(|item| item.id() == id).cloned().expect("patch target must exist in pre-state");
+            let mut after = prior.clone();
+            after.apply_patch(patch);
+            let inverse_patch = after.diff_patch(&prior).expect("a patch that changed state must yield a computable inverse");
             CollectionOperation::Patch { id: id.clone(), patch: inverse_patch }
         }
     }

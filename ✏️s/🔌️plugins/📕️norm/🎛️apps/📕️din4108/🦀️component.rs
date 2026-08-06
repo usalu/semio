@@ -71,7 +71,7 @@ impl DocumentApp for Din4108PlayApp {
         Some(crate::core::app::norm_io(VARIANT, DOCUMENT_SCHEMA))
     }
 
-    fn command_id(command: &Din4108Command) -> &str {
+    fn command_id(command: &Din4108Command) -> &'static str {
         command.command_id()
     }
 

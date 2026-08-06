@@ -1,7 +1,7 @@
 //! 🌐️ Application-neutral 3D world canvas: mesh loading, orbit camera, picking, and marquee selection.
 
 use base64::Engine;
-use framework_surface_terrain::TerrainSessionCore;
+use crate::framework_surface_terrain::TerrainSessionCore;
 use semio_s_3d::scene::{
     aabb_intersects_frustum, axis_rotate_angle, frustum_planes, grid_placement_anchor, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
     marquee_is_crossing_from_path, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rotate_vector, screen_select_components, screen_select_instances,

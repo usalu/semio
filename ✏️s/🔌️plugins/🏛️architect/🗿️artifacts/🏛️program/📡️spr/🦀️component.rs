@@ -45,7 +45,7 @@ mod tests {
             "7b226f7065726174696f6e223a22656c656d656e7473222c226b696e64223a2272656d6f7665222c226964223a22656c656d656e742d31227d"
         );
         assert_eq!(
-            hex(&ProgramOperation::Elements(CollectionOperation::Move { id: EntityId("element-1".into()), to: 2 })),
+            hex(&ProgramOperation::Elements(CollectionOperation::Move { id: EntityId("element-1".into()), to_index: 2 })),
             "7b226f7065726174696f6e223a22656c656d656e7473222c226b696e64223a226d6f7665222c226964223a22656c656d656e742d31222c22746f223a327d"
         );
     }

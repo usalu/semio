@@ -71,7 +71,7 @@ impl DocumentApp for En1997PlayApp {
         Some(crate::core::app::norm_io(VARIANT, DOCUMENT_SCHEMA))
     }
 
-    fn command_id(command: &En1997Command) -> &str {
+    fn command_id(command: &En1997Command) -> &'static str {
         command.command_id()
     }
 

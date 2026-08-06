@@ -102,7 +102,7 @@ impl DocumentApp for ArchitectPlayApp {
         ArchitectConfig { active_register: "elements".into(), ..ArchitectConfig::default() }
     }
 
-    fn command_id(command: &ArchitectCommand) -> &str {
+    fn command_id(command: &ArchitectCommand) -> &'static str {
         command.command_id()
     }
 

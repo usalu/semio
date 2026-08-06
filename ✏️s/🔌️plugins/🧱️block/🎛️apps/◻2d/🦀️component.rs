@@ -87,7 +87,7 @@ impl DocumentApp for Block2dPlayApp {
         Some(crate::artifacts::block2d::engine::block2d_io())
     }
 
-    fn command_id(command: &Block2dCommand) -> &str {
+    fn command_id(command: &Block2dCommand) -> &'static str {
         command.command_id()
     }
 

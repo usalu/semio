@@ -82,7 +82,7 @@ impl DocumentApp for MathematicalPlayApp {
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`. `setLocale` has no manifest declaration (host-pushed,
     /// not a user-facing action).
-    fn command_id(command: &MathCommand) -> &str {
+    fn command_id(command: &MathCommand) -> &'static str {
         command.command_id()
     }
 

@@ -77,17 +77,17 @@ enum GisMapOperationDsl {
 
 fn gis_map_operation_to_dsl(operation: &GisMapOperation) -> GisMapOperationDsl {
     match operation {
-        GisMapOperation::Positions(CollectionOperation::Add { id: _id, item, at }) => GisMapOperationDsl::AddPosition { index: *at, item: item.clone() },
+        GisMapOperation::Positions(CollectionOperation::Add { index: at, item }) => GisMapOperationDsl::AddPosition { index: *at, item: item.clone() },
         GisMapOperation::Positions(CollectionOperation::Remove { id }) => GisMapOperationDsl::RemovePosition { id: id.clone() },
-        GisMapOperation::Positions(CollectionOperation::Move { id, to }) => GisMapOperationDsl::MovePosition { id: id.clone(), to_index: *to },
+        GisMapOperation::Positions(CollectionOperation::Move { id, to_index: to }) => GisMapOperationDsl::MovePosition { id: id.clone(), to_index: *to },
         GisMapOperation::Positions(CollectionOperation::Patch { id, patch }) => GisMapOperationDsl::PatchPosition { id: id.clone(), patch: patch.clone() },
-        GisMapOperation::Routes(CollectionOperation::Add { id: _id, item, at }) => GisMapOperationDsl::AddRoute { index: *at, item: item.clone() },
+        GisMapOperation::Routes(CollectionOperation::Add { index: at, item }) => GisMapOperationDsl::AddRoute { index: *at, item: item.clone() },
         GisMapOperation::Routes(CollectionOperation::Remove { id }) => GisMapOperationDsl::RemoveRoute { id: id.clone() },
-        GisMapOperation::Routes(CollectionOperation::Move { id, to }) => GisMapOperationDsl::MoveRoute { id: id.clone(), to_index: *to },
+        GisMapOperation::Routes(CollectionOperation::Move { id, to_index: to }) => GisMapOperationDsl::MoveRoute { id: id.clone(), to_index: *to },
         GisMapOperation::Routes(CollectionOperation::Patch { id, patch }) => GisMapOperationDsl::PatchRoute { id: id.clone(), patch: patch.clone() },
-        GisMapOperation::Regions(CollectionOperation::Add { id: _id, item, at }) => GisMapOperationDsl::AddRegion { index: *at, item: item.clone() },
+        GisMapOperation::Regions(CollectionOperation::Add { index: at, item }) => GisMapOperationDsl::AddRegion { index: *at, item: item.clone() },
         GisMapOperation::Regions(CollectionOperation::Remove { id }) => GisMapOperationDsl::RemoveRegion { id: id.clone() },
-        GisMapOperation::Regions(CollectionOperation::Move { id, to }) => GisMapOperationDsl::MoveRegion { id: id.clone(), to_index: *to },
+        GisMapOperation::Regions(CollectionOperation::Move { id, to_index: to }) => GisMapOperationDsl::MoveRegion { id: id.clone(), to_index: *to },
         GisMapOperation::Regions(CollectionOperation::Patch { id, patch }) => GisMapOperationDsl::PatchRegion { id: id.clone(), patch: patch.clone() },
         GisMapOperation::SetDocument { document } => GisMapOperationDsl::SetDocument { document: document.clone() },
     }
@@ -95,17 +95,17 @@ fn gis_map_operation_to_dsl(operation: &GisMapOperation) -> GisMapOperationDsl {
 
 fn gis_map_operation_from_dsl(operation: GisMapOperationDsl) -> GisMapOperation {
     match operation {
-        GisMapOperationDsl::AddPosition { index, item } => GisMapOperation::Positions(CollectionOperation::Add { id: item.id.clone(), item, at: index }),
+        GisMapOperationDsl::AddPosition { index, item } => GisMapOperation::Positions(CollectionOperation::Add { index: index, item }),
         GisMapOperationDsl::RemovePosition { id } => GisMapOperation::Positions(CollectionOperation::Remove { id }),
-        GisMapOperationDsl::MovePosition { id, to_index } => GisMapOperation::Positions(CollectionOperation::Move { id, to: to_index }),
+        GisMapOperationDsl::MovePosition { id, to_index } => GisMapOperation::Positions(CollectionOperation::Move { id, to_index: to_index }),
         GisMapOperationDsl::PatchPosition { id, patch } => GisMapOperation::Positions(CollectionOperation::Patch { id, patch }),
-        GisMapOperationDsl::AddRoute { index, item } => GisMapOperation::Routes(CollectionOperation::Add { id: item.id.clone(), item, at: index }),
+        GisMapOperationDsl::AddRoute { index, item } => GisMapOperation::Routes(CollectionOperation::Add { index: index, item }),
         GisMapOperationDsl::RemoveRoute { id } => GisMapOperation::Routes(CollectionOperation::Remove { id }),
-        GisMapOperationDsl::MoveRoute { id, to_index } => GisMapOperation::Routes(CollectionOperation::Move { id, to: to_index }),
+        GisMapOperationDsl::MoveRoute { id, to_index } => GisMapOperation::Routes(CollectionOperation::Move { id, to_index: to_index }),
         GisMapOperationDsl::PatchRoute { id, patch } => GisMapOperation::Routes(CollectionOperation::Patch { id, patch }),
-        GisMapOperationDsl::AddRegion { index, item } => GisMapOperation::Regions(CollectionOperation::Add { id: item.id.clone(), item, at: index }),
+        GisMapOperationDsl::AddRegion { index, item } => GisMapOperation::Regions(CollectionOperation::Add { index: index, item }),
         GisMapOperationDsl::RemoveRegion { id } => GisMapOperation::Regions(CollectionOperation::Remove { id }),
-        GisMapOperationDsl::MoveRegion { id, to_index } => GisMapOperation::Regions(CollectionOperation::Move { id, to: to_index }),
+        GisMapOperationDsl::MoveRegion { id, to_index } => GisMapOperation::Regions(CollectionOperation::Move { id, to_index: to_index }),
         GisMapOperationDsl::PatchRegion { id, patch } => GisMapOperation::Regions(CollectionOperation::Patch { id, patch }),
         GisMapOperationDsl::SetDocument { document } => GisMapOperation::SetDocument { document },
     }
@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 });
+        let operation = GisMapOperation::Positions(CollectionOperation::Add { index: 0, item: sample_patch_feature() });
         store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -172,26 +172,26 @@ mod tests {
 
     #[test]
     fn gis_map_positions_op_lines_round_trip() {
-        store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 }));
+        store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Add { index: 0, item: sample_patch_feature() }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Remove { id: "p1".into() }));
-        store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Move { id: "p1".into(), to: 3 }));
+        store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Move { id: "p1".into(), to_index: 3 }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(&json!({ "label": "Home" }))) } }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: None } }));
     }
 
     #[test]
     fn gis_map_routes_op_lines_round_trip() {
-        store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 }));
+        store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Add { index: 0, item: sample_patch_feature() }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Remove { id: "p1".into() }));
-        store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Move { id: "p1".into(), to: 1 }));
+        store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Move { id: "p1".into(), to_index: 1 }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(&json!({ "kind": "reuse" }))) } }));
     }
 
     #[test]
     fn gis_map_regions_op_lines_round_trip() {
-        store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 }));
+        store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Add { index: 0, item: sample_patch_feature() }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Remove { id: "p1".into() }));
-        store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Move { id: "p1".into(), to: 2 }));
+        store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Move { id: "p1".into(), to_index: 2 }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(&json!({ "kind": "boundary" }))) } }));
     }
 
@@ -209,8 +209,8 @@ mod tests {
         let hex = |operation: &GisMapOperation| OpBinary::encode_op(operation).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
         assert_eq!(hex(&GisMapOperation::Positions(CollectionOperation::Remove { id: "p1".into() })), "01010102703101000600");
         assert_eq!(hex(&GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: None } })), "01030102703102000600010e0d00");
-        assert_eq!(hex(&GisMapOperation::Routes(CollectionOperation::Move { id: "p1".into(), to: 1 })), "01060102703102000600010401");
-        assert_eq!(hex(&GisMapOperation::Regions(CollectionOperation::Move { id: "p1".into(), to: 2 })), "010a0102703102000600010402");
+        assert_eq!(hex(&GisMapOperation::Routes(CollectionOperation::Move { id: "p1".into(), to_index: 1 })), "01060102703102000600010401");
+        assert_eq!(hex(&GisMapOperation::Regions(CollectionOperation::Move { id: "p1".into(), to_index: 2 })), "010a0102703102000600010402");
     }
 
     #[test]
@@ -218,7 +218,7 @@ mod tests {
         let initial = empty_gis_map_projection();
         let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None);
         let mut store = store::DocumentStore::new(envelope);
-        store.dispatch(store::DocumentCommand::Apply { operations: vec![GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 })], description: None }).expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![GisMapOperation::Positions(CollectionOperation::Add { index: 0, item: sample_patch_feature() })], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

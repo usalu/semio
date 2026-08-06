@@ -31,7 +31,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::LazyLock;
 
 //#region 🔖️Constants
@@ -60,27 +59,32 @@ pub const PUZZLE5D_PROXIMITY_RADIUS: f64 = 0.75;
 /// `crate::artifacts::puzzle5d::Puzzle5dProjection` — see that artifact's `🔖️ValueBridge` region — so
 /// the DSL-text example fixtures are parsed once into the typed projection and re-serialized to the
 /// JSON string this module's `document_from_json`/`.example(...)` call sites expect.
-pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::artifacts::puzzle5d::dsl::PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest"));
-pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::artifacts::puzzle5d::dsl::PUZZLE5D_NAKAGIN_EXAMPLE_TEXT, "nakagin"));
+fn concrete_forest_example_json() -> String { parse_example_dsl(crate::artifacts::puzzle5d::dsl::PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest") }
+fn nakagin_example_json() -> String { parse_example_dsl(crate::artifacts::puzzle5d::dsl::PUZZLE5D_NAKAGIN_EXAMPLE_TEXT, "nakagin") }
 
 fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
     let projection = <Puzzle5dProjection as store::DocumentDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
     serde_json::to_string(&projection).unwrap_or_else(|error| panic!("serialize {label} example fixture: {error}"))
 }
 
-static PUZZLE5D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 pub fn puzzle5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 pub fn next_part_id() -> String {
-    let next = PUZZLE5D_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
+    let next = {
+        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
+        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
+    };
     format!("part-{next}")
 }
 
 pub fn next_fastener_id() -> String {
-    let next = PUZZLE5D_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
+    let next = {
+        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
+        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
+    };
     format!("fastener-{next}")
 }
 //#endregion 🔖️Constants
@@ -227,7 +231,7 @@ pub fn document_from_json(json_text: &str) -> Puzzle5dDocument {
 }
 
 pub fn default_document() -> Puzzle5dDocument {
-    document_from_json(CONCRETE_FOREST_EXAMPLE_JSON.as_str())
+    document_from_json(concrete_forest_example_json().as_str())
 }
 
 /// 🧮️ Document ops for a document mutation — normalizes `before` through the same typed
@@ -1266,39 +1270,25 @@ pub struct Puzzle5dActionCtx<'a> {
 /// `cfg.projection`, every write flows out as a `Puzzle5dConfigOperation` in the returned `Emit`.
 /// Each action mutates a transient {@link Puzzle5dScene}, then emits the granular operation delta.
 /// Undo/redo/checkpoints are handled by the wrapper.
-pub struct Puzzle5dPlayApp {
-    pub precompute: RefCell<Puzzle5dPrecomputeSession>,
-    pub registered_mesh_urls: RefCell<HashSet<String>>,
+pub #[derive(Default, Clone, Copy)]
+struct Puzzle5dPlayApp;
+
+impl Default for Puzzle5dPlayApp
 }
 
-impl Default for Puzzle5dPlayApp {
-    fn default() -> Self {
-        Self { precompute: RefCell::new(Puzzle5dPrecomputeSession::new()), registered_mesh_urls: RefCell::new(HashSet::new()) }
-    }
-}
-
-impl Puzzle5dPlayApp {
-    pub fn drive_precompute(&self, envelope: &Puzzle5dScene) {
-        let _ = self.precompute.borrow_mut().set_scene(&scene_config_json(envelope));
-        // 🧊️ Guarded by `has_mesh` (mirrors the puzzle3d path): `register_mesh` now invalidates the
-        // precompute cache, so re-registering the same fallback body on every drive would wipe
-        // suggestion/fill progress every call and defeat `set_scene`'s idempotence above.
-        if !self.precompute.borrow_mut().has_mesh(PUZZLE5D_FALLBACK_MESH_KIND) {
-            let fallback = semio_framework_plugin::mesh_from_kind(PUZZLE5D_FALLBACK_MESH_KIND);
-            self.precompute.borrow_mut().register_mesh(PUZZLE5D_FALLBACK_MESH_KIND, &fallback.positions, &fallback.indices);
-        }
+impl Puzzle5dPlayApp
         for url in collect_mesh_urls(&envelope.document) {
-            if !self.registered_mesh_urls.borrow_mut().contains(&url) && !self.precompute.borrow_mut().has_mesh(&url) {
+            if !(std::cell::RefCell::new(std::collections::HashSet::<String>::new())).borrow_mut().contains(&url) && !(std::cell::RefCell::new(Puzzle5dPrecomputeSession::default())).borrow_mut().has_mesh(&url) {
                 let fallback = semio_framework_plugin::mesh_from_kind(PUZZLE5D_FALLBACK_MESH_KIND);
-                self.precompute.borrow_mut().register_mesh(&url, &fallback.positions, &fallback.indices);
+                (std::cell::RefCell::new(Puzzle5dPrecomputeSession::default())).borrow_mut().register_mesh(&url, &fallback.positions, &fallback.indices);
             }
         }
-        let _ = self.precompute.borrow_mut().precompute_step(8);
+        let _ = (std::cell::RefCell::new(Puzzle5dPrecomputeSession::default())).borrow_mut().precompute_step(8);
     }
 
     pub fn apply_engine_brush_placement(&self, envelope: &Puzzle5dScene, payload: &Value) -> Option<Puzzle5dScene> {
         let brush_payload = serde_json::from_value::<BrushPlacePayload>(payload.clone()).ok()?;
-        let fixture_json = self.precompute.borrow_mut().apply_brush_placement_rust(&serde_json::to_string(&brush_payload).ok()?).ok()?;
+        let fixture_json = (std::cell::RefCell::new(Puzzle5dPrecomputeSession::default())).borrow_mut().apply_brush_placement_rust(&serde_json::to_string(&brush_payload).ok()?).ok()?;
         merge_engine_fixture(envelope, &fixture_json)
     }
 
@@ -1308,7 +1298,7 @@ impl Puzzle5dPlayApp {
         let node_kind = payload.get("nodeKind").and_then(|value| value.as_str()).unwrap_or("Part").to_string();
         let source_grip = payload.get("sourceHandleId").and_then(|value| value.as_str()).map(str::to_string).or_else(|| puzzle5d_brush_target_grip(envelope));
         if let Some(source_grip) = source_grip.as_ref() {
-            let candidates = parse_brush_candidates_free(&self.precompute.borrow().brush_candidates(source_grip));
+            let candidates = parse_brush_candidates_free(&(std::cell::RefCell::new(Puzzle5dPrecomputeSession::default())).borrow().brush_candidates(source_grip));
             let candidate_index =
                 candidates.iter().position(|candidate| candidate.get("objectKindId").or_else(|| candidate.get("objectKind")).and_then(|value| value.as_str()) == Some(node_kind.as_str())).unwrap_or(envelope.runtime.brush_candidate_index);
             let engine_payload = json!({ "objectKindId": node_kind, "targetVortexFullId": source_grip, "candidateIndex": candidate_index });
@@ -1528,22 +1518,7 @@ fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args:
     }
 }
 
-impl DocumentApp for Puzzle5dPlayApp {
-    type Projection = Puzzle5dPlayProjection;
-    type Operation = Puzzle5dOperation;
-    type Config = Puzzle5dConfig;
-    type ConfigOperation = Puzzle5dConfigOperation;
-    type Draft = NoDraft;
-    type DraftOperation = NoDraftOperation;
-
-    type Command = Puzzle5dCommand;
-
-    const APP_ID: &'static str = PUZZLE5D_PLAY_APP_ID;
-    const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA;
-
-    fn initial_projection() -> Puzzle5dPlayProjection {
-        Puzzle5dPlayProjection(serde_json::to_value(default_document()).unwrap_or(Value::Null))
-    }
+impl DocumentApp for Puzzle5dPlayApp
 
     fn clipboard_media_type() -> Option<MediaType> {
         Some(MediaType { class: MediaClass::Kit, form: MediaForm::Design })
@@ -1736,7 +1711,7 @@ impl DocumentApp for Puzzle5dPlayApp {
         let labels = puzzle5d_labels(config);
         match body_key {
             board2d::BODY_KEY => board2d::render(&envelope),
-            world3d::BODY_KEY => world3d::render(&envelope, &self.precompute.borrow()),
+            world3d::BODY_KEY => world3d::render(&envelope, &(std::cell::RefCell::new(Puzzle5dPrecomputeSession::default())).borrow()),
             document_panel::BODY_KEY => document_panel::render(&envelope, labels),
             catalogue::BODY_KEY => catalogue::render(&envelope, labels),
             inspection::BODY_KEY => inspection::render(&envelope, labels),
@@ -1772,9 +1747,9 @@ impl DocumentApp for Puzzle5dPlayApp {
                     let active_utility = puzzle5d_scene_active_utility(config, Some(&wid));
                     let envelope = scene_from_projection(&doc.projection.0, config.clone(), &active_utility);
                     let measures = if *window == board2d::WINDOW_KIND_ID {
-                        board2d::window_measures(&envelope, &self.precompute.borrow(), labels)
+                        board2d::window_measures(&envelope, &(std::cell::RefCell::new(Puzzle5dPrecomputeSession::default())).borrow(), labels)
                     } else {
-                        world3d::window_measures(&envelope, &self.precompute.borrow(), labels)
+                        world3d::window_measures(&envelope, &(std::cell::RefCell::new(Puzzle5dPrecomputeSession::default())).borrow(), labels)
                     };
                     (wid, measures)
                 })

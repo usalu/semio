@@ -5247,12 +5247,10 @@ mod sobject {
     use crate::artifacts::present::engine::animate_core::updater::Updater;
     use kurbo::{ParamCurve, ParamCurveArclen, PathSeg, Shape};
     use math::geometry::{append_shape_to_path, bounding_box, polygon_centroid, Affine, BezPath, PathEl, Point, Vec2};
-    use std::sync::atomic::{AtomicU64, Ordering};
-
-    static SOBJECT_ID: AtomicU64 = AtomicU64::new(1);
+    
 
     fn next_id() -> u64 {
-        SOBJECT_ID.fetch_add(1, Ordering::Relaxed)
+        ({ u64::from_str_radix(&blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex()[..8], 16).unwrap_or(1) })
     }
 
     /// 🎨️ Stroke and fill style for vector Sobjects.
@@ -6759,14 +6757,13 @@ mod updater {
         callback: Arc<dyn Fn(&mut dyn Sobject, f64) + Send + Sync>,
     }
 
-    static UPDATER_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
     impl Updater {
         pub fn new<F>(name: impl Into<String>, callback: F) -> Self
         where
             F: Fn(&mut dyn Sobject, f64) + Send + Sync + 'static,
         {
-            Self { id: UPDATER_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed), name: name.into(), active: true, dt_scale: 1.0, callback: Arc::new(callback) }
+            Self { id: ({ u64::from_str_radix(&blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex()[..8], 16).unwrap_or(1) }), name: name.into(), active: true, dt_scale: 1.0, callback: Arc::new(callback) }
         }
 
         pub fn invoke(&self, target: &mut dyn Sobject, dt: f64) {
