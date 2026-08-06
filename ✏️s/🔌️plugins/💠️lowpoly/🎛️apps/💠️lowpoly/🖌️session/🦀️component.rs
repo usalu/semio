@@ -11,7 +11,7 @@ use crate::artifacts::lowpoly::engine::{composite_layer_pixels, flood_fill, pixe
 use crate::artifacts::lowpoly::op::{LowpolyOperation, PixelRun};
 use crate::artifacts::lowpoly::{empty_paint_pixels, LowpolyObject, LowpolyObjectPatch, LowpolyProjection, LOWPOLY_PAINT_TEXTURE_SIZE};
 use base64::Engine;
-use semio_s_3d::Vec3;
+use semio_s_3d::mesh::Vec3;
 use semio_framework_plugin::Emit;
 use std::collections::HashMap;
 

@@ -1,0 +1,142 @@
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(226,29): error TS2540: Cannot assign to 'aliases' because it is a read-only property.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(227,30): error TS2540: Cannot assign to 'variants' because it is a read-only property.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(228,35): error TS2540: Cannot assign to 'themedAliases' because it is a read-only property.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(229,36): error TS2540: Cannot assign to 'themedVariants' because it is a read-only property.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(321,17): error TS2339: Property 'vitest' does not exist on type 'ImportMeta'.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(322,48): error TS2339: Property 'vitest' does not exist on type 'ImportMeta'.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(798,17): error TS2339: Property 'vitest' does not exist on type 'ImportMeta'.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(799,48): error TS2339: Property 'vitest' does not exist on type 'ImportMeta'.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(1031,17): error TS2339: Property 'vitest' does not exist on type 'ImportMeta'.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(1032,59): error TS2339: Property 'vitest' does not exist on type 'ImportMeta'.
+📦️index.tsx(112,8): error TS2307: Cannot find module '@semio-tech/framework-core' or its corresponding type declarations.
+📦️index.tsx(893,189): error TS2307: Cannot find module '@semio-tech/framework-core' or its corresponding type declarations.
+📦️index.tsx(894,76): error TS2307: Cannot find module '@semio-tech/framework-core' or its corresponding type declarations.
+📦️index.tsx(925,28): error TS7006: Parameter 'target' implicitly has an 'any' type.
+📦️index.tsx(1056,52): error TS7006: Parameter 'row' implicitly has an 'any' type.
+📦️index.tsx(1087,205): error TS2300: Duplicate identifier 'Icon'.
+📦️index.tsx(1087,1808): error TS2300: Duplicate identifier 'Cursor'.
+📦️index.tsx(1087,1841): error TS2300: Duplicate identifier 'Icon'.
+📦️index.tsx(1088,205): error TS2300: Duplicate identifier 'Icon'.
+📦️index.tsx(1088,1808): error TS2300: Duplicate identifier 'Cursor'.
+📦️index.tsx(1088,1841): error TS2300: Duplicate identifier 'Icon'.
+📦️index.tsx(1489,24): error TS2345: Argument of type 'import("/Users/ueli/Documents/semio/node_modules/@xyflow/react/dist/esm/types/nodes").Node | null' is not assignable to parameter of type 'Node | null'.
+  Type 'Node' is not assignable to type 'Node | null'.
+📦️index.tsx(1500,49): error TS2345: Argument of type 'Node' is not assignable to parameter of type 'Node | null'.
+📦️index.tsx(1898,7): error TS2322: Type 'true' is not assignable to type 'false'.
+📦️index.tsx(1900,7): error TS2322: Type 'true' is not assignable to type 'false'.
+📦️index.tsx(3413,161): error TS2552: Cannot find name 'DeepUiTranslationKeys'. Did you mean 'UiTranslationKey'?
+📦️index.tsx(4044,11): error TS2322: Type 'HTMLElement' is not assignable to type 'Node'.
+  Type 'HTMLElement' is missing the following properties from type '{ id: string; position: XYPosition; data: Record<string, unknown>; sourcePosition?: Position | undefined; targetPosition?: Position | undefined; ... 19 more ...; measured?: { ...; } | undefined; }': position, data
+📦️index.tsx(4114,30): error TS2345: Argument of type 'import("/Users/ueli/Documents/semio/node_modules/@xyflow/react/dist/esm/types/nodes").Node' is not assignable to parameter of type 'Node'.
+  Type 'Node' is missing the following properties from type 'Node': baseURI, childNodes, firstChild, isConnected, and 46 more.
+📦️index.tsx(4157,11): error TS2322: Type 'HTMLElement' is not assignable to type 'Node'.
+  Type 'HTMLElement' is missing the following properties from type '{ id: string; position: XYPosition; data: Record<string, unknown>; sourcePosition?: Position | undefined; targetPosition?: Position | undefined; ... 19 more ...; measured?: { ...; } | undefined; }': position, data
+📦️index.tsx(4195,30): error TS2345: Argument of type 'import("/Users/ueli/Documents/semio/node_modules/@xyflow/react/dist/esm/types/nodes").Node' is not assignable to parameter of type 'Node'.
+  Type 'Node' is missing the following properties from type 'Node': baseURI, childNodes, firstChild, isConnected, and 46 more.
+📦️index.tsx(4572,71): error TS2366: Function lacks ending return statement and return type does not include 'undefined'.
+📦️index.tsx(5072,35): error TS7006: Parameter '_' implicitly has an 'any' type.
+📦️index.tsx(5072,38): error TS7006: Parameter 'index' implicitly has an 'any' type.
+📦️index.tsx(5206,111): error TS7006: Parameter 'id' implicitly has an 'any' type.
+📦️index.tsx(5260,36): error TS7006: Parameter 'interaction' implicitly has an 'any' type.
+📦️index.tsx(5260,49): error TS7006: Parameter 'index' implicitly has an 'any' type.
+📦️index.tsx(5391,79): error TS7006: Parameter 'id' implicitly has an 'any' type.
+📦️index.tsx(5434,42): error TS7006: Parameter 'event' implicitly has an 'any' type.
+📦️index.tsx(5435,46): error TS7006: Parameter 'event' implicitly has an 'any' type.
+📦️index.tsx(5462,55): error TS18046: 'c' is of type 'unknown'.
+📦️index.tsx(5463,64): error TS18046: 'c' is of type 'unknown'.
+📦️index.tsx(5464,56): error TS18046: 'c' is of type 'unknown'.
+📦️index.tsx(5465,58): error TS18046: 'e' is of type 'unknown'.
+📦️index.tsx(5466,50): error TS18046: 'k' is of type 'unknown'.
+📦️index.tsx(5467,62): error TS18046: 'e' is of type 'unknown'.
+📦️index.tsx(5468,58): error TS18046: 'k' is of type 'unknown'.
+📦️index.tsx(5469,62): error TS18046: 'c' is of type 'unknown'.
+📦️index.tsx(5696,39): error TS2322: Type '"gauge"' is not assignable to type 'ControlIcon'.
+📦️index.tsx(6573,10): error TS2741: Property 'children' is missing in type '{ ref: RefObject<HTMLDivElement | null>; sessionGhost: false; "data-level": string; "data-slot": string; "data-anchor": "top-left" | "top-middle" | "top-right" | ... 4 more ... | "left-middle"; "data-panel-chrome-tab-bar-placeholder": string; "aria-hidden": "true"; className: string; style: { ...; } | undefined; }' but required in type 'GhostRegionShellProps'.
+📦️index.tsx(6736,15): error TS2540: Cannot assign to 'right' because it is a read-only property.
+📦️index.tsx(7121,16): error TS2322: Type '{ xmlns: string; className: string; style: { width: string; height: string; }; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>'.
+  Property 'xmlns' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>'.
+📦️index.tsx(7316,20): error TS2304: Cannot find name 'contextMenuContentClassName'.
+📦️index.tsx(7934,10): error TS2300: Duplicate identifier 'Cursor'.
+📦️index.tsx(7935,10): error TS2300: Duplicate identifier 'Cursor'.
+📦️index.tsx(10058,17): error TS2339: Property 'vitest' does not exist on type 'ImportMeta'.
+📦️index.tsx(10059,52): error TS2339: Property 'vitest' does not exist on type 'ImportMeta'.
+📦️index.tsx(10480,15): error TS2741: Property 'iconId' is missing in type '{ id: string; title: UiLabel; utilityBar: React.JSX.Element; utilityBarFolded: false; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+📦️index.tsx(10540,15): error TS2741: Property 'iconId' is missing in type '{ id: string; title: UiLabel; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+📦️index.tsx(14909,49): error TS2345: Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'readonly { id: string; title: string; iconId: "map" | "dag" | "info" | "code" | "link" | "s" | "search" | "import" | "filter" | "window" | "typography" | "animate" | "architect" | "draw" | "flow" | ... 233 more ... | "zoom-out"; }[]'.
+  Property 'iconId' is missing in type '{ id: string; title: string; }' but required in type '{ id: string; title: string; iconId: "map" | "dag" | "info" | "code" | "link" | "s" | "search" | "import" | "filter" | "window" | "typography" | "animate" | "architect" | "draw" | "flow" | ... 233 more ... | "zoom-out"; }'.
+📦️index.tsx(14912,44): error TS2345: Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'readonly { id: string; title: string; iconId: "map" | "dag" | "info" | "code" | "link" | "s" | "search" | "import" | "filter" | "window" | "typography" | "animate" | "architect" | "draw" | "flow" | ... 233 more ... | "zoom-out"; }[]'.
+  Property 'iconId' is missing in type '{ id: string; title: string; }' but required in type '{ id: string; title: string; iconId: "map" | "dag" | "info" | "code" | "link" | "s" | "search" | "import" | "filter" | "window" | "typography" | "animate" | "architect" | "draw" | "flow" | ... 233 more ... | "zoom-out"; }'.
+📦️index.tsx(14920,49): error TS2345: Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'readonly { id: string; title: string; iconId: "map" | "dag" | "info" | "code" | "link" | "s" | "search" | "import" | "filter" | "window" | "typography" | "animate" | "architect" | "draw" | "flow" | ... 233 more ... | "zoom-out"; }[]'.
+  Property 'iconId' is missing in type '{ id: string; title: string; }' but required in type '{ id: string; title: string; iconId: "map" | "dag" | "info" | "code" | "link" | "s" | "search" | "import" | "filter" | "window" | "typography" | "animate" | "architect" | "draw" | "flow" | ... 233 more ... | "zoom-out"; }'.
+📦️index.tsx(15869,21): error TS2741: Property 'iconId' is missing in type '{ id: string; title: UiLabel; active: true; search: { input: { id: string; value: string; placeholder: UiLabel; onChange: React.Dispatch<React.SetStateAction<string>>; }; }; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+📦️index.tsx(16058,19): error TS2741: Property 'iconId' is missing in type '{ id: string; title: UiLabel; active: true; search: { input: { value: string; placeholder: UiLabel; onChange: () => void; onAbort: () => number; }; }; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+../../../../🧱️elements/🎨Canvas/🟦️component.tsx(1224,7): error TS2322: Type 'number[]' is not assignable to type 'Layout'.
+  Index signature for type 'string' is missing in type 'number[]'.
+../../../../🧱️elements/🎨Canvas/🟦️component.tsx(1688,7): error TS2322: Type 'readonly { id: string; title: string; iconId: "map" | "dag" | "info" | "code" | "link" | "s" | "search" | "import" | "filter" | "window" | "typography" | "animate" | "architect" | "draw" | "flow" | ... 233 more ... | "zoom-out"; }[] | { ...; }[]' is not assignable to type 'readonly { id: string; title: string; iconId: "map" | "dag" | "info" | "code" | "link" | "s" | "search" | "import" | "filter" | "window" | "typography" | "animate" | "architect" | "draw" | "flow" | ... 233 more ... | "zoom-out"; }[]'.
+  Type '{ id: string; title: string; iconId: string; }[]' is not assignable to type 'readonly { id: string; title: string; iconId: "map" | "dag" | "info" | "code" | "link" | "s" | "search" | "import" | "filter" | "window" | "typography" | "animate" | "architect" | "draw" | "flow" | ... 233 more ... | "zoom-out"; }[]'.
+    Type '{ id: string; title: string; iconId: string; }' is not assignable to type '{ id: string; title: string; iconId: "map" | "dag" | "info" | "code" | "link" | "s" | "search" | "import" | "filter" | "window" | "typography" | "animate" | "architect" | "draw" | "flow" | ... 233 more ... | "zoom-out"; }'.
+      Types of property 'iconId' are incompatible.
+        Type 'string' is not assignable to type '"map" | "dag" | "info" | "code" | "link" | "s" | "search" | "import" | "filter" | "window" | "typography" | "animate" | "architect" | "draw" | "flow" | "forms" | "gis2d" | "gis3d" | ... 230 more ... | "zoom-out"'.
+../../../../🧱️elements/💬UIDialog/🟦️component.tsx(10,100): error TS2307: Cannot find module '@semio-tech/framework-core' or its corresponding type declarations.
+../../../../🧱️elements/💬UIDialog/🟦️component.tsx(57,31): error TS7006: Parameter 'def' implicitly has an 'any' type.
+../../../../🧱️elements/📁VirtualFileSystem/🟦️component.tsx(540,6): error TS2604: JSX element type 'Table' does not have any construct or call signatures.
+../../../../🧱️elements/📁VirtualFileSystem/🟦️component.tsx(540,6): error TS2786: 'Table' cannot be used as a JSX component.
+  Its type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>' is not a valid JSX element type.
+../../../../🧱️elements/📁VirtualFileSystem/🟦️component.tsx(544,18): error TS7006: Parameter 'row' implicitly has an 'any' type.
+../../../../🧱️elements/📊Diagram/🟦️component.tsx(600,9): error TS2322: Type '(event: React.MouseEvent, node: Node) => void' is not assignable to type 'OnNodeDrag<Node>'.
+  Types of parameters 'event' and 'event' are incompatible.
+    Type 'MouseEvent | TouchEvent' is not assignable to type 'MouseEvent<Element, MouseEvent>'.
+      Type 'MouseEvent' is missing the following properties from type 'MouseEvent<Element, MouseEvent>': nativeEvent, isDefaultPrevented, isPropagationStopped, persist
+../../../../🧱️elements/📊Diagram/🟦️component.tsx(601,9): error TS2322: Type '(event: React.MouseEvent, node: Node) => void' is not assignable to type 'OnNodeDrag<Node>'.
+  Types of parameters 'event' and 'event' are incompatible.
+    Type 'MouseEvent | TouchEvent' is not assignable to type 'MouseEvent<Element, MouseEvent>'.
+      Type 'MouseEvent' is missing the following properties from type 'MouseEvent<Element, MouseEvent>': nativeEvent, isDefaultPrevented, isPropagationStopped, persist
+../../../../🧱️elements/📊Diagram/🟦️component.tsx(602,9): error TS2322: Type '(event: React.MouseEvent, node: Node) => void' is not assignable to type 'OnNodeDrag<Node>'.
+  Types of parameters 'event' and 'event' are incompatible.
+    Type 'MouseEvent | TouchEvent' is not assignable to type 'MouseEvent<Element, MouseEvent>'.
+      Type 'MouseEvent' is missing the following properties from type 'MouseEvent<Element, MouseEvent>': nativeEvent, isDefaultPrevented, isPropagationStopped, persist
+../../../../🧱️elements/📊Table/🟦️component.tsx(17,10): error TS2305: Module '"../../\uD83D\uDCE6\uFE0Fpackages/\uD83D\uDFE6\uFE0Ftypescript/\uD83C\uDFAF\uFE0Ftargets/\u269B\uFE0Freact/\uD83D\uDCE6\uFE0Findex.tsx"' has no exported member 'tableRowInteractiveClass'.
+../../../../🧱️elements/📊Table/🟦️component.tsx(17,36): error TS2305: Module '"../../\uD83D\uDCE6\uFE0Fpackages/\uD83D\uDFE6\uFE0Ftypescript/\uD83C\uDFAF\uFE0Ftargets/\u269B\uFE0Freact/\uD83D\uDCE6\uFE0Findex.tsx"' has no exported member 'tableRowSelectedClass'.
+../../../../🧱️elements/📑PanelTabBar/🟦️component.tsx(11,57): error TS2307: Cannot find module '@semio-tech/framework-core' or its corresponding type declarations.
+../../../../🧱️elements/📑PanelTabBar/🟦️component.tsx(242,66): error TS7006: Parameter 'child' implicitly has an 'any' type.
+../../../../🧱️elements/📑PanelTabBar/🟦️component.tsx(242,73): error TS7006: Parameter 'index' implicitly has an 'any' type.
+../../../../🧱️elements/📑PanelTabBar/🟦️component.tsx(245,59): error TS7006: Parameter 'id' implicitly has an 'any' type.
+../../../../🧱️elements/📑PanelTabBar/🟦️component.tsx(245,63): error TS7006: Parameter 'index' implicitly has an 'any' type.
+../../../../🧱️elements/📑PanelTabBar/🟦️component.tsx(255,58): error TS7006: Parameter 'tab' implicitly has an 'any' type.
+../../../../🧱️elements/📑PanelTabBar/🟦️component.tsx(255,63): error TS7006: Parameter 'index' implicitly has an 'any' type.
+../../../../🧱️elements/📑PanelTabBar/🟦️component.tsx(284,75): error TS7006: Parameter 'id' implicitly has an 'any' type.
+../../../../🧱️elements/📑PanelTabBar/🟦️component.tsx(311,64): error TS7006: Parameter 'node' implicitly has an 'any' type.
+../../../../🧱️elements/📑PanelTabBar/🟦️component.tsx(319,44): error TS7006: Parameter 'id' implicitly has an 'any' type.
+../../../../🧱️elements/📑PanelTabBar/🟦️component.tsx(319,74): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+../../../../🧱️elements/📑PanelTabBar/🟦️component.tsx(328,80): error TS7006: Parameter 'node' implicitly has an 'any' type.
+../../../../🧱️elements/📱MobilePanel/🟦️component.tsx(10,49): error TS2307: Cannot find module '@semio-tech/framework-core' or its corresponding type declarations.
+../../../../🧱️elements/🔣Icons/🟦️component.tsx(385,33): error TS2322: Type 'string' is not assignable to type '"map" | "dag" | "info" | "code" | "link" | "s" | "search" | "import" | "filter" | "window" | "typography" | "animate" | "architect" | "draw" | "flow" | "forms" | "gis2d" | "gis3d" | ... 230 more ... | "zoom-out"'.
+../../../../🧱️elements/🔣IconSelector/🟦️component.tsx(74,94): error TS2322: Type 'string' is not assignable to type '"map" | "dag" | "info" | "code" | "link" | "s" | "search" | "import" | "filter" | "window" | "typography" | "animate" | "architect" | "draw" | "flow" | "forms" | "gis2d" | "gis3d" | ... 230 more ... | "zoom-out"'.
+../../../../🧱️elements/🖼️Panel/🟦️component.tsx(10,49): error TS2307: Cannot find module '@semio-tech/framework-core' or its corresponding type declarations.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(40,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(49,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(58,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(68,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(77,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(86,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(95,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🪵Tree/🟦️component.tsx(517,3): error TS2322: Type '{ id: string; label: UiLabel; icon: ControlIcon; disabled: boolean | undefined; onSelect: () => void; }[]' is not assignable to type 'ContextMenuItem[]'.
+  Type '{ id: string; label: UiLabel; icon: ControlIcon; disabled: boolean | undefined; onSelect: () => void; }' is not assignable to type 'ContextMenuItem'.
+    Types of property 'icon' are incompatible.
+      Type 'ControlIcon' is not assignable to type 'string | { readonly kind: "url"; readonly url: string; } | { readonly kind: "shortcode"; readonly code: string; } | { readonly kind: "data"; readonly data: string; } | { readonly kind: "emoji"; readonly emoji: string; } | ... 10 more ... | undefined'.
+        Type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not assignable to type 'string | { readonly kind: "url"; readonly url: string; } | { readonly kind: "shortcode"; readonly code: string; } | { readonly kind: "data"; readonly data: string; } | { readonly kind: "emoji"; readonly emoji: string; } | ... 10 more ... | undefined'.
+          Type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not assignable to type '{ readonly kind: "url"; readonly url: string; } | { readonly kind: "shortcode"; readonly code: string; } | { readonly kind: "data"; readonly data: string; } | { readonly kind: "emoji"; readonly emoji: string; } | ... 9 more ... | { ...; }'.
+            Property 'kind' is missing in type 'ReactElement<unknown, string | JSXElementConstructor<any>>' but required in type '{ readonly kind: "themed"; readonly key: "base" | "base_blob" | "capital" | "capsule_J" | "capsule_L" | "capsule_backslash" | "capsule_p" | "capsule_q" | "capsule_s" | "capsule_slash" | ... 18 more ... | "tambour_single-storey"; }'.
+../../../../🧱️elements/🪵Tree/🟦️component.tsx(766,54): error TS2339: Property 'escape' does not exist on type 'Readonly<{ Translate: { toString(transform: Transform | null): string | undefined; }; Scale: { toString(transform: Transform | null): string | undefined; }; Transform: { ...; }; Transition: { ...; }; }>'.
+../../../../🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx(12,60): error TS2307: Cannot find module '@semio-tech/framework-core' or its corresponding type declarations.
+../../../../🧱️elements/🫀️core/📚️I18n/🟦️component.tsx(8,57): error TS2307: Cannot find module '@semio-tech/framework-core' or its corresponding type declarations.
+../../../../🧱️elements/🫀️core/🚗️UiDriver/🟦️component.tsx(9,60): error TS2307: Cannot find module '@semio-tech/framework-core' or its corresponding type declarations.
+../../../../../../🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts(1420,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../../../🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts(1421,81): error TS2339: Property 'toString' does not exist on type 'never'.

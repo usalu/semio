@@ -1,0 +1,3 @@
+error: two packages named `semio-framework-editor` in this workspace:
+- /Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/Cargo.toml
+- /Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust/Cargo.toml

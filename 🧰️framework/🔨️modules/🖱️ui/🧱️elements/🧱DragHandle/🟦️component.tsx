@@ -8,8 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { ChromeControlHint } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { ChromeControlHint } from "../🫀️core/🎛️Chrome/🟦️component.tsx";
 import { GripVerticalIcon, MoveIcon } from "../🔣Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

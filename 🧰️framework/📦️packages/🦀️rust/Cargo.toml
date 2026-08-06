@@ -20,7 +20,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 ts-rs = { workspace = true, optional = true }
-ui_wgpu = { path = "../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu", package = "semio-framework-ui-wgpu" }
+ui_wgpu = { path = "../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 semio-framework-hash = { path = "../../🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 # 🎞️ CW3 kernel cut-over: HybridLogicalTimestamp/UndoPolicy/MergeStrategyKind and the operation-
 # flavored id newtypes (OperationId/ActorId/DocumentId/DocumentVersion/SchemaId) now canonically
@@ -41,49 +41,3 @@ pretty_assertions = "1.4.1"
 # never enabled by default so `ts-rs` never affects the plain `cargo build`/`cargo test` path.
 typegen = ["dep:ts-rs", "ui_wgpu/typegen"]
 
-# ==== 🧪️ TEMPORARY VERIFICATION OVERLAY — delete this section + nested target/Cargo.lock at
-# registrar handoff (see TEMPLATE.md §3 "chicken-and-egg" verification recipe). Copied verbatim
-# from root Cargo.toml so artifact fingerprints match while this crate is not yet a workspace
-# member. ====
-[workspace]
-members = ["."]
-
-[workspace.package]
-version = "0.1.0"
-edition = "2021"
-rust-version = "1.88"
-
-[workspace.dependencies]
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.149"
-wasm-bindgen = "0.2.106"
-thiserror = "2.0.18"
-ts-rs = "10"
-
-[profile.dev]
-debug = false
-incremental = true
-
-[profile.dev.build-override]
-opt-level = 3
-
-[profile.dev.package.semio-framework-os-kernel-store]
-codegen-units = 1
-
-[workspace.lints.rust]
-future_incompatible = { level = "warn", priority = -1 }
-rust_2018_idioms = { level = "warn", priority = -1 }
-unsafe_op_in_unsafe_fn = "warn"
-unused_lifetimes = "warn"
-unused_qualifications = "warn"
-
-[workspace.lints.clippy]
-all = { level = "warn", priority = -1 }
-cloned_instead_of_copied = "warn"
-inefficient_to_string = "warn"
-map_unwrap_or = "warn"
-needless_pass_by_value = "warn"
-semicolon_if_nothing_returned = "warn"
-unnecessary_wraps = "warn"
-redundant_clone = "warn"
-# END TEMPORARY VERIFICATION OVERLAY

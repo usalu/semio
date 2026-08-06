@@ -59,9 +59,9 @@ use std::io::Read;
 use std::rc::Rc;
 use std::sync::Arc;
 #[cfg(target_arch = "wasm32")]
-use ui_wgpu::apply_canvas_cursor;
-use ui_wgpu::ActionDescriptor;
-use ui_wgpu::{
+use ui_wgpu::wgpu::apply_canvas_cursor;
+use ui_wgpu::wgpu::ActionDescriptor;
+use ui_wgpu::wgpu::{
     apply_window_cursor, dispatch_window_event, fetch_font_bytes, resolve_semio_cursor, schedule_frame, CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, PointerCallbacks, PointerModifiers, SemioCursor, Theme,
     WindowInputState,
 };

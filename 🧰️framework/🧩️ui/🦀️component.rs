@@ -5,7 +5,7 @@
 
 use serde::{Deserialize, Serialize};
 use dsl::DslValue;
-use ui_wgpu::{ActionDescriptor, Locale, LocalizedLabel, NamedLayout, SurfaceKind, Terminology, WindowLayout, WindowOptions};
+use ui_wgpu::wgpu::{ActionDescriptor, Locale, LocalizedLabel, NamedLayout, SurfaceKind, Terminology, WindowLayout, WindowOptions};
 use crate::mesh::{MediaPortSpec, ArtifactKindSpec, ConfigSpec, CommandGrammar, AppIo};
 use crate::IconName;
 
@@ -58,7 +58,7 @@ impl ActionArgOption {
 }
 
 /// @emoji 🎚️ Declarative input control for one action argument — a lean manifest-altitude enum,
-/// deliberately NOT `ui_wgpu::UiControlNode` (whose variants embed live values and immediate-dispatch
+/// deliberately NOT `ui_wgpu::wgpu::UiControlNode` (whose variants embed live values and immediate-dispatch
 /// wiring). Renderers map each variant onto a staged form field. Tagged with `kind` to mirror the
 /// sibling `UtilityNode`/`UiControlNode` declarative-tree convention.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -349,7 +349,7 @@ impl ActionDefinition {
         self.with_in_palette(in_palette)
     }
 
-    /// @emoji 🗂️ Sets this action's ribbon-parent-taxonomy category (a `ui_wgpu::RIBBON_PARENT_CATEGORIES`
+    /// @emoji 🗂️ Sets this action's ribbon-parent-taxonomy category (a `ui_wgpu::wgpu::RIBBON_PARENT_CATEGORIES`
     /// id) — read back by `AppActionRegistry::category_of` and fed into `organize_context_menu`'s
     /// `category_of` lookup at the context-menu funnel, so an overflowing flat menu buckets this
     /// action's row into `menu.group.<category>` instead of `menu.group.actions`.
@@ -596,7 +596,7 @@ pub struct UtilityDefinition {
     pub cursor: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub category: Option<ui_wgpu::UtilityCategory>,
+    pub category: Option<ui_wgpu::wgpu::UtilityCategory>,
     /// 🚦️ Whether window-scoped actions stay enabled while this utility is active. Defaults to `false`
     /// (matching today's whitelist-based gating where an active utility suppresses the action panel);
     /// set `true` for passive view utilities (e.g. cad `cad.play.view.*`) that should not gate actions.
@@ -2982,9 +2982,9 @@ mod app_document_tests {
                 id: "main".into(),
                 label: LocalizedLabel::data("Main"),
                 body_key: "a.main".into(),
-                surface_kind: ui_wgpu::SurfaceKind::Canvas2d,
+                surface_kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
                 icon_id: "pen-tool".into(),
-                options: ui_wgpu::WindowOptions::default(),
+                options: ui_wgpu::wgpu::WindowOptions::default(),
                 actions: window_actions,
                 utilities: Vec::new(),
                 params_schema: None,
@@ -3121,9 +3121,9 @@ mod app_document_tests {
 
     #[test]
     fn resolve_layout_for_mode_prefers_named_then_default_then_none() {
-        fn stack_layout(active: &str) -> ui_wgpu::WindowLayout {
-            ui_wgpu::WindowLayout {
-                root: ui_wgpu::WindowLayoutRoot::Stack(ui_wgpu::WindowLayoutStackNode {
+        fn stack_layout(active: &str) -> ui_wgpu::wgpu::WindowLayout {
+            ui_wgpu::wgpu::WindowLayout {
+                root: ui_wgpu::wgpu::WindowLayoutRoot::Stack(ui_wgpu::wgpu::WindowLayoutStackNode {
                     kind: "stack".into(),
                     size: None,
                     active_window_kind_id: Some(active.into()),
@@ -3133,7 +3133,7 @@ mod app_document_tests {
         }
         let mut app = app_with(vec![], vec![]);
         app.modes.first_mut().layout_id = Some("named".into());
-        app.named_layouts.push(ui_wgpu::NamedLayout {
+        app.named_layouts.push(ui_wgpu::wgpu::NamedLayout {
             id: "named".into(),
             label: "Named".into(),
             icon_id: None,
@@ -4045,30 +4045,30 @@ mod app_document_tests {
     #[test]
     fn exports_typescript_bindings() {
         use ts_rs::TS;
-        ui_wgpu::IconName::export().unwrap();
-        ui_wgpu::ActionDescriptor::export().unwrap();
-        ui_wgpu::WindowLayoutWindowNode::export().unwrap();
-        ui_wgpu::WindowLayoutStackNode::export().unwrap();
-        ui_wgpu::WindowLayoutAxisNode::export().unwrap();
-        ui_wgpu::WindowLayoutChild::export().unwrap();
-        ui_wgpu::WindowLayoutRoot::export().unwrap();
-        ui_wgpu::WindowLayout::export().unwrap();
-        ui_wgpu::NamedLayout::export().unwrap();
-        ui_wgpu::component::layout::MeasureSelectItem::export().unwrap();
-        ui_wgpu::WindowMeasure::export().unwrap();
-        ui_wgpu::component::layout::WindowEngagementOption::export().unwrap();
-        ui_wgpu::component::layout::WindowEngagementInput::export().unwrap();
-        ui_wgpu::component::layout::WindowEngagementStatus::export().unwrap();
-        ui_wgpu::component::layout::WindowEngagementPossible::export().unwrap();
-        ui_wgpu::component::layout::WindowEngagementRingOption::export().unwrap();
-        ui_wgpu::component::layout::WindowEngagementToggleGroupOption::export().unwrap();
-        ui_wgpu::component::layout::WindowEngagementSelectItem::export().unwrap();
-        ui_wgpu::WindowEngagementControl::export().unwrap();
-        ui_wgpu::WindowEngagement::export().unwrap();
-        ui_wgpu::WindowEngagementSlot::export().unwrap();
-        ui_wgpu::WindowOptions::export().unwrap();
-        ui_wgpu::SurfaceKind::export().unwrap();
-        ui_wgpu::UtilityCategory::export().unwrap();
+        ui_wgpu::wgpu::IconName::export().unwrap();
+        ui_wgpu::wgpu::ActionDescriptor::export().unwrap();
+        ui_wgpu::wgpu::WindowLayoutWindowNode::export().unwrap();
+        ui_wgpu::wgpu::WindowLayoutStackNode::export().unwrap();
+        ui_wgpu::wgpu::WindowLayoutAxisNode::export().unwrap();
+        ui_wgpu::wgpu::WindowLayoutChild::export().unwrap();
+        ui_wgpu::wgpu::WindowLayoutRoot::export().unwrap();
+        ui_wgpu::wgpu::WindowLayout::export().unwrap();
+        ui_wgpu::wgpu::NamedLayout::export().unwrap();
+        ui_wgpu::wgpu::component::layout::MeasureSelectItem::export().unwrap();
+        ui_wgpu::wgpu::WindowMeasure::export().unwrap();
+        ui_wgpu::wgpu::component::layout::WindowEngagementOption::export().unwrap();
+        ui_wgpu::wgpu::component::layout::WindowEngagementInput::export().unwrap();
+        ui_wgpu::wgpu::component::layout::WindowEngagementStatus::export().unwrap();
+        ui_wgpu::wgpu::component::layout::WindowEngagementPossible::export().unwrap();
+        ui_wgpu::wgpu::component::layout::WindowEngagementRingOption::export().unwrap();
+        ui_wgpu::wgpu::component::layout::WindowEngagementToggleGroupOption::export().unwrap();
+        ui_wgpu::wgpu::component::layout::WindowEngagementSelectItem::export().unwrap();
+        ui_wgpu::wgpu::WindowEngagementControl::export().unwrap();
+        ui_wgpu::wgpu::WindowEngagement::export().unwrap();
+        ui_wgpu::wgpu::WindowEngagementSlot::export().unwrap();
+        ui_wgpu::wgpu::WindowOptions::export().unwrap();
+        ui_wgpu::wgpu::SurfaceKind::export().unwrap();
+        ui_wgpu::wgpu::UtilityCategory::export().unwrap();
         // 🧭️ The shared element-state model + every `UiNode` variant struct (closing the gap that used
         // to leave these hand-mirrored in `framework/core/js/index.ts` — see 🔖️Presence/🔖️UiNode).
         // `UiNode`/`UiComponentSceneNode` themselves are NOT yet typegen-derived: the enum's
@@ -4076,30 +4076,30 @@ mod app_document_tests {
         // that would each need their own `ts_rs::TS` derive first — a large, separate mechanical pass,
         // out of scope here. `framework/core/js/index.ts` hand-writes the `UiNode` union stitching
         // these generated variant interfaces together until that follow-up lands.
-        ui_wgpu::UiState::export().unwrap();
-        ui_wgpu::UiStatus::export().unwrap();
-        ui_wgpu::UiPresence::export().unwrap();
-        ui_wgpu::UiDropOverlaySpec::export().unwrap();
-        ui_wgpu::UiTextNode::export().unwrap();
-        ui_wgpu::UiButtonNode::export().unwrap();
-        ui_wgpu::UiSeparatorNode::export().unwrap();
-        ui_wgpu::UiImageNode::export().unwrap();
-        ui_wgpu::UiInputNode::export().unwrap();
-        ui_wgpu::UiSelectItem::export().unwrap();
-        ui_wgpu::UiSelectNode::export().unwrap();
-        ui_wgpu::UiToggleNode::export().unwrap();
-        ui_wgpu::UiKeyValueEntry::export().unwrap();
-        ui_wgpu::UiKeyValueNode::export().unwrap();
-        ui_wgpu::UiSliderNode::export().unwrap();
-        ui_wgpu::UiNumberStepperNode::export().unwrap();
-        ui_wgpu::UiRingNode::export().unwrap();
-        ui_wgpu::UiIconSelectNode::export().unwrap();
-        ui_wgpu::UiControlNode::export().unwrap();
-        ui_wgpu::UiTreeItemAction::export().unwrap();
-        ui_wgpu::UiTreeItemNode::export().unwrap();
-        ui_wgpu::UiTreeSectionNode::export().unwrap();
-        ui_wgpu::UiTreeNode::export().unwrap();
-        ui_wgpu::UiExternalSlotNode::export().unwrap();
+        ui_wgpu::wgpu::UiState::export().unwrap();
+        ui_wgpu::wgpu::UiStatus::export().unwrap();
+        ui_wgpu::wgpu::UiPresence::export().unwrap();
+        ui_wgpu::wgpu::UiDropOverlaySpec::export().unwrap();
+        ui_wgpu::wgpu::UiTextNode::export().unwrap();
+        ui_wgpu::wgpu::UiButtonNode::export().unwrap();
+        ui_wgpu::wgpu::UiSeparatorNode::export().unwrap();
+        ui_wgpu::wgpu::UiImageNode::export().unwrap();
+        ui_wgpu::wgpu::UiInputNode::export().unwrap();
+        ui_wgpu::wgpu::UiSelectItem::export().unwrap();
+        ui_wgpu::wgpu::UiSelectNode::export().unwrap();
+        ui_wgpu::wgpu::UiToggleNode::export().unwrap();
+        ui_wgpu::wgpu::UiKeyValueEntry::export().unwrap();
+        ui_wgpu::wgpu::UiKeyValueNode::export().unwrap();
+        ui_wgpu::wgpu::UiSliderNode::export().unwrap();
+        ui_wgpu::wgpu::UiNumberStepperNode::export().unwrap();
+        ui_wgpu::wgpu::UiRingNode::export().unwrap();
+        ui_wgpu::wgpu::UiIconSelectNode::export().unwrap();
+        ui_wgpu::wgpu::UiControlNode::export().unwrap();
+        ui_wgpu::wgpu::UiTreeItemAction::export().unwrap();
+        ui_wgpu::wgpu::UiTreeItemNode::export().unwrap();
+        ui_wgpu::wgpu::UiTreeSectionNode::export().unwrap();
+        ui_wgpu::wgpu::UiTreeNode::export().unwrap();
+        ui_wgpu::wgpu::UiExternalSlotNode::export().unwrap();
         // NOT exported (recursive through `UiNode`, itself not yet typegen-derived — see comment
         // above): UiStackNode, UiGroupNode, UiFieldNode, UiSectionNode, UiInspectorFieldGroup.
         crate::ui::Keybinding::export().unwrap();

@@ -9,8 +9,8 @@
 
 use crate::scenes::{decode_canvas_image, queue_canvas_image_upload, render_component_scene, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use serde_json::Value;
-use ui_wgpu::{draw_text, render_widget, Rect, SelectItem, Theme, WidgetContext, WidgetInteractionMaps, WidgetNode};
-use ui_wgpu::{ActionDescriptor, DragPayload, NodeId, UiComponentSceneNode, UiNode, UiPresence, UiState};
+use ui_wgpu::wgpu::{draw_text, render_widget, Rect, SelectItem, Theme, WidgetContext, WidgetInteractionMaps, WidgetNode};
+use ui_wgpu::wgpu::{ActionDescriptor, DragPayload, NodeId, UiComponentSceneNode, UiNode, UiPresence, UiState};
 
 pub type FrameworkWidgetContext<'a> = WidgetContext<'a, ActionDescriptor>;
 
@@ -195,7 +195,7 @@ fn render_plan_error_widget(message: &str, bounds: Rect, ctx: &mut FrameworkWidg
 //#endregion RenderPlanValidator
 
 //#region RetainedEngineCutover
-/** 🧵️ The wave-3 cutover: `render_ui_node`'s live implementation is now `ui_wgpu::engine::Ui`
+/** 🧵️ The wave-3 cutover: `render_ui_node`'s live implementation is now `ui_wgpu::wgpu::engine::Ui`
  * (retained-mode `apply_tree`/`frame`/`dispatch_event`), not `ui_node_to_widget`+`render_widget`.
  * One process-wide `Ui` façade (its own internal `HashMap<window_id, UiWindow>` already partitions
  * per-window retained state — see `report-w0-engine-facade.md`) lives in a `thread_local!`, mirroring
@@ -212,7 +212,7 @@ fn render_plan_error_widget(message: &str, bounds: Rect, ctx: &mut FrameworkWidg
  * filed as a pure wiring request: without it the crate does not compile, and no identity for the
  * retained per-window bucket can be derived from anything else already flowing into this function.
  *
- * ✅️ RESOLVED (was a KNOWN, CONFIRMED GAP): `ui_wgpu::Ui` no longer owns a private `FontAtlas`/
+ * ✅️ RESOLVED (was a KNOWN, CONFIRMED GAP): `ui_wgpu::wgpu::Ui` no longer owns a private `FontAtlas`/
  * `Option<IconAtlas>` at all — `set_icons`/the old `atlas`/`icons` fields are gone. `Ui::frame` now
  * takes `atlas: &mut FontAtlas, icons: Option<&IconAtlas>` as parameters, mirroring how
  * `flex::LayoutEngine::compute`/`paint::paint_tree` already receive them internally. `render_ui_node`
@@ -223,7 +223,7 @@ fn render_plan_error_widget(message: &str, bounds: Rect, ctx: &mut FrameworkWidg
  * `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w3-interpreter-cutover.md`'s "CRITICAL FINDING"
  * for the original gap and the follow-up ticket work that closed it. */
 thread_local! {
-    static UI_ENGINE: std::cell::RefCell<ui_wgpu::Ui> = std::cell::RefCell::new(ui_wgpu::Ui::new());
+    static UI_ENGINE: std::cell::RefCell<ui_wgpu::wgpu::Ui> = std::cell::RefCell::new(ui_wgpu::wgpu::Ui::new());
     /// 👆️ Last-seen `(pointer_down, pointer_button)` per `window_id`, so `dispatch_pointer_events` can
     /// detect Down/Up edges from `InputState`'s per-frame aggregate (which only carries *current*
     /// state, not a transition) without needing a `ShellTypes` field either.
@@ -232,7 +232,7 @@ thread_local! {
 }
 
 /** 🖇️ Public hook for the sibling `w3-shell-input-cutover` workstream (region `shell::ShellInput`,
- * which this ticket must not touch): routes a fully-formed `ui_wgpu::UiEvent` (built from raw
+ * which this ticket must not touch): routes a fully-formed `ui_wgpu::wgpu::UiEvent` (built from raw
  * winit input, e.g. real key events/IME/focus-scoped routing this function's own per-frame
  * pointer-only synthesis below deliberately does not attempt) into the same process-wide retained
  * engine `render_ui_node` itself drives, and forwards any resulting `UiCommand::App` action into the
@@ -240,17 +240,17 @@ thread_local! {
  * command list too, for `FocusChanged`/`OverlayClosed`/`DropCommitted`/clipboard commands a caller may
  * want to react to itself (e.g. an actual OS clipboard read for `ClipboardPasteRequested` is a `host`
  * concern, not this function's). */
-pub fn dispatch_ui_event(window_id: &str, event: ui_wgpu::UiEvent, input: &mut ui_wgpu::InputState<ActionDescriptor>) -> Vec<ui_wgpu::UiCommand> {
+pub fn dispatch_ui_event(window_id: &str, event: ui_wgpu::wgpu::UiEvent, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ui_wgpu::wgpu::UiCommand> {
     let commands = UI_ENGINE.with(|cell| cell.borrow_mut().dispatch_event(window_id, event));
     apply_ui_commands(&commands, input);
     commands
 }
 
-/** 🧵️ W3 clipboard/drag-drop wiring (`report-w3-clipboard-dnd.md`): every `ui_wgpu::UiCommand`
+/** 🧵️ W3 clipboard/drag-drop wiring (`report-w3-clipboard-dnd.md`): every `ui_wgpu::wgpu::UiCommand`
  * variant now has an explicit arm — no more silently-dropped-by-omission commands.
  *  - `App` → unchanged: queues `action` into the same `input.queue_event` pipeline every other
  *    action already flows through.
- *  - `ClipboardCopy`/`ClipboardCut` → `write_os_clipboard` (real OS clipboard via `ui_wgpu::host`,
+ *  - `ClipboardCopy`/`ClipboardCut` → `write_os_clipboard` (real OS clipboard via `ui_wgpu::wgpu::host`,
  *    mocked in this module's own tests — see `MOCK_CLIPBOARD_WRITES`).
  *  - `ClipboardPasteRequested` → `apply_clipboard_paste_requested`, below (native/wasm split: native
  *    reads synchronously and round-trips within this same call; wasm can't, see that fn's doc comment).
@@ -261,7 +261,7 @@ pub fn dispatch_ui_event(window_id: &str, event: ui_wgpu::UiEvent, input: &mut u
  *  - `OverlayClosed` → intentional no-op: overlay open/close is fully internal
  *    `events::EventRouter` bookkeeping the retained engine already repaints correctly on its own; no
  *    `UiNode` variant carries an "on close"/`onOpenChange` callback today (confirmed by grep across
- *    every `Ui*Node` struct in `ui_wgpu::component::ui`), so there is nothing for a host to fire.
+ *    every `Ui*Node` struct in `ui_wgpu::wgpu::component::ui`), so there is nothing for a host to fire.
  *  - `FocusChanged` → intentional no-op HERE: the sibling `w3-shell-input-cutover` workstream's own
  *    `note_content_focus_commands` (off-limits `shell::ShellInput` region, see that fn's doc comment)
  *    already consumes the raw command list `dispatch_ui_event` returns to ITS OWN callers for this —
@@ -269,23 +269,23 @@ pub fn dispatch_ui_event(window_id: &str, event: ui_wgpu::UiEvent, input: &mut u
  *  - `Scene` → `apply_scene_ui_command`, below (`w4-scene-input`): a real per-event pointer/wheel hit
  *    on a `ComponentScene` leaf, routed into the matching per-`SurfaceKind` handler in `scenes`
  *    instead of that region's own once-per-render-frame `InputState` sample. */
-fn apply_ui_commands(commands: &[ui_wgpu::UiCommand], input: &mut ui_wgpu::InputState<ActionDescriptor>) {
+fn apply_ui_commands(commands: &[ui_wgpu::wgpu::UiCommand], input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
     for command in commands {
         match command {
-            ui_wgpu::UiCommand::App { action, .. } => input.queue_event(action.clone()),
-            ui_wgpu::UiCommand::ClipboardCopy { text, .. } | ui_wgpu::UiCommand::ClipboardCut { text, .. } => {
+            ui_wgpu::wgpu::UiCommand::App { action, .. } => input.queue_event(action.clone()),
+            ui_wgpu::wgpu::UiCommand::ClipboardCopy { text, .. } | ui_wgpu::wgpu::UiCommand::ClipboardCut { text, .. } => {
                 write_os_clipboard(text);
             }
-            ui_wgpu::UiCommand::ClipboardPasteRequested { window_id } => {
+            ui_wgpu::wgpu::UiCommand::ClipboardPasteRequested { window_id } => {
                 apply_clipboard_paste_requested(window_id, input);
             }
-            ui_wgpu::UiCommand::DropCommitted { window_id, target, payload, .. } => {
+            ui_wgpu::wgpu::UiCommand::DropCommitted { window_id, target, payload, .. } => {
                 apply_drop_committed(window_id, *target, payload, input);
             }
-            ui_wgpu::UiCommand::Scene { window_id, node, kind, rect, event, .. } => {
+            ui_wgpu::wgpu::UiCommand::Scene { window_id, node, kind, rect, event, .. } => {
                 apply_scene_ui_command(window_id, *node, *kind, *rect, event, input);
             }
-            ui_wgpu::UiCommand::DropCancelled { .. } | ui_wgpu::UiCommand::OverlayClosed { .. } | ui_wgpu::UiCommand::FocusChanged { .. } => {}
+            ui_wgpu::wgpu::UiCommand::DropCancelled { .. } | ui_wgpu::wgpu::UiCommand::OverlayClosed { .. } | ui_wgpu::wgpu::UiCommand::FocusChanged { .. } => {}
         }
     }
 }
@@ -300,7 +300,7 @@ fn apply_ui_commands(commands: &[ui_wgpu::UiCommand], input: &mut ui_wgpu::Input
  * (`{...descriptor.args, ...patch}`, patch wins) reproduced by `merge_action_args`. A no-op if the
  * target isn't (or no longer is, by the time this command is applied) a `Stack` with a `drop_action`,
  * or the payload carries no decodable semio-mime entry. */
-fn apply_drop_committed(window_id: &str, target: NodeId, payload: &DragPayload, input: &mut ui_wgpu::InputState<ActionDescriptor>) {
+fn apply_drop_committed(window_id: &str, target: NodeId, payload: &DragPayload, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
     let Some(action) = drop_target_action(window_id, target) else { return };
     let Some(patch) = decode_drop_payload(payload) else { return };
     input.queue_event(ActionDescriptor { controller_id: action.controller_id, action: action.action, args: merge_action_args(action.args.as_ref(), patch) });
@@ -342,11 +342,11 @@ fn merge_action_args(existing: Option<&semio_framework_core::DslValue>, patch: s
     semio_framework_core::optional_json_to_dsl(Some(Value::Object(base)))
 }
 
-/// 📋️ Writes to the OS clipboard via `ui_wgpu::host` — the one indirection this module's own tests
+/// 📋️ Writes to the OS clipboard via `ui_wgpu::wgpu::host` — the one indirection this module's own tests
 /// swap for a mock (`MOCK_CLIPBOARD_WRITES`), so `cargo test` never touches a real display/clipboard.
 #[cfg(not(test))]
 fn write_os_clipboard(text: &str) {
-    ui_wgpu::clipboard_write_text(text);
+    ui_wgpu::wgpu::clipboard_write_text(text);
 }
 
 #[cfg(test)]
@@ -358,7 +358,7 @@ fn write_os_clipboard(text: &str) {
 /// `apply_clipboard_paste_requested` below for why there is no wasm counterpart of this fn itself.
 #[cfg(all(not(target_arch = "wasm32"), not(test)))]
 fn read_os_clipboard() -> Option<String> {
-    ui_wgpu::clipboard_read_text()
+    ui_wgpu::wgpu::clipboard_read_text()
 }
 
 #[cfg(all(not(target_arch = "wasm32"), test))]
@@ -372,7 +372,7 @@ thread_local! {
     static MOCK_CLIPBOARD_READ: std::cell::RefCell<Option<String>> = std::cell::RefCell::new(None);
 }
 
-/** 📋️ `ClipboardPasteRequested`'s native handling: `ui_wgpu::clipboard_read_text` is a blocking
+/** 📋️ `ClipboardPasteRequested`'s native handling: `ui_wgpu::wgpu::clipboard_read_text` is a blocking
  * call, so this reads the OS clipboard and round-trips the result straight back into the SAME
  * retained window (`UI_ENGINE.dispatch_event(window_id, UiEvent::Paste{text})`) within this one
  * synchronous call — safe to re-enter `UI_ENGINE` here specifically because every caller of
@@ -382,14 +382,14 @@ thread_local! {
  * `on_change` action yet, a documented pre-existing gap, see `report-w1d-events-overlay.md`) are
  * applied right back through `apply_ui_commands`, so this stays correct if that ever changes. */
 #[cfg(not(target_arch = "wasm32"))]
-fn apply_clipboard_paste_requested(window_id: &str, input: &mut ui_wgpu::InputState<ActionDescriptor>) {
+fn apply_clipboard_paste_requested(window_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
     let Some(text) = read_os_clipboard() else { return };
-    let commands = UI_ENGINE.with(|cell| cell.borrow_mut().dispatch_event(window_id, ui_wgpu::UiEvent::Paste { text }));
+    let commands = UI_ENGINE.with(|cell| cell.borrow_mut().dispatch_event(window_id, ui_wgpu::wgpu::UiEvent::Paste { text }));
     apply_ui_commands(&commands, input);
 }
 
 /** 📋️ `ClipboardPasteRequested`'s wasm handling: the browser's Clipboard API is Promise-based with
- * no synchronous read (`ui_wgpu::clipboard_read_text` is `async` there — see that fn's doc comment),
+ * no synchronous read (`ui_wgpu::wgpu::clipboard_read_text` is `async` there — see that fn's doc comment),
  * so this can't resolve within this synchronous call the way the native arm above does. Spawns a
  * `wasm_bindgen_futures::spawn_local` task that re-enters `UI_ENGINE` once the browser grants/denies
  * the read, on a later microtask (no `&mut InputState<ActionDescriptor>` borrow can survive that
@@ -401,12 +401,12 @@ fn apply_clipboard_paste_requested(window_id: &str, input: &mut ui_wgpu::InputSt
  * comment); moot today regardless, since `Paste` never fires an `App` command yet (see the native
  * arm's own doc comment above). */
 #[cfg(target_arch = "wasm32")]
-fn apply_clipboard_paste_requested(window_id: &str, _input: &mut ui_wgpu::InputState<ActionDescriptor>) {
+fn apply_clipboard_paste_requested(window_id: &str, _input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
     let window_id = window_id.to_string();
     wasm_bindgen_futures::spawn_local(async move {
-        if let Some(text) = ui_wgpu::clipboard_read_text().await {
+        if let Some(text) = ui_wgpu::wgpu::clipboard_read_text().await {
             UI_ENGINE.with(|cell| {
-                cell.borrow_mut().dispatch_event(&window_id, ui_wgpu::UiEvent::Paste { text });
+                cell.borrow_mut().dispatch_event(&window_id, ui_wgpu::wgpu::UiEvent::Paste { text });
             });
         }
     });
@@ -421,26 +421,26 @@ fn apply_clipboard_paste_requested(window_id: &str, _input: &mut ui_wgpu::InputS
 /// into a real `i16` for those same `scenes` handlers; nothing previously read `UiEvent::PointerDown/
 /// Up`'s `button` field on this path (`events::EventRouter::dispatch` itself never branches on it), so
 /// the swap had no observable effect before this ticket.
-fn pointer_button_from_code(code: i16) -> ui_wgpu::PointerButton {
+fn pointer_button_from_code(code: i16) -> ui_wgpu::wgpu::PointerButton {
     match code {
-        1 => ui_wgpu::PointerButton::Middle,
-        2 => ui_wgpu::PointerButton::Secondary,
-        _ => ui_wgpu::PointerButton::Primary,
+        1 => ui_wgpu::wgpu::PointerButton::Middle,
+        2 => ui_wgpu::wgpu::PointerButton::Secondary,
+        _ => ui_wgpu::wgpu::PointerButton::Primary,
     }
 }
 
 /// 🖱️ Inverse of `pointer_button_from_code` — the DOM-standard `i16` code `scenes`' own handlers
 /// expect, for `apply_scene_ui_command` to recover from a `UiCommand::Scene`'s `PointerButton`.
-fn pointer_button_code(button: ui_wgpu::PointerButton) -> i16 {
+fn pointer_button_code(button: ui_wgpu::wgpu::PointerButton) -> i16 {
     match button {
-        ui_wgpu::PointerButton::Primary => 0,
-        ui_wgpu::PointerButton::Middle => 1,
-        ui_wgpu::PointerButton::Secondary => 2,
+        ui_wgpu::wgpu::PointerButton::Primary => 0,
+        ui_wgpu::wgpu::PointerButton::Middle => 1,
+        ui_wgpu::wgpu::PointerButton::Secondary => 2,
     }
 }
 
 /// 🎬️ `UiCommand::Scene` handling (`w4-scene-input`): routes a real per-event pointer/wheel hit
-/// against a `ComponentScene` leaf — built by `ui_wgpu::events::EventRouter::dispatch`'s own hit-
+/// against a `ComponentScene` leaf — built by `ui_wgpu::wgpu::events::EventRouter::dispatch`'s own hit-
 /// testing — into `scenes::handle_scene_pointer_button`/`handle_scene_pointer_move`/
 /// `handle_scene_wheel`. This is now the ONLY caller of those three: they used to also be driven once
 /// per render frame from `scenes::RenderEntry`'s own `apply_scene_wheel`/`apply_scene_pointer`,
@@ -459,7 +459,7 @@ fn pointer_button_code(button: ui_wgpu::PointerButton) -> i16 {
 /// limitation `events::UiEvent`'s public shape has everywhere else today, not something this fn can
 /// fix without a breaking `UiEvent` field addition across ~30 downstream plugins (see
 /// `dispatch_event`'s own `#[allow(clippy::needless_pass_by_value...)]` doc comment on that cost).
-fn apply_scene_ui_command(window_id: &str, node: NodeId, kind: ui_wgpu::SurfaceKind, rect: Rect, event: &ui_wgpu::UiEvent, input: &mut ui_wgpu::InputState<ActionDescriptor>) {
+fn apply_scene_ui_command(window_id: &str, node: NodeId, kind: ui_wgpu::wgpu::SurfaceKind, rect: Rect, event: &ui_wgpu::wgpu::UiEvent, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
     if crate::scenes::scene_has_bespoke_pointer_dispatch(kind) {
         return;
     }
@@ -469,15 +469,15 @@ fn apply_scene_ui_command(window_id: &str, node: NodeId, kind: ui_wgpu::SurfaceK
         let Some(n) = tree.node(node) else { return Vec::new() };
         let UiNode::ComponentScene(scene) = &n.spec.0 else { return Vec::new() };
         match event {
-            ui_wgpu::UiEvent::PointerDown { x, y, button } => crate::scenes::handle_scene_pointer_button(scene, rect, *x, *y, true, pointer_button_code(*button), false),
-            ui_wgpu::UiEvent::PointerUp { x, y, button } => crate::scenes::handle_scene_pointer_button(scene, rect, *x, *y, false, pointer_button_code(*button), false),
-            ui_wgpu::UiEvent::PointerMove { x, y } => {
+            ui_wgpu::wgpu::UiEvent::PointerDown { x, y, button } => crate::scenes::handle_scene_pointer_button(scene, rect, *x, *y, true, pointer_button_code(*button), false),
+            ui_wgpu::wgpu::UiEvent::PointerUp { x, y, button } => crate::scenes::handle_scene_pointer_button(scene, rect, *x, *y, false, pointer_button_code(*button), false),
+            ui_wgpu::wgpu::UiEvent::PointerMove { x, y } => {
                 let (was_down, last_x, last_y) = crate::scenes::scene_pointer_edge_state(&scene.surface_id);
                 let actions = crate::scenes::handle_scene_pointer_move(scene, rect, *x, *y, was_down, 0, *x - last_x, *y - last_y);
                 crate::scenes::set_scene_last_pointer_pos(&scene.surface_id, *x, *y);
                 actions
             }
-            ui_wgpu::UiEvent::Scroll { x, y, delta_y, .. } => {
+            ui_wgpu::wgpu::UiEvent::Scroll { x, y, delta_y, .. } => {
                 if delta_y.abs() < 0.01 {
                     Vec::new()
                 } else {
@@ -501,7 +501,7 @@ fn apply_scene_ui_command(window_id: &str, node: NodeId, kind: ui_wgpu::SurfaceK
  * stealing keys from whichever window/panel doesn't happen to run first; that needs "which window
  * currently has keyboard focus" bookkeeping this ticket's `must_not_touch` `shell` regions own. Use
  * `dispatch_ui_event` (above) for that once `w3-shell-input-cutover` lands it. */
-fn dispatch_pointer_events(engine: &mut ui_wgpu::Ui, window_id: &str, bounds: Rect, input: &ui_wgpu::InputState<ActionDescriptor>) -> Vec<ui_wgpu::UiCommand> {
+fn dispatch_pointer_events(engine: &mut ui_wgpu::wgpu::Ui, window_id: &str, bounds: Rect, input: &ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ui_wgpu::wgpu::UiCommand> {
     let local_x = input.pointer_x - bounds.x;
     let local_y = input.pointer_y - bounds.y;
     let inside = local_x >= 0.0 && local_y >= 0.0 && local_x <= bounds.w && local_y <= bounds.h;
@@ -509,15 +509,15 @@ fn dispatch_pointer_events(engine: &mut ui_wgpu::Ui, window_id: &str, bounds: Re
     let was_down = POINTER_EDGE_STATE.with(|cell| cell.borrow().get(window_id).map(|(down, _)| *down).unwrap_or(false));
     let mut commands = Vec::new();
     if inside {
-        commands.extend(engine.dispatch_event(window_id, ui_wgpu::UiEvent::PointerMove { x: local_x, y: local_y }));
+        commands.extend(engine.dispatch_event(window_id, ui_wgpu::wgpu::UiEvent::PointerMove { x: local_x, y: local_y }));
         if input.wheel_delta != 0.0 {
-            commands.extend(engine.dispatch_event(window_id, ui_wgpu::UiEvent::Scroll { x: local_x, y: local_y, delta_x: 0.0, delta_y: input.wheel_delta }));
+            commands.extend(engine.dispatch_event(window_id, ui_wgpu::wgpu::UiEvent::Scroll { x: local_x, y: local_y, delta_x: 0.0, delta_y: input.wheel_delta }));
         }
     }
     if input.pointer_down && !was_down && inside {
-        commands.extend(engine.dispatch_event(window_id, ui_wgpu::UiEvent::PointerDown { x: local_x, y: local_y, button }));
+        commands.extend(engine.dispatch_event(window_id, ui_wgpu::wgpu::UiEvent::PointerDown { x: local_x, y: local_y, button }));
     } else if !input.pointer_down && was_down {
-        commands.extend(engine.dispatch_event(window_id, ui_wgpu::UiEvent::PointerUp { x: local_x, y: local_y, button }));
+        commands.extend(engine.dispatch_event(window_id, ui_wgpu::wgpu::UiEvent::PointerUp { x: local_x, y: local_y, button }));
     }
     POINTER_EDGE_STATE.with(|cell| {
         cell.borrow_mut().insert(window_id.to_string(), (input.pointer_down, input.pointer_button));
@@ -525,22 +525,22 @@ fn dispatch_pointer_events(engine: &mut ui_wgpu::Ui, window_id: &str, bounds: Re
     commands
 }
 
-fn shift_instance(instance: &ui_wgpu::draw::UiInstance, dx: f32, dy: f32) -> ui_wgpu::draw::UiInstance {
+fn shift_instance(instance: &ui_wgpu::wgpu::draw::UiInstance, dx: f32, dy: f32) -> ui_wgpu::wgpu::draw::UiInstance {
     let mut shifted = *instance;
     shifted.rect[0] += dx;
     shifted.rect[1] += dy;
     shifted
 }
 
-fn shift_vertex(vertex: &ui_wgpu::draw::VectorVertex, dx: f32, dy: f32) -> ui_wgpu::draw::VectorVertex {
+fn shift_vertex(vertex: &ui_wgpu::wgpu::draw::VectorVertex, dx: f32, dy: f32) -> ui_wgpu::wgpu::draw::VectorVertex {
     let mut shifted = *vertex;
     shifted.position[0] += dx;
     shifted.position[1] += dy;
     shifted
 }
 
-fn shift_scissor(scissor: ui_wgpu::draw::ScissorRect, dx: f32, dy: f32) -> ui_wgpu::draw::ScissorRect {
-    ui_wgpu::draw::ScissorRect { x: ((scissor.x as f32) + dx).max(0.0) as u32, y: ((scissor.y as f32) + dy).max(0.0) as u32, w: scissor.w, h: scissor.h }
+fn shift_scissor(scissor: ui_wgpu::wgpu::draw::ScissorRect, dx: f32, dy: f32) -> ui_wgpu::wgpu::draw::ScissorRect {
+    ui_wgpu::wgpu::draw::ScissorRect { x: ((scissor.x as f32) + dx).max(0.0) as u32, y: ((scissor.y as f32) + dy).max(0.0) as u32, w: scissor.w, h: scissor.h }
 }
 
 /** 🧩️ Copies `retained`'s already-painted content into `target` (the same live `DrawList` the
@@ -556,7 +556,7 @@ fn shift_scissor(scissor: ui_wgpu::draw::ScissorRect, dx: f32, dy: f32) -> ui_wg
  * arm, which calls into `infinite_world::render_world_3d`'s own `ctx.draw.push_scene_pass`) rides
  * along through this exact rebasing, no special-casing needed here now that a real `SceneHost` is
  * registered. */
-fn composite_retained_draw_list(target: &mut ui_wgpu::DrawList, retained: &ui_wgpu::DrawList, offset_x: f32, offset_y: f32) {
+fn composite_retained_draw_list(target: &mut ui_wgpu::wgpu::DrawList, retained: &ui_wgpu::wgpu::DrawList, offset_x: f32, offset_y: f32) {
     let glass_base = target.glass_regions.len();
     for region in &retained.glass_regions {
         let mut shifted = *region;
@@ -566,7 +566,7 @@ fn composite_retained_draw_list(target: &mut ui_wgpu::DrawList, retained: &ui_wg
     }
     let layer_base = target.layers.len();
     for layer in &retained.layers {
-        target.layers.push(ui_wgpu::draw::DrawLayer {
+        target.layers.push(ui_wgpu::wgpu::draw::DrawLayer {
             scissor: layer.scissor.map(|s| shift_scissor(s, offset_x, offset_y)),
             foreground_of: layer.foreground_of.map(|idx| idx + glass_base),
             ui_instances: layer.ui_instances.iter().map(|inst| shift_instance(inst, offset_x, offset_y)).collect(),
@@ -599,8 +599,8 @@ fn composite_retained_draw_list(target: &mut ui_wgpu::DrawList, retained: &ui_wg
  * takes `scene_host` as a parameter rather than a stored field (see that method's doc comment):
  * `gpu`/the per-surface-kind state maps aren't anything a `Ui`-owned `Box<dyn SceneHost>` could hold. */
 struct FrameworkSceneHost<'ctx> {
-    gpu: &'ctx mut ui_wgpu::GpuContext,
-    input: &'ctx mut ui_wgpu::InputState<ActionDescriptor>,
+    gpu: &'ctx mut ui_wgpu::wgpu::GpuContext,
+    input: &'ctx mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
     theme: &'ctx Theme,
     scroll_offsets: &'ctx mut std::collections::HashMap<String, f32>,
     collapsed_sections: &'ctx mut std::collections::HashMap<String, bool>,
@@ -612,24 +612,24 @@ struct FrameworkSceneHost<'ctx> {
     board2d_states: &'ctx mut std::collections::HashMap<String, Board2dSurface>,
 }
 
-impl ui_wgpu::SceneHost for FrameworkSceneHost<'_> {
+impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
     /// 🖌️ `draw`/`atlas`/`icons` are `Ui::frame`'s own per-tick parameters, reborrowed fresh by the
     /// engine for each slot (see `scene_slots::SceneHost::paint_slot`'s doc comment) — `draw` is the
     /// retained window's own `DrawList`, in that window's local `(0,0)`-origin space, the same space
     /// `slot.rect` is expressed in (the caller composites/offsets the WHOLE retained `DrawList` by
     /// `bounds.x`/`bounds.y` afterward via `composite_retained_draw_list`, exactly like every other
     /// retained-paint call — so real scene/image pixels painted here land in the right place for free).
-    fn paint_slot(&mut self, slot: &ui_wgpu::SceneSlot<'_>, draw: &mut ui_wgpu::DrawList, atlas: &mut ui_wgpu::FontAtlas, icons: Option<&ui_wgpu::IconAtlas>) {
+    fn paint_slot(&mut self, slot: &ui_wgpu::wgpu::SceneSlot<'_>, draw: &mut ui_wgpu::wgpu::DrawList, atlas: &mut ui_wgpu::wgpu::FontAtlas, icons: Option<&ui_wgpu::wgpu::IconAtlas>) {
         let mut ctx = framework_widget_context(draw, None, atlas, icons, self.input, self.theme, self.scroll_offsets, self.collapsed_sections, self.open_selects, None);
         match &slot.content {
-            ui_wgpu::SlotContent::Scene(scene) => render_component_scene(scene, slot.rect, &mut ctx, self.gpu, self.world3d_states, self.node_graph_states, self.tiled_map_states, self.icon_render_states, self.board2d_states),
-            ui_wgpu::SlotContent::Image(image) => render_ui_image(image, slot.rect, &mut ctx),
+            ui_wgpu::wgpu::SlotContent::Scene(scene) => render_component_scene(scene, slot.rect, &mut ctx, self.gpu, self.world3d_states, self.node_graph_states, self.tiled_map_states, self.icon_render_states, self.board2d_states),
+            ui_wgpu::wgpu::SlotContent::Image(image) => render_ui_image(image, slot.rect, &mut ctx),
         }
     }
 }
 
 /** 🔁️ The live cutover entry point (was `ui_node_to_widget`+`render_widget`, now
- * `ui_wgpu::Ui::apply_tree`/`frame`/`dispatch_event`). `window_id` identifies which retained window
+ * `ui_wgpu::wgpu::Ui::apply_tree`/`frame`/`dispatch_event`). `window_id` identifies which retained window
  * bucket this call's `node`/`bounds` belong to — see `RetainedEngineCutover`'s doc comment for why
  * this had to become a new parameter and which two call sites outside `interpreter` were touched.
  *
@@ -647,7 +647,7 @@ pub fn render_ui_node(
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
     window_id: &str,
-    gpu: &mut ui_wgpu::GpuContext,
+    gpu: &mut ui_wgpu::wgpu::GpuContext,
     world3d_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
     node_graph_states: &mut std::collections::HashMap<String, NodeGraphSurface>,
     tiled_map_states: &mut std::collections::HashMap<String, TiledMapSurface>,
@@ -696,7 +696,7 @@ mod ui_command_wiring_tests {
     }
 
     fn stack_with(id: &str, drop_action: Option<ActionDescriptor>, children: Vec<UiNode>) -> UiNode {
-        UiNode::Stack(ui_wgpu::UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some(id.into()), presence: ui_wgpu::UiPresence::default(), activate: None, drop_action, drop_overlay: None, children, menu: None })
+        UiNode::Stack(ui_wgpu::wgpu::UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some(id.into()), presence: ui_wgpu::wgpu::UiPresence::default(), activate: None, drop_action, drop_overlay: None, children, menu: None })
     }
 
     //#region 🔖️DropCommittedTests
@@ -765,7 +765,7 @@ mod ui_command_wiring_tests {
         let target = UI_ENGINE.with(|cell| cell.borrow().tree(window_id).unwrap().root.unwrap());
         let mut payload = DragPayload::new();
         payload.insert("application/x-semio-catalogue-item".into(), "{\"id\":\"abc\"}".into());
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
 
         apply_drop_committed(window_id, target, &payload, &mut input);
 
@@ -783,7 +783,7 @@ mod ui_command_wiring_tests {
         let window_id = "apply-ui-commands-drop-committed-no-payload-test";
         UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("dz", Some(action("onDrop", None)), vec![])));
         let target = UI_ENGINE.with(|cell| cell.borrow().tree(window_id).unwrap().root.unwrap());
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
 
         apply_drop_committed(window_id, target, &DragPayload::new(), &mut input);
 
@@ -795,9 +795,9 @@ mod ui_command_wiring_tests {
     #[test]
     fn clipboard_copy_and_cut_commands_write_through_the_mocked_os_clipboard() {
         MOCK_CLIPBOARD_WRITES.with(|cell| cell.borrow_mut().clear());
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
 
-        apply_ui_commands(&[ui_wgpu::UiCommand::ClipboardCopy { window_id: "w".into(), text: "hello".into() }, ui_wgpu::UiCommand::ClipboardCut { window_id: "w".into(), text: "world".into() }], &mut input);
+        apply_ui_commands(&[ui_wgpu::wgpu::UiCommand::ClipboardCopy { window_id: "w".into(), text: "hello".into() }, ui_wgpu::wgpu::UiCommand::ClipboardCut { window_id: "w".into(), text: "world".into() }], &mut input);
 
         assert_eq!(MOCK_CLIPBOARD_WRITES.with(|cell| cell.borrow().clone()), vec!["hello".to_string(), "world".to_string()]);
     }
@@ -805,7 +805,7 @@ mod ui_command_wiring_tests {
     #[test]
     fn clipboard_paste_requested_reads_the_mocked_clipboard_and_inserts_it_at_the_focused_caret() {
         let window_id = "apply-ui-commands-clipboard-paste-test";
-        let input_node = UiNode::Input(ui_wgpu::UiInputNode {
+        let input_node = UiNode::Input(ui_wgpu::wgpu::UiInputNode {
             id: "name".into(),
             input_kind: "text".into(),
             value: String::new(),
@@ -816,20 +816,20 @@ mod ui_command_wiring_tests {
             step: None,
             accept: None,
             on_change: action("onChange", None),
-            presence: ui_wgpu::UiPresence::default(),
+            presence: ui_wgpu::wgpu::UiPresence::default(),
             menu: None,
         });
         UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("root", None, vec![input_node])));
-        let focus_commands = UI_ENGINE.with(|cell| cell.borrow_mut().dispatch_event(window_id, ui_wgpu::UiEvent::KeyDown { key: "Tab".into(), modifiers: ui_wgpu::EventModifiers::default() }));
+        let focus_commands = UI_ENGINE.with(|cell| cell.borrow_mut().dispatch_event(window_id, ui_wgpu::wgpu::UiEvent::KeyDown { key: "Tab".into(), modifiers: ui_wgpu::wgpu::EventModifiers::default() }));
         let focused = focus_commands
             .iter()
             .find_map(|cmd| match cmd {
-                ui_wgpu::UiCommand::FocusChanged { node: Some(id), .. } => Some(*id),
+                ui_wgpu::wgpu::UiCommand::FocusChanged { node: Some(id), .. } => Some(*id),
                 _ => None,
             })
             .expect("Tab should focus the only focusable node (the Input)");
         MOCK_CLIPBOARD_READ.with(|cell| *cell.borrow_mut() = Some("pasted".to_string()));
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
 
         apply_clipboard_paste_requested(window_id, &mut input);
 
@@ -842,7 +842,7 @@ mod ui_command_wiring_tests {
         let window_id = "apply-ui-commands-clipboard-paste-empty-test";
         UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("root", None, vec![])));
         MOCK_CLIPBOARD_READ.with(|cell| *cell.borrow_mut() = None);
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
 
         apply_clipboard_paste_requested(window_id, &mut input);
 
@@ -856,13 +856,13 @@ mod ui_command_wiring_tests {
         let window_id = "apply-ui-commands-noop-test";
         UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("root", None, vec![])));
         let node = UI_ENGINE.with(|cell| cell.borrow().tree(window_id).unwrap().root.unwrap());
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
 
         apply_ui_commands(
             &[
-                ui_wgpu::UiCommand::DropCancelled { window_id: window_id.into(), source: node },
-                ui_wgpu::UiCommand::OverlayClosed { window_id: window_id.into(), root: node, kind: ui_wgpu::OverlayKind::Tooltip },
-                ui_wgpu::UiCommand::FocusChanged { window_id: window_id.into(), node: Some(node) },
+                ui_wgpu::wgpu::UiCommand::DropCancelled { window_id: window_id.into(), source: node },
+                ui_wgpu::wgpu::UiCommand::OverlayClosed { window_id: window_id.into(), root: node, kind: ui_wgpu::wgpu::OverlayKind::Tooltip },
+                ui_wgpu::wgpu::UiCommand::FocusChanged { window_id: window_id.into(), node: Some(node) },
             ],
             &mut input,
         );
@@ -873,9 +873,9 @@ mod ui_command_wiring_tests {
 
     //#region 🔖️SceneCommandTests
     /// 🎬️ A minimal `ComponentScene` leaf — every optional per-`SurfaceKind` payload left `None`,
-    /// matching `ui_wgpu::events::tests::component_scene_ui`'s own fixture shape (that one is private
+    /// matching `ui_wgpu::wgpu::events::tests::component_scene_ui`'s own fixture shape (that one is private
     /// to the sibling `ui_wgpu` crate, so this is a separate copy for this crate's own tests).
-    fn component_scene_ui(surface_id: &str, kind: ui_wgpu::SurfaceKind) -> UiNode {
+    fn component_scene_ui(surface_id: &str, kind: ui_wgpu::wgpu::SurfaceKind) -> UiNode {
         UiNode::ComponentScene(UiComponentSceneNode {
             surface_id: surface_id.into(),
             controller_id: "ctrl".into(),
@@ -915,25 +915,25 @@ mod ui_command_wiring_tests {
         })
     }
 
-    fn seed_scene_window(window_id: &str, surface_id: &str, kind: ui_wgpu::SurfaceKind) -> NodeId {
+    fn seed_scene_window(window_id: &str, surface_id: &str, kind: ui_wgpu::wgpu::SurfaceKind) -> NodeId {
         seed_scene_window_with(window_id, component_scene_ui(surface_id, kind))
     }
 
     #[test]
     fn scene_command_dispatches_a_canvas2d_pointer_down_action() {
         let window_id = "apply-ui-commands-scene-canvas2d-pointer-down";
-        let node = seed_scene_window(window_id, "s1", ui_wgpu::SurfaceKind::Canvas2d);
+        let node = seed_scene_window(window_id, "s1", ui_wgpu::wgpu::SurfaceKind::Canvas2d);
         let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
 
         apply_ui_commands(
-            &[ui_wgpu::UiCommand::Scene {
+            &[ui_wgpu::wgpu::UiCommand::Scene {
                 window_id: window_id.into(),
                 node,
                 surface_id: "s1".into(),
-                kind: ui_wgpu::SurfaceKind::Canvas2d,
+                kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
                 rect,
-                event: ui_wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::PointerButton::Primary },
+                event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary },
             }],
             &mut input,
         );
@@ -948,16 +948,16 @@ mod ui_command_wiring_tests {
         // 🎨️ `ink_wheel` reads straight from the scene's own `ink_canvas` payload (unlike TextEditor,
         // it needs no separate lazily-render-created host state) — mirrors `RenderEntry::ink_scene`'s
         // own fixture (`apply_scene_wheel_dispatches_actions_for_a_previously_dead_surface`).
-        let mut scene_node = component_scene_ui("s1", ui_wgpu::SurfaceKind::InkCanvas);
+        let mut scene_node = component_scene_ui("s1", ui_wgpu::wgpu::SurfaceKind::InkCanvas);
         if let UiNode::ComponentScene(scene) = &mut scene_node {
-            scene.ink_canvas = Some(ui_wgpu::InkCanvasScene { document_json: "{}".into(), selection_json: "[]".into(), hovered_id: None, active_utility: String::new(), view_mode: "canvas".into(), interactive: true });
+            scene.ink_canvas = Some(ui_wgpu::wgpu::InkCanvasScene { document_json: "{}".into(), selection_json: "[]".into(), hovered_id: None, active_utility: String::new(), view_mode: "canvas".into(), interactive: true });
         }
         let node = seed_scene_window_with(window_id, scene_node);
         let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
 
         apply_ui_commands(
-            &[ui_wgpu::UiCommand::Scene { window_id: window_id.into(), node, surface_id: "s1".into(), kind: ui_wgpu::SurfaceKind::InkCanvas, rect, event: ui_wgpu::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: -1.0 } }],
+            &[ui_wgpu::wgpu::UiCommand::Scene { window_id: window_id.into(), node, surface_id: "s1".into(), kind: ui_wgpu::wgpu::SurfaceKind::InkCanvas, rect, event: ui_wgpu::wgpu::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: -1.0 } }],
             &mut input,
         );
 
@@ -968,18 +968,18 @@ mod ui_command_wiring_tests {
     #[test]
     fn scene_command_skips_bespoke_surface_kinds_to_avoid_double_dispatch() {
         let window_id = "apply-ui-commands-scene-bespoke-skip";
-        let node = seed_scene_window(window_id, "s1", ui_wgpu::SurfaceKind::NodeGraph);
+        let node = seed_scene_window(window_id, "s1", ui_wgpu::wgpu::SurfaceKind::NodeGraph);
         let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
 
         apply_ui_commands(
-            &[ui_wgpu::UiCommand::Scene {
+            &[ui_wgpu::wgpu::UiCommand::Scene {
                 window_id: window_id.into(),
                 node,
                 surface_id: "s1".into(),
-                kind: ui_wgpu::SurfaceKind::NodeGraph,
+                kind: ui_wgpu::wgpu::SurfaceKind::NodeGraph,
                 rect,
-                event: ui_wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::PointerButton::Primary },
+                event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary },
             }],
             &mut input,
         );
@@ -1002,32 +1002,32 @@ mod ui_command_wiring_tests {
     #[test]
     fn scene_command_reaches_every_generic_fallback_surface_kind_without_panicking() {
         let kinds = [
-            ui_wgpu::SurfaceKind::Canvas2d,
-            ui_wgpu::SurfaceKind::Paint2d,
-            ui_wgpu::SurfaceKind::TextEditor,
-            ui_wgpu::SurfaceKind::InkCanvas,
-            ui_wgpu::SurfaceKind::GraphTimeline,
-            ui_wgpu::SurfaceKind::Table,
-            ui_wgpu::SurfaceKind::VirtualFileSystem,
-            ui_wgpu::SurfaceKind::IconRender,
-            ui_wgpu::SurfaceKind::BlockList,
-            ui_wgpu::SurfaceKind::DiffView,
-            ui_wgpu::SurfaceKind::EventFeed,
+            ui_wgpu::wgpu::SurfaceKind::Canvas2d,
+            ui_wgpu::wgpu::SurfaceKind::Paint2d,
+            ui_wgpu::wgpu::SurfaceKind::TextEditor,
+            ui_wgpu::wgpu::SurfaceKind::InkCanvas,
+            ui_wgpu::wgpu::SurfaceKind::GraphTimeline,
+            ui_wgpu::wgpu::SurfaceKind::Table,
+            ui_wgpu::wgpu::SurfaceKind::VirtualFileSystem,
+            ui_wgpu::wgpu::SurfaceKind::IconRender,
+            ui_wgpu::wgpu::SurfaceKind::BlockList,
+            ui_wgpu::wgpu::SurfaceKind::DiffView,
+            ui_wgpu::wgpu::SurfaceKind::EventFeed,
         ];
         for kind in kinds {
             assert!(!crate::scenes::scene_has_bespoke_pointer_dispatch(kind), "{kind:?} must stay in the generic-fallback set for this smoke test to be meaningful");
             let window_id = format!("apply-ui-commands-scene-smoke-{kind:?}");
             let node = seed_scene_window(&window_id, "s1", kind);
             let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-            let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+            let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
             let events = [
-                ui_wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::PointerButton::Primary },
-                ui_wgpu::UiEvent::PointerMove { x: 12.0, y: 12.0 },
-                ui_wgpu::UiEvent::PointerUp { x: 12.0, y: 12.0, button: ui_wgpu::PointerButton::Primary },
-                ui_wgpu::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: 4.0 },
+                ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary },
+                ui_wgpu::wgpu::UiEvent::PointerMove { x: 12.0, y: 12.0 },
+                ui_wgpu::wgpu::UiEvent::PointerUp { x: 12.0, y: 12.0, button: ui_wgpu::wgpu::PointerButton::Primary },
+                ui_wgpu::wgpu::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: 4.0 },
             ];
             for event in events {
-                apply_ui_commands(&[ui_wgpu::UiCommand::Scene { window_id: window_id.clone(), node, surface_id: "s1".into(), kind, rect, event }], &mut input);
+                apply_ui_commands(&[ui_wgpu::wgpu::UiCommand::Scene { window_id: window_id.clone(), node, surface_id: "s1".into(), kind, rect, event }], &mut input);
             }
         }
     }
@@ -1047,18 +1047,18 @@ mod ui_command_wiring_tests {
     #[test]
     fn scene_command_right_click_on_text_editor_does_not_panic_and_stays_a_graceful_no_op_without_a_rendered_host() {
         let window_id = "apply-ui-commands-scene-text-editor-right-click";
-        let node = seed_scene_window(window_id, "s1", ui_wgpu::SurfaceKind::TextEditor);
+        let node = seed_scene_window(window_id, "s1", ui_wgpu::wgpu::SurfaceKind::TextEditor);
         let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
 
         apply_ui_commands(
-            &[ui_wgpu::UiCommand::Scene {
+            &[ui_wgpu::wgpu::UiCommand::Scene {
                 window_id: window_id.into(),
                 node,
                 surface_id: "s1".into(),
-                kind: ui_wgpu::SurfaceKind::TextEditor,
+                kind: ui_wgpu::wgpu::SurfaceKind::TextEditor,
                 rect,
-                event: ui_wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::PointerButton::Secondary },
+                event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Secondary },
             }],
             &mut input,
         );
@@ -1315,7 +1315,7 @@ fn object_contain_rect(bounds: Rect, natural_w: f32, natural_h: f32) -> Rect {
 }
 //#endregion UiImageLoading
 
-fn render_ui_image(image: &ui_wgpu::UiImageNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+fn render_ui_image(image: &ui_wgpu::wgpu::UiImageNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let (key, natural_size) = resolve_ui_image(&image.id, image.src.trim());
     let Some(key) = key else {
         if let Some(alt) = &image.alt {
@@ -1328,11 +1328,11 @@ fn render_ui_image(image: &ui_wgpu::UiImageNode, bounds: Rect, ctx: &mut Framewo
 }
 
 pub fn framework_widget_context<'a>(
-    draw: &'a mut ui_wgpu::DrawList,
-    overlay: Option<&'a mut ui_wgpu::DrawList>,
-    atlas: &'a mut ui_wgpu::FontAtlas,
-    icons: Option<&'a ui_wgpu::IconAtlas>,
-    input: &'a mut ui_wgpu::InputState<ActionDescriptor>,
+    draw: &'a mut ui_wgpu::wgpu::DrawList,
+    overlay: Option<&'a mut ui_wgpu::wgpu::DrawList>,
+    atlas: &'a mut ui_wgpu::wgpu::FontAtlas,
+    icons: Option<&'a ui_wgpu::wgpu::IconAtlas>,
+    input: &'a mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
     theme: &'a Theme,
     scroll_offsets: &'a mut std::collections::HashMap<String, f32>,
     collapsed_sections: &'a mut std::collections::HashMap<String, bool>,
@@ -1346,7 +1346,7 @@ pub fn framework_widget_context<'a>(
 #[cfg(test)]
 mod render_plan_validator_tests {
     use super::*;
-    use ui_wgpu::{build_table_scene, build_world_3d_scene, TableScene, UiStackNode, World3dScene};
+    use ui_wgpu::wgpu::{build_table_scene, build_world_3d_scene, TableScene, UiStackNode, World3dScene};
 
     #[test]
     fn validate_ui_node_rejects_oversized_json_payload() {
@@ -1619,11 +1619,11 @@ fn ui_node_path_segment(node: &UiNode, sibling_index: usize) -> String {
 //#endregion 🔬️IntrospectionPathGrammar
 
 //#region 🔬️IntrospectionVisualFields
-fn rgba_array(color: ui_wgpu::Rgba) -> [f32; 4] {
+fn rgba_array(color: ui_wgpu::wgpu::Rgba) -> [f32; 4] {
     [color.r, color.g, color.b, color.a]
 }
 
-fn dim(color: ui_wgpu::Rgba, disabled: bool) -> ui_wgpu::Rgba {
+fn dim(color: ui_wgpu::wgpu::Rgba, disabled: bool) -> ui_wgpu::wgpu::Rgba {
     if disabled {
         color.with_alpha(color.a * 0.5)
     } else {
@@ -1632,7 +1632,7 @@ fn dim(color: ui_wgpu::Rgba, disabled: bool) -> ui_wgpu::Rgba {
 }
 
 /// 🎨️ Best-effort `(text, color, bg, fontSize)` per `UiNode` kind, read straight off `theme`'s
-/// already-`pub` fields (or the re-exported `ui_wgpu::item_bg`/`item_text` helpers
+/// already-`pub` fields (or the re-exported `ui_wgpu::wgpu::item_bg`/`item_text` helpers
 /// `paint::paint_button`/`paint_toggle` themselves call) rather than duplicating `paint`'s private
 /// per-widget geometry — `null` wherever a kind genuinely carries no single rendered text/color
 /// (e.g. `KeyValue`'s multiple entries, `Slider`'s numeric value, any purely-visual kind). Colors
@@ -1659,8 +1659,8 @@ fn dump_visual_fields(node: &UiNode, theme: &Theme, hovered: bool) -> (Option<St
         }
         UiNode::Button(button) => {
             let disabled = button.presence.state == UiState::Disabled;
-            let color = dim(ui_wgpu::item_text(theme, false, hovered), disabled);
-            let bg = dim(ui_wgpu::item_bg(theme, false, hovered), disabled);
+            let color = dim(ui_wgpu::wgpu::item_text(theme, false, hovered), disabled);
+            let bg = dim(ui_wgpu::wgpu::item_bg(theme, false, hovered), disabled);
             (Some(button.label.as_str().to_string()), Some(rgba_array(color)), Some(rgba_array(bg)), Some(theme.font_size_body))
         }
         UiNode::Separator(_) => (None, Some(rgba_array(theme.separator)), None, None),
@@ -1675,15 +1675,15 @@ fn dump_visual_fields(node: &UiNode, theme: &Theme, hovered: bool) -> (Option<St
         }
         UiNode::Toggle(toggle) => {
             let pressed = toggle.presence.selected;
-            let color = ui_wgpu::item_text(theme, pressed, hovered);
-            let bg = ui_wgpu::item_bg(theme, pressed, hovered);
+            let color = ui_wgpu::wgpu::item_text(theme, pressed, hovered);
+            let bg = ui_wgpu::wgpu::item_bg(theme, pressed, hovered);
             let font_size = toggle.text.is_some().then_some(theme.font_size_body);
             (toggle.text.as_ref().map(|text| text.as_str().to_string()), Some(rgba_array(color)), Some(rgba_array(bg)), font_size)
         }
         UiNode::KeyValue(_) => (None, None, None, None),
         UiNode::Slider(_) => (None, None, None, None),
         UiNode::NumberStepper(stepper) => {
-            let (text, color) = if stepper.uniform { (format!("{:.3}", stepper.value), theme.text) } else { (ui_wgpu::UI_INSPECTOR_MIXED_PLACEHOLDER.to_string(), theme.text_muted) };
+            let (text, color) = if stepper.uniform { (format!("{:.3}", stepper.value), theme.text) } else { (ui_wgpu::wgpu::UI_INSPECTOR_MIXED_PLACEHOLDER.to_string(), theme.text_muted) };
             (Some(text), Some(rgba_array(color)), Some(rgba_array(theme.input_bg)), Some(theme.font_size_body))
         }
         UiNode::Ring(_) => (None, None, None, None),
@@ -1704,10 +1704,10 @@ fn dump_visual_fields(node: &UiNode, theme: &Theme, hovered: bool) -> (Option<St
 
 //#region 🔬️IntrospectionWalk
 /// 🖱️ Same authored-hover-folds-into-live-hover rule `paint::paint_node` applies (private to
-/// `ui_wgpu::paint`, so re-derived here from the same two already-`pub` inputs it reads):
+/// `ui_wgpu::wgpu::paint`, so re-derived here from the same two already-`pub` inputs it reads):
 /// `presence.hover` counts as hovered too, unless the node is disabled.
-fn effective_hovered(node: &ui_wgpu::Node, presence_hover: bool, disabled: bool) -> bool {
-    let live = node.flags.contains(ui_wgpu::NodeFlags::HOVERED);
+fn effective_hovered(node: &ui_wgpu::wgpu::Node, presence_hover: bool, disabled: bool) -> bool {
+    let live = node.flags.contains(ui_wgpu::wgpu::NodeFlags::HOVERED);
     if disabled {
         live
     } else {
@@ -1720,7 +1720,7 @@ fn effective_hovered(node: &ui_wgpu::Node, presence_hover: bool, disabled: bool)
 /// node.layout.x, origin_y + node.layout.y)`), building one `DumpNode` per visited node and
 /// recording the first node found with `NodeFlags::FOCUSED` set as `focus_path`.
 #[allow(clippy::too_many_arguments, reason = "one arg per walk-state accumulator; mirrors paint_node's own equally-wide signature")]
-fn walk_dump(tree: &ui_wgpu::UiTree, id: ui_wgpu::NodeId, origin_x: f32, origin_y: f32, parent_path: &str, sibling_index: usize, theme: &Theme, focus_path: &mut Option<String>, nodes: &mut Vec<DumpNode>) {
+fn walk_dump(tree: &ui_wgpu::wgpu::UiTree, id: ui_wgpu::wgpu::NodeId, origin_x: f32, origin_y: f32, parent_path: &str, sibling_index: usize, theme: &Theme, focus_path: &mut Option<String>, nodes: &mut Vec<DumpNode>) {
     let Some(node) = tree.node(id) else { return };
     let ui_node = &node.spec.0;
     let presence = ui_node.presence();
@@ -1731,7 +1731,7 @@ fn walk_dump(tree: &ui_wgpu::UiTree, id: ui_wgpu::NodeId, origin_x: f32, origin_
     let abs_y = origin_y + node.layout.y;
     let disabled = presence.state == UiState::Disabled;
     let hovered = effective_hovered(node, presence.hover, disabled);
-    if focus_path.is_none() && node.flags.contains(ui_wgpu::NodeFlags::FOCUSED) {
+    if focus_path.is_none() && node.flags.contains(ui_wgpu::wgpu::NodeFlags::FOCUSED) {
         *focus_path = Some(path.clone());
     }
 
@@ -1766,13 +1766,13 @@ fn walk_dump(tree: &ui_wgpu::UiTree, id: ui_wgpu::NodeId, origin_x: f32, origin_
 /// single docked window, no floating panels open), wrong in general once a test opens a floating
 /// panel too. Noted rather than guessed further; a real fix needs these two exports to grow an
 /// optional `windowId` JS argument, which this pass doesn't have sanction to add unasked.
-fn primary_window_id(engine: &ui_wgpu::Ui) -> Option<String> {
+fn primary_window_id(engine: &ui_wgpu::wgpu::Ui) -> Option<String> {
     engine.window_ids().filter_map(|id| engine.viewport(id).map(|(w, h)| (id.to_string(), w * h))).max_by(|a, b| a.1.total_cmp(&b.1)).map(|(id, _)| id)
 }
 //#endregion 🔬️IntrospectionWindowSelection
 
 //#region 🔬️IntrospectionBuilders
-fn build_structure_dump(engine: &ui_wgpu::Ui, dpr: f32) -> DumpStructure {
+fn build_structure_dump(engine: &ui_wgpu::wgpu::Ui, dpr: f32) -> DumpStructure {
     let Some(window_id) = primary_window_id(engine) else {
         return DumpStructure { viewport: DumpViewport { w: 0.0, h: 0.0, dpr }, focus_path: None, nodes: Vec::new() };
     };
@@ -1794,15 +1794,15 @@ fn build_structure_dump(engine: &ui_wgpu::Ui, dpr: f32) -> DumpStructure {
 /// (glyphs included — a glyph is itself one `UiInstance`, see `draw::KIND_GLYPH`); `glyphCount` is
 /// the `KIND_GLYPH` subset, for boot-triage (a booted-but-blank canvas has 0 of everything; text
 /// that silently failed to shape has quads but 0 glyphs).
-fn layer_is_nonempty(layer: &ui_wgpu::draw::DrawLayer) -> bool {
+fn layer_is_nonempty(layer: &ui_wgpu::wgpu::draw::DrawLayer) -> bool {
     !layer.ui_instances.is_empty() || !layer.raster_instances.is_empty() || !layer.vector_vertices.is_empty() || !layer.overlay_ui_instances.is_empty() || !layer.overlay_vector_vertices.is_empty()
 }
 
-fn is_glyph_instance(instance: &ui_wgpu::draw::UiInstance) -> bool {
-    instance.params[2] == ui_wgpu::draw::KIND_GLYPH
+fn is_glyph_instance(instance: &ui_wgpu::wgpu::draw::UiInstance) -> bool {
+    instance.params[2] == ui_wgpu::wgpu::draw::KIND_GLYPH
 }
 
-fn build_frame_stats(engine: &ui_wgpu::Ui) -> DumpFrameStats {
+fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui) -> DumpFrameStats {
     let Some(window_id) = primary_window_id(engine) else {
         return DumpFrameStats { window_id: None, draw_calls: 0, quad_count: 0, glyph_count: 0 };
     };
@@ -1852,7 +1852,7 @@ pub fn dump_frame_stats() -> String {
 #[cfg(test)]
 mod introspection_tests {
     use super::*;
-    use ui_wgpu::{Label, LayoutBucket, Node, NodeFlags, NodeKey, Theme, UiPresence, UiStackNode, UiTextNode, WidgetSpec};
+    use ui_wgpu::wgpu::{Label, LayoutBucket, Node, NodeFlags, NodeKey, Theme, UiPresence, UiStackNode, UiTextNode, WidgetSpec};
 
     fn text_node(value: &str) -> UiNode {
         UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
@@ -1873,7 +1873,7 @@ mod introspection_tests {
 
     #[test]
     fn walk_dump_accumulates_absolute_rects_and_builds_full_paths() {
-        let mut tree = ui_wgpu::UiTree::new();
+        let mut tree = ui_wgpu::wgpu::UiTree::new();
         let root_id = tree.insert_child(None, Node::new(NodeKey::Explicit("root".into()), WidgetSpec(stack_node(Some("root"), vec![]))));
         let child_id = tree.insert_child(Some(root_id), Node::new(NodeKey::Positional(1, 0), WidgetSpec(text_node("hi"))));
         tree.node_mut(root_id).unwrap().layout = LayoutBucket { x: 10.0, y: 20.0, width: 200.0, height: 100.0, ..Default::default() };
@@ -1893,7 +1893,7 @@ mod introspection_tests {
 
     #[test]
     fn focus_path_is_recorded_for_the_focused_node() {
-        let mut tree = ui_wgpu::UiTree::new();
+        let mut tree = ui_wgpu::wgpu::UiTree::new();
         let root_id = tree.insert_child(None, Node::new(NodeKey::Explicit("root".into()), WidgetSpec(stack_node(Some("root"), vec![]))));
         let child_id = tree.insert_child(Some(root_id), Node::new(NodeKey::Positional(1, 0), WidgetSpec(text_node("hi"))));
         tree.node_mut(child_id).unwrap().flags.set(NodeFlags::FOCUSED, true);

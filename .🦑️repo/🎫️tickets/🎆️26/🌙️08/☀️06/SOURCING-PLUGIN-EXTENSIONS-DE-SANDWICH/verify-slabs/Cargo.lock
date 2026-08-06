@@ -699,6 +699,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-ui"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-ui-styling",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-ui-styling"
 version = "0.1.0"
 
@@ -706,10 +716,7 @@ version = "0.1.0"
 name = "semio-framework-ui-wgpu"
 version = "0.1.0"
 dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-ui-styling",
- "serde",
- "serde_json",
+ "semio-framework-ui",
 ]
 
 [[package]]

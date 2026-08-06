@@ -8,11 +8,55 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { RibbonZone } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🎀️Ribbon
+// #region RibbonZone
+interface RibbonZoneProps extends React.ComponentProps<"div"> {
+  children: React.ReactNode;
+  /** @emoji 📏️ Lets intrinsically tall ribbon content define the row height while retaining the standard minimum. */
+  variableHeight?: boolean;
+}
+
+function RibbonZone({ className, children, variableHeight = false, ...props }: RibbonZoneProps) {
+  return (
+    <div data-slot="ribbon-zone" data-variable-height={variableHeight ? "true" : undefined} className={cn("flex shrink-0 items-center gap-single min-w-0", variableHeight ? "h-auto min-h-medium" : "h-medium", className)} {...props}>
+      {children}
+    </div>
+  );
+}
+
+interface RibbonGroupProps extends React.ComponentProps<"div"> {
+  children: React.ReactNode;
+}
+
+function RibbonGroup({ className, children, ...props }: RibbonGroupProps) {
+  return (
+    <div data-slot="ribbon-group" role="group" className={cn("flex shrink-0 items-center gap-single h-full", className)} {...props}>
+      {children}
+    </div>
+  );
+}
+
+function RibbonDivider({ className, ...props }: React.ComponentProps<"div">) {
+  return <div data-slot="ribbon-divider" className={cn("w-px h-small bg-border my-auto shrink-0", className)} {...props} />;
+}
+
+interface RibbonItemProps extends React.ComponentProps<"div"> {
+  children: React.ReactNode;
+}
+
+function RibbonItem({ className, children, ...props }: RibbonItemProps) {
+  return (
+    <div data-slot="ribbon-item" className={cn("shrink-0 flex items-center h-full min-w-0", className)} {...props}>
+      {children}
+    </div>
+  );
+}
+
+export { RibbonDivider, RibbonGroup, RibbonItem, RibbonZone };
+// #endregion RibbonZone
+
 // A ribbon is a chrome strip that grows by stacked rows — one per tree level — instead of staying a single line.
 
 /** @emoji 🎀️ `inline` keeps every row on one horizontal line (footer drill-down); `up`/`down` stack rows vertically, growing away from the base row. */

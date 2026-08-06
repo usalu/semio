@@ -96,7 +96,7 @@ impl Platform {
 mod tests {
     use super::*;
     use crate::ui::{ModeDefinition, WindowKindDefinition};
-    use ui_wgpu::LocalizedLabel;
+    use ui_wgpu::wgpu::LocalizedLabel;
 
     #[test]
     fn adds_first_app_as_active() {
@@ -120,9 +120,9 @@ mod tests {
                 id: "composite".into(),
                 label: LocalizedLabel::data("Canvas"),
                 body_key: "composite".into(),
-                surface_kind: ui_wgpu::SurfaceKind::Canvas2d,
+                surface_kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
                 icon_id: "pen-tool".into(),
-                options: ui_wgpu::WindowOptions::default(),
+                options: ui_wgpu::wgpu::WindowOptions::default(),
                 actions: Vec::new(),
                 utilities: Vec::new(),
                 params_schema: None,
@@ -174,9 +174,9 @@ mod tests {
                 id: "main".into(),
                 label: LocalizedLabel::data("Main"),
                 body_key: "main".into(),
-                surface_kind: ui_wgpu::SurfaceKind::Canvas2d,
+                surface_kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
                 icon_id: "pen-tool".into(),
-                options: ui_wgpu::WindowOptions::default(),
+                options: ui_wgpu::wgpu::WindowOptions::default(),
                 actions: Vec::new(),
                 utilities: Vec::new(),
                 params_schema: None,

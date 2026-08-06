@@ -1950,7 +1950,7 @@ dependencies = [
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-protocol-core",
- "semio-framework-ui-wgpu",
+ "semio-framework-ui",
  "serde",
  "serde_json",
  "thiserror 2.0.19",
@@ -1964,6 +1964,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-math"
+version = "0.1.0"
+dependencies = [
+ "kurbo 0.13.1",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-dsl-core",
+ "semio-framework-os-kernel-dsl-schema",
+ "semio-framework-os-kernel-neural-engine",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.19",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "semio-framework-os"
 version = "0.1.0"
 dependencies = [
@@ -1972,8 +1987,6 @@ dependencies = [
  "resvg",
  "rusqlite",
  "semio-framework-core",
- "semio-framework-os-kernel-3d-brep",
- "semio-framework-os-kernel-3d-brep-engine",
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-space",
@@ -1982,7 +1995,8 @@ dependencies = [
  "semio-framework-os-kernel-vcs",
  "semio-framework-os-kernel-workflow",
  "semio-framework-plugin",
- "semio-framework-ui-wgpu",
+ "semio-framework-ui",
+ "semio-s-3d",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -1995,37 +2009,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-os-kernel-3d-brep"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "base64",
- "brepkit-check",
- "brepkit-geometry",
- "brepkit-io",
- "brepkit-math",
- "brepkit-operations",
- "brepkit-topology",
- "rayon",
- "semio-framework-core",
- "semio-framework-os-kernel-3d-brep-engine",
- "semio-framework-os-kernel-math-number",
- "serde",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-3d-brep-engine"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "futures",
- "pollster",
- "rayon",
- "serde",
- "thiserror 2.0.19",
-]
-
-[[package]]
 name = "semio-framework-os-kernel-dsl"
 version = "0.1.0"
 dependencies = [
@@ -2034,6 +2017,7 @@ dependencies = [
  "semio-framework-os-kernel-dsl-schema",
  "semio-framework-os-kernel-pack",
  "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-semio",
  "serde_json",
 ]
 
@@ -2056,10 +2040,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-os-kernel-dsl-notation"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel-dsl-core",
+]
+
+[[package]]
 name = "semio-framework-os-kernel-dsl-schema"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-dsl-core",
+ "semio-framework-os-kernel-dsl-notation",
  "serde",
 ]
 
@@ -2067,11 +2059,8 @@ dependencies = [
 name = "semio-framework-os-kernel-infinite-board"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-math",
  "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-os-kernel-math-geometry",
- "semio-framework-os-kernel-math-graph",
- "semio-framework-os-kernel-math-graph-drawing",
- "semio-framework-os-kernel-math-graph-manifest",
  "semio-framework-ui-styling",
  "serde",
  "serde_json",
@@ -2081,11 +2070,9 @@ dependencies = [
 name = "semio-framework-os-kernel-infinite-board-normal-undirected"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-math",
  "semio-framework-os-kernel-infinite-board",
  "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-os-kernel-math-geometry",
- "semio-framework-os-kernel-math-graph",
- "semio-framework-os-kernel-math-graph-drawing",
  "serde",
  "serde_json",
  "thiserror 2.0.19",
@@ -2095,8 +2082,8 @@ dependencies = [
 name = "semio-framework-os-kernel-infinite-board-port"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-math",
  "semio-framework-os-kernel-infinite-board",
- "semio-framework-os-kernel-math-graph",
  "serde",
  "serde_json",
 ]
@@ -2105,11 +2092,11 @@ dependencies = [
 name = "semio-framework-os-kernel-infinite-board-port-directed"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-math",
  "semio-framework-os-kernel-infinite-board",
  "semio-framework-os-kernel-infinite-board-normal-undirected",
  "semio-framework-os-kernel-infinite-board-port",
  "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-os-kernel-math-graph",
  "semio-framework-ui-styling",
  "serde",
  "serde_json",
@@ -2119,11 +2106,10 @@ dependencies = [
 name = "semio-framework-os-kernel-infinite-board-port-directed-normal"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-math",
  "semio-framework-os-kernel-infinite-board-normal-undirected",
  "semio-framework-os-kernel-infinite-board-port-directed",
  "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-os-kernel-math-graph-drawing",
- "semio-framework-os-kernel-math-graph-manifest",
  "semio-framework-ui-styling",
  "serde",
  "serde_json",
@@ -2139,7 +2125,7 @@ dependencies = [
  "image",
  "js-sys",
  "semio-framework-compiler",
- "semio-framework-os-kernel-math-geometry",
+ "semio-framework-math",
  "semio-framework-ui-styling",
  "serde",
  "serde_json",
@@ -2151,61 +2137,6 @@ dependencies = [
  "wasm-bindgen-futures",
  "web-sys",
 ]
-
-[[package]]
-name = "semio-framework-os-kernel-math-geometry"
-version = "0.1.0"
-dependencies = [
- "kurbo 0.13.1",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-math-graph"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-math-geometry",
- "semio-framework-os-kernel-math-graph-manifest",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-math-graph-drawing"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-math-geometry",
- "semio-framework-os-kernel-math-graph",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-math-graph-dsl"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-dsl-core",
- "semio-framework-os-kernel-dsl-schema",
- "semio-framework-os-kernel-math-graph-manifest",
- "serde",
- "serde_json",
- "thiserror 2.0.19",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-math-graph-manifest"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-neural-engine",
- "serde",
- "serde_json",
- "thiserror 2.0.19",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-math-number"
-version = "0.1.0"
 
 [[package]]
 name = "semio-framework-os-kernel-neural-engine"
@@ -2410,6 +2341,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-os-kernel-semio"
+version = "0.1.0"
+dependencies = [
+ "thiserror 2.0.19",
+]
+
+[[package]]
 name = "semio-framework-os-kernel-space"
 version = "0.1.0"
 dependencies = [
@@ -2436,6 +2374,7 @@ dependencies = [
  "semio-framework-os-kernel-dsl-core",
  "semio-framework-os-kernel-pack",
  "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-semio",
  "semio-framework-os-kernel-vcs",
  "serde",
  "serde-wasm-bindgen",
@@ -2504,7 +2443,7 @@ dependencies = [
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-vcs",
- "semio-framework-ui-wgpu",
+ "semio-framework-ui",
  "serde",
  "serde_json",
  "thiserror 2.0.19",
@@ -2512,11 +2451,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-ui-styling"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-ui-wgpu"
+name = "semio-framework-ui"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-dsl",
@@ -2526,20 +2461,43 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-ui-styling"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-3d"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "base64",
+ "brepkit-check",
+ "brepkit-geometry",
+ "brepkit-io",
+ "brepkit-math",
+ "brepkit-operations",
+ "brepkit-topology",
+ "futures",
+ "pollster",
+ "rayon",
+ "semio-framework-core",
+ "semio-framework-math",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.19",
+]
+
+[[package]]
 name = "semio-s-plugin-trinity"
 version = "0.1.0"
 dependencies = [
  "js-sys",
  "semio-framework-core",
+ "semio-framework-math",
  "semio-framework-os",
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-infinite-board-port-directed",
  "semio-framework-os-kernel-infinite-board-port-directed-normal",
  "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-os-kernel-math-geometry",
- "semio-framework-os-kernel-math-graph-drawing",
- "semio-framework-os-kernel-math-graph-dsl",
- "semio-framework-os-kernel-math-graph-manifest",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-vcs",

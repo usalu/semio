@@ -1,0 +1,27 @@
+{
+  "name": "@semio-tech/framework-os-kernel",
+  "root": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os",
+  "projectType": "library",
+  "tags": [
+    "lang:rust",
+    "role:framework",
+    "family:os-kernel"
+  ],
+  "targets": {
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts check",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts test",
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}

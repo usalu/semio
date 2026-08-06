@@ -15,8 +15,8 @@ use infinite_canvas as canvas;
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use ui_wgpu::{draw_text, draw_text_overlay, FontAtlas, GpuContext, HitKind, HitTarget, KeyAction, PointerModifiers, Rect, Rgba, Theme};
-use ui_wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
+use ui_wgpu::wgpu::{draw_text, draw_text_overlay, FontAtlas, GpuContext, HitKind, HitTarget, KeyAction, PointerModifiers, Rect, Rgba, Theme};
+use ui_wgpu::wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
 use vello::peniko::Color;
 use vello::wgpu;
 use vello::{AaConfig, AaSupport, RenderParams, Renderer, RendererOptions};
@@ -41,12 +41,12 @@ struct NodeGraphSyncCache {
     selection: Option<Vec<String>>,
     preview_off_json: Option<String>,
     catalogue_json: Option<String>,
-    operators: Option<Vec<ui_wgpu::NodeGraphOperatorRecord>>,
+    operators: Option<Vec<ui_wgpu::wgpu::NodeGraphOperatorRecord>>,
     computing_json: Option<String>,
     status_json: Option<String>,
     eval_json: Option<String>,
     lod_json: Option<String>,
-    viewport: Option<ui_wgpu::NodeGraphViewport>,
+    viewport: Option<ui_wgpu::wgpu::NodeGraphViewport>,
     scene_pack: Option<Vec<u8>>,
 }
 
@@ -153,12 +153,12 @@ fn effective_json_field(field: &str) -> String {
     store::pack_rt::scene_field_json_text(field).unwrap_or_else(|_| field.to_string())
 }
 
-fn graph_scene_pack(graph: &ui_wgpu::NodeGraphScene) -> Vec<u8> {
+fn graph_scene_pack(graph: &ui_wgpu::wgpu::NodeGraphScene) -> Vec<u8> {
     let dsl = semio_framework_core::to_dsl_value(graph).expect("node graph scene pack");
     store::pack_rt::encode_pack_value(&dsl)
 }
 
-fn editor_scene_pack(editor: &ui_wgpu::TextEditorScene) -> Vec<u8> {
+fn editor_scene_pack(editor: &ui_wgpu::wgpu::TextEditorScene) -> Vec<u8> {
     let dsl = semio_framework_core::to_dsl_value(editor).expect("text editor scene pack");
     store::pack_rt::encode_pack_value(&dsl)
 }
@@ -193,7 +193,7 @@ fn raster_key(surface_id: &str) -> String {
     format!("engine:{surface_id}")
 }
 
-fn is_flow_graph(graph: &ui_wgpu::NodeGraphScene) -> bool {
+fn is_flow_graph(graph: &ui_wgpu::wgpu::NodeGraphScene) -> bool {
     if graph.fixture_json.as_ref().is_some_and(|json| !json.trim().is_empty()) {
         return true;
     }
@@ -208,7 +208,7 @@ fn graph_action(controller_id: &str, surface_id: &str, action: &str, args: Value
     ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: semio_framework_core::optional_json_to_dsl(Some(args)) }
 }
 
-fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::NodeGraphScene, cache: &mut NodeGraphSyncCache) {
+fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::wgpu::NodeGraphScene, cache: &mut NodeGraphSyncCache) {
     if sync_eq_field(&mut cache.operators, &graph.operators) {
         host.set_neuron_kind_infos(&graph.operators);
     }
@@ -300,7 +300,7 @@ fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::NodeGraphScene, cache: &
             host.set_camera(viewport.x, viewport.y, viewport.zoom);
         }
     }
-    // 🧵️ `hover` is a `NodeGraphHover { nodeId }`-only record today (see `ui_wgpu::NodeGraphHover`) —
+    // 🧵️ `hover` is a `NodeGraphHover { nodeId }`-only record today (see `ui_wgpu::wgpu::NodeGraphHover`) —
     // flow-backed scenes don't currently emit it, so there is nothing to sync here yet.
 }
 
@@ -454,7 +454,7 @@ pub fn paint_node_graph(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext<'
         return;
     }
     ctx.draw.push_raster_quad(&raster_key(&scene.surface_id), [inner.x, inner.y, inner.w, inner.h], [0.0, 0.0, 1.0, 1.0], 1.0);
-    ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(format!("{}.pane", scene.surface_id)), kind: HitKind::ScrollRegion, drag_axis: Some(ui_wgpu::input::DragAxis::Both), drag_data: None });
+    ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(format!("{}.pane", scene.surface_id)), kind: HitKind::ScrollRegion, drag_axis: Some(ui_wgpu::wgpu::input::DragAxis::Both), drag_data: None });
 }
 
 fn note_widget_hit_at_screen(host: &flow_core::FlowHost, sx: f64, sy: f64) -> Option<(String, f64, f64)> {
@@ -1049,7 +1049,7 @@ fn paint_node_graph_selection_marquee(ctx: &mut FrameworkWidgetContext<'_>, inne
     }
     let lasso = method == "lasso";
     let global: Vec<[f32; 2]> = points.iter().map(|(x, y)| [inner.x + x, inner.y + y]).collect();
-    ui_wgpu::paint_selection_marquee(&mut ctx.draw, theme, crossing, lasso, &global, true);
+    ui_wgpu::wgpu::paint_selection_marquee(&mut ctx.draw, theme, crossing, lasso, &global, true);
 }
 
 fn paint_node_graph_selection_bounds(ctx: &mut FrameworkWidgetContext<'_>, inner: Rect, bounds_json: &str, theme: &Theme) {
@@ -1115,7 +1115,7 @@ fn map_theme_json_from_ui_theme(theme: &Theme) -> String {
     .to_string()
 }
 
-fn sync_map_host(host: &mut framework_surface_tiled_map::MapHost, scene: &ui_wgpu::TiledMapScene, cache: &mut MapSyncCache, pw: u32, ph: u32, dpr: f64, theme_json: &str) {
+fn sync_map_host(host: &mut framework_surface_tiled_map::MapHost, scene: &ui_wgpu::wgpu::TiledMapScene, cache: &mut MapSyncCache, pw: u32, ph: u32, dpr: f64, theme_json: &str) {
     let size_key = format!("{pw}x{ph}@{dpr}");
     if sync_field(&mut cache.size_key, &size_key) {
         host.set_size(pw, ph, dpr);
@@ -1157,7 +1157,7 @@ fn sync_map_host(host: &mut framework_surface_tiled_map::MapHost, scene: &ui_wgp
     }
 }
 
-fn queue_map_tile_fetches(surface_id: &str, scene: &ui_wgpu::TiledMapScene, host: &mut framework_surface_tiled_map::MapHost) {
+fn queue_map_tile_fetches(surface_id: &str, scene: &ui_wgpu::wgpu::TiledMapScene, host: &mut framework_surface_tiled_map::MapHost) {
     host.prepare_visible_tiles();
     let needs_raster = scene.render_mode == "image" || scene.render_mode == "combined";
     let needs_vector = scene.render_mode == "vector" || scene.render_mode == "combined";
@@ -1270,7 +1270,7 @@ pub fn paint_tiled_map(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext<'_
         return;
     }
     ctx.draw.push_raster_quad(&raster_key(&scene.surface_id), [inner.x, inner.y, inner.w, inner.h], [0.0, 0.0, 1.0, 1.0], 1.0);
-    ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(format!("{}.map", scene.surface_id)), kind: HitKind::ScrollRegion, drag_axis: Some(ui_wgpu::input::DragAxis::Both), drag_data: None });
+    ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(format!("{}.map", scene.surface_id)), kind: HitKind::ScrollRegion, drag_axis: Some(ui_wgpu::wgpu::input::DragAxis::Both), drag_data: None });
 }
 
 pub fn with_map_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut framework_surface_tiled_map::MapHost) -> R) -> Option<R> {
@@ -1374,9 +1374,9 @@ pub fn map_interaction_actions(surface_id: &str, controller_id: &str, host: &fra
     });
     let hover = if let (Some(kind), Some(id)) = (host.hovered_kind(), host.hovered_id()) { json!({ "kind": kind, "id": id }) } else { Value::Null };
     vec![
-        map_action(controller_id, ui_wgpu::tiled_map_actions::SET_CAMERA, json!({ "surfaceId": surface_id, "camera": serde_json::from_str::<Value>(&host.camera_json()).unwrap_or(json!({})) })),
-        map_action(controller_id, ui_wgpu::tiled_map_actions::SET_FEATURE_SELECTION, json!({ "surfaceId": surface_id, "positions": selection["positions"], "routes": selection["routes"] })),
-        map_action(controller_id, ui_wgpu::tiled_map_actions::SET_HOVER, json!({ "surfaceId": surface_id, "hover": hover })),
+        map_action(controller_id, ui_wgpu::wgpu::tiled_map_actions::SET_CAMERA, json!({ "surfaceId": surface_id, "camera": serde_json::from_str::<Value>(&host.camera_json()).unwrap_or(json!({})) })),
+        map_action(controller_id, ui_wgpu::wgpu::tiled_map_actions::SET_FEATURE_SELECTION, json!({ "surfaceId": surface_id, "positions": selection["positions"], "routes": selection["routes"] })),
+        map_action(controller_id, ui_wgpu::wgpu::tiled_map_actions::SET_HOVER, json!({ "surfaceId": surface_id, "hover": hover })),
     ]
 }
 
@@ -1475,7 +1475,7 @@ fn parse_board_selection_ids(json: &str) -> Vec<String> {
 }
 
 /// @emoji 🔁️ Applies scene fields onto `host`, diffing against `cache` so only changed fields re-sync. Mirrors `applyFixtureToSession` plus the independent per-field effects in the React host: reparsing the fixture resets selection/camera, so both are silently re-applied right after. Skips fixture/selection/camera sync entirely while `host` defers descriptor sync (mid-gesture), matching `pendingFixtureSceneRef`.
-fn sync_board_host(host: &mut puzzle::artifacts::puzzle2d::engine::BoardHost, scene: &ui_wgpu::Board2dScene, cache: &mut BoardSyncCache, pw: u32, ph: u32, dpr: f64) {
+fn sync_board_host(host: &mut puzzle::artifacts::puzzle2d::engine::BoardHost, scene: &ui_wgpu::wgpu::Board2dScene, cache: &mut BoardSyncCache, pw: u32, ph: u32, dpr: f64) {
     let size_key = format!("{pw}x{ph}@{dpr}");
     if sync_field(&mut cache.size_key, &size_key) {
         host.set_size(pw, ph, dpr);
@@ -1571,7 +1571,7 @@ pub fn paint_puzzle_board(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext
     }
     ctx.draw.push_raster_quad(&raster_key(&scene.surface_id), [inner.x, inner.y, inner.w, inner.h], [0.0, 0.0, 1.0, 1.0], 1.0);
     if board_scene.interactive {
-        ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(format!("{}.board", scene.surface_id)), kind: HitKind::ScrollRegion, drag_axis: Some(ui_wgpu::input::DragAxis::Both), drag_data: None });
+        ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(format!("{}.board", scene.surface_id)), kind: HitKind::ScrollRegion, drag_axis: Some(ui_wgpu::wgpu::input::DragAxis::Both), drag_data: None });
     }
 }
 
@@ -1791,7 +1791,7 @@ mod board2d_engine_tests {
 }
 
 //#region TextEditor
-pub fn text_editor_apply_key(scene: &UiComponentSceneNode, key: ui_wgpu::KeyAction, modifiers: &ui_wgpu::PointerModifiers) -> Vec<ActionDescriptor> {
+pub fn text_editor_apply_key(scene: &UiComponentSceneNode, key: ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers) -> Vec<ActionDescriptor> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let Some(entry) = map.get_mut(&scene.surface_id) else {
@@ -1801,12 +1801,12 @@ pub fn text_editor_apply_key(scene: &UiComponentSceneNode, key: ui_wgpu::KeyActi
             return Vec::new();
         };
         match key {
-            ui_wgpu::KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl) => {
+            ui_wgpu::wgpu::KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl) => {
                 host.insert_text(&ch.to_string());
             }
-            ui_wgpu::KeyAction::Backspace => host.backspace(),
-            ui_wgpu::KeyAction::Delete => host.delete_forward(),
-            ui_wgpu::KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a") => {
+            ui_wgpu::wgpu::KeyAction::Backspace => host.backspace(),
+            ui_wgpu::wgpu::KeyAction::Delete => host.delete_forward(),
+            ui_wgpu::wgpu::KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a") => {
                 host.select_all();
             }
             _ => return Vec::new(),

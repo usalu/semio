@@ -23,8 +23,7 @@ import { type TreeDragAndDropController } from "../🪵Tree/🟦️component.tsx
 import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
 import { interactiveHoverClass, interactiveActiveFillClass, glassClass, surfaceClass, shellFloorFillClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { chromeStatusBorderClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { modeDockTabClassName } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { modeDockTabClassName } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { useLabel, resolveTranslationLabel, useUiTranslation } from "../🫀️core/🏷️Label/🟦️component.tsx";
 import { useShellKeydown, useShellScopeOptional, NULL_SHELL_ROOT_REF } from "../🫀️core/🐚️ShellScope/🟦️component.tsx";
 import { isSurfaceActiveBackgroundPointer, useSurface, useSurfaceActive, LevelProvider, SurfaceScope } from "../🫀️core/🌈️Surface/🟦️component.tsx";

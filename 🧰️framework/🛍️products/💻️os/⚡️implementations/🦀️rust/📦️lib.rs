@@ -15,7 +15,7 @@ pub mod host {
     use std::collections::{HashMap, HashSet};
     use std::sync::{Arc, LazyLock, Mutex};
     use store::{create_document_envelope, document_backbone_ref, materialize_document_projection, DocumentBackboneRef, DocumentCommand, DocumentEnvelope, DocumentStore, SpaceConflict};
-    use ui_wgpu::{ui_recovery_panel, UiNode};
+    use ui_wgpu::wgpu::{ui_recovery_panel, UiNode};
     use vcs::{DocumentVcs, VcsError};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -186,7 +186,7 @@ pub mod host {
 
         //#region 🔖️ActionKernel
 
-        /// @emoji 🩺️ Delegates to `ui_wgpu::ui_recovery_panel`'s `🔖️StatusBuilders` builder — this host
+        /// @emoji 🩺️ Delegates to `ui_wgpu::wgpu::ui_recovery_panel`'s `🔖️StatusBuilders` builder — this host
         /// has no locale on hand at this call site (no `ViewState` threaded into `recovery_ui`), so
         /// `is_de` is pinned to `false` (English) until a locale source is plumbed through.
         pub fn recovery_ui(&self, plugin_id: &str) -> UiNode {
@@ -961,7 +961,7 @@ pub mod host {
         use semio_framework_core::{MediaClass, MediaForm, MediaType, MediaWireFormat, ModeDefinition, OsMediaFormat, PluginManifest, WindowKindDefinition};
         use std::sync::Arc;
         use store::{MemoryBackbone, MemoryBackbonePort};
-        use ui_wgpu::SurfaceKind;
+        use ui_wgpu::wgpu::SurfaceKind;
 
         #[test]
         fn loads_plugin_apps_into_registry() {
@@ -984,7 +984,7 @@ pub mod host {
                         body_key: "composite".into(),
                         surface_kind: SurfaceKind::Canvas2d,
                         icon_id: "pen-tool".into(),
-                        options: ui_wgpu::WindowOptions::default(),
+                        options: ui_wgpu::wgpu::WindowOptions::default(),
                         actions: Vec::new(),
                         utilities: Vec::new(),
                         params_schema: None,
@@ -1039,7 +1039,7 @@ pub mod host {
                     body_key: "composite".into(),
                     surface_kind: SurfaceKind::Canvas2d,
                     icon_id: "pen-tool".into(),
-                    options: ui_wgpu::WindowOptions::default(),
+                    options: ui_wgpu::wgpu::WindowOptions::default(),
                     actions: Vec::new(),
                     utilities: Vec::new(),
                     params_schema: None,
@@ -1082,7 +1082,7 @@ pub mod host {
                     body_key: "composite".into(),
                     surface_kind: SurfaceKind::Canvas2d,
                     icon_id: "pen-tool".into(),
-                    options: ui_wgpu::WindowOptions::default(),
+                    options: ui_wgpu::wgpu::WindowOptions::default(),
                     actions: Vec::new(),
                     utilities: Vec::new(),
                     params_schema: None,
@@ -1148,7 +1148,7 @@ pub mod host {
                     body_key: "composite".into(),
                     surface_kind: SurfaceKind::Canvas2d,
                     icon_id: "pen-tool".into(),
-                    options: ui_wgpu::WindowOptions::default(),
+                    options: ui_wgpu::wgpu::WindowOptions::default(),
                     actions: Vec::new(),
                     utilities: Vec::new(),
                     params_schema: None,
@@ -1270,7 +1270,7 @@ pub mod host {
                     body_key: id.into(),
                     surface_kind: SurfaceKind::Canvas2d,
                     icon_id: "app-window".into(),
-                    options: ui_wgpu::WindowOptions::default(),
+                    options: ui_wgpu::wgpu::WindowOptions::default(),
                     actions: Vec::new(),
                     utilities: Vec::new(),
                     params_schema: None,
@@ -3773,7 +3773,7 @@ pub mod registry {
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use std::sync::{LazyLock, Mutex};
-    use ui_wgpu::{LocalizedLabel, SurfaceKind};
+    use ui_wgpu::wgpu::{LocalizedLabel, SurfaceKind};
 
     pub type OsArtifactKindId = String;
 
@@ -4072,7 +4072,7 @@ pub mod registry {
             body_key: registration.component_kind.clone(),
             surface_kind: SurfaceKind::Canvas2d,
             icon_id: "app-window".into(),
-            options: ui_wgpu::WindowOptions::default(),
+            options: ui_wgpu::wgpu::WindowOptions::default(),
             actions: Vec::new(),
             utilities: Vec::new(),
             params_schema: None,
@@ -4205,7 +4205,7 @@ pub mod registry {
                     body_key: "draw".into(),
                     surface_kind: SurfaceKind::Canvas2d,
                     icon_id: "pen-tool".into(),
-                    options: ui_wgpu::WindowOptions::default(),
+                    options: ui_wgpu::wgpu::WindowOptions::default(),
                     actions: Vec::new(),
                     utilities: Vec::new(),
                     params_schema: None,
@@ -4273,7 +4273,7 @@ pub use registry::{
 pub use semio_framework_core::*;
 pub use space::*;
 pub use store::{document_backbone_ref, set_host_backbone_port, DocumentBackboneRef, DocumentCommand, LocalStorageBackbonePort, MemoryBackbonePort};
-pub use ui_wgpu::*;
+pub use ui_wgpu::wgpu::*;
 pub use vcs::{Author, Checkpoint, VcsError};
 pub use workflow::{
     apply_flow_fixture_to_os_workflow, apply_workflow_operation, assert_os_media_export_coverage, assert_os_media_import_coverage, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_document,

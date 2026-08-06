@@ -12,8 +12,7 @@ import * as React from "react";
 // 🧱️elements/🫀️core/🔌Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { useWindowContentDeadLineScroll, windowContentDeadLineScrollClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { useWindowContentDeadLineScroll, windowContentDeadLineScrollClass } from "../🫀️core/🎛️Chrome/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🎮️Scrollable

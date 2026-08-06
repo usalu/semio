@@ -1,0 +1,1 @@
+kernel_3d_scene = { path = "../../../../../✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust", package = "semio-s-3d", optional = true, default-features = false }

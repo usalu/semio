@@ -1,0 +1,38 @@
+{
+  "at": "2026-08-06T11:17:26.512Z",
+  "cargo_metadata": {
+    "ok": true,
+    "members": 164
+  },
+  "followups": {
+    "S-MODULES-CRATE-CONSOLIDATION-AND-NAMING-FIX": {
+      "agent": "4ebf4254-5b42-4169-8255-7d1f3e7c8320",
+      "npm_kernel_3d_js_repoints": "already_zero_remaining",
+      "workspace_dependency_aliases_added": [
+        "semio-s-2d",
+        "semio-s-3d",
+        "semio-s-mindmap",
+        "semio-s-imperative"
+      ],
+      "ui_semio_s_3d_default_features_false": true,
+      "note": "Rust use-path rewrites from orchestrator-dependent-map.md remain progressive; paths already point at semio-s-3d packages."
+    },
+    "MIT-BESTAND-UNWRAP": {
+      "agent": "b7b1f617-75e1-4883-95c5-7b1e54b99de3",
+      "remaining_impl_dirs": [],
+      "package_json_workspaces": "already_point_at_packages_typescript",
+      "registrar_action": "none"
+    },
+    "collateral": {
+      "nested_workspace_overlays_stripped": [
+        "framework/packages/rust",
+        "hash/packages/rust",
+        "editor/packages/rust",
+        "schema/packages/rust",
+        "fem/packages/rust"
+      ],
+      "singleton_editor_schema_deps_repointed_to_packages": true,
+      "dsl_schema_false_positive_reverted": true
+    }
+  }
+}

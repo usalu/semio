@@ -1,0 +1,16 @@
+{
+  "at": "2026-08-06T11:19:03.165Z",
+  "agent": "ea474317-2ac0-405a-b8fc-456d2945c591",
+  "status": "registrar_applied",
+  "actions": [
+    "deleted recreated 🎯️targets/�wgpu/Cargo.toml",
+    "repointed residual consumers still on ui-wgpu path",
+    "ensured call sites use ui_wgpu::wgpu:: / ui_tui::tui::",
+    "root members/deps already merged semio-framework-ui",
+    "kernel_3d_scene default-features=false retained"
+  ],
+  "changedManifests": [
+    "🧰️framework/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml"
+  ]
+}

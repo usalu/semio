@@ -1711,7 +1711,7 @@ mod tests {
             ]
         );
         for window in definition.window_kinds.iter() {
-            assert_eq!(window.surface_kind, ui_wgpu::SurfaceKind::World3d, "window {} surface kind", window.id);
+            assert_eq!(window.surface_kind, ui_wgpu::wgpu::SurfaceKind::World3d, "window {} surface kind", window.id);
             assert!(window.options.measures.is_empty(), "window {} must not freeze measures into the manifest", window.id);
         }
         let modes: Vec<&str> = definition.modes.iter().map(|mode| mode.id.as_str()).collect();

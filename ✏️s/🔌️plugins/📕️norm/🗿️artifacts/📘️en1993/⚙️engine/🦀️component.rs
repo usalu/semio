@@ -818,24 +818,25 @@ pub fn check_full_steel_member(document: &Document) -> CheckReport {
 }
 
 // #region 🔖️Fem
-use fem_core::{BeamEb2, Dof, MemberUdl, Model, Node, Support};
+use fem::core::elements2d::BeamEb2;
+use fem::core::{Dof, MemberUdl, Model, Node, Support};
 
-fn max_beam_moment_knm(result: &fem_core::StaticResult, element_id: &str) -> f64 {
-    let (_, fem_core::ElementResult::Beam { stations }) = result.elements.iter().find(|(id, _)| id == element_id).expect("beam element result") else {
+fn max_beam_moment_knm(result: &fem::core::StaticResult, element_id: &str) -> f64 {
+    let (_, fem::core::ElementResult::Beam { stations }) = result.elements.iter().find(|(id, _)| id == element_id).expect("beam element result") else {
         panic!("expected beam element result");
     };
     stations.iter().map(|s| s.m.abs()).fold(0.0_f64, f64::max) / 1000.0
 }
 
-fn max_beam_shear_kn(result: &fem_core::StaticResult, element_id: &str) -> f64 {
-    let (_, fem_core::ElementResult::Beam { stations }) = result.elements.iter().find(|(id, _)| id == element_id).expect("beam element result") else {
+fn max_beam_shear_kn(result: &fem::core::StaticResult, element_id: &str) -> f64 {
+    let (_, fem::core::ElementResult::Beam { stations }) = result.elements.iter().find(|(id, _)| id == element_id).expect("beam element result") else {
         panic!("expected beam element result");
     };
     stations.iter().map(|s| s.v.abs()).fold(0.0_f64, f64::max) / 1000.0
 }
 
 /// 🏗️ Solve a simply supported steel beam with `fem_core` and run EN 1993 ULS checks.
-pub fn check_steel_member_from_fem(span_m: f64, udl_kn_m: f64, a_mm2: f64, w_pl_mm3: f64, a_v_mm2: f64, f_y_mpa: f64, chi: f64) -> Result<CheckReport, fem_core::FemError> {
+pub fn check_steel_member_from_fem(span_m: f64, udl_kn_m: f64, a_mm2: f64, w_pl_mm3: f64, a_v_mm2: f64, f_y_mpa: f64, chi: f64) -> Result<CheckReport, fem::core::FemError> {
     let mut model = Model::default();
     model.nodes.push(Node { id: "n0".into(), pos: [0.0, 0.0, 0.0] });
     model.nodes.push(Node { id: "n1".into(), pos: [span_m, 0.0, 0.0] });
@@ -844,7 +845,7 @@ pub fn check_steel_member_from_fem(span_m: f64, udl_kn_m: f64, a_mm2: f64, w_pl_
     model.elements.push(Box::new(BeamEb2 { id: "b1".into(), start: "n0".into(), end: "n1".into(), e: 210e9, area: a_mm2 / 1e6, iy: a_mm2 * a_mm2 / 12e12, density: 7850.0 }));
     model.member_loads.push(("b1".into(), MemberUdl { wx: 0.0, wy: -udl_kn_m * 1000.0, wz: 0.0 }));
 
-    let result = fem_core::solve_linear_static(&model)?;
+    let result = fem::core::solve_linear_static(&model)?;
     let m_ed_knm = max_beam_moment_knm(&result, "b1");
     let v_ed_kn = max_beam_shear_kn(&result, "b1");
 

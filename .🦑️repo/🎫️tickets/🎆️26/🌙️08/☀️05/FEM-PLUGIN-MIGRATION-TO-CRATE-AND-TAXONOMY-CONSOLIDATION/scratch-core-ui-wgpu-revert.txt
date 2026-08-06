@@ -1,0 +1,2 @@
+ui_wgpu = {path = "../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
+ui_wgpu = { path = "../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu", package = "semio-framework-ui-wgpu" }

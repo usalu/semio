@@ -249,3 +249,7 @@ transient root-workspace breaks while investigating, all from other sessions' co
 each cleared within ~30-60s on retry — did not chase further). Full writeup in that ticket's
 `📌️important.md`. Repo MCP unavailable this session too — ticket left `status: open` for the next
 session/dev to close via MCP; do not redispatch this name, it is fully done modulo the flagged follow-up.
+
+**✅ Registrar follow-ups (finishing-session):** Closed/verified residual mop-ups (sourcing extensions, trinity jack tools, imperative+playbook extensions). Deleted orphaned hash/schema/editor/core `⚡️implementations` (members already on packages). Fixed infinite-canvas assets shortcodes path + `with_shape_ref!` macro path after math merge. `cargo check` green for `semio-framework-ui`, `-math`, `-core`, `-hash`, `semio-s-3d`. Workspace members ~151, metadata OK. Remaining long pole: OS products (~101 impls) W8c.
+
+**✅ Progress (finishing-session ~13:00):** FEM closed (Shape V2, 0 old impls, wasm ok, 318/328 tests — 10 DSL preamble failures are framework-wide). Math+surface member swaps applied; compiler-math path fix; duplicate editor members removed; core↔ui↔s-3d cycle broken by dropping ui's optional `kernel_3d_scene` (restore later via host adapter). `cargo check -p semio-framework-core` green. Cargo members ~169. Remaining: OS products (~101 impls), singletons leftover impl dirs on disk, UI/s-modules/residuals agents, W9–W11.

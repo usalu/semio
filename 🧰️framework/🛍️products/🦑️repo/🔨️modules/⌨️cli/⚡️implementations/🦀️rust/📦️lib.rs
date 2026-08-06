@@ -419,15 +419,15 @@ pub mod tui_dashboard {
     use std::sync::mpsc::{channel, Receiver};
     use std::time::Duration;
     use ui_styling::appearance::AppearanceName;
-    use ui_tui::backend::{NativeTerminal, TerminalBackend};
-    use ui_tui::chrome::{shell, ChromeState, FooterState, KeyHint, NavItem, NavbarState, WindowState};
-    use ui_tui::engine::Tui;
-    use ui_tui::event::{Event, Key};
-    use ui_tui::geometry::Size;
-    use ui_tui::layout::{even_window_layout, Constraint, Dimension, Direction};
-    use ui_tui::scene::{Node, NodeContent, NodeId};
-    use ui_tui::theme::Theme;
-    use ui_tui::widget::{LogState, TableAlign, TableColumn, TableRow, TableState, WidgetSignal, WidgetState};
+    use ui_tui::tui::backend::{NativeTerminal, TerminalBackend};
+    use ui_tui::tui::chrome::{shell, ChromeState, FooterState, KeyHint, NavItem, NavbarState, WindowState};
+    use ui_tui::tui::engine::Tui;
+    use ui_tui::tui::event::{Event, Key};
+    use ui_tui::tui::geometry::Size;
+    use ui_tui::tui::layout::{even_window_layout, Constraint, Dimension, Direction};
+    use ui_tui::tui::scene::{Node, NodeContent, NodeId};
+    use ui_tui::tui::theme::Theme;
+    use ui_tui::tui::widget::{LogState, TableAlign, TableColumn, TableRow, TableState, WidgetSignal, WidgetState};
 
     //#region 🔖️CatalogTable
     /// 🌳️ Groups the catalog by `pluginId` into a two-level table: one parent row per plugin, one

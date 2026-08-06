@@ -18,7 +18,7 @@ use flow_core::{
 use semio_framework_plugin::HostEffect;
 use serde_json::{json, Value};
 use std::sync::{Arc, OnceLock};
-use ui_wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Constants
 pub const FLOW_WIDGET_DRAG_MIME: &str = "application/x-flow-widget";

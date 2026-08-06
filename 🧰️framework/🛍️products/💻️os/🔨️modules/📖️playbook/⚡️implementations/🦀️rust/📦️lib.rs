@@ -548,7 +548,7 @@ pub mod generation_forms {
     use super::{default_value_for_block, flatten_playbook_blocks, is_block_visible, PlaybookBlock, PlaybookSpec};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Map, Value};
-    use ui_wgpu::{
+    use ui_wgpu::wgpu::{
         build_text_editor_scene, ui_stack_vertical, ui_text, ActionDescriptor, Label, Locale, LocalizedLabel, Terminology, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeActionPlacement,
         UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     };
@@ -1000,7 +1000,7 @@ pub fn render_generations_tree(controller_id: &str, surface_prefix: &str, genera
                 menu: None,
             }),
         };
-        Some(UiNode::Field(UiFieldNode { id: field_id, label: Label::data(question.label.clone()), child: Box::new(ui_wgpu::ui_control_to_node(child)), description: None, required: None, error: None, presence: UiPresence::default(), menu: None }))
+        Some(UiNode::Field(UiFieldNode { id: field_id, label: Label::data(question.label.clone()), child: Box::new(ui_wgpu::wgpu::ui_control_to_node(child)), description: None, required: None, error: None, presence: UiPresence::default(), menu: None }))
     }
 
     pub fn render_generation_form_body(form_spec: &PlaybookSpec, values: &Map<String, Value>, controller_id: &str, patch_action: &str, generation_id: &str) -> UiNode {
@@ -1098,7 +1098,7 @@ pub mod builder_kit {
 
     use super::{PlaybookBlock, PlaybookOperation, PlaybookSpec, PlaybookStep};
     use serde_json::Value;
-    use ui_wgpu::{ActionDescriptor, BlockListScene, BlockPaletteEntry, IconName, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence};
+    use ui_wgpu::wgpu::{ActionDescriptor, BlockListScene, BlockPaletteEntry, IconName, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence};
 
     //#region 🔖️Config
     #[derive(Clone, Debug)]

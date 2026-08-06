@@ -7,7 +7,7 @@
 //! other changes.
 //! 🖼️ CPU-rasterized Lucide icon atlas for native and web wgpu shells.
 
-use ui_wgpu::IconAtlas;
+use ui_wgpu::wgpu::IconAtlas;
 
 const ICON_SIZE: u32 = 24;
 const ATLAS_COLS: u32 = 16;

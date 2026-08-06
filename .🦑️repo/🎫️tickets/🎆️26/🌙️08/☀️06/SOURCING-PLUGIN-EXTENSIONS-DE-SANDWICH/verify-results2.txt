@@ -1,0 +1,95 @@
+Start at Thu Aug  6 13:16:21 CEST 2026
+===== verify-beams =====
+warning: `semio-framework-os-kernel-dsl-notation` (lib) generated 1 warning
+    Checking semio-framework-ui-wgpu v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/ui-wgpu)
+    Checking semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/framework-core)
+    Checking semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/store)
+    Checking semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/plugin)
+    Checking semio-s-plugin-sourcing v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/sourcing)
+    Checking semio-s-plugin-sourcing-beams v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-beams)
+    Finished `dev` profile [unoptimized] target(s) in 6.56s
+CHECK_OK verify-beams
+   Compiling semio-framework-ui-wgpu v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/ui-wgpu)
+   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/framework-core)
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/store)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/plugin)
+   Compiling semio-s-plugin-sourcing v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/sourcing)
+   Compiling semio-s-plugin-sourcing-beams v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-beams)
+    Finished `test` profile [unoptimized] target(s) in 14.73s
+     Running unittests /Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/📦️lib.rs (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-target/debug/deps/semio_s_plugin_sourcing_beams-4407d007fc2a5e5d)
+
+running 1 test
+test tests::bundle_contributes_beams_module_for_sourcing_curate ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests semio_s_plugin_sourcing_beams
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+TEST_OK verify-beams
+===== verify-slabs =====
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-dsl-notation` (lib) generated 1 warning
+    Checking semio-s-plugin-sourcing-slabs v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-slabs)
+    Finished `dev` profile [unoptimized] target(s) in 0.92s
+CHECK_OK verify-slabs
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-dsl-notation` (lib) generated 1 warning
+   Compiling semio-s-plugin-sourcing-slabs v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-slabs)
+    Finished `test` profile [unoptimized] target(s) in 1.47s
+     Running unittests /Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/📦️lib.rs (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-target/debug/deps/semio_s_plugin_sourcing_slabs-263da54c0591e355)
+
+running 1 test
+test tests::bundle_contributes_slabs_module_for_sourcing_curate ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests semio_s_plugin_sourcing_slabs
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+TEST_OK verify-slabs
+===== verify-windows =====
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-dsl-notation` (lib) generated 1 warning
+    Checking semio-s-plugin-sourcing-windows v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-windows)
+    Finished `dev` profile [unoptimized] target(s) in 0.35s
+CHECK_OK verify-windows
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-dsl-notation` (lib) generated 1 warning
+   Compiling semio-s-plugin-sourcing-windows v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-windows)
+    Finished `test` profile [unoptimized] target(s) in 0.74s
+     Running unittests /Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/📦️lib.rs (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-target/debug/deps/semio_s_plugin_sourcing_windows-0e742393571857c8)
+
+running 1 test
+test tests::bundle_contributes_windows_module_for_sourcing_curate ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests semio_s_plugin_sourcing_windows
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+TEST_OK verify-windows
+All done at Thu Aug  6 13:16:47 CEST 2026

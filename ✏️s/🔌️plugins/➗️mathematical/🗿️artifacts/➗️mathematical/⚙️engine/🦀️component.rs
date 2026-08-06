@@ -10,7 +10,7 @@
 use crate::artifacts::mathematical::{MathGeometry, MathGraph};
 use semio_framework_plugin::{SurfaceKind, UiComponentSceneNode, UiPresence};
 use serde_json::{json, Value};
-use ui_wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord};
+use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord};
 
 //#region 🔖️Register
 /// 🗂️ Registers `MathProjection`'s pack↔dsl codec under `MATH_DOCUMENT_SCHEMA` so `framework/sync`'s

@@ -9,6 +9,7 @@ import { ClassValue, clsx } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
 import * as React from "react";
 import type { SurfaceScopeValue } from "../🌈️Surface/🟦️component.tsx";
+import type { UiStatus } from "@semio-tech/ui-styling";
 // #endregion 🔌️Adapters
 
 //#region 🎨️ClassNames
@@ -167,6 +168,102 @@ export function shellFloorFillClass(parent: SurfaceScopeValue | null): string {
 
 /** @emoji Re-export private handle-hover fill for chrome tab cells still composing in the barrel. */
 export { hoverExcludingHandleBgFillClass };
+
+//#region 🎨️ChromeControlClasses
+/** @emoji 🌀️ Waiting ring matching the element current state color; empty when not waiting. */
+export function waitingBorderStateClass(waiting: boolean, active = false): string {
+  return waiting ? (active ? waitingBorderActiveClass : waitingBorderClass) : "";
+}
+
+/** @emoji 🌀️ Loading ring matching the element current state color; empty when not loading. */
+export function loadingBorderStateClass(loading: boolean, active = false): string {
+  return loading ? (active ? loadingBorderActiveClass : loadingBorderClass) : "";
+}
+
+/** @emoji 🌀️ Maps shell chrome UiStatus to the shared border ring utilities. */
+export function chromeStatusBorderClass(status: UiStatus | undefined, active = false): string {
+  if (status === "loading") return loadingBorderStateClass(true, active);
+  if (status === "waiting") return waitingBorderStateClass(true, active);
+  return "";
+}
+
+/** @emoji 🎛️ Shared control cell base — transparent on the group glass. */
+export const chromeControlItemBaseClass = cn(
+  "text-element inline-flex items-center justify-center gap-single text-xs font-medium bg-transparent",
+  "cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed",
+  "[&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0",
+  formControlFocusBorderClass,
+  "whitespace-nowrap h-medium p-single overflow-hidden leading-none",
+);
+
+/** @emoji 🎛️ Navbar/button/toggle cell hover. */
+export const chromeControlItemClass = cn(chromeControlItemBaseClass, interactiveHoverClass);
+
+/** @emoji 🎛️ Tab/chip cell hover — preserves drag-handle exclusion beside labels. */
+export const chromeControlTabItemClass = cn(chromeControlItemBaseClass, hoverExcludingHandleBgFillClass, hoverExcludingHandleTextEmphasizedClass);
+
+
+/** @emoji 📑️ Default mode-dock tab label. */
+export const modeDockTabClassName = cn(chromeControlTabItemClass, "group max-w-[12rem] shrink-0 cursor-pointer items-center px-single select-none transition-colors");
+
+/** @emoji 📑️ Pane chrome toggle class. */
+export const windowPaneChromeToggleClass = cn(
+  modeDockTabClassName,
+  "relative z-30 box-border min-h-medium shrink-0 border-0 bg-transparent",
+  "outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-active-base",
+  "disabled:pointer-events-none disabled:opacity-50",
+);
+
+/** @emoji 🌀️ Loading ring in the level-aware element border color. */
+export const loadingBorderElementClass = cn(loadingBorderClass, "border-loading-element");
+
+/** @emoji 🌀️ Waiting ring in the level-aware element border color. */
+export const waitingBorderElementClass = cn(waitingBorderClass, "border-waiting-element");
+
+/** @emoji 🎛️ Shared outer chrome shell for chips, buttons, and toggles — glass group with hairline dividers. */
+export const chromeControlGroupShellClass = cn("flex items-center border divide-x overflow-hidden w-fit shrink-0", borderNormalClass, "divide-normal", glassClass);
+
+/** @emoji 🎛️ Standard {@link chromeControlGroupShellClass} height for chips, buttons, and toggles. */
+export const chromeControlGroupClass = cn(chromeControlGroupShellClass, "h-medium");
+
+/** @emoji 🎛️ Pressed/on via `data-state="on"` — toggles and toggle-group items. */
+export const chromeControlItemOnClass = interactiveOnClass;
+
+/** @emoji 🎛️ Pressed/on via `data-active="true"` — panel/window tab cells. */
+export const chromeControlTabActiveClass = cn(
+  "data-[active=true]:bg-active-base",
+  "data-[active=true]:border-active-base",
+  "data-[active=true]:text-emphasized",
+  "data-[active=true]:hover:bg-active-base/90",
+  "data-[active=true]:hover:border-active-base",
+  "data-[active=true]:hover:text-emphasized",
+);
+
+/** @emoji 🎚️ Slider filled range — element gray at rest; foreground emphasis on hover; active fill while dragging. */
+export const sliderRangeClassName = cn("bg-element absolute transition-[background-color] data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full", "group-hover:bg-emphasized", "data-[dragging=true]:bg-active-base");
+
+/** @emoji 🎚️ Slider ready extent — secondary highlight from the knob to the preloaded/ready value on a fixed range. */
+export const sliderReadyClassName = cn("bg-[var(--accent-secondary)] pointer-events-none absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full");
+
+/** @emoji 🎚️ Slider thumb — element border at rest; hover fill; primary fill when dragging/focused. */
+export const sliderThumbClassName = cn(
+  "block size-small shrink-0 rounded-[9999px] bg-element transition-[background-color] outline-hidden",
+  "hover:bg-emphasized group-hover:bg-emphasized",
+  "focus-visible:bg-active-base focus-visible:ring-0",
+  "data-[dragging=true]:bg-active-base",
+  "disabled:pointer-events-none disabled:opacity-50",
+);
+
+/** @emoji 🎚️ Slider numeric readout — element gray at rest. */
+export const sliderValueClassName = cn("text-element w-large text-end text-xs leading-none select-none transition-colors", "hover:text-emphasized group-hover:text-emphasized");
+
+/** @emoji 📊 Interactive table row — element text + hover fill. */
+export const tableRowInteractiveClass = cn("text-element", interactiveControlTransitionClass, interactiveHoverClass);
+
+/** @emoji 📊 Selected table row fill. */
+export const tableRowSelectedClass = interactiveActiveFillClass;
+//#endregion 🎨️ChromeControlClasses
+
 //#endregion 🎨️StyleClasses
 
 

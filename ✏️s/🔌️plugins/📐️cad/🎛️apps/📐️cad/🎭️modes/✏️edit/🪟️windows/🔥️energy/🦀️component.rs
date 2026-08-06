@@ -7,7 +7,7 @@ use crate::apps::cad::config::CadDislocateOptions;
 use crate::apps::cad::{CadPlayRuntime, CadPlayView};
 use crate::artifacts::cad::CadPaneId;
 use semio_framework_plugin::{LocalizedLabel, UiNode, WindowEngagement, WindowKindDefinition, WindowMeasure, WindowOptions};
-use ui_wgpu::SurfaceKind;
+use ui_wgpu::wgpu::SurfaceKind;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "cad-play-energy";

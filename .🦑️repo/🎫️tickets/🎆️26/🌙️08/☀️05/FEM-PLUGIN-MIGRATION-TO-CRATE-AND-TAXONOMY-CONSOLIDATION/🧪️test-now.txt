@@ -1,0 +1,476 @@
+   Compiling semio-framework-os-kernel-dsl-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-semio v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/⚡️implementations/🦀️rust)
+   Compiling semio-framework-ui-styling v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust)
+   Compiling semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+   Compiling semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust)
+warning: unused variable: `len`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:1083:21
+     |
+1083 |                 let len = end_j - i;
+     |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling semio-framework-os-kernel-pack-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🫀️core/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-dsl-notation v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust)
+warning: function `print_edge_label` is never used
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust/../../../🖋️notation/⚡️implementations/🦀️rust/📦️lib.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-dsl-core` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os-kernel-dsl-core` to apply 1 suggestion)
+   Compiling semio-framework-os-kernel-dsl-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-pack-format v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📐️format/⚡️implementations/🦀️rust)
+warning: `semio-framework-os-kernel-dsl-notation` (lib) generated 1 warning
+   Compiling semio-framework-os-kernel-protocol-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-pack-io v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔌️io/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-pack-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⏳️async/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-command v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-format v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📐️format/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-pack-value v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️value/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-pack-http v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌐️http/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-history v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📜️history/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-causal v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔗️causal/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-crdt v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔀️crdt/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-pack-index v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️index/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-wire v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📡️wire/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-channel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧵️channel/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-io v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔌️io/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-materialize v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/💎️materialize/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-vcs v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling semio-framework-math v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust)
+   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust)
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3296:68
+     |
+3296 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3296 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3296 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+   Compiling semio-s-plugin-fem v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 23.39s
+     Running unittests 📦️lib.rs (target/debug/deps/semio_s_plugin_fem-4a02a04bb4aed364)
+
+running 328 tests
+test __semio_plugin_sanity_constitutional_crates_present ... ok
+test apps::fem2d::commands::example::tests::set_active_example_is_declared_as_operation_2d ... ok
+test apps::fem2d::commands::analysis::tests::set_analysis_settings_partial_args_keep_current_2d ... ok
+test apps::fem2d::commands::loads::tests::add_load_case_and_combination_emit_ops_2d ... ok
+test apps::fem2d::commands::camera::tests::set_camera_action_writes_config_not_document_operations ... ok
+test apps::fem2d::commands::loads::tests::add_member_udl_action_emits_op_2d ... ok
+test __semio_plugin_sanity_declared_apps_appear_in_bundle_manifest ... ok
+test apps::fem2d::commands::loads::tests::add_nodal_load_action_targets_named_case_2d ... ok
+test apps::fem2d::commands::loads::tests::set_self_weight_toggles_case_2d ... ok
+test apps::fem2d::commands::locale::tests::set_locale_action_writes_config_not_document_operations ... ok
+test apps::fem2d::commands::model::tests::add_material_action_emits_op_2d ... ok
+test apps::fem2d::commands::model::tests::add_node_action_emits_op_2d ... ok
+test apps::fem2d::commands::model::tests::add_region_action_emits_set_region_2d ... ok
+test apps::fem2d::commands::model::tests::add_section_action_emits_op_2d ... ok
+test apps::fem2d::component::tests::an_unknown_body_key_renders_a_diagnostic_instead_of_panicking ... ok
+test apps::fem2d::commands::model::tests::add_support_action_emits_op_with_fixed_dofs_2d ... ok
+test apps::fem2d::commands::results::tests::set_result_display_is_config_only ... ok
+test apps::fem2d::commands::example::tests::set_active_example_loads_default_fixture_2d ... ok
+test apps::fem2d::commands::model::tests::add_bar_and_add_beam_actions_emit_ops_2d ... ok
+test apps::fem2d::commands::selection::tests::remove_selection_with_no_matching_ids_is_a_no_op ... ok
+test apps::fem2d::commands::loads::tests::add_area_load_targets_named_case_2d ... ok
+test apps::fem2d::commands::selection::tests::remove_selection_covers_nodes_elements_materials_sections_supports_load_cases_2d ... ok
+test apps::fem2d::component::tests::app_io_forwards_the_engine_declared_ports ... ok
+test apps::fem2d::component::tests::config_spec_declares_no_fields ... ok
+test apps::fem2d::commands::selection::tests::remove_selection_covers_regions_and_combinations_2d ... ok
+test apps::fem2d::component::tests::command_ids_are_unique_and_match_the_declared_manifest_actions ... ok
+test apps::fem2d::component::tests::export_media_results_out_errors_when_no_load_cases_are_defined ... ok
+test apps::fem2d::component::tests::every_command_keeps_its_pre_migration_bytes ... ok
+test apps::fem2d::component::tests::export_media_unknown_port_is_not_implemented ... ok
+test apps::fem2d::component::tests::import_media_geometry_in_builds_a_new_region_from_the_first_material ... ok
+test apps::fem2d::component::tests::import_media_geometry_in_falls_back_to_unassigned_material_when_none_exists ... ok
+test apps::fem2d::component::tests::manifest_labels_resolve_german_locale_2d ... ok
+test apps::fem2d::component::tests::manifest_declares_config_io_and_computation_artifact_kind ... ok
+test apps::fem2d::component::tests::undo_restores_document_after_add_node ... ok
+test apps::fem2d::config::tests::config_operation_backwards_always_restores_the_pre_operation_snapshot ... ok
+test apps::fem2d::config::tests::fem2d_config_default_is_static_display_with_default_camera_and_locale ... ok
+test apps::fem2d::config::tests::fem2d_config_operation_diff_is_a_whole_record_replace ... ok
+test apps::fem2d::commands::example::tests::set_active_example_unknown_id_yields_empty_document_2d ... ok
+test apps::fem2d::config::tests::set_locale_config_operation_round_trips ... ok
+test apps::fem2d::config::tests::set_result_display_config_operation_round_trips ... ok
+test apps::fem2d::modes::edit::windows::model::tests::fem2d_model_extent_degenerate_model_returns_one ... ok
+test apps::fem2d::component::tests::the_manifest_stitches_every_taxonomy_node ... ok
+test apps::fem2d::modes::edit::windows::results::tests::clip_by_value_empty_polygon_returns_empty ... ok
+test apps::fem2d::modes::edit::windows::results::tests::clip_by_value_keeps_only_the_requested_half_plane ... ok
+test apps::fem2d::modes::edit::windows::results::tests::interpolate_at_value_falls_back_to_midpoint_when_values_equal ... ok
+test apps::fem2d::modes::edit::windows::model::tests::renders_fem2d_model_scene ... ok
+test apps::fem2d::modes::edit::windows::results::tests::results_window_buckling_with_no_load_case_shows_placeholder_2d ... ok
+test apps::fem2d::config::tests::fem2d_config_operation_text_round_trips_every_variant ... ok
+test apps::fem2d::component::tests::two_instances_converge_on_disjoint_edits ... ok
+test apps::fem2d::modes::edit::windows::results::tests::results_window_surfaces_solver_error_without_panicking_2d ... ok
+test apps::fem2d::wasm::tests::fem2d_store_type_alias_constructs_from_an_empty_envelope ... ok
+test apps::fem2d::component::tests::every_command_round_trips_through_text_and_binary ... ok
+test apps::fem3d::commands::analysis::tests::set_analysis_settings_partially_updates_and_keeps_the_rest ... ok
+test apps::fem2d::component::tests::export_media_results_out_returns_json_with_every_case_and_combination ... ok
+test apps::fem3d::commands::example::tests::set_active_example_is_declared_as_operation_3d ... ok
+test apps::fem3d::commands::camera::tests::set_camera_action_writes_config_not_document_operations ... ok
+test apps::fem2d::modes::edit::windows::model::tests::mesh_preview_renders_region_edges ... ok
+test apps::fem3d::commands::loads::tests::add_combination_invalid_terms_json_is_a_no_op ... ok
+test apps::fem3d::commands::loads::tests::add_combination_parses_terms_json ... ok
+test apps::fem3d::commands::loads::tests::add_member_udl_action_emits_op_3d ... ok
+test apps::fem3d::commands::loads::tests::resolve_load_case_synthesizes_case_when_none_exist ... ok
+test apps::fem3d::commands::loads::tests::add_nodal_load_targets_named_case ... ok
+test apps::fem3d::commands::loads::tests::set_self_weight_toggles_existing_case ... ok
+test apps::fem3d::commands::loads::tests::set_self_weight_unknown_case_is_a_no_op ... ok
+test apps::fem3d::commands::model::tests::add_frame_action_emits_op_3d ... ok
+test apps::fem3d::commands::model::tests::add_material_action_emits_op_3d ... ok
+test apps::fem2d::modes::edit::windows::results::tests::results_window_renders_reaction_labels_2d ... ok
+test apps::fem3d::commands::example::tests::set_active_example_loads_default_fixture_3d ... ok
+test apps::fem2d::modes::edit::windows::results::tests::renders_fem2d_results_scene ... ok
+test apps::fem3d::commands::model::tests::add_node_action_emits_op_3d ... ok
+test apps::fem3d::commands::model::tests::add_solid_action_emits_set_solid_3d ... ok
+test apps::fem3d::commands::selection::tests::remove_selection_with_unknown_ids_is_a_no_op ... ok
+test apps::fem3d::commands::model::tests::add_section_action_emits_op_3d ... ok
+test apps::fem3d::component::tests::an_unknown_body_key_renders_a_diagnostic_instead_of_panicking ... ok
+test apps::fem3d::component::tests::command_ids_are_unique_and_match_the_declared_manifest_actions ... ok
+test apps::fem3d::component::tests::every_command_keeps_its_pre_migration_bytes ... ok
+test apps::fem3d::commands::results::tests::set_result_display_writes_config_not_document_operations ... ok
+test apps::fem2d::component::tests::export_media_document_out_round_trips_via_import_media_document_in ... ok
+test apps::fem3d::component::tests::export_media_results_out_errors_without_load_cases_3d ... ok
+test apps::fem3d::commands::selection::tests::remove_selection_covers_solids_3d ... ok
+test apps::fem3d::component::tests::every_command_round_trips_through_text_and_binary ... ok
+test apps::fem2d::modes::edit::windows::results::tests::results_window_renders_modal_mode_shape_2d ... ok
+test apps::fem3d::component::tests::fem3d_io_matches_declared_artifact_identity_3d ... ok
+test apps::fem3d::component::tests::import_media_geometry_in_adds_a_new_solid_3d ... FAILED
+test apps::fem3d::component::tests::every_printed_op_line_starts_with_the_rows_wire_keyword ... ok
+test apps::fem3d::component::tests::manifest_labels_resolve_german_3d ... ok
+test apps::fem3d::component::tests::the_manifest_stitches_every_taxonomy_node ... ok
+test apps::fem3d::component::tests::undo_restores_document_after_add_node ... ok
+test apps::fem3d::config::tests::config_operation_backwards_always_restores_the_pre_operation_snapshot ... ok
+test apps::fem3d::commands::example::tests::set_active_example_unknown_id_resets_to_empty_document ... ok
+test apps::fem3d::config::tests::fem3d_config_default_is_static_display_with_default_camera ... ok
+test apps::fem3d::config::tests::fem3d_config_operation_diff_is_a_whole_record_replace ... ok
+test apps::fem3d::config::tests::fem3d_config_operation_text_round_trips_every_variant ... ok
+test apps::fem3d::config::tests::set_result_display_config_operation_round_trips ... ok
+test apps::fem3d::modes::edit::windows::model::tests::renders_fem3d_model_scene ... ok
+test apps::fem3d::modes::edit::windows::results::tests::fem3d_model_extent_degenerate_model_returns_one ... ok
+test apps::fem2d::modes::edit::windows::results::tests::results_window_renders_contour_for_region ... ok
+test apps::fem3d::modes::edit::windows::results::tests::results_window_surfaces_solver_error_without_panicking_3d ... ok
+test artifacts::fem2d::diff::tests::document_diff_absorb_wins_over_granular_changes ... ok
+test apps::fem2d::modes::edit::windows::results::tests::results_window_renders_buckling_mode_shape_2d ... ok
+test artifacts::fem2d::diff::tests::index_of_locates_the_pre_operation_position ... ok
+test artifacts::fem2d::diff::tests::granular_diff_applies_sets_and_removals ... ok
+test artifacts::fem2d::engine::component::tests::area_load_on_region_produces_reactions ... ok
+test apps::fem3d::modes::edit::windows::model::tests::model_scene_renders_solid_mesh_and_oriented_member_instances_3d ... ok
+test artifacts::fem2d::dsl::tests::fem2d_dsl_round_trips_fixture_documents ... FAILED
+test artifacts::fem2d::dsl::tests::fem2d_dsl_round_trips_bundled_default_example ... FAILED
+test artifacts::fem2d::engine::component::tests::build_model_reports_dangling_material ... ok
+test artifacts::fem2d::engine::component::tests::build_model_reports_dangling_node ... ok
+test artifacts::fem2d::engine::component::tests::build_model_reports_dangling_section ... ok
+test artifacts::fem2d::engine::component::tests::fem2d_io_declares_geometry_in_and_results_out_ports ... ok
+test artifacts::fem2d::engine::component::tests::fem2d_solve_all_returns_case_and_combination_results ... ok
+test artifacts::fem2d::engine::component::tests::build_model_meshes_region_and_solves ... ok
+test artifacts::fem2d::engine::component::tests::self_weight_case_produces_nonzero_reactions ... ok
+test artifacts::fem2d::engine::component::tests::simply_supported_beam_matches_analytical_udl_solution ... ok
+test artifacts::fem2d::engine::component::tests::region_with_hole_meshes_and_solves ... ok
+test artifacts::fem2d::engine::component::tests::region_self_weight_via_solve_all_matches_total_mass_times_gravity ... ok
+test artifacts::fem2d::engine::component::tests::truss_is_in_equilibrium_with_finite_bar_forces ... ok
+test artifacts::fem2d::engine::component::tests::two_span_beam_matches_analytical_midspan_deflection_and_moment ... ok
+test artifacts::fem2d::engine::component::tests::unknown_load_case_returns_descriptive_error ... ok
+test artifacts::fem2d::engine::modal_buckling::tests::fem2d_buckling_mode_values_returns_node_displacements ... ok
+test artifacts::fem2d::engine::mesh_preview::tests::fem2d_mesh_preview_returns_region_triangles ... ok
+test artifacts::fem2d::engine::modal_buckling::tests::fem2d_buckling_returns_requested_mode_count ... ok
+test artifacts::fem2d::engine::mesh_preview::tests::fem2d_nodal_von_mises_returns_one_value_per_mesh_node ... ok
+test artifacts::fem2d::engine::modal_buckling::tests::fem2d_buckling_unknown_case_errors ... ok
+test artifacts::fem2d::engine::modal_buckling::tests::fem2d_modal_mode_values_returns_node_displacements ... ok
+test artifacts::fem2d::engine::component::tests::example_fixture_parses_and_solves ... ok
+test artifacts::fem2d::op::tests::analysis_settings_op_round_trips ... ok
+test artifacts::fem2d::op::tests::combination_op_round_trips ... ok
+test artifacts::fem2d::op::tests::document_op_round_trips ... ok
+test artifacts::fem2d::op::tests::element_op_round_trips ... ok
+test artifacts::fem2d::op::tests::fem2d_op_text_round_trips_every_variant ... ok
+test apps::fem3d::component::tests::export_media_results_out_returns_solved_json_for_every_case_3d ... ok
+test artifacts::fem2d::engine::modal_buckling::tests::fem2d_modal_returns_requested_mode_count ... ok
+test artifacts::fem2d::op::tests::material_op_round_trips ... ok
+test artifacts::fem2d::op::tests::region_op_round_trips ... ok
+test artifacts::fem2d::op::tests::load_case_op_round_trips ... ok
+test artifacts::fem2d::op::tests::node_op_round_trips ... ok
+test artifacts::fem2d::op::tests::section_op_round_trips ... ok
+test artifacts::fem2d::op::tests::support_op_round_trips ... ok
+test artifacts::fem2d::pack::tests::fem2d_pack_agrees_with_dsl_for_fixture_documents ... FAILED
+test artifacts::fem2d::pack::tests::fem2d_pack_agrees_with_dsl_for_bundled_default_example ... FAILED
+test artifacts::fem3d::component::tests::computation_artifact_kind_matches_computation_fem3d ... ok
+test artifacts::fem2d::spr::tests::operation_bytes_match_the_pre_migration_baseline ... ok
+test artifacts::fem2d::spr::tests::op_binary_round_trips_and_agrees_with_text ... ok
+test artifacts::fem3d::component::tests::fem_analysis_settings_default_matches_pre_migration_values ... ok
+test artifacts::fem2d::spr::tests::fem2d_document_text_round_trips_through_the_store ... FAILED
+test artifacts::fem3d::component::tests::fem_camera_default_is_empty_json_object ... ok
+test artifacts::fem3d::component::tests::fem_dof_round_trips_through_core_dof ... ok
+test artifacts::fem3d::diff::tests::apply_collection_diff_inserts_and_replaces_by_id ... ok
+test artifacts::fem3d::diff::tests::apply_collection_diff_removes_by_id ... ok
+test artifacts::fem3d::diff::tests::document_diff_wins_over_granular_changes_on_absorb ... ok
+test artifacts::fem3d::dsl::tests::fem3d_dsl_round_trips_fixture_documents ... FAILED
+test artifacts::fem3d::engine::component::tests::build_model_rejects_dangling_material ... ok
+test artifacts::fem3d::engine::component::tests::build_model_rejects_dangling_node ... ok
+test artifacts::fem3d::engine::component::tests::build_model_rejects_dangling_section ... ok
+test artifacts::fem3d::engine::component::tests::cantilever_tip_load_matches_analytical_solution ... ok
+test artifacts::fem3d::engine::component::tests::fem3d_camera_json_falls_back_to_world3d_default_for_empty_object ... ok
+test artifacts::fem3d::dsl::tests::fem3d_dsl_round_trips_bundled_default_example ... FAILED
+test artifacts::fem3d::engine::component::tests::fem3d_io_declares_geometry_in_and_results_out_ports ... ok
+test artifacts::fem3d::engine::component::tests::fem3d_solve_all_returns_case_and_combination_results ... ok
+test artifacts::fem3d::engine::component::tests::quat_z_to_handles_antiparallel_direction ... ok
+test artifacts::fem3d::engine::component::tests::fem3d_solve_unknown_case_id_errors ... ok
+test artifacts::fem3d::engine::component::tests::member_udl_load_matches_total_wl ... ok
+test artifacts::fem3d::engine::component::tests::fem3d_scene_parts_include_solid_mesh_and_oriented_member_instances ... ok
+test artifacts::fem3d::engine::component::tests::quat_z_to_identity_for_parallel_direction ... ok
+test artifacts::fem3d::engine::component::tests::self_weight_case_produces_nonzero_reactions ... ok
+test apps::fem3d::modes::edit::windows::results::tests::renders_fem3d_results_scene ... ok
+test artifacts::fem3d::engine::component::tests::truss_3d_solve_is_finite_and_balanced ... ok
+test artifacts::fem3d::engine::mesh_preview::tests::fem3d_mesh_preview_returns_solid_tets_and_boundary ... ok
+test artifacts::fem3d::engine::component::tests::solid_self_weight_matches_total_mass_times_gravity ... ok
+test artifacts::fem3d::engine::mesh_preview::tests::fem3d_nodal_von_mises_returns_finite_values_for_solid ... ok
+test artifacts::fem3d::engine::modal_buckling::tests::fem3d_buckling_unknown_case_errors ... ok
+test artifacts::fem3d::engine::modal_buckling::tests::fem3d_buckling_mode_values_returns_node_displacements ... ok
+test artifacts::fem3d::op::tests::analysis_settings_set_round_trips ... ok
+test apps::fem3d::modes::edit::windows::results::tests::results_scene_includes_solid_vertex_colors_3d ... ok
+test artifacts::fem3d::engine::modal_buckling::tests::fem3d_modal_returns_requested_mode_count ... ok
+test artifacts::fem3d::engine::modal_buckling::tests::fem3d_modal_mode_values_returns_node_displacements ... ok
+test artifacts::fem3d::engine::modal_buckling::tests::fem3d_buckling_returns_requested_mode_count ... ok
+test artifacts::fem3d::engine::component::tests::solid_area_load_matches_pressure_times_footprint_area ... ok
+test artifacts::fem3d::op::tests::document_diff_absorb_wins_over_granular_changes ... ok
+test artifacts::fem3d::op::tests::combination_set_and_remove_round_trip ... ok
+test artifacts::fem3d::op::tests::document_op_round_trips ... ok
+test artifacts::fem3d::op::tests::element_set_and_remove_round_trip ... ok
+test artifacts::fem3d::op::tests::load_case_set_and_remove_round_trip ... ok
+test apps::fem3d::modes::edit::windows::results::tests::results_window_renders_modal_mode_shape_3d ... ok
+test artifacts::fem3d::op::tests::fem3d_op_text_round_trips_every_variant ... ok
+test artifacts::fem3d::op::tests::material_set_and_remove_round_trip ... ok
+test artifacts::fem3d::op::tests::node_set_and_remove_round_trip ... ok
+test artifacts::fem3d::op::tests::section_set_and_remove_round_trip ... ok
+test artifacts::fem3d::op::tests::solid_op_round_trips ... ok
+test artifacts::fem3d::op::tests::support_set_and_remove_round_trip ... ok
+test artifacts::fem3d::spr::tests::operation_bytes_match_the_pre_migration_baseline ... ok
+test core::analyses::tests::combination_equals_manual_superposition ... ok
+test core::analyses::tests::buckling_euler_column_matches_analytical_load ... ok
+test core::analyses::tests::dangling_load_case_node_ref_is_rejected ... ok
+test core::analyses::tests::dangling_support_node_ref_is_rejected ... ok
+test core::analyses::tests::dangling_element_node_ref_is_rejected ... ok
+test artifacts::fem3d::spr::tests::op_binary_round_trips_and_agrees_with_text ... ok
+test artifacts::fem3d::pack::tests::fem3d_pack_agrees_with_dsl_for_fixture_documents ... FAILED
+test core::analyses::tests::element_scalar_average_covers_every_variant_and_scalar_combination ... ok
+test core::analyses::tests::duplicate_node_id_is_rejected ... ok
+test core::analyses::tests::empty_model_is_rejected ... ok
+test artifacts::fem3d::spr::tests::fem3d_document_text_round_trips_through_the_store ... FAILED
+test core::analyses::tests::nodal_averaged_scalar_patch_test_is_exact_under_uniform_stress ... ok
+test core::analyses::tests::self_weight_matches_total_mass_times_gravity ... ok
+test artifacts::fem3d::pack::tests::fem3d_pack_agrees_with_dsl_for_bundled_default_example ... FAILED
+test core::analyses::tests::solve_multi_case_matches_single_case_dense_solve ... ok
+test core::analyses::tests::solve_multi_case_supports_bar2_truss ... ok
+test core::analyses::tests::zero_like_and_add_scaled_element_result_handle_every_non_beam_variant ... ok
+test core::component::tests::dangling_node_ref_is_rejected ... ok
+test core::analyses::tests::nodal_averaged_scalar_shared_node_is_between_neighboring_element_values ... ok
+test core::analyses::tests::solve_multi_case_applies_member_udl_equivalent_loads ... ok
+test core::component::tests::duplicate_node_id_is_rejected ... ok
+test core::component::tests::empty_model_is_rejected ... ok
+test core::component::tests::equilibrium_checks_are_near_zero ... ok
+test core::component::tests::load_on_inactive_dof_is_silently_skipped ... ok
+test core::component::tests::member_udl_on_element_without_udl_support_is_a_no_op ... ok
+test core::component::tests::solves_single_spring_against_hand_calc ... ok
+test core::component::tests::unconstrained_model_is_singular ... ok
+test core::component::tests::model_debug_fmt_prints_element_ids_not_trait_objects ... ok
+test core::analyses::tests::modal_cantilever_matches_analytical_frequencies ... ok
+test core::elements2d::continuum_tests::continuum_elements_solve_correctly_via_dyn_dispatch ... ok
+test core::elements2d::continuum_tests::quad4_mass_total_equals_rho_t_area ... ok
+test core::elements2d::continuum_tests::quad4_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric ... ok
+test core::elements2d::continuum_tests::quad4_patch_test_reproduces_linear_field ... ok
+test core::elements2d::continuum_tests::quad4_rigid_translation_gives_zero_force ... ok
+test core::elements2d::continuum_tests::quad8_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric ... ok
+test core::elements2d::continuum_tests::quad8_patch_test_reproduces_linear_field ... ok
+test core::elements2d::continuum_tests::quad8_mass_total_equals_rho_t_area ... ok
+test core::elements2d::continuum_tests::tri3_cst_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric ... ok
+test core::elements2d::continuum_tests::tri3_cst_patch_test_reproduces_linear_field ... ok
+test core::elements2d::continuum_tests::tri3_cst_mass_total_equals_rho_t_area ... ok
+test core::elements2d::continuum_tests::quad8_rigid_translation_gives_zero_force ... ok
+test core::elements2d::continuum_tests::tri3_cst_rigid_translation_gives_zero_force ... ok
+test core::elements2d::continuum_tests::quad4_cooks_membrane_tip_deflection_is_positive_and_finite ... ok
+test core::elements2d::continuum_tests::tri6_lst_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric ... ok
+test core::elements2d::continuum_tests::tri6_lst_mass_total_equals_rho_t_area ... ok
+test core::elements2d::plate_tests::plate_dkt_mass_lumps_rho_t_area_over_3_onto_each_tz_only ... ok
+test core::elements2d::continuum_tests::tri6_lst_patch_test_reproduces_linear_field ... ok
+test core::elements2d::continuum_tests::tri6_lst_rigid_translation_gives_zero_force ... ok
+test core::elements2d::plate_tests::plate_dkt_patch_test_reproduces_constant_curvature ... ok
+test core::elements2d::plate_tests::plate_dkt_rigid_translation_gives_zero_force ... ok
+test core::elements2d::tests::bar2_axial_matches_hand_calc ... ok
+test core::elements2d::tests::bar2_equivalent_nodal_loads_matches_wl_over_2 ... ok
+test core::elements2d::tests::bar2_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric ... ok
+test core::elements2d::tests::bar2_mass_matches_hand_calc ... ok
+test core::elements2d::tests::bar2_mass_total_equals_rho_a_l ... ok
+test core::elements2d::tests::beam_eb2_cantilever_matches_hand_calc ... ok
+test core::elements2d::tests::beam_eb2_geometric_stiffness_is_symmetric_and_scales_with_axial_force ... ok
+test core::elements2d::tests::beam_eb2_geometric_stiffness_rigid_translation_gives_zero_force ... ok
+test core::elements2d::tests::beam_eb2_mass_axial_block_sums_to_total_mass ... ok
+test core::elements2d::tests::beam_eb2_rigid_translation_gives_zero_force ... ok
+test core::elements2d::plate_tests::plate_dkt_simply_supported_square_center_deflection_right_order_of_magnitude ... ok
+test core::elements3d::shell_tests::shell_facet3_mass_total_equals_rho_t_area ... ok
+test core::elements3d::shell_tests::shell_facet3_patch_test_reproduces_linear_membrane_and_constant_curvature ... ok
+test core::elements3d::shell_tests::shell_facet3_membrane_compression_destabilizes_and_tension_stabilizes_out_of_plane_stiffness ... ok
+test core::elements3d::shell_tests::shell_facet3_cantilever_deflects_toward_tip_load ... ok
+test core::elements3d::shell_tests::shell_facet3_rigid_translation_gives_zero_force ... ok
+test core::elements3d::solid_tests::hex8_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric ... ok
+test core::elements3d::solid_tests::hex8_mass_total_equals_rho_v ... ok
+test core::elements3d::solid_tests::tet4_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric ... ok
+test core::elements3d::solid_tests::hex8_patch_test_recovers_exact_constant_stress ... ok
+test core::elements3d::solid_tests::tet4_mass_total_equals_rho_v ... ok
+test core::elements3d::solid_tests::tet4_rigid_translation_gives_zero_force ... ok
+test core::elements3d::solid_tests::hex8_rigid_translation_gives_zero_force ... ok
+test core::elements3d::solid_tests::tet4_patch_test_recovers_exact_constant_stress ... ok
+test core::elements3d::tests::bar3_equivalent_nodal_loads_matches_wl_over_2 ... ok
+test core::elements3d::tests::bar3_axial_matches_hand_calc_on_skew_member ... ok
+test core::elements3d::tests::bar3_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric ... ok
+test core::elements3d::tests::bar3_mass_matches_hand_calc ... ok
+test core::elements3d::tests::bar3_mass_total_equals_rho_a_l ... ok
+test core::elements3d::solid_tests::tet4_self_weight_matches_total_mass_times_gravity ... ok
+test core::elements3d::tests::frame3_geometric_stiffness_is_symmetric ... ok
+test core::elements3d::tests::frame3_geometric_stiffness_rigid_translation_gives_zero_force ... ok
+test core::elements3d::tests::frame3_mass_axial_and_torsion_blocks_sum_to_total ... ok
+test core::elements3d::tests::frame3_rigid_translation_gives_zero_force ... ok
+test core::elements3d::tests::frame3_udl_cantilever_matches_hand_calc ... ok
+test core::formulation::tests::gauss_1d_weights_sum_to_two ... ok
+test core::formulation::tests::gauss_tri_weights_sum_to_half ... ok
+test core::formulation::tests::gauss_1d_panics_on_unsupported_order - should panic ... ok
+test core::formulation::tests::shape_quad4_partition_of_unity_and_node_values ... ok
+test core::formulation::tests::shape_quad8_partition_of_unity_and_node_values ... ok
+test core::formulation::tests::shape_tri3_partition_of_unity_and_node_values ... ok
+test core::formulation::tests::shape_tri6_partition_of_unity_and_node_values ... ok
+test core::formulation::tests::gauss_quad_weights_sum_to_four ... ok
+test core::formulation::tests::gauss_tri_panics_on_unsupported_order - should panic ... ok
+test core::formulation::tests::jacobian_of_axis_aligned_rectangle_is_diagonal ... ok
+test core::mesh::tests::boundary_faces_area_matches_extruded_box_surface ... ok
+test core::mesh::tests::extrude_quad_mesh_volume_matches_area_times_height ... ok
+test core::mesh::tests::extrude_tri_mesh_volume_matches_area_times_height ... ok
+test core::mesh::tests::point_in_polygon_returns_false_for_degenerate_polygon ... ok
+test core::mesh::tests::quad_grid_has_expected_topology ... ok
+test core::mesh::tests::split_to_tets_passes_through_existing_tet4_cells ... ok
+test core::mesh::tests::refined_mesh_respects_min_angle ... ok
+test core::mesh::tests::split_to_tets_preserves_volume ... ok
+test core::mesh::tests::split_to_tets_shared_faces_are_parity_consistent ... ok
+test core::elements3d::solid_tests::hex8_meshed_cantilever_deflection_is_right_order_of_magnitude ... ok
+test core::mesh::tests::to_quadratic_welds_shared_edges ... ok
+test core::mesh::tests::tri_mesh_quality_detects_inverted_winding_and_handles_empty_mesh ... ok
+test core::mesh::tests::triangulate_rejects_degenerate_hole ... ok
+test core::mesh::tests::triangulate_honors_constrained_boundary_edges ... ok
+test core::mesh::tests::triangulate_rejects_degenerate_outer_boundary ... ok
+test core::mesh::tests::triangulate_square_area_matches_input ... ok
+test core::mesh::tests::volume_mesh_quality_detects_inverted_cell ... ok
+test core::mesh::tests::triangulate_respects_hole_area ... ok
+test core::shared::tests::hex_to_rgb01_parses_pure_colors ... ok
+test core::shared::tests::parse_result_display_missing_args_defaults_to_static_with_no_source ... ok
+test core::shared::tests::next_id_retries_past_collisions ... ok
+test core::shared::tests::parse_result_display_unknown_mode_falls_back_to_static ... ok
+test core::shared::tests::von_mises_color_maps_extremes_midpoint_and_clamps ... ok
+test core::sparse::tests::csc_sym_get_and_to_csr_full_match_dense ... ok
+test core::sparse::tests::dense_symmetric_eigen_jacobi_handles_zero_size_matrix ... ok
+test core::sparse::tests::dense_symmetric_eigen_jacobi_matches_known_eigenvalues ... ok
+test core::sparse::tests::ldlt_matches_dense_lu_on_1d_laplacian ... ok
+test core::sparse::tests::ldlt_reports_zero_pivot_on_singular_matrix ... ok
+test core::sparse::tests::ldlt_matches_dense_lu_on_random_spd ... ok
+test core::sparse::tests::negative_pivot_count_counts_negative_diagonal_entries ... ok
+test core::sparse::tests::pcg_breaks_on_zero_curvature_direction ... ok
+test core::sparse::tests::pcg_converges_immediately_when_initial_guess_is_already_exact ... ok
+test core::sparse::tests::ldlt_solve_many_matches_solve_per_column ... ok
+test core::sparse::tests::pcg_reports_not_converged_when_max_iter_is_zero ... ok
+test core::sparse::tests::pcg_matches_ldlt_and_dense_lu ... ok
+test core::sparse::tests::rcm_reduces_bandwidth_on_scattered_path_graph ... ok
+test core::sparse::tests::subspace_iteration_matches_dense_jacobi_on_small_nondiagonal_case ... ok
+test core::sparse::tests::subspace_iteration_matches_diagonal_analytic_case ... ok
+test apps::fem3d::modes::edit::windows::results::tests::results_window_renders_buckling_mode_shape_3d ... ok
+test apps::fem3d::modes::edit::windows::results::tests::results_scene_captions_name_mode_and_factor_3d ... ok
+test artifacts::fem3d::engine::component::tests::example_fixture_parses ... ok
+
+failures:
+
+---- apps::fem3d::component::tests::import_media_geometry_in_adds_a_new_solid_3d stdout ----
+
+thread 'apps::fem3d::component::tests::import_media_geometry_in_adds_a_new_solid_3d' (119748446) panicked at ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🦀️component.rs:596:17:
+assertion `left == right` failed
+  left: "m0"
+ right: "concrete"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- artifacts::fem2d::dsl::tests::fem2d_dsl_round_trips_fixture_documents stdout ----
+
+thread 'artifacts::fem2d::dsl::tests::fem2d_dsl_round_trips_fixture_documents' (119748468) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3543:68:
+dsl parse failed: expected List, found Absent at 1:1
+
+---- artifacts::fem2d::dsl::tests::fem2d_dsl_round_trips_bundled_default_example stdout ----
+
+thread 'artifacts::fem2d::dsl::tests::fem2d_dsl_round_trips_bundled_default_example' (119748467) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3543:68:
+dsl parse failed: expected List, found Absent at 1:1
+
+---- artifacts::fem2d::pack::tests::fem2d_pack_agrees_with_dsl_for_fixture_documents stdout ----
+
+thread 'artifacts::fem2d::pack::tests::fem2d_pack_agrees_with_dsl_for_fixture_documents' (119748505) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3612:84:
+dsl parse failed: expected List, found Absent at 1:1
+
+---- artifacts::fem2d::pack::tests::fem2d_pack_agrees_with_dsl_for_bundled_default_example stdout ----
+
+thread 'artifacts::fem2d::pack::tests::fem2d_pack_agrees_with_dsl_for_bundled_default_example' (119748504) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3612:84:
+dsl parse failed: expected List, found Absent at 1:1
+
+---- artifacts::fem2d::spr::tests::fem2d_document_text_round_trips_through_the_store stdout ----
+
+thread 'artifacts::fem2d::spr::tests::fem2d_document_text_round_trips_through_the_store' (119748507) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3676:123:
+parse document text failed: expected List, found Absent at 1:1
+
+---- artifacts::fem3d::dsl::tests::fem3d_dsl_round_trips_fixture_documents stdout ----
+
+thread 'artifacts::fem3d::dsl::tests::fem3d_dsl_round_trips_fixture_documents' (119748519) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3543:68:
+dsl parse failed: expected List, found Absent at 1:1
+
+---- artifacts::fem3d::dsl::tests::fem3d_dsl_round_trips_bundled_default_example stdout ----
+
+thread 'artifacts::fem3d::dsl::tests::fem3d_dsl_round_trips_bundled_default_example' (119748518) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3543:68:
+dsl parse failed: expected List, found Absent at 1:1
+
+---- artifacts::fem3d::pack::tests::fem3d_pack_agrees_with_dsl_for_fixture_documents stdout ----
+
+thread 'artifacts::fem3d::pack::tests::fem3d_pack_agrees_with_dsl_for_fixture_documents' (119748558) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3612:84:
+dsl parse failed: expected List, found Absent at 1:1
+
+---- artifacts::fem3d::spr::tests::fem3d_document_text_round_trips_through_the_store stdout ----
+
+thread 'artifacts::fem3d::spr::tests::fem3d_document_text_round_trips_through_the_store' (119748559) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3676:123:
+parse document text failed: expected List, found Absent at 1:1
+
+---- artifacts::fem3d::pack::tests::fem3d_pack_agrees_with_dsl_for_bundled_default_example stdout ----
+
+thread 'artifacts::fem3d::pack::tests::fem3d_pack_agrees_with_dsl_for_bundled_default_example' (119748557) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs:3612:84:
+dsl parse failed: expected List, found Absent at 1:1
+
+
+failures:
+    apps::fem3d::component::tests::import_media_geometry_in_adds_a_new_solid_3d
+    artifacts::fem2d::dsl::tests::fem2d_dsl_round_trips_bundled_default_example
+    artifacts::fem2d::dsl::tests::fem2d_dsl_round_trips_fixture_documents
+    artifacts::fem2d::pack::tests::fem2d_pack_agrees_with_dsl_for_bundled_default_example
+    artifacts::fem2d::pack::tests::fem2d_pack_agrees_with_dsl_for_fixture_documents
+    artifacts::fem2d::spr::tests::fem2d_document_text_round_trips_through_the_store
+    artifacts::fem3d::dsl::tests::fem3d_dsl_round_trips_bundled_default_example
+    artifacts::fem3d::dsl::tests::fem3d_dsl_round_trips_fixture_documents
+    artifacts::fem3d::pack::tests::fem3d_pack_agrees_with_dsl_for_bundled_default_example
+    artifacts::fem3d::pack::tests::fem3d_pack_agrees_with_dsl_for_fixture_documents
+    artifacts::fem3d::spr::tests::fem3d_document_text_round_trips_through_the_store
+
+test result: FAILED. 317 passed; 11 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+
+error: test failed, to rerun pass `-p semio-s-plugin-fem --lib`

@@ -1,0 +1,2 @@
+    Checking semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.58s

@@ -20,8 +20,7 @@ import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { type UiLabel } from "../🫀️core/🏷️UiLabel/🟦️component.tsx";
 import { Popover, PopoverTrigger, PopoverContent } from "../🗨️Popover/🟦️component.tsx";
 import { interactiveHoverClass, interactiveActiveFillClass, menuListItemClassName, formControlFocusBorderClass, borderNormalClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { chromeControlItemBaseClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { chromeControlItemBaseClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { useTransaction } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
 import { useLevel, type Level } from "../🫀️core/🌈️Surface/🟦️component.tsx";
 import { useControlAccessibleLabel, useControlInlineText } from "../🫀️core/🏷️Label/🟦️component.tsx";

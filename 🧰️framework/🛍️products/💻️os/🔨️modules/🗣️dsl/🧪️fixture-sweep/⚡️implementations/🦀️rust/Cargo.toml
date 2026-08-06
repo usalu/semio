@@ -11,6 +11,7 @@ workspace = true
 path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/⚡️implementations/🦀️rust/📦️lib.rs"
 
 [dependencies]
+fem = { path = "../../../../../../../../✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust", package = "semio-s-plugin-fem" }
 
 [dev-dependencies]
 dsl = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
@@ -65,8 +66,7 @@ shooting = { path = "../../../../../../../../✏️s/🔌️plugins/🎥️shoot
 # `semio-s-plugin-sequence` by the crate-consolidation taxonomy migration (ticket
 # 26/08/05/SEQUENCE-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION).
 sequence = { path = "../../../../../../../../✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust", package = "semio-s-plugin-sequence" }
-fem2d = { path = "../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/⚡️implementations/🦀️rust", package = "semio-s-app-fem-2d" }
-fem3d = { path = "../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-fem-3d" }
+
 process_3d = { path = "../../../../../../../../✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust", package = "semio-s-plugin-process" }
 # 🔷️ `LowpolyProjection` merged into `semio-s-plugin-lowpoly` by the crate-consolidation taxonomy
 # migration (ticket 26/08/05/LOWPOLY-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION) — real owner

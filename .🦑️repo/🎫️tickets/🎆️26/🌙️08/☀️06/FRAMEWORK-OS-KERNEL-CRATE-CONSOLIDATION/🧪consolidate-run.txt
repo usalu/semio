@@ -1,0 +1,4 @@
+rewrite entries 52
+copied 58 items
+PKG /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust
+deps 45 targetDepCfgs 1

@@ -1,0 +1,200 @@
+    Updating crates.io index
+     Locking 134 packages to latest compatible versions
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.47
+   Compiling zmij v1.0.23
+   Compiling serde_core v1.0.229
+   Compiling serde v1.0.229
+   Compiling serde_json v1.0.151
+    Checking itoa v1.0.18
+    Checking memchr v2.8.3
+   Compiling thiserror v2.0.19
+   Compiling find-msvc-tools v0.1.9
+   Compiling shlex v2.0.1
+    Checking arrayvec v0.7.8
+    Checking cfg-if v1.0.4
+   Compiling cc v1.4.0
+    Checking constant_time_eq v0.4.2
+    Checking arrayref v0.3.9
+    Checking adler2 v2.0.1
+   Compiling blake3 v1.8.6
+   Compiling zerocopy v0.8.55
+   Compiling version_check v0.9.5
+    Checking miniz_oxide v0.8.9
+   Compiling ahash v0.8.12
+   Compiling once_cell v1.21.4
+   Compiling hashbrown v0.17.1
+   Compiling equivalent v1.0.2
+    Checking pin-project-lite v0.2.17
+    Checking fastrand v2.5.0
+   Compiling bitflags v2.13.1
+    Checking futures-io v0.3.33
+    Checking futures-core v0.3.33
+   Compiling indexmap v2.14.0
+   Compiling anyhow v1.0.104
+   Compiling semver v1.0.28
+    Checking parking v2.2.1
+   Compiling hashbrown v0.14.5
+   Compiling syn v3.0.3
+   Compiling syn v2.0.119
+   Compiling crossbeam-utils v0.8.22
+   Compiling prettyplease v0.2.37
+   Compiling smallvec v1.15.2
+   Compiling crossbeam-epoch v0.9.20
+   Compiling leb128 v0.2.7
+    Checking futures-lite v2.6.1
+   Compiling log v0.4.33
+   Compiling id-arena v2.3.0
+   Compiling wasmparser v0.220.1
+   Compiling serde_derive v1.0.229
+   Compiling thiserror-impl v2.0.19
+   Compiling async-trait v0.1.91
+   Compiling unicode-xid v0.2.6
+   Compiling spdx v0.10.9
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/⚡️implementations/🦀️rust)
+   Compiling crossbeam-deque v0.8.7
+   Compiling inflections v1.1.1
+   Compiling heck v0.5.0
+   Compiling rayon-core v1.13.0
+   Compiling wit-bindgen-rust v0.36.0
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling wit-bindgen-rt v0.36.0
+   Compiling wasm-encoder v0.220.1
+   Compiling wit-parser v0.220.1
+    Checking lazy_static v1.5.0
+    Checking semio-framework-ui-styling v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust)
+    Checking byteorder v1.5.0
+   Compiling gltf-derive v1.4.1
+   Compiling wit-bindgen-rust-macro v0.36.0
+   Compiling autocfg v1.5.1
+    Checking semio-framework-os-kernel-semio v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/⚡️implementations/🦀️rust)
+    Checking semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+    Checking either v1.17.0
+   Compiling semio-framework-math v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust)
+    Checking semio-framework-os-kernel-dsl-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust)
+warning: unused variable: `len`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:1083:21
+     |
+1083 |                 let len = end_j - i;
+     |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+    Checking polycool v0.4.0
+warning: `semio-framework-os-kernel-dsl-core` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os-kernel-dsl-core` to apply 1 suggestion)
+    Checking semio-framework-os-kernel-pack-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🫀️core/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-pack-format v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📐️format/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-dsl-notation v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-command v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust)
+warning: function `print_edge_label` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust/../../../🖋️notation/⚡️implementations/🦀️rust/📦️lib.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-dsl-notation` (lib) generated 1 warning
+    Checking semio-framework-os-kernel-dsl-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-format v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📐️format/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-causal v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔗️causal/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-history v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📜️history/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-pack-io v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔌️io/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-materialize v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/💎️materialize/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-io v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔌️io/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-channel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧵️channel/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-wire v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📡️wire/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-pack-value v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️value/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-crdt v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔀️crdt/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-pack-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⏳️async/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-pack-index v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️index/⚡️implementations/🦀️rust)
+    Checking gltf-json v1.4.1
+    Checking semio-framework-os-kernel-pack-http v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌐️http/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust)
+   Compiling wasm-metadata v0.220.1
+    Checking semio-framework-os-kernel-vcs v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust)
+    Checking foldhash v0.2.0
+   Compiling wit-bindgen-core v0.36.0
+   Compiling num-traits v0.2.19
+    Checking base64 v0.22.1
+    Checking allocator-api2 v0.2.21
+    Checking kurbo v0.13.1
+    Checking gltf v1.4.1
+error: failed to create file encoder: No such file or directory (os error 2)
+
+error: could not compile `wasm-metadata` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error: extern location for wit_parser does not exist: /Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps/libwit_parser-ccf4c0ba463d3121.rmeta
+ --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wit-bindgen-core-0.36.0/src/lib.rs:5:5
+  |
+5 | use wit_parser::*;
+  |     ^^^^^^^^^^
+
+error: could not compile `wit-bindgen-core` (lib) due to 1 previous error
+sccache: encountered fatal error
+error: could not compile `rayon-core` (lib)
+
+Caused by:
+  failed to create file `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/.fingerprint/rayon-core-91ba772e9b999959/output-lib-rayon_core`
+
+Caused by:
+  failed to parse process output: `sccache /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/rustc --crate-name rayon_core --edition=2021 /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rayon-core-1.13.0/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values("web_spin_lock"))' -C metadata=7149dcd075ba8de1 -C extra-filename=-91ba772e9b999959 --out-dir '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps' -C strip=debuginfo -L 'dependency=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps' --extern 'crossbeam_deque=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps/libcrossbeam_deque-b5b3c1e0494323d9.rmeta' --extern 'crossbeam_utils=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps/libcrossbeam_utils-04c15fd942baab3c.rmeta' --cap-lints allow -Z threads=8` (exit status: 254)
+sccache: encountered fatal error
+error: could not compile `equivalent` (lib)
+
+Caused by:
+  failed to create file `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/.fingerprint/equivalent-27c740781164cb1c/output-lib-equivalent`
+
+Caused by:
+  failed to parse process output: `sccache /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/rustc --crate-name equivalent --edition=2015 /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equivalent-1.0.2/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=ae8ee5373842fd79 -C extra-filename=-27c740781164cb1c --out-dir '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps' -C strip=debuginfo -L 'dependency=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps' --cap-lints allow -Z threads=8` (exit status: 254)
+sccache: encountered fatal error
+error: could not compile `wit-bindgen-rt` (lib)
+
+Caused by:
+  failed to create file `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/.fingerprint/wit-bindgen-rt-8552812e11193ddb/output-lib-wit_bindgen_rt`
+
+Caused by:
+  failed to parse process output: `sccache /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/rustc --crate-name wit_bindgen_rt --edition=2021 /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wit-bindgen-rt-0.36.0/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata -C embed-bitcode=no --cfg 'feature="bitflags"' --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values("bitflags"))' -C metadata=a30024def22866ff -C extra-filename=-8552812e11193ddb --out-dir '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps' -C strip=debuginfo -L 'dependency=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps' --extern 'bitflags=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps/libbitflags-64d30c835296d018.rmeta' --cap-lints allow -Z threads=8` (exit status: 254)
+sccache: encountered fatal error
+error: could not compile `base64` (lib)
+
+Caused by:
+  failed to create file `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/.fingerprint/base64-7f3650fd960f29c9/output-lib-base64`
+
+Caused by:
+  failed to parse process output: `sccache /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/rustc --crate-name base64 --edition=2018 /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.22.1/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata -C embed-bitcode=no --cfg 'feature="alloc"' --cfg 'feature="default"' --cfg 'feature="std"' --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values("alloc", "default", "std"))' -C metadata=7d5b448595837561 -C extra-filename=-7f3650fd960f29c9 --out-dir '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps' -C strip=debuginfo -L 'dependency=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps' --cap-lints allow -Z threads=8` (exit status: 254)
+sccache: encountered fatal error
+error: could not compile `allocator-api2` (lib)
+
+Caused by:
+  failed to create file `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/.fingerprint/allocator-api2-1371f371dfbafc6b/output-lib-allocator_api2`
+
+Caused by:
+  failed to parse process output: `sccache /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/rustc --crate-name allocator_api2 --edition=2018 /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/allocator-api2-0.2.21/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata -C embed-bitcode=no --cfg 'feature="alloc"' --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values("alloc", "default", "fresh-rust", "nightly", "serde", "std"))' -C metadata=6082fc70363b221f -C extra-filename=-1371f371dfbafc6b --out-dir '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps' -C strip=debuginfo -L 'dependency=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps' --cap-lints allow -Z threads=8` (exit status: 254)
+error: extern location for lazy_static does not exist: /Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps/liblazy_static-271a033e1ae0cbb0.rmeta
+  --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gltf-1.4.1/src/lib.rs:88:1
+   |
+88 | extern crate lazy_static;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: could not compile `gltf` (lib) due to 1 previous error
+sccache: encountered fatal error
+error: could not compile `kurbo` (lib)
+
+Caused by:
+  failed to create file `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/.fingerprint/kurbo-add7ae9bc5197250/output-lib-kurbo`
+
+Caused by:
+  failed to parse process output: `sccache /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/rustc --crate-name kurbo --edition=2024 /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/kurbo-0.13.1/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata -C embed-bitcode=no --cfg 'feature="default"' --cfg 'feature="std"' --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values("default", "euclid", "libm", "mint", "schemars", "serde", "std"))' -C metadata=d6b7c83b07ab9255 -C extra-filename=-add7ae9bc5197250 --out-dir '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps' -C strip=debuginfo -L 'dependency=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps' --extern 'arrayvec=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps/libarrayvec-25dd0b766ebc489a.rmeta' --extern 'polycool=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps/libpolycool-07a1ef11b53c8398.rmeta' --extern 'smallvec=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps/libsmallvec-733f1f0888c9084c.rmeta' --cap-lints allow -Z threads=8` (exit status: 254)
+sccache: encountered fatal error
+error: could not compile `num-traits` (lib)
+
+Caused by:
+  failed to create file `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/.fingerprint/num-traits-6f4fd6b4c67c0572/output-lib-num_traits`
+
+Caused by:
+  failed to parse process output: `sccache /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/rustc --crate-name num_traits --edition=2021 /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/num-traits-0.2.19/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata -C embed-bitcode=no --cfg 'feature="default"' --cfg 'feature="std"' --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values("default", "i128", "libm", "std"))' -C metadata=a4b974a9cf8e7f51 -C extra-filename=-6f4fd6b4c67c0572 --out-dir '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps' -C strip=debuginfo -L 'dependency=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/target/debug/deps' --cap-lints allow -Z threads=8 --cfg has_total_cmp --check-cfg 'cfg(has_total_cmp)'` (exit status: 254)

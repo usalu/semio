@@ -1,0 +1,56 @@
+# protocol→spr and kernel module rewrite map
+
+| old crate | old lib | new module | component |
+|---|---|---|---|
+| semio-framework-kernel-infinite-world | infinite_world | os_infinite::world | 🔨️modules/♾️infinite/🌍️world/🦀️component.rs |
+| semio-framework-os-kernel-dsl | dsl | os_dsl | 🔨️modules/🗣️dsl/🦀️component.rs |
+| semio-framework-os-kernel-dsl-core | dsl_core | os_dsl::core | 🔨️modules/🗣️dsl/🫀️core/🦀️component.rs |
+| semio-framework-os-kernel-dsl-family-catalog | dsl_family_catalog | os_dsl::family::catalog | 🔨️modules/🗣️dsl/👪️family/🗂️catalog/🦀️component.rs |
+| semio-framework-os-kernel-dsl-family-embed | dsl_family_embed | os_dsl::family::embed | 🔨️modules/🗣️dsl/👪️family/📎️embed/🦀️component.rs |
+| semio-framework-os-kernel-dsl-family-geo | dsl_family_geo | os_dsl::family::geo | 🔨️modules/🗣️dsl/👪️family/🌍️geo/🦀️component.rs |
+| semio-framework-os-kernel-dsl-family-graph | dsl_family_graph | os_dsl::family::graph | 🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️component.rs |
+| semio-framework-os-kernel-dsl-family-recipe | dsl_family_recipe | os_dsl::family::recipe | 🔨️modules/🗣️dsl/👪️family/🧑‍🍳️recipe/🦀️component.rs |
+| semio-framework-os-kernel-dsl-family-scene | dsl_family_scene | os_dsl::family::scene | 🔨️modules/🗣️dsl/👪️family/🎬️scene/🦀️component.rs |
+| semio-framework-os-kernel-dsl-family-sheet | dsl_family_sheet | os_dsl::family::sheet | 🔨️modules/🗣️dsl/👪️family/📊️sheet/🦀️component.rs |
+| semio-framework-os-kernel-dsl-fixture-sweep | dsl_fixture_sweep | os_dsl::fixture_sweep | 🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs |
+| semio-framework-os-kernel-dsl-grammar | dsl_grammar | os_dsl::grammar | 🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs |
+| semio-framework-os-kernel-dsl-lsp | dsl_lsp | os_dsl::lsp | 🔨️modules/🗣️dsl/🧠️lsp/🦀️component.rs |
+| semio-framework-os-kernel-dsl-notation | dsl_notation | os_dsl::notation | 🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs |
+| semio-framework-os-kernel-dsl-registry | dsl_registry | os_dsl::registry | 🔨️modules/🗣️dsl/📇️registry/🦀️component.rs |
+| semio-framework-os-kernel-dsl-schema | dsl_schema | os_dsl::schema | 🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs |
+| semio-framework-os-kernel-flow-core | flow_core | os_flow | 🔨️modules/🌊️flow/🫀️core/🦀️component.rs |
+| semio-framework-os-kernel-infinite-board | infinite_board | os_infinite::board | 🔨️modules/♾️infinite/🎲️board/🦀️component.rs |
+| semio-framework-os-kernel-infinite-board-normal-directed | infinite_board_normal_directed | os_infinite::board::normal::directed | 🔨️modules/♾️infinite/🎲️board/➕️normal/➡️directed/🦀️component.rs |
+| semio-framework-os-kernel-infinite-board-normal-undirected | infinite_board_normal_undirected | os_infinite::board::normal::undirected | 🔨️modules/♾️infinite/🎲️board/➕️normal/↔undirected/🦀️component.rs |
+| semio-framework-os-kernel-infinite-board-port | infinite_board_port | os_infinite::board::ports | 🔨️modules/♾️infinite/🎲️board/🔌️ports/🦀️component.rs |
+| semio-framework-os-kernel-infinite-board-port-directed | infinite_board_port_directed | os_infinite::board::ports::directed | 🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🦀️component.rs |
+| semio-framework-os-kernel-infinite-board-port-directed-dag | infinite_board_port_directed_dag | os_infinite::board::ports::directed::dag | 🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️component.rs |
+| semio-framework-os-kernel-infinite-board-port-directed-normal | infinite_board_port_directed_normal | os_infinite::board::ports::directed::normal | 🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🦀️component.rs |
+| semio-framework-os-kernel-infinite-board-port-undirected | infinite_board_port_undirected | os_infinite::board::ports::undirected | 🔨️modules/♾️infinite/🎲️board/🔌️ports/↔undirected/🦀️component.rs |
+| semio-framework-os-kernel-infinite-canvas | infinite_canvas | os_infinite::canvas | 🔨️modules/♾️infinite/🖼️canvas/🦀️component.rs |
+| semio-framework-os-kernel-pack | pack | os_pack | 🔨️modules/🎒️pack/🦀️component.rs |
+| semio-framework-os-kernel-pack-async | pack_async | os_pack::async_ | 🔨️modules/🎒️pack/⏳️async/🦀️component.rs |
+| semio-framework-os-kernel-pack-cli | pack_cli | os_pack::cli | 🔨️modules/🎒️pack/⌨️cli/🦀️component.rs |
+| semio-framework-os-kernel-pack-core | pack_core | os_pack::core | 🔨️modules/🎒️pack/🫀️core/🦀️component.rs |
+| semio-framework-os-kernel-pack-format | pack_format | os_pack::format | 🔨️modules/🎒️pack/📐️format/🦀️component.rs |
+| semio-framework-os-kernel-pack-http | pack_http | os_pack::http | 🔨️modules/🎒️pack/🌐️http/🦀️component.rs |
+| semio-framework-os-kernel-pack-index | pack_index | os_pack::index | 🔨️modules/🎒️pack/🔢️index/🦀️component.rs |
+| semio-framework-os-kernel-pack-io | pack_io | os_pack::io | 🔨️modules/🎒️pack/🔌️io/🦀️component.rs |
+| semio-framework-os-kernel-pack-testkit | pack_testkit | os_pack::testkit | 🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs |
+| semio-framework-os-kernel-pack-value | pack_value | os_pack::value | 🔨️modules/🎒️pack/🔢️value/🦀️component.rs |
+| semio-framework-os-kernel-protocol | protocol | os_spr | 🔨️modules/📡️spr/🦀️component.rs |
+| semio-framework-os-kernel-protocol-causal | protocol_causal | os_spr::causal | 🔨️modules/📡️spr/🔗️causal/🦀️component.rs |
+| semio-framework-os-kernel-protocol-channel | protocol_channel | os_spr::channel | 🔨️modules/📡️spr/🧵️channel/🦀️component.rs |
+| semio-framework-os-kernel-protocol-cli | protocol_cli | os_spr::cli | 🔨️modules/📡️spr/⌨️cli/🦀️component.rs |
+| semio-framework-os-kernel-protocol-command | protocol_command | os_spr::command | 🔨️modules/📡️spr/🎮️command/🦀️component.rs |
+| semio-framework-os-kernel-protocol-core | protocol_core | os_spr::core | 🔨️modules/📡️spr/🫀️core/🦀️component.rs |
+| semio-framework-os-kernel-protocol-crdt | protocol_crdt | os_spr::crdt | 🔨️modules/📡️spr/🔀️crdt/🦀️component.rs |
+| semio-framework-os-kernel-protocol-format | protocol_format | os_spr::format | 🔨️modules/📡️spr/📐️format/🦀️component.rs |
+| semio-framework-os-kernel-protocol-history | protocol_history | os_spr::history | 🔨️modules/📡️spr/📜️history/🦀️component.rs |
+| semio-framework-os-kernel-protocol-io | protocol_io | os_spr::io | 🔨️modules/📡️spr/🔌️io/🦀️component.rs |
+| semio-framework-os-kernel-protocol-materialize | protocol_materialize | os_spr::materialize | 🔨️modules/📡️spr/💎️materialize/🦀️component.rs |
+| semio-framework-os-kernel-protocol-testkit | protocol_testkit | os_spr::testkit | 🔨️modules/📡️spr/🧪️testkit/🦀️component.rs |
+| semio-framework-os-kernel-protocol-wire | protocol_wire | os_spr::wire | 🔨️modules/📡️spr/📡️wire/🦀️component.rs |
+| semio-framework-os-kernel-store | store | os_store | 🔨️modules/🏪️store/🦀️component.rs |
+| semio-framework-os-kernel-store-sync | store_sync | os_store::sync | 🔨️modules/🏪️store/🔄️sync/🦀️component.rs |
+| semio-framework-os-kernel-store-worker | store_worker | os_store::worker | 🔨️modules/🏪️store/👷️worker/🦀️component.rs |

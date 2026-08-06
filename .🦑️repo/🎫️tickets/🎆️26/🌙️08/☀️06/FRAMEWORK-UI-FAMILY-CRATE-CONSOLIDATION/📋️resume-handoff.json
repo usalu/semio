@@ -1,0 +1,11 @@
+{
+  "status": "ready-for-registrar",
+  "remainingImplementationsUnderUi": [],
+  "notes": [
+    "Shape V2 package consolidation under 🖱️ui/** is complete: single semio-framework-ui at packages/rust with feature-gated targets/{⌨️tui,🧊️wgpu}; @semio-tech/ui-react / ui-styling names+paths preserved; zero implementations left.",
+    "Per-target Cargo.toml deleted (co-location ticket may recreate wgpu's — delete again before registrar swap). Root cargo metadata is intentionally red until members/deps/consumers are updated.",
+    "Pre-registrar verify: wgpu + typegen + wasm32-wasip2/wgpu green; tui red due to emoji-renamed elements paths owned by open UI-ELEMENT-CO-LOCATION-RESTRUCTURE — do not steal that work.",
+    "wgpu-engine verify blocked on registrar: optional kernel_3d_scene (semio-s-3d) → core → deleted ui-wgpu cycle. Consumer feature map engine→wgpu-engine, terminal→tui-terminal, bindgen→tui-bindgen.",
+    "Registrar: see registrar-handoff.md. Nested [workspace] overlays must not be re-added to the crate; use ticket cargo.sh only for pre-registrar checks."
+  ]
+}

@@ -10,7 +10,7 @@ use flow_extension_draw::render_scene_json;
 use playbook::{selected_generation, GenerationPlayState};
 use serde_json::{json, Value};
 use store::DocumentDsl;
-use ui_wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Io
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors `create_procedural2d_app`'s

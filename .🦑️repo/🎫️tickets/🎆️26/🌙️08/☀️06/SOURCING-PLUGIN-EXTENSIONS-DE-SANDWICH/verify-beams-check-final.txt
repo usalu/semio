@@ -1,0 +1,149 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.47
+   Compiling zmij v1.0.23
+   Compiling serde_core v1.0.229
+   Compiling serde v1.0.229
+   Compiling serde_json v1.0.151
+    Checking memchr v2.8.3
+    Checking itoa v1.0.18
+   Compiling thiserror v2.0.19
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.9
+    Checking constant_time_eq v0.4.2
+    Checking cfg-if v1.0.4
+    Checking arrayref v0.3.9
+    Checking arrayvec v0.7.8
+    Checking adler2 v2.0.1
+   Compiling cc v1.4.0
+   Compiling zerocopy v0.8.55
+   Compiling version_check v0.9.5
+   Compiling once_cell v1.21.4
+   Compiling hashbrown v0.17.1
+    Checking miniz_oxide v0.8.9
+   Compiling blake3 v1.8.6
+   Compiling ahash v0.8.12
+   Compiling equivalent v1.0.2
+   Compiling anyhow v1.0.104
+   Compiling bitflags v2.13.1
+    Checking futures-core v0.3.33
+    Checking futures-io v0.3.33
+    Checking parking v2.2.1
+    Checking pin-project-lite v0.2.17
+   Compiling syn v3.0.3
+   Compiling syn v2.0.119
+   Compiling indexmap v2.14.0
+   Compiling semver v1.0.28
+    Checking fastrand v2.5.0
+   Compiling hashbrown v0.14.5
+   Compiling serde_derive v1.0.229
+   Compiling thiserror-impl v2.0.19
+   Compiling async-trait v0.1.91
+    Checking futures-lite v2.6.1
+   Compiling prettyplease v0.2.37
+   Compiling id-arena v2.3.0
+   Compiling log v0.4.33
+   Compiling wasmparser v0.220.1
+   Compiling unicode-xid v0.2.6
+   Compiling smallvec v1.15.2
+    Checking semio-framework-os-kernel-dsl-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust)
+warning: unused variable: `len`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:1083:21
+     |
+1083 |                 let len = end_j - i;
+     |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-dsl-core` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os-kernel-dsl-core` to apply 1 suggestion)
+    Checking semio-framework-os-kernel-pack-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🫀️core/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-dsl-notation v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-pack-format v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📐️format/⚡️implementations/🦀️rust)
+warning: function `print_edge_label` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust/../../../🖋️notation/⚡️implementations/🦀️rust/📦️lib.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-dsl-notation` (lib) generated 1 warning
+    Checking semio-framework-os-kernel-protocol-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-dsl-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-command v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-format v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📐️format/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-pack-io v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔌️io/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-pack-value v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️value/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-history v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📜️history/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-pack-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⏳️async/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-causal v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔗️causal/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-crdt v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔀️crdt/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-pack-index v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️index/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-channel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧵️channel/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-io v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔌️io/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-materialize v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/💎️materialize/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-wire v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📡️wire/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-pack-http v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌐️http/⚡️implementations/🦀️rust)
+   Compiling leb128 v0.2.7
+    Checking semio-framework-os-kernel-semio v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/⚡️implementations/🦀️rust)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking semio-framework-os-kernel-protocol v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust)
+    Checking semio-framework-os-kernel-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust)
+   Compiling inflections v1.1.1
+   Compiling heck v0.5.0
+   Compiling wit-bindgen-rust v0.36.0
+    Checking semio-framework-ui-styling v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust)
+    Checking byteorder v1.5.0
+    Checking semio-framework-os-kernel-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust)
+    Checking lazy_static v1.5.0
+   Compiling wit-bindgen-rt v0.36.0
+   Compiling wit-bindgen-rust-macro v0.36.0
+    Checking semio-framework-ui-wgpu v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/ui-wgpu)
+    Checking semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+    Checking semio-framework-os-kernel-vcs v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/vcs)
+   Compiling wit-parser v0.220.1
+    Checking base64 v0.22.1
+   Compiling spdx v0.10.9
+   Compiling wasm-encoder v0.220.1
+   Compiling gltf-derive v1.4.1
+    Checking gltf-json v1.4.1
+   Compiling wit-bindgen-core v0.36.0
+   Compiling wasm-metadata v0.220.1
+    Checking gltf v1.4.1
+   Compiling wit-component v0.220.1
+    Checking semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/framework-core)
+error[E0432]: unresolved import `ui_wgpu::wgpu`
+ --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/📦️lib.rs:3:18
+  |
+3 | pub use ui_wgpu::wgpu::IconName;
+  |                  ^^^^ could not find `wgpu` in `ui_wgpu`
+
+error[E0432]: unresolved import `ui_wgpu::wgpu`
+ --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/📦️lib.rs:4:18
+  |
+4 | pub use ui_wgpu::wgpu::{Locale, Terminology};
+  |                  ^^^^ could not find `wgpu` in `ui_wgpu`
+
+error[E0432]: unresolved import `ui_wgpu::wgpu`
+ --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/../../🧩️ui/🦀️component.rs:8:14
+  |
+8 | use ui_wgpu::wgpu::{ActionDescriptor, Locale, LocalizedLabel, NamedLayout, SurfaceKind, Terminology, WindowLayout, WindowOptions};
+  |              ^^^^ could not find `wgpu` in `ui_wgpu`
+
+error[E0432]: unresolved import `ui_wgpu::wgpu`
+ --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/../../🧩️ui/🧠️kernel/🦀️component.rs:6:14
+  |
+6 | use ui_wgpu::wgpu::UiNode;
+  |              ^^^^ could not find `wgpu` in `ui_wgpu`
+
+error[E0433]: cannot find `wgpu` in `ui_wgpu`
+   --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/../../🧩️ui/🦀️component.rs:599:35
+    |
+599 |     pub category: Option<ui_wgpu::wgpu::UtilityCategory>,
+    |                                   ^^^^ could not find `wgpu` in `ui_wgpu`
+
+Some errors have detailed explanations: E0432, E0433.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `semio-framework-core` (lib) due to 5 previous errors
+warning: build failed, waiting for other jobs to finish...

@@ -1,7 +1,6 @@
 # 📋️ Registrar Handoff — Sourcing Plugin Extensions De-Sandwich
 
-**None needed.** Root `Cargo.toml` `[workspace] members` already point at the Shape V2 locations (confirmed
-at lines 172–174):
+**None needed for member lines.** Root `Cargo.toml` `[workspace] members` already point at Shape V2 locations:
 
 ```toml
     "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust",
@@ -9,16 +8,19 @@ at lines 172–174):
     "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust",
 ```
 
-No `[workspace.dependencies]` entries name these extension crates (dynamic plugin leaves). No root
-`package.json` workspace edits apply (Rust-only extensions).
+No `[workspace.dependencies]` entries name these extension crates (dynamic plugin leaves).
+No root `package.json` workspace edits (Rust-only extensions).
 
-If a future registrar pass still has the old `⚡️implementations` paths on a branch, swap each member line:
+If a branch still has old sandwich members, swap `…/<ext>/⚡️implementations/🦀️rust` → `…/<ext>/📦️packages/🦀️rust`.
 
-| Old | New |
-| --- | --- |
-| `…/🪵️beams/⚡️implementations/🦀️rust` | `…/🪵️beams/📦️packages/🦀️rust` |
-| `…/🧱️slabs/⚡️implementations/🦀️rust` | `…/🧱️slabs/📦️packages/🦀️rust` |
-| `…/🪟️windows/⚡️implementations/🦀️rust` | `…/🪟️windows/📦️packages/🦀️rust` |
+Published crate names **frozen**: `semio-s-plugin-sourcing-beams`, `semio-s-plugin-sourcing-slabs`, `semio-s-plugin-sourcing-windows`.
 
-Published crate names frozen: `semio-s-plugin-sourcing-beams`, `semio-s-plugin-sourcing-slabs`,
-`semio-s-plugin-sourcing-windows`. Component ids frozen: `semio:sourcing-module-beams/slabs/windows`.
+Component package ids **frozen**: `semio:sourcing-module-beams`, `semio:sourcing-module-slabs`, `semio:sourcing-module-windows`.
+
+## Verification
+
+Ticket-local overlays `verify-{beams,slabs,windows}` + `verify-shims/` (ui-wgpu compat for concurrent UI-family merge):
+all three crates `cargo check` + `cargo test` green (1 unit test each).
+
+Root workspace `cargo check -p semio-s-plugin-sourcing-*` remains blocked until UI-family/core registrar
+repoints `semio-framework-core` ui_wgpu path onto `semio-framework-ui`. See `🧩handoff.json`.

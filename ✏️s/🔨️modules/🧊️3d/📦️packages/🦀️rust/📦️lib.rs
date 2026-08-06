@@ -3,6 +3,7 @@
 //#region 🔖️Brep
 /// @emoji 📐️ Boundary-representation kernel (native modules + brepkit backend + engine contracts).
 #[cfg(feature = "brep")]
+#[path = "."]
 pub mod brep {
     #[path = "../../📐️brep/🚨️error/🦀️component.rs"]
     pub mod error;
@@ -48,22 +49,21 @@ pub mod brep {
 //#endregion 🔖️Brep
 
 //#region 🔖️Mesh
+/// @emoji 🥽️ Half-edge mesh kernel: topology, editing ops, tessellation, UV/decimation.
 #[path = "../../🥽️mesh/🦀️component.rs"]
 pub mod mesh;
-pub use mesh::*;
 //#endregion 🔖️Mesh
 
 //#region 🔖️Scene
+/// @emoji 🎬️ Generic 3D scene math: orbit camera, mesh instances, screen picking, draw descriptors.
 #[path = "../../🎬️scene/🦀️component.rs"]
 pub mod scene;
-pub use scene::*;
 //#endregion 🔖️Scene
 
 //#region 🔖️Spatial
+/// @emoji 🗺️ BVH spatial index (AABB overlap, nearest point, ray queries).
 #[cfg(feature = "brep")]
 #[path = "../../🗺️spatial/🦀️component.rs"]
 pub mod spatial;
-#[cfg(feature = "brep")]
-pub use spatial::*;
 //#endregion 🔖️Spatial
 

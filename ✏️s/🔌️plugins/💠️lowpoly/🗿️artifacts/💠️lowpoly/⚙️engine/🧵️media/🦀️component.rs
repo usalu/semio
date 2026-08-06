@@ -64,7 +64,7 @@ mod export_concrete_forest_mesh_tests {
     use cad_plugin::artifacts::cad::engine::geometry_import::{objects_from_fixture_model, parse_geometry};
     use semio_s_3d::brep::kernel::BrepkitKernel;
     use semio_s_3d::brep::engine::GeometryHandle;
-    use semio_s_3d::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};
+    use semio_s_3d::mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};
     use serde_json::Value;
     use std::collections::HashMap;
 

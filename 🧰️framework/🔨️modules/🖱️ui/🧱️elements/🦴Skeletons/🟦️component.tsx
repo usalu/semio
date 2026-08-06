@@ -9,8 +9,7 @@
 import * as React from "react";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { SceneSkeleton } from "../🎬Scene/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { LoadingRow } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { LoadingRow } from "../🫀️core/🎛️Chrome/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🦴Skeletons

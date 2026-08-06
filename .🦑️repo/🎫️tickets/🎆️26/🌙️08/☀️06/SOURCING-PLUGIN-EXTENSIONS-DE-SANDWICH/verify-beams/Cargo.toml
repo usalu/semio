@@ -5,7 +5,7 @@ name = "semio-s-plugin-sourcing-beams"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Sourcing beams module — verify overlay"
+description = "Sourcing beams verify overlay"
 
 [package.metadata.component]
 package = "semio:sourcing-module-beams"
@@ -31,6 +31,3 @@ wasm-bindgen = "0.2.106"
 [profile.dev]
 debug = false
 incremental = true
-
-[profile.dev.build-override]
-opt-level = 3

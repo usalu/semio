@@ -100,9 +100,8 @@ protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/�
 vcs = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 # 🏗️ Cross-plugin: EN 1992/EN 1993 solve a simply supported beam with the FEM plugin's shared kernel
-# before running their ULS checks. Repoint to `semio-s-plugin-fem` (`fem::core::…`) as part of 🏗️fem's
 # own registrar pass — see this plugin's ticket handoff.
-fem_core = { path = "../../../🏗️fem/🔨️modules/🫀️core/⚡️implementations/🦀️rust", package = "semio-s-plugin-fem-core" }
+fem = { path = "../../../🏗️fem/📦️packages/🦀️rust", package = "semio-s-plugin-fem" }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true

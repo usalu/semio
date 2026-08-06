@@ -11,7 +11,7 @@ use semio_framework_core::kernel::HostEffect;
 use semio_framework_core::{PluginManifest, ViewState};
 use std::collections::HashMap;
 use std::sync::Arc;
-use ui_wgpu::{UiNode, UtilityNode, WindowEngagement, WindowMeasure};
+use ui_wgpu::wgpu::{UiNode, UtilityNode, WindowEngagement, WindowMeasure};
 
 #[cfg(target_arch = "wasm32")]
 use js_sys::{Array, Function, Reflect};
@@ -332,7 +332,7 @@ impl ProgramBridgeEntry {
     }
 
     /// 🖱️ On-demand context menu rows for the given surface hit and selection snapshot.
-    pub async fn context_menu(&self, instance_id: u32, request: serde_json::Value) -> Result<Vec<ui_wgpu::ContextMenuItemSpec>, String> {
+    pub async fn context_menu(&self, instance_id: u32, request: serde_json::Value) -> Result<Vec<ui_wgpu::wgpu::ContextMenuItemSpec>, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => context_menu_js(handle, instance_id, &request).await,
@@ -461,7 +461,7 @@ async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn context_menu_js(handle: &Rc<JsValue>, instance_id: u32, request: &serde_json::Value) -> Result<Vec<ui_wgpu::ContextMenuItemSpec>, String> {
+async fn context_menu_js(handle: &Rc<JsValue>, instance_id: u32, request: &serde_json::Value) -> Result<Vec<ui_wgpu::wgpu::ContextMenuItemSpec>, String> {
     let menu_fn = Reflect::get(handle.as_ref(), &JsValue::from_str("contextMenu")).ok().and_then(|v| v.dyn_into::<Function>().ok());
     let Some(menu_fn) = menu_fn else {
         return Ok(Vec::new());

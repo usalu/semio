@@ -84,6 +84,7 @@ mod tests {
     #[test]
     fn fem2d_dsl_round_trips_bundled_default_example() {
         let document = parse_dsl(FEM2D_EXAMPLE_TEXT).expect("parse default example");
+
         store::test_support::assert_dsl_round_trip(&document);
     }
 

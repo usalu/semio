@@ -1,0 +1,14 @@
+error: failed to load manifest for workspace member `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/.`
+referenced by workspace at `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml`
+
+Caused by:
+  failed to load manifest for dependency `semio-framework-core`
+
+Caused by:
+  failed to parse manifest at `/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/Cargo.toml`
+
+Caused by:
+  error inheriting `serde` from workspace root manifest's `workspace.dependencies.serde`
+
+Caused by:
+  `workspace.dependencies` was not defined

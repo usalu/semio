@@ -1,7 +1,7 @@
 //! 🥅️ Render-independent framework kernel: declarative {@link UiNode}, {@link Platform}, {@link ActionBus}.
 
-pub use ui_wgpu::IconName;
-pub use ui_wgpu::{Locale, Terminology};
+pub use ui_wgpu::wgpu::IconName;
+pub use ui_wgpu::wgpu::{Locale, Terminology};
 
 #[path = "../../🎯️action-bus/🦀️component.rs"]
 pub mod action_bus;

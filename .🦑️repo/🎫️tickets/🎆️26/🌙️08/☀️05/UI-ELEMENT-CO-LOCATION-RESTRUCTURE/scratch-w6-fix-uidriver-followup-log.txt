@@ -1,0 +1,15 @@
+fixed Chrome LoadingRow docs
+fixed I18n export type vs value
+fixed UiDriver export type vs value
+moving loadingBorderElementClass to ClassNames
+moving waitingBorderElementClass to ClassNames
+moving chromeControlGroupShellClass to ClassNames
+moving chromeControlGroupClass to ClassNames
+moving chromeControlItemOnClass to ClassNames
+moving chromeControlTabActiveClass to ClassNames
+moving sliderRangeClassName to ClassNames
+moving sliderReadyClassName to ClassNames
+moving sliderThumbClassName to ClassNames
+moving sliderValueClassName to ClassNames
+appended 10 to ClassNames
+barrel updated

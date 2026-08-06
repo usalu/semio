@@ -409,17 +409,18 @@ pub fn check_full_rc_beam(m_ed_knm: f64, v_ed_kn: f64, f_ck: f64, b_mm: f64, d_m
 }
 
 // #region 🔖️Fem
-use fem_core::{BeamEb2, Dof, MemberUdl, Model, Node, Support};
+use fem::core::elements2d::BeamEb2;
+use fem::core::{Dof, MemberUdl, Model, Node, Support};
 
-fn max_beam_moment_knm(result: &fem_core::StaticResult, element_id: &str) -> f64 {
-    let (_, fem_core::ElementResult::Beam { stations }) = result.elements.iter().find(|(id, _)| id == element_id).expect("beam element result") else {
+fn max_beam_moment_knm(result: &fem::core::StaticResult, element_id: &str) -> f64 {
+    let (_, fem::core::ElementResult::Beam { stations }) = result.elements.iter().find(|(id, _)| id == element_id).expect("beam element result") else {
         panic!("expected beam element result");
     };
     stations.iter().map(|s| s.m.abs()).fold(0.0_f64, f64::max) / 1000.0
 }
 
-fn max_beam_shear_kn(result: &fem_core::StaticResult, element_id: &str) -> f64 {
-    let (_, fem_core::ElementResult::Beam { stations }) = result.elements.iter().find(|(id, _)| id == element_id).expect("beam element result") else {
+fn max_beam_shear_kn(result: &fem::core::StaticResult, element_id: &str) -> f64 {
+    let (_, fem::core::ElementResult::Beam { stations }) = result.elements.iter().find(|(id, _)| id == element_id).expect("beam element result") else {
         panic!("expected beam element result");
     };
     stations.iter().map(|s| s.v.abs()).fold(0.0_f64, f64::max) / 1000.0
@@ -427,7 +428,7 @@ fn max_beam_shear_kn(result: &fem_core::StaticResult, element_id: &str) -> f64 {
 
 /// 🏗️ Solve a simply supported RC beam with `fem_core` and run EN 1992 ULS checks.
 #[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
-pub fn check_rc_beam_from_fem(span_m: f64, udl_kn_m: f64, f_ck: f64, b_mm: f64, d_mm: f64, a_s_mm2: f64, f_yk: f64, rho_l: f64, annex: AnnexChoice) -> Result<CheckReport, fem_core::FemError> {
+pub fn check_rc_beam_from_fem(span_m: f64, udl_kn_m: f64, f_ck: f64, b_mm: f64, d_mm: f64, a_s_mm2: f64, f_yk: f64, rho_l: f64, annex: AnnexChoice) -> Result<CheckReport, fem::core::FemError> {
     let mut model = Model::default();
     model.nodes.push(Node { id: "n0".into(), pos: [0.0, 0.0, 0.0] });
     model.nodes.push(Node { id: "n1".into(), pos: [span_m, 0.0, 0.0] });
@@ -436,7 +437,7 @@ pub fn check_rc_beam_from_fem(span_m: f64, udl_kn_m: f64, f_ck: f64, b_mm: f64, 
     model.elements.push(Box::new(BeamEb2 { id: "b1".into(), start: "n0".into(), end: "n1".into(), e: 30e9, area: b_mm * d_mm / 1e6, iy: b_mm * d_mm.powi(3) / 12e12, density: 2500.0 }));
     model.member_loads.push(("b1".into(), MemberUdl { wx: 0.0, wy: -udl_kn_m * 1000.0, wz: 0.0 }));
 
-    let result = fem_core::solve_linear_static(&model)?;
+    let result = fem::core::solve_linear_static(&model)?;
     let m_ed_knm = max_beam_moment_knm(&result, "b1");
     let v_ed_kn = max_beam_shear_kn(&result, "b1");
 

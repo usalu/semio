@@ -1,0 +1,8 @@
+error: failed to parse manifest at `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml`
+
+Caused by:
+  feature `trim-paths` is required
+
+  The package requires the Cargo feature called `trim-paths`, but that feature is not stabilized in this version of Cargo (1.99.0-nightly (2f0e7011e 2026-07-05)).
+  Consider adding `cargo-features = ["trim-paths"]` to the top of Cargo.toml (above the [package] table) to tell Cargo you are opting in to use this unstable feature.
+  See https://doc.rust-lang.org/nightly/cargo/reference/unstable.html#profile-trim-paths-option for more information about the status of this feature.

@@ -11,7 +11,7 @@ use crate::artifacts::dag::DAG_DOCUMENT_SCHEMA;
 use infinite_board_port_directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle, DagDocument, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, IoPortSpec};
 use protocol::CollectionOperation;
 use std::collections::BTreeSet;
-use ui_wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Register
 /// 🗂️ Registers `DagDocument`'s pack<->dsl codec under its real `document_schema()` string so

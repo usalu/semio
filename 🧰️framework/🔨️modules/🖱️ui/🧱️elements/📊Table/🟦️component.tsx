@@ -14,7 +14,8 @@ import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { Scrollable } from "../📜Scrollable/🟦️component.tsx";
 import { borderNormalBottomClass, surfaceClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { useLabel } from "../🫀️core/🏷️Label/🟦️component.tsx";
-import { tableRowInteractiveClass, tableRowSelectedClass, useUiDriverDragSurface, useNativeDragArm } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { tableRowInteractiveClass, tableRowSelectedClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
+import { useUiDriverDragSurface, useNativeDragArm } from "../🫀️core/🚗️UiDriver/🟦️component.tsx";
 import { DragHandle } from "../🧱DragHandle/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

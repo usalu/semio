@@ -1,0 +1,15 @@
+
+ NX   Failed to process project graph.
+
+The following projects are defined in multiple locations:
+- @semio-tech/dsl-derive-rs: 
+  - 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/⚡️implementations/🦀️rust
+  - 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust
+- @semio-tech/dsl-family-catalog-rs: 
+  - 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🌍️geo/⚡️implementations/🦀️rust
+  - 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🎬️scene/⚡️implementations/🦀️rust
+  - 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📎️embed/⚡️implementations/🦀️rust
+  - 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🗂️catalog/⚡️implementations/🦀️rust
+
+To fix this, set a unique name for each project in a project.json inside the project's root. If the project does not currently have a project.json, you can create one that contains only a name.
+

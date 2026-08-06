@@ -1,0 +1,73 @@
+package semio:framework;
+
+interface types {
+  record migrate-document-input {
+    from-version: string,
+    to-version: string,
+    data: list<u8>,
+  }
+
+  record migrate-document-output {
+    data: list<u8>,
+  }
+
+  variant plugin-error {
+    fault(list<u8>),
+  }
+}
+
+interface plugin {
+  use types.{
+    migrate-document-input,
+    migrate-document-output,
+    plugin-error,
+  };
+
+  /// 📦️ `PluginManifest`, encoded as `store::pack_rt::encode_wire_value` bytes (the container-less
+  /// dynamic-value grammar — see `pack::encode_record_body`) — no JSON string anywhere on this ABI.
+  manifest: func() -> list<u8>;
+  instantiate-app: func(app-id: string, instance-id: string) -> result<u32, plugin-error>;
+  /// 🔀️ The single bidirectional entry point: a batched, synchronous duplex exchange. Each element of
+  /// `commands` is one binary-encoded `protocol_channel::AppCommand`; the result is every
+  /// `protocol_channel::AppFrame` produced by processing the batch, plus anything queued out of band
+  /// since the previous call (pending effects, backbone-ingested `DocumentChanged`). `exchange(id, [])`
+  /// is a pure drain — the heartbeat that replaces the old poll-backbone + refresh-ui tick. This
+  /// subsumes and replaces the previous per-verb surface (`handle-action`, `handle-command`,
+  /// `update-window`, `refresh-ui`, `context-menu`, `apply-operations[-text]`,
+  /// `read/load-app-document-{text,pack}`, `attach/detach-backbone`, `consume/produce-media`) — every
+  /// UI interaction and every headless-runner interaction is just a forwarded `AppCommand` on this one
+  /// call, so a workflow that wires apps together never needs a UI-mock API: it drives the exact same
+  /// channel a live UI does.
+  exchange: func(instance-id: u32, commands: list<list<u8>>) -> result<list<list<u8>>, plugin-error>;
+  /// 📦️ `data` (both directions) is pack-container bytes (see `document-pack-files`, carried inside
+  /// `AppFrame::Document`/`AppCommand::LoadDocument` on the channel now) — signature unchanged.
+  migrate-document: func(input: migrate-document-input) -> result<migrate-document-output, plugin-error>;
+  /// 🩹️ Clears the plugin's single-flight instance guard after a wasm trap skipped `Drop`. Hosts
+  /// must only call this between serialized top-level calls — never while another call is in flight.
+  clear-instance-guard: func();
+}
+
+interface host {
+  log: func(level: string, message: string);
+  now-ms: func() -> s64;
+  /// 📦️ `read-document`/`write-document` payloads are `store::pack_rt::encode_wire_value` bytes.
+  read-document: func(handle: u64) -> result<list<u8>, list<u8>>;
+  write-document: func(handle: u64, payload: list<u8>) -> result<_, list<u8>>;
+  /// 📦️ `params` is a wire-encoded `DslValue` (`encode_wire_value`).
+  open-window: func(kind: string, params: list<u8>) -> result<u64, list<u8>>;
+  /// 📦️ `invocation`/`result` are wire-encoded `DslValue` blobs.
+  invoke-action: func(target: string, invocation: list<u8>) -> result<list<u8>, list<u8>>;
+  read-asset: func(handle: u64) -> result<list<u8>, list<u8>>;
+  network-fetch: func(origin: string, path: string) -> result<list<u8>, list<u8>>;
+  write-blob: func(data: list<u8>, media-type: string) -> result<string, list<u8>>;
+  read-blob: func(hash: string) -> result<list<u8>, list<u8>>;
+  /// 📦️ `message` is a `store::encode_backbone_message` blob (a binary `BackboneMessage`).
+  backbone-send: func(uri: string, message: list<u8>) -> result<_, list<u8>>;
+  backbone-poll: func(uri: string) -> result<list<list<u8>>, list<u8>>;
+  backbone-status: func(uri: string) -> result<string, list<u8>>;
+}
+
+world plugin-world {
+  import host;
+  export plugin;
+}

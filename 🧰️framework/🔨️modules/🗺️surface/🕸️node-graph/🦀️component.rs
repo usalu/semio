@@ -77,7 +77,7 @@ fn default_zoom() -> f64 {
     1.0
 }
 
-/// 🖱️ Hovered node id, mirrors `ui_wgpu::NodeGraphHover`'s wire shape.
+/// 🖱️ Hovered node id, mirrors `ui_wgpu::wgpu::NodeGraphHover`'s wire shape.
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GraphHoverRecord {

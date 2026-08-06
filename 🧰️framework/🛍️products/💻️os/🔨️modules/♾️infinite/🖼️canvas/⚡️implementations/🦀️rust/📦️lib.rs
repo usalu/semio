@@ -220,7 +220,7 @@ mod renderer {
             let style: backend::peniko::Fill = rule.into();
             let blend: backend::peniko::Mix = blend.into();
             let transform = transform.to_kurbo();
-            math::geometry::with_shape_ref!(clip.into(), |s| {
+            math::with_shape_ref!(clip.into(), |s| {
                 self.0.push_layer(style, blend, alpha, transform, &s.to_kurbo());
             });
         }
@@ -230,7 +230,7 @@ mod renderer {
         pub fn push_clip_layer<'a>(&mut self, rule: FillRule, transform: Affine, clip: impl Into<ShapeRef<'a>>) {
             let style: backend::peniko::Fill = rule.into();
             let transform = transform.to_kurbo();
-            math::geometry::with_shape_ref!(clip.into(), |s| {
+            math::with_shape_ref!(clip.into(), |s| {
                 self.0.push_clip_layer(style, transform, &s.to_kurbo());
             });
         }

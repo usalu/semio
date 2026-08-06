@@ -16,7 +16,7 @@ name = "semio"
 path = "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/⚡️implementations/🦀️rust/📦️main.rs"
 
 [dependencies]
-ui_tui = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui", features = ["terminal"], package = "semio-framework-ui-tui" }
+ui_tui = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["tui-terminal"], package = "semio-framework-ui" }
 ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

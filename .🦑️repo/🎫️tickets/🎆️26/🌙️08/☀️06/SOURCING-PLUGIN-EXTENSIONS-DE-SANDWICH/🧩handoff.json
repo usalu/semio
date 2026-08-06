@@ -1,0 +1,43 @@
+{
+  "owner": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/**",
+  "ticketPath": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH",
+  "newCrates": [
+    {
+      "package": "semio-s-plugin-sourcing-beams",
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust",
+      "componentPackage": "semio:sourcing-module-beams"
+    },
+    {
+      "package": "semio-s-plugin-sourcing-slabs",
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust",
+      "componentPackage": "semio:sourcing-module-slabs"
+    },
+    {
+      "package": "semio-s-plugin-sourcing-windows",
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust",
+      "componentPackage": "semio:sourcing-module-windows"
+    }
+  ],
+  "oldMemberLines": [
+    "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/⚡️implementations/🦀️rust",
+    "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/⚡️implementations/🦀️rust",
+    "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/⚡️implementations/🦀️rust"
+  ],
+  "tests": {
+    "semio-s-plugin-sourcing-beams": {
+      "cargoCheck": "pass",
+      "cargoTest": "pass (1/1 bundle_contributes_beams_module_for_sourcing_curate)"
+    },
+    "semio-s-plugin-sourcing-slabs": {
+      "cargoCheck": "pass",
+      "cargoTest": "pass (1/1 bundle_contributes_slabs_module_for_sourcing_curate)"
+    },
+    "semio-s-plugin-sourcing-windows": {
+      "cargoCheck": "pass",
+      "cargoTest": "pass (1/1 bundle_contributes_windows_module_for_sourcing_curate)"
+    },
+    "method": "ticket-local overlays verify-{beams,slabs,windows} + verify-shims (ui-wgpu compat) because root workspace blocked on deleted ui-wgpu manifest",
+    "rootWorkspace": "blocked (framework-core -> missing ui-wgpu Cargo.toml; UI-family registrar)"
+  },
+  "status": "done"
+}

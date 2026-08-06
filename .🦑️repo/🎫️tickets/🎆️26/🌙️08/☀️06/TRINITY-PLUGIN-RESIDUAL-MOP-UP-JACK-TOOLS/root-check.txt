@@ -1,0 +1,8 @@
+error: cyclic package dependency: package `semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)` depends on itself. Cycle:
+package `semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)`
+    ... which satisfies path dependency `semio-framework-core` (locked to 0.1.0) of package `semio-s-3d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust)`
+    ... which satisfies path dependency `kernel_3d_scene` (locked to 0.1.0) of package `semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)`
+    ... which satisfies path dependency `ui_wgpu` of package `semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)`
+    ... which satisfies path dependency `semio-framework-core` (locked to 0.1.0) of package `semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust)`
+    ... which satisfies path dependency `store` (locked to 0.1.0) of package `semio-compose-rs v0.1.0 (/Users/ueli/Documents/semio/compose/client/lib/rs)`
+    ... which satisfies path dependency `semio_compose_rs` (locked to 0.1.0) of package `semio-compose-gql v0.1.0 (/Users/ueli/Documents/semio/compose/client/bin/gql/rs)`

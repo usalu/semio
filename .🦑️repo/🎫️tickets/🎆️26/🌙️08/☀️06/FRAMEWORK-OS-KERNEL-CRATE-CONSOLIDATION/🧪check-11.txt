@@ -1,0 +1,1483 @@
+inserted member
+warning: unused variable: `len`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:1083:21
+     |
+1083 |                 let len = end_j - i;
+     |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-dsl-core` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os-kernel-dsl-core` to apply 1 suggestion)
+warning: function `print_edge_label` is never used
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust/../../../🖋️notation/⚡️implementations/🦀️rust/📦️lib.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-dsl-notation` (lib) generated 1 warning
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+error[E0433]: cannot find `fault_from_thiserror` in `core`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🫀️core/🦀️component.rs:100:22
+    |
+100 | crate::os_dsl::core::fault_from_thiserror!(PackError, crate::os_dsl::core::FaultOrigin::Module, "module.pack");
+    |                      ^^^^^^^^^^^^^^^^^^^^ could not find `fault_from_thiserror` in `core`
+
+error[E0433]: cannot find `fault_from_thiserror` in `core`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:38:22
+   |
+38 | crate::os_dsl::core::fault_from_thiserror!(ProtocolError, crate::os_dsl::core::FaultOrigin::Module, "module.protocol");
+   |                      ^^^^^^^^^^^^^^^^^^^^ could not find `fault_from_thiserror` in `core`
+
+error[E0433]: cannot find module or crate `writer` in this scope
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📇️registry/🦀️component.rs:45:20
+   |
+45 |     schemas.insert(writer::artifacts::writer::WRITER_DOCUMENT_SCHEMA, writer::artifacts::writer::WriterProjection::__dsl_spec);
+   |                    ^^^^^^ use of unresolved module or unlinked crate `writer`
+   |
+   = help: if you wanted to use a crate named `writer`, use `cargo add writer` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `writer` in this scope
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📇️registry/🦀️component.rs:45:71
+   |
+45 |     schemas.insert(writer::artifacts::writer::WRITER_DOCUMENT_SCHEMA, writer::artifacts::writer::WriterProjection::__dsl_spec);
+   |                                                                       ^^^^^^ use of unresolved module or unlinked crate `writer`
+   |
+   = help: if you wanted to use a crate named `writer`, use `cargo add writer` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `writer` in this scope
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📇️registry/🦀️component.rs:46:44
+   |
+46 |     schemas.insert("writer.document#diff", writer::artifacts::writer::diff::WriterDiff::__dsl_diff_spec);
+   |                                            ^^^^^^ use of unresolved module or unlinked crate `writer`
+   |
+   = help: if you wanted to use a crate named `writer`, use `cargo add writer` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `note` in this scope
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📇️registry/🦀️component.rs:47:20
+   |
+47 |     schemas.insert(note::artifacts::note::NOTE_DOCUMENT_SCHEMA, note::artifacts::note::NoteDocument::__dsl_spec);
+   |                    ^^^^ use of unresolved module or unlinked crate `note`
+   |
+   = help: if you wanted to use a crate named `note`, use `cargo add note` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `note` in this scope
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📇️registry/🦀️component.rs:47:65
+   |
+47 |     schemas.insert(note::artifacts::note::NOTE_DOCUMENT_SCHEMA, note::artifacts::note::NoteDocument::__dsl_spec);
+   |                                                                 ^^^^ use of unresolved module or unlinked crate `note`
+   |
+   = help: if you wanted to use a crate named `note`, use `cargo add note` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `note` in this scope
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📇️registry/🦀️component.rs:48:42
+   |
+48 |     schemas.insert("note.document#diff", note::artifacts::note::diff::NoteDiff::__dsl_diff_spec);
+   |                                          ^^^^ use of unresolved module or unlinked crate `note`
+   |
+   = help: if you wanted to use a crate named `note`, use `cargo add note` to add it to your `Cargo.toml`
+
+error[E0425]: cannot find type `HashMap` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:411:39
+    |
+411 | static IDIOM_REGISTRY: OnceLock<Mutex<HashMap<&'static str, IdiomHooks>>> = OnceLock::new();
+    |                                       ^^^^^^^ not found in this scope
+    |
+note: found an item that was configured out
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:16:23
+    |
+ 13 | #[cfg(test)]
+    |       ---- the item is gated here
+...
+ 16 | use std::collections::HashMap;
+    |                       ^^^^^^^
+    = note: struct `crate::os_store::test_support::HashMap` exists but is inaccessible
+help: consider importing this struct
+    |
+ 17 + use std::collections::HashMap;
+    |
+
+error[E0425]: cannot find type `HashMap` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:413:39
+    |
+413 | fn idiom_registry() -> &'static Mutex<HashMap<&'static str, IdiomHooks>> {
+    |                                       ^^^^^^^ not found in this scope
+    |
+note: found an item that was configured out
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:16:23
+    |
+ 13 | #[cfg(test)]
+    |       ---- the item is gated here
+...
+ 16 | use std::collections::HashMap;
+    |                       ^^^^^^^
+    = note: struct `crate::os_store::test_support::HashMap` exists but is inaccessible
+help: consider importing this struct
+    |
+ 17 + use std::collections::HashMap;
+    |
+
+error[E0433]: cannot find type `HashMap` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:414:46
+    |
+414 |     IDIOM_REGISTRY.get_or_init(|| Mutex::new(HashMap::new()))
+    |                                              ^^^^^^^ use of undeclared type `HashMap`
+    |
+note: found an item that was configured out
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:16:23
+    |
+ 13 | #[cfg(test)]
+    |       ---- the item is gated here
+...
+ 16 | use std::collections::HashMap;
+    |                       ^^^^^^^
+    = note: struct `crate::os_store::test_support::HashMap` exists but is inaccessible
+help: consider importing this struct
+    |
+ 17 + use std::collections::HashMap;
+    |
+
+error[E0425]: cannot find type `HashMap` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:475:42
+    |
+475 | static LANGUAGE_REGISTRY: OnceLock<Mutex<HashMap<&'static str, LanguageSpec>>> = OnceLock::new();
+    |                                          ^^^^^^^ not found in this scope
+    |
+note: found an item that was configured out
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:16:23
+    |
+ 13 | #[cfg(test)]
+    |       ---- the item is gated here
+...
+ 16 | use std::collections::HashMap;
+    |                       ^^^^^^^
+    = note: struct `crate::os_store::test_support::HashMap` exists but is inaccessible
+help: consider importing this struct
+    |
+ 17 + use std::collections::HashMap;
+    |
+
+error[E0425]: cannot find type `HashMap` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:477:42
+    |
+477 | fn language_registry() -> &'static Mutex<HashMap<&'static str, LanguageSpec>> {
+    |                                          ^^^^^^^ not found in this scope
+    |
+note: found an item that was configured out
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:16:23
+    |
+ 13 | #[cfg(test)]
+    |       ---- the item is gated here
+...
+ 16 | use std::collections::HashMap;
+    |                       ^^^^^^^
+    = note: struct `crate::os_store::test_support::HashMap` exists but is inaccessible
+help: consider importing this struct
+    |
+ 17 + use std::collections::HashMap;
+    |
+
+error[E0433]: cannot find type `HashMap` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:478:49
+    |
+478 |     LANGUAGE_REGISTRY.get_or_init(|| Mutex::new(HashMap::new()))
+    |                                                 ^^^^^^^ use of undeclared type `HashMap`
+    |
+note: found an item that was configured out
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:16:23
+    |
+ 13 | #[cfg(test)]
+    |       ---- the item is gated here
+...
+ 16 | use std::collections::HashMap;
+    |                       ^^^^^^^
+    = note: struct `crate::os_store::test_support::HashMap` exists but is inaccessible
+help: consider importing this struct
+    |
+ 17 + use std::collections::HashMap;
+    |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:8:1
+  |
+8 | extern crate self as pack;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+8 - extern crate self as pack;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:9:1
+  |
+9 | extern crate self as spr;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+9 - extern crate self as spr;
+  |
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:345:11
+    |
+345 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, and `ureq`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:351:11
+    |
+351 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, and `ureq`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:157:9
+    |
+157 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `test_support` in the type namespace is first re-exported here
+158 | pub use crate::os_store::*;
+    |         ------------------ but the name `test_support` in the type namespace is also re-exported here
+    |
+    = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:157:9
+    |
+157 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `core` in the type namespace is first re-exported here
+...
+160 | pub use crate::os_pack::*;
+    |         ----------------- but the name `core` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:158:9
+    |
+158 | pub use crate::os_store::*;
+    |         ^^^^^^^^^^^^^^^^^^ the name `CollectionDiff` in the type namespace is first re-exported here
+159 | pub use crate::os_spr::*;
+    |         ---------------- but the name `CollectionDiff` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:158:9
+    |
+158 | pub use crate::os_store::*;
+    |         ^^^^^^^^^^^^^^^^^^ the name `CollectionOperation` in the type namespace is first re-exported here
+159 | pub use crate::os_spr::*;
+    |         ---------------- but the name `CollectionOperation` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:158:9
+    |
+158 | pub use crate::os_store::*;
+    |         ^^^^^^^^^^^^^^^^^^ the name `ItemPatch` in the type namespace is first re-exported here
+159 | pub use crate::os_spr::*;
+    |         ---------------- but the name `ItemPatch` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:159:9
+    |
+158 | pub use crate::os_store::*;
+    |         ------------------ but the name `apply_collection_operation` in the value namespace is also re-exported here
+159 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `apply_collection_operation` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:159:9
+    |
+158 | pub use crate::os_store::*;
+    |         ------------------ but the name `collection_diff_from_operation` in the value namespace is also re-exported here
+159 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `collection_diff_from_operation` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:159:9
+    |
+158 | pub use crate::os_store::*;
+    |         ------------------ but the name `invert_collection_operation` in the value namespace is also re-exported here
+159 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `invert_collection_operation` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:159:9
+    |
+158 | pub use crate::os_store::*;
+    |         ------------------ but the name `Identified` in the type namespace is also re-exported here
+159 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Identified` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:159:9
+    |
+158 | pub use crate::os_store::*;
+    |         ------------------ but the name `Patchable` in the type namespace is also re-exported here
+159 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Patchable` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:159:9
+    |
+159 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `cli` in the type namespace is first re-exported here
+160 | pub use crate::os_pack::*;
+    |         ----------------- but the name `cli` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:159:9
+    |
+159 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `format` in the type namespace is first re-exported here
+160 | pub use crate::os_pack::*;
+    |         ----------------- but the name `format` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:159:9
+    |
+159 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `io` in the type namespace is first re-exported here
+160 | pub use crate::os_pack::*;
+    |         ----------------- but the name `io` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:159:9
+    |
+159 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `testkit` in the type namespace is first re-exported here
+160 | pub use crate::os_pack::*;
+    |         ----------------- but the name `testkit` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:160:9
+    |
+159 | pub use crate::os_spr::*;
+    |         ---------------- but the name `recover_file` in the value namespace is also re-exported here
+160 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `recover_file` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:160:9
+    |
+159 | pub use crate::os_spr::*;
+    |         ---------------- but the name `RecoveryReport` in the type namespace is also re-exported here
+160 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `RecoveryReport` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:160:9
+    |
+159 | pub use crate::os_spr::*;
+    |         ---------------- but the name `VerificationLevel` in the type namespace is also re-exported here
+160 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `VerificationLevel` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:160:9
+    |
+159 | pub use crate::os_spr::*;
+    |         ---------------- but the name `WriteOptions` in the type namespace is also re-exported here
+160 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `WriteOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:160:9
+    |
+159 | pub use crate::os_spr::*;
+    |         ---------------- but the name `DecodeOptions` in the type namespace is also re-exported here
+160 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `DecodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️lib.rs:160:9
+    |
+159 | pub use crate::os_spr::*;
+    |         ---------------- but the name `EncodeOptions` in the type namespace is also re-exported here
+160 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `EncodeOptions` in the type namespace is first re-exported here
+
+error[E0277]: the trait bound `Operation: protocol_command::Operation<P>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:3509:41
+     |
+3509 |         let post = apply_operation(pre, &operation);
+     |                    ---------------      ^^^^^^^^^^ the trait `protocol_command::Operation<P>` is not implemented for `Operation`
+     |                    |
+     |                    required by a bound introduced by this call
+     |
+     = note: `Operation` implements similarly named trait `command::Operation`, but not `protocol_command::Operation<P>`
+note: required by a bound in `vcs::apply_operation`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/📦️lib.rs:241:16
+     |
+ 239 | pub fn apply_operation<P, Operation>(projection: &P, operation: &Operation) -> P
+     |        --------------- required by a bound in this function
+ 240 | where
+ 241 |     Operation: crate::Operation<P>,
+     |                ^^^^^^^^^^^^^^^^^^^ required by this bound in `apply_operation`
+help: consider further restricting type parameter `Operation` with trait `Operation`
+     |
+3507 |         Operation: self::Operation<P> + protocol_command::Operation<P>,
+     |                                       ++++++++++++++++++++++++++++++++
+
+error[E0277]: the trait bound `Operation: protocol_command::Operation<P>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:3512:110
+     |
+3512 |         let restored = backwards.iter().fold(post, |projection, back_operation| apply_operation(&projection, back_operation));
+     |                                                                                 ---------------              ^^^^^^^^^^^^^^ the trait `protocol_command::Operation<P>` is not implemented for `Operation`
+     |                                                                                 |
+     |                                                                                 required by a bound introduced by this call
+     |
+     = note: `Operation` implements similarly named trait `command::Operation`, but not `protocol_command::Operation<P>`
+note: required by a bound in `vcs::apply_operation`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/📦️lib.rs:241:16
+     |
+ 239 | pub fn apply_operation<P, Operation>(projection: &P, operation: &Operation) -> P
+     |        --------------- required by a bound in this function
+ 240 | where
+ 241 |     Operation: crate::Operation<P>,
+     |                ^^^^^^^^^^^^^^^^^^^ required by this bound in `apply_operation`
+help: consider further restricting type parameter `Operation` with trait `Operation`
+     |
+3507 |         Operation: self::Operation<P> + protocol_command::Operation<P>,
+     |                                       ++++++++++++++++++++++++++++++++
+
+error[E0277]: the trait bound `Operation: protocol_command::Operation<P>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2418:59
+     |
+2418 |             self.current = apply_operation(&self.current, operation);
+     |                            ---------------                ^^^^^^^^^ the trait `protocol_command::Operation<P>` is not implemented for `Operation`
+     |                            |
+     |                            required by a bound introduced by this call
+     |
+     = note: `Operation` implements similarly named trait `command::Operation`, but not `protocol_command::Operation<P>`
+note: required by a bound in `vcs::apply_operation`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/📦️lib.rs:241:16
+     |
+ 239 | pub fn apply_operation<P, Operation>(projection: &P, operation: &Operation) -> P
+     |        --------------- required by a bound in this function
+ 240 | where
+ 241 |     Operation: crate::Operation<P>,
+     |                ^^^^^^^^^^^^^^^^^^^ required by this bound in `apply_operation`
+help: consider further restricting type parameter `Operation` with trait `Operation`
+     |
+1925 |     Operation: Clone + Serialize + DeserializeOwned + self::Operation<P> + OpBinary + OpText + protocol_command::Operation<P>,
+     |                                                                                              ++++++++++++++++++++++++++++++++
+
+error[E0277]: the trait bound `Operation: protocol_command::Operation<P>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2085:59
+     |
+2085 |                 projection = apply_operation(&projection, operation);
+     |                              ---------------              ^^^^^^^^^ the trait `protocol_command::Operation<P>` is not implemented for `Operation`
+     |                              |
+     |                              required by a bound introduced by this call
+     |
+     = note: `Operation` implements similarly named trait `command::Operation`, but not `protocol_command::Operation<P>`
+note: required by a bound in `vcs::apply_operation`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/📦️lib.rs:241:16
+     |
+ 239 | pub fn apply_operation<P, Operation>(projection: &P, operation: &Operation) -> P
+     |        --------------- required by a bound in this function
+ 240 | where
+ 241 |     Operation: crate::Operation<P>,
+     |                ^^^^^^^^^^^^^^^^^^^ required by this bound in `apply_operation`
+help: consider further restricting type parameter `Operation` with trait `Operation`
+     |
+1925 |     Operation: Clone + Serialize + DeserializeOwned + self::Operation<P> + OpBinary + OpText + protocol_command::Operation<P>,
+     |                                                                                              ++++++++++++++++++++++++++++++++
+
+error[E0277]: the trait bound `Operation: protocol_command::Operation<P>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:1946:63
+     |
+1946 | ...                   folded = apply_operation(&folded, operation);
+     |                                ---------------          ^^^^^^^^^ the trait `protocol_command::Operation<P>` is not implemented for `Operation`
+     |                                |
+     |                                required by a bound introduced by this call
+     |
+     = note: `Operation` implements similarly named trait `command::Operation`, but not `protocol_command::Operation<P>`
+note: required by a bound in `vcs::apply_operation`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/📦️lib.rs:241:16
+     |
+ 239 | pub fn apply_operation<P, Operation>(projection: &P, operation: &Operation) -> P
+     |        --------------- required by a bound in this function
+ 240 | where
+ 241 |     Operation: crate::Operation<P>,
+     |                ^^^^^^^^^^^^^^^^^^^ required by this bound in `apply_operation`
+help: consider further restricting type parameter `Operation` with trait `Operation`
+     |
+1925 |     Operation: Clone + Serialize + DeserializeOwned + self::Operation<P> + OpBinary + OpText + protocol_command::Operation<P>,
+     |                                                                                              ++++++++++++++++++++++++++++++++
+
+error[E0277]: the trait bound `Operation: protocol_command::Operation<P>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2153:59
+     |
+2153 |                         folded = apply_operation(&folded, operation);
+     |                                  ---------------          ^^^^^^^^^ the trait `protocol_command::Operation<P>` is not implemented for `Operation`
+     |                                  |
+     |                                  required by a bound introduced by this call
+     |
+     = note: `Operation` implements similarly named trait `command::Operation`, but not `protocol_command::Operation<P>`
+note: required by a bound in `vcs::apply_operation`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/📦️lib.rs:241:16
+     |
+ 239 | pub fn apply_operation<P, Operation>(projection: &P, operation: &Operation) -> P
+     |        --------------- required by a bound in this function
+ 240 | where
+ 241 |     Operation: crate::Operation<P>,
+     |                ^^^^^^^^^^^^^^^^^^^ required by this bound in `apply_operation`
+help: consider further restricting type parameter `Operation` with trait `Operation`
+     |
+1925 |     Operation: Clone + Serialize + DeserializeOwned + self::Operation<P> + OpBinary + OpText + protocol_command::Operation<P>,
+     |                                                                                              ++++++++++++++++++++++++++++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2009:9
+     |
+2008 | ...ub fn edit_operations(&self) -> Option<(&[Operation], &[Operation], &[OperationMeta])> {
+     |                                    ------------------------------------------------------ expected `std::option::Option<(&[Operation], &[Operation], &[command::OperationMeta])>` because of return type
+2009 | ...   self.envelope.vcs.edits.last().map(|edit| (edit.forwards.as_slice(), edit.backwards.as_slice(), edit.operation_meta.as_slice()))
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `command::OperationMeta`, found `protocol_command::OperationMeta`
+     |
+     = note: `protocol_command::OperationMeta` and `command::OperationMeta` have similar names, but are actually distinct types
+note: `protocol_command::OperationMeta` is defined in crate `protocol_command`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:147:1
+     |
+ 147 | pub struct OperationMeta {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+note: `command::OperationMeta` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:147:1
+     |
+ 147 | pub struct OperationMeta {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0308]: arguments to this function are incorrect
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2555:27
+     |
+2555 |                     match crate::os_spr::operation_envelope_from_edit::<P, Operation>(edit, &document_id, &schema) {
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^       ------------  ------- expected `os_spr::core::SchemaId`, found `semio_framework_core::SchemaId`
+     |                                                                                             |
+     |                                                                                             expected `os_spr::core::DocumentId`, found `semio_framework_core::DocumentId`
+     |
+note: expected `command::Edit<Operation>`, found `protocol_command::Edit<Operation>`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2555:87
+     |
+2555 |                     match crate::os_spr::operation_envelope_from_edit::<P, Operation>(edit, &document_id, &schema) {
+     |                                                                                       ^^^^
+     = note: `protocol_command::Edit<Operation>` and `command::Edit<Operation>` have similar names, but are actually distinct types
+note: `protocol_command::Edit<Operation>` is defined in crate `protocol_command`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+note: `command::Edit<Operation>` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+     = note: `semio_framework_core::DocumentId` and `os_spr::core::DocumentId` have similar names, but are actually distinct types
+note: `semio_framework_core::DocumentId` is defined in crate `protocol_core`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:614:1
+     |
+ 614 | pub struct DocumentId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::DocumentId` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:614:1
+     |
+ 614 | pub struct DocumentId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^^^
+     = note: `semio_framework_core::SchemaId` and `os_spr::core::SchemaId` have similar names, but are actually distinct types
+note: `semio_framework_core::SchemaId` is defined in crate `protocol_core`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:624:1
+     |
+ 624 | pub struct SchemaId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::SchemaId` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:624:1
+     |
+ 624 | pub struct SchemaId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^
+note: function defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔗️causal/🦀️component.rs:281:8
+     |
+ 281 | pub fn operation_envelope_from_edit<P, Op: crate::os_spr::command::Operation<P> + crate::os_spr::command::OpBinary>(
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 282 |     edit: &crate::os_spr::command::Edit<Op>,
+     |     ---------------------------------------
+ 283 |     document_id: &crate::os_spr::core::DocumentId,
+     |     ---------------------------------------------
+ 284 |     schema: &crate::os_spr::core::SchemaId,
+     |     --------------------------------------
+
+error[E0308]: arguments to this function are incorrect
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:3727:25
+     |
+3727 | ... let envelopes = crate::os_spr::operation_envelope_from_edit::<P, Operation>(edit, document_id, schema).unwrap_or_else(|error| ...
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^       -----------  ------ expected `os_spr::core::SchemaId`, found `semio_framework_core::SchemaId`
+     |                                                                                       |
+     |                                                                                       expected `os_spr::core::DocumentId`, found `semio_framework_core::DocumentId`
+     |
+     = note: `semio_framework_core::DocumentId` and `os_spr::core::DocumentId` have similar names, but are actually distinct types
+note: `semio_framework_core::DocumentId` is defined in crate `protocol_core`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:614:1
+     |
+ 614 | pub struct DocumentId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::DocumentId` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:614:1
+     |
+ 614 | pub struct DocumentId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^^^
+     = note: `semio_framework_core::SchemaId` and `os_spr::core::SchemaId` have similar names, but are actually distinct types
+note: `semio_framework_core::SchemaId` is defined in crate `protocol_core`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:624:1
+     |
+ 624 | pub struct SchemaId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::SchemaId` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:624:1
+     |
+ 624 | pub struct SchemaId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^
+note: function defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔗️causal/🦀️component.rs:281:8
+     |
+ 281 | pub fn operation_envelope_from_edit<P, Op: crate::os_spr::command::Operation<P> + crate::os_spr::command::OpBinary>(
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 282 |     edit: &crate::os_spr::command::Edit<Op>,
+ 283 |     document_id: &crate::os_spr::core::DocumentId,
+     |     ---------------------------------------------
+ 284 |     schema: &crate::os_spr::core::SchemaId,
+     |     --------------------------------------
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:3730:46
+     |
+3730 |             assert_eq!(envelope.document_id, *document_id, "document id did not survive the envelope conversion");
+     |                                              ^^^^^^^^^^^^ expected `os_spr::core::DocumentId`, found `semio_framework_core::DocumentId`
+     |
+     = note: `semio_framework_core::DocumentId` and `os_spr::core::DocumentId` have similar names, but are actually distinct types
+note: `semio_framework_core::DocumentId` is defined in crate `protocol_core`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:614:1
+     |
+ 614 | pub struct DocumentId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::DocumentId` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:614:1
+     |
+ 614 | pub struct DocumentId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2235:46
+     |
+2235 |                 self.envelope.vcs.edits.push(edit);
+     |                                         ---- ^^^^ expected `protocol_command::Edit<Operation>`, found `command::Edit<Operation>`
+     |                                         |
+     |                                         arguments to this method are incorrect
+     |
+     = note: `command::Edit<Operation>` and `protocol_command::Edit<Operation>` have similar names, but are actually distinct types
+note: `command::Edit<Operation>` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+note: `protocol_command::Edit<Operation>` is defined in crate `protocol_command`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+note: method defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/vec/mod.rs:1001:12
+     |
+1001 |     pub fn push(&mut self, value: T) {
+     |            ^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2420:38
+     |
+2420 |         self.envelope.vcs.edits.push(edit);
+     |                                 ---- ^^^^ expected `protocol_command::Edit<Operation>`, found `command::Edit<Operation>`
+     |                                 |
+     |                                 arguments to this method are incorrect
+     |
+     = note: `command::Edit<Operation>` and `protocol_command::Edit<Operation>` have similar names, but are actually distinct types
+note: `command::Edit<Operation>` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+note: `protocol_command::Edit<Operation>` is defined in crate `protocol_command`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+note: method defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/vec/mod.rs:1001:12
+     |
+1001 |     pub fn push(&mut self, value: T) {
+     |            ^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2033:35
+     |
+2033 |             self.dag.seed_applied(OperationId(edit_id.clone()));
+     |                      ------------ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `os_spr::core::OperationId`, found `semio_framework_core::OperationId`
+     |                      |
+     |                      arguments to this method are incorrect
+     |
+     = note: `semio_framework_core::OperationId` and `os_spr::core::OperationId` have similar names, but are actually distinct types
+note: `semio_framework_core::OperationId` is defined in crate `protocol_core`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:604:1
+     |
+ 604 | pub struct OperationId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::OperationId` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:604:1
+     |
+ 604 | pub struct OperationId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^^^^
+note: method defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔗️causal/🦀️component.rs:155:12
+     |
+ 155 |     pub fn seed_applied(&mut self, operation_id: crate::os_spr::core::OperationId) {
+     |            ^^^^^^^^^^^^            ----------------------------------------------
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:1052:56
+     |
+1052 |         edits.push(history_edit_from_edit::<Operation>(edit)?);
+     |                    ----------------------------------- ^^^^ expected `command::Edit<Operation>`, found `protocol_command::Edit<Operation>`
+     |                    |
+     |                    arguments to this function are incorrect
+     |
+     = note: `protocol_command::Edit<Operation>` and `command::Edit<Operation>` have similar names, but are actually distinct types
+note: `protocol_command::Edit<Operation>` is defined in crate `protocol_command`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+note: `command::Edit<Operation>` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+note: function defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:996:4
+     |
+ 996 | fn history_edit_from_edit<Operation: OpBinary>(edit: &Edit<Operation>) -> Result<crate::os_spr::HistoryEdit, VcsError> {
+     |    ^^^^^^^^^^^^^^^^^^^^^^                      ----------------------
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2640:26
+     |
+2640 |             undo_policy: UndoPolicy::ExactBaseOnly,
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^ expected `os_spr::core::UndoPolicy`, found `semio_framework_core::UndoPolicy`
+     |
+     = note: `semio_framework_core::UndoPolicy` and `os_spr::core::UndoPolicy` have similar names, but are actually distinct types
+note: `semio_framework_core::UndoPolicy` is defined in crate `protocol_core`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:709:1
+     |
+ 709 | pub enum UndoPolicy {
+     | ^^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::UndoPolicy` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:709:1
+     |
+ 709 | pub enum UndoPolicy {
+     | ^^^^^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2447:39
+     |
+2447 |                 self.dag.seed_applied(OperationId(edit.id.clone()));
+     |                          ------------ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `os_spr::core::OperationId`, found `semio_framework_core::OperationId`
+     |                          |
+     |                          arguments to this method are incorrect
+     |
+     = note: `semio_framework_core::OperationId` and `os_spr::core::OperationId` have similar names, but are actually distinct types
+note: `semio_framework_core::OperationId` is defined in crate `protocol_core`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:604:1
+     |
+ 604 | pub struct OperationId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::OperationId` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:604:1
+     |
+ 604 | pub struct OperationId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^^^^
+note: method defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔗️causal/🦀️component.rs:155:12
+     |
+ 155 |     pub fn seed_applied(&mut self, operation_id: crate::os_spr::core::OperationId) {
+     |            ^^^^^^^^^^^^            ----------------------------------------------
+
+error[E0271]: type mismatch resolving `<Vec<OperationMeta> as IntoIterator>::Item == OperationMeta`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2259:52
+     |
+2259 |                         edit.operation_meta.extend(new_operation_meta);
+     |                                             ------ ^^^^^^^^^^^^^^^^^^ expected `protocol_command::OperationMeta`, found `command::OperationMeta`
+     |                                             |
+     |                                             required by a bound introduced by this call
+     |
+     = note: `command::OperationMeta` and `protocol_command::OperationMeta` have similar names, but are actually distinct types
+note: `command::OperationMeta` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:147:1
+     |
+ 147 | pub struct OperationMeta {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+note: `protocol_command::OperationMeta` is defined in crate `protocol_command`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:147:1
+     |
+ 147 | pub struct OperationMeta {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `extend`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/iter/traits/collect.rs:416:31
+     |
+ 416 |     fn extend<T: IntoIterator<Item = A>>(&mut self, iter: T);
+     |                               ^^^^^^^^ required by this bound in `Extend::extend`
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2448:75
+     |
+2448 |                 for operation_id in crate::os_spr::operation_ids_for_edit(edit) {
+     |                                     ------------------------------------- ^^^^ expected `&Edit<_>`, found `&Edit<Operation>`
+     |                                     |
+     |                                     arguments to this function are incorrect
+     |
+     = note: `protocol_command::Edit<Operation>` and `command::Edit<_>` have similar names, but are actually distinct types
+note: `protocol_command::Edit<Operation>` is defined in crate `protocol_command`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+note: `command::Edit<_>` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+note: function defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔗️causal/🦀️component.rs:277:8
+     |
+ 277 | pub fn operation_ids_for_edit<P, Op: crate::os_spr::command::Operation<P>>(edit: &crate::os_spr::command::Edit<Op>) -> Vec<crate::...
+     |        ^^^^^^^^^^^^^^^^^^^^^^                                              ---------------------------------------
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2471:68
+     |
+2471 |             known_ids.extend(crate::os_spr::operation_ids_for_edit(edit).into_iter().map(|id| id.0));
+     |                              ------------------------------------- ^^^^ expected `&Edit<_>`, found `&Edit<Operation>`
+     |                              |
+     |                              arguments to this function are incorrect
+     |
+     = note: `protocol_command::Edit<Operation>` and `command::Edit<_>` have similar names, but are actually distinct types
+note: `protocol_command::Edit<Operation>` is defined in crate `protocol_command`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+note: `command::Edit<_>` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+note: function defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔗️causal/🦀️component.rs:277:8
+     |
+ 277 | pub fn operation_ids_for_edit<P, Op: crate::os_spr::command::Operation<P>>(edit: &crate::os_spr::command::Edit<Op>) -> Vec<crate::...
+     |        ^^^^^^^^^^^^^^^^^^^^^^                                              ---------------------------------------
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2277:50
+     |
+2277 |                     self.envelope.vcs.edits.push(edit);
+     |                                             ---- ^^^^ expected `protocol_command::Edit<Operation>`, found `command::Edit<Operation>`
+     |                                             |
+     |                                             arguments to this method are incorrect
+     |
+     = note: `command::Edit<Operation>` and `protocol_command::Edit<Operation>` have similar names, but are actually distinct types
+note: `command::Edit<Operation>` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+note: `protocol_command::Edit<Operation>` is defined in crate `protocol_command`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+note: method defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/vec/mod.rs:1001:12
+     |
+1001 |     pub fn push(&mut self, value: T) {
+     |            ^^^^
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:891:40
+    |
+891 |         ops.push_str(&print_edit_lines(edit)?);
+    |                       ---------------- ^^^^ expected `&Edit<_>`, found `&Edit<Operation>`
+    |                       |
+    |                       arguments to this function are incorrect
+    |
+    = note: `protocol_command::Edit<Operation>` and `command::Edit<_>` have similar names, but are actually distinct types
+note: `protocol_command::Edit<Operation>` is defined in crate `protocol_command`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:165:1
+    |
+165 | pub struct Edit<Op> {
+    | ^^^^^^^^^^^^^^^^^^^
+note: `command::Edit<_>` is defined in the current crate
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:165:1
+    |
+165 | pub struct Edit<Op> {
+    | ^^^^^^^^^^^^^^^^^^^
+note: function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:862:8
+    |
+862 | pub fn print_edit_lines<Operation: OpText>(edit: &Edit<Operation>) -> Result<String, VcsError> {
+    |        ^^^^^^^^^^^^^^^^                    ----------------------
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2475:71
+     |
+2475 |             let operation_ids = crate::os_spr::operation_ids_for_edit(&edit);
+     |                                 ------------------------------------- ^^^^^ expected `&Edit<_>`, found `&Edit<Operation>`
+     |                                 |
+     |                                 arguments to this function are incorrect
+     |
+     = note: `protocol_command::Edit<Operation>` and `command::Edit<_>` have similar names, but are actually distinct types
+note: `protocol_command::Edit<Operation>` is defined in crate `protocol_command`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+note: `command::Edit<_>` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+note: function defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔗️causal/🦀️component.rs:277:8
+     |
+ 277 | pub fn operation_ids_for_edit<P, Op: crate::os_spr::command::Operation<P>>(edit: &crate::os_spr::command::Edit<Op>) -> Vec<crate::...
+     |        ^^^^^^^^^^^^^^^^^^^^^^                                              ---------------------------------------
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:1117:83
+     |
+1117 |                     operation_id: Some(operation.operation_id().unwrap_or_else(|| OperationId(create_document_vcs_id("operation")))),
+     |                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `os_spr::core::OperationId`, found `semio_framework_core::OperationId`
+     |
+     = note: `semio_framework_core::OperationId` and `os_spr::core::OperationId` have similar names, but are actually distinct types
+note: `semio_framework_core::OperationId` is defined in crate `protocol_core`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:604:1
+     |
+ 604 | pub struct OperationId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::OperationId` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:604:1
+     |
+ 604 | pub struct OperationId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0277]: the trait bound `Operation: protocol_command::Operation<P>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2488:63
+     |
+2488 |                 self.current = apply_operation(&self.current, operation);
+     |                                ---------------                ^^^^^^^^^ the trait `protocol_command::Operation<P>` is not implemented for `Operation`
+     |                                |
+     |                                required by a bound introduced by this call
+     |
+     = note: `Operation` implements similarly named trait `command::Operation`, but not `protocol_command::Operation<P>`
+note: required by a bound in `vcs::apply_operation`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/📦️lib.rs:241:16
+     |
+ 239 | pub fn apply_operation<P, Operation>(projection: &P, operation: &Operation) -> P
+     |        --------------- required by a bound in this function
+ 240 | where
+ 241 |     Operation: crate::Operation<P>,
+     |                ^^^^^^^^^^^^^^^^^^^ required by this bound in `apply_operation`
+help: consider further restricting type parameter `Operation` with trait `Operation`
+     |
+1925 |     Operation: Clone + Serialize + DeserializeOwned + self::Operation<P> + OpBinary + OpText + protocol_command::Operation<P>,
+     |                                                                                              ++++++++++++++++++++++++++++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2299:79
+     |
+2299 |                 operation_id: Some(operation.operation_id().unwrap_or_else(|| OperationId(create_document_vcs_id("operation")))),
+     |                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `os_spr::core::OperationId`, found `semio_framework_core::OperationId`
+     |
+     = note: `semio_framework_core::OperationId` and `os_spr::core::OperationId` have similar names, but are actually distinct types
+note: `semio_framework_core::OperationId` is defined in crate `protocol_core`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:604:1
+     |
+ 604 | pub struct OperationId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::OperationId` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:604:1
+     |
+ 604 | pub struct OperationId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:1120:77
+     |
+1120 |                     author_id: Some(operation.author_id().unwrap_or_else(|| ActorId("local".into()))),
+     |                                                                             ^^^^^^^^^^^^^^^^^^^^^^^ expected `os_spr::core::ActorId`, found `semio_framework_core::ActorId`
+     |
+     = note: `semio_framework_core::ActorId` and `os_spr::core::ActorId` have similar names, but are actually distinct types
+note: `semio_framework_core::ActorId` is defined in crate `protocol_core`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:609:1
+     |
+ 609 | pub struct ActorId(pub String);
+     | ^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::ActorId` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:609:1
+     |
+ 609 | pub struct ActorId(pub String);
+     | ^^^^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2302:73
+     |
+2302 |                 author_id: Some(operation.author_id().unwrap_or_else(|| ActorId("local".into()))),
+     |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^ expected `os_spr::core::ActorId`, found `semio_framework_core::ActorId`
+     |
+     = note: `semio_framework_core::ActorId` and `os_spr::core::ActorId` have similar names, but are actually distinct types
+note: `semio_framework_core::ActorId` is defined in crate `protocol_core`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:609:1
+     |
+ 609 | pub struct ActorId(pub String);
+     | ^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::ActorId` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:609:1
+     |
+ 609 | pub struct ActorId(pub String);
+     | ^^^^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:1121:72
+     |
+1121 |                     timestamp: operation.timestamp().unwrap_or_else(|| HybridLogicalTimestamp::new(0, now_ms())),
+     |                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `os_spr::core::HybridLogicalTimestamp`, found `HybridLogicalTimestamp`
+     |
+     = note: `HybridLogicalTimestamp` and `os_spr::core::HybridLogicalTimestamp` have similar names, but are actually distinct types
+note: `HybridLogicalTimestamp` is defined in crate `protocol_core`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:646:1
+     |
+ 646 | pub struct HybridLogicalTimestamp {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::HybridLogicalTimestamp` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:646:1
+     |
+ 646 | pub struct HybridLogicalTimestamp {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0277]: the trait bound `Operation: protocol_command::Operation<P>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:1129:55
+     |
+1129 |             projection = apply_operation(&projection, operation);
+     |                          ---------------              ^^^^^^^^^ the trait `protocol_command::Operation<P>` is not implemented for `Operation`
+     |                          |
+     |                          required by a bound introduced by this call
+     |
+     = note: `Operation` implements similarly named trait `command::Operation`, but not `protocol_command::Operation<P>`
+note: required by a bound in `vcs::apply_operation`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/📦️lib.rs:241:16
+     |
+ 239 | pub fn apply_operation<P, Operation>(projection: &P, operation: &Operation) -> P
+     |        --------------- required by a bound in this function
+ 240 | where
+ 241 |     Operation: crate::Operation<P>,
+     |                ^^^^^^^^^^^^^^^^^^^ required by this bound in `apply_operation`
+help: consider further restricting type parameter `Operation` with trait `Operation`
+     |
+1088 |     Operation: OpText + OpBinary + self::Operation<P> + protocol_command::Operation<P>,
+     |                                                       ++++++++++++++++++++++++++++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2303:68
+     |
+2303 |                 timestamp: operation.timestamp().unwrap_or_else(|| HybridLogicalTimestamp::new(0, now_ms())),
+     |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `os_spr::core::HybridLogicalTimestamp`, found `HybridLogicalTimestamp`
+     |
+     = note: `HybridLogicalTimestamp` and `os_spr::core::HybridLogicalTimestamp` have similar names, but are actually distinct types
+note: `HybridLogicalTimestamp` is defined in crate `protocol_core`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:646:1
+     |
+ 646 | pub struct HybridLogicalTimestamp {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::HybridLogicalTimestamp` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:646:1
+     |
+ 646 | pub struct HybridLogicalTimestamp {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:969:51
+    |
+969 |         undo_policy: protocol_undo_policy_ordinal(meta.undo_policy),
+    |                      ---------------------------- ^^^^^^^^^^^^^^^^ expected `semio_framework_core::UndoPolicy`, found `os_spr::core::UndoPolicy`
+    |                      |
+    |                      arguments to this function are incorrect
+    |
+    = note: `os_spr::core::UndoPolicy` and `semio_framework_core::UndoPolicy` have similar names, but are actually distinct types
+note: `os_spr::core::UndoPolicy` is defined in the current crate
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:709:1
+    |
+709 | pub enum UndoPolicy {
+    | ^^^^^^^^^^^^^^^^^^^
+note: `semio_framework_core::UndoPolicy` is defined in crate `protocol_core`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:709:1
+    |
+709 | pub enum UndoPolicy {
+    | ^^^^^^^^^^^^^^^^^^^
+note: function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:944:4
+    |
+944 | fn protocol_undo_policy_ordinal(policy: UndoPolicy) -> u8 {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ------------------
+
+error[E0277]: the trait bound `Operation: protocol_command::Operation<P>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2313:55
+     |
+2313 |             projection = apply_operation(&projection, &operation);
+     |                          ---------------              ^^^^^^^^^^ the trait `protocol_command::Operation<P>` is not implemented for `Operation`
+     |                          |
+     |                          required by a bound introduced by this call
+     |
+     = note: `Operation` implements similarly named trait `command::Operation`, but not `protocol_command::Operation<P>`
+note: required by a bound in `vcs::apply_operation`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/📦️lib.rs:241:16
+     |
+ 239 | pub fn apply_operation<P, Operation>(projection: &P, operation: &Operation) -> P
+     |        --------------- required by a bound in this function
+ 240 | where
+ 241 |     Operation: crate::Operation<P>,
+     |                ^^^^^^^^^^^^^^^^^^^ required by this bound in `apply_operation`
+help: consider further restricting type parameter `Operation` with trait `Operation`
+     |
+1925 |     Operation: Clone + Serialize + DeserializeOwned + self::Operation<P> + OpBinary + OpText + protocol_command::Operation<P>,
+     |                                                                                              ++++++++++++++++++++++++++++++++
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:977:23
+    |
+977 |         operation_id: meta.op_id.map(OperationId),
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `os_spr::core::OperationId`, found `semio_framework_core::OperationId`
+    |
+    = note: `semio_framework_core::OperationId` and `os_spr::core::OperationId` have similar names, but are actually distinct types
+note: `semio_framework_core::OperationId` is defined in crate `protocol_core`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:604:1
+    |
+604 | pub struct OperationId(pub String);
+    | ^^^^^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::OperationId` is defined in the current crate
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:604:1
+    |
+604 | pub struct OperationId(pub String);
+    | ^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:1151:13
+     |
+1151 |             edits,
+     |             ^^^^^ expected `Vec<Edit<_>>`, found `Vec<Edit<Operation>>`
+     |
+     = note: `command::Edit<Operation>` and `protocol_command::Edit<_>` have similar names, but are actually distinct types
+note: `command::Edit<Operation>` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+note: `protocol_command::Edit<_>` is defined in crate `protocol_command`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+
+error[E0277]: a value of type `Vec<os_spr::core::OperationId>` cannot be built from an iterator over elements of type `semio_framework_core::OperationId`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:978:70
+     |
+ 978 |         dependencies: meta.dependencies.into_iter().map(OperationId).collect(),
+     |                                                                      ^^^^^^^ value of type `Vec<os_spr::core::OperationId>` cannot be built from `std::iter::Iterator<Item=semio_framework_core::OperationId>`
+     |
+help: the trait `FromIterator<semio_framework_core::OperationId>` is not implemented for `Vec<os_spr::core::OperationId>`
+      but trait `FromIterator<os_spr::core::OperationId>` is implemented for it
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/vec/mod.rs:3938:1
+     |
+3938 | impl<T> FromIterator<T> for Vec<T> {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `os_spr::core::OperationId`, found `semio_framework_core::OperationId`
+note: the method call chain might not have had the expected associated types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:978:53
+     |
+ 978 |         dependencies: meta.dependencies.into_iter().map(OperationId).collect(),
+     |                       ----------------- ----------- ^^^^^^^^^^^^^^^^ `Iterator::Item` changed to `OperationId` here
+     |                       |                 |
+     |                       |                 `Iterator::Item` is `String` here
+     |                       this expression has type `Vec<String>`
+note: required by a bound in `std::iter::Iterator::collect`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/iter/traits/iterator.rs:2077:19
+     |
+2077 |     fn collect<B: FromIterator<Self::Item>>(self) -> B
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `Iterator::collect`
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:980:20
+    |
+980 |         author_id: meta.author_id.map(ActorId),
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `os_spr::core::ActorId`, found `semio_framework_core::ActorId`
+    |
+    = note: `semio_framework_core::ActorId` and `os_spr::core::ActorId` have similar names, but are actually distinct types
+note: `semio_framework_core::ActorId` is defined in crate `protocol_core`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:609:1
+    |
+609 | pub struct ActorId(pub String);
+    | ^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::ActorId` is defined in the current crate
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:609:1
+    |
+609 | pub struct ActorId(pub String);
+    | ^^^^^^^^^^^^^^^^^^
+
+error[E0277]: the trait bound `Operation: protocol_command::Operation<P>` is not satisfied
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:721:55
+    |
+721 |             projection = apply_operation(&projection, operation);
+    |                          ---------------              ^^^^^^^^^ the trait `protocol_command::Operation<P>` is not implemented for `Operation`
+    |                          |
+    |                          required by a bound introduced by this call
+    |
+    = note: `Operation` implements similarly named trait `command::Operation`, but not `protocol_command::Operation<P>`
+note: required by a bound in `vcs::apply_operation`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/📦️lib.rs:241:16
+    |
+239 | pub fn apply_operation<P, Operation>(projection: &P, operation: &Operation) -> P
+    |        --------------- required by a bound in this function
+240 | where
+241 |     Operation: crate::Operation<P>,
+    |                ^^^^^^^^^^^^^^^^^^^ required by this bound in `apply_operation`
+help: consider further restricting type parameter `Operation` with trait `Operation`
+    |
+714 |     Operation: self::Operation<P> + protocol_command::Operation<P>,
+    |                                   ++++++++++++++++++++++++++++++++
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:981:20
+    |
+981 |         timestamp: HybridLogicalTimestamp { actor, physical_ms: physical_ms as u64, logical },
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `os_spr::core::HybridLogicalTimestamp`, found `HybridLogicalTimestamp`
+    |
+    = note: `HybridLogicalTimestamp` and `os_spr::core::HybridLogicalTimestamp` have similar names, but are actually distinct types
+note: `HybridLogicalTimestamp` is defined in crate `protocol_core`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:646:1
+    |
+646 | pub struct HybridLogicalTimestamp {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::HybridLogicalTimestamp` is defined in the current crate
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:646:1
+    |
+646 | pub struct HybridLogicalTimestamp {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:982:22
+    |
+982 |         undo_policy: protocol_undo_policy_from_ordinal(meta.undo_policy),
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `os_spr::core::UndoPolicy`, found `semio_framework_core::UndoPolicy`
+    |
+    = note: `semio_framework_core::UndoPolicy` and `os_spr::core::UndoPolicy` have similar names, but are actually distinct types
+note: `semio_framework_core::UndoPolicy` is defined in crate `protocol_core`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:709:1
+    |
+709 | pub enum UndoPolicy {
+    | ^^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::UndoPolicy` is defined in the current crate
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:709:1
+    |
+709 | pub enum UndoPolicy {
+    | ^^^^^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:2496:35
+     |
+2496 |             self.dag.seed_applied(OperationId(edit_id.clone()));
+     |                      ------------ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `os_spr::core::OperationId`, found `semio_framework_core::OperationId`
+     |                      |
+     |                      arguments to this method are incorrect
+     |
+     = note: `semio_framework_core::OperationId` and `os_spr::core::OperationId` have similar names, but are actually distinct types
+note: `semio_framework_core::OperationId` is defined in crate `protocol_core`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:604:1
+     |
+ 604 | pub struct OperationId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::OperationId` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:604:1
+     |
+ 604 | pub struct OperationId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^^^^
+note: method defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔗️causal/🦀️component.rs:155:12
+     |
+ 155 |     pub fn seed_applied(&mut self, operation_id: crate::os_spr::core::OperationId) {
+     |            ^^^^^^^^^^^^            ----------------------------------------------
+
+error[E0277]: the trait bound `Operation: protocol_command::Operation<P>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:1178:55
+     |
+1178 |                     folded = apply_operation(&folded, operation);
+     |                              ---------------          ^^^^^^^^^ the trait `protocol_command::Operation<P>` is not implemented for `Operation`
+     |                              |
+     |                              required by a bound introduced by this call
+     |
+     = note: `Operation` implements similarly named trait `command::Operation`, but not `protocol_command::Operation<P>`
+note: required by a bound in `vcs::apply_operation`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/📦️lib.rs:241:16
+     |
+ 239 | pub fn apply_operation<P, Operation>(projection: &P, operation: &Operation) -> P
+     |        --------------- required by a bound in this function
+ 240 | where
+ 241 |     Operation: crate::Operation<P>,
+     |                ^^^^^^^^^^^^^^^^^^^ required by this bound in `apply_operation`
+help: consider further restricting type parameter `Operation` with trait `Operation`
+     |
+1088 |     Operation: OpText + OpBinary + self::Operation<P> + protocol_command::Operation<P>,
+     |                                                       ++++++++++++++++++++++++++++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:1258:79
+     |
+1258 |                 operation_id: Some(operation.operation_id().unwrap_or_else(|| OperationId(create_document_vcs_id("operation")))),
+     |                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `os_spr::core::OperationId`, found `semio_framework_core::OperationId`
+     |
+     = note: `semio_framework_core::OperationId` and `os_spr::core::OperationId` have similar names, but are actually distinct types
+note: `semio_framework_core::OperationId` is defined in crate `protocol_core`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:604:1
+     |
+ 604 | pub struct OperationId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::OperationId` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:604:1
+     |
+ 604 | pub struct OperationId(pub String);
+     | ^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:1261:73
+     |
+1261 |                 author_id: Some(operation.author_id().unwrap_or_else(|| ActorId("local".into()))),
+     |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^ expected `os_spr::core::ActorId`, found `semio_framework_core::ActorId`
+     |
+     = note: `semio_framework_core::ActorId` and `os_spr::core::ActorId` have similar names, but are actually distinct types
+note: `semio_framework_core::ActorId` is defined in crate `protocol_core`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:609:1
+     |
+ 609 | pub struct ActorId(pub String);
+     | ^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::ActorId` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:609:1
+     |
+ 609 | pub struct ActorId(pub String);
+     | ^^^^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:1262:68
+     |
+1262 |                 timestamp: operation.timestamp().unwrap_or_else(|| HybridLogicalTimestamp::new(0, now_ms())),
+     |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `os_spr::core::HybridLogicalTimestamp`, found `HybridLogicalTimestamp`
+     |
+     = note: `HybridLogicalTimestamp` and `os_spr::core::HybridLogicalTimestamp` have similar names, but are actually distinct types
+note: `HybridLogicalTimestamp` is defined in crate `protocol_core`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:646:1
+     |
+ 646 | pub struct HybridLogicalTimestamp {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: `os_spr::core::HybridLogicalTimestamp` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🫀️core/🦀️component.rs:646:1
+     |
+ 646 | pub struct HybridLogicalTimestamp {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0277]: the trait bound `Operation: protocol_command::Operation<P>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:1266:55
+     |
+1266 |             *projection = apply_operation(projection, operation);
+     |                           ---------------             ^^^^^^^^^ the trait `protocol_command::Operation<P>` is not implemented for `Operation`
+     |                           |
+     |                           required by a bound introduced by this call
+     |
+     = note: `Operation` implements similarly named trait `command::Operation`, but not `protocol_command::Operation<P>`
+note: required by a bound in `vcs::apply_operation`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/📦️lib.rs:241:16
+     |
+ 239 | pub fn apply_operation<P, Operation>(projection: &P, operation: &Operation) -> P
+     |        --------------- required by a bound in this function
+ 240 | where
+ 241 |     Operation: crate::Operation<P>,
+     |                ^^^^^^^^^^^^^^^^^^^ required by this bound in `apply_operation`
+help: consider further restricting type parameter `Operation` with trait `Operation`
+     |
+1218 |     Operation: OpText + self::Operation<P> + protocol_command::Operation<P>,
+     |                                            ++++++++++++++++++++++++++++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:1324:90
+     |
+1324 | ...DocumentVcs { initial_projection, edits, changes, checkpoints, alternatives }, backbone: None, active_alternative_id, cursor: c...
+     |                                      ^^^^^ expected `Vec<Edit<_>>`, found `Vec<Edit<Operation>>`
+     |
+     = note: `command::Edit<Operation>` and `protocol_command::Edit<_>` have similar names, but are actually distinct types
+note: `command::Edit<Operation>` is defined in the current crate
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+note: `protocol_command::Edit<_>` is defined in crate `protocol_command`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:165:1
+     |
+ 165 | pub struct Edit<Op> {
+     | ^^^^^^^^^^^^^^^^^^^
+
+error[E0277]: the trait bound `Operation: protocol_command::Operation<P>` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🏪️store/🦀️component.rs:1337:55
+     |
+1337 |                     folded = apply_operation(&folded, operation);
+     |                              ---------------          ^^^^^^^^^ the trait `protocol_command::Operation<P>` is not implemented for `Operation`
+     |                              |
+     |                              required by a bound introduced by this call
+     |
+     = note: `Operation` implements similarly named trait `command::Operation`, but not `protocol_command::Operation<P>`
+note: required by a bound in `vcs::apply_operation`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust/📦️lib.rs:241:16
+     |
+ 239 | pub fn apply_operation<P, Operation>(projection: &P, operation: &Operation) -> P
+     |        --------------- required by a bound in this function
+ 240 | where
+ 241 |     Operation: crate::Operation<P>,
+     |                ^^^^^^^^^^^^^^^^^^^ required by this bound in `apply_operation`
+help: consider further restricting type parameter `Operation` with trait `Operation`
+     |
+1218 |     Operation: OpText + self::Operation<P> + protocol_command::Operation<P>,
+     |                                            ++++++++++++++++++++++++++++++++
+
+warning: unused variable: `len`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:1083:21
+     |
+1083 |                 let len = end_j - i;
+     |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+Some errors have detailed explanations: E0271, E0277, E0308, E0425, E0433.
+For more information about an error, try `rustc --explain E0271`.
+warning: `semio-framework-os-kernel` (lib) generated 25 warnings
+error: could not compile `semio-framework-os-kernel` (lib) due to 61 previous errors; 25 warnings emitted

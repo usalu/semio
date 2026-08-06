@@ -1,0 +1,87 @@
+     Locking 1 package to latest compatible version
+      Adding semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: unused variable: `len`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:1083:21
+     |
+1083 |                 let len = end_j - i;
+     |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-dsl-core` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os-kernel-dsl-core` to apply 1 suggestion)
+warning: function `print_edge_label` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust/../../../🖋️notation/⚡️implementations/🦀️rust/📦️lib.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-dsl-notation` (lib) generated 1 warning
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+error[E0432]: unresolved imports `ui_wgpu::ActionDescriptor`, `ui_wgpu::Locale`, `ui_wgpu::LocalizedLabel`, `ui_wgpu::NamedLayout`, `ui_wgpu::SurfaceKind`, `ui_wgpu::Terminology`, `ui_wgpu::WindowLayout`, `ui_wgpu::WindowOptions`
+ --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/../../🧩️ui/🦀️component.rs:8:15
+  |
+8 | use ui_wgpu::{ActionDescriptor, Locale, LocalizedLabel, NamedLayout, SurfaceKind, Terminology, WindowLayout, WindowOptions};
+  |               ^^^^^^^^^^^^^^^^  ^^^^^^  ^^^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^^ no `WindowOptions` in the root
+  |               |                 |       |               |            |            |            |
+  |               |                 |       |               |            |            |            no `WindowLayout` in the root
+  |               |                 |       |               |            |            no `Terminology` in the root
+  |               |                 |       |               |            no `SurfaceKind` in the root
+  |               |                 |       |               no `NamedLayout` in the root
+  |               |                 |       no `LocalizedLabel` in the root
+  |               |                 no `Locale` in the root
+  |               no `ActionDescriptor` in the root
+  |
+  = help: consider importing this struct instead:
+          ui_wgpu::wgpu::ActionDescriptor
+  = help: consider importing one of these enums instead:
+          crate::Locale
+          ui_wgpu::wgpu::Locale
+  = help: consider importing this struct instead:
+          ui_wgpu::wgpu::LocalizedLabel
+  = help: consider importing this struct instead:
+          ui_wgpu::wgpu::NamedLayout
+  = help: consider importing this enum instead:
+          ui_wgpu::wgpu::SurfaceKind
+  = help: consider importing one of these enums instead:
+          crate::Terminology
+          ui_wgpu::wgpu::Terminology
+  = help: consider importing this struct instead:
+          ui_wgpu::wgpu::WindowLayout
+  = help: consider importing this struct instead:
+          ui_wgpu::wgpu::WindowOptions
+
+error[E0432]: unresolved import `ui_wgpu::UiNode`
+ --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/../../🧩️ui/🧠️kernel/🦀️component.rs:6:5
+  |
+6 | use ui_wgpu::UiNode;
+  |     ^^^^^^^^^------
+  |              |
+  |              no `UiNode` in the root
+  |
+help: consider importing this enum instead
+  |
+6 | use ui_wgpu::wgpu::UiNode;
+  |              ++++++
+
+error[E0425]: cannot find type `UtilityCategory` in crate `ui_wgpu`
+   --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/../../🧩️ui/🦀️component.rs:599:35
+    |
+599 |     pub category: Option<ui_wgpu::UtilityCategory>,
+    |                                   ^^^^^^^^^^^^^^^ not found in `ui_wgpu`
+    |
+help: consider importing this enum
+    |
+  6 + use ui_wgpu::wgpu::UtilityCategory;
+    |
+help: if you import `UtilityCategory`, refer to it directly
+    |
+599 -     pub category: Option<ui_wgpu::UtilityCategory>,
+599 +     pub category: Option<UtilityCategory>,
+    |
+
+Some errors have detailed explanations: E0425, E0432.
+For more information about an error, try `rustc --explain E0425`.
+error: could not compile `semio-framework-core` (lib) due to 3 previous errors

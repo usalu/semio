@@ -14,8 +14,7 @@ import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, f
 import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
 import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { surfaceClass, loadingBorderClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { HostReactFlow, HostReactFlowProvider } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { HostReactFlow, HostReactFlowProvider } from "../🫀️core/🔌Ports/🟦️component.tsx";
 import { queryElement } from "../🖱️ContextMenu/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

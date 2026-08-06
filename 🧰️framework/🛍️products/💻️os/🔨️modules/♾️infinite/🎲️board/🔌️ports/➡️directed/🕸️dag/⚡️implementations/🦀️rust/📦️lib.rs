@@ -2332,12 +2332,12 @@ impl DagHost {
         Some(WorldBox { min_x: union.min_x - pad, min_y: union.min_y - pad, max_x: union.max_x + pad, max_y: union.max_y + pad })
     }
 
-    /// 🗺️ Thin wrapper over `ui_wgpu::minimap::content_fully_visible` — pure layout math relocated there
+    /// 🗺️ Thin wrapper over `ui_wgpu::wgpu::minimap::content_fully_visible` — pure layout math relocated there
     /// (see `.🦑️repo/🎫️tickets/26/08/05/FRAMEWORK-BUILDER-PASSTHROUGHS-APP-COMMANDS-MACRO-WIDGET-EXTRACTION`).
     fn minimap_camera_fully_shows_content(&self, content: &WorldBox, viewport_w: u32, viewport_h: u32) -> bool {
         let cam = &self.fixture.camera;
-        ui_wgpu::minimap::content_fully_visible(
-            &ui_wgpu::minimap::MinimapContentBounds { min_x: content.min_x, min_y: content.min_y, max_x: content.max_x, max_y: content.max_y },
+        ui_wgpu::wgpu::minimap::content_fully_visible(
+            &ui_wgpu::wgpu::minimap::MinimapContentBounds { min_x: content.min_x, min_y: content.min_y, max_x: content.max_x, max_y: content.max_y },
             viewport_w,
             viewport_h,
             cam.x,
@@ -2347,7 +2347,7 @@ impl DagHost {
         )
     }
 
-    /// 🗺️ Thin wrapper over `ui_wgpu::minimap::layout` — see `minimap_camera_fully_shows_content` above.
+    /// 🗺️ Thin wrapper over `ui_wgpu::wgpu::minimap::layout` — see `minimap_camera_fully_shows_content` above.
     fn minimap_widget_layout(&self, viewport_w: u32, viewport_h: u32) -> Option<MinimapWidgetLayout> {
         if !self.minimap_widget_visible {
             return None;
@@ -2361,8 +2361,8 @@ impl DagHost {
         let margin = ui_styling::metrics::dag::MINIMAP_WIDGET_MARGIN;
         let ratio = ui_styling::metrics::dag::MINIMAP_WIDGET_MAX_CONTENT_RATIO;
         let cam = &self.fixture.camera;
-        let layout = ui_wgpu::minimap::layout(
-            &ui_wgpu::minimap::MinimapContentBounds { min_x: content.min_x, min_y: content.min_y, max_x: content.max_x, max_y: content.max_y },
+        let layout = ui_wgpu::wgpu::minimap::layout(
+            &ui_wgpu::wgpu::minimap::MinimapContentBounds { min_x: content.min_x, min_y: content.min_y, max_x: content.max_x, max_y: content.max_y },
             viewport_w,
             viewport_h,
             cam.x,
@@ -2376,14 +2376,14 @@ impl DagHost {
         Some(MinimapWidgetLayout { panel: layout.panel, world_min_x: layout.world_min_x, world_min_y: layout.world_min_y, scale: layout.scale, map_origin_x: layout.map_origin_x, map_origin_y: layout.map_origin_y, viewport: layout.viewport })
     }
 
-    /// 🗺️ Thin wrapper over `ui_wgpu::minimap::screen_to_world` — see `minimap_camera_fully_shows_content` above.
+    /// 🗺️ Thin wrapper over `ui_wgpu::wgpu::minimap::screen_to_world` — see `minimap_camera_fully_shows_content` above.
     fn minimap_widget_screen_to_world(&self, layout: &MinimapWidgetLayout, sx: f64, sy: f64) -> (f64, f64) {
-        ui_wgpu::minimap::screen_to_world(layout.map_origin_x, layout.map_origin_y, layout.world_min_x, layout.world_min_y, layout.scale, sx, sy)
+        ui_wgpu::wgpu::minimap::screen_to_world(layout.map_origin_x, layout.map_origin_y, layout.world_min_x, layout.world_min_y, layout.scale, sx, sy)
     }
 
-    /// 🗺️ Thin wrapper over `ui_wgpu::minimap::point_in_rect` — see `minimap_camera_fully_shows_content` above.
+    /// 🗺️ Thin wrapper over `ui_wgpu::wgpu::minimap::point_in_rect` — see `minimap_camera_fully_shows_content` above.
     fn minimap_widget_point_in_rect(rect: (f64, f64, f64, f64), sx: f64, sy: f64) -> bool {
-        ui_wgpu::minimap::point_in_rect(rect, sx, sy)
+        ui_wgpu::wgpu::minimap::point_in_rect(rect, sx, sy)
     }
 
     fn minimap_widget_pointer_hit(&self, sx: f64, sy: f64) -> Option<(MinimapWidgetLayout, bool)> {

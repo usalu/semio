@@ -1,0 +1,47 @@
+cargo-features = ["trim-paths"]
+
+[package]
+name = "semio-framework-os-kernel-store"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Local-first, non-blocking, client-side, in-memory document store — DocumentStore/Backbone/BlobStore/Studio over vcs's version-graph algebra"
+
+
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[lib]
+name = "store"
+crate-type = ["rlib", "cdylib"]
+path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"
+dsl_core = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-core" }
+dsl = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+pack = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-pack" }
+semio-framework-core = { path = "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/framework-core", package = "semio-framework-core" }
+protocol = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+semio_format = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-semio" }
+vcs = { path = "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/vcs", package = "semio-framework-os-kernel-vcs" }
+blake3 = "1"
+base64 = "0.22.1"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+js-sys = "0.3.83"
+serde-wasm-bindgen = "0.6.5"
+wasm-bindgen = "0.2.106"
+wasm-bindgen-futures = "0.4.71"
+web-sys = { version = "0.3.83", features = ["Window", "Storage"] }
+
+[dev-dependencies]
+tempfile = "3.20.0"
+
+[workspace]

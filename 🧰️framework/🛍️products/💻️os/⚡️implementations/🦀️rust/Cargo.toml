@@ -22,7 +22,7 @@ path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implemen
 [dependencies]
 semio-framework-core = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", package = "semio-framework-plugin" }
-ui_wgpu = { path = "../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu", package = "semio-framework-ui-wgpu" }
+ui_wgpu = {path = "../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
 semio-s-3d = { path = "../../../../../✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 vcs = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
 store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }

@@ -66,7 +66,7 @@ pub fn render(document: &Procedural3dDocument, config: &Procedural3dConfig, sess
     build_world_3d_scene(
         PROCEDURAL_3D_PLAY_SURFACE_PREVIEW,
         PROCEDURAL_3D_PLAY_APP_ID,
-        ui_wgpu::World3dScene { status_json: preview_scene_status_json(session, preview_status), ..world3d_scene(preview_camera_json(config), meshes_json, instances_json, preview_selection_json(config, active_utility), &sun) },
+        ui_wgpu::wgpu::World3dScene { status_json: preview_scene_status_json(session, preview_status), ..world3d_scene(preview_camera_json(config), meshes_json, instances_json, preview_selection_json(config, active_utility), &sun) },
     )
 }
 //#endregion 🔖️Render

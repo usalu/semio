@@ -114,43 +114,43 @@ pub mod shell;
 pub mod engine;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/Select/🧊️component.rs"]
+#[path = "../../../../🧱️elements/☑️Select/🧊️component.rs"]
 mod select;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/Button/🧊️component.rs"]
+#[path = "../../../../🧱️elements/🔘Button/🧊️component.rs"]
 mod button;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/Input/🧊️component.rs"]
+#[path = "../../../../🧱️elements/✏️Input/🧊️component.rs"]
 mod input_element;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/Toggle/🧊️component.rs"]
+#[path = "../../../../🧱️elements/🎚️Toggle/🧊️component.rs"]
 mod toggle;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/KeyValue/🧊️component.rs"]
+#[path = "../../../../🧱️elements/🔑KeyValue/🧊️component.rs"]
 mod key_value;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/Slider/🧊️component.rs"]
+#[path = "../../../../🧱️elements/🎚️Slider/🧊️component.rs"]
 mod slider;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/Stepper/🧊️component.rs"]
+#[path = "../../../../🧱️elements/🪜Stepper/🧊️component.rs"]
 mod stepper;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/Ring/🧊️component.rs"]
+#[path = "../../../../🧱️elements/⭕Ring/🧊️component.rs"]
 mod ring;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/IconSelector/🧊️component.rs"]
+#[path = "../../../../🧱️elements/🔣IconSelector/🧊️component.rs"]
 mod icon_selector;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/Tree/🧊️component.rs"]
+#[path = "../../../../🧱️elements/🪵Tree/🧊️component.rs"]
 mod tree_element;
 
 #[cfg(feature = "wgpu-engine")]
@@ -188,7 +188,7 @@ pub use draw::{ear_clip_polygon, mesh_content_version, paint_selection_marquee, 
 #[cfg(feature = "wgpu-engine")]
 pub use tree::{EditState, LayoutBucket, Node, NodeFlags, NodeKey, PaintBucket, UiTree, WidgetSpec, WidgetState};
 // 🪟️🫳️🖱️ W2 wiring: `w1d-events-overlay`'s overlay/drag-drop/scroll types, previously reachable only
-// via `ui_wgpu::events::*` (the module itself is `pub`, just not curated into this flattened surface)
+// via `crate::events::*` (the module itself is `pub`, just not curated into this flattened surface)
 // — `EventRouter` itself stays `pub(crate)` (an `engine::Ui` implementation detail; drive it via
 // `Ui::dispatch_event`), but the data these `UiCommand`s/the host's own drag-ghost rendering need are
 // now part of the crate's curated public API like every other `events` type already was.

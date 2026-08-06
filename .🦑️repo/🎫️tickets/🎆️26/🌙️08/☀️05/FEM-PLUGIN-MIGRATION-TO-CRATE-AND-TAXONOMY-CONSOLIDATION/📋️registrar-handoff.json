@@ -1,0 +1,32 @@
+{
+  "owner": "✏️s/🔌️plugins/🏗️fem",
+  "ticketPath": ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION",
+  "newCrates": [
+    "semio-s-plugin-fem @ ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust"
+  ],
+  "oldMemberLines": [
+    "(already removed — 17 former …/⚡️implementations/🦀️rust fem members)"
+  ],
+  "workspaceDepRenames": [
+    "REMOVED semio-s-app-fem-2d (already absent)",
+    "REMOVED semio-s-app-fem-3d (already absent)",
+    "REMOVED semio-s-plugin-fem-core (already absent)",
+    "NO new alias for semio-s-plugin-fem"
+  ],
+  "crossDepsFlagged": [
+    "APPLIED: ✏️s/🔌️plugins/📕️norm (Cargo.toml + en1992/en1993 engines)",
+    "APPLIED: framework dsl fixture-sweep (Cargo.toml + lib.rs)"
+  ],
+  "residualsDeferred": [
+    "10 tests: dsl/pack/spr round-trips fail with store 'expected List, found Absent at 1:1'",
+    "1 test: import_media_geometry_in_adds_a_new_solid_3d material id m0 vs concrete",
+    "repo MCP unavailable — ticket_close not called; see 📌️important.md"
+  ],
+  "tests": {
+    "baseline": "222 passed across old crates; 3 UI crates failed to compile (test-baseline-before.txt)",
+    "now": "cargo check GREEN; cargo test 317 passed / 11 failed — 🧪️test-now.txt / 🧪️check-final-attempt.txt"
+  },
+  "wireProof": "🧪️wire-baseline-2d-lines.txt + 🧪️wire-baseline-3d-lines.txt",
+  "status": "owner-tree-complete; check-green; 11-test-residuals",
+  "oldImplementationsDirsRemaining": 0
+}

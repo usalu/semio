@@ -1,0 +1,122 @@
+Start all extension verify at Thu Aug  6 13:12:39 CEST 2026
+===== verify-beams =====
+--- check ---
+
+Some errors have detailed explanations: E0432, E0433.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `semio-framework-core` (lib) due to 5 previous errors
+warning: build failed, waiting for other jobs to finish...
+CHECK_OK verify-beams
+--- test ---
+3 | pub use ui_wgpu::wgpu::IconName;
+  |                  ^^^^ could not find `wgpu` in `ui_wgpu`
+
+error[E0432]: unresolved import `ui_wgpu::wgpu`
+ --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/📦️lib.rs:4:18
+  |
+4 | pub use ui_wgpu::wgpu::{Locale, Terminology};
+  |                  ^^^^ could not find `wgpu` in `ui_wgpu`
+
+error[E0432]: unresolved import `ui_wgpu::wgpu`
+ --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/../../🧩️ui/🦀️component.rs:8:14
+  |
+8 | use ui_wgpu::wgpu::{ActionDescriptor, Locale, LocalizedLabel, NamedLayout, SurfaceKind, Terminology, WindowLayout, WindowOptions};
+  |              ^^^^ could not find `wgpu` in `ui_wgpu`
+
+error[E0432]: unresolved import `ui_wgpu::wgpu`
+ --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/../../🧩️ui/🧠️kernel/🦀️component.rs:6:14
+  |
+6 | use ui_wgpu::wgpu::UiNode;
+  |              ^^^^ could not find `wgpu` in `ui_wgpu`
+
+error[E0433]: cannot find `wgpu` in `ui_wgpu`
+   --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/../../🧩️ui/🦀️component.rs:599:35
+    |
+599 |     pub category: Option<ui_wgpu::wgpu::UtilityCategory>,
+    |                                   ^^^^ could not find `wgpu` in `ui_wgpu`
+
+Some errors have detailed explanations: E0432, E0433.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `semio-framework-core` (lib) due to 5 previous errors
+TEST_OK verify-beams
+===== verify-slabs =====
+--- check ---
+    |                                   ^^^^ could not find `wgpu` in `ui_wgpu`
+
+Some errors have detailed explanations: E0432, E0433.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `semio-framework-core` (lib) due to 5 previous errors
+CHECK_OK verify-slabs
+--- test ---
+3 | pub use ui_wgpu::wgpu::IconName;
+  |                  ^^^^ could not find `wgpu` in `ui_wgpu`
+
+error[E0432]: unresolved import `ui_wgpu::wgpu`
+ --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/📦️lib.rs:4:18
+  |
+4 | pub use ui_wgpu::wgpu::{Locale, Terminology};
+  |                  ^^^^ could not find `wgpu` in `ui_wgpu`
+
+error[E0432]: unresolved import `ui_wgpu::wgpu`
+ --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/../../🧩️ui/🦀️component.rs:8:14
+  |
+8 | use ui_wgpu::wgpu::{ActionDescriptor, Locale, LocalizedLabel, NamedLayout, SurfaceKind, Terminology, WindowLayout, WindowOptions};
+  |              ^^^^ could not find `wgpu` in `ui_wgpu`
+
+error[E0432]: unresolved import `ui_wgpu::wgpu`
+ --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/../../🧩️ui/🧠️kernel/🦀️component.rs:6:14
+  |
+6 | use ui_wgpu::wgpu::UiNode;
+  |              ^^^^ could not find `wgpu` in `ui_wgpu`
+
+error[E0433]: cannot find `wgpu` in `ui_wgpu`
+   --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/../../🧩️ui/🦀️component.rs:599:35
+    |
+599 |     pub category: Option<ui_wgpu::wgpu::UtilityCategory>,
+    |                                   ^^^^ could not find `wgpu` in `ui_wgpu`
+
+Some errors have detailed explanations: E0432, E0433.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `semio-framework-core` (lib) due to 5 previous errors
+TEST_OK verify-slabs
+===== verify-windows =====
+--- check ---
+    |                                   ^^^^ could not find `wgpu` in `ui_wgpu`
+
+Some errors have detailed explanations: E0432, E0433.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `semio-framework-core` (lib) due to 5 previous errors
+CHECK_OK verify-windows
+--- test ---
+3 | pub use ui_wgpu::wgpu::IconName;
+  |                  ^^^^ could not find `wgpu` in `ui_wgpu`
+
+error[E0432]: unresolved import `ui_wgpu::wgpu`
+ --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/📦️lib.rs:4:18
+  |
+4 | pub use ui_wgpu::wgpu::{Locale, Terminology};
+  |                  ^^^^ could not find `wgpu` in `ui_wgpu`
+
+error[E0432]: unresolved import `ui_wgpu::wgpu`
+ --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/../../🧩️ui/🦀️component.rs:8:14
+  |
+8 | use ui_wgpu::wgpu::{ActionDescriptor, Locale, LocalizedLabel, NamedLayout, SurfaceKind, Terminology, WindowLayout, WindowOptions};
+  |              ^^^^ could not find `wgpu` in `ui_wgpu`
+
+error[E0432]: unresolved import `ui_wgpu::wgpu`
+ --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/../../🧩️ui/🧠️kernel/🦀️component.rs:6:14
+  |
+6 | use ui_wgpu::wgpu::UiNode;
+  |              ^^^^ could not find `wgpu` in `ui_wgpu`
+
+error[E0433]: cannot find `wgpu` in `ui_wgpu`
+   --> /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/../../🧩️ui/🦀️component.rs:599:35
+    |
+599 |     pub category: Option<ui_wgpu::wgpu::UtilityCategory>,
+    |                                   ^^^^ could not find `wgpu` in `ui_wgpu`
+
+Some errors have detailed explanations: E0432, E0433.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `semio-framework-core` (lib) due to 5 previous errors
+TEST_OK verify-windows
+All done at Thu Aug  6 13:14:22 CEST 2026

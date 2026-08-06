@@ -11,7 +11,7 @@ path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨�
 
 [dependencies]
 semio-s-3d = { path = "../../../../../../../../✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
-ui_wgpu = { path = "../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu", features = ["engine"], package = "semio-framework-ui-wgpu" }
+ui_wgpu = { path = "../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
 semio-framework-core = { path = "../../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core" }
 framework_surface_terrain = { path = "../../../../../../../🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface" }
 serde = { version = "1.0.219", features = ["derive"] }

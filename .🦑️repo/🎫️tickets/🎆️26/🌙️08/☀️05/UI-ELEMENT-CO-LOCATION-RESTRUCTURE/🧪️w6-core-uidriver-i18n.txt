@@ -1,0 +1,23 @@
+# w6-core-uidriver-i18n
+
+## Status
+UiDriver / I18n / Chrome extraction completed (agent finished despite truncated first attempt). Follow-up fixed barrel type re-exports, ClassNames leftovers, Chrome LoadingRowProps/ChromeControlHint, and double-comma syntax.
+
+## Leaves
+- 🚗️UiDriver
+- 📚️I18n
+- 🎛️Chrome (ChromeControlHint, LoadingRow, window dead-line scroll)
+- 🏷️ClassNames extended (chrome/slider/border helpers)
+
+## Metrics
+| | before | after |
+|--|--|--|
+| W3-interim files | 9 | **0** |
+| W4-interim files | 0 | 0 |
+| barrel lines | ~21876 | 20772 |
+| typecheck errors | 116 | 105 |
+
+## Notes
+- `@semio-tech/framework-core` resolution errors in UiDriver/I18n/ShellScope match other leaves (PanelTabBar/MobilePanel) — environment/alias, not unique to this extract.
+- tableRowInteractiveClass missing export is separate/pre-existing band (Table leaf).
+- nx project graph currently broken (duplicate dsl-derive projects) — typecheck via `bun ./📜️script.ts typecheck` in ui-react package.

@@ -163,11 +163,6 @@ import { Link, useNavigate } from "react-router";
 import { reactHostPort, setReactHostPort, type ReactHostPort } from "../../../../🧱️elements/🫀️core/🔌Ports/🟦️component.tsx";
 export { reactHostPort, type ReactHostPort };
 
-/** @emoji 🕸️ Host surface for diagram runtime (implemented by 🔌️Adapters). */
-export interface FlowHostPort {
-  readonly flow: typeof ReactFlow;
-  readonly provider: typeof ReactFlowProvider;
-}
 
 /** @emoji 🧊️ Host surface for three.js / R3F (implemented by 🔌️Adapters). */
 export interface ThreeHostPort {
@@ -183,16 +178,13 @@ export { sceneHostPort, type SceneHostPort };
 // #endregion 🔌️Ports
 
 // #region 🔌️PortWiring
+import { flowHostPort, setFlowHostPort, type FlowHostPort, HostReactFlow, HostReactFlowProvider } from "../../../../🧱️elements/🫀️core/🔌Ports/🟦️component.tsx";
+export { flowHostPort, type FlowHostPort, HostReactFlow, HostReactFlowProvider };
 // 🧱️core-extracted: reactHostPort's `let` binding + default value now live in
 // 🧱️elements/🫀️core/🔌Ports/🟦️component.tsx (imported above, in the 🔌️Ports region) — reassignment below
 // goes through the imported setReactHostPort() setter, since an ES import binding can't be assigned to
 // directly.
 
-/** @emoji 🔌️ Default diagram host port wired to @xyflow/react adapters. */
-export let flowHostPort: FlowHostPort = {
-  flow: ReactFlow,
-  provider: ReactFlowProvider,
-};
 
 /** @emoji 🔌️ Default R3F host port wired to fiber/drei adapters. */
 export let threeHostPort: ThreeHostPort = {
@@ -224,13 +216,13 @@ export type HostPortOverrides = Partial<{
 export function configureHostPorts(overrides: HostPortOverrides): () => void {
   const previous: HostPortOverrides = { react: reactHostPort, flow: flowHostPort, three: threeHostPort, scene: sceneHostPort, iconRender: iconRenderPort };
   if (overrides.react !== undefined) setReactHostPort(overrides.react);
-  if (overrides.flow !== undefined) flowHostPort = overrides.flow;
+  if (overrides.flow !== undefined) setFlowHostPort(overrides.flow);
   if (overrides.three !== undefined) threeHostPort = overrides.three;
   if (overrides.scene !== undefined) setSceneHostPort(overrides.scene);
   if (overrides.iconRender !== undefined) iconRenderPort = overrides.iconRender;
   return () => {
     if (overrides.react !== undefined) setReactHostPort(previous.react ?? defaultReactHostPort);
-    if (overrides.flow !== undefined) flowHostPort = previous.flow ?? defaultFlowHostPort;
+    if (overrides.flow !== undefined) setFlowHostPort(previous.flow ?? defaultFlowHostPort);
     if (overrides.three !== undefined) threeHostPort = previous.three ?? defaultThreeHostPort;
     if (overrides.scene !== undefined) setSceneHostPort(previous.scene ?? defaultSceneHostPort);
     if (overrides.iconRender !== undefined) iconRenderPort = previous.iconRender ?? defaultIconRenderPort;
@@ -609,9 +601,6 @@ export let referenceMediaPort: ReferenceMediaPort = {
 // #endregion 🖼️ReferenceMedia
 
 // #region 🔌️PortWiringAliases
-/** @emoji 🔌️ JSX aliases for diagram / R3F hosts (use instead of adapter imports in domain JSX). */
-export const HostReactFlow = flowHostPort.flow;
-export const HostReactFlowProvider = flowHostPort.provider;
 export const HostThreeCanvas = threeHostPort.canvas;
 export const HostSceneCanvas = sceneHostPort.fiber.canvas;
 export type { ThreeEvent };
@@ -621,19 +610,6 @@ export type { ThreeEvent };
 
 
 
-
-
-
-/** @emoji 🪟️ Pane chrome toggle — same layout as {@link panelAnchorTabButtonClass}: leading semantic icon, label, trailing {@link DragHandle}. */
-export const windowPaneChromeToggleClass = cn(
-  modeDockTabClassName,
-  "relative z-30 box-border min-h-medium shrink-0 border-0 bg-transparent",
-  "outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-active-base",
-  "disabled:pointer-events-none disabled:opacity-50",
-);
-
-/** @emoji 🪟️ Default mode-dock tab label — element gray; emphasize on hover/active only. */
-export const modeDockTabClassName = cn(chromeControlTabItemClass, "group max-w-[12rem] shrink-0 cursor-pointer items-center px-single select-none transition-colors");
 
 
 
@@ -658,38 +634,9 @@ export const dropZoneReadyFillClass = "bg-[var(--accent-secondary)]";
 /** @emoji Combined passive drop-zone treatment (fill + emphasized text/icons). */
 export const dropZoneReadyClass = cn(dropZoneReadyFillClass, dropZoneReadyTextClass);
 
-/** @emoji 🌀️ Maps shell chrome {@link UiStatus} to the shared border ring utilities. */
-export function chromeStatusBorderClass(status: UiStatus | undefined, active = false): string {
-  if (status === "loading") return loadingBorderStateClass(true, active);
-  if (status === "waiting") return waitingBorderStateClass(true, active);
-  return "";
-}
-
 /** @emoji 🎨️ Active/on: primary fill + active border + emphasized content (never the transient hover fill). */
 
-/** @emoji 🌀️ Waiting ring matching the element's current state color; empty when not waiting. */
-export function waitingBorderStateClass(waiting: boolean, active = false): string {
-  return waiting ? (active ? waitingBorderActiveClass : waitingBorderClass) : "";
-}
-
 /** @emoji 🌀️ Maps shell chrome {@link UiStatus} to the shared border ring utilities. */
-
-/** @emoji 🌀️ Loading ring matching the element's current state color; empty when not loading. */
-export function loadingBorderStateClass(loading: boolean, active = false): string {
-  return loading ? (active ? loadingBorderActiveClass : loadingBorderClass) : "";
-}
-
-
-
-
-
-
-
-
-
-
-
-
 
 // 🧱️core: cn/twMergeUi extracted to 🧱️elements/🫀️core/🏷️ClassNames/🟦️component.tsx — ActionGroup/Toggle call
 import { cn } from "../../../../🧱️elements/🫀️core/🏷️ClassNames/🟦️component.tsx";
@@ -720,6 +667,26 @@ import {
   menuListItemClassName,
   shellFloorPaints,
   shellFloorFillClass,
+  waitingBorderStateClass,
+  loadingBorderStateClass,
+  chromeStatusBorderClass,
+  chromeControlItemBaseClass,
+  chromeControlItemClass,
+  chromeControlTabItemClass,
+  modeDockTabClassName,
+  windowPaneChromeToggleClass,
+  loadingBorderElementClass,
+  waitingBorderElementClass,
+  chromeControlGroupShellClass,
+  chromeControlGroupClass,
+  chromeControlItemOnClass,
+  chromeControlTabActiveClass,
+  sliderRangeClassName,
+  sliderReadyClassName,
+  sliderThumbClassName,
+  sliderValueClassName,
+  tableRowInteractiveClass,
+  tableRowSelectedClass
 } from "../../../../🧱️elements/🫀️core/🏷️ClassNames/🟦️component.tsx";
 export {
   waitingBorderClass,
@@ -747,6 +714,26 @@ export {
   menuListItemClassName,
   shellFloorPaints,
   shellFloorFillClass,
+  waitingBorderStateClass,
+  loadingBorderStateClass,
+  chromeStatusBorderClass,
+  chromeControlItemBaseClass,
+  chromeControlItemClass,
+  chromeControlTabItemClass,
+  modeDockTabClassName,
+  windowPaneChromeToggleClass,
+  loadingBorderElementClass,
+  waitingBorderElementClass,
+  chromeControlGroupShellClass,
+  chromeControlGroupClass,
+  chromeControlItemOnClass,
+  chromeControlTabActiveClass,
+  sliderRangeClassName,
+  sliderReadyClassName,
+  sliderThumbClassName,
+  sliderValueClassName,
+  tableRowInteractiveClass,
+  tableRowSelectedClass
 };
 // cn(...) at module top level, which requires a non-circular import (see that file's header comment for
 // why the barrel definition caused a real bug).
@@ -1106,23 +1093,7 @@ export { resolveIconSizePx, decodeIcon, encodeIcon, classifyIconSelectorMode, re
 
 
 
-/** @emoji 🎨️ Interactive hover: normal-border fill + emphasized content. */
 
-/** @emoji 📏️ Active stroke paired with {@link interactiveActiveFillClass}. */
-
-/** @emoji 🌀️ Clockwise spinning + pulsing loading ring in the element's normal border color. */
-
-/** @emoji 🌀️ Loading ring recolored to the active stroke; pair with selected/active elements. */
-
-/** @emoji 🌀️ Loading ring in the level-aware element border color. */
-export const loadingBorderElementClass = cn(loadingBorderClass, "border-loading-element");
-
-/** @emoji 🌀️ Loading ring matching the element's current state color; empty when not loading. */
-
-/** @emoji 🌀️ Waiting ring recolored to the active stroke; pair with selected/active elements. */
-
-/** @emoji 🌀️ Waiting ring in the level-aware element border color. */
-export const waitingBorderElementClass = cn(waitingBorderClass, "border-waiting-element");
 
 /** @emoji 🌀️ Waiting ring matching the element's current state color; empty when not waiting. */
 
@@ -1134,79 +1105,11 @@ export { createDOMEventBinding, getElementById, queryElement, ContextMenu, conte
 // #endregion 🖱️ContextMenu
 
 
-// #region 🚗️UiDriver
-/** @emoji 🏷️ Inline caption policy: full icon+label chrome vs icons only. */
-export type UiDriverLabels = "full" | "icons";
-/** @emoji 🎚️ Which member of a `{normal, beginner}` label pair resolves. */
-export type UiDriverLabelTier = "beginner" | "normal";
-/** @emoji 🫳️ Drag affordance: dedicated grip handle vs whole-element draggable surface. */
-export type UiDriverDrag = "handle" | "surface";
-/** @emoji 🫥️ Chrome/gumball visibility: always painted vs revealed only while the cursor is in the region. */
-export type UiDriverReveal = "always" | "hover";
-/** @emoji 🎙️ Tooltip richness: full (label + manual/tutorial links + hotkey), minimal (label + hotkey), or none. */
-export type UiDriverTooltips = "full" | "minimal" | "none";
-/** @emoji ⌨️ Hotkey visibility: inline kbd badge on controls, tooltip-only, or hidden. */
-export type UiDriverHotkeys = "inline" | "tooltip" | "none";
-
-/** @emoji 🚗️ A named configuration bundle controlling how the UI presents itself. */
-export interface UiDriver {
-  readonly id: string;
-  readonly label: string;
-  readonly labels: UiDriverLabels;
-  readonly labelTier: UiDriverLabelTier;
-  readonly drag: UiDriverDrag;
-  readonly chrome: UiDriverReveal;
-  readonly gumball: UiDriverReveal;
-  readonly tooltips: UiDriverTooltips;
-  readonly hotkeys: UiDriverHotkeys;
-}
-
-/** @emoji 🚗️ Every affordance visible: drag handles, full labels, chrome and gumball always painted, rich tooltips. */
-export const DEFAULT_UI_DRIVER: UiDriver = { id: "default", label: "Default", labels: "full", labelTier: "normal", drag: "handle", chrome: "always", gumball: "always", tooltips: "full", hotkeys: "inline" };
-/** @emoji 🚗️ Assumes the user knows the UI: icon-only chrome that reveals on hover, whole-surface drag, no tooltips. */
-export const COMPACT_UI_DRIVER: UiDriver = { id: "compact", label: "Compact", labels: "icons", labelTier: "normal", drag: "surface", chrome: "hover", gumball: "hover", tooltips: "none", hotkeys: "none" };
-
-/** @emoji 🚗️ The built-in drivers shipped with the shell. */
-export function builtinUiDrivers(): readonly UiDriver[] {
-  return [DEFAULT_UI_DRIVER, COMPACT_UI_DRIVER];
-}
-
-function requireUiDriverAxis<T extends string>(value: unknown, path: string, allowed: readonly T[]): T {
-  if (typeof value === "string" && (allowed as readonly string[]).includes(value)) return value as T;
-  throw new Error(`driver.${path} must be one of ${allowed.join(", ")}`);
-}
-
-/** @emoji 🔎️ Strictly parses and validates a `UiDriver` (unknown axis values throw). */
-export function parseUiDriver(json: unknown): UiDriver {
-  if (typeof json !== "object" || json === null) throw new Error("driver must be an object");
-  const obj = json as Record<string, unknown>;
-  if (typeof obj.id !== "string") throw new Error("driver.id must be a string");
-  if (typeof obj.label !== "string") throw new Error("driver.label must be a string");
-  return {
-    id: obj.id,
-    label: obj.label,
-    labels: requireUiDriverAxis(obj.labels, "labels", ["full", "icons"] as const),
-    labelTier: requireUiDriverAxis(obj.labelTier, "labelTier", ["beginner", "normal"] as const),
-    drag: requireUiDriverAxis(obj.drag, "drag", ["handle", "surface"] as const),
-    chrome: requireUiDriverAxis(obj.chrome, "chrome", ["always", "hover"] as const),
-    gumball: requireUiDriverAxis(obj.gumball, "gumball", ["always", "hover"] as const),
-    tooltips: requireUiDriverAxis(obj.tooltips, "tooltips", ["full", "minimal", "none"] as const),
-    hotkeys: requireUiDriverAxis(obj.hotkeys, "hotkeys", ["inline", "tooltip", "none"] as const),
-  };
-}
-
-/** @emoji 💾️ Serializes a `UiDriver` to canonical JSON. */
-export function serializeUiDriver(driver: UiDriver): string {
-  return JSON.stringify(driver, null, 2);
-}
-
-/** @emoji 🚗️ Resolves a driver id against custom drivers, falling back to a builtin, then {@link DEFAULT_UI_DRIVER}. */
-export function resolveUiDriver(id: string, custom: Record<string, UiDriver>): UiDriver {
-  if (custom[id]) return custom[id];
-  const builtin = builtinUiDrivers().find((driver) => driver.id === id);
-  return builtin ?? DEFAULT_UI_DRIVER;
-}
-// #endregion 🚗️UiDriver
+// #region UiDriver
+import { type UiDriverLabels, type UiDriverLabelTier, type UiDriverDrag, type UiDriverReveal, type UiDriverTooltips, type UiDriverHotkeys, type UiDriver, DEFAULT_UI_DRIVER, COMPACT_UI_DRIVER, builtinUiDrivers, parseUiDriver, serializeUiDriver, resolveUiDriver, UI_CHROME_DRIVER_STORAGE_KEY, readStoredUiDriverId, writeStoredUiDriverId, UI_CUSTOM_DRIVERS_STORAGE_KEY, readStoredUiCustomDrivers, writeStoredUiCustomDrivers, readStoredUiDriver, setUiDriverProvider, activeUiDriver, useUiDriver, UiDriverProvider, useUiDriverDragSurface, useNativeDragArm, useUiDriverTooltips, setControlLabelIdResolver, resolveControlLabelId, panelKindFromPanelToggleControlId, isInternalChromeControlId, humanizeControlSegment, humanizeControlId, humanizeEngagementStepId } from "../../../../🧱️elements/🫀️core/🚗️UiDriver/🟦️component.tsx";
+export type { UiDriverLabels, UiDriverLabelTier, UiDriverDrag, UiDriverReveal, UiDriverTooltips, UiDriverHotkeys, UiDriver };
+export { DEFAULT_UI_DRIVER, COMPACT_UI_DRIVER, builtinUiDrivers, parseUiDriver, serializeUiDriver, resolveUiDriver, UI_CHROME_DRIVER_STORAGE_KEY, readStoredUiDriverId, writeStoredUiDriverId, UI_CUSTOM_DRIVERS_STORAGE_KEY, readStoredUiCustomDrivers, writeStoredUiCustomDrivers, readStoredUiDriver, setUiDriverProvider, activeUiDriver, useUiDriver, UiDriverProvider, useUiDriverDragSurface, useNativeDragArm, useUiDriverTooltips, setControlLabelIdResolver, resolveControlLabelId, panelKindFromPanelToggleControlId, isInternalChromeControlId, humanizeControlSegment, humanizeControlId, humanizeEngagementStepId };
+// #endregion UiDriver
 
 // #region ⌨️UiKeybindings
 /** @emoji ⌨️ Splits a declared `keys` binding (comma-separated chord alternatives) into individual chords. */
@@ -1791,51 +1694,6 @@ export function resetElementsSurfaceChromeForTests(): void {
 }
 
 // #region 🎛️UiChromePrefs
-/** @emoji 🚗️ Storage key for the active driver id (builtin or `custom.<slug>`). */
-export const UI_CHROME_DRIVER_STORAGE_KEY = "ui.chrome.driver";
-
-/** @emoji 🚗️ Reads the persisted active driver id from the given shell's storage, defaulting to `"default"`. */
-export function readStoredUiDriverId(storage: StoragePort): string {
-  return storage.get(UI_CHROME_DRIVER_STORAGE_KEY) || DEFAULT_UI_DRIVER.id;
-}
-
-/** @emoji 🚗️ Persists the active driver id to the given shell's storage. */
-export function writeStoredUiDriverId(storage: StoragePort, id: string): void {
-  storage.set(UI_CHROME_DRIVER_STORAGE_KEY, id);
-}
-
-/** @emoji 🚗️ Storage key for the user's saved custom drivers, keyed by driver id. */
-export const UI_CUSTOM_DRIVERS_STORAGE_KEY = "ui.drivers.custom";
-
-/** @emoji 🚗️ Reads the user's saved custom drivers from the given shell's storage; discards any entry that fails to parse. */
-export function readStoredUiCustomDrivers(storage: StoragePort): Record<string, UiDriver> {
-  const raw = storage.get(UI_CUSTOM_DRIVERS_STORAGE_KEY);
-  if (!raw) return {};
-  try {
-    const parsed = JSON.parse(raw) as Record<string, unknown>;
-    const out: Record<string, UiDriver> = {};
-    for (const [id, value] of Object.entries(parsed)) {
-      try {
-        out[id] = parseUiDriver(value);
-      } catch {
-        /* drop invalid saved driver */
-      }
-    }
-    return out;
-  } catch {
-    return {};
-  }
-}
-
-/** @emoji 🚗️ Persists the user's saved custom drivers to the given shell's storage. */
-export function writeStoredUiCustomDrivers(storage: StoragePort, drivers: Record<string, UiDriver>): void {
-  storage.set(UI_CUSTOM_DRIVERS_STORAGE_KEY, JSON.stringify(drivers));
-}
-
-/** @emoji 🚗️ Resolves the active driver from the given shell's storage (non-React fallback for non-hook consumers). */
-export function readStoredUiDriver(storage: StoragePort): UiDriver {
-  return resolveUiDriver(readStoredUiDriverId(storage), readStoredUiCustomDrivers(storage));
-}
 
 /** @emoji 🌓️ Storage key for surface appearance (system/light/dark). */
 export const UI_CHROME_APPEARANCE_STORAGE_KEY = "ui.chrome.appearance";
@@ -2014,150 +1872,8 @@ export function writeStoredIntroductionSeen(appId: string): void {
   localStorage.setItem(`${UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}${appId}`, "true");
 }
 
-const UiDriverContext = reactHostPort.createContext<UiDriver | null>(null);
-
-let _uiDriverProvider: (() => UiDriver) | null = null;
-
-/** @emoji 🚗️ Registers the active driver resolver for non-React consumers (e.g. {@link resolveTranslationLabel}). */
-export function setUiDriverProvider(fn: () => UiDriver): void {
-  _uiDriverProvider = fn;
-}
-
-/** @emoji 🚗️ Resolves the active driver outside React render context. */
-export function activeUiDriver(): UiDriver {
-  return _uiDriverProvider ? _uiDriverProvider() : readStoredUiDriver(createBrowserStoragePort());
-}
-
-/** @emoji 🚗️ The active driver controlling labels, drag affordances, chrome/gumball reveal, and tooltips. */
-export function useUiDriver(): UiDriver {
-  const contextValue = reactHostPort.useContext(UiDriverContext);
-  if (contextValue !== null) return contextValue;
-  return activeUiDriver();
-}
-
-/** @emoji 🚗️ Supplies driver state to a subtree, overriding the ambient/stored driver. */
-export function UiDriverProvider({ driver, children }: { readonly driver: UiDriver; readonly children: React.ReactNode }): React.ReactElement {
-  reactHostPort.useEffect(() => {
-    setUiDriverProvider(() => driver);
-    return () => setUiDriverProvider(() => readStoredUiDriver(createBrowserStoragePort()));
-  }, [driver]);
-  return <UiDriverContext.Provider value={driver}>{children}</UiDriverContext.Provider>;
-}
-
-/** @emoji 🫳️ True when the driver wants whole-surface dragging (no dedicated grip handle). */
-export function useUiDriverDragSurface(): boolean {
-  return useUiDriver().drag === "surface";
-}
-
-/** @emoji 🤝 Arm native HTML5 `draggable` only while a drag handle is pressed. */
-export function useNativeDragArm(): { readonly armed: boolean; readonly arm: () => void } {
-  const [armed, setArmed] = reactHostPort.useState(false);
-  const arm = reactHostPort.useCallback(() => {
-    setArmed(true);
-    window.addEventListener("pointerup", () => setArmed(false), { once: true });
-  }, []);
-  return { armed, arm };
-}
-
-
-/** @emoji 🎙️ The active driver's tooltip richness. */
-export function useUiDriverTooltips(): UiDriverTooltips {
-  return useUiDriver().tooltips;
-}
-
-let _controlLabelIdResolver: (id: string) => string = (id) => id;
-
-/** @emoji 🏷️ Registers a product-specific mapper from shell control ids (`ui.*`) to i18n keys. */
-export function setControlLabelIdResolver(resolver: (id: string) => string): void {
-  _controlLabelIdResolver = resolver;
-}
-
-/** @emoji 🏷️ Maps shell control ids to i18n keys for inline labels (identity until a product resolver is set). */
-export function resolveControlLabelId(id: string): string {
-  if (id.startsWith("ui.nav.")) {
-    const segment = id.slice("ui.nav.".length);
-    if (segment === "back" || segment === "forward" || segment === "up") {
-      return _controlLabelIdResolver(`ui.nav.${segment}`);
-    }
-  }
-  if (id === "ui.search.toggle") {
-    return _controlLabelIdResolver("ui.search.toggle");
-  }
-  if (id === "ui.find.toggle") {
-    return _controlLabelIdResolver("ui.find.toggle");
-  }
-  if (id === "ui.fullscreen.toggle") {
-    return _controlLabelIdResolver("ui.fullscreen.toggle");
-  }
-  if (id === "ui.mobilePanel.toggle") {
-    return _controlLabelIdResolver("ui.mobilePanel.toggle");
-  }
-  if (id.startsWith("ui.panelToggle.")) {
-    return _controlLabelIdResolver(`ui.panelToggle.${id.slice("ui.panelToggle.".length)}`);
-  }
-  if (id.startsWith("ui.ribbon.group.")) {
-    return _controlLabelIdResolver(`ui.ribbon.parent.${id.slice("ui.ribbon.group.".length)}`);
-  }
-  if (id.startsWith("ui.ribbon.") && id.includes(".group.")) {
-    return _controlLabelIdResolver(`ui.ribbon.parent.${id.slice(id.lastIndexOf(".group.") + ".group.".length)}`);
-  }
-  if (id === "ui.windowSearch.suggestions") {
-    return _controlLabelIdResolver("ui.windowSearch.suggestions");
-  }
-  if (id === "ui.engagement.actions") {
-    return _controlLabelIdResolver("ui.engagement.actions");
-  }
-  if (id === "search-input" || id === "ui.windowSearch.action") {
-    return _controlLabelIdResolver("ui.windowSearch.action");
-  }
-  if (id.startsWith("playground.panel.")) {
-    return _controlLabelIdResolver(`ui.panelToggle.${id.slice("playground.panel.".length)}`);
-  }
-  return _controlLabelIdResolver(id);
-}
-
-/** @emoji 🏷️ Panel kind slug from a panel-toggle control id (`ui.panelToggle.*`, `playground.panel.*`, sketchpad navbar keys). */
-export function panelKindFromPanelToggleControlId(id: string): string | undefined {
-  if (id.startsWith("ui.panelToggle.")) return id.slice("ui.panelToggle.".length);
-  if (id.startsWith("playground.panel.")) return id.slice("playground.panel.".length);
-  if (id.startsWith("compose.sketchpad.navbar.panelToggle.")) return id.slice("compose.sketchpad.navbar.panelToggle.".length);
-  return undefined;
-}
-
-/** @emoji 🏷️ True for internal engagement/search chrome element ids that must not surface as humanized tooltips. */
-export function isInternalChromeControlId(id: string | undefined | null): boolean {
-  if (!id) return false;
-  return id.startsWith("engagement-") || id.startsWith("engagement.") || id.startsWith("search-") || id.startsWith("search.");
-}
-
-/** @emoji 🔤️ Turns a control id segment into a short title (e.g. `panelToggle` → `Panel Toggle`). */
-export function humanizeControlSegment(segment: string): string {
-  const normalized = segment
-    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-    .replace(/[._-]+/g, " ")
-    .trim();
-  if (!normalized) return segment;
-  return normalized.replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
-/** @emoji 🔤️ Human-readable caption from the last segment of a dotted control id. */
-export function humanizeControlId(id: string): string {
-  const segment = id.split(".").filter(Boolean).pop() ?? id;
-  return humanizeControlSegment(segment);
-}
-
-
-
-/** @emoji 🏷️ Native title/aria-label for chrome controls (avoids Radix tooltip `setTrigger` ref update loops). */
-export function ChromeControlHint({ id, text, children }: { readonly id?: string; readonly text?: string; readonly children: React.ReactElement }): React.ReactElement {
-  const label = useControlAccessibleLabel(id, text);
-  if (!label || !React.isValidElement(children)) return children;
-  const childProps = children.props as { readonly title?: string; readonly "aria-label"?: string };
-  return React.cloneElement(children, {
-    title: childProps.title ?? label,
-    "aria-label": childProps["aria-label"] ?? label,
-  } as Record<string, unknown>);
-}
+import { ChromeControlHint } from "../../../../🧱️elements/🫀️core/🎛️Chrome/🟦️component.tsx";
+export { ChromeControlHint };
 // #endregion 🎛️UiChromeCompact
 
 // #endregion 🌈️SurfaceChrome
@@ -2172,596 +1888,14 @@ export function ChromeControlHint({ id, text, children }: { readonly id?: string
 
 /** @emoji 🪁️ Supported UI locale codes — the single source is `@semio-tech/framework-core`'s
  * `ShellLocale`, so a brand's `locks.locale` and this chrome bundle's coverage can never drift apart. */
-export type UiLocale = ShellLocale;
-
-// #region 🎗️UiLabel
-// 🧱️core-extracted: UiLabel + uiDataLabel moved to 🧱️elements/🫀️core/🏷️UiLabel/🟦️component.tsx (same
-// module-top-level circular-import fix as reactHostPort/cn/sceneHostPort above, triggered by
-// VirtualFileSystem's top-level `uiDataLabel(...)` reads) — imported below, not redefined.
+// #region UiLabel
 import { uiDataLabel, type UiLabel } from "../../../../🧱️elements/🫀️core/🏷️UiLabel/🟦️component.tsx";
 export { uiDataLabel, type UiLabel };
-// #endregion 🎗️UiLabel
+// #endregion UiLabel
 
-/** @emoji 🪁️ Label pair resolved by the active driver's `labelTier` axis. */
-export type UiLabelPair = { readonly normal: string; readonly beginner: string };
-
-/** @emoji 🪁️ Translation leaf with optional manual and tutorial metadata. */
-export type UiLabelValue = {
-  readonly label: UiLabelPair;
-  readonly manual?: string;
-  readonly tutorial?: string;
-};
-
-/** @emoji 🪁️ Ribbon collection ids for ribbon collection toggles. */
-export type UiRibbonParentCategory =
-  | "history"
-  | "hand"
-  | "selection"
-  | "lasso"
-  | "filter"
-  | "open"
-  | "save"
-  | "transfer"
-  | "transform"
-  | "create"
-  | "view"
-  | "actions"
-  | "settings"
-  | "methods"
-  | "mode"
-  | "targets"
-  | "export"
-  | "tools"
-  | "utilities"
-  | "sync";
-
-/** @emoji 🪁️ Runtime enumeration of {@link UiRibbonParentCategory} in taxonomy order — for grouping/sorting menu rows by category at runtime. */
-export const UI_RIBBON_PARENT_CATEGORIES: readonly UiRibbonParentCategory[] = [
-  "history",
-  "hand",
-  "selection",
-  "lasso",
-  "filter",
-  "open",
-  "save",
-  "transfer",
-  "transform",
-  "create",
-  "view",
-  "actions",
-  "settings",
-  "methods",
-  "mode",
-  "targets",
-  "export",
-  "tools",
-  "utilities",
-  "sync",
-];
-
-/** @emoji 🪁️ i18n key for a ribbon collection toggle. */
-export type UiRibbonParentKey = `ui.ribbon.parent.${string}`;
-
-type UiRibbonParentEntries = { readonly [K in UiRibbonParentCategory]: UiLabelValue };
-
-type DeepUiTranslationKeys<T, Prefix extends string = ""> = T extends UiLabelValue
-  ? Prefix extends ""
-    ? never
-    : Prefix
-  : T extends string
-    ? Prefix extends ""
-      ? never
-      : Prefix
-    : T extends number | boolean | null | undefined
-      ? never
-      : T extends readonly unknown[]
-        ? never
-        : {
-            [K in keyof T & string]: DeepUiTranslationKeys<T[K], Prefix extends "" ? K : `${Prefix}.${K}`>;
-          }[keyof T & string];
-
-/** @emoji 🪁️ Domain-neutral chrome translation tree (settings, tooltip, `ui.*`). */
-export type UiTranslationSchema = {
-  readonly ui: {
-    readonly nav: {
-      readonly back: UiLabelValue;
-      readonly forward: UiLabelValue;
-      readonly up: UiLabelValue;
-    };
-    readonly search: {
-      readonly toggle: UiLabelValue;
-      readonly close: UiLabelValue;
-      readonly title: UiLabelValue;
-      readonly description: UiLabelValue;
-      readonly placeholder: UiLabelValue;
-      readonly empty: UiLabelValue;
-      readonly category: {
-        readonly panels: UiLabelValue;
-        readonly windows: UiLabelValue;
-        readonly catalogue: UiLabelValue;
-        readonly studio: UiLabelValue;
-        readonly navigation: UiLabelValue;
-      };
-    };
-    readonly palette: {
-      readonly undo: UiLabelValue;
-      readonly redo: UiLabelValue;
-      readonly goHome: UiLabelValue;
-      readonly spawnPrefix: UiLabelValue;
-    };
-    readonly panel: {
-      readonly document: UiLabelValue;
-      readonly catalogue: UiLabelValue;
-      readonly inspection: UiLabelValue;
-      readonly parameters: UiLabelValue;
-      readonly documentEmpty: UiLabelValue;
-      readonly spawnedAppsSuffix: UiLabelValue;
-      readonly sync: UiLabelValue;
-      readonly actions: UiLabelValue;
-      readonly history: UiLabelValue;
-    };
-    readonly tree: {
-      readonly drag: {
-        readonly sort: UiLabelValue;
-        readonly transfer: UiLabelValue;
-      };
-    };
-    readonly find: {
-      readonly toggle: UiLabelValue;
-      readonly title: UiLabelValue;
-      readonly description: UiLabelValue;
-      readonly placeholder: UiLabelValue;
-      readonly empty: UiLabelValue;
-    };
-    readonly fullscreen: {
-      readonly toggle: UiLabelValue;
-    };
-    readonly mobilePanel: {
-      readonly toggle: UiLabelValue;
-      readonly app: UiLabelValue;
-    };
-    readonly panelToggle: {
-      readonly topLeft: UiLabelValue;
-      readonly topRight: UiLabelValue;
-      readonly bottomLeft: UiLabelValue;
-      readonly bottomRight: UiLabelValue;
-      readonly display: UiLabelValue;
-      readonly command: UiLabelValue;
-      readonly tool: UiLabelValue;
-      readonly overview: UiLabelValue;
-      readonly workbench: UiLabelValue;
-      readonly details: UiLabelValue;
-      readonly settings: UiLabelValue;
-      readonly chat: UiLabelValue;
-      readonly plugins: UiLabelValue;
-    };
-    readonly display: {
-      readonly tab: {
-        readonly windows: UiLabelValue;
-        readonly layout: UiLabelValue;
-      };
-      readonly saveLayout: UiLabelValue;
-      readonly saveLayoutPlaceholder: UiLabelValue;
-      readonly saveCurrentLayout: UiLabelValue;
-      readonly deleteLayout: UiLabelValue;
-      readonly emptyShell: UiLabelValue;
-      readonly layouts: UiLabelValue;
-      readonly saved: UiLabelValue;
-      readonly unavailable: UiLabelValue;
-    };
-    readonly settings: {
-      readonly tab: {
-        readonly general: UiLabelValue;
-        readonly driver: UiLabelValue;
-        readonly app: UiLabelValue;
-        readonly appearance: UiLabelValue;
-        readonly layout: UiLabelValue;
-        readonly language: UiLabelValue;
-        readonly terminology: UiLabelValue;
-        readonly theme: UiLabelValue;
-        readonly keybindings: UiLabelValue;
-      };
-      readonly appearance: {
-        readonly light: UiLabelValue;
-        readonly dark: UiLabelValue;
-        readonly system: UiLabelValue;
-      };
-      readonly language: {
-        readonly en: UiLabelValue;
-        readonly de: UiLabelValue;
-      };
-      readonly terminology: {
-        readonly native: UiLabelValue;
-        readonly reuse: UiLabelValue;
-      };
-      readonly app: {
-        readonly name: UiLabelValue;
-        readonly id: UiLabelValue;
-        readonly controller: UiLabelValue;
-        readonly plugin: UiLabelValue;
-      };
-      readonly theme: {
-        readonly select: UiLabelValue;
-        readonly save: UiLabelValue;
-        readonly savePlaceholder: UiLabelValue;
-        readonly reset: UiLabelValue;
-        readonly export: UiLabelValue;
-        readonly import: UiLabelValue;
-        readonly delete: UiLabelValue;
-        readonly colors: UiLabelValue;
-        readonly spacing: UiLabelValue;
-        readonly fonts: UiLabelValue;
-        readonly strokes: UiLabelValue;
-        readonly radii: UiLabelValue;
-        readonly opacities: UiLabelValue;
-        readonly metrics: UiLabelValue;
-        readonly appearances: UiLabelValue;
-        readonly dirty: UiLabelValue;
-        readonly appearance: {
-          readonly light: UiLabelValue;
-          readonly dark: UiLabelValue;
-        };
-        readonly group: {
-          readonly board: UiLabelValue;
-          readonly map: UiLabelValue;
-          readonly canvas: UiLabelValue;
-          readonly chrome: UiLabelValue;
-        };
-      };
-      readonly unavailable: UiLabelValue;
-      readonly resetDock: UiLabelValue;
-    };
-    /** 🔌️ Plugin panel (bottom-right dock, next to Settings/Theme): install/uninstall/reload for the
-     * dev `PluginSource`'s registry — see `createFrameworkPluginsPanelTabs`. */
-    readonly plugins: {
-      readonly status: {
-        readonly available: UiLabelValue;
-        readonly installing: UiLabelValue;
-        readonly loaded: UiLabelValue;
-        readonly failed: UiLabelValue;
-        readonly reloading: UiLabelValue;
-      };
-      readonly action: {
-        readonly install: UiLabelValue;
-        readonly uninstall: UiLabelValue;
-        readonly reload: UiLabelValue;
-      };
-      readonly waitingForHost: UiLabelValue;
-      readonly unavailable: UiLabelValue;
-      readonly source: UiLabelValue;
-    };
-    readonly command: {
-      readonly introduceApp: UiLabelValue;
-      readonly playTutorial: UiLabelValue;
-      readonly recordTutorial: UiLabelValue;
-      readonly setAppearance: UiLabelValue;
-      readonly setTheme: UiLabelValue;
-      readonly setLayout: UiLabelValue;
-      readonly setLocale: UiLabelValue;
-      readonly setTerminology: UiLabelValue;
-      readonly setDriver: UiLabelValue;
-    };
-    /** @emoji 🧭️ Labels for `noteShellCommand`'s shell-chrome commandIds (dock drag, window resize/rearrange/
-     * activate/close/split, panel toggle/tab) — logged into the plugin's session-only command-history panel. */
-    readonly shellCommand: {
-      readonly dockMove: UiLabelValue;
-      readonly windowResize: UiLabelValue;
-      readonly windowMove: UiLabelValue;
-      readonly windowActivate: UiLabelValue;
-      readonly windowClose: UiLabelValue;
-      readonly windowSplit: UiLabelValue;
-      readonly panelToggle: UiLabelValue;
-      readonly panelTab: UiLabelValue;
-    };
-    readonly ribbon: {
-      readonly group: {
-        readonly parent: UiLabelValue;
-      };
-      readonly parent: UiRibbonParentEntries;
-    };
-    readonly selection: {
-      readonly method: UiLabelValue;
-      readonly mode: UiLabelValue;
-      readonly rectangle: UiLabelValue;
-      readonly lasso: UiLabelValue;
-      readonly selective: UiLabelValue;
-      readonly additive: UiLabelValue;
-      readonly subtractive: UiLabelValue;
-      readonly invertive: UiLabelValue;
-    };
-    readonly common: {
-      readonly mixedValues: UiLabelValue;
-      readonly name: UiLabelValue;
-      readonly save: UiLabelValue;
-      readonly loading: UiLabelValue;
-      readonly loadingPlugins: UiLabelValue;
-      readonly renderError: UiLabelValue;
-      readonly noPluginsLoaded: UiLabelValue;
-      readonly missingWindow: UiLabelValue;
-      readonly home: UiLabelValue;
-      readonly backToWorkflow: UiLabelValue;
-      readonly execute: UiLabelValue;
-      readonly reset: UiLabelValue;
-      readonly windowOptions: UiLabelValue;
-      readonly focus: UiLabelValue;
-      readonly unfocus: UiLabelValue;
-      readonly example: UiLabelValue;
-      readonly noExample: UiLabelValue;
-      readonly loadingSurface: UiLabelValue;
-      readonly unknownComponent: UiLabelValue;
-      readonly select: UiLabelValue;
-      readonly commandPalette: UiLabelValue;
-      readonly searchForCommand: UiLabelValue;
-      readonly find: UiLabelValue;
-      readonly noData: UiLabelValue;
-      readonly noFileSystemNodes: UiLabelValue;
-      readonly selectTarget: UiLabelValue;
-      readonly selectOption: UiLabelValue;
-      readonly noOptionsFound: UiLabelValue;
-      readonly close: UiLabelValue;
-      readonly newWindow: UiLabelValue;
-      readonly minimize: UiLabelValue;
-      readonly maximize: UiLabelValue;
-      readonly action: UiLabelValue;
-      readonly actions: UiLabelValue;
-      readonly utilities: UiLabelValue;
-      readonly retry: UiLabelValue;
-      readonly somethingWentWrong: UiLabelValue;
-      readonly doubleClickToEdit: UiLabelValue;
-      readonly importFile: UiLabelValue;
-      readonly clear: UiLabelValue;
-      readonly collapse: UiLabelValue;
-      readonly expand: UiLabelValue;
-      readonly cancel: UiLabelValue;
-      readonly error: UiLabelValue;
-    };
-    readonly contextMenu: {
-      readonly select: UiLabelValue;
-      readonly deselect: UiLabelValue;
-      readonly selectAll: UiLabelValue;
-      readonly clearSelection: UiLabelValue;
-      readonly selectSameKind: UiLabelValue;
-      readonly duplicate: UiLabelValue;
-      readonly delete: UiLabelValue;
-      readonly zoomToSelection: UiLabelValue;
-      readonly focusZoom: UiLabelValue;
-      readonly openSource: UiLabelValue;
-      readonly fitWorld: UiLabelValue;
-      readonly cut: UiLabelValue;
-      readonly copy: UiLabelValue;
-      readonly paste: UiLabelValue;
-      readonly rename: UiLabelValue;
-      readonly formatDocument: UiLabelValue;
-      readonly lintDocument: UiLabelValue;
-      readonly suggestCompletions: UiLabelValue;
-      readonly selectToken: UiLabelValue;
-      readonly selectLine: UiLabelValue;
-      readonly hide: UiLabelValue;
-      readonly show: UiLabelValue;
-      readonly lock: UiLabelValue;
-      readonly unlock: UiLabelValue;
-    };
-    readonly host: {
-      readonly emptyScene: UiLabelValue;
-      readonly preview: UiLabelValue;
-      readonly sourceAvailable: UiLabelValue;
-      readonly blockImage: UiLabelValue;
-      readonly blockTable: UiLabelValue;
-      readonly blockMath: UiLabelValue;
-      readonly blockInk: UiLabelValue;
-      readonly blockGroup: UiLabelValue;
-      readonly blockText: UiLabelValue;
-      readonly checkingPlacement: UiLabelValue;
-      readonly noPlacement: UiLabelValue;
-      readonly canvasUnavailable: UiLabelValue;
-      readonly rendering: UiLabelValue;
-      readonly documentPlaceholder: UiLabelValue;
-      readonly languageDocument: UiLabelValue;
-      readonly iconShot: UiLabelValue;
-      readonly projection: UiLabelValue;
-      readonly perspective: UiLabelValue;
-      readonly orthographic: UiLabelValue;
-    };
-    readonly chat: {
-      readonly readyFor: UiLabelValue;
-      readonly localOnly: UiLabelValue;
-      readonly instructions: UiLabelValue;
-      readonly placeholder: UiLabelValue;
-      readonly savedLocally: UiLabelValue;
-      readonly send: UiLabelValue;
-    };
-    readonly docs: {
-      readonly navigation: {
-        readonly previous: UiLabelValue;
-        readonly next: UiLabelValue;
-      };
-    };
-    readonly blockList: {
-      readonly steps: UiLabelValue;
-      readonly addStep: UiLabelValue;
-    };
-    readonly ring: {
-      readonly demo: UiLabelValue;
-    };
-    readonly iconSelector: {
-      readonly mode: {
-        readonly url: UiLabelValue;
-        readonly shortcode: UiLabelValue;
-        readonly math: UiLabelValue;
-        readonly data: UiLabelValue;
-        readonly emoji: UiLabelValue;
-        readonly text: UiLabelValue;
-        readonly vector: UiLabelValue;
-      };
-    };
-    readonly stepper: {
-      readonly demo: UiLabelValue;
-    };
-    readonly engagement: {
-      readonly actions: UiLabelValue;
-      readonly viewport: UiLabelValue;
-    };
-    readonly windowSearch: {
-      readonly title: UiLabelValue;
-      readonly action: UiLabelValue;
-      readonly actionActive: UiLabelValue;
-      readonly suggestions: UiLabelValue;
-      readonly noMatches: UiLabelValue;
-    };
-    readonly flowSpotlight: {
-      readonly typeToAdd: UiLabelValue;
-      readonly collapseSuggestions: UiLabelValue;
-      readonly showAllSuggestions: UiLabelValue;
-    };
-    readonly sync: {
-      readonly attach: UiLabelValue;
-      readonly detach: UiLabelValue;
-    };
-    readonly ink: {
-      readonly link: UiLabelValue;
-      readonly linkUrlPrompt: UiLabelValue;
-    };
-    readonly surfaceContextMenu: {
-      readonly file: UiLabelValue;
-      readonly workspace: UiLabelValue;
-      readonly canvas: UiLabelValue;
-      readonly scene: UiLabelValue;
-      readonly placementSuggestions: UiLabelValue;
-      readonly node: UiLabelValue;
-      readonly flow: UiLabelValue;
-      readonly row: UiLabelValue;
-      readonly paint: UiLabelValue;
-      readonly board: UiLabelValue;
-      readonly ink: UiLabelValue;
-      readonly history: UiLabelValue;
-      readonly step: UiLabelValue;
-      readonly diff: UiLabelValue;
-      readonly event: UiLabelValue;
-      readonly editor: UiLabelValue;
-      readonly map: UiLabelValue;
-    };
-  };
-  readonly settings: {
-    readonly layout: {
-      readonly desktop: UiLabelValue;
-      readonly tablet: UiLabelValue;
-      readonly mobile: UiLabelValue;
-    };
-    readonly driver: {
-      readonly select: UiLabelValue;
-      readonly default: UiLabelValue;
-      readonly compact: UiLabelValue;
-      readonly labels: UiLabelValue;
-      readonly labelsOption: {
-        readonly full: UiLabelValue;
-        readonly icons: UiLabelValue;
-      };
-      readonly labelTier: UiLabelValue;
-      readonly labelTierOption: {
-        readonly beginner: UiLabelValue;
-        readonly normal: UiLabelValue;
-      };
-      readonly drag: UiLabelValue;
-      readonly dragOption: {
-        readonly handle: UiLabelValue;
-        readonly surface: UiLabelValue;
-      };
-      readonly chrome: UiLabelValue;
-      readonly chromeOption: {
-        readonly always: UiLabelValue;
-        readonly hover: UiLabelValue;
-      };
-      readonly gumball: UiLabelValue;
-      readonly gumballOption: {
-        readonly always: UiLabelValue;
-        readonly hover: UiLabelValue;
-      };
-      readonly tooltips: UiLabelValue;
-      readonly tooltipsOption: {
-        readonly full: UiLabelValue;
-        readonly minimal: UiLabelValue;
-        readonly none: UiLabelValue;
-      };
-      readonly hotkeys: UiLabelValue;
-      readonly hotkeysOption: {
-        readonly inline: UiLabelValue;
-        readonly tooltip: UiLabelValue;
-        readonly none: UiLabelValue;
-      };
-      readonly save: UiLabelValue;
-      readonly savePlaceholder: UiLabelValue;
-      readonly delete: UiLabelValue;
-      readonly dirty: UiLabelValue;
-    };
-    readonly keybindings: {
-      readonly capture: UiLabelValue;
-      readonly reset: UiLabelValue;
-      readonly conflict: UiLabelValue;
-      readonly pressKeys: UiLabelValue;
-    };
-  };
-  readonly tooltip: {
-    readonly manual: UiLabelValue;
-    readonly tutorial: UiLabelValue;
-  };
-  readonly introduction: {
-    readonly skip: UiLabelValue;
-    readonly back: UiLabelValue;
-    readonly next: UiLabelValue;
-    readonly done: UiLabelValue;
-  };
-  readonly tutorial: {
-    readonly play: UiLabelValue;
-    readonly pause: UiLabelValue;
-    readonly stop: UiLabelValue;
-    readonly rate: UiLabelValue;
-    readonly mute: UiLabelValue;
-    readonly captions: UiLabelValue;
-    readonly record: UiLabelValue;
-    readonly recording: UiLabelValue;
-    readonly addChapter: UiLabelValue;
-    readonly chapter: UiLabelValue;
-  };
-};
-
-/** @emoji 🪁️ Dot-path union of keys in {@link UiTranslationSchema}. */
-export type UiTranslationKey = DeepUiTranslationKeys<UiTranslationSchema>;
-
-/** @emoji 🪁️ Compile-time check that ribbon collection ids have chrome translation keys. */
-export type AssertUiRibbonParentKeysCovered<Categories extends string> = {
-  readonly [K in Categories]: `ui.ribbon.parent.${K}` extends UiTranslationKey ? true : false;
-}[Categories] extends true
-  ? true
-  : false;
-
-/** @emoji 🪁️ Compile-time check that every {@link UiLocale} has a settings-dropdown label key. */
-export type AssertUiSettingsLanguageKeysCovered<Locales extends string> = {
-  readonly [L in Locales]: `ui.settings.language.${L}` extends UiTranslationKey ? true : false;
-}[Locales] extends true
-  ? true
-  : false;
-
-/** @emoji 🗣️ Chrome-known terminology ids — single source `@semio-tech/framework-core`'s `ShellTerminology`; app-declared ids beyond this set fall back to their raw id in the dropdown. */
-export type UiChromeTerminologyId = ShellTerminology;
-
-/** @emoji 🗣️ Compile-time check that every {@link UiChromeTerminologyId} has a settings-dropdown label key. */
-export type AssertUiSettingsTerminologyKeysCovered<Ids extends string> = {
-  readonly [I in Ids]: `ui.settings.terminology.${I}` extends UiTranslationKey ? true : false;
-}[Ids] extends true
-  ? true
-  : false;
-
-/** @emoji 🪁️ Typed translate function for domain-neutral chrome keys. */
-export type UiTranslateFn = <K extends UiTranslationKey>(key: K, options?: Record<string, unknown>) => unknown;
-
-/** @emoji 🪁️ Shared UI i18n port (wraps i18next; do not import i18next outside this bundle). */
-export interface UiI18nPort {
-  readonly t: UiTranslateFn;
-  changeLanguage(locale: UiLocale): Promise<unknown>;
-  readonly language: string | undefined;
-  readonly resolvedLanguage: string | undefined;
-  readonly isInitialized: boolean;
-}
+import { type UiLocale, type UiLabelPair, type UiLabelValue, type UiRibbonParentCategory, type UiRibbonParentKey, type UiRibbonParentEntries, type UiTranslationSchema, type UiTranslationKey, type AssertUiRibbonParentKeysCovered, type AssertUiSettingsLanguageKeysCovered, type UiChromeTerminologyId, type AssertUiSettingsTerminologyKeysCovered, type UiTranslateFn, type UiI18nPort, type UiRegisteredTranslationKey, UI_RIBBON_PARENT_CATEGORIES } from "../../../../🧱️elements/🫀️core/📚️I18n/🟦️component.tsx";
+export type { UiLocale, UiLabelPair, UiLabelValue, UiRibbonParentCategory, UiRibbonParentKey, UiRibbonParentEntries, UiTranslationSchema, UiTranslationKey, AssertUiRibbonParentKeysCovered, AssertUiSettingsLanguageKeysCovered, UiChromeTerminologyId, AssertUiSettingsTerminologyKeysCovered, UiTranslateFn, UiI18nPort, UiRegisteredTranslationKey };
+export { UI_RIBBON_PARENT_CATEGORIES };
 
 const _assertUiRibbonParentKeys: AssertUiRibbonParentKeysCovered<UiRibbonParentCategory> = true;
 
@@ -4272,12 +3406,7 @@ declare module "i18next" {
   }
 }
 
-declare const uiRegisteredTranslationKeyBrand: unique symbol;
-/** @emoji 🪁️ Key branded by {@link registerUiTranslationBundles} — only obtainable from the caster it
- * returns, so a value of this type provably exists in every {@link UiLocale} bundle registered together
- * with it. Products (coda, compose, …) hold this instead of hand-rolling their own translation-key union
- * and casting into `useLabel`. */
-export type UiRegisteredTranslationKey = string & { readonly [uiRegisteredTranslationKeyBrand]: true };
+// UiRegisteredTranslationKey imported from core I18n above/with schema import
 
 /** @emoji 🪁️ Merges additional locale bundles into the shared UI i18n instance, requiring every
  * {@link UiLocale} to register the exact same schema `S` (a compile error otherwise — the same
@@ -6780,65 +5909,13 @@ export const borderNormalFrameClass = `box-border border border-solid ${borderNo
 /** @emoji 📏️ Normal top edge utility for in-chrome dividers (not shell footer — footer uses a CSS `::before` stroke). */
 export const borderNormalTopClass = `border-t ${borderNormalClass}`;
 
-/** @emoji 📏️ Implicit element border color (controls, dropdowns, dividers). */
-
-/** @emoji 🎯️ Focus/open on form controls: accent border color only, never extra ring width. */
-
-/** @emoji 🎛️ Shared outer chrome shell for chips, buttons, and toggles — glass group with hairline dividers. */
-export const chromeControlGroupShellClass = cn("flex items-center border divide-x overflow-hidden w-fit shrink-0", borderNormalClass, "divide-normal", glassClass);
-
-/** @emoji 🎛️ Standard {@link chromeControlGroupShellClass} height for chips, buttons, and toggles. */
-export const chromeControlGroupClass = cn(chromeControlGroupShellClass, "h-medium");
-
-/** @emoji 🎛️ Shared control cell base — transparent on the group glass. */
-/** @emoji 🎛️ Shared control cell base — transparent on the group glass. */
-export const chromeControlItemBaseClass = cn(
-  "text-element inline-flex items-center justify-center gap-single text-xs font-medium bg-transparent",
-  "cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed",
-  "[&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0",
-  formControlFocusBorderClass,
-  "whitespace-nowrap h-medium p-single overflow-hidden leading-none",
-);
 
 
-/** @emoji 🎛️ Navbar/button/toggle cell hover — matches {@link ShellParentHover} group items. */
-export const chromeControlItemClass = cn(chromeControlItemBaseClass, interactiveHoverClass);
-
-/** @emoji 🎛️ Tab/chip cell hover — preserves drag-handle exclusion beside labels. */
-/** @emoji 🎛️ Tab/chip cell hover — preserves drag-handle exclusion beside labels. */
-export const chromeControlTabItemClass = cn(chromeControlItemBaseClass, hoverExcludingHandleBgFillClass, hoverExcludingHandleTextEmphasizedClass);
 
 
-/** @emoji 🎛️ Pressed/on via `data-state="on"` — toggles and toggle-group items. */
-export const chromeControlItemOnClass = interactiveOnClass;
 
-/** @emoji 🎛️ Pressed/on via `data-active="true"` — panel/window tab cells. */
-export const chromeControlTabActiveClass = cn(
-  "data-[active=true]:bg-active-base",
-  "data-[active=true]:border-active-base",
-  "data-[active=true]:text-emphasized",
-  "data-[active=true]:hover:bg-active-base/90",
-  "data-[active=true]:hover:border-active-base",
-  "data-[active=true]:hover:text-emphasized",
-);
 
-/** @emoji 🎚️ Slider filled range — element gray at rest; foreground emphasis on hover; active fill while dragging. */
-export const sliderRangeClassName = cn("bg-element absolute transition-[background-color] data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full", "group-hover:bg-emphasized", "data-[dragging=true]:bg-active-base");
 
-/** @emoji 🎚️ Slider ready extent — secondary highlight from the knob to the preloaded/ready value on a fixed range. */
-export const sliderReadyClassName = cn("bg-[var(--accent-secondary)] pointer-events-none absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full");
-
-/** @emoji 🎚️ Slider thumb — element border at rest; hover fill; primary fill when dragging/focused. */
-export const sliderThumbClassName = cn(
-  "block size-small shrink-0 rounded-[9999px] bg-element transition-[background-color] outline-hidden",
-  "hover:bg-emphasized group-hover:bg-emphasized",
-  "focus-visible:bg-active-base focus-visible:ring-0",
-  "data-[dragging=true]:bg-active-base",
-  "disabled:pointer-events-none disabled:opacity-50",
-);
-
-/** @emoji 🎚️ Slider numeric readout — element gray at rest. */
-export const sliderValueClassName = cn("text-element w-large text-end text-xs leading-none select-none transition-colors", "hover:text-emphasized group-hover:text-emphasized");
 
 /** @emoji 📏️ Active window chrome line when that stack is globally active. */
 export const activeLineClass = "border-active-base";
@@ -8282,115 +7359,8 @@ export const windowSearchBodyClass = windowEngagementBodyClass;
 /** @emoji 📐️ Utility row beside the utility bar chrome toggle — a single utility keeps the chrome's height, but the active utility's options tree (stacked above it) can grow taller; its inline `maxHeight` (see {@link useWindowUtilityBarMaxHeightPx}) caps it just below the top-anchored chrome and this scrolls the overflow instead of painting past that line. */
 export const utilityBarBodyClass = "flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto overflow-y-auto px-single";
 
-/** @emoji 📐️ CSS variable for invisible top clearance below floating window chrome. */
-export const windowChromeScrollClearanceVar = "--window-chrome-scroll-clearance";
-
-/** @emoji 🏝️ CSS variable for the default cleared line under floating window chrome (dead-island). */
-export const windowContentDeadLineVar = "--window-content-dead-line";
-
-/** @emoji 🏝️ Chrome-aware scroll hosts stay edgeless but reserve scroll-padding for the dead line. */
-export const windowContentDeadLineScrollClass = "overscroll-contain [scroll-padding-top:var(--window-content-dead-line)]";
-
-/** @emoji 📐️ Resolves {@link windowChromeScrollClearanceVar} to px for layout math. */
-export function readWindowChromeScrollClearancePx(element?: Element | null, rootPx = STYLING_COMPACT_ROOT_PX): number {
-  const measured = measureWindowChromeScrollClearancePx(element);
-  if (measured > 0) return measured;
-  const fromCss = readSizeVarPx(windowChromeScrollClearanceVar, element);
-  if (fromCss > 0) return fromCss;
-  return uiSpacingPx(9, rootPx);
-}
-
-/** @emoji 📐️ Measures live floating engagement/measures chrome height inside the nearest window body. */
-export function measureWindowChromeScrollClearancePx(element?: Element | null): number {
-  const windowBody = element?.closest('[data-slot="window-body"]');
-  if (!windowBody) return 0;
-  const overlays = windowBody.querySelectorAll('[data-slot="window-engagement-overlay"], [data-slot="window-search-overlay"], [data-slot="window-measures-overlay"]');
-  const bodyTop = windowBody.getBoundingClientRect().top;
-  let maxBottom = bodyTop;
-  for (const overlay of overlays) {
-    if (!(overlay instanceof HTMLElement)) continue;
-    const bottom = overlay.getBoundingClientRect().bottom;
-    if (bottom > maxBottom) maxBottom = bottom;
-  }
-  return Math.max(0, Math.ceil(maxBottom - bodyTop));
-}
-
-/** @emoji 🏝️ True when an element scrolls inside a window with floating chrome overlays (not edgeless canvas bodies). */
-export function isWindowContentDeadLineHost(element: Element | null): boolean {
-  if (!element) return false;
-  if (element.closest("[data-window-content-layout=edgeless]")) return false;
-  const windowBody = element.closest('[data-slot="window-body"]');
-  if (!windowBody) return false;
-  return windowBody.querySelector('[data-slot="window-engagement-overlay"], [data-slot="window-search-overlay"], [data-slot="window-measures-overlay"]') != null;
-}
-
-/** @emoji 🏝️ Resolves the default dead-line scroll offset for chrome-aware window bodies. */
-export function readWindowContentDeadLinePx(element?: Element | null, rootPx = STYLING_COMPACT_ROOT_PX): number {
-  if (!element || !isWindowContentDeadLineHost(element)) return 0;
-  const windowBody = element.closest('[data-slot="window-body"]');
-  const fromBodyVar = readSizeVarPx(windowContentDeadLineVar, windowBody ?? element);
-  if (fromBodyVar > 0) return fromBodyVar;
-  const measured = measureWindowChromeScrollClearancePx(element);
-  if (measured > 0) return measured;
-  return readWindowChromeScrollClearancePx(element, rootPx);
-}
-
-/** @emoji 🏝️ True when a scroll host's content exceeds its viewport. */
-export function readScrollerContentOverflows(scroller: HTMLElement): boolean {
-  if (scroller.clientHeight <= 0) return true;
-  if (scroller.scrollHeight > scroller.clientHeight + 1) return true;
-  const viewport = scroller.querySelector('[data-slot="scroll-area-viewport"]');
-  if (viewport instanceof HTMLElement) {
-    return viewport.scrollHeight > scroller.clientHeight + 1;
-  }
-  return false;
-}
-
-/** @emoji 🏝️ Clears the first line under floating chrome by default; scrolling up reveals it edgelessly. */
-export function useWindowContentDeadLineScroll(scrollerRef: React.RefObject<HTMLElement | null>): void {
-  const edgelessScrollRef = reactHostPort.useRef(false);
-  reactHostPort.useLayoutEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const applyDefault = () => {
-      if (!isWindowContentDeadLineHost(el)) return;
-      const overflows = readScrollerContentOverflows(el);
-      if (!overflows) {
-        edgelessScrollRef.current = false;
-        if (el.scrollTop !== 0) el.scrollTop = 0;
-        return;
-      }
-      const deadLine = readWindowContentDeadLinePx(el);
-      if (deadLine <= 0 || edgelessScrollRef.current) return;
-      if (el.scrollTop < deadLine) el.scrollTop = deadLine;
-    };
-    const onScroll = () => {
-      if (!isWindowContentDeadLineHost(el)) return;
-      if (!readScrollerContentOverflows(el)) {
-        edgelessScrollRef.current = false;
-        return;
-      }
-      const deadLine = readWindowContentDeadLinePx(el);
-      if (deadLine <= 0) return;
-      if (el.scrollTop < deadLine - 1) edgelessScrollRef.current = true;
-      else if (el.scrollTop >= deadLine) edgelessScrollRef.current = false;
-    };
-    applyDefault();
-    el.addEventListener("scroll", onScroll, { passive: true });
-    const body = el.closest('[data-slot="window-body"]');
-    if (!body) return () => el.removeEventListener("scroll", onScroll);
-    const ro = new ResizeObserver(applyDefault);
-    ro.observe(body);
-    for (const slot of ["window-engagement-overlay", "window-search-overlay", "window-measures-overlay"] as const) {
-      const overlay = body.querySelector(`[data-slot="${slot}"]`);
-      if (overlay) ro.observe(overlay);
-    }
-    return () => {
-      el.removeEventListener("scroll", onScroll);
-      ro.disconnect();
-    };
-  }, []);
-}
+import { windowChromeScrollClearanceVar, windowContentDeadLineVar, windowContentDeadLineScrollClass, readWindowChromeScrollClearancePx, measureWindowChromeScrollClearancePx, isWindowContentDeadLineHost, readWindowContentDeadLinePx, readScrollerContentOverflows, useWindowContentDeadLineScroll } from "../../../../🧱️elements/🫀️core/🎛️Chrome/🟦️component.tsx";
+export { windowChromeScrollClearanceVar, windowContentDeadLineVar, windowContentDeadLineScrollClass, readWindowChromeScrollClearancePx, measureWindowChromeScrollClearancePx, isWindowContentDeadLineHost, readWindowContentDeadLinePx, readScrollerContentOverflows, useWindowContentDeadLineScroll };
 
 /** @emoji 🏝️ Full-bleed scroll surface for chrome-aware window bodies (writer hosts, forms, tables). */
 export const ChromeAwareWindowScrollSurface = reactHostPort.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div">>(({ className, children, ...props }, ref) => {
@@ -8943,34 +7913,11 @@ export function ErrorView({ id, title, message, onRetry }: ErrorViewProps): Reac
 export const UI_ELEMENT_REGISTRY = ["Window", "Panel", "Canvas", "Button", "Slider", "TreeItem", "Action"] as const;
 //#endregion 🧭️UiElementRegistry
 
-// #region 🎺️LoadingRow
-// Skeleton loading row with pulsing icon and name.
-// Consumers MUST provide a name for the placeholder.
-
-/**
- * Props interface for the LoadingRow component.
-/**
- **/
-/**
- **/
-export interface LoadingRowProps {
-  name: string;
-  icon?: React.ReactNode;
-  className?: string;
-}
-
-/** LoadingRow holds the data fields for a LoadingRow record.
- **/
-export const LoadingRow: React.FC<LoadingRowProps> = ({ name, icon, className = "" }) => {
-  return (
-    <div className={cn("flex items-center gap-single p-single opacity-50 pointer-events-none", loadingBorderClass, className)}>
-      {icon && <span className="shrink-0">{icon}</span>}
-      <span className="flex-1 truncate">{name}</span>
-    </div>
-  );
-};
-
-// #endregion 🎺️LoadingRow
+// #region LoadingRow
+import { LoadingRow, type LoadingRowProps } from "../../../../🧱️elements/🫀️core/🎛️Chrome/🟦️component.tsx";
+export { LoadingRow };
+export type { LoadingRowProps };
+// #endregion LoadingRow
 
 // #region 🦴Skeletons
 import { skeletonPulseClass, SkeletonBlock, elementSkeleton, WindowBodySkeleton, PanelTreeSkeleton, CanvasSkeleton, type ElementSkeletonKind } from "../../../../🧱️elements/🦴Skeletons/🟦️component.tsx";
@@ -9822,49 +8769,8 @@ export type { MobilePanelProps };
 
 // #region 🩻️Ribbon Components
 
-interface RibbonZoneProps extends React.ComponentProps<"div"> {
-  children: React.ReactNode;
-  /** @emoji 📏️ Lets intrinsically tall ribbon content define the row height while retaining the standard minimum. */
-  variableHeight?: boolean;
-}
-
-function RibbonZone({ className, children, variableHeight = false, ...props }: RibbonZoneProps) {
-  return (
-    <div data-slot="ribbon-zone" data-variable-height={variableHeight ? "true" : undefined} className={cn("flex shrink-0 items-center gap-single min-w-0", variableHeight ? "h-auto min-h-medium" : "h-medium", className)} {...props}>
-      {children}
-    </div>
-  );
-}
-
-interface RibbonGroupProps extends React.ComponentProps<"div"> {
-  children: React.ReactNode;
-}
-
-function RibbonGroup({ className, children, ...props }: RibbonGroupProps) {
-  return (
-    <div data-slot="ribbon-group" role="group" className={cn("flex shrink-0 items-center gap-single h-full", className)} {...props}>
-      {children}
-    </div>
-  );
-}
-
-function RibbonDivider({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="ribbon-divider" className={cn("w-px h-small bg-border my-auto shrink-0", className)} {...props} />;
-}
-
-interface RibbonItemProps extends React.ComponentProps<"div"> {
-  children: React.ReactNode;
-}
-
-function RibbonItem({ className, children, ...props }: RibbonItemProps) {
-  return (
-    <div data-slot="ribbon-item" className={cn("shrink-0 flex items-center h-full min-w-0", className)} {...props}>
-      {children}
-    </div>
-  );
-}
-
-export { RibbonDivider, RibbonGroup, RibbonItem, RibbonZone };
+import { RibbonZone, RibbonDivider, RibbonGroup, RibbonItem } from "../../../../🧱️elements/🎀Ribbon/🟦️component.tsx";
+export { RibbonZone, RibbonDivider, RibbonGroup, RibbonItem };
 
 // #region 🎀️Ribbon
 import { Ribbon, type RibbonDirection, type RibbonRow, type RibbonProps } from "../../../../🧱️elements/🎀Ribbon/🟦️component.tsx";
@@ -10000,12 +8906,6 @@ export const UI_WINDOW_SEARCH = {
   noMatches: "ui.windowSearch.noMatches",
 } as const satisfies Record<string, UiTranslationKey>;
 
-/** @emoji 🏷️ Turns an internal step id (`first_corner`) into readable status text (`First Corner`). */
-export function humanizeEngagementStepId(stepId: string): string {
-  const trimmed = stepId.trim();
-  if (!trimmed) return "";
-  return trimmed.replace(/[._-]+/g, " ").replace(/\b\w/g, (character) => character.toUpperCase());
-}
 
 /** @emoji ⌨️ Normalizes engagement action text: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`), preserving decimal points inside numbers (`3.5` stays `3.5`, not `35`). */
 export function normalizeEngagementActionText(text: string): string {

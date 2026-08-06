@@ -9,6 +9,7 @@ import * as React from "react";
 import * as THREE from "three";
 import { Clone, GizmoHelper, GizmoViewport, Grid, Line as DreiLine, OrbitControls, OrthographicCamera, Outlines, PerspectiveCamera, Text as DreiText, TransformControls, useGLTF } from "@react-three/drei";
 import { Canvas as ThreeCanvas, createPortal as r3fCreatePortal, useFrame, useStore, useThree } from "@react-three/fiber";
+import { ReactFlow, ReactFlowProvider } from "@xyflow/react";
 // #endregion 🔌️Adapters
 
 //#region 🔌️Ports
@@ -137,4 +138,28 @@ export function setSceneHostPort(port: SceneHostPort): SceneHostPort {
   sceneHostPort = port;
   return previous;
 }
+
+/** @emoji Flow host surface for diagram runtime. */
+export interface FlowHostPort {
+  readonly flow: typeof ReactFlow;
+  readonly provider: typeof ReactFlowProvider;
+}
+
+/** @emoji Default diagram host port wired to @xyflow/react. */
+export let flowHostPort: FlowHostPort = {
+  flow: ReactFlow,
+  provider: ReactFlowProvider,
+};
+
+/** @emoji ESM-safe setter for flowHostPort. */
+export function setFlowHostPort(port: FlowHostPort): FlowHostPort {
+  const previous = flowHostPort;
+  flowHostPort = port;
+  return previous;
+}
+
+/** @emoji JSX alias for diagram flow host. */
+export const HostReactFlow = flowHostPort.flow;
+/** @emoji JSX alias for diagram flow provider. */
+export const HostReactFlowProvider = flowHostPort.provider;
 //#endregion 🔌️Ports

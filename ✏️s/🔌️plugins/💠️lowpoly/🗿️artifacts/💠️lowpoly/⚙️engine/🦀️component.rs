@@ -4,7 +4,7 @@
 //! `🎨️paint/🦀️component.rs`; media export/import compute lives in `🧵️media/🦀️component.rs`.
 
 use crate::artifacts::lowpoly::{LowpolyObject, LowpolyPaintLayer, LowpolyProjection, LowpolySelection, LOWPOLY_PAINT_TEXTURE_SIZE};
-use semio_s_3d::{EdgeId, FaceId, HalfedgeMesh, MeshKernelError, Vec3, VertexId};
+use semio_s_3d::mesh::{EdgeId, FaceId, HalfedgeMesh, MeshKernelError, Vec3, VertexId};
 use serde_json::Value;
 
 //#region ⚠️ Errors

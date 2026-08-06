@@ -48,8 +48,8 @@ mod tests {
     use norm::artifacts::en1997::Document as En1997Document;
     use norm::artifacts::en1998::Document as En1998Document;
     use norm::artifacts::en1999::Document as En1999Document;
-    use fem2d::Fem2dDocument;
-    use fem3d::Fem3dDocument;
+    use fem::artifacts::fem2d::Fem2dDocument;
+    use fem::artifacts::fem3d::Fem3dDocument;
     use flow_app::FlowFixture;
     // 🌱️ 26/08/05/FORMS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION: the old `forms` app facade
     // crate is gone (merged into `semio-s-plugin-forms`); `FormSpec` was always a bare `pub use` alias of

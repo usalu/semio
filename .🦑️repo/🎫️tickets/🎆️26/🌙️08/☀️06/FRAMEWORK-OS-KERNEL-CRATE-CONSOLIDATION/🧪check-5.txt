@@ -1,0 +1,7 @@
+    Updating crates.io index
+    Updating git repository `https://github.com/andymai/brepkit`
+error: cyclic package dependency: package `semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)` depends on itself. Cycle:
+package `semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)`
+    ... which satisfies path dependency `semio-framework-core` of package `semio-s-3d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust)`
+    ... which satisfies path dependency `kernel_3d_scene` of package `semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)`
+    ... which satisfies path dependency `ui_wgpu` of package `semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)`

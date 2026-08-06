@@ -16,9 +16,9 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use ui_wgpu::input::{DragAxis, KeyAction};
-use ui_wgpu::{draw_text, draw_text_wrapped, render_widget, HitKind, HitTarget, Rect, Rgba, Theme, WidgetNode};
-use ui_wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode, UiPresence, UiSelectItem, UiSelectNode, UiTextNode};
+use ui_wgpu::wgpu::input::{DragAxis, KeyAction};
+use ui_wgpu::wgpu::{draw_text, draw_text_wrapped, render_widget, HitKind, HitTarget, Rect, Rgba, Theme, WidgetNode};
+use ui_wgpu::wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode, UiPresence, UiSelectItem, UiSelectNode, UiTextNode};
 
 //#region SceneRuntime
 #[derive(Clone, Copy, Debug, Default)]
@@ -36,7 +36,7 @@ impl Viewport {
             .unwrap_or_default()
     }
 
-    fn from_typed(viewport: Option<&ui_wgpu::NodeGraphViewport>) -> Self {
+    fn from_typed(viewport: Option<&ui_wgpu::wgpu::NodeGraphViewport>) -> Self {
         viewport.map(|viewport| Self { x: viewport.x as f32, y: viewport.y as f32, zoom: viewport.zoom as f32 }).unwrap_or(Self { x: 0.0, y: 0.0, zoom: 1.0 })
     }
 
@@ -713,7 +713,7 @@ pub fn render_component_scene(
     scene: &UiComponentSceneNode,
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
-    gpu: &mut ui_wgpu::GpuContext,
+    gpu: &mut ui_wgpu::wgpu::GpuContext,
     world3d_states: &mut HashMap<String, World3dState>,
     node_graph_states: &mut HashMap<String, NodeGraphSurface>,
     tiled_map_states: &mut HashMap<String, TiledMapSurface>,
@@ -761,7 +761,7 @@ pub fn render_component_scene(
     // frame" edge detection, which could drop fast clicks/double-clicks and had asymmetries (e.g. a
     // right-click passthrough silently inert because `pointer_down_screen` no-op'd unless `button ==
     // 0`). Real pointer/wheel input for these 11 surfaces now arrives per real event, hit-tested by
-    // `ui_wgpu::events::EventRouter::dispatch` and routed here via `UiCommand::Scene` ->
+    // `ui_wgpu::wgpu::events::EventRouter::dispatch` and routed here via `UiCommand::Scene` ->
     // `interpreter::apply_scene_ui_command`, which calls the SAME `handle_scene_wheel`/
     // `handle_scene_pointer_button`/`handle_scene_pointer_move` below — so nothing is called from this
     // render pass any longer.
@@ -993,7 +993,7 @@ fn paint2d_navigator_overlay_rect(content_camera_json: &str, content_viewport_js
 //#endregion Paint2dNavigator
 
 /** 🖼️ Composites paint-2d document layers as textured quads; blend modes, masks and adjustment layers are not yet applied (see FIX-LOWPOLY-DEV-BOOT sibling ticket 26/07/11/WGPU-RENDERER-FULL-PARITY for follow-up scope). `viewMode === "navigator"` renders the same layer stack fit-to-view with a composite-viewport overlay instead of following the local/camera viewport. */
-fn render_paint_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::GpuContext) {
+fn render_paint_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::wgpu::GpuContext) {
     let theme = ctx.theme;
     let Some(paint_2d) = &scene.paint_2d else {
         return render_placeholder("paint-2d", bounds, ctx);
@@ -1079,7 +1079,7 @@ struct TableSortJson {
     direction: String,
 }
 
-/// 🧾️ Mirrors `ui_wgpu::TableCell` — a typed table cell value parsed out of a row's raw JSON.
+/// 🧾️ Mirrors `ui_wgpu::wgpu::TableCell` — a typed table cell value parsed out of a row's raw JSON.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 enum TableCellPayload {
@@ -1233,7 +1233,7 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
 #[cfg(test)]
 mod table_tests {
     use super::*;
-    use ui_wgpu::{DrawList, FontAtlas, IconAtlas, InputState, TableScene};
+    use ui_wgpu::wgpu::{DrawList, FontAtlas, IconAtlas, InputState, TableScene};
 
     fn table_scene(surface_id: &str, table: TableScene) -> UiComponentSceneNode {
         UiComponentSceneNode {
@@ -1379,7 +1379,7 @@ struct BlockListStepJson {
     blocks: Vec<BlockListBlockJson>,
 }
 
-/// 🧩️ Mirrors `ui_wgpu::BlockPaletteEntry`'s wire format (`{blockKind, label, iconId}`).
+/// 🧩️ Mirrors `ui_wgpu::wgpu::BlockPaletteEntry`'s wire format (`{blockKind, label, iconId}`).
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct BlockListPaletteEntryJson {
@@ -1560,7 +1560,7 @@ fn render_block_list(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
 #[cfg(test)]
 mod block_list_tests {
     use super::*;
-    use ui_wgpu::{BlockListScene, DrawList, FontAtlas, IconAtlas, InputState};
+    use ui_wgpu::wgpu::{BlockListScene, DrawList, FontAtlas, IconAtlas, InputState};
 
     fn block_list_scene(surface_id: &str, block_list: BlockListScene) -> UiComponentSceneNode {
         UiComponentSceneNode {
@@ -1958,7 +1958,7 @@ mod diff_view_tests {
     /// 🧰️ Renders a `render_diff_view` scene in `mode` and returns the `DrawList` so paint-level
     /// assertions (glyph tint, absence of row-background fills) can inspect it directly, same
     /// technique as `render_entry_tests::Fixture`.
-    fn render_diff(before: &str, after: &str, mode: Option<&str>) -> (ui_wgpu::DrawList, Theme) {
+    fn render_diff(before: &str, after: &str, mode: Option<&str>) -> (ui_wgpu::wgpu::DrawList, Theme) {
         let scene = UiComponentSceneNode {
             surface_id: "diff-paint-test".into(),
             controller_id: "controller".into(),
@@ -1978,14 +1978,14 @@ mod diff_view_tests {
             icon_render: None,
             ink_canvas: None,
             graph_timeline: None,
-            diff_view: Some(ui_wgpu::DiffViewScene { before: before.into(), after: after.into(), language: None, mode: mode.map(str::to_string) }),
+            diff_view: Some(ui_wgpu::wgpu::DiffViewScene { before: before.into(), after: after.into(), language: None, mode: mode.map(str::to_string) }),
             event_feed: None,
             block_list: None,
             menu: None,
         };
-        let mut draw = ui_wgpu::DrawList::default();
-        let mut atlas = ui_wgpu::FontAtlas::builtin();
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut draw = ui_wgpu::wgpu::DrawList::default();
+        let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
         let theme = Theme::default();
         let mut scroll = HashMap::new();
         let mut collapsed = HashMap::new();
@@ -1997,7 +1997,7 @@ mod diff_view_tests {
         (draw, theme)
     }
 
-    fn glyph_colors(draw: &ui_wgpu::DrawList) -> Vec<Rgba> {
+    fn glyph_colors(draw: &ui_wgpu::wgpu::DrawList) -> Vec<Rgba> {
         draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| Rgba::new(instance.color[0], instance.color[1], instance.color[2], instance.color[3])).collect()
     }
 
@@ -2039,7 +2039,7 @@ mod diff_view_tests {
 
 //#region EventFeed
 /// 🪶️ Mirrors a `SurfaceKind::EventFeed` entry (`{id, timestampMs, iconId, title, detail?, tone?}`,
-/// `ui_wgpu::EventFeedScene`'s doc comment / `EventFeedEntry` in `framework/core/js/index.ts`).
+/// `ui_wgpu::wgpu::EventFeedScene`'s doc comment / `EventFeedEntry` in `framework/core/js/index.ts`).
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct EventFeedEntryJson {
@@ -2226,7 +2226,7 @@ mod event_feed_tests {
     /// 🧰️ Renders `render_event_feed` with one entry of the given `tone` and returns its `DrawList`,
     /// so the title glyph's tint can be inspected directly — matches `FEED_TONE_CLASS`'s title-span
     /// coloring in `event-feed-host.tsx`.
-    fn render_feed_entry(tone: Option<&str>) -> (ui_wgpu::DrawList, Theme) {
+    fn render_feed_entry(tone: Option<&str>) -> (ui_wgpu::wgpu::DrawList, Theme) {
         let entry = json!({ "id": "e1", "title": "Built", "tone": tone });
         let scene = UiComponentSceneNode {
             surface_id: "feed-paint-test".into(),
@@ -2248,13 +2248,13 @@ mod event_feed_tests {
             ink_canvas: None,
             graph_timeline: None,
             diff_view: None,
-            event_feed: Some(ui_wgpu::EventFeedScene { entries_json: json!([entry]).to_string(), follow: None, activate_action: None }),
+            event_feed: Some(ui_wgpu::wgpu::EventFeedScene { entries_json: json!([entry]).to_string(), follow: None, activate_action: None }),
             block_list: None,
             menu: None,
         };
-        let mut draw = ui_wgpu::DrawList::default();
-        let mut atlas = ui_wgpu::FontAtlas::builtin();
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut draw = ui_wgpu::wgpu::DrawList::default();
+        let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
         let theme = Theme::default();
         let mut scroll = HashMap::new();
         let mut collapsed = HashMap::new();
@@ -2266,7 +2266,7 @@ mod event_feed_tests {
         (draw, theme)
     }
 
-    fn instance_colors(draw: &ui_wgpu::DrawList) -> Vec<Rgba> {
+    fn instance_colors(draw: &ui_wgpu::wgpu::DrawList) -> Vec<Rgba> {
         draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| Rgba::new(instance.color[0], instance.color[1], instance.color[2], instance.color[3])).collect()
     }
 
@@ -2559,9 +2559,9 @@ mod graph_timeline_tests {
 
     #[test]
     fn lane_guide_lines_are_translucent_not_the_opaque_separator_token() {
-        let mut draw = ui_wgpu::DrawList::default();
-        let mut atlas = ui_wgpu::FontAtlas::builtin();
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut draw = ui_wgpu::wgpu::DrawList::default();
+        let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
         let theme = Theme::default();
         let mut scroll = HashMap::new();
         let mut collapsed = HashMap::new();
@@ -2584,7 +2584,7 @@ mod graph_timeline_tests {
             board2d: None,
             icon_render: None,
             ink_canvas: None,
-            graph_timeline: Some(ui_wgpu::GraphTimelineScene {
+            graph_timeline: Some(ui_wgpu::wgpu::GraphTimelineScene {
                 columns_json: json!([
                     { "checkpointId": "b", "lane": 0, "parentCheckpointId": "a" },
                     { "checkpointId": "a", "lane": 0 },
@@ -2789,7 +2789,7 @@ pub(crate) fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_u
  * (intersected with the full `±extent/2` grid) instead of always walking the whole grid — a
  * continuously-rendering surface (paint-2d) was pushing up to `(extent/cell)^2` solid quads every
  * single frame regardless of zoom/pan, which starves headless WebGPU frame pacing. */
-fn draw_checkerboard(draw: &mut ui_wgpu::DrawList, viewport: &Viewport, inner: Rect, theme: &ui_wgpu::Theme, extent: f32) {
+fn draw_checkerboard(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, theme: &ui_wgpu::wgpu::Theme, extent: f32) {
     let cell = 16.0;
     let half = extent * 0.5;
     let light = theme.checker_light;
@@ -2826,7 +2826,7 @@ fn draw_checkerboard(draw: &mut ui_wgpu::DrawList, viewport: &Viewport, inner: R
 }
 
 /** 📐️ Theme-aware LOD world grid for canvas-2d — same large/medium/small/micro steps as flow and infinite boards. */
-fn draw_canvas_infinite_grid(draw: &mut ui_wgpu::DrawList, viewport: &Viewport, inner: Rect, theme: &ui_wgpu::Theme) {
+fn draw_canvas_infinite_grid(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, theme: &ui_wgpu::wgpu::Theme) {
     if viewport.zoom <= 0.0 {
         return;
     }
@@ -2863,7 +2863,7 @@ fn draw_canvas_infinite_grid(draw: &mut ui_wgpu::DrawList, viewport: &Viewport, 
     }
 }
 
-fn draw_dashed_line(draw: &mut ui_wgpu::DrawList, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {
+fn draw_dashed_line(draw: &mut ui_wgpu::wgpu::DrawList, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {
     let dx = x1 - x0;
     let dy = y1 - y0;
     let len = (dx * dx + dy * dy).sqrt().max(0.001);
@@ -3059,7 +3059,7 @@ fn canvas_circle_points(cx: f32, cy: f32, radius: f32, segments: usize) -> Vec<[
         .collect()
 }
 
-fn push_shape_fill(draw: &mut ui_wgpu::DrawList, rect: Rect, color: Rgba, is_circle: bool) {
+fn push_shape_fill(draw: &mut ui_wgpu::wgpu::DrawList, rect: Rect, color: Rgba, is_circle: bool) {
     if is_circle {
         let cx = rect.x + rect.w * 0.5;
         let cy = rect.y + rect.h * 0.5;
@@ -3070,7 +3070,7 @@ fn push_shape_fill(draw: &mut ui_wgpu::DrawList, rect: Rect, color: Rgba, is_cir
     }
 }
 
-fn push_circle_outline(draw: &mut ui_wgpu::DrawList, cx: f32, cy: f32, radius: f32, color: Rgba, width: f32) {
+fn push_circle_outline(draw: &mut ui_wgpu::wgpu::DrawList, cx: f32, cy: f32, radius: f32, color: Rgba, width: f32) {
     let points = canvas_circle_points(cx, cy, radius.max(0.5), CANVAS_CIRCLE_SEGMENTS);
     for i in 0..points.len() {
         let a = points[i];
@@ -3079,7 +3079,7 @@ fn push_circle_outline(draw: &mut ui_wgpu::DrawList, cx: f32, cy: f32, radius: f
     }
 }
 
-fn push_shape_outline(draw: &mut ui_wgpu::DrawList, rect: Rect, color: Rgba, width: f32, is_circle: bool, dash: Option<&[f64]>) {
+fn push_shape_outline(draw: &mut ui_wgpu::wgpu::DrawList, rect: Rect, color: Rgba, width: f32, is_circle: bool, dash: Option<&[f64]>) {
     if is_circle {
         let cx = rect.x + rect.w * 0.5;
         let cy = rect.y + rect.h * 0.5;
@@ -3098,9 +3098,9 @@ fn push_shape_outline(draw: &mut ui_wgpu::DrawList, rect: Rect, color: Rgba, wid
 }
 
 /** 🌈️ Bands a linear gradient across `clip` (scissor-bounded to the shape's screen bbox) as
- * `CANVAS_GRADIENT_BANDS` solid quads perpendicular to the `(x1,y1)-(x2,y2)` axis — `ui_wgpu::
+ * `CANVAS_GRADIENT_BANDS` solid quads perpendicular to the `(x1,y1)-(x2,y2)` axis — `ui_wgpu::wgpu::
  * DrawList` has no per-vertex gradient primitive, see `canvas_apply_blend_mode` doc comment. */
-fn push_linear_gradient_fill(draw: &mut ui_wgpu::DrawList, viewport: &Viewport, inner: Rect, clip: Rect, origin_x: f64, origin_y: f64, fill: &CanvasFillJson, opacity: f32, blend: Option<&str>, backdrop: Rgba) {
+fn push_linear_gradient_fill(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, clip: Rect, origin_x: f64, origin_y: f64, fill: &CanvasFillJson, opacity: f32, blend: Option<&str>, backdrop: Rgba) {
     let (sx1, sy1) = viewport.world_to_screen((origin_x + fill.x1) as f32, (origin_y + fill.y1) as f32, inner);
     let (sx2, sy2) = viewport.world_to_screen((origin_x + fill.x2) as f32, (origin_y + fill.y2) as f32, inner);
     let dx = sx2 - sx1;
@@ -3136,7 +3136,7 @@ fn push_linear_gradient_fill(draw: &mut ui_wgpu::DrawList, viewport: &Viewport, 
 
 /** 🌈️ Bands a radial gradient as `CANVAS_GRADIENT_BANDS` concentric circles painted outer-to-inner
  * (painter's algorithm — smaller/later circles overpaint the center), scissor-bounded to `clip`. */
-fn push_radial_gradient_fill(draw: &mut ui_wgpu::DrawList, viewport: &Viewport, inner: Rect, clip: Rect, origin_x: f64, origin_y: f64, fill: &CanvasFillJson, opacity: f32, blend: Option<&str>, backdrop: Rgba) {
+fn push_radial_gradient_fill(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, clip: Rect, origin_x: f64, origin_y: f64, fill: &CanvasFillJson, opacity: f32, blend: Option<&str>, backdrop: Rgba) {
     let (scx, scy) = viewport.world_to_screen((origin_x + fill.cx) as f32, (origin_y + fill.cy) as f32, inner);
     let sr = (fill.r as f32 * viewport.zoom).max(0.5);
     draw.push_scissor(clip);
@@ -3152,7 +3152,7 @@ fn push_radial_gradient_fill(draw: &mut ui_wgpu::DrawList, viewport: &Viewport, 
 
 /** 🖌️ Resolves and draws a Canvas2dScene draw record's `fill` (solid / linear / radial gradient) and
  * `stroke`, matching `drawSceneNode`'s fill/stroke resolution in `canvas-2d-host.tsx`. */
-fn render_canvas_shape_fill(draw: &mut ui_wgpu::DrawList, viewport: &Viewport, inner: Rect, shape_rect: Rect, layer: &CanvasLayer, opacity: f32, fallback_fill: Rgba, backdrop: Rgba, is_circle: bool) {
+fn render_canvas_shape_fill(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, shape_rect: Rect, layer: &CanvasLayer, opacity: f32, fallback_fill: Rgba, backdrop: Rgba, is_circle: bool) {
     let blend = layer.blend_mode.as_deref();
     match &layer.fill {
         Some(fill) if fill.kind.as_deref() == Some("linearGradient") && !fill.stops.is_empty() => {
@@ -3316,7 +3316,7 @@ mod canvas2d_tests {
             pane_id: None,
             binding_id: None,
             presence: UiPresence::default(),
-            canvas_2d: Some(ui_wgpu::Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json }),
+            canvas_2d: Some(ui_wgpu::wgpu::Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json }),
             world_3d: None,
             node_graph: None,
             text_editor: None,
@@ -3342,9 +3342,9 @@ mod canvas2d_tests {
     fn selected_shape_draws_the_amber_ring_and_glow_not_theme_accent() {
         let layers = json!([{ "kind": "rectangle", "id": "r1", "x": 10.0, "y": 10.0, "width": 40.0, "height": 20.0, "selected": true }]);
         let node = canvas_scene("s1", layers.to_string());
-        let mut draw = ui_wgpu::DrawList::default();
-        let mut atlas = ui_wgpu::FontAtlas::builtin();
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut draw = ui_wgpu::wgpu::DrawList::default();
+        let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
         let theme = Theme::default();
         let mut scroll = HashMap::new();
         let mut collapsed = HashMap::new();
@@ -4192,14 +4192,14 @@ fn ink_wheel(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: f
 //#endregion InkCanvasState
 
 //#region InkCanvasRender
-fn draw_ink_rect_outline(draw: &mut ui_wgpu::DrawList, x: f32, y: f32, w: f32, h: f32, color: Rgba, width: f32) {
+fn draw_ink_rect_outline(draw: &mut ui_wgpu::wgpu::DrawList, x: f32, y: f32, w: f32, h: f32, color: Rgba, width: f32) {
     draw.push_line(x, y, x + w, y, color, width);
     draw.push_line(x + w, y, x + w, y + h, color, width);
     draw.push_line(x + w, y + h, x, y + h, color, width);
     draw.push_line(x, y + h, x, y, color, width);
 }
 
-fn draw_ink_grid(draw: &mut ui_wgpu::DrawList, camera: InkCameraF, inner: Rect, theme: &Theme, spacing: f64, subdivisions: u32, opacity: f64) {
+fn draw_ink_grid(draw: &mut ui_wgpu::wgpu::DrawList, camera: InkCameraF, inner: Rect, theme: &Theme, spacing: f64, subdivisions: u32, opacity: f64) {
     let major_px = (spacing * camera.zoom) as f32;
     if major_px < 2.0 {
         return;
@@ -4351,7 +4351,7 @@ fn draw_ink_item(ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneN
     draw_ink_rect_outline(ctx.draw, sx, sy, w.max(4.0), h.max(4.0), border, border_w);
 }
 
-fn draw_ink_selection_chrome(draw: &mut ui_wgpu::DrawList, theme: &Theme, camera: InkCameraF, inner: Rect, bounds: InkBoundsF, show_handles: bool) {
+fn draw_ink_selection_chrome(draw: &mut ui_wgpu::wgpu::DrawList, theme: &Theme, camera: InkCameraF, inner: Rect, bounds: InkBoundsF, show_handles: bool) {
     let (sx, sy) = ink_world_to_screen(camera, inner, bounds.x, bounds.y);
     let w = (bounds.w * camera.zoom) as f32;
     let h = (bounds.h * camera.zoom) as f32;
@@ -4367,7 +4367,7 @@ fn draw_ink_selection_chrome(draw: &mut ui_wgpu::DrawList, theme: &Theme, camera
     }
 }
 
-fn render_ink_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::GpuContext) {
+fn render_ink_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::wgpu::GpuContext) {
     let _ = gpu;
     let theme = ctx.theme;
     let Some(ink) = &scene.ink_canvas else {
@@ -4412,7 +4412,7 @@ fn render_ink_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
 
     if state.ink_marquee_points.len() >= 2 {
         let points: Vec<[f32; 2]> = state.ink_marquee_points.iter().map(|p| [p.0, p.1]).collect();
-        ui_wgpu::paint_selection_marquee(ctx.draw, theme, false, false, &points, false);
+        ui_wgpu::wgpu::paint_selection_marquee(ctx.draw, theme, false, false, &points, false);
     }
 
     ctx.draw.pop_scissor();
@@ -4426,7 +4426,7 @@ fn render_ink_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
 mod raster_frame_cost_tests {
     use super::*;
 
-    fn count_solids(draw: &ui_wgpu::DrawList) -> usize {
+    fn count_solids(draw: &ui_wgpu::wgpu::DrawList) -> usize {
         draw.layers.iter().map(|layer| layer.ui_instances.len()).sum()
     }
 
@@ -4466,7 +4466,7 @@ mod raster_frame_cost_tests {
 
     #[test]
     fn draw_checkerboard_clamps_to_visible_viewport() {
-        let mut draw = ui_wgpu::DrawList::default();
+        let mut draw = ui_wgpu::wgpu::DrawList::default();
         let viewport = Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
         let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
         let theme = Theme::default();
@@ -4478,7 +4478,7 @@ mod raster_frame_cost_tests {
 
     #[test]
     fn draw_checkerboard_falls_back_to_full_extent_when_zoom_is_zero() {
-        let mut draw = ui_wgpu::DrawList::default();
+        let mut draw = ui_wgpu::wgpu::DrawList::default();
         let viewport = Viewport { x: 0.0, y: 0.0, zoom: 0.0 };
         let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
         let theme = Theme::default();
@@ -4538,7 +4538,7 @@ mod raster_frame_cost_tests {
 
     #[test]
     fn push_linear_gradient_fill_emits_banded_triangle_fan_geometry() {
-        let mut draw = ui_wgpu::DrawList::default();
+        let mut draw = ui_wgpu::wgpu::DrawList::default();
         let viewport = Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
         let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
         let clip = Rect::new(50.0, 50.0, 100.0, 40.0);
@@ -4558,7 +4558,7 @@ mod raster_frame_cost_tests {
 
     #[test]
     fn push_radial_gradient_fill_emits_concentric_ring_geometry() {
-        let mut draw = ui_wgpu::DrawList::default();
+        let mut draw = ui_wgpu::wgpu::DrawList::default();
         let viewport = Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
         let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
         let clip = Rect::new(0.0, 0.0, 80.0, 80.0);
@@ -4577,7 +4577,7 @@ mod raster_frame_cost_tests {
 
     #[test]
     fn render_canvas_shape_fill_draws_solid_fill_and_stroke_for_plain_records() {
-        let mut draw = ui_wgpu::DrawList::default();
+        let mut draw = ui_wgpu::wgpu::DrawList::default();
         let viewport = Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
         let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
         let shape_rect = Rect::new(10.0, 10.0, 40.0, 20.0);
@@ -4634,7 +4634,7 @@ mod raster_frame_cost_tests {
 #[cfg(test)]
 mod ink_canvas_tests {
     use super::*;
-    use ui_wgpu::UiPresence;
+    use ui_wgpu::wgpu::UiPresence;
 
     fn sample_block(id: &str, x: f64, y: f64, w: f64, h: f64) -> Value {
         json!({
@@ -4741,9 +4741,9 @@ mod ink_canvas_tests {
             block_list: None,
             menu: None,
         };
-        let mut draw = ui_wgpu::DrawList::default();
-        let mut atlas = ui_wgpu::FontAtlas::builtin();
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut draw = ui_wgpu::wgpu::DrawList::default();
+        let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
         let theme = Theme::default();
         let mut scroll = HashMap::new();
         let mut collapsed = HashMap::new();
@@ -4797,7 +4797,7 @@ pub fn resolve_graph_context_action(action: &ActionDescriptor, node_id: Option<&
     resolved
 }
 
-fn find_graph_node(scene: &UiComponentSceneNode, node_id: &str) -> Option<ui_wgpu::NodeGraphNodeRecord> {
+fn find_graph_node(scene: &UiComponentSceneNode, node_id: &str) -> Option<ui_wgpu::wgpu::NodeGraphNodeRecord> {
     scene.node_graph.as_ref().and_then(|graph| graph.nodes.iter().find(|n| n.id == node_id).cloned())
 }
 
@@ -4835,7 +4835,7 @@ fn push_bezier(ctx: &mut FrameworkWidgetContext<'_>, x0: f32, y0: f32, x1: f32, 
     }
 }
 
-fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::GpuContext, node_graph_states: &mut HashMap<String, NodeGraphSurface>) {
+fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::wgpu::GpuContext, node_graph_states: &mut HashMap<String, NodeGraphSurface>) {
     let Some(graph) = &scene.node_graph else {
         return render_placeholder("node-graph", bounds, ctx);
     };
@@ -4851,7 +4851,7 @@ fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
     engine_canvas::paint_node_graph_overlays(ctx, scene, inner);
 }
 
-fn node_screen_pos(node: &ui_wgpu::NodeGraphNodeRecord, state: &SceneSurfaceState, viewport: &Viewport, inner: Rect) -> (f32, f32) {
+fn node_screen_pos(node: &ui_wgpu::wgpu::NodeGraphNodeRecord, state: &SceneSurfaceState, viewport: &Viewport, inner: Rect) -> (f32, f32) {
     let (nx, ny) = state.node_positions.get(&node.id).copied().unwrap_or((node.x as f32, node.y as f32));
     viewport.world_to_screen(nx, ny, inner)
 }
@@ -4896,8 +4896,8 @@ fn paint_tiled_map_marquee(ctx: &mut FrameworkWidgetContext<'_>, surface_id: &st
     };
     let lasso = method == "lasso" && points.len() >= 3;
     let global: Vec<[f32; 2]> = points.iter().map(|(x, y)| [inner.x + x, inner.y + y]).collect();
-    let crossing = ui_wgpu::marquee_is_crossing_from_path(&global, lasso);
-    ui_wgpu::paint_selection_marquee(&mut ctx.draw, theme, crossing, lasso, &global, false);
+    let crossing = ui_wgpu::wgpu::marquee_is_crossing_from_path(&global, lasso);
+    ui_wgpu::wgpu::paint_selection_marquee(&mut ctx.draw, theme, crossing, lasso, &global, false);
 }
 
 /** @emoji 🗺️ Pushes GIS map context-menu items for a screen-space hit. */
@@ -4965,7 +4965,7 @@ pub fn tiled_map_pointer_move(surface_id: &str, controller_id: &str, inner: Rect
     mutate_scene_state(surface_id, |state| {
         state.map_last_hover_json = Some(hover_json.clone());
     });
-    vec![engine_canvas::map_action(controller_id, ui_wgpu::tiled_map_actions::SET_HOVER, json!({ "surfaceId": surface_id, "hover": hover }))]
+    vec![engine_canvas::map_action(controller_id, ui_wgpu::wgpu::tiled_map_actions::SET_HOVER, json!({ "surfaceId": surface_id, "hover": hover }))]
 }
 
 pub fn tiled_map_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32) -> Vec<ActionDescriptor> {
@@ -4993,7 +4993,7 @@ pub fn tiled_map_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, 
                 let (positions, routes) = engine_canvas::with_map_host(surface_id, |host| query_map_feature_hits(host, &method, &points, crossing)).unwrap_or_default();
                 actions.push(engine_canvas::map_action(
                     controller_id,
-                    ui_wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
+                    ui_wgpu::wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
                     json!({
                         "surfaceId": surface_id,
                         "positions": positions,
@@ -5008,7 +5008,7 @@ pub fn tiled_map_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, 
                 if let (Some(kind), Some(id)) = (kind, id) {
                     actions.push(engine_canvas::map_action(
                         controller_id,
-                        ui_wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
+                        ui_wgpu::wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
                         json!({
                             "surfaceId": surface_id,
                             "positions": if kind == "position" { vec![id] } else { Vec::<&str>::new() },
@@ -5033,7 +5033,7 @@ pub fn tiled_map_drag_active(surface_id: &str) -> bool {
     scene_state(surface_id).drag.as_ref().is_some_and(|drag| matches!(drag.mode, SceneDragMode::MapMarquee { .. } | SceneDragMode::MapPan))
 }
 
-fn render_tiled_map(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::GpuContext, tiled_map_states: &mut HashMap<String, TiledMapSurface>) {
+fn render_tiled_map(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::wgpu::GpuContext, tiled_map_states: &mut HashMap<String, TiledMapSurface>) {
     let Some(map_scene) = &scene.tiled_map else {
         return render_placeholder("tiled-map", bounds, ctx);
     };
@@ -5173,7 +5173,7 @@ fn render_icon_render_empty(bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, 
 }
 
 /** @emoji 🖼️ Native counterpart of framework/renderer/react/components/icon-render-host.tsx: reframes the request into a synthetic World3dScene and delegates the actual GLB draw to infinite_world::render_world_3d, then paints the aspect-fit frame/badge/footer chrome on top. */
-fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::GpuContext, icon_render_states: &mut HashMap<String, World3dState>) {
+fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::wgpu::GpuContext, icon_render_states: &mut HashMap<String, World3dState>) {
     let Some(icon_render) = &scene.icon_render else {
         return render_icon_render_empty(bounds, ctx, "No shot");
     };
@@ -5202,7 +5202,7 @@ fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
         icon_render_camera_json(&request.camera),
         semio_framework_plugin::world3d_meshes_json_from_urls(std::slice::from_ref(&request.asset_url)),
         instances_json,
-        ui_wgpu::world3d_default_selection_json(),
+        ui_wgpu::wgpu::world3d_default_selection_json(),
         &semio_framework_plugin::WorldSunConfig::default(),
     );
     synthetic_world.environment_json = Some(icon_render_environment_json(&request));
@@ -5284,9 +5284,9 @@ mod icon_render_tests {
         let bounds = Rect::new(0.0, 0.0, 200.0, 200.0);
         let frame = Rect::new(20.0, 20.0, 160.0, 160.0);
 
-        let mut draw = ui_wgpu::DrawList::default();
-        let mut atlas = ui_wgpu::FontAtlas::builtin();
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut draw = ui_wgpu::wgpu::DrawList::default();
+        let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
         let theme = Theme::default();
         let mut scroll = HashMap::new();
         let mut collapsed = HashMap::new();
@@ -5321,7 +5321,7 @@ pub struct Board2dSurface {
     pub fixture_json: String,
 }
 
-fn render_board2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::GpuContext, board2d_states: &mut HashMap<String, Board2dSurface>) {
+fn render_board2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::wgpu::GpuContext, board2d_states: &mut HashMap<String, Board2dSurface>) {
     let Some(board_scene) = &scene.board2d else {
         return render_placeholder("board-2d", bounds, ctx);
     };
@@ -5744,7 +5744,7 @@ mod virtual_file_system_tests {
 /// `w2-scene-wiring` landed `apply_scene_pointer` in `RenderEntry` next, calling those for every
 /// non-bespoke surface kind including `TextEditor` from a once-per-render-frame `InputState` sample —
 /// and `w4-scene-input` (`.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`) has
-/// since replaced THAT with a real per-event route (`ui_wgpu::UiCommand::Scene` ->
+/// since replaced THAT with a real per-event route (`ui_wgpu::wgpu::UiCommand::Scene` ->
 /// `interpreter::apply_scene_ui_command`, calling the same two handlers), deleting `apply_scene_pointer`
 /// itself. Plain click/drag still reaches `EditorHost` via that generic path today, just per real event
 /// now rather than sampled once per frame. That single-click/drag code was removed here to avoid
@@ -5822,11 +5822,11 @@ fn store_text_editor_ui_state(surface_id: &str, state: TextEditorUiState) {
     });
 }
 
-fn text_editor_completions(editor: &ui_wgpu::TextEditorScene) -> Vec<TextEditorCompletionItem> {
+fn text_editor_completions(editor: &ui_wgpu::wgpu::TextEditorScene) -> Vec<TextEditorCompletionItem> {
     editor.completions_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default()
 }
 
-fn text_editor_rename_info(editor: &ui_wgpu::TextEditorScene) -> Option<TextEditorRenameInfo> {
+fn text_editor_rename_info(editor: &ui_wgpu::wgpu::TextEditorScene) -> Option<TextEditorRenameInfo> {
     editor.rename_json.as_deref().and_then(|json| serde_json::from_str(json).ok())
 }
 
@@ -5857,11 +5857,11 @@ fn text_editor_line_range(buffer: &str, cursor: usize) -> (usize, usize) {
 }
 
 /// 🧭️ Right-click menu rows, mirroring `buildTextEditorContextMenuItems` (`text-editor-host.tsx`) minus
-/// clipboard (no OS clipboard binding exists anywhere in this crate yet — see `ui_wgpu::events`'
+/// clipboard (no OS clipboard binding exists anywhere in this crate yet — see `ui_wgpu::wgpu::events`'
 /// `UiCommand::ClipboardCopy/Cut/PasteRequested`, which even there says the OS read/write is a
 /// "host-region concern" still unwired) and the domain-specific "pick target" rows (those need a new
 /// `EditorHost::pick_targets_at_screen_json` wrapper; deferred, noted in the ticket report).
-fn text_editor_context_menu_items(editor: &ui_wgpu::TextEditorScene) -> Vec<TextEditorMenuItem> {
+fn text_editor_context_menu_items(editor: &ui_wgpu::wgpu::TextEditorScene) -> Vec<TextEditorMenuItem> {
     let mut items = Vec::new();
     if !text_editor_completions(editor).is_empty() {
         items.push(TextEditorMenuItem { id: "suggest", label: "Suggest Completions" });
@@ -5880,7 +5880,7 @@ fn text_editor_context_menu_items(editor: &ui_wgpu::TextEditorScene) -> Vec<Text
 /// ▶️ Executes one context-menu row. `inner` re-derives the click point in surface-local screen space for
 /// "Select Token"/"Select Line"; "Select All" reuses `engine_canvas::text_editor_apply_key`'s existing
 /// Ctrl/Cmd+A path instead of adding a sixth wrapper.
-fn text_editor_run_menu_action(scene: &UiComponentSceneNode, editor: &ui_wgpu::TextEditorScene, inner: Rect, menu: &TextEditorContextMenu, action_id: &str, ctx: &mut FrameworkWidgetContext<'_>, ui_state: &mut TextEditorUiState) {
+fn text_editor_run_menu_action(scene: &UiComponentSceneNode, editor: &ui_wgpu::wgpu::TextEditorScene, inner: Rect, menu: &TextEditorContextMenu, action_id: &str, ctx: &mut FrameworkWidgetContext<'_>, ui_state: &mut TextEditorUiState) {
     match action_id {
         "suggest" => {
             ui_state.completions_open = true;
@@ -5899,7 +5899,7 @@ fn text_editor_run_menu_action(scene: &UiComponentSceneNode, editor: &ui_wgpu::T
             }
         }
         "select-all" => {
-            let modifiers = ui_wgpu::PointerModifiers { ctrl: true, ..Default::default() };
+            let modifiers = ui_wgpu::wgpu::PointerModifiers { ctrl: true, ..Default::default() };
             for action in engine_canvas::text_editor_apply_key(scene, KeyAction::Char("a".to_string()), &modifiers) {
                 ctx.input.queue_event(action);
             }
@@ -5948,7 +5948,7 @@ fn text_editor_menu_hit(menu: &TextEditorContextMenu, theme: &Theme, x: f32, y: 
     (0..menu.items.len()).find(|&index| text_editor_menu_row_rect(menu, theme, index).contains(x, y))
 }
 
-/// 🍿️ Local fallback popup: `ui_wgpu::events::{OverlayKind, open_overlay}` (the w1d-events-overlay
+/// 🍿️ Local fallback popup: `ui_wgpu::wgpu::events::{OverlayKind, open_overlay}` (the w1d-events-overlay
 /// workstream) is `pub(crate)` inside `ui_wgpu` — not reachable from this crate yet ("None of the new
 /// `EventRouter` API or new public types are called/re-exported from `engine`/crate-root yet", per that
 /// workstream's own report) — so this draws directly via `ctx.draw`, same convention as row-list surfaces
@@ -6056,7 +6056,7 @@ fn line_col_at(text: &str, cursor: usize) -> (usize, usize) {
 //#endregion Geometry
 
 //#region Render
-fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::GpuContext) {
+fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::wgpu::GpuContext) {
     let Some(editor) = &scene.text_editor else {
         return render_placeholder("text-editor", bounds, ctx);
     };
@@ -6075,7 +6075,7 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
 
     //#region PointerInput
     // 🔀️ Plain single-click-to-caret and drag-to-select are handled by the generic real per-event
-    // `ui_wgpu::UiCommand::Scene` -> `interpreter::apply_scene_ui_command` ->
+    // `ui_wgpu::wgpu::UiCommand::Scene` -> `interpreter::apply_scene_ui_command` ->
     // `handle_scene_pointer_button`/`handle_scene_pointer_move` route now (see `TextEditorUiState`'s
     // doc comment) — this block only covers what that path doesn't: double-click word-select and the
     // right-click context menu.
@@ -6263,7 +6263,7 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
 mod text_editor_tests {
     use super::*;
     use crate::interpreter::framework_widget_context;
-    use ui_wgpu::UiPresence;
+    use ui_wgpu::wgpu::UiPresence;
 
     fn test_scene(surface_id: &str, kind: SurfaceKind) -> UiComponentSceneNode {
         UiComponentSceneNode {
@@ -6292,8 +6292,8 @@ mod text_editor_tests {
         }
     }
 
-    fn text_editor_scene_payload(buffer: &str, completions_json: Option<&str>, rename_json: Option<&str>) -> ui_wgpu::TextEditorScene {
-        ui_wgpu::TextEditorScene {
+    fn text_editor_scene_payload(buffer: &str, completions_json: Option<&str>, rename_json: Option<&str>) -> ui_wgpu::wgpu::TextEditorScene {
+        ui_wgpu::wgpu::TextEditorScene {
             buffer: buffer.to_string(),
             language: None,
             selection_json: None,
@@ -6322,10 +6322,10 @@ mod text_editor_tests {
     /// 🧰️ GPU-free `FrameworkWidgetContext` fixture, same construction as `render_entry_tests::Fixture`
     /// (private to that module, so duplicated here rather than reused).
     struct Fixture {
-        draw: ui_wgpu::DrawList,
-        atlas: ui_wgpu::FontAtlas,
+        draw: ui_wgpu::wgpu::DrawList,
+        atlas: ui_wgpu::wgpu::FontAtlas,
         theme: Theme,
-        input: ui_wgpu::InputState<ActionDescriptor>,
+        input: ui_wgpu::wgpu::InputState<ActionDescriptor>,
         scroll_offsets: HashMap<String, f32>,
         collapsed_sections: HashMap<String, bool>,
         open_selects: HashMap<String, bool>,
@@ -6334,10 +6334,10 @@ mod text_editor_tests {
     impl Fixture {
         fn new() -> Self {
             Self {
-                draw: ui_wgpu::DrawList::default(),
-                atlas: ui_wgpu::FontAtlas::builtin(),
+                draw: ui_wgpu::wgpu::DrawList::default(),
+                atlas: ui_wgpu::wgpu::FontAtlas::builtin(),
                 theme: Theme::default(),
-                input: ui_wgpu::InputState::<ActionDescriptor>::default(),
+                input: ui_wgpu::wgpu::InputState::<ActionDescriptor>::default(),
                 scroll_offsets: HashMap::new(),
                 collapsed_sections: HashMap::new(),
                 open_selects: HashMap::new(),

@@ -157,7 +157,7 @@ pub fn preview_tolerance(lod_mode: &str) -> f64 {
 }
 
 pub fn preview_camera_json(cfg: &Procedural3dConfig) -> String {
-    ui_wgpu::world3d_camera_json(cfg.preview_camera.position, cfg.preview_camera.target, cfg.preview_camera.fov)
+    ui_wgpu::wgpu::world3d_camera_json(cfg.preview_camera.position, cfg.preview_camera.target, cfg.preview_camera.fov)
 }
 
 /// 🧭️ World-3d selection payload with the host-owned gumball utility spliced in, so the transform
@@ -226,29 +226,29 @@ pub fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<ui_wgpu::NodeGraphNodeRecord>, Vec<ui_wgpu::NodeGraphEdgeRecord>) {
-    let nodes: Vec<ui_wgpu::NodeGraphNodeRecord> = fixture
+pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<ui_wgpu::wgpu::NodeGraphNodeRecord>, Vec<ui_wgpu::wgpu::NodeGraphEdgeRecord>) {
+    let nodes: Vec<ui_wgpu::wgpu::NodeGraphNodeRecord> = fixture
         .nodes
         .iter()
-        .map(|node| ui_wgpu::NodeGraphNodeRecord {
+        .map(|node| ui_wgpu::wgpu::NodeGraphNodeRecord {
             id: node.id.clone(),
             label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
             x: node.x,
             y: node.y,
             width: node.width,
             height: node.height,
-            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| ui_wgpu::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), ..Default::default() }).collect(),
-            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| ui_wgpu::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), ..Default::default() }).collect(),
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| ui_wgpu::wgpu::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), ..Default::default() }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| ui_wgpu::wgpu::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), ..Default::default() }).collect(),
             ..Default::default()
         })
         .collect();
-    let edges: Vec<ui_wgpu::NodeGraphEdgeRecord> = fixture
+    let edges: Vec<ui_wgpu::wgpu::NodeGraphEdgeRecord> = fixture
         .edges
         .iter()
         .map(|edge| {
             let (source_node_id, source_port_id) = split_endpoint(&edge.source);
             let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-            ui_wgpu::NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
+            ui_wgpu::wgpu::NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
         })
         .collect();
     (nodes, edges)
@@ -573,7 +573,7 @@ pub(crate) mod test_support {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_s_3d::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Mesh3d, Vec3};
+    use semio_s_3d::scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Mesh3d, Vec3};
     use std::sync::MutexGuard;
 
     fn test_serial() -> MutexGuard<'static, ()> {

@@ -82,3 +82,34 @@ move in this ticket). Two dangling sourceRoots belonging to other families are l
 and both that manifest and `🎨️styling/📦️packages/🦀️rust/📜️script.ts` contain literal `"ln"` where a
 generated filename belongs (same corruption class visible in `compose/client/lib/net/…csproj`'s
 `🛂️n.manifest.json`). Left alone: pre-dates this ticket and touching the styling generator was out of scope.
+
+
+## Finish pass (2026-08-06 ~13:10)
+
+Root `cargo check -p semio-framework-ui-wgpu|tui|styling` blocked: target `Cargo.toml` files correctly
+absent post-consolidation, but root members not yet swapped (registrar). Also core→ui_wgpu still points
+at the deleted wgpu target path.
+
+Isolated overlay on merged `semio-framework-ui` (optional `kernel_3d_scene` temporarily removed so
+resolve does not walk core→deleted ui-wgpu):
+
+| Features | Result |
+|---|---|
+| `tui` | ✅ |
+| `wgpu` | ✅ (pulls styling) |
+| `typegen` | ✅ |
+| `tui-terminal` | ✅ |
+| `tui,wgpu,typegen` | ✅ |
+| `wgpu-engine` | ⛔ blocked on registrar dependent repoint (§9) |
+
+Also fixed `🎯️targets/{tui,wgpu}/📦️lib.rs` element `#[path]`s after UI-ELEMENT emoji folder rename.
+Logs: `verify/recheck-*.txt`.
+
+## Finish pass (2026-08-06) — final
+
+- Root members/workspace.deps/consumers already swapped to `semio-framework-ui` (registrar ahead of handoff).
+- Per-target `Cargo.toml` absent; parent owns `build.rs`.
+- Element `#[path]`s updated for UI-ELEMENT emoji folders.
+- Isolated overlay: `tui`, `wgpu`, `typegen`, `tui-terminal`, `tui+wgpu+typegen` all ✅ (`verify/recheck-*.txt`).
+- Root `-p` blocked by unrelated duplicate `semio-framework-editor`.
+- Ticket closed via filesystem (`🎫️ticket.json` status=closed).

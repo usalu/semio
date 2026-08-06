@@ -1,0 +1,58 @@
+COPY infinite_world -> 🔨️modules/♾️infinite/🌍️world/🦀️component.rs
+COPY dsl -> 🔨️modules/🗣️dsl/🦀️component.rs
+COPY dsl_core -> 🔨️modules/🗣️dsl/🫀️core/🦀️component.rs
+COPY dsl_family_catalog -> 🔨️modules/🗣️dsl/👪️family/🗂️catalog/🦀️component.rs
+COPY dsl_family_embed -> 🔨️modules/🗣️dsl/👪️family/📎️embed/🦀️component.rs
+COPY dsl_family_geo -> 🔨️modules/🗣️dsl/👪️family/🌍️geo/🦀️component.rs
+COPY dsl_family_graph -> 🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️component.rs
+COPY dsl_family_recipe -> 🔨️modules/🗣️dsl/👪️family/🧑‍🍳️recipe/🦀️component.rs
+COPY dsl_family_scene -> 🔨️modules/🗣️dsl/👪️family/🎬️scene/🦀️component.rs
+COPY dsl_family_sheet -> 🔨️modules/🗣️dsl/👪️family/📊️sheet/🦀️component.rs
+COPY dsl_fixture_sweep -> 🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs
+COPY dsl_grammar -> 🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs
+COPY dsl_lsp -> 🔨️modules/🗣️dsl/🧠️lsp/🦀️component.rs
+COPY dsl_notation -> 🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs
+COPY dsl_registry -> 🔨️modules/🗣️dsl/📇️registry/🦀️component.rs
+COPY dsl_schema -> 🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs
+  sibling dsl_value_serde.rs
+COPY flow_core -> 🔨️modules/🌊️flow/🫀️core/🦀️component.rs
+COPY infinite_board -> 🔨️modules/♾️infinite/🎲️board/🦀️component.rs
+COPY infinite_board_normal_directed -> 🔨️modules/♾️infinite/🎲️board/➕️normal/➡️directed/🦀️component.rs
+COPY infinite_board_normal_undirected -> 🔨️modules/♾️infinite/🎲️board/➕️normal/↔undirected/🦀️component.rs
+COPY infinite_board_port -> 🔨️modules/♾️infinite/🎲️board/🔌️ports/🦀️component.rs
+COPY infinite_board_port_directed -> 🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🦀️component.rs
+COPY infinite_board_port_directed_dag -> 🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️component.rs
+COPY infinite_board_port_directed_normal -> 🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🦀️component.rs
+COPY infinite_board_port_undirected -> 🔨️modules/♾️infinite/🎲️board/🔌️ports/↔undirected/🦀️component.rs
+COPY infinite_canvas -> 🔨️modules/♾️infinite/🖼️canvas/🦀️component.rs
+  build.rs
+  assets 🖼️assets
+COPY pack -> 🔨️modules/🎒️pack/🦀️component.rs
+COPY pack_async -> 🔨️modules/🎒️pack/⏳️async/🦀️component.rs
+COPY pack_cli -> 🔨️modules/🎒️pack/⌨️cli/🦀️component.rs
+  main.rs
+COPY pack_core -> 🔨️modules/🎒️pack/🫀️core/🦀️component.rs
+COPY pack_format -> 🔨️modules/🎒️pack/📐️format/🦀️component.rs
+COPY pack_http -> 🔨️modules/🎒️pack/🌐️http/🦀️component.rs
+COPY pack_index -> 🔨️modules/🎒️pack/🔢️index/🦀️component.rs
+COPY pack_io -> 🔨️modules/🎒️pack/🔌️io/🦀️component.rs
+COPY pack_testkit -> 🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs
+COPY pack_value -> 🔨️modules/🎒️pack/🔢️value/🦀️component.rs
+COPY protocol -> 🔨️modules/📡️spr/🦀️component.rs
+COPY protocol_causal -> 🔨️modules/📡️spr/🔗️causal/🦀️component.rs
+COPY protocol_channel -> 🔨️modules/📡️spr/🧵️channel/🦀️component.rs
+COPY protocol_cli -> 🔨️modules/📡️spr/⌨️cli/🦀️component.rs
+  main.rs
+COPY protocol_command -> 🔨️modules/📡️spr/🎮️command/🦀️component.rs
+COPY protocol_core -> 🔨️modules/📡️spr/🫀️core/🦀️component.rs
+COPY protocol_crdt -> 🔨️modules/📡️spr/🔀️crdt/🦀️component.rs
+COPY protocol_format -> 🔨️modules/📡️spr/📐️format/🦀️component.rs
+COPY protocol_history -> 🔨️modules/📡️spr/📜️history/🦀️component.rs
+COPY protocol_io -> 🔨️modules/📡️spr/🔌️io/🦀️component.rs
+COPY protocol_materialize -> 🔨️modules/📡️spr/💎️materialize/🦀️component.rs
+COPY protocol_testkit -> 🔨️modules/📡️spr/🧪️testkit/🦀️component.rs
+  benches
+COPY protocol_wire -> 🔨️modules/📡️spr/📡️wire/🦀️component.rs
+COPY store -> 🔨️modules/🏪️store/🦀️component.rs
+COPY store_sync -> 🔨️modules/🏪️store/🔄️sync/🦀️component.rs
+COPY store_worker -> 🔨️modules/🏪️store/👷️worker/🦀️component.rs

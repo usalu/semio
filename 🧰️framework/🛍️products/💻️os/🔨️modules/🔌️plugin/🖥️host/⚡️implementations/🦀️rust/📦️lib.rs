@@ -7,7 +7,7 @@ use semio_framework_core::{
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
-use ui_wgpu::{UtilityNode, WindowEngagement, WindowMeasure};
+use ui_wgpu::wgpu::{UtilityNode, WindowEngagement, WindowMeasure};
 use wasmtime::component::{bindgen, Component, Linker};
 use wasmtime::{Config, Engine, Store};
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
@@ -306,7 +306,7 @@ impl WasmPluginRuntime {
     }
 
     /// 🖱️ On-demand context menu via `AppCommand::ContextMenu` on the plugin exchange channel.
-    pub fn context_menu(&self, instance_id: u32, request: serde_json::Value) -> Result<Vec<ui_wgpu::ContextMenuItemSpec>, PluginHostError> {
+    pub fn context_menu(&self, instance_id: u32, request: serde_json::Value) -> Result<Vec<ui_wgpu::wgpu::ContextMenuItemSpec>, PluginHostError> {
         use protocol::{decode_app_frame, encode_app_command, AppCommand, AppFrame};
         use std::sync::atomic::{AtomicU64, Ordering};
         static SEQ: AtomicU64 = AtomicU64::new(1);

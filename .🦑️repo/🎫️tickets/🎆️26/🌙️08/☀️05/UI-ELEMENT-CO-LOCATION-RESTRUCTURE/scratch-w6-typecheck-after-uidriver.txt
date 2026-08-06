@@ -1,0 +1,351 @@
+../../../../../../⚡️implementations/🟦️typescript/📦️index.ts(66,33): error TS2307: Cannot find module '../🦀️rust/bindings/UiPresence' or its corresponding type declarations.
+../../../../../../⚡️implementations/🟦️typescript/📦️index.ts(67,30): error TS2307: Cannot find module '../🦀️rust/bindings/UiState' or its corresponding type declarations.
+../../../../../../⚡️implementations/🟦️typescript/📦️index.ts(68,31): error TS2307: Cannot find module '../🦀️rust/bindings/UiStatus' or its corresponding type declarations.
+../../../../../../⚡️implementations/🟦️typescript/📦️index.ts(69,33): error TS2307: Cannot find module '../🦀️rust/bindings/UiPresence' or its corresponding type declarations.
+../../../../../../⚡️implementations/🟦️typescript/📦️index.ts(70,31): error TS2307: Cannot find module '../🦀️rust/bindings/UiStatus' or its corresponding type declarations.
+../../../../../../⚡️implementations/🟦️typescript/📦️index.ts(2945,23): error TS2358: The left-hand side of an 'instanceof' expression must be of type 'any', an object type or a type parameter.
+../../../../../../⚡️implementations/🟦️typescript/📦️index.ts(2945,96): error TS2352: Conversion of type 'string' to type 'ArrayBuffer' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(226,29): error TS2540: Cannot assign to 'aliases' because it is a read-only property.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(227,30): error TS2540: Cannot assign to 'variants' because it is a read-only property.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(228,35): error TS2540: Cannot assign to 'themedAliases' because it is a read-only property.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(229,36): error TS2540: Cannot assign to 'themedVariants' because it is a read-only property.
+📦️index.tsx(870,20): error TS2304: Cannot find name 'UiLabel'.
+📦️index.tsx(1067,205): error TS2300: Duplicate identifier 'Icon'.
+📦️index.tsx(1067,1808): error TS2300: Duplicate identifier 'Cursor'.
+📦️index.tsx(1067,1841): error TS2300: Duplicate identifier 'Icon'.
+📦️index.tsx(1068,205): error TS2300: Duplicate identifier 'Icon'.
+📦️index.tsx(1068,1808): error TS2300: Duplicate identifier 'Cursor'.
+📦️index.tsx(1068,1841): error TS2300: Duplicate identifier 'Icon'.
+📦️index.tsx(1484,24): error TS2345: Argument of type 'import("/Users/ueli/Documents/semio/node_modules/@xyflow/react/dist/esm/types/nodes").Node | null' is not assignable to parameter of type 'Node | null'.
+  Type 'Node' is not assignable to type 'Node | null'.
+📦️index.tsx(1495,49): error TS2345: Argument of type 'Node' is not assignable to parameter of type 'Node | null'.
+📦️index.tsx(1901,25): error TS2552: Cannot find name 'UiRibbonParentEntries'. Did you mean 'UiRibbonParentKey'?
+📦️index.tsx(1930,25): error TS2552: Cannot find name 'UiRibbonParentEntries'. Did you mean 'UiRibbonParentKey'?
+📦️index.tsx(3402,161): error TS2552: Cannot find name 'DeepUiTranslationKeys'. Did you mean 'UiTranslationKey'?
+📦️index.tsx(4033,11): error TS2322: Type 'HTMLElement' is not assignable to type 'Node'.
+  Type 'HTMLElement' is missing the following properties from type '{ id: string; position: XYPosition; data: Record<string, unknown>; sourcePosition?: Position | undefined; targetPosition?: Position | undefined; ... 19 more ...; measured?: { ...; } | undefined; }': position, data
+📦️index.tsx(4103,30): error TS2345: Argument of type 'import("/Users/ueli/Documents/semio/node_modules/@xyflow/react/dist/esm/types/nodes").Node' is not assignable to parameter of type 'Node'.
+  Type 'Node' is missing the following properties from type 'Node': baseURI, childNodes, firstChild, isConnected, and 46 more.
+📦️index.tsx(4146,11): error TS2322: Type 'HTMLElement' is not assignable to type 'Node'.
+  Type 'HTMLElement' is missing the following properties from type '{ id: string; position: XYPosition; data: Record<string, unknown>; sourcePosition?: Position | undefined; targetPosition?: Position | undefined; ... 19 more ...; measured?: { ...; } | undefined; }': position, data
+📦️index.tsx(4184,30): error TS2345: Argument of type 'import("/Users/ueli/Documents/semio/node_modules/@xyflow/react/dist/esm/types/nodes").Node' is not assignable to parameter of type 'Node'.
+  Type 'Node' is missing the following properties from type 'Node': baseURI, childNodes, firstChild, isConnected, and 46 more.
+📦️index.tsx(5186,58): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+📦️index.tsx(5213,15): error TS2322: Type 'unknown' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+📦️index.tsx(5685,39): error TS2322: Type '"gauge"' is not assignable to type 'ControlIcon'.
+📦️index.tsx(6595,10): error TS2741: Property 'children' is missing in type '{ ref: RefObject<HTMLDivElement | null>; sessionGhost: false; "data-level": string; "data-slot": string; "data-anchor": "top-left" | "top-middle" | "top-right" | ... 4 more ... | "left-middle"; "data-panel-chrome-tab-bar-placeholder": string; "aria-hidden": "true"; className: string; style: { ...; } | undefined; }' but required in type 'GhostRegionShellProps'.
+📦️index.tsx(6758,15): error TS2540: Cannot assign to 'right' because it is a read-only property.
+📦️index.tsx(7143,16): error TS2322: Type '{ xmlns: string; className: string; style: { width: string; height: string; }; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>'.
+  Property 'xmlns' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>'.
+📦️index.tsx(7338,20): error TS2304: Cannot find name 'contextMenuContentClassName'.
+📦️index.tsx(7643,11): error TS2304: Cannot find name 'UiLabel'.
+📦️index.tsx(7902,11): error TS2304: Cannot find name 'UiLabel'.
+📦️index.tsx(7956,10): error TS2300: Duplicate identifier 'Cursor'.
+📦️index.tsx(7957,10): error TS2300: Duplicate identifier 'Cursor'.
+📦️index.tsx(7969,11): error TS2304: Cannot find name 'UiLabel'.
+📦️index.tsx(8564,20): error TS2304: Cannot find name 'UiLabel'.
+📦️index.tsx(8805,11): error TS2304: Cannot find name 'UiLabel'.
+📦️index.tsx(8828,11): error TS2304: Cannot find name 'UiLabel'.
+📦️index.tsx(8845,11): error TS2304: Cannot find name 'UiLabel'.
+📦️index.tsx(8860,11): error TS2304: Cannot find name 'UiLabel'.
+📦️index.tsx(8879,11): error TS2304: Cannot find name 'UiLabel'.
+📦️index.tsx(8897,11): error TS2304: Cannot find name 'UiLabel'.
+📦️index.tsx(8899,17): error TS2304: Cannot find name 'UiLabel'.
+📦️index.tsx(8954,17): error TS2304: Cannot find name 'UiLabel'.
+📦️index.tsx(9262,11): error TS2304: Cannot find name 'UiLabel'.
+📦️index.tsx(10502,15): error TS2741: Property 'iconId' is missing in type '{ id: string; title: any; utilityBar: React.JSX.Element; utilityBarFolded: false; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+📦️index.tsx(10504,24): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(10562,15): error TS2741: Property 'iconId' is missing in type '{ id: string; title: any; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+📦️index.tsx(10564,24): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(11214,34): error TS2322: Type '"click"' is not assignable to type '"zoom" | "panel" | "tool" | "action" | "expand" | "orbit" | "utility" | "pan"'.
+📦️index.tsx(11487,34): error TS2322: Type '"click"' is not assignable to type '"zoom" | "panel" | "tool" | "action" | "expand" | "orbit" | "utility" | "pan"'.
+📦️index.tsx(11509,34): error TS2322: Type '"click"' is not assignable to type '"zoom" | "panel" | "tool" | "action" | "expand" | "orbit" | "utility" | "pan"'.
+📦️index.tsx(11755,44): error TS2345: Argument of type '{ kind: "drag"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; }' is not assignable to parameter of type 'IntroductionGesture'.
+  Type '{ kind: "drag"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; }' is missing the following properties from type '{ kind: "drag"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }': button, modifiers
+📦️index.tsx(11756,44): error TS2345: Argument of type '{ kind: "drag"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; button: "middle"; }' is not assignable to parameter of type 'IntroductionGesture'.
+  Property 'modifiers' is missing in type '{ kind: "drag"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; button: "middle"; }' but required in type '{ kind: "drag"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }'.
+📦️index.tsx(11757,44): error TS2345: Argument of type '{ kind: "orbit"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; }' is not assignable to parameter of type 'IntroductionGesture'.
+  Type '{ kind: "orbit"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; }' is missing the following properties from type '{ kind: "orbit"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }': button, modifiers
+📦️index.tsx(11897,23): error TS2352: Conversion of type '{ id: string; title: string; body: string; introduce: null; show: never[]; placement: "center"; interactions: never[]; ordered: false; logos: never[]; }[]' to type 'IntroductionStepDefinition[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'demonstrations' is missing in type '{ id: string; title: string; body: string; introduce: null; show: never[]; placement: "center"; interactions: never[]; ordered: false; logos: never[]; }' but required in type 'IntroductionStepDefinition'.
+📦️index.tsx(11973,13): error TS2322: Type '{ kind: "drag"; from: { kind: "element"; id: string; }; to: { kind: "element"; id: string; }; button: "middle"; }' is not assignable to type 'IntroductionGesture'.
+  Property 'modifiers' is missing in type '{ kind: "drag"; from: { kind: "element"; id: string; }; to: { kind: "element"; id: string; }; button: "middle"; }' but required in type '{ kind: "drag"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }'.
+📦️index.tsx(11974,13): error TS2322: Type '{ kind: "orbit"; from: { kind: "element"; id: string; }; to: { kind: "element"; id: string; }; }' is not assignable to type 'IntroductionGesture'.
+  Type '{ kind: "orbit"; from: { kind: "element"; id: string; }; to: { kind: "element"; id: string; }; }' is missing the following properties from type '{ kind: "orbit"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }': button, modifiers
+📦️index.tsx(12786,47): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12811,70): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12819,29): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12838,16): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12838,42): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12838,70): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12838,103): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12896,29): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12896,79): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12908,29): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12908,79): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12924,51): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12924,89): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12947,51): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12947,89): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12969,29): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12971,36): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12972,37): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12973,34): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12992,44): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(12992,127): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13007,39): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13011,31): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13012,31): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13032,39): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13036,42): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13037,42): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13061,41): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13061,121): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13080,39): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13085,42): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13086,42): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13102,39): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13106,31): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13107,31): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13108,33): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13109,31): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13124,39): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13128,31): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13129,31): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13147,39): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13153,22): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13155,38): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13156,40): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13159,36): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13175,44): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13175,148): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13194,39): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13198,43): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13199,31): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13200,33): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13201,31): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13216,39): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13219,45): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13219,103): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13233,39): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13236,45): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13236,120): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13245,44): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13245,122): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13310,36): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13311,39): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13324,34): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(13325,36): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14404,44): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14450,36): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14451,37): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14524,36): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14525,37): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14567,48): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14596,34): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14597,34): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14598,34): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14599,34): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14666,36): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14667,37): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14703,35): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14704,38): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14734,34): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14735,34): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14736,34): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14737,34): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14773,33): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14774,33): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14837,37): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14838,38): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14904,36): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14905,36): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(14931,49): error TS2345: Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'readonly { id: string; title: string; iconId: "x" | "type" | "link" | "list" | "note" | "search" | "camera" | "clock" | "layers" | "triangle" | "map" | "filter" | "copy" | "focus" | "animate" | ... 233 more ... | "zoom-out"; }[]'.
+  Property 'iconId' is missing in type '{ id: string; title: string; }' but required in type '{ id: string; title: string; iconId: "x" | "type" | "link" | "list" | "note" | "search" | "camera" | "clock" | "layers" | "triangle" | "map" | "filter" | "copy" | "focus" | "animate" | ... 233 more ... | "zoom-out"; }'.
+📦️index.tsx(14934,44): error TS2345: Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'readonly { id: string; title: string; iconId: "x" | "type" | "link" | "list" | "note" | "search" | "camera" | "clock" | "layers" | "triangle" | "map" | "filter" | "copy" | "focus" | "animate" | ... 233 more ... | "zoom-out"; }[]'.
+  Property 'iconId' is missing in type '{ id: string; title: string; }' but required in type '{ id: string; title: string; iconId: "x" | "type" | "link" | "list" | "note" | "search" | "camera" | "clock" | "layers" | "triangle" | "map" | "filter" | "copy" | "focus" | "animate" | ... 233 more ... | "zoom-out"; }'.
+📦️index.tsx(14942,49): error TS2345: Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'readonly { id: string; title: string; iconId: "x" | "type" | "link" | "list" | "note" | "search" | "camera" | "clock" | "layers" | "triangle" | "map" | "filter" | "copy" | "focus" | "animate" | ... 233 more ... | "zoom-out"; }[]'.
+  Property 'iconId' is missing in type '{ id: string; title: string; }' but required in type '{ id: string; title: string; iconId: "x" | "type" | "link" | "list" | "note" | "search" | "camera" | "clock" | "layers" | "triangle" | "map" | "filter" | "copy" | "focus" | "animate" | ... 233 more ... | "zoom-out"; }'.
+📦️index.tsx(15236,34): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15237,34): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15238,34): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15239,34): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15516,33): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15517,33): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15540,48): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15549,36): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15550,36): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15570,55): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15571,41): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15582,25): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15591,100): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15594,73): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15600,59): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15654,33): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15681,33): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15727,33): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15753,20): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15764,22): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15846,28): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15869,26): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15891,21): error TS2741: Property 'iconId' is missing in type '{ id: string; title: any; active: true; search: { input: { id: string; value: string; placeholder: any; onChange: React.Dispatch<React.SetStateAction<string>>; }; }; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+📦️index.tsx(15893,30): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15895,82): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15980,81): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(15997,77): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16011,73): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16027,57): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16039,51): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16049,51): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16064,42): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16080,19): error TS2741: Property 'iconId' is missing in type '{ id: string; title: any; active: true; search: { input: { value: string; placeholder: any; onChange: () => void; onAbort: () => number; }; }; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+📦️index.tsx(16082,28): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16085,59): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16105,191): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16163,108): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16188,95): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16223,28): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16261,79): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16333,75): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16346,94): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16362,88): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16379,128): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16401,129): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16534,47): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16637,79): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16650,71): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16662,71): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16673,72): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16691,75): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16705,78): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16715,80): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16728,78): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16744,77): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16755,77): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16772,87): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16794,100): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16808,100): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16819,74): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16836,102): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16860,72): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16872,72): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16883,77): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16911,78): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16925,70): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16939,75): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(16955,74): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(17340,74): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(17430,72): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(17433,75): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(18481,24): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(18608,139): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(18608,219): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(19146,25): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(19147,25): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(19175,98): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(19198,41): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(19221,41): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(19222,60): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(19245,43): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(19267,43): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(19281,43): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(19297,43): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(19300,43): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(19682,69): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(19751,70): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(19773,44): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(20451,41): error TS2304: Cannot find name 'uiDataLabel'.
+📦️index.tsx(20451,108): error TS2304: Cannot find name 'uiDataLabel'.
+../../../../🧱️elements/🎨Canvas/🟦️component.tsx(1224,7): error TS2322: Type 'number[]' is not assignable to type 'Layout'.
+  Index signature for type 'string' is missing in type 'number[]'.
+../../../../🧱️elements/🎨Canvas/🟦️component.tsx(1688,7): error TS2322: Type 'readonly { id: string; title: string; iconId: "x" | "type" | "link" | "list" | "note" | "search" | "camera" | "clock" | "layers" | "triangle" | "map" | "filter" | "copy" | "focus" | "animate" | ... 233 more ... | "zoom-out"; }[] | { ...; }[]' is not assignable to type 'readonly { id: string; title: string; iconId: "x" | "type" | "link" | "list" | "note" | "search" | "camera" | "clock" | "layers" | "triangle" | "map" | "filter" | "copy" | "focus" | "animate" | ... 233 more ... | "zoom-out"; }[]'.
+  Type '{ id: string; title: string; iconId: string; }[]' is not assignable to type 'readonly { id: string; title: string; iconId: "x" | "type" | "link" | "list" | "note" | "search" | "camera" | "clock" | "layers" | "triangle" | "map" | "filter" | "copy" | "focus" | "animate" | ... 233 more ... | "zoom-out"; }[]'.
+    Type '{ id: string; title: string; iconId: string; }' is not assignable to type '{ id: string; title: string; iconId: "x" | "type" | "link" | "list" | "note" | "search" | "camera" | "clock" | "layers" | "triangle" | "map" | "filter" | "copy" | "focus" | "animate" | ... 233 more ... | "zoom-out"; }'.
+      Types of property 'iconId' are incompatible.
+        Type 'string' is not assignable to type '"x" | "type" | "link" | "list" | "note" | "search" | "camera" | "clock" | "layers" | "triangle" | "map" | "filter" | "copy" | "focus" | "animate" | "box" | "columns" | "home" | "window" | ... 229 more ... | "zoom-out"'.
+../../../../🧱️elements/💬UIDialog/🟦️component.tsx(53,55): error TS2322: Type 'unknown' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+../../../../🧱️elements/💬UIDialog/🟦️component.tsx(54,9): error TS2322: Type 'unknown' is not assignable to type 'string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<...> | null | undefined'.
+../../../../🧱️elements/💬UIDialog/🟦️component.tsx(54,80): error TS2322: Type '{}' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+../../../../🧱️elements/💬UIDialog/🟦️component.tsx(59,65): error TS2322: Type 'unknown' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+../../../../🧱️elements/💬UIDialog/🟦️component.tsx(66,66): error TS2322: Type '{}' is not assignable to type 'string'.
+../../../../🧱️elements/💬UIDialog/🟦️component.tsx(67,54): error TS2322: Type 'unknown' is not assignable to type 'string | undefined'.
+../../../../🧱️elements/📁VirtualFileSystem/🟦️component.tsx(540,6): error TS2604: JSX element type 'Table' does not have any construct or call signatures.
+../../../../🧱️elements/📁VirtualFileSystem/🟦️component.tsx(540,6): error TS2786: 'Table' cannot be used as a JSX component.
+  Its type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>' is not a valid JSX element type.
+../../../../🧱️elements/📁VirtualFileSystem/🟦️component.tsx(544,18): error TS7006: Parameter 'row' implicitly has an 'any' type.
+../../../../🧱️elements/📊Diagram/🟦️component.tsx(600,9): error TS2322: Type '(event: React.MouseEvent, node: Node) => void' is not assignable to type 'OnNodeDrag<Node>'.
+  Types of parameters 'event' and 'event' are incompatible.
+    Type 'MouseEvent | TouchEvent' is not assignable to type 'MouseEvent<Element, MouseEvent>'.
+      Type 'MouseEvent' is missing the following properties from type 'MouseEvent<Element, MouseEvent>': nativeEvent, isDefaultPrevented, isPropagationStopped, persist
+../../../../🧱️elements/📊Diagram/🟦️component.tsx(601,9): error TS2322: Type '(event: React.MouseEvent, node: Node) => void' is not assignable to type 'OnNodeDrag<Node>'.
+  Types of parameters 'event' and 'event' are incompatible.
+    Type 'MouseEvent | TouchEvent' is not assignable to type 'MouseEvent<Element, MouseEvent>'.
+      Type 'MouseEvent' is missing the following properties from type 'MouseEvent<Element, MouseEvent>': nativeEvent, isDefaultPrevented, isPropagationStopped, persist
+../../../../🧱️elements/📊Diagram/🟦️component.tsx(602,9): error TS2322: Type '(event: React.MouseEvent, node: Node) => void' is not assignable to type 'OnNodeDrag<Node>'.
+  Types of parameters 'event' and 'event' are incompatible.
+    Type 'MouseEvent | TouchEvent' is not assignable to type 'MouseEvent<Element, MouseEvent>'.
+      Type 'MouseEvent' is missing the following properties from type 'MouseEvent<Element, MouseEvent>': nativeEvent, isDefaultPrevented, isPropagationStopped, persist
+../../../../🧱️elements/📊Table/🟦️component.tsx(17,10): error TS2305: Module '"../../\uD83D\uDCE6\uFE0Fpackages/\uD83D\uDFE6\uFE0Ftypescript/\uD83C\uDFAF\uFE0Ftargets/\u269B\uFE0Freact/\uD83D\uDCE6\uFE0Findex.tsx"' has no exported member 'tableRowInteractiveClass'.
+../../../../🧱️elements/📊Table/🟦️component.tsx(17,36): error TS2305: Module '"../../\uD83D\uDCE6\uFE0Fpackages/\uD83D\uDFE6\uFE0Ftypescript/\uD83C\uDFAF\uFE0Ftargets/\u269B\uFE0Freact/\uD83D\uDCE6\uFE0Findex.tsx"' has no exported member 'tableRowSelectedClass'.
+../../../../🧱️elements/🔣Icons/🟦️component.tsx(385,33): error TS2322: Type 'string' is not assignable to type '"x" | "type" | "link" | "list" | "note" | "search" | "camera" | "clock" | "layers" | "triangle" | "map" | "filter" | "copy" | "focus" | "animate" | "box" | "columns" | "home" | "window" | ... 229 more ... | "zoom-out"'.
+../../../../🧱️elements/🔣IconSelector/🟦️component.tsx(74,94): error TS2322: Type 'string' is not assignable to type '"x" | "type" | "link" | "list" | "note" | "search" | "camera" | "clock" | "layers" | "triangle" | "map" | "filter" | "copy" | "focus" | "animate" | "box" | "columns" | "home" | "window" | ... 229 more ... | "zoom-out"'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(40,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(49,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(58,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(68,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(77,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(86,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴Skeletons/🧪️story.tsx(95,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🪵Tree/🟦️component.tsx(517,3): error TS2322: Type '{ id: string; label: UiLabel; icon: ControlIcon; disabled: boolean | undefined; onSelect: () => void; }[]' is not assignable to type 'ContextMenuItem[]'.
+  Type '{ id: string; label: UiLabel; icon: ControlIcon; disabled: boolean | undefined; onSelect: () => void; }' is not assignable to type 'ContextMenuItem'.
+    Types of property 'icon' are incompatible.
+      Type 'ControlIcon' is not assignable to type 'string | { readonly kind: "url"; readonly url: string; } | { readonly kind: "shortcode"; readonly code: string; } | { readonly kind: "data"; readonly data: string; } | { readonly kind: "emoji"; readonly emoji: string; } | ... 10 more ... | undefined'.
+        Type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not assignable to type 'string | { readonly kind: "url"; readonly url: string; } | { readonly kind: "shortcode"; readonly code: string; } | { readonly kind: "data"; readonly data: string; } | { readonly kind: "emoji"; readonly emoji: string; } | ... 10 more ... | undefined'.
+          Type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not assignable to type '{ readonly kind: "url"; readonly url: string; } | { readonly kind: "shortcode"; readonly code: string; } | { readonly kind: "data"; readonly data: string; } | { readonly kind: "emoji"; readonly emoji: string; } | ... 9 more ... | { ...; }'.
+            Property 'kind' is missing in type 'ReactElement<unknown, string | JSXElementConstructor<any>>' but required in type '{ readonly kind: "themed"; readonly key: "base" | "capsule_J" | "base_blob" | "capital" | "capsule_L" | "capsule_backslash" | "capsule_p" | "capsule_q" | "capsule_s" | "capsule_slash" | ... 18 more ... | "tambour_single-storey"; }'.
+../../../../🧱️elements/🪵Tree/🟦️component.tsx(766,54): error TS2339: Property 'escape' does not exist on type 'Readonly<{ Translate: { toString(transform: Transform | null): string | undefined; }; Scale: { toString(transform: Transform | null): string | undefined; }; Transform: { ...; }; Transition: { ...; }; }>'.
+../../../../🧱️elements/🫀️core/📚️I18n/🟦️component.tsx(18,43): error TS2307: Cannot find module '../../../../🧱️elements/🫀️core/🏷️UiLabel/🟦️component.tsx' or its corresponding type declarations.
+../../../../../../🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts(1420,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../../../🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts(1421,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../../../🤖️generated/🟦️manifest.ts(129,9): error TS2304: Cannot find name 'ConfigSpec'.
+../../../../../../🤖️generated/🟦️manifest.ts(134,17): error TS2304: Cannot find name 'CommandGrammar'.
+../../../../../../🤖️generated/🟦️manifest.ts(140,5): error TS2304: Cannot find name 'AppIo'.
+../../../../../../🤖️generated/🟦️manifest.ts(697,68): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(697,109): error TS2304: Cannot find name 'StyleSpec'.
+../../../../../../🤖️generated/🟦️manifest.ts(697,150): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(704,42): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(704,55): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(706,136): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(708,161): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(710,60): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(710,97): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(712,89): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(712,231): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(714,40): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(716,95): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(718,183): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(729,124): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(731,52): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(733,99): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(733,164): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(735,63): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(737,170): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(752,35): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(752,140): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(754,67): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(754,132): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(756,60): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(756,105): error TS2304: Cannot find name 'UiTreeActionPlacement'.
+../../../../../../🤖️generated/🟦️manifest.ts(758,51): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(768,8): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(770,222): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../../🤖️generated/🟦️manifest.ts(772,55): error TS2304: Cannot find name 'Label'.
+../../../../../../🤖️generated/🟦️manifest.ts(831,9): error TS2304: Cannot find name 'Locale'.
+../../../../../../🤖️generated/🟦️manifest.ts(835,14): error TS2304: Cannot find name 'Terminology'.

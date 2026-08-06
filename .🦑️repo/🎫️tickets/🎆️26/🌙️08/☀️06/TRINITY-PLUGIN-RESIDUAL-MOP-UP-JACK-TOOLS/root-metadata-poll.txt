@@ -16,3 +16,84 @@ Caused by:
 
 Caused by:
   No such file or directory (os error 2)
+=== poll 4 11:09:52 ===
+Caused by:
+  failed to read `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)
+=== poll 5 11:10:22 ===
+Caused by:
+  failed to read `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)
+=== poll 6 11:10:52 ===
+Caused by:
+  failed to read `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)
+=== poll 7 11:11:23 ===
+Caused by:
+  failed to read `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)
+=== poll 8 11:11:53 ===
+Caused by:
+  failed to read `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)
+=== poll 9 11:12:23 ===
+error: two packages named `semio-framework-editor` in this workspace:
+- /Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/Cargo.toml
+- /Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust/Cargo.toml
+=== poll 10 11:12:53 ===
+error: two packages named `semio-framework-editor` in this workspace:
+- /Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/Cargo.toml
+- /Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust/Cargo.toml
+=== poll 11 11:13:23 ===
+error: two packages named `semio-framework-editor` in this workspace:
+- /Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/Cargo.toml
+- /Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust/Cargo.toml
+=== poll 12 11:13:54 ===
+error: two packages named `semio-framework-editor` in this workspace:
+- /Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/Cargo.toml
+- /Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust/Cargo.toml
+=== poll 13 11:14:24 ===
+error: two packages named `semio-framework-editor` in this workspace:
+- /Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/Cargo.toml
+- /Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust/Cargo.toml
+=== poll 14 11:14:54 ===
+error: two packages named `semio-framework-editor` in this workspace:
+- /Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/Cargo.toml
+- /Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust/Cargo.toml
+=== poll 15 11:15:24 ===
+Caused by:
+  failed to read `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)
+=== poll 16 11:15:55 ===
+Caused by:
+  failed to read `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)
+=== poll 17 11:16:25 ===
+  /Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust
+  /Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust
+  /Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust
+  /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust
+  /Users/ueli/Documents/semio
+=== poll 18 11:16:55 ===
+Caused by:
+  error inheriting `serde` from workspace root manifest's `workspace.dependencies.serde`
+
+Caused by:
+  `workspace.dependencies` was not defined
+=== poll 19 11:17:25 ===
+SUCCESS at poll 19
+['semio-s-plugin-trinity-jack-shell', 'semio-s-plugin-trinity-jack-lsp']

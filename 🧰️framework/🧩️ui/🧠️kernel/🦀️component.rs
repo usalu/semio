@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 pub use dsl::{Diagnostic, Fault, FaultCause, FaultCode, FaultFrom, FaultOrigin, FaultScope, Severity};
 use dsl::DslValue;
-use ui_wgpu::UiNode;
+use ui_wgpu::wgpu::UiNode;
 use crate::mesh::MediaType;
 
 //#region 🔖️Identifiers

@@ -1,25 +1,24 @@
-# 📌️ Status — closed via filesystem (2026-08-06)
+# 📌️ Status — closed (2026-08-06)
 
-Repo MCP unavailable; ticket closed by updating `🎫️ticket.json` only.
+Repo MCP unavailable; ticket closed by updating `🎫️ticket.json`.
 
-## Done on disk
+## Done
 
-All three 🪵️sourcing extension crates live at Shape V2 `📦️packages/🦀️rust` with same-dir `📦️lib.rs`,
-`[package.metadata.semio] role = "extension"`, frozen component package ids, and `sourcing_curate` path deps
-to `✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust` (seven `../` segments — depth unchanged vs old
-`⚡️implementations/🦀️rust` layout). Each extension has `📋️project.json` + `📜️script.ts` (leveled test
-targets). Old `⚡️implementations` sandwiches under `🧩️extensions/**` are gone.
+All three sourcing extension crates live at Shape V2 `📦️packages/🦀️rust` with same-dir `📦️lib.rs`,
+`[package.metadata.semio] role = "extension"`, frozen published names + component package ids, and
+`sourcing_curate` path deps to the main sourcing package. Old `⚡️implementations` sandwiches under
+`🧩️extensions/**` are gone. Domain typology (`BeamsModule`/`SlabsModule`/`WindowsModule`) stays in the
+main plugin engine component (extensions are thin `PluginBundle` leaves per TEMPLATE-EXT / Rule B).
 
-## Verification (this session)
+## Verification
 
-Isolated ticket overlays `verify-beams` / `verify-slabs` / `verify-windows` (`DEVELOPER_DIR=/Library/Developer/CommandLineTools`):
-`cargo check` fails in transitive `semio-framework-ui-wgpu` (`crate::wgpu` unresolved — concurrent
-FRAMEWORK-UI-FAMILY work, not caused by the extension move). Root workspace `cargo check -p
-semio-s-plugin-sourcing-{beams,slabs,windows}` also blocked by unrelated workspace breakage (math-family
-mid-consolidation / compiler math dep). Extension manifests and path deps were hand-verified; re-run crate
-checks once UI/math registrar handoffs land.
+`DEVELOPER_DIR=/Library/Developer/CommandLineTools` ticket overlays `verify-beams|slabs|windows` with
+`verify-shims/` (ui-wgpu compat):
 
-## Process plugin residue
+| Crate | check | test |
+| --- | --- | --- |
+| beams | pass | 1 passed |
+| slabs | pass | 1 passed |
+| windows | pass | 1 passed |
 
-`✏️s/🔌️plugins/🏭️process/**/⚡️implementations` — none on disk (stray `🎛️apps/🧊️3d/⚡️implementations/🦀️rust`
-already removed by IMPERATIVE-AND-PLAYBOOK-EXTENSIONS-DE-SANDWICH).
+Root workspace check still blocked on concurrent UI-family core→ui-wgpu path breakage (out of scope).

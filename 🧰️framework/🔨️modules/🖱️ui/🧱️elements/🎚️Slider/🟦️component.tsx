@@ -12,8 +12,7 @@ import { cn } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { reactHostPort } from "../🫀️core/🔌Ports/🟦️component.tsx";
 import { PropertyValueColumnContext } from "../🪵Tree/🟦️component.tsx";
 import { formatNumber, Input } from "../✏️Input/🟦️component.tsx";
-// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
-import { loadingBorderStateClass, waitingBorderStateClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { loadingBorderStateClass, waitingBorderStateClass } from "../🫀️core/🏷️ClassNames/🟦️component.tsx";
 import { useTransaction, type ElementProps } from "../🫀️core/🐹️ElementProps/🟦️component.tsx";
 import { useLabel, useControlAccessibleLabel, Label } from "../🫀️core/🏷️Label/🟦️component.tsx";
 import { useInteractionCommands, sliderRangeClassName, sliderReadyClassName, sliderThumbClassName, sliderValueClassName } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";

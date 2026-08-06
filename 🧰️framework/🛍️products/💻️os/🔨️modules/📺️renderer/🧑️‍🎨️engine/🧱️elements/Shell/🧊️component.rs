@@ -22,12 +22,12 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 #[cfg(not(target_arch = "wasm32"))]
 use store_sync::{DocumentActorMsg, DocumentEvent, DocumentHost, DocumentSyncStatus, PersistenceBinding, RemoteState};
-use ui_wgpu::component::layout::WindowEngagementPossible;
-use ui_wgpu::{
+use ui_wgpu::wgpu::component::layout::WindowEngagementPossible;
+use ui_wgpu::wgpu::{
     chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, Rgba, Theme, TreeDragState, TreeDropPosition,
     WidgetInteractionMaps,
 };
-use ui_wgpu::{
+use ui_wgpu::wgpu::{
     ActionDescriptor, Label, Locale, LocalizedLabel, Terminology, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, UtilityCategory, UtilityNode, WindowEngagement, WindowEngagementControl,
     WindowEngagementInput, WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
 };
@@ -134,7 +134,7 @@ fn context_menu_selection_groups(selection_json: Option<&str>) -> Vec<serde_json
     }
 }
 
-/// 🗂️ `ui_wgpu::ShellMenuAction.kind` wire string for an `ActionDefinition.kind` — host-side styling
+/// 🗂️ `ui_wgpu::wgpu::ShellMenuAction.kind` wire string for an `ActionDefinition.kind` — host-side styling
 /// parity only, unused by `build_shell_context_menu_specs` itself.
 fn context_menu_action_kind_str(kind: semio_framework_core::ActionKind) -> String {
     match kind {
@@ -148,13 +148,13 @@ fn context_menu_action_kind_str(kind: semio_framework_core::ActionKind) -> Strin
 }
 
 /// 🖱️ Maps an on-demand plugin context-menu spec into the wgpu shell menu row — `menu.group.<category>`
-/// rows (D5's `organize_context_menu` folds, see `ui_wgpu::ContextMenuOrganizer`) resolve their label via
+/// rows (D5's `organize_context_menu` folds, see `ui_wgpu::wgpu::ContextMenuOrganizer`) resolve their label via
 /// `ribbon_parent_label` (falling back to the spec's own label if the category is unrecognized) and get
 /// a default folder icon when the spec left `icon` unset.
-fn shell_context_menu_item_from_spec(spec: ui_wgpu::ContextMenuItemSpec, controller_id: &str, is_de: bool) -> ContextMenuItem {
-    let ui_wgpu::ContextMenuItemSpec { id, label, icon, shortcut, disabled, separator, checked, destructive, action, args, children, .. } = spec;
+fn shell_context_menu_item_from_spec(spec: ui_wgpu::wgpu::ContextMenuItemSpec, controller_id: &str, is_de: bool) -> ContextMenuItem {
+    let ui_wgpu::wgpu::ContextMenuItemSpec { id, label, icon, shortcut, disabled, separator, checked, destructive, action, args, children, .. } = spec;
     let category = id.strip_prefix("menu.group.");
-    let label = category.and_then(|category| ui_wgpu::ribbon_parent_label(category, is_de)).map(str::to_string).or(label);
+    let label = category.and_then(|category| ui_wgpu::wgpu::ribbon_parent_label(category, is_de)).map(str::to_string).or(label);
     let icon = icon.or_else(|| category.map(|_| "folder".to_string()));
     ContextMenuItem {
         id,
@@ -472,11 +472,11 @@ pub struct ShellState {
     pub tree_drag_origin: (f32, f32),
     pub dock_drag: Option<DockDragState>,
     pub pending_dock_drag: Option<(DockDragPayload, (f32, f32))>,
-    pub dock_drag_snapshot: Option<ui_wgpu::WindowLayout>,
+    pub dock_drag_snapshot: Option<ui_wgpu::wgpu::WindowLayout>,
     pub dock_canvas_bounds: Rect,
     pub dock_drop_tab_bars: Vec<(Vec<usize>, Rect, Vec<f32>)>,
     pub dock_drop_bodies: Vec<(Vec<usize>, Rect, String)>,
-    pub layout_override: Option<ui_wgpu::WindowLayout>,
+    pub layout_override: Option<ui_wgpu::wgpu::WindowLayout>,
     pub split_resize_origin: Vec<f32>,
     pub split_resize_secondary_path: Option<Vec<usize>>,
     pub split_resize_secondary_index: usize,
@@ -1048,7 +1048,7 @@ impl ShellState {
             self.panel_ui.insert(tab.id().to_string(), resolved);
         }
         // 🧰️ The utility bar is derived from the app's declared `AppDefinition.utilities` (scoped to the active
-        // window kind) via `ui_wgpu::derive_utility_nodes` — the old per-call `plugin.utilities()` fetch and the
+        // window kind) via `ui_wgpu::wgpu::derive_utility_nodes` — the old per-call `plugin.utilities()` fetch and the
         // `find_active_utility_id` "first pressed toggle" heuristic are gone (Architecture Decision 5).
         self.active_utilities = self.derive_utility_nodes(&session);
         self.active_utilities.extend(framework_sync_utilities(self.sync_backbone_uri.as_deref()));
@@ -2229,7 +2229,7 @@ impl ShellState {
 //#region ShellInput
 thread_local! {
     /// 🎯️ Per-window: whether `interpreter::dispatch_ui_event`'s retained content currently holds
-    /// keyboard focus, as last reported by that function's own returned `ui_wgpu::UiCommand::
+    /// keyboard focus, as last reported by that function's own returned `ui_wgpu::wgpu::UiCommand::
     /// FocusChanged` (see `dispatch_ui_event`'s own doc comment — the ONE sanctioned hook into the
     /// process-wide retained engine this workstream may call; `interpreter`'s `UI_ENGINE` itself is
     /// private to that off-limits module/region, so there is no direct way to *query* live focus,
@@ -2242,7 +2242,7 @@ thread_local! {
     /// changes, only ones this module's own keyboard routing below itself causes (e.g. Tab entering
     /// content). Not a silent guess: a real fix needs a small `interpreter`-side
     /// `pub fn window_has_focus(window_id: &str) -> bool` reading `UI_ENGINE` directly (mirrors
-    /// `ui_wgpu::engine::Ui::window_has_focus`, added this same pass) — flagged as a wiring request
+    /// `ui_wgpu::wgpu::engine::Ui::window_has_focus`, added this same pass) — flagged as a wiring request
     /// for whoever next owns that region, not worked around by touching it.
     static CONTENT_FOCUS: std::cell::RefCell<std::collections::HashMap<String, bool>> =
         std::cell::RefCell::new(std::collections::HashMap::new());
@@ -2256,15 +2256,15 @@ fn content_has_focus(window_id: &str) -> bool {
 
 /// 🎯️ Updates `CONTENT_FOCUS` from any `FocusChanged` commands `interpreter::dispatch_ui_event`
 /// returned to a caller in this module.
-fn note_content_focus_commands(commands: &[ui_wgpu::UiCommand]) {
+fn note_content_focus_commands(commands: &[ui_wgpu::wgpu::UiCommand]) {
     for command in commands {
-        if let ui_wgpu::UiCommand::FocusChanged { window_id, node } = command {
+        if let ui_wgpu::wgpu::UiCommand::FocusChanged { window_id, node } = command {
             CONTENT_FOCUS.with(|cell| cell.borrow_mut().insert(window_id.clone(), node.is_some()));
         }
     }
 }
 
-/// ⌨️ Maps a chrome-level `ui_wgpu::KeyAction` (+ modifiers) to the `ui_wgpu::UiEvent` the retained
+/// ⌨️ Maps a chrome-level `ui_wgpu::wgpu::KeyAction` (+ modifiers) to the `ui_wgpu::wgpu::UiEvent` the retained
 /// content engine's `events::EventRouter::dispatch` expects — mirrors that fn's `UiEvent::KeyDown`
 /// key-string vocabulary exactly (`"ArrowLeft"`/`"Backspace"`/`"c"`+ctrl for copy/etc., see
 /// `ui_wgpu`'s `🔖️EditRouting`/`🔖️UiCommand` regions). A `Char` held with Ctrl/Cmd routes as
@@ -2272,26 +2272,26 @@ fn note_content_focus_commands(commands: &[ui_wgpu::UiCommand]) {
 /// inserted as text); a plain `Char` routes as `TextInput`. `Space` has no coherent press/release
 /// `UiEvent` (content has no pan-mode concept) and is already fully handled earlier in
 /// `AppRuntime::handle_key`, so it never reaches here.
-fn ui_event_from_key_action(action: &ui_wgpu::KeyAction, modifiers: &ui_wgpu::PointerModifiers) -> Option<ui_wgpu::UiEvent> {
-    let event_modifiers = ui_wgpu::EventModifiers { shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta };
+fn ui_event_from_key_action(action: &ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers) -> Option<ui_wgpu::wgpu::UiEvent> {
+    let event_modifiers = ui_wgpu::wgpu::EventModifiers { shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta };
     match action {
-        ui_wgpu::KeyAction::Char(ch) => {
+        ui_wgpu::wgpu::KeyAction::Char(ch) => {
             if modifiers.ctrl_or_meta() {
-                Some(ui_wgpu::UiEvent::KeyDown { key: ch.clone(), modifiers: event_modifiers })
+                Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: ch.clone(), modifiers: event_modifiers })
             } else {
-                Some(ui_wgpu::UiEvent::TextInput { text: ch.clone() })
+                Some(ui_wgpu::wgpu::UiEvent::TextInput { text: ch.clone() })
             }
         }
-        ui_wgpu::KeyAction::Backspace => Some(ui_wgpu::UiEvent::KeyDown { key: "Backspace".into(), modifiers: event_modifiers }),
-        ui_wgpu::KeyAction::Delete => Some(ui_wgpu::UiEvent::KeyDown { key: "Delete".into(), modifiers: event_modifiers }),
-        ui_wgpu::KeyAction::Enter => Some(ui_wgpu::UiEvent::KeyDown { key: "Enter".into(), modifiers: event_modifiers }),
-        ui_wgpu::KeyAction::Escape => Some(ui_wgpu::UiEvent::KeyDown { key: "Escape".into(), modifiers: event_modifiers }),
-        ui_wgpu::KeyAction::ArrowLeft => Some(ui_wgpu::UiEvent::KeyDown { key: "ArrowLeft".into(), modifiers: event_modifiers }),
-        ui_wgpu::KeyAction::ArrowRight => Some(ui_wgpu::UiEvent::KeyDown { key: "ArrowRight".into(), modifiers: event_modifiers }),
-        ui_wgpu::KeyAction::ArrowUp => Some(ui_wgpu::UiEvent::KeyDown { key: "ArrowUp".into(), modifiers: event_modifiers }),
-        ui_wgpu::KeyAction::ArrowDown => Some(ui_wgpu::UiEvent::KeyDown { key: "ArrowDown".into(), modifiers: event_modifiers }),
-        ui_wgpu::KeyAction::Tab => Some(ui_wgpu::UiEvent::KeyDown { key: "Tab".into(), modifiers: event_modifiers }),
-        ui_wgpu::KeyAction::Space(_) => None,
+        ui_wgpu::wgpu::KeyAction::Backspace => Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: "Backspace".into(), modifiers: event_modifiers }),
+        ui_wgpu::wgpu::KeyAction::Delete => Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: "Delete".into(), modifiers: event_modifiers }),
+        ui_wgpu::wgpu::KeyAction::Enter => Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: "Enter".into(), modifiers: event_modifiers }),
+        ui_wgpu::wgpu::KeyAction::Escape => Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: "Escape".into(), modifiers: event_modifiers }),
+        ui_wgpu::wgpu::KeyAction::ArrowLeft => Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: "ArrowLeft".into(), modifiers: event_modifiers }),
+        ui_wgpu::wgpu::KeyAction::ArrowRight => Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: "ArrowRight".into(), modifiers: event_modifiers }),
+        ui_wgpu::wgpu::KeyAction::ArrowUp => Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: "ArrowUp".into(), modifiers: event_modifiers }),
+        ui_wgpu::wgpu::KeyAction::ArrowDown => Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: "ArrowDown".into(), modifiers: event_modifiers }),
+        ui_wgpu::wgpu::KeyAction::Tab => Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: "Tab".into(), modifiers: event_modifiers }),
+        ui_wgpu::wgpu::KeyAction::Space(_) => None,
     }
 }
 
@@ -3232,7 +3232,7 @@ impl ShellState {
         let mut items = Vec::new();
         if let Some(session) = self.session.clone() {
             let shortcut_by_action: std::collections::HashMap<String, String> = session.app.keybindings.iter().map(|binding| (binding.action.action.clone(), binding.keys.clone())).collect();
-            // 🖱️ `viewState` deliberately omitted — `ui_wgpu::ContextMenuRequest` never carries it (see
+            // 🖱️ `viewState` deliberately omitted — `ui_wgpu::wgpu::ContextMenuRequest` never carries it (see
             // that type's own doc comment); `selection`/`text` are the typed slices plugins actually need.
             let selection = context_menu_selection_groups(session.view_state.selection_json.as_deref());
             let text: Option<serde_json::Value> = None;
@@ -3277,11 +3277,11 @@ impl ShellState {
         if items.is_empty() {
             if let Some(session) = &self.session {
                 let window_kind = session.app.window_kinds.iter().find(|kind| Some(&kind.id) == self.active_window_id.as_ref()).or_else(|| Some(session.app.window_kinds.first()));
-                let actions: Vec<ui_wgpu::ShellMenuAction> = window_kind
+                let actions: Vec<ui_wgpu::wgpu::ShellMenuAction> = window_kind
                     .map(|kind| semio_framework_core::resolve_window_actions(&session.app, kind))
                     .unwrap_or_default()
                     .into_iter()
-                    .map(|action| ui_wgpu::ShellMenuAction {
+                    .map(|action| ui_wgpu::wgpu::ShellMenuAction {
                         id: action.id.clone(),
                         label: action.label.resolve(self.active_terminology(), self.active_locale()).to_string(),
                         icon: Some(action.icon_id.as_str().to_string()),
@@ -3293,7 +3293,7 @@ impl ShellState {
                     })
                     .collect();
                 let controller_id = session.app.controller_id.clone();
-                items = ui_wgpu::build_shell_context_menu_specs(&actions, true).into_iter().map(|spec| shell_context_menu_item_from_spec(spec, &controller_id, is_de)).collect();
+                items = ui_wgpu::wgpu::build_shell_context_menu_specs(&actions, true).into_iter().map(|spec| shell_context_menu_item_from_spec(spec, &controller_id, is_de)).collect();
             }
         }
         if let Some(controller_id) = self.host_controller_id() {
@@ -3303,13 +3303,13 @@ impl ShellState {
         self.overlay_state = OverlayState::None;
     }
 
-    fn resolve_context_menu_surface(&self, x: f32, y: f32, node_id: Option<&str>, edge_id: Option<&str>) -> (String, String, Vec<ui_wgpu::ContextMenuHit>) {
+    fn resolve_context_menu_surface(&self, x: f32, y: f32, node_id: Option<&str>, edge_id: Option<&str>) -> (String, String, Vec<ui_wgpu::wgpu::ContextMenuHit>) {
         let mut hits = Vec::new();
         if let Some(node_id) = node_id {
-            hits.push(ui_wgpu::ContextMenuHit { domain: "node".into(), id: node_id.into(), label: None });
+            hits.push(ui_wgpu::wgpu::ContextMenuHit { domain: "node".into(), id: node_id.into(), label: None });
         }
         if let Some(edge_id) = edge_id {
-            hits.push(ui_wgpu::ContextMenuHit { domain: "edge".into(), id: edge_id.into(), label: None });
+            hits.push(ui_wgpu::wgpu::ContextMenuHit { domain: "edge".into(), id: edge_id.into(), label: None });
         }
         for (surface_id, surface) in &self.node_graph_states {
             if surface.bounds.contains(x, y) {
@@ -3349,14 +3349,14 @@ impl ShellState {
     }
 
     /** @emoji ⌨️ Routes keyboard input to the open shell context menu. */
-    pub fn context_menu_handle_key(&mut self, action: ui_wgpu::KeyAction) -> ContextMenuKeyOutcome {
+    pub fn context_menu_handle_key(&mut self, action: ui_wgpu::wgpu::KeyAction) -> ContextMenuKeyOutcome {
         let Some(menu) = self.context_menu.as_mut() else {
             return ContextMenuKeyOutcome::Ignored;
         };
         let root = menu.items.clone();
         let path = menu.active.clone();
         match action {
-            ui_wgpu::KeyAction::Escape => {
+            ui_wgpu::wgpu::KeyAction::Escape => {
                 if menu.active.len() > 1 {
                     menu.active.pop();
                     return ContextMenuKeyOutcome::Consumed;
@@ -3364,7 +3364,7 @@ impl ShellState {
                 self.context_menu = None;
                 return ContextMenuKeyOutcome::CloseMenu;
             }
-            ui_wgpu::KeyAction::Char(ref key) if key.len() == 1 && key.chars().next().is_some_and(|ch| ch.is_ascii_digit() && ch != '0') => {
+            ui_wgpu::wgpu::KeyAction::Char(ref key) if key.len() == 1 && key.chars().next().is_some_and(|ch| ch.is_ascii_digit() && ch != '0') => {
                 let ordinal = key.parse::<usize>().ok();
                 let Some(ordinal) = ordinal else {
                     return ContextMenuKeyOutcome::Ignored;
@@ -3375,15 +3375,15 @@ impl ShellState {
                 }
                 return ContextMenuKeyOutcome::Ignored;
             }
-            ui_wgpu::KeyAction::ArrowUp => {
+            ui_wgpu::wgpu::KeyAction::ArrowUp => {
                 menu.active = context_menu_move_active(&root, &path, false);
                 return ContextMenuKeyOutcome::Consumed;
             }
-            ui_wgpu::KeyAction::ArrowDown => {
+            ui_wgpu::wgpu::KeyAction::ArrowDown => {
                 menu.active = context_menu_move_active(&root, &path, true);
                 return ContextMenuKeyOutcome::Consumed;
             }
-            ui_wgpu::KeyAction::ArrowLeft => {
+            ui_wgpu::wgpu::KeyAction::ArrowLeft => {
                 if menu.active.len() > 1 {
                     let parent = menu.active[..menu.active.len() - 1].to_vec();
                     menu.active = parent.clone();
@@ -3391,13 +3391,13 @@ impl ShellState {
                 }
                 return ContextMenuKeyOutcome::Consumed;
             }
-            ui_wgpu::KeyAction::ArrowRight => {
+            ui_wgpu::wgpu::KeyAction::ArrowRight => {
                 if let Some(next) = context_menu_open_submenu_path(&root, &menu.active) {
                     menu.active = next;
                 }
                 return ContextMenuKeyOutcome::Consumed;
             }
-            ui_wgpu::KeyAction::Enter | ui_wgpu::KeyAction::Space(true) => {
+            ui_wgpu::wgpu::KeyAction::Enter | ui_wgpu::wgpu::KeyAction::Space(true) => {
                 let active = menu.active.clone();
                 let Some(item) = context_menu_item_at_path(&root, &active) else {
                     return ContextMenuKeyOutcome::Ignored;
@@ -3417,21 +3417,21 @@ impl ShellState {
                 }
                 return ContextMenuKeyOutcome::Ignored;
             }
-            ui_wgpu::KeyAction::Char(ref key) if matches!(key.as_str(), "w" | "W") => {
+            ui_wgpu::wgpu::KeyAction::Char(ref key) if matches!(key.as_str(), "w" | "W") => {
                 menu.active = context_menu_move_active(&root, &path, false);
                 return ContextMenuKeyOutcome::Consumed;
             }
-            ui_wgpu::KeyAction::Char(ref key) if matches!(key.as_str(), "s" | "S") => {
+            ui_wgpu::wgpu::KeyAction::Char(ref key) if matches!(key.as_str(), "s" | "S") => {
                 menu.active = context_menu_move_active(&root, &path, true);
                 return ContextMenuKeyOutcome::Consumed;
             }
-            ui_wgpu::KeyAction::Char(ref key) if matches!(key.as_str(), "a" | "A") => {
+            ui_wgpu::wgpu::KeyAction::Char(ref key) if matches!(key.as_str(), "a" | "A") => {
                 if menu.active.len() > 1 {
                     menu.active.pop();
                 }
                 return ContextMenuKeyOutcome::Consumed;
             }
-            ui_wgpu::KeyAction::Char(ref key) if matches!(key.as_str(), "d" | "D") => {
+            ui_wgpu::wgpu::KeyAction::Char(ref key) if matches!(key.as_str(), "d" | "D") => {
                 if let Some(next) = context_menu_open_submenu_path(&root, &menu.active) {
                     menu.active = next;
                 }
@@ -3600,8 +3600,8 @@ impl ShellState {
         Ok(())
     }
 
-    pub fn handle_keyboard(&mut self, action: ui_wgpu::KeyAction, modifiers: &ui_wgpu::PointerModifiers, input: &mut InputState<ActionDescriptor>) {
-        if action == ui_wgpu::KeyAction::Escape {
+    pub fn handle_keyboard(&mut self, action: ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers, input: &mut InputState<ActionDescriptor>) {
+        if action == ui_wgpu::wgpu::KeyAction::Escape {
             if self.dock_drag.take().is_some() || self.pending_dock_drag.take().is_some() {
                 self.restore_dock_drag_snapshot();
                 self.dock_drag_snapshot = None;
@@ -3619,7 +3619,7 @@ impl ShellState {
                 return;
             }
             if self.context_menu.is_some() {
-                match self.context_menu_handle_key(ui_wgpu::KeyAction::Escape) {
+                match self.context_menu_handle_key(ui_wgpu::wgpu::KeyAction::Escape) {
                     ContextMenuKeyOutcome::Activate(_) => return,
                     ContextMenuKeyOutcome::Ignored => {}
                     ContextMenuKeyOutcome::Consumed | ContextMenuKeyOutcome::CloseMenu => return,
@@ -3633,20 +3633,20 @@ impl ShellState {
         if input.focused_id.is_none() && self.sync_card_kind.is_none() {
             if let Some(step) = self.chrome_tour_active_step() {
                 match action {
-                    ui_wgpu::KeyAction::Escape => {
+                    ui_wgpu::wgpu::KeyAction::Escape => {
                         if let Some(session) = self.session.as_ref() {
                             write_stored_introduction_seen(&session.app.id);
                         }
                         chrome_skip_introduction();
                         return;
                     }
-                    ui_wgpu::KeyAction::Enter | ui_wgpu::KeyAction::ArrowRight => {
+                    ui_wgpu::wgpu::KeyAction::Enter | ui_wgpu::wgpu::KeyAction::ArrowRight => {
                         if step.interactions.is_empty() {
                             self.chrome_tour_advance_current_step(&step);
                             return;
                         }
                     }
-                    ui_wgpu::KeyAction::ArrowLeft => {
+                    ui_wgpu::wgpu::KeyAction::ArrowLeft => {
                         chrome_back_introduction();
                         return;
                     }
@@ -3661,7 +3661,7 @@ impl ShellState {
         // the user is typing". Previously these six chords fired unconditionally, so e.g. Ctrl+B while
         // typing in a focused Input would silently toggle the left panel instead of inserting "b".
         let editing = input.focused_id.is_some() || self.sync_card_kind.is_some();
-        if !editing && meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("p")) {
+        if !editing && meta && matches!(action, ui_wgpu::wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("p")) {
             self.search_open = !self.search_open;
             self.find_open = false;
             self.overlay_state = if self.search_open { OverlayState::Search } else { OverlayState::None };
@@ -3670,7 +3670,7 @@ impl ShellState {
             }
             return;
         }
-        if !editing && meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("f")) {
+        if !editing && meta && matches!(action, ui_wgpu::wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("f")) {
             self.find_open = !self.find_open;
             self.search_open = false;
             self.overlay_state = if self.find_open { OverlayState::Find } else { OverlayState::None };
@@ -3679,21 +3679,21 @@ impl ShellState {
             }
             return;
         }
-        if !editing && meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c == "[") {
+        if !editing && meta && matches!(action, ui_wgpu::wgpu::KeyAction::Char(ref c) if c == "[") {
             if self.uri_index > 0 {
                 self.uri_index -= 1;
             }
             self.pending_shell_uri_apply = true;
             return;
         }
-        if !editing && meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c == "]") {
+        if !editing && meta && matches!(action, ui_wgpu::wgpu::KeyAction::Char(ref c) if c == "]") {
             if self.uri_index + 1 < self.uri_history.len() {
                 self.uri_index += 1;
             }
             self.pending_shell_uri_apply = true;
             return;
         }
-        if !editing && meta && matches!(action, ui_wgpu::KeyAction::ArrowUp) {
+        if !editing && meta && matches!(action, ui_wgpu::wgpu::KeyAction::ArrowUp) {
             let uri = self.shell_uri();
             if let Some(parent) = uri.rsplit_once('/').map(|(p, _)| p.to_string()) {
                 if !parent.is_empty() {
@@ -3703,11 +3703,11 @@ impl ShellState {
             self.pending_shell_uri_apply = true;
             return;
         }
-        if !editing && meta && modifiers.shift && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("b")) {
+        if !editing && meta && modifiers.shift && matches!(action, ui_wgpu::wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("b")) {
             self.right_panel_open = !self.right_panel_open;
             return;
         }
-        if !editing && meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("b")) {
+        if !editing && meta && matches!(action, ui_wgpu::wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("b")) {
             self.left_panel_open = !self.left_panel_open;
             return;
         }
@@ -3718,17 +3718,17 @@ impl ShellState {
         // `KeyAction::Tab` handling). Single-window content-level Tab cycling among widgets is a
         // separate, content-layer concern for `ui_wgpu`'s own engine/EventRouter (owned by the
         // interpreter cutover), not this chrome-level routing.
-        if !editing && !palette_open && self.dock_drag.is_none() && action == ui_wgpu::KeyAction::Tab {
+        if !editing && !palette_open && self.dock_drag.is_none() && action == ui_wgpu::wgpu::KeyAction::Tab {
             self.cycle_active_window(!modifiers.shift);
             return;
         }
         if self.sync_card_kind.is_some() {
             match action {
-                ui_wgpu::KeyAction::Escape => {
+                ui_wgpu::wgpu::KeyAction::Escape => {
                     self.sync_card_kind = None;
                     return;
                 }
-                ui_wgpu::KeyAction::Enter => {
+                ui_wgpu::wgpu::KeyAction::Enter => {
                     self.deferred_actions.push(ActionDescriptor {
                         controller_id: "framework.sync".into(),
                         action: "attach".into(),
@@ -3739,11 +3739,11 @@ impl ShellState {
                     });
                     return;
                 }
-                ui_wgpu::KeyAction::Char(key) => {
+                ui_wgpu::wgpu::KeyAction::Char(key) => {
                     self.sync_card_draft.push_str(&key);
                     return;
                 }
-                ui_wgpu::KeyAction::Backspace => {
+                ui_wgpu::wgpu::KeyAction::Backspace => {
                     self.sync_card_draft.pop();
                     return;
                 }
@@ -3752,13 +3752,13 @@ impl ShellState {
         }
         if palette_open {
             match action {
-                ui_wgpu::KeyAction::Escape => {
+                ui_wgpu::wgpu::KeyAction::Escape => {
                     self.overlay_state = OverlayState::None;
                     self.search_open = false;
                     self.find_open = false;
                     input.focused_id = None;
                 }
-                ui_wgpu::KeyAction::ArrowDown => {
+                ui_wgpu::wgpu::KeyAction::ArrowDown => {
                     if self.overlay_state == OverlayState::Search {
                         let len = self.filtered_search_items().len();
                         if len > 0 {
@@ -3771,18 +3771,18 @@ impl ShellState {
                         }
                     }
                 }
-                ui_wgpu::KeyAction::ArrowUp => {
+                ui_wgpu::wgpu::KeyAction::ArrowUp => {
                     if self.overlay_state == OverlayState::Search {
                         self.search_selected = self.search_selected.saturating_sub(1);
                     } else {
                         self.find_selected = self.find_selected.saturating_sub(1);
                     }
                 }
-                ui_wgpu::KeyAction::Enter => {
+                ui_wgpu::wgpu::KeyAction::Enter => {
                     let runtime = ();
                     let _ = runtime;
                 }
-                ui_wgpu::KeyAction::Char(key) => {
+                ui_wgpu::wgpu::KeyAction::Char(key) => {
                     if self.overlay_state == OverlayState::Search {
                         self.search_query.push_str(&key);
                         self.search_selected = 0;
@@ -3791,7 +3791,7 @@ impl ShellState {
                         self.find_selected = 0;
                     }
                 }
-                ui_wgpu::KeyAction::Backspace => {
+                ui_wgpu::wgpu::KeyAction::Backspace => {
                     if self.overlay_state == OverlayState::Search {
                         self.search_query.pop();
                         self.search_selected = 0;
@@ -3806,15 +3806,15 @@ impl ShellState {
         }
         if input.focused_id.is_some() {
             match action {
-                ui_wgpu::KeyAction::Char(key) => input.text_buffer.push_str(&key),
-                ui_wgpu::KeyAction::Backspace => input.backspace(),
-                ui_wgpu::KeyAction::Delete => input.delete_forward(),
+                ui_wgpu::wgpu::KeyAction::Char(key) => input.text_buffer.push_str(&key),
+                ui_wgpu::wgpu::KeyAction::Backspace => input.backspace(),
+                ui_wgpu::wgpu::KeyAction::Delete => input.delete_forward(),
                 _ => {}
             }
         }
     }
 
-    pub async fn handle_keyboard_async(&mut self, action: ui_wgpu::KeyAction, modifiers: &ui_wgpu::PointerModifiers, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
+    pub async fn handle_keyboard_async(&mut self, action: ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
         if self.context_menu.is_some() {
             match self.context_menu_handle_key(action.clone()) {
                 ContextMenuKeyOutcome::Ignored => {}
@@ -3825,17 +3825,17 @@ impl ShellState {
                 }
             }
         }
-        if matches!(self.overlay_state, OverlayState::Search) && action == ui_wgpu::KeyAction::Enter {
+        if matches!(self.overlay_state, OverlayState::Search) && action == ui_wgpu::wgpu::KeyAction::Enter {
             self.activate_search_item(self.search_selected).await?;
             return Ok(());
         }
-        if matches!(self.overlay_state, OverlayState::Find) && action == ui_wgpu::KeyAction::Enter {
+        if matches!(self.overlay_state, OverlayState::Find) && action == ui_wgpu::wgpu::KeyAction::Enter {
             self.activate_find_item(self.find_selected).await?;
             return Ok(());
         }
         if input.focused_id.is_some() {
             match action {
-                ui_wgpu::KeyAction::Enter | ui_wgpu::KeyAction::Escape => {
+                ui_wgpu::wgpu::KeyAction::Enter | ui_wgpu::wgpu::KeyAction::Escape => {
                     self.commit_focused_input(input).await?;
                     return Ok(());
                 }
@@ -3867,7 +3867,7 @@ impl ShellState {
             }
         }
         // 🧰️ Escape deactivates the active utility for the focused window (P5).
-        if idle && action == ui_wgpu::KeyAction::Escape {
+        if idle && action == ui_wgpu::wgpu::KeyAction::Escape {
             if let Some(window_id) = self.active_window_id.clone() {
                 if self.active_utility_by_window.remove(&window_id).is_some() {
                     self.refresh_ui().await?;
@@ -3888,7 +3888,7 @@ impl ShellState {
     }
 
     /// ⌨️ The app keybinding matching the current key event, if any.
-    fn match_app_keybinding(&self, action: &ui_wgpu::KeyAction, modifiers: &ui_wgpu::PointerModifiers) -> Option<ActionDescriptor> {
+    fn match_app_keybinding(&self, action: &ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers) -> Option<ActionDescriptor> {
         let session = self.session.as_ref()?;
         session.app.keybindings.iter().find(|binding| key_event_matches_chord(action, modifiers, &binding.keys)).map(|binding| binding.action.clone())
     }
@@ -3972,7 +3972,7 @@ impl ShellState {
 #[cfg(test)]
 mod shell_input_tests {
     use super::*;
-    use ui_wgpu::UiPresence;
+    use ui_wgpu::wgpu::UiPresence;
 
     #[test]
     fn standalone_multi_app_variants_resolve_their_declared_app() {
@@ -4022,41 +4022,41 @@ mod shell_input_tests {
 
     #[test]
     fn ui_event_from_key_action_maps_plain_char_to_text_input() {
-        let modifiers = ui_wgpu::PointerModifiers::default();
-        let event = ui_event_from_key_action(&ui_wgpu::KeyAction::Char("a".into()), &modifiers);
-        assert_eq!(event, Some(ui_wgpu::UiEvent::TextInput { text: "a".into() }));
+        let modifiers = ui_wgpu::wgpu::PointerModifiers::default();
+        let event = ui_event_from_key_action(&ui_wgpu::wgpu::KeyAction::Char("a".into()), &modifiers);
+        assert_eq!(event, Some(ui_wgpu::wgpu::UiEvent::TextInput { text: "a".into() }));
     }
 
     #[test]
     fn ui_event_from_key_action_routes_ctrl_char_as_key_down_for_clipboard_chords() {
-        let modifiers = ui_wgpu::PointerModifiers { ctrl: true, ..Default::default() };
-        let event = ui_event_from_key_action(&ui_wgpu::KeyAction::Char("c".into()), &modifiers);
-        assert_eq!(event, Some(ui_wgpu::UiEvent::KeyDown { key: "c".into(), modifiers: ui_wgpu::EventModifiers { shift: false, ctrl: true, alt: false, meta: false } }));
+        let modifiers = ui_wgpu::wgpu::PointerModifiers { ctrl: true, ..Default::default() };
+        let event = ui_event_from_key_action(&ui_wgpu::wgpu::KeyAction::Char("c".into()), &modifiers);
+        assert_eq!(event, Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: "c".into(), modifiers: ui_wgpu::wgpu::EventModifiers { shift: false, ctrl: true, alt: false, meta: false } }));
     }
 
     #[test]
     fn ui_event_from_key_action_maps_editing_and_tab_keys_to_matching_key_down_strings() {
-        let modifiers = ui_wgpu::PointerModifiers::default();
+        let modifiers = ui_wgpu::wgpu::PointerModifiers::default();
         let cases = [
-            (ui_wgpu::KeyAction::Backspace, "Backspace"),
-            (ui_wgpu::KeyAction::Delete, "Delete"),
-            (ui_wgpu::KeyAction::Enter, "Enter"),
-            (ui_wgpu::KeyAction::Escape, "Escape"),
-            (ui_wgpu::KeyAction::ArrowLeft, "ArrowLeft"),
-            (ui_wgpu::KeyAction::ArrowRight, "ArrowRight"),
-            (ui_wgpu::KeyAction::ArrowUp, "ArrowUp"),
-            (ui_wgpu::KeyAction::ArrowDown, "ArrowDown"),
-            (ui_wgpu::KeyAction::Tab, "Tab"),
+            (ui_wgpu::wgpu::KeyAction::Backspace, "Backspace"),
+            (ui_wgpu::wgpu::KeyAction::Delete, "Delete"),
+            (ui_wgpu::wgpu::KeyAction::Enter, "Enter"),
+            (ui_wgpu::wgpu::KeyAction::Escape, "Escape"),
+            (ui_wgpu::wgpu::KeyAction::ArrowLeft, "ArrowLeft"),
+            (ui_wgpu::wgpu::KeyAction::ArrowRight, "ArrowRight"),
+            (ui_wgpu::wgpu::KeyAction::ArrowUp, "ArrowUp"),
+            (ui_wgpu::wgpu::KeyAction::ArrowDown, "ArrowDown"),
+            (ui_wgpu::wgpu::KeyAction::Tab, "Tab"),
         ];
         for (action, key) in cases {
             let event = ui_event_from_key_action(&action, &modifiers);
-            assert_eq!(event, Some(ui_wgpu::UiEvent::KeyDown { key: key.into(), modifiers: ui_wgpu::EventModifiers::default() }), "KeyAction {action:?} should map to KeyDown{{{key}}}");
+            assert_eq!(event, Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: key.into(), modifiers: ui_wgpu::wgpu::EventModifiers::default() }), "KeyAction {action:?} should map to KeyDown{{{key}}}");
         }
     }
 
     #[test]
     fn ui_event_from_key_action_has_no_mapping_for_space() {
-        let event = ui_event_from_key_action(&ui_wgpu::KeyAction::Space(true), &ui_wgpu::PointerModifiers::default());
+        let event = ui_event_from_key_action(&ui_wgpu::wgpu::KeyAction::Space(true), &ui_wgpu::wgpu::PointerModifiers::default());
         assert_eq!(event, None);
     }
 
@@ -4064,11 +4064,11 @@ mod shell_input_tests {
     fn content_focus_tracker_defaults_unfocused_and_tracks_focus_changed_commands() {
         let window_id = "w2-input-wiring-test-window-a";
         assert!(!content_has_focus(window_id));
-        let mut arena: ui_wgpu::Arena<()> = ui_wgpu::Arena::new();
+        let mut arena: ui_wgpu::wgpu::Arena<()> = ui_wgpu::wgpu::Arena::new();
         let node_id = arena.insert(());
-        note_content_focus_commands(&[ui_wgpu::UiCommand::FocusChanged { window_id: window_id.to_string(), node: Some(node_id) }]);
+        note_content_focus_commands(&[ui_wgpu::wgpu::UiCommand::FocusChanged { window_id: window_id.to_string(), node: Some(node_id) }]);
         assert!(content_has_focus(window_id));
-        note_content_focus_commands(&[ui_wgpu::UiCommand::FocusChanged { window_id: window_id.to_string(), node: None }]);
+        note_content_focus_commands(&[ui_wgpu::wgpu::UiCommand::FocusChanged { window_id: window_id.to_string(), node: None }]);
         assert!(!content_has_focus(window_id));
     }
 
@@ -4076,9 +4076,9 @@ mod shell_input_tests {
     fn content_focus_tracker_ignores_commands_for_other_windows() {
         let window_id = "w2-input-wiring-test-window-b";
         let other_window_id = "w2-input-wiring-test-window-c";
-        let mut arena: ui_wgpu::Arena<()> = ui_wgpu::Arena::new();
+        let mut arena: ui_wgpu::wgpu::Arena<()> = ui_wgpu::wgpu::Arena::new();
         let node_id = arena.insert(());
-        note_content_focus_commands(&[ui_wgpu::UiCommand::FocusChanged { window_id: other_window_id.to_string(), node: Some(node_id) }]);
+        note_content_focus_commands(&[ui_wgpu::wgpu::UiCommand::FocusChanged { window_id: other_window_id.to_string(), node: Some(node_id) }]);
         assert!(!content_has_focus(window_id));
         assert!(content_has_focus(other_window_id));
     }
@@ -4086,7 +4086,7 @@ mod shell_input_tests {
     #[test]
     fn content_focus_tracker_ignores_non_focus_commands() {
         let window_id = "w2-input-wiring-test-window-d";
-        note_content_focus_commands(&[ui_wgpu::UiCommand::ClipboardPasteRequested { window_id: window_id.to_string() }]);
+        note_content_focus_commands(&[ui_wgpu::wgpu::UiCommand::ClipboardPasteRequested { window_id: window_id.to_string() }]);
         assert!(!content_has_focus(window_id));
     }
 
@@ -4579,9 +4579,9 @@ fn fmt_num(value: f64) -> String {
     }
 }
 
-/// 🖱️ Maps a `UtilityDefinition.cursor` CSS/winit cursor name onto the shell's {@link ui_wgpu::SemioCursor}.
-fn semio_cursor_from_name(name: &str) -> ui_wgpu::SemioCursor {
-    use ui_wgpu::SemioCursor;
+/// 🖱️ Maps a `UtilityDefinition.cursor` CSS/winit cursor name onto the shell's {@link ui_wgpu::wgpu::SemioCursor}.
+fn semio_cursor_from_name(name: &str) -> ui_wgpu::wgpu::SemioCursor {
+    use ui_wgpu::wgpu::SemioCursor;
     match name.trim().to_ascii_lowercase().as_str() {
         "pointer" => SemioCursor::Pointer,
         "text" => SemioCursor::Text,
@@ -4647,14 +4647,14 @@ fn format_keybinding_shortcut(keys: &str) -> String {
 
 /// ⌨️ Whether a key event is one of the hardcoded shell chords (palette/find/panels/nav) that must win
 /// over app-declared keybindings (P4 — "reserved shell chords still win").
-pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::KeyAction, modifiers: &ui_wgpu::PointerModifiers) -> bool {
+pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers) -> bool {
     let accelerator = modifiers.meta || modifiers.ctrl;
     if !accelerator {
         return false;
     }
     match action {
-        ui_wgpu::KeyAction::Char(c) => matches!(c.to_ascii_lowercase().as_str(), "p" | "f" | "b" | "[" | "]"),
-        ui_wgpu::KeyAction::ArrowUp => true,
+        ui_wgpu::wgpu::KeyAction::Char(c) => matches!(c.to_ascii_lowercase().as_str(), "p" | "f" | "b" | "[" | "]"),
+        ui_wgpu::wgpu::KeyAction::ArrowUp => true,
         _ => false,
     }
 }
@@ -4662,7 +4662,7 @@ pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::KeyAction, modifiers: &u
 /// ⌨️ Whether a key event matches a keybinding chord such as `"mod+shift+z"`, `"ctrl+k"`, or `"escape"`.
 /// `"mod"` is the platform accelerator (meta OR ctrl). Declared modifiers must be present and no
 /// undeclared accelerator/shift/alt may be held, so `mod+z` never fires for `mod+shift+z`.
-pub(crate) fn key_event_matches_chord(action: &ui_wgpu::KeyAction, modifiers: &ui_wgpu::PointerModifiers, chord: &str) -> bool {
+pub(crate) fn key_event_matches_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers, chord: &str) -> bool {
     let mut want_mod = false;
     let mut want_shift = false;
     let mut want_alt = false;
@@ -4692,17 +4692,17 @@ pub(crate) fn key_event_matches_chord(action: &ui_wgpu::KeyAction, modifiers: &u
         return false;
     }
     match action {
-        ui_wgpu::KeyAction::Char(c) => c.eq_ignore_ascii_case(&key_token),
-        ui_wgpu::KeyAction::Enter => key_token == "enter" || key_token == "return",
-        ui_wgpu::KeyAction::Escape => key_token == "escape" || key_token == "esc",
-        ui_wgpu::KeyAction::Backspace => key_token == "backspace",
-        ui_wgpu::KeyAction::Delete => key_token == "delete" || key_token == "del",
-        ui_wgpu::KeyAction::Tab => key_token == "tab",
-        ui_wgpu::KeyAction::ArrowLeft => key_token == "arrowleft" || key_token == "left",
-        ui_wgpu::KeyAction::ArrowRight => key_token == "arrowright" || key_token == "right",
-        ui_wgpu::KeyAction::ArrowUp => key_token == "arrowup" || key_token == "up",
-        ui_wgpu::KeyAction::ArrowDown => key_token == "arrowdown" || key_token == "down",
-        ui_wgpu::KeyAction::Space(_) => key_token == "space",
+        ui_wgpu::wgpu::KeyAction::Char(c) => c.eq_ignore_ascii_case(&key_token),
+        ui_wgpu::wgpu::KeyAction::Enter => key_token == "enter" || key_token == "return",
+        ui_wgpu::wgpu::KeyAction::Escape => key_token == "escape" || key_token == "esc",
+        ui_wgpu::wgpu::KeyAction::Backspace => key_token == "backspace",
+        ui_wgpu::wgpu::KeyAction::Delete => key_token == "delete" || key_token == "del",
+        ui_wgpu::wgpu::KeyAction::Tab => key_token == "tab",
+        ui_wgpu::wgpu::KeyAction::ArrowLeft => key_token == "arrowleft" || key_token == "left",
+        ui_wgpu::wgpu::KeyAction::ArrowRight => key_token == "arrowright" || key_token == "right",
+        ui_wgpu::wgpu::KeyAction::ArrowUp => key_token == "arrowup" || key_token == "up",
+        ui_wgpu::wgpu::KeyAction::ArrowDown => key_token == "arrowdown" || key_token == "down",
+        ui_wgpu::wgpu::KeyAction::Space(_) => key_token == "space",
     }
 }
 
@@ -4726,9 +4726,9 @@ impl ShellState {
         if resolved.is_empty() {
             return Vec::new();
         }
-        let specs: Vec<ui_wgpu::component::utilities::DerivedUtilitySpec> = resolved
+        let specs: Vec<ui_wgpu::wgpu::component::utilities::DerivedUtilitySpec> = resolved
             .iter()
-            .map(|utility| ui_wgpu::component::utilities::DerivedUtilitySpec {
+            .map(|utility| ui_wgpu::wgpu::component::utilities::DerivedUtilitySpec {
                 id: utility.id.clone(),
                 label: utility.label.resolve(self.active_terminology(), self.active_locale()).to_string(),
                 icon_id: utility.icon_id.clone(),
@@ -4737,7 +4737,7 @@ impl ShellState {
             })
             .collect();
         let active = self.active_utility_by_window.get(&window_kind.id).map(String::as_str);
-        ui_wgpu::component::utilities::derive_utility_nodes(&session.app.controller_id, &specs, active)
+        ui_wgpu::wgpu::component::utilities::derive_utility_nodes(&session.app.controller_id, &specs, active)
     }
     // #endregion
 
@@ -4762,8 +4762,8 @@ impl ShellState {
     }
 
     /// 🖱️ The cursor the active utility requests while the pointer is over the active window's body — maps
-    /// `UtilityDefinition.cursor` onto a {@link ui_wgpu::SemioCursor} (P5). `None` when no utility/cursor applies.
-    pub(crate) fn utility_cursor_override(&self, x: f32, y: f32) -> Option<ui_wgpu::SemioCursor> {
+    /// `UtilityDefinition.cursor` onto a {@link ui_wgpu::wgpu::SemioCursor} (P5). `None` when no utility/cursor applies.
+    pub(crate) fn utility_cursor_override(&self, x: f32, y: f32) -> Option<ui_wgpu::wgpu::SemioCursor> {
         let session = self.session.as_ref()?;
         let window_id = self.active_window_id.as_deref()?;
         let utility_id = self.active_utility_for_window(window_id)?;
@@ -5399,7 +5399,7 @@ mod command_registry_tests {
                 id: "main".into(),
                 label: LocalizedLabel::data("Main"),
                 body_key: "main.body".into(),
-                surface_kind: ui_wgpu::SurfaceKind::Canvas2d,
+                surface_kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
                 icon_id: "app-window".into(),
                 options: Default::default(),
                 actions: vec![],
@@ -6018,7 +6018,7 @@ fn resolve_introduction_placement(placement: semio_framework_core::IntroductionP
 /// renderer: the first `possible` (in the order the host already gave them — wgpu's engagement rail has
 /// no ranked-match dropdown to reorder by) whose label case-insensitively prefix-matches `query`, sliced
 /// on a char boundary (never a byte index) so a multi-byte label can't panic.
-fn engagement_completion_suffix(query: &str, possibles: Option<&[ui_wgpu::WindowEngagementPossible]>) -> String {
+fn engagement_completion_suffix(query: &str, possibles: Option<&[ui_wgpu::wgpu::WindowEngagementPossible]>) -> String {
     let query = query.trim();
     if query.is_empty() {
         return String::new();
@@ -7177,7 +7177,7 @@ mod tutorial_tests {
 //#endregion 🎬️Tutorial
 
 impl ShellState {
-    pub fn render_chrome(&mut self, draw: &mut DrawList, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, gpu: &mut ui_wgpu::GpuContext) {
+    pub fn render_chrome(&mut self, draw: &mut DrawList, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, gpu: &mut ui_wgpu::wgpu::GpuContext) {
         self.load_ui_prefs_once();
         // 🗄️ See `persist_panel_layout_if_changed`'s doc comment: a render-loop dirty-check hook rather
         // than patching the `ui.panelToggle.*`/resize-end call sites individually.
@@ -7597,7 +7597,7 @@ impl ShellState {
         tabs: &[PanelTabDefinition],
         active_tab_id: &str,
         side_left: bool,
-        gpu: &mut ui_wgpu::GpuContext,
+        gpu: &mut ui_wgpu::wgpu::GpuContext,
     ) {
         const PANEL_RESIZE_HIT_PX: f32 = 20.0;
         let resize_id = if side_left { "panel.resize.left" } else { "panel.resize.right" };
@@ -7651,7 +7651,7 @@ impl ShellState {
         input.register_hit(HitTarget { rect: resize_handle, event: None, control_id: Some(resize_id.into()), kind: HitKind::PanelResize, drag_axis: Some(DragAxis::Horizontal), drag_data: None });
     }
 
-    fn render_left_panel(&mut self, panel_draw: &mut DrawList, mut overlay: Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect, gpu: &mut ui_wgpu::GpuContext) {
+    fn render_left_panel(&mut self, panel_draw: &mut DrawList, mut overlay: Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect, gpu: &mut ui_wgpu::wgpu::GpuContext) {
         let session = match self.session.as_ref() {
             Some(s) => s.clone(),
             None => return,
@@ -7665,7 +7665,7 @@ impl ShellState {
         self.render_floating_panel(panel_draw, overlay.as_deref_mut(), atlas, icons, input, theme, panel, &tabs, &active, true, gpu);
     }
 
-    fn render_right_panel(&mut self, panel_draw: &mut DrawList, mut overlay: Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect, gpu: &mut ui_wgpu::GpuContext) {
+    fn render_right_panel(&mut self, panel_draw: &mut DrawList, mut overlay: Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect, gpu: &mut ui_wgpu::wgpu::GpuContext) {
         let session = match self.session.as_ref() {
             Some(s) => s.clone(),
             None => return,
@@ -7679,7 +7679,7 @@ impl ShellState {
         self.render_floating_panel(panel_draw, overlay.as_deref_mut(), atlas, icons, input, theme, panel, &tabs, &active, false, gpu);
     }
 
-    fn render_main_window(&mut self, draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, bounds: Rect, gpu: &mut ui_wgpu::GpuContext) {
+    fn render_main_window(&mut self, draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, bounds: Rect, gpu: &mut ui_wgpu::wgpu::GpuContext) {
         draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.background);
         let session = match self.session.as_ref() {
             Some(s) => s.clone(),
@@ -7800,7 +7800,7 @@ impl ShellState {
         content: Rect,
         ui: &UiNode,
         window_id: &str,
-        gpu: &mut ui_wgpu::GpuContext,
+        gpu: &mut ui_wgpu::wgpu::GpuContext,
     ) {
         let scroll_key = format!("window.{window_id}");
         let scroll_y = *self.scroll_offsets.get(&scroll_key).unwrap_or(&0.0);
@@ -7915,7 +7915,7 @@ impl ShellState {
     }
 
     /// 💬️ Paints the armed tooltip (item 1) — `AtPointer` placement/dismissal policy sourced from
-    /// `ui_wgpu::OverlayKind::Tooltip` via a scratch `UiTree` (empty; `Point` anchors never touch it).
+    /// `ui_wgpu::wgpu::OverlayKind::Tooltip` via a scratch `UiTree` (empty; `Point` anchors never touch it).
     fn render_chrome_tooltip(&self, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
         let hovered_id = input.hovered_id.clone();
         let title = hovered_id.as_ref().and_then(|id| CHROME_TOOLTIP_TITLES.with(|cell| cell.borrow().get(id).cloned()));
@@ -7945,8 +7945,8 @@ impl ShellState {
         let (text_w, text_h) = atlas.measure_text(&text, theme.font_size_small);
         let content_w = text_w + padding * 2.0;
         let content_h = text_h + padding * 2.0;
-        let scratch_tree = ui_wgpu::UiTree::new();
-        let (x, y) = ui_wgpu::resolve_overlay_placement(&scratch_tree, ui_wgpu::OverlayAnchor::Point { x: hover.anchor_x, y: hover.anchor_y }, (content_w, content_h), (width, height), ui_wgpu::OverlayKind::Tooltip.default_placement());
+        let scratch_tree = ui_wgpu::wgpu::UiTree::new();
+        let (x, y) = ui_wgpu::wgpu::resolve_overlay_placement(&scratch_tree, ui_wgpu::wgpu::OverlayAnchor::Point { x: hover.anchor_x, y: hover.anchor_y }, (content_w, content_h), (width, height), ui_wgpu::wgpu::OverlayKind::Tooltip.default_placement());
         overlay.push_glass([x, y, content_w, content_h], theme.border_radius, theme.glass(Level::Menu));
         chrome_text(overlay, atlas, input, theme, &text, x + padding, y + (content_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
     }
@@ -7966,8 +7966,8 @@ impl ShellState {
         overlay.push_solid([0.0, 0.0, width, height], Rgba::new(0.0, 0.0, 0.0, 0.35));
         let dialog_w = 360.0_f32;
         let dialog_h = 168.0_f32;
-        let scratch_tree = ui_wgpu::UiTree::new();
-        let (x, y) = ui_wgpu::resolve_overlay_placement(&scratch_tree, ui_wgpu::OverlayAnchor::Point { x: 0.0, y: 0.0 }, (dialog_w, dialog_h), (width, height), ui_wgpu::OverlayKind::Dialog.default_placement());
+        let scratch_tree = ui_wgpu::wgpu::UiTree::new();
+        let (x, y) = ui_wgpu::wgpu::resolve_overlay_placement(&scratch_tree, ui_wgpu::wgpu::OverlayAnchor::Point { x: 0.0, y: 0.0 }, (dialog_w, dialog_h), (width, height), ui_wgpu::wgpu::OverlayKind::Dialog.default_placement());
         let dialog_rect = Rect::new(x, y, dialog_w, dialog_h);
         overlay.push_glass([x, y, dialog_w, dialog_h], theme.border_radius, theme.glass(Level::Dialog));
         let pad = theme.padding_standard;
@@ -8477,7 +8477,7 @@ impl ShellState {
         }
     }
 
-    fn window_engagement_chrome_visible(engagement: &ui_wgpu::WindowEngagement, window_id: &str, engagement_inputs: &HashMap<String, String>, activated: bool) -> bool {
+    fn window_engagement_chrome_visible(engagement: &ui_wgpu::wgpu::WindowEngagement, window_id: &str, engagement_inputs: &HashMap<String, String>, activated: bool) -> bool {
         if engagement.session_active.unwrap_or(false) {
             return true;
         }
@@ -8493,7 +8493,7 @@ impl ShellState {
     }
 
     fn engagement_for_kind(&self, kind: &semio_framework_core::WindowKindDefinition) -> Option<WindowEngagement> {
-        self.window_engagements.get(&kind.id).cloned().or_else(|| kind.options.engagement.as_option().cloned()).or_else(|| if kind.surface_kind.is_viewport() { Some(ui_wgpu::default_viewport_engagement()) } else { None })
+        self.window_engagements.get(&kind.id).cloned().or_else(|| kind.options.engagement.as_option().cloned()).or_else(|| if kind.surface_kind.is_viewport() { Some(ui_wgpu::wgpu::default_viewport_engagement()) } else { None })
     }
 
     fn render_window_measures_rail(
@@ -8507,11 +8507,11 @@ impl ShellState {
         content: &Rect,
         window_id: &str,
         kind: &semio_framework_core::WindowKindDefinition,
-        gpu: &mut ui_wgpu::GpuContext,
+        gpu: &mut ui_wgpu::wgpu::GpuContext,
     ) -> WindowMeasuresRailOutcome {
         let inset = theme.gap_standard;
         let active_utility = self.active_utility_by_window.get(window_id).cloned();
-        let (measures, _utility_options) = ui_wgpu::partition_window_measures(&self.measures_for_kind(kind), active_utility.as_deref());
+        let (measures, _utility_options) = ui_wgpu::wgpu::partition_window_measures(&self.measures_for_kind(kind), active_utility.as_deref());
         if measures.is_empty() {
             return WindowMeasuresRailOutcome { chip_hit: None, reserve_width: 0.0 };
         }
@@ -8589,11 +8589,11 @@ impl ShellState {
         content: &Rect,
         window_id: &str,
         kind: &semio_framework_core::WindowKindDefinition,
-        gpu: &mut ui_wgpu::GpuContext,
+        gpu: &mut ui_wgpu::wgpu::GpuContext,
     ) {
         let inset = theme.gap_standard;
         let active_utility = self.active_utility_by_window.get(window_id).cloned();
-        let (_general, utility_options) = ui_wgpu::partition_window_measures(&self.measures_for_kind(kind), active_utility.as_deref());
+        let (_general, utility_options) = ui_wgpu::wgpu::partition_window_measures(&self.measures_for_kind(kind), active_utility.as_deref());
         if utility_options.is_empty() {
             return;
         }
@@ -8626,10 +8626,10 @@ impl ShellState {
         theme: &Theme,
         bounds: Rect,
         measure: &WindowMeasure,
-        gpu: &mut ui_wgpu::GpuContext,
+        gpu: &mut ui_wgpu::wgpu::GpuContext,
     ) -> f32 {
-        use ui_wgpu::component::layout::MeasureSelectItem;
-        use ui_wgpu::widgets::{render_widget, ControlNode, WidgetNode};
+        use ui_wgpu::wgpu::component::layout::MeasureSelectItem;
+        use ui_wgpu::wgpu::widgets::{render_widget, ControlNode, WidgetNode};
         let height = measure_window_measure_height(theme, &self.collapsed_sections, measure);
         let mut y = bounds.y;
         match measure {
@@ -8653,7 +8653,7 @@ impl ShellState {
                 let node = WidgetNode::Select {
                     id: id.clone(),
                     value: value.clone(),
-                    items: items.iter().map(|item: &MeasureSelectItem| ui_wgpu::widgets::SelectItem { value: item.value.clone(), label: item.label.clone() }).collect(),
+                    items: items.iter().map(|item: &MeasureSelectItem| ui_wgpu::wgpu::widgets::SelectItem { value: item.value.clone(), label: item.label.clone() }).collect(),
                     placeholder: None,
                     on_change: Some(on_change.clone()),
                 };
@@ -8710,7 +8710,7 @@ impl ShellState {
         window_id: &str,
         kind: &semio_framework_core::WindowKindDefinition,
         measures_reserve: f32,
-        gpu: &mut ui_wgpu::GpuContext,
+        gpu: &mut ui_wgpu::wgpu::GpuContext,
     ) -> Option<(Rect, String)> {
         let inset = theme.gap_standard;
         let measures_expanded = self.measures_expanded.get(window_id).copied().unwrap_or(false);
@@ -8807,8 +8807,8 @@ impl ShellState {
         bounds: Rect,
         window_id: &str,
         spec: &WindowEngagementInput,
-        possibles: Option<&[ui_wgpu::WindowEngagementPossible]>,
-        _gpu: &mut ui_wgpu::GpuContext,
+        possibles: Option<&[ui_wgpu::wgpu::WindowEngagementPossible]>,
+        _gpu: &mut ui_wgpu::wgpu::GpuContext,
     ) {
         let id = spec.id.clone().unwrap_or_else(|| format!("engagement-input-{window_id}"));
         let committed_value = self.engagement_inputs.get(&id).cloned().or_else(|| spec.value.clone()).unwrap_or_default();
@@ -8818,13 +8818,13 @@ impl ShellState {
         // `query` input in `ui/js/react/index.tsx`.
         let focused = input.focused_id.as_deref() == Some(id.as_str());
         let live_query = if focused { input.text_buffer.clone() } else { committed_value.clone() };
-        let node = ui_wgpu::widgets::WidgetNode::Input { id: id.clone(), input_kind: "text".into(), value: committed_value, placeholder: spec.placeholder.clone(), commit: None, on_change: spec.on_change.clone() };
+        let node = ui_wgpu::wgpu::widgets::WidgetNode::Input { id: id.clone(), input_kind: "text".into(), value: committed_value, placeholder: spec.placeholder.clone(), commit: None, on_change: spec.on_change.clone() };
         {
             let scroll_offsets = &mut self.scroll_offsets;
             let collapsed_sections = &mut self.collapsed_sections;
             let open_selects = &mut self.open_selects;
             let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, None);
-            ui_wgpu::widgets::render_widget(&node, bounds, &mut ctx);
+            ui_wgpu::wgpu::widgets::render_widget(&node, bounds, &mut ctx);
         }
         // #region GhostTextCompletion (item 6: engagement inline-completion ghost text)
         // 👻️ Ports `engagementInlineCompletion`/`engagementCompletionSuffix` (`ui/js/react/index.tsx`) —
@@ -8868,9 +8868,9 @@ impl ShellState {
         theme: &Theme,
         bounds: Rect,
         control: &WindowEngagementControl,
-        _gpu: &mut ui_wgpu::GpuContext,
+        _gpu: &mut ui_wgpu::wgpu::GpuContext,
     ) {
-        use ui_wgpu::widgets::{render_widget, WidgetNode};
+        use ui_wgpu::wgpu::widgets::{render_widget, WidgetNode};
         let node = match control {
             WindowEngagementControl::Slider { id, value, min, max, step, disabled, on_change, .. } => WidgetNode::Slider {
                 id: id.clone().unwrap_or_else(|| "engagement-slider".into()),
@@ -8888,7 +8888,7 @@ impl ShellState {
             WindowEngagementControl::Select { id, value, items, on_change, .. } => WidgetNode::Select {
                 id: id.clone().unwrap_or_else(|| "engagement-select".into()),
                 value: value.clone().unwrap_or_default(),
-                items: items.iter().map(|item| ui_wgpu::widgets::SelectItem { value: item.value.clone(), label: item.label.clone() }).collect(),
+                items: items.iter().map(|item| ui_wgpu::wgpu::widgets::SelectItem { value: item.value.clone(), label: item.label.clone() }).collect(),
                 placeholder: None,
                 on_change: on_change.clone(),
             },
@@ -9482,7 +9482,7 @@ fn shell_pref_locks() -> ShellPrefLocks {
 //#region 🎨️ThemeRegistry
 /// 🎨️ A user-defined theme's color overrides for one appearance — deliberately scoped down from
 /// React's full `UiTheme` (colors/spacing/fontStacks/canvasFonts/strokes/radii/opacities/metrics
-/// per :ui/styling/js/theme.ts`) to the handful of paints `ui_wgpu::Theme` actually varies by
+/// per :ui/styling/js/theme.ts`) to the handful of paints `ui_wgpu::wgpu::Theme` actually varies by
 /// chrome palette (see `ui/wgpu/rs/lib.rs`'s `from_chrome`, read-only reference). A full token-level
 /// draft editor would require porting `resolveThemePaint`'s token/mix resolver wholesale; this
 /// covers "load/mutate/save a custom theme's token values programmatically" per the WP14 scope note.
@@ -9816,10 +9816,10 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
     }
 }
 
-/// 🗣️ `id`'s locale-aware label via `ui_wgpu::framework_panel_tab_label` (the one existing
+/// 🗣️ `id`'s locale-aware label via `ui_wgpu::wgpu::framework_panel_tab_label` (the one existing
 /// locale-aware string helper, per a prior wave), falling back to `fallback` for app-declared ids.
 fn shell_panel_tab_label(id: &str, fallback: &'static str, is_de: bool) -> String {
-    ui_wgpu::framework_panel_tab_label(id, is_de).unwrap_or(fallback).to_string()
+    ui_wgpu::wgpu::framework_panel_tab_label(id, is_de).unwrap_or(fallback).to_string()
 }
 
 /// 🎓️ Reads whether `app_id`'s introduction has already been shown, byte-identical semantics to
@@ -10513,22 +10513,22 @@ mod chrome_overlays_tour_tests {
     #[test]
     fn utility_subtree_has_active_path_finds_a_pressed_toggle_at_the_top_level() {
         let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
-        let nodes = vec![ui_wgpu::utility_toggle("a", "circle".into(), "A", true, action)];
+        let nodes = vec![ui_wgpu::wgpu::utility_toggle("a", "circle".into(), "A", true, action)];
         assert!(utility_subtree_has_active_path(&nodes));
     }
 
     #[test]
     fn utility_subtree_has_active_path_recurses_into_nested_collections() {
         let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
-        let inner = vec![ui_wgpu::utility_toggle("b", "circle".into(), "B", true, action.clone())];
-        let nested = ui_wgpu::utility_collection("group-2", "circle".into(), "Group 2", vec![ui_wgpu::utility_collection("group-1", "circle".into(), "Group 1", inner)]);
+        let inner = vec![ui_wgpu::wgpu::utility_toggle("b", "circle".into(), "B", true, action.clone())];
+        let nested = ui_wgpu::wgpu::utility_collection("group-2", "circle".into(), "Group 2", vec![ui_wgpu::wgpu::utility_collection("group-1", "circle".into(), "Group 1", inner)]);
         assert!(utility_subtree_has_active_path(std::slice::from_ref(&nested)));
     }
 
     #[test]
     fn utility_subtree_has_active_path_false_when_nothing_pressed() {
         let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
-        let nodes = vec![ui_wgpu::utility_toggle("a", "circle".into(), "A", false, action.clone()), ui_wgpu::utility_collection("group", "circle".into(), "Group", vec![ui_wgpu::utility_toggle("b", "circle".into(), "B", false, action)])];
+        let nodes = vec![ui_wgpu::wgpu::utility_toggle("a", "circle".into(), "A", false, action.clone()), ui_wgpu::wgpu::utility_collection("group", "circle".into(), "Group", vec![ui_wgpu::wgpu::utility_toggle("b", "circle".into(), "B", false, action)])];
         assert!(!utility_subtree_has_active_path(&nodes));
     }
 
@@ -10539,9 +10539,9 @@ mod chrome_overlays_tour_tests {
     #[test]
     fn render_footer_utility_nodes_recurses_at_least_two_levels_deep() {
         let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
-        let leaf_toggle = ui_wgpu::utility_toggle("leaf", "circle".into(), "Leaf", false, action.clone());
-        let inner_collection = ui_wgpu::utility_collection("inner", "circle".into(), "Inner", vec![leaf_toggle]);
-        let outer_collection = ui_wgpu::utility_collection("outer", "circle".into(), "Outer", vec![inner_collection]);
+        let leaf_toggle = ui_wgpu::wgpu::utility_toggle("leaf", "circle".into(), "Leaf", false, action.clone());
+        let inner_collection = ui_wgpu::wgpu::utility_collection("inner", "circle".into(), "Inner", vec![leaf_toggle]);
+        let outer_collection = ui_wgpu::wgpu::utility_collection("outer", "circle".into(), "Outer", vec![inner_collection]);
         let utilities = vec![outer_collection];
 
         let mut collection_expanded = HashMap::new();
@@ -10562,14 +10562,14 @@ mod chrome_overlays_tour_tests {
     //#region GhostText
     #[test]
     fn engagement_completion_suffix_matches_label_prefix() {
-        let possibles = vec![ui_wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+        let possibles = vec![ui_wgpu::wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
         assert_eq!(engagement_completion_suffix("Bo", Some(&possibles)), "x");
         assert_eq!(engagement_completion_suffix("bo", Some(&possibles)), "x");
     }
 
     #[test]
     fn engagement_completion_suffix_empty_when_query_is_empty_or_unmatched() {
-        let possibles = vec![ui_wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+        let possibles = vec![ui_wgpu::wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
         assert_eq!(engagement_completion_suffix("", Some(&possibles)), "");
         assert_eq!(engagement_completion_suffix("zz", Some(&possibles)), "");
         assert_eq!(engagement_completion_suffix("Box", Some(&possibles)), ""); // fully typed: no suffix left
@@ -10578,14 +10578,14 @@ mod chrome_overlays_tour_tests {
 
     #[test]
     fn engagement_completion_suffix_picks_first_matching_possible_in_order() {
-        let possibles = vec![ui_wgpu::WindowEngagementPossible { id: "boat".into(), label: "Boat".into(), detail: None, action: None }, ui_wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+        let possibles = vec![ui_wgpu::wgpu::WindowEngagementPossible { id: "boat".into(), label: "Boat".into(), detail: None, action: None }, ui_wgpu::wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
         assert_eq!(engagement_completion_suffix("Bo", Some(&possibles)), "at");
     }
 
     /// 🧪️ Char-boundary safety: a multi-byte label prefix-matched by a query must not panic on slicing.
     #[test]
     fn engagement_completion_suffix_is_multibyte_safe() {
-        let possibles = vec![ui_wgpu::WindowEngagementPossible { id: "muenster".into(), label: "Münster".into(), detail: None, action: None }];
+        let possibles = vec![ui_wgpu::wgpu::WindowEngagementPossible { id: "muenster".into(), label: "Münster".into(), detail: None, action: None }];
         assert_eq!(engagement_completion_suffix("M", Some(&possibles)), "ünster");
     }
 
@@ -11001,10 +11001,10 @@ mod context_menu_keyboard_tests {
     fn render_context_menu_level_renders_a_labeled_separator_as_a_header_without_a_hit() {
         let items = vec![ContextMenuItem { id: "header-1".into(), label: "Header".into(), separator: true, ..Default::default() }, ContextMenuItem { id: "leaf-1".into(), label: "Leaf".into(), ..Default::default() }];
         let menu = ContextMenuState { items: items.clone(), ..Default::default() };
-        let mut draw = ui_wgpu::DrawList::default();
-        let mut atlas = ui_wgpu::FontAtlas::builtin();
-        let icons = ui_wgpu::IconAtlas::default();
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut draw = ui_wgpu::wgpu::DrawList::default();
+        let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+        let icons = ui_wgpu::wgpu::IconAtlas::default();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
         let theme = Theme::default();
         ShellState::render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input, &theme, &menu, &menu.items, &[], 0.0, 0.0, 800.0, 600.0);
         assert!(input.hit_targets.iter().all(|hit| hit.control_id.as_deref() != Some("header-1")), "a labeled separator must stay non-interactive");
@@ -11018,18 +11018,18 @@ mod context_menu_keyboard_tests {
         let row_h = theme.control_height;
         let viewport_h = row_h * 4.0;
         let menu_at = |scroll_offset: f32| ContextMenuState { items: items.clone(), scroll_offset, ..Default::default() };
-        let mut draw = ui_wgpu::DrawList::default();
-        let mut atlas = ui_wgpu::FontAtlas::builtin();
-        let icons = ui_wgpu::IconAtlas::default();
+        let mut draw = ui_wgpu::wgpu::DrawList::default();
+        let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+        let icons = ui_wgpu::wgpu::IconAtlas::default();
 
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
         let menu = menu_at(0.0);
         ShellState::render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input, &theme, &menu, &menu.items, &[], 0.0, 0.0, 800.0, viewport_h);
         let visible_ids: Vec<String> = input.hit_targets.iter().filter_map(|hit| hit.control_id.clone()).collect();
         assert!(visible_ids.len() < items.len(), "expected the viewport clip to hide some rows, got {} of {}", visible_ids.len(), items.len());
         assert!(!visible_ids.contains(&"item-19".to_string()), "the last row should be scrolled out of view without scrolling");
 
-        let mut input2 = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut input2 = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
         let menu2 = menu_at(row_h * 16.0);
         ShellState::render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input2, &theme, &menu2, &menu2.items, &[], 0.0, 0.0, 800.0, viewport_h);
         let scrolled_ids: Vec<String> = input2.hit_targets.iter().filter_map(|hit| hit.control_id.clone()).collect();
@@ -11042,10 +11042,10 @@ mod context_menu_keyboard_tests {
         let child_items = vec![ContextMenuItem { id: "child-1".into(), label: "Child one".into(), ..Default::default() }];
         let parent_items = vec![ContextMenuItem { id: "menu.group.view".into(), label: "View".into(), children: child_items, ..Default::default() }];
         let menu = ContextMenuState { items: parent_items.clone(), active: vec![0], ..Default::default() };
-        let mut draw = ui_wgpu::DrawList::default();
-        let mut atlas = ui_wgpu::FontAtlas::builtin();
-        let icons = ui_wgpu::IconAtlas::default();
-        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let mut draw = ui_wgpu::wgpu::DrawList::default();
+        let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+        let icons = ui_wgpu::wgpu::IconAtlas::default();
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
         let viewport_w = 220.0;
         ShellState::render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input, &theme, &menu, &menu.items, &[], 0.0, 0.0, viewport_w, 600.0);
         let parent_w = ShellState::context_menu_level_width(&parent_items, &theme);

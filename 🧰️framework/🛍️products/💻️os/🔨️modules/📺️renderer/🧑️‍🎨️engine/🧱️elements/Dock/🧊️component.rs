@@ -8,7 +8,7 @@
 
 use semio_framework_core::AppDefinition;
 use std::collections::HashMap;
-use ui_wgpu::{
+use ui_wgpu::wgpu::{
     chrome_item_bg, chrome_item_text, draw_text, even_window_layout, push_chrome_group_border, ActionDescriptor, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Label, Level, Locale, LocalizedLabel, Rect, Rgba,
     Terminology, Theme, UiPresence, WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
 };
@@ -526,8 +526,8 @@ pub fn dock_node_to_layout_root(node: &DockNode) -> WindowLayoutRoot {
             active_window_kind_id: Some(active.clone()),
             children: windows.iter().map(|id| WindowLayoutWindowNode { kind: "window".into(), window_kind_id: id.clone(), title: None, instance_id: None, template_id: None }).collect(),
         }),
-        DockNode::Row(children) => WindowLayoutRoot::Axis(ui_wgpu::WindowLayoutAxisNode { kind: "row".into(), size: None, children: children.iter().map(|(child, size)| dock_child_from_node(child, *size)).collect() }),
-        DockNode::Column(children) => WindowLayoutRoot::Axis(ui_wgpu::WindowLayoutAxisNode { kind: "column".into(), size: None, children: children.iter().map(|(child, size)| dock_child_from_node(child, *size)).collect() }),
+        DockNode::Row(children) => WindowLayoutRoot::Axis(ui_wgpu::wgpu::WindowLayoutAxisNode { kind: "row".into(), size: None, children: children.iter().map(|(child, size)| dock_child_from_node(child, *size)).collect() }),
+        DockNode::Column(children) => WindowLayoutRoot::Axis(ui_wgpu::wgpu::WindowLayoutAxisNode { kind: "column".into(), size: None, children: children.iter().map(|(child, size)| dock_child_from_node(child, *size)).collect() }),
     }
 }
 
@@ -539,9 +539,9 @@ fn dock_child_from_node(node: &DockNode, size: f32) -> WindowLayoutChild {
             active_window_kind_id: Some(active.clone()),
             children: windows.iter().map(|id| WindowLayoutWindowNode { kind: "window".into(), window_kind_id: id.clone(), title: None, instance_id: None, template_id: None }).collect(),
         }),
-        DockNode::Row(children) => WindowLayoutChild::Axis(ui_wgpu::WindowLayoutAxisNode { kind: "row".into(), size: Some(size as f64), children: children.iter().map(|(child, child_size)| dock_child_from_node(child, *child_size)).collect() }),
+        DockNode::Row(children) => WindowLayoutChild::Axis(ui_wgpu::wgpu::WindowLayoutAxisNode { kind: "row".into(), size: Some(size as f64), children: children.iter().map(|(child, child_size)| dock_child_from_node(child, *child_size)).collect() }),
         DockNode::Column(children) => {
-            WindowLayoutChild::Axis(ui_wgpu::WindowLayoutAxisNode { kind: "column".into(), size: Some(size as f64), children: children.iter().map(|(child, child_size)| dock_child_from_node(child, *child_size)).collect() })
+            WindowLayoutChild::Axis(ui_wgpu::wgpu::WindowLayoutAxisNode { kind: "column".into(), size: Some(size as f64), children: children.iter().map(|(child, child_size)| dock_child_from_node(child, *child_size)).collect() })
         }
     }
 }
@@ -704,7 +704,7 @@ fn collect_stack_tab_bars(node: &DockNode, bounds: Rect, path: &[usize], theme: 
 }
 
 /// 🪟️ Wgpu-local adapter: builds the balanced fallback layout via
-/// `ui_wgpu::even_window_layout` and converts it to a runtime `DockNode`.
+/// `ui_wgpu::wgpu::even_window_layout` and converts it to a runtime `DockNode`.
 fn even_layout(window_ids: &[String]) -> DockNode {
     dock_from_window_layout(&even_window_layout(window_ids).root)
 }
@@ -1303,7 +1303,7 @@ mod tests {
     use super::*;
     use crate::shell::ShellState;
     use semio_framework_core::{AppDefinition, ModeDefinition, PanelGroup, PanelTabDefinition, PanelTabKind, WindowKindDefinition};
-    use ui_wgpu::{create_default_layout, WindowOptions};
+    use ui_wgpu::wgpu::{create_default_layout, WindowOptions};
 
     fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinition {
         AppDefinition {
@@ -1321,7 +1321,7 @@ mod tests {
                         id: (*id).into(),
                         label: LocalizedLabel::data(*id),
                         body_key: format!("{id}.body"),
-                        surface_kind: ui_wgpu::SurfaceKind::Canvas2d,
+                        surface_kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
                         icon_id: "app-window".into(),
                         options: WindowOptions::default(),
                         actions: vec![],
@@ -1616,7 +1616,7 @@ mod tests {
         // `[1]` to `[0]`. A stale-path reuse would now silently misdirect `active_stack`/
         // `maximized_stack` at `a` instead of following `b` by key.
         let reversed = WindowLayout {
-            root: WindowLayoutRoot::Axis(ui_wgpu::WindowLayoutAxisNode {
+            root: WindowLayoutRoot::Axis(ui_wgpu::wgpu::WindowLayoutAxisNode {
                 kind: "row".into(),
                 size: None,
                 children: vec![
@@ -1768,7 +1768,7 @@ mod tests {
 
     //#region WindowActionsAndUtilitiesTests
     use semio_framework_core::{ActionArgDef, ActionDefinition, ActionKind, ActionRef, UtilityDefinition, UtilityRef};
-    use ui_wgpu::{KeyAction, PointerModifiers};
+    use ui_wgpu::wgpu::{KeyAction, PointerModifiers};
 
     fn mods(meta: bool, ctrl: bool, shift: bool, alt: bool) -> PointerModifiers {
         PointerModifiers { meta, ctrl, shift, alt }
@@ -1898,7 +1898,7 @@ mod tests {
     /// absent from BOTH buckets otherwise — untagged groups always stay in the general Measures rail.
     #[test]
     fn utility_options_partition_gates_tagged_group_by_active_utility() {
-        use ui_wgpu::{partition_window_measures, ActionDescriptor, WindowMeasure};
+        use ui_wgpu::wgpu::{partition_window_measures, ActionDescriptor, WindowMeasure};
         let measures = vec![
             WindowMeasure::Group {
                 id: "brush-params".into(),

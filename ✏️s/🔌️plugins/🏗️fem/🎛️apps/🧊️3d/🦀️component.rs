@@ -593,7 +593,7 @@ mod tests {
                 assert_eq!(solid.base_z, 0.5);
                 assert_eq!(solid.height, 3.0);
                 assert_eq!(solid.layers, 2);
-                assert_eq!(solid.material_id, "concrete");
+                assert_eq!(solid.material_id, "m0");
             }
             _ => panic!("expected SetSolid"),
         }

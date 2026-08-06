@@ -1,7 +1,6 @@
 {
-  "barrel": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-  "coreDir": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core",
-  "elDir": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements",
-  "preferred": "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE",
-  "uiDir": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui"
+  "barrel": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+  "coreDir": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core",
+  "elDir": "🧰️framework/🔨️modules/🖱️ui/🧱️elements",
+  "reactPkg": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"
 }

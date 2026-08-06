@@ -22,7 +22,7 @@ ui_styling = { path = "../../../../../../../../../../🔨️modules/🖱️ui/�
 # 🗺️ Default features only (NOT "engine") — just the `minimap` layout-math module, kept lightweight so this
 # vello/`infinite_canvas`-based crate never pulls in wgpu/winit/parley/kernel_3d_scene. See
 # `.🦑️repo/🎫️tickets/26/08/05/FRAMEWORK-BUILDER-PASSTHROUGHS-APP-COMMANDS-MACRO-WIDGET-EXTRACTION`.
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu", package = "semio-framework-ui-wgpu" }
+ui_wgpu = {path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
 infinite_board_port_directed = { path = "../../../../../../🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed" }
 infinite_canvas = { path = "../../../../../../🖼️canvas/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
 serde = { version = "1.0.219", features = ["derive"] }
