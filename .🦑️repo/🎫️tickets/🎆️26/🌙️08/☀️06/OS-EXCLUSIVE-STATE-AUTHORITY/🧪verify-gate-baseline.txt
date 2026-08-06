@@ -1,0 +1,346 @@
+[verify] dependency-cruiser boundaries…
+Saved lockfile
+
+✔ no dependency violations found (27 modules, 15 dependencies cruised)
+
+[verify] generated catalog freshness…
+
+> nx run @semio-tech/plugin-registry:check
+
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check
+> nx run @semio-tech/plugin-registry:check
+$ bun nx run @semio-tech/plugin-registry:check

@@ -1,0 +1,4 @@
+# Goals (Wave 0)
+Associated goal: AI-OPTIMIZED-REPO
+Ticket: 26/08/06/OS-EXCLUSIVE-STATE-AUTHORITY
+Date: 2026-08-06

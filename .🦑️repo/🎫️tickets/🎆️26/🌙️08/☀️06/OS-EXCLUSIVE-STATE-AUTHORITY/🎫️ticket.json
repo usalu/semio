@@ -1,0 +1,10 @@
+{
+  "title": "Os Exclusive State Authority",
+  "emoji": "🎫️",
+  "status": "open",
+  "description": "Make the OS framework the only possible state mechanism: host-authoritative DocumentStore, receiverless DocumentApp, host-owned content-addressed engines, draft lane for ephemeral state, migrate all s and non-OS framework state sites, seal with policy lint.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪988579c6e78e4dfc9c067d2d9829296d"
+  ]
+}

@@ -621,7 +621,7 @@ pub mod host {
             let mut inner = DocumentStore::new(envelope);
             if !applied_edit_ids.is_empty() {
                 let snapshot = inner.envelope().clone();
-                inner.set_envelope(snapshot, applied_edit_ids);
+                inner.reset(snapshot, applied_edit_ids, Vec::new()).expect("reset snapshot");
             }
             Self { inner, name: document.name }
         }

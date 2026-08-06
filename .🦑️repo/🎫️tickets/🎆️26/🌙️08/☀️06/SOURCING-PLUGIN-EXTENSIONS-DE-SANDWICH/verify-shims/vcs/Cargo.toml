@@ -21,7 +21,7 @@ dsl_core = { path = "../../../../../../../../🧰️framework/🛍️products/�
 # 🎞️ Operation/Edit — this crate's own `DocumentVcs.edits: Vec<Edit<Operation>>` field type and the
 # `apply_operation`/`absorb_diff` generic bound. `pack`/`dsl` moved to `store` (the serialization seam
 # now lives there — see `26/07/28/EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY`).
-protocol = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 # 🎞️ content-addressed checkpoint ids — `pack::content_hash` reads a pack FILE's footer (wrong tool
 # for hashing arbitrary bytes), so this crate hashes directly with blake3 (the same primitive
 # `pack_core::ContentHash`/`protocol_format::Blake3Hasher` use).

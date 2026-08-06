@@ -4,7 +4,6 @@
 //! which depends on this crate — see `26/07/28/EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY`).
 
 use serde::{Deserialize, Serialize};
-use std::sync::atomic::{AtomicU64, Ordering};
 use thiserror::Error;
 
 // This crate's own body spells the trait name bare (`self::Operation<P>` in `apply_operation`
@@ -14,13 +13,63 @@ use thiserror::Error;
 // method, called on `Operation::Diff` inside `apply_operation`.
 use crate::os_spr::{Edit, Operation, OperationDiff};
 
-static ID_COUNTER: AtomicU64 = AtomicU64::new(0);
-
-/// @emoji 🆔️ Allocates stable ids for document VCS entities.
-pub fn create_document_vcs_id(prefix: &str) -> String {
-    let n = ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
-    format!("{prefix}-{n}")
+//#region 🆔️Ids
+/// @emoji 🔑 Content-addressed entity id: `{prefix}-{hex16(blake3(prefix || 0 || payload))}`.
+pub fn content_addressed_entity_id(prefix: &str, payload: &[u8]) -> String {
+    let mut input = prefix.as_bytes().to_vec();
+    input.push(0);
+    input.extend_from_slice(payload);
+    let digest = *blake3::hash(&input).as_bytes();
+    let hex16: String = digest[..8].iter().map(|byte| format!("{byte:02x}")).collect();
+    format!("{prefix}-{hex16}")
 }
+
+/// @emoji 🆔️ Deterministic child id scoped to an edit: blake3(`{edit_id}:{ordinal}`).
+pub fn edit_scoped_id(edit_id: &str, ordinal: u32) -> String {
+    let digest = blake3::hash(format!("{edit_id}:{ordinal}").as_bytes());
+    let hex16: String = digest.as_bytes()[..8].iter().map(|byte| format!("{byte:02x}")).collect();
+    format!("scoped-{hex16}")
+}
+
+/// @emoji ✏️ Content-addressed edit id from actor + sequence + forwards fingerprint (no global counter).
+pub fn mint_edit_id(actor: Option<&str>, sequence: i32, forwards_fingerprint: &[u8]) -> String {
+    let mut payload = Vec::new();
+    payload.extend_from_slice(actor.unwrap_or("").as_bytes());
+    payload.push(0);
+    payload.extend_from_slice(&sequence.to_le_bytes());
+    payload.push(0);
+    payload.extend_from_slice(forwards_fingerprint);
+    content_addressed_entity_id("edit", &payload)
+}
+
+/// @emoji 📦️ Content-addressed change id from ordered edit ids (+ optional description distinguisher).
+pub fn mint_change_id(edit_ids: &[String], description: Option<&str>) -> String {
+    let mut payload = edit_ids.join("\0").into_bytes();
+    payload.push(0);
+    payload.extend_from_slice(description.unwrap_or("").as_bytes());
+    content_addressed_entity_id("change", &payload)
+}
+
+/// @emoji 🌿️ Content-addressed alternative id from name + ordered checkpoint ids.
+pub fn mint_alternative_id(name: &str, checkpoint_ids: &[String]) -> String {
+    let mut payload = name.as_bytes().to_vec();
+    payload.push(0);
+    payload.extend_from_slice(checkpoint_ids.join("\0").as_bytes());
+    content_addressed_entity_id("alternative", &payload)
+}
+
+/// @emoji ⚙️ Content-addressed operation id from the operation's binary (or other) fingerprint bytes.
+pub fn mint_operation_id(operation_bytes: &[u8]) -> String {
+    content_addressed_entity_id("operation", operation_bytes)
+}
+
+/// @emoji 🆔️ Legacy-compatible prefix-only mint — identical inputs collide.
+/// Prefer [`mint_edit_id`] / [`mint_change_id`] / [`mint_alternative_id`] / [`mint_operation_id`] /
+/// [`content_addressed_entity_id`] with a distinguishing payload.
+pub fn create_document_vcs_id(prefix: &str) -> String {
+    content_addressed_entity_id(prefix, prefix.as_bytes())
+}
+//#endregion 🆔️Ids
 
 //#region 🔖️Schemas
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -108,6 +157,9 @@ crate::fault_from_thiserror!(VcsError, crate::os_dsl::core::FaultOrigin::Module,
 //#endregion 🔖️Errors
 //#region 🔖️CollectionDiff
 /// @emoji 🧩️ Sparse collection patch entry (mirrors semio_compose_rs `XModified`).
+///
+/// 🎞️ Field-identical to `crate::os_spr::command::ItemPatch`, but kept local because the surrounding
+/// VCS `CollectionOperation` schema still diverges from spr (`index` vs `at`) — see that enum's note.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemPatch<TId, TPatch> {
@@ -143,6 +195,10 @@ pub trait Patchable<TPatch> {
 }
 
 /// @emoji 🧺️ Generic ordered-collection operation (add/remove/move/patch) with mechanical pre-state inverses.
+///
+/// 🎞️ `crate::os_spr::command::CollectionOperation` is the frozen-contract twin (`Add { id, item, at }`,
+/// `Move { id, to }`). This VCS shape keeps `index`/`to_index` for `apply_collection_operation` below —
+/// schemas differ, so these are NOT `pub use` aliases of spr.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum CollectionOperation<TId, TItem, TPatch> {
@@ -405,5 +461,23 @@ mod tests {
         let id_different_timestamp = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:02Z");
         assert_ne!(id_a, id_different_timestamp, "a different timestamp must change the id");
     }
+
+    //#region 🆔️Ids
+    #[test]
+    fn content_addressed_entity_and_mint_helpers_are_deterministic() {
+        assert_eq!(content_addressed_entity_id("x", b"payload"), content_addressed_entity_id("x", b"payload"));
+        assert_ne!(content_addressed_entity_id("x", b"a"), content_addressed_entity_id("x", b"b"));
+        assert_eq!(edit_scoped_id("edit-1", 0), edit_scoped_id("edit-1", 0));
+        assert_ne!(edit_scoped_id("edit-1", 0), edit_scoped_id("edit-1", 1));
+        assert!(edit_scoped_id("edit-1", 0).starts_with("scoped-"));
+        assert_eq!(mint_edit_id(Some("alice"), 3, b"fwd"), mint_edit_id(Some("alice"), 3, b"fwd"));
+        assert_ne!(mint_edit_id(Some("alice"), 3, b"fwd"), mint_edit_id(Some("bob"), 3, b"fwd"));
+        assert_eq!(mint_change_id(&["e1".into(), "e2".into()], Some("msg")), mint_change_id(&["e1".into(), "e2".into()], Some("msg")));
+        assert_eq!(mint_alternative_id("main", &["ck1".into()]), mint_alternative_id("main", &["ck1".into()]));
+        assert_eq!(mint_operation_id(b"op-bytes"), mint_operation_id(b"op-bytes"));
+        assert_eq!(create_document_vcs_id("draft"), create_document_vcs_id("draft"));
+        assert!(create_document_vcs_id("draft").starts_with("draft-"));
+    }
+    //#endregion 🆔️Ids
 }
 //#endregion 🧪️Tests

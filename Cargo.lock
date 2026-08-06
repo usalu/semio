@@ -2039,9 +2039,6 @@ name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
-dependencies = [
- "serde",
-]
 
 [[package]]
 name = "email_address"
@@ -2384,7 +2381,7 @@ version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbc773e24e02d4ddd8395fd30dc147524273a83e54e0f312d986ea30de5f5646"
 dependencies = [
- "roxmltree 0.20.0",
+ "roxmltree",
 ]
 
 [[package]]
@@ -2418,7 +2415,7 @@ dependencies = [
  "objc2-foundation 0.3.2",
  "peniko 0.4.1",
  "read-fonts 0.29.3",
- "roxmltree 0.20.0",
+ "roxmltree",
  "smallvec",
  "windows",
  "windows-core",
@@ -2441,7 +2438,7 @@ dependencies = [
  "objc2-foundation 0.3.2",
  "peniko 0.4.1",
  "read-fonts 0.29.3",
- "roxmltree 0.20.0",
+ "roxmltree",
  "smallvec",
  "windows",
  "windows-core",
@@ -3808,12 +3805,6 @@ name = "imagesize"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "edcd27d72f2f071c64249075f42e205ff93c9a4c5f6c6da53e79ed9f9832c285"
-
-[[package]]
-name = "imagesize"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09e54e57b4c48b40f7aec75635392b12b3421fa26fe8b4332e63138ed278459c"
 
 [[package]]
 name = "indexmap"
@@ -6207,9 +6198,9 @@ dependencies = [
  "log",
  "pico-args",
  "rgb",
- "svgtypes 0.15.3",
+ "svgtypes",
  "tiny-skia",
- "usvg 0.45.1",
+ "usvg",
  "zune-jpeg 0.4.21",
 ]
 
@@ -6283,15 +6274,6 @@ name = "roxmltree"
 version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c20b6793b5c2fa6553b250154b78d6d0db37e72700ae35fad9387a46f487c97"
-
-[[package]]
-name = "roxmltree"
-version = "0.21.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1964b10c76125c36f8afe190065a4bf9a87bf324842c05701330bba9f1cacbb"
-dependencies = [
- "memchr",
-]
 
 [[package]]
 name = "rsqlite-vfs"
@@ -6689,10 +6671,7 @@ dependencies = [
  "nalgebra 0.34.2",
  "paste",
  "rusqlite",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
+ "semio-framework-os-kernel",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -6738,9 +6717,8 @@ name = "semio-framework-editor"
 version = "0.1.0"
 dependencies = [
  "js-sys",
- "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
+ "semio-framework-os-infinite",
+ "semio-framework-os-kernel",
  "semio-framework-ui-styling",
  "serde",
  "serde_json",
@@ -6758,41 +6736,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-kernel-infinite-world"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "image",
- "js-sys",
- "semio-framework-core",
- "semio-framework-surface",
- "semio-framework-ui",
- "semio-s-3d",
- "serde",
- "serde_json",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "semio-framework-kernel-neural-dag"
-version = "0.1.0"
-dependencies = [
- "semio-framework-math",
- "semio-framework-os-kernel-neural-engine",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
 name = "semio-framework-math"
 version = "0.1.0"
 dependencies = [
  "kurbo 0.13.1",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-dsl-core",
- "semio-framework-os-kernel-dsl-schema",
+ "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
  "serde",
  "serde_json",
@@ -6810,13 +6758,7 @@ dependencies = [
  "resvg",
  "rusqlite",
  "semio-framework-core",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-space",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-store-sync",
- "semio-framework-os-kernel-vcs",
- "semio-framework-os-kernel-workflow",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-ui",
  "semio-s-3d",
@@ -6826,9 +6768,33 @@ dependencies = [
  "thiserror 2.0.18",
  "tiny-skia",
  "tokio",
- "usvg 0.45.1",
+ "usvg",
  "uuid",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-framework-os-flow"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "semio-framework-core",
+ "semio-framework-os-kernel",
+ "semio-framework-os-kernel-neural-engine",
+ "semio-s-3d",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-framework-os-infinite"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -6863,329 +6829,11 @@ dependencies = [
 name = "semio-framework-os-kernel-db"
 version = "0.1.0"
 dependencies = [
- "semio-framework-os-kernel-db-actor",
- "semio-framework-os-kernel-db-cluster",
- "semio-framework-os-kernel-db-compact",
- "semio-framework-os-kernel-db-conflict",
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-db-document",
- "semio-framework-os-kernel-db-engine",
- "semio-framework-os-kernel-db-index",
- "semio-framework-os-kernel-db-observe",
- "semio-framework-os-kernel-db-preview",
- "semio-framework-os-kernel-db-projection",
- "semio-framework-os-kernel-db-query",
- "semio-framework-os-kernel-db-security",
- "semio-framework-os-kernel-db-snapshot",
- "semio-framework-os-kernel-db-state",
- "semio-framework-os-kernel-db-storage",
- "semio-framework-os-kernel-db-storage-neo4j",
- "semio-framework-os-kernel-db-storage-postgres",
- "semio-framework-os-kernel-db-storage-sqlite",
- "semio-framework-os-kernel-db-sync",
- "semio-framework-os-kernel-db-wal",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-protocol",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-actor"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-db-core",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-cli"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-db",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-protocol",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-cluster"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-db-actor",
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-db-storage",
- "semio-framework-os-kernel-db-sync",
- "semio-framework-os-kernel-db-wal",
- "semio-framework-os-kernel-protocol",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-compact"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-db-index",
- "semio-framework-os-kernel-db-snapshot",
- "semio-framework-os-kernel-db-state",
- "semio-framework-os-kernel-db-storage",
- "semio-framework-os-kernel-db-wal",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-conflict"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-db-state",
- "semio-framework-os-kernel-protocol",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-core"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-pack-core",
- "serde",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-document"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-db-actor",
- "semio-framework-os-kernel-db-conflict",
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-db-index",
- "semio-framework-os-kernel-db-preview",
- "semio-framework-os-kernel-db-projection",
- "semio-framework-os-kernel-db-query",
- "semio-framework-os-kernel-db-security",
- "semio-framework-os-kernel-db-snapshot",
- "semio-framework-os-kernel-db-state",
- "semio-framework-os-kernel-db-storage",
- "semio-framework-os-kernel-db-wal",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-engine"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-db-actor",
- "semio-framework-os-kernel-db-cluster",
- "semio-framework-os-kernel-db-compact",
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-db-document",
- "semio-framework-os-kernel-db-observe",
- "semio-framework-os-kernel-db-security",
- "semio-framework-os-kernel-db-storage",
- "semio-framework-os-kernel-db-sync",
- "semio-framework-os-kernel-db-wal",
- "semio-framework-os-kernel-pack-core",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-index"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-db-storage",
- "semio-framework-os-kernel-pack-core",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-observe"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-pack-core",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-preview"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-db-conflict",
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-db-state",
- "semio-framework-os-kernel-protocol",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-projection"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-db-index",
- "semio-framework-os-kernel-db-state",
- "semio-framework-os-kernel-db-storage",
- "semio-framework-os-kernel-protocol",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-query"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-db-index",
- "semio-framework-os-kernel-db-projection",
- "semio-framework-os-kernel-db-state",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-security"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-protocol",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-snapshot"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-db-state",
- "semio-framework-os-kernel-db-storage",
- "semio-framework-os-kernel-pack",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-state"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-pack-core",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-storage"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-pack",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-storage-neo4j"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "blake3",
- "neo4rs",
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-db-storage",
- "semio-framework-os-kernel-pack",
- "serde",
- "tokio",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-storage-postgres"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-db-storage",
- "semio-framework-os-kernel-pack",
- "sqlx",
- "tokio",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-storage-sqlite"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "rusqlite",
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-db-storage",
- "semio-framework-os-kernel-pack",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-sync"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-db-storage",
- "semio-framework-os-kernel-db-wal",
- "semio-framework-os-kernel-protocol",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-testkit"
-version = "0.1.0"
-dependencies = [
- "criterion",
- "semio-framework-os-kernel-db",
- "semio-framework-os-kernel-db-actor",
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-db-document",
- "semio-framework-os-kernel-db-engine",
- "semio-framework-os-kernel-db-projection",
- "semio-framework-os-kernel-db-state",
- "semio-framework-os-kernel-db-storage",
- "semio-framework-os-kernel-db-sync",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-pack-testkit",
- "semio-framework-os-kernel-protocol",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-db-wal"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "semio-framework-os-kernel-db-core",
- "semio-framework-os-kernel-db-storage",
- "semio-framework-os-kernel-pack-core",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-protocol-core",
- "semio-framework-os-kernel-protocol-format",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-dsl"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl-core",
- "semio-framework-os-kernel-dsl-derive",
- "semio-framework-os-kernel-dsl-grammar",
- "semio-framework-os-kernel-dsl-schema",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-semio",
- "semio-framework-os-kernel-store",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-dsl-core"
-version = "0.1.0"
-dependencies = [
+ "async-trait",
+ "semio-framework-os-kernel",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -7198,205 +6846,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-os-kernel-dsl-family-recipe"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl-core",
- "semio-framework-os-kernel-dsl-grammar",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-dsl-grammar"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl-core",
- "semio-framework-os-kernel-dsl-notation",
- "semio-framework-os-kernel-dsl-schema",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-dsl-lsp"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-dsl-notation"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl-core",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-dsl-schema"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl-core",
- "semio-framework-os-kernel-dsl-notation",
- "serde",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-flow-core"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "js-sys",
- "semio-framework-core",
- "semio-framework-kernel-neural-dag",
- "semio-framework-math",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-infinite-board-port-directed-dag",
- "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-os-kernel-neural-engine",
- "semio-framework-os-kernel-playbook",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
- "semio-framework-ui",
- "semio-framework-ui-styling",
- "semio-s-kernel-flow-extension-brep",
- "semio-s-kernel-flow-extension-core",
- "semio-s-kernel-flow-extension-dictionary",
- "semio-s-kernel-flow-extension-draw",
- "semio-s-kernel-flow-extension-list",
- "semio-s-kernel-flow-extension-logic",
- "semio-s-kernel-flow-extension-math",
- "semio-s-kernel-flow-extension-text",
- "semio-s-kernel-flow-extension-wasm",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "thiserror 2.0.18",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-infinite-board"
-version = "0.1.0"
-dependencies = [
- "semio-framework-math",
- "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-ui-styling",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-infinite-board-normal-directed"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-infinite-board",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-infinite-board-normal-undirected"
-version = "0.1.0"
-dependencies = [
- "semio-framework-math",
- "semio-framework-os-kernel-infinite-board",
- "semio-framework-os-kernel-infinite-canvas",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-infinite-board-port"
-version = "0.1.0"
-dependencies = [
- "semio-framework-math",
- "semio-framework-os-kernel-infinite-board",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-infinite-board-port-directed"
-version = "0.1.0"
-dependencies = [
- "semio-framework-math",
- "semio-framework-os-kernel-infinite-board",
- "semio-framework-os-kernel-infinite-board-normal-undirected",
- "semio-framework-os-kernel-infinite-board-port",
- "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-ui-styling",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-infinite-board-port-directed-dag"
-version = "0.1.0"
-dependencies = [
- "js-sys",
- "semio-framework-math",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-infinite-board-port-directed",
- "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
- "semio-framework-ui",
- "semio-framework-ui-styling",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-infinite-board-port-directed-normal"
-version = "0.1.0"
-dependencies = [
- "semio-framework-math",
- "semio-framework-os-kernel-infinite-board-normal-undirected",
- "semio-framework-os-kernel-infinite-board-port-directed",
- "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-ui-styling",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-infinite-board-port-undirected"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-infinite-board-port",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-infinite-canvas"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "fontdb",
- "image",
- "js-sys",
- "semio-framework-compiler",
- "semio-framework-math",
- "semio-framework-ui-styling",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "vello",
- "vello_encoding",
- "vello_svg",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
 name = "semio-framework-os-kernel-neural-engine"
 version = "0.1.0"
 dependencies = [
@@ -7404,324 +6853,6 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.18",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-pack"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl-schema",
- "semio-framework-os-kernel-pack-async",
- "semio-framework-os-kernel-pack-core",
- "semio-framework-os-kernel-pack-format",
- "semio-framework-os-kernel-pack-http",
- "semio-framework-os-kernel-pack-index",
- "semio-framework-os-kernel-pack-io",
- "semio-framework-os-kernel-pack-value",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-pack-async"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "futures-lite",
- "semio-framework-os-kernel-pack-core",
- "semio-framework-os-kernel-pack-format",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-pack-core"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl-core",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-pack-format"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "miniz_oxide",
- "semio-framework-os-kernel-pack-core",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-pack-http"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "futures-lite",
- "semio-framework-os-kernel-pack-async",
- "semio-framework-os-kernel-pack-core",
- "semio-framework-os-kernel-pack-format",
- "ureq",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-pack-index"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-pack-core",
- "semio-framework-os-kernel-pack-format",
- "semio-framework-os-kernel-pack-value",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-pack-io"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-pack-core",
- "semio-framework-os-kernel-pack-format",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-pack-testkit"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "semio-framework-os-kernel-dsl-core",
- "semio-framework-os-kernel-dsl-schema",
- "semio-framework-os-kernel-pack",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-pack-value"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "semio-framework-os-kernel-dsl-core",
- "semio-framework-os-kernel-dsl-schema",
- "semio-framework-os-kernel-pack-core",
- "semio-framework-os-kernel-pack-format",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-playbook"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
- "semio-framework-ui",
- "serde",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-protocol"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-protocol-causal",
- "semio-framework-os-kernel-protocol-channel",
- "semio-framework-os-kernel-protocol-command",
- "semio-framework-os-kernel-protocol-core",
- "semio-framework-os-kernel-protocol-crdt",
- "semio-framework-os-kernel-protocol-format",
- "semio-framework-os-kernel-protocol-history",
- "semio-framework-os-kernel-protocol-io",
- "semio-framework-os-kernel-protocol-materialize",
- "semio-framework-os-kernel-protocol-wire",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-protocol-causal"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-protocol-command",
- "semio-framework-os-kernel-protocol-core",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-protocol-channel"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-protocol-causal",
- "semio-framework-os-kernel-protocol-core",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-protocol-command"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "semio-framework-os-kernel-dsl-core",
- "semio-framework-os-kernel-protocol-core",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-protocol-core"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl-core",
- "semio-framework-os-kernel-pack-core",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-protocol-crdt"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-protocol-command",
- "semio-framework-os-kernel-protocol-core",
- "serde",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-protocol-format"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "semio-framework-os-kernel-pack-core",
- "semio-framework-os-kernel-pack-format",
- "semio-framework-os-kernel-protocol-core",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-protocol-history"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl-core",
- "semio-framework-os-kernel-dsl-schema",
- "semio-framework-os-kernel-pack-core",
- "semio-framework-os-kernel-protocol-core",
- "semio-framework-os-kernel-protocol-format",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-protocol-io"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-pack-core",
- "semio-framework-os-kernel-pack-io",
- "semio-framework-os-kernel-protocol-core",
- "semio-framework-os-kernel-protocol-format",
- "semio-framework-os-kernel-protocol-history",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-protocol-materialize"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-pack-core",
- "semio-framework-os-kernel-protocol-core",
- "semio-framework-os-kernel-protocol-format",
- "semio-framework-os-kernel-protocol-history",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-protocol-wire"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-protocol-causal",
- "semio-framework-os-kernel-protocol-command",
- "semio-framework-os-kernel-protocol-core",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-semio"
-version = "0.1.0"
-dependencies = [
- "pretty_assertions",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-space"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "zip 2.4.2",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-store"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "blake3",
- "js-sys",
- "semio-framework-core",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-dsl-core",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-semio",
- "semio-framework-os-kernel-vcs",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "tempfile",
- "thiserror 2.0.18",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-store-sync"
-version = "0.1.0"
-dependencies = [
- "futures-util",
- "js-sys",
- "notify",
- "rusqlite",
- "semio-framework-core",
- "semio-framework-hash",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.18",
- "tokio",
- "tokio-tungstenite 0.26.2",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-vcs"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "semio-framework-os-kernel-dsl-core",
- "semio-framework-os-kernel-protocol",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-workflow"
-version = "0.1.0"
-dependencies = [
- "semio-framework-core",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -7736,15 +6867,9 @@ dependencies = [
  "rfd",
  "semio-framework-core",
  "semio-framework-editor",
- "semio-framework-kernel-infinite-world",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-dsl-core",
- "semio-framework-os-kernel-flow-core",
- "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-store-sync",
- "semio-framework-os-kernel-vcs",
+ "semio-framework-os-flow",
+ "semio-framework-os-infinite",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
  "semio-framework-surface",
@@ -7756,7 +6881,7 @@ dependencies = [
  "tiny-skia",
  "tokio",
  "ureq",
- "usvg 0.45.1",
+ "usvg",
  "vello",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -7766,15 +6891,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-os-run"
+version = "0.1.0"
+dependencies = [
+ "pretty_assertions",
+ "semio-framework-core",
+ "semio-framework-hash",
+ "semio-framework-os",
+ "semio-framework-os-kernel",
+ "semio-framework-plugin",
+ "semio-framework-plugin-host",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "semio-framework-plugin"
 version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
  "semio-framework-core",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
+ "semio-framework-os-kernel",
  "semio-framework-ui",
  "serde",
  "serde_json",
@@ -7787,11 +6925,7 @@ name = "semio-framework-plugin-host"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-dsl-core",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
+ "semio-framework-os-kernel",
  "semio-framework-ui",
  "serde",
  "serde_json",
@@ -7829,10 +6963,8 @@ dependencies = [
  "js-sys",
  "prost",
  "semio-framework-math",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-infinite-board-port-directed-dag",
- "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-os-kernel-store",
+ "semio-framework-os-infinite",
+ "semio-framework-os-kernel",
  "semio-framework-ui-styling",
  "semio-s-plugin-puzzle",
  "serde",
@@ -7854,7 +6986,7 @@ dependencies = [
  "libc",
  "parley",
  "pollster",
- "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel",
  "semio-framework-ui-styling",
  "serde",
  "serde_json",
@@ -7884,8 +7016,8 @@ dependencies = [
  "futures",
  "neo4rs",
  "rusqlite",
+ "semio-framework-os-kernel",
  "semio-framework-os-kernel-db",
- "semio-framework-os-kernel-protocol",
  "serde",
  "serde_json",
  "sqlx-core",
@@ -7940,10 +7072,8 @@ dependencies = [
 name = "semio-s-imperative"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
  "semio-s-plugin-imperative-control",
  "semio-s-plugin-imperative-core",
  "semio-s-plugin-imperative-logic",
@@ -7954,117 +7084,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-kernel-flow-extension-brep"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "getrandom 0.3.4",
- "js-sys",
- "semio-framework-core",
- "semio-framework-os-kernel-neural-engine",
- "semio-s-3d",
- "semio-s-kernel-flow-extension-wasm",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "semio-s-kernel-flow-extension-core"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-neural-engine",
- "semio-s-kernel-flow-extension-wasm",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "semio-s-kernel-flow-extension-dictionary"
-version = "0.1.0"
-dependencies = [
- "getrandom 0.3.4",
- "semio-framework-os-kernel-neural-engine",
- "semio-s-kernel-flow-extension-wasm",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "semio-s-kernel-flow-extension-draw"
-version = "0.1.0"
-dependencies = [
- "getrandom 0.3.4",
- "semio-framework-os-kernel-neural-engine",
- "semio-s-2d",
- "semio-s-kernel-flow-extension-wasm",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "semio-s-kernel-flow-extension-list"
-version = "0.1.0"
-dependencies = [
- "getrandom 0.3.4",
- "semio-framework-os-kernel-neural-engine",
- "semio-s-kernel-flow-extension-wasm",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "semio-s-kernel-flow-extension-logic"
-version = "0.1.0"
-dependencies = [
- "getrandom 0.3.4",
- "semio-framework-os-kernel-neural-engine",
- "semio-s-kernel-flow-extension-wasm",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "semio-s-kernel-flow-extension-math"
-version = "0.1.0"
-dependencies = [
- "getrandom 0.3.4",
- "js-sys",
- "semio-framework-os-kernel-neural-engine",
- "semio-s-kernel-flow-extension-wasm",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "semio-s-kernel-flow-extension-text"
-version = "0.1.0"
-dependencies = [
- "getrandom 0.3.4",
- "semio-framework-os-kernel-neural-engine",
- "semio-s-kernel-flow-extension-wasm",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "semio-s-kernel-flow-extension-wasm"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-neural-engine",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "semio-s-mindmap"
 version = "0.1.0"
 dependencies = [
- "semio-framework-os-kernel-infinite-board-normal-directed",
- "semio-framework-os-kernel-infinite-canvas",
+ "semio-framework-os-infinite",
+ "semio-framework-os-kernel",
  "wasm-bindgen",
 ]
 
@@ -8083,10 +7107,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-math",
  "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -8094,7 +7115,7 @@ dependencies = [
  "typst",
  "typst-assets",
  "typst-svg",
- "usvg 0.45.1",
+ "usvg",
  "vello",
  "wasm-bindgen",
  "wgpu",
@@ -8106,9 +7127,7 @@ name = "semio-s-plugin-architect"
 version = "0.1.0"
 dependencies = [
  "semio-framework-math",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -8119,10 +7138,7 @@ dependencies = [
 name = "semio-s-plugin-block"
 version = "0.1.0"
 dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -8136,9 +7152,7 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-math",
  "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-ui",
  "semio-s-3d",
@@ -8151,10 +7165,8 @@ dependencies = [
 name = "semio-s-plugin-dag"
 version = "0.1.0"
 dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-infinite-board-port-directed-dag",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
+ "semio-framework-os-infinite",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-ui",
  "serde",
@@ -8186,9 +7198,7 @@ dependencies = [
  "image",
  "semio-framework-core",
  "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-s-2d",
  "semio-s-plugin-draw-fsm",
@@ -8232,11 +7242,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-math",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -8249,13 +7255,9 @@ dependencies = [
 name = "semio-s-plugin-flow"
 version = "0.1.0"
 dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-flow-core",
- "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-playbook",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
+ "semio-framework-os-flow",
+ "semio-framework-os-infinite",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-ui",
  "serde",
@@ -8267,9 +7269,9 @@ name = "semio-s-plugin-flow-extension-bim"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
+ "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
- "semio-s-kernel-flow-extension-wasm",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -8280,10 +7282,7 @@ name = "semio-s-plugin-forms"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-playbook",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -8295,11 +7294,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-surface",
  "serde",
@@ -8312,11 +7307,8 @@ name = "semio-s-plugin-imperative"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
- "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
  "semio-framework-plugin",
  "semio-s-imperative",
  "serde",
@@ -8376,11 +7368,8 @@ dependencies = [
  "png 0.17.16",
  "semio-framework-core",
  "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
+ "semio-framework-os-infinite",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "serde",
  "serde-wasm-bindgen",
@@ -8401,9 +7390,7 @@ dependencies = [
  "base64 0.22.1",
  "png 0.17.16",
  "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-s-3d",
  "semio-s-plugin-cad",
@@ -8418,9 +7405,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-math",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-ui",
  "serde",
@@ -8431,10 +7416,7 @@ dependencies = [
 name = "semio-s-plugin-norm"
 version = "0.1.0"
 dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-s-plugin-fem",
  "serde",
@@ -8447,9 +7429,7 @@ name = "semio-s-plugin-note"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -8460,10 +7440,7 @@ dependencies = [
 name = "semio-s-plugin-playbook"
 version = "0.1.0"
 dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-playbook",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -8474,14 +7451,9 @@ name = "semio-s-plugin-playbook-procedural"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-flow-core",
- "semio-framework-os-kernel-playbook",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
+ "semio-framework-os-flow",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
- "semio-s-kernel-flow-extension-brep",
  "serde",
  "serde_json",
 ]
@@ -8492,20 +7464,13 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-flow-core",
- "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-playbook",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
+ "semio-framework-os-flow",
+ "semio-framework-os-infinite",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-ui",
  "semio-framework-ui-styling",
  "semio-s-3d",
- "semio-s-kernel-flow-extension-brep",
- "semio-s-kernel-flow-extension-draw",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -8518,11 +7483,7 @@ dependencies = [
  "base64 0.22.1",
  "semio-framework-core",
  "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-s-3d",
  "serde",
@@ -8539,12 +7500,8 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-math",
  "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-infinite-board-port-directed-normal",
- "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
+ "semio-framework-os-infinite",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-s-mindmap",
  "serde",
@@ -8559,10 +7516,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -8573,13 +7527,8 @@ dependencies = [
 name = "semio-s-plugin-reasoning-mindmap"
 version = "0.1.0"
 dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-infinite-board-normal-undirected",
- "semio-framework-os-kernel-infinite-board-port-directed",
- "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
+ "semio-framework-os-infinite",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-s-mindmap",
  "serde",
@@ -8596,10 +7545,7 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-math",
  "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -8612,13 +7558,9 @@ dependencies = [
  "js-sys",
  "semio-framework-core",
  "semio-framework-math",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-infinite-board-port-directed-dag",
- "semio-framework-os-kernel-infinite-canvas",
+ "semio-framework-os-infinite",
+ "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
  "semio-framework-plugin",
  "semio-s-imperative",
  "serde",
@@ -8635,10 +7577,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -8650,10 +7589,7 @@ name = "semio-s-plugin-sourcing"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -8700,12 +7636,8 @@ dependencies = [
  "base64 0.22.1",
  "semio-framework-core",
  "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-infinite-board-port-directed-dag",
- "semio-framework-os-kernel-pack",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
+ "semio-framework-os-infinite",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -8719,13 +7651,8 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-math",
  "semio-framework-os",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-infinite-board-port-directed",
- "semio-framework-os-kernel-infinite-board-port-directed-normal",
- "semio-framework-os-kernel-infinite-canvas",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
+ "semio-framework-os-infinite",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -8739,7 +7666,7 @@ dependencies = [
 name = "semio-s-plugin-trinity-jack-lsp"
 version = "0.1.0"
 dependencies = [
- "semio-framework-os-kernel-dsl-lsp",
+ "semio-framework-os-kernel",
  "wasm-bindgen",
 ]
 
@@ -8747,8 +7674,7 @@ dependencies = [
 name = "semio-s-plugin-trinity-jack-shell"
 version = "0.1.0"
 dependencies = [
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
+ "semio-framework-os-kernel",
  "semio-s-plugin-trinity",
  "thiserror 2.0.18",
 ]
@@ -8757,10 +7683,7 @@ dependencies = [
 name = "semio-s-plugin-vcs"
 version = "0.1.0"
 dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
- "semio-framework-os-kernel-vcs",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -8771,10 +7694,7 @@ name = "semio-s-plugin-writer"
 version = "0.1.0"
 dependencies = [
  "semio-framework-editor",
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-dsl-lsp",
- "semio-framework-os-kernel-protocol",
- "semio-framework-os-kernel-store",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-s-plugin-trinity",
  "serde",
@@ -9182,17 +8102,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sqlx"
-version = "0.8.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1fefb893899429669dcdd979aff487bd78f4064e5e7907e4269081e0ef7d97dc"
-dependencies = [
- "sqlx-core",
- "sqlx-macros",
- "sqlx-postgres",
-]
-
-[[package]]
 name = "sqlx-core"
 version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9200,7 +8109,6 @@ checksum = "ee6798b1838b6a0f69c007c133b8df5866302197e404e8b6ee8ed3e3a5e68dc6"
 dependencies = [
  "base64 0.22.1",
  "bytes",
- "crc",
  "crossbeam-queue",
  "either",
  "event-listener",
@@ -9218,7 +8126,6 @@ dependencies = [
  "rustls",
  "serde",
  "serde_json",
- "sha2",
  "smallvec",
  "thiserror 2.0.18",
  "tokio",
@@ -9227,42 +8134,6 @@ dependencies = [
  "url",
  "uuid",
  "webpki-roots 0.26.11",
-]
-
-[[package]]
-name = "sqlx-macros"
-version = "0.8.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2d452988ccaacfbf5e0bdbc348fb91d7c8af5bee192173ac3636b5fb6e6715d"
-dependencies = [
- "proc-macro2",
- "quote",
- "sqlx-core",
- "sqlx-macros-core",
- "syn 2.0.117",
-]
-
-[[package]]
-name = "sqlx-macros-core"
-version = "0.8.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19a9c1841124ac5a61741f96e1d9e2ec77424bf323962dd894bdb93f37d5219b"
-dependencies = [
- "dotenvy",
- "either",
- "heck 0.5.0",
- "hex",
- "once_cell",
- "proc-macro2",
- "quote",
- "serde",
- "serde_json",
- "sha2",
- "sqlx-core",
- "sqlx-postgres",
- "syn 2.0.117",
- "tokio",
- "url",
 ]
 
 [[package]]
@@ -9423,16 +8294,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68c7541fff44b35860c1a7a47a7cadf3e4a304c457b58f9870d9706ece028afc"
 dependencies = [
  "kurbo 0.11.3",
- "siphasher",
-]
-
-[[package]]
-name = "svgtypes"
-version = "0.16.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "695b5790b3131dafa99b3bbfd25a216edb3d216dad9ca208d4657bfb8f2abc3d"
-dependencies = [
- "kurbo 0.13.1",
  "siphasher",
 ]
 
@@ -10321,7 +9182,7 @@ dependencies = [
  "rayon",
  "regex",
  "regex-syntax",
- "roxmltree 0.20.0",
+ "roxmltree",
  "rust_decimal",
  "rustc-hash 2.1.2",
  "rustybuzz",
@@ -10345,7 +9206,7 @@ dependencies = [
  "unicode-normalization",
  "unicode-segmentation",
  "unscanny",
- "usvg 0.45.1",
+ "usvg",
  "utf8_iter",
  "wasmi",
  "xmlwriter",
@@ -10657,43 +9518,16 @@ dependencies = [
  "data-url",
  "flate2",
  "fontdb",
- "imagesize 0.13.0",
+ "imagesize",
  "kurbo 0.11.3",
  "log",
  "pico-args",
- "roxmltree 0.20.0",
+ "roxmltree",
  "rustybuzz",
  "simplecss",
  "siphasher",
  "strict-num",
- "svgtypes 0.15.3",
- "tiny-skia-path",
- "unicode-bidi",
- "unicode-script",
- "unicode-vo",
- "xmlwriter",
-]
-
-[[package]]
-name = "usvg"
-version = "0.46.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e419dff010bb12512b0ae9e3d2f318dfbdf0167fde7eb05465134d4e8756076f"
-dependencies = [
- "base64 0.22.1",
- "data-url",
- "flate2",
- "fontdb",
- "imagesize 0.14.0",
- "kurbo 0.13.1",
- "log",
- "pico-args",
- "roxmltree 0.21.1",
- "rustybuzz",
- "simplecss",
- "siphasher",
- "strict-num",
- "svgtypes 0.16.1",
+ "svgtypes",
  "tiny-skia-path",
  "unicode-bidi",
  "unicode-script",
@@ -10791,18 +9625,6 @@ dependencies = [
  "naga",
  "thiserror 2.0.18",
  "vello_encoding",
-]
-
-[[package]]
-name = "vello_svg"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79dfa03829a8fb45ad458a05bd533d399d2259d042cdd78f391b290dbbdf1bd3"
-dependencies = [
- "image",
- "thiserror 2.0.18",
- "usvg 0.46.0",
- "vello",
 ]
 
 [[package]]

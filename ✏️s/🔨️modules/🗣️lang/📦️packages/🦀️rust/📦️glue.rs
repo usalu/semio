@@ -1,5 +1,7 @@
 //! @emoji 🗣️ `s_language_bundle` — aggregates registered [`dsl::LanguageSpec`] hosts for apps (writer, OS).
 
+extern crate semio_framework_os_kernel as dsl_lsp;
+extern crate semio_framework_os_kernel as dsl;
 pub use dsl_lsp::{handle_json_rpc, LanguageSession};
 pub use dsl::{language, language_for_extension, register_language, LanguageRole, LanguageSpec};
 

@@ -1,3 +1,5 @@
+extern crate infinite_canvas as infinite_board_port_directed_normal;
+extern crate infinite_canvas as infinite_board_port_directed;
 //! 🔺️ Trinity plugin — Jack and Rewrite apps in one hot-swappable WASM plugin.
 //!
 //! WIRING ONLY. Every `mod` below points at exactly one taxonomy component file with a `#[path]`
@@ -7,6 +9,10 @@
 //! are not spliced into that base directory.
 
 #![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as vcs;
 // 📌️ Command-group handler functions (`🎮️commands/<group>/component.rs`) are decomposed out of a
 // single `DocumentApp::handle` match, one function per command — the uniform `Result<Emit<_, _>,
 // Fault>` signature is dictated by the dispatch call site (some commands in the same group DO fail;

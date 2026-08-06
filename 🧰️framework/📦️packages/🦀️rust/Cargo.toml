@@ -24,9 +24,6 @@ ui_wgpu = { path = "../../🔨️modules/🖱️ui/📦️packages/🦀️rust",
 semio-framework-hash = { path = "../../🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 # 🎯️ OS kernel owns spr/dsl types — aliases avoid dual trees / cycle with old implementations.
 semio-framework-os-kernel = { path = "../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-protocol_core = { path = "../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-protocol = { path = "../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-dsl = { path = "../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"

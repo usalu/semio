@@ -2702,17 +2702,6 @@
       }
     },
     {
-      "name": "🛠️dev🧬semio-inspect",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts semio inspect \"✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.gis.gismap.dsl.semio\"",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 387.2
-      }
-    },
-    {
       "name": "🛠️dev🕸️os-run",
       "type": "node-terminal",
       "request": "launch",

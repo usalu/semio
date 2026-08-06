@@ -1,3 +1,5 @@
+extern crate infinite_canvas as infinite_board_port_directed_normal;
+extern crate infinite_canvas as infinite_board_port_directed;
 //! 🧩️ Puzzle plugin — the 2d/3d/5d play apps bundled as one hot-swappable WASM component.
 //!
 //! WIRING ONLY. Every `mod` below points at exactly one taxonomy component file with a `#[path]` that
@@ -10,6 +12,10 @@
 //! master ticket `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard
 //! ruling).
 
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as pack;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 // 🧯️ `clippy::result_large_err` — `DocumentApp::handle` and `import_media` return
 // `Result<Emit<Puzzle2dOperation, Puzzle2dConfigOperation>, Fault>`/`…, MediaError>`, the exact
 // signatures the trait requires. `Fault` is a framework-owned error type; boxing it here would

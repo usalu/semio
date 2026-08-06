@@ -2,6 +2,9 @@
 //!
 //! Each domain is a `🦀️component.rs` in the owner tree; this entry file is pure wiring.
 
+extern crate semio_framework_os_kernel as dsl_core;
+extern crate semio_framework_os_kernel as dsl_schema;
+extern crate semio_framework_os_kernel as dsl;
 #[path = "../../➕️algebra/🦀️component.rs"]
 pub mod algebra;
 

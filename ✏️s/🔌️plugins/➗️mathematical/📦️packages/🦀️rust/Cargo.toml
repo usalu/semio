@@ -32,9 +32,7 @@ math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦
 # "dependency.dsl was not found in workspace.dependencies" when trying `dsl = { workspace = true, package =
 # "semio-framework-os-kernel-dsl" }`). So the renamed internal aliases below stay plain `path`+`package`
 # deps; only the four whose local name already equals the workspace key use `workspace = true`.
-dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-store = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 ui_wgpu = {path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
 semio-framework-core = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }

@@ -1,0 +1,8 @@
+{
+  "at": "2026-08-06T13:52:10.822Z",
+  "moved": {
+    "frameworkCore": "🧰️framework/🔨️modules/🧩core/🟦️component.ts",
+    "osCore": "🧰️framework/🛍️products/💻️os/🟦️component.ts",
+    "osDev": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🟦️component.ts"
+  }
+}

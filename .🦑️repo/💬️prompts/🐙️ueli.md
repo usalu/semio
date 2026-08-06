@@ -7,6 +7,7 @@
 Extend/Refactor/Change clean mechanisms to properly achieve this.
 Exhaustively plan for a workforce of parallel agents /workflows.
 Everything end to end.
+Use only Cursor Grok 4.5 and Composer 2.5 as subagent models. Use the regular speed models and not the fast ones.
 
 ---
 
@@ -362,6 +363,14 @@ TODO: Add roomie to discord for verification
 TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)t
 
 ##
+
+---
+
+```
+<framework|s|etc>
+  bundles
+    <>
+```
 
 ---
 

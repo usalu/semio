@@ -31,7 +31,7 @@ component-guest = ["dep:semio-framework-plugin", "dep:semio-framework-core"]
 standalone-wasm = ["dep:wasm-bindgen"]
 
 [dependencies]
-flow_extension_sdk = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-s-kernel-flow-extension-wasm" }
+flow_extension_sdk = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", package = "semio-framework-os-flow" }
 neural_engine = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

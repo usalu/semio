@@ -16,6 +16,7 @@
 //! their `read_*` twins); this crate adds only the option/vec combinators and the frame/nested-enum
 //! tag dispatch below.
 
+use serde::{Deserialize, Serialize};
 //#region 🔖️Lane
 /// @emoji 🛣️ Which logical channel a wire frame travels on: `Command` for causally-ordered,
 /// durable operation batches; `Preview` for ephemeral, best-effort UI-state broadcast.

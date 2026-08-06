@@ -552,7 +552,7 @@ where
     /// @emoji 🕸️ Feeds a remote envelope through the store's causal DAG, materializing it (and any
     /// now-unblocked dependents) into the edit timeline. Kept for direct/test injection.
     pub fn receive(&mut self, envelope: crate::os_spr::OperationEnvelope) -> Result<(), SyncError> {
-        self.store.ingest_remote(envelope).map_err(|error| SyncError::Vcs(error.to_string()))
+        self.store.dispatch(crate::os_store::DocumentCommand::IngestRemote { envelope }).map(|_| ()).map_err(|error| SyncError::Vcs(error.to_string()))
     }
 
     pub fn reconcile_branch(&mut self, alternative_name: &str, message: Option<String>, authors: Vec<vcs::Author>) -> Result<String, SyncError> {
@@ -560,7 +560,7 @@ where
         let alternative_id = reconcile_alternative(&mut envelope, alternative_name, message, authors).map_err(|error| SyncError::Vcs(error.to_string()))?;
         let applied = self.store.applied_edit_ids().to_vec();
         let redo = self.store.redo_edit_ids().to_vec();
-        self.store.set_state(envelope, applied, redo);
+        self.store.reset(envelope, applied, redo).map_err(|error| SyncError::Vcs(error.to_string()))?;
         Ok(alternative_id)
     }
 }

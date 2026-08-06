@@ -1,3 +1,5 @@
+extern crate infinite_canvas as infinite_board_normal_undirected;
+extern crate infinite_canvas as infinite_board_port_directed;
 //! 🧠️ Reasoning plugin — declarative WIRES mindmap play app bundled as a hot-swappable WASM component.
 //!
 //! WIRING ONLY. Every `mod` below points at exactly one taxonomy component file with a `#[path]` that is
@@ -9,6 +11,10 @@
 //! master ticket `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard
 //! ruling, and its Shape V2 addendum for the `📦️packages`-relocated entry file).
 
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as pack;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<MindmapWiresOperation, WiresConfigOperation>, Fault>`, the exact signature
 // `DocumentApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a

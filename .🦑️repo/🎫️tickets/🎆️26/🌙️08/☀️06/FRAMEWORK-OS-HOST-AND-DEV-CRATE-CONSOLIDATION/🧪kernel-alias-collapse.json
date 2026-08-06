@@ -1,0 +1,358 @@
+[
+  {
+    "cargo": "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "store",
+      "protocol"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "store",
+      "protocol"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "pack",
+      "protocol",
+      "store",
+      "vcs"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "pack",
+      "protocol",
+      "store"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "pack",
+      "protocol",
+      "store",
+      "vcs"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "store",
+      "protocol"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "protocol",
+      "store",
+      "vcs"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "protocol",
+      "store",
+      "vcs"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "protocol",
+      "store",
+      "vcs"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "store",
+      "pack",
+      "protocol",
+      "vcs"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "store",
+      "protocol",
+      "dsl"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "protocol",
+      "store",
+      "pack",
+      "vcs"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "protocol",
+      "store"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "pack",
+      "protocol",
+      "store"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "protocol",
+      "store"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "pack",
+      "protocol",
+      "store"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "protocol",
+      "store"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "store",
+      "protocol",
+      "vcs"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "protocol",
+      "store"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "vcs",
+      "store",
+      "protocol",
+      "dsl"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "store",
+      "protocol",
+      "vcs"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "protocol",
+      "store",
+      "pack"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "store",
+      "protocol",
+      "vcs"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🐚️shell/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "vcs",
+      "store"
+    ],
+    "glueOk": false
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "store",
+      "protocol",
+      "dsl"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "store",
+      "protocol"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "store",
+      "protocol",
+      "vcs"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "store",
+      "protocol"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "pack",
+      "protocol",
+      "store"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "store",
+      "protocol",
+      "pack"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "store",
+      "protocol",
+      "pack",
+      "vcs"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "dsl",
+      "store",
+      "protocol",
+      "pack"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "vcs",
+      "store",
+      "protocol"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "vcs",
+      "store"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "store",
+      "dsl"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "store",
+      "dsl",
+      "protocol"
+    ],
+    "glueOk": true
+  },
+  {
+    "cargo": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml",
+    "aliases": [
+      "vcs",
+      "store",
+      "dsl",
+      "protocol"
+    ],
+    "glueOk": true
+  }
+]

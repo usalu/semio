@@ -35,10 +35,7 @@ crate-type = ["cdylib", "rlib"]
 path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/📦️lib.rs"
 
 [dependencies]
-dsl = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-store = { path = "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/store", package = "semio-framework-os-kernel" }
-protocol = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-pack = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-core = { path = "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/framework-core", package = "semio-framework-core" }
 semio-framework-plugin = { path = "/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/SOURCING-PLUGIN-EXTENSIONS-DE-SANDWICH/verify-shims/plugin", features = ["component-guest"], package = "semio-framework-plugin" }
 serde = { version = "1.0.219", features = ["derive"] }

@@ -184,6 +184,7 @@ impl RecordValueGen {
             Shape::Count => FieldValue::UInt(self.next_uint()),
             Shape::Expr => FieldValue::Expr(ExprValue::Num(self.next_f64())),
             Shape::Embed(_) => FieldValue::Text(self.next_string(8)),
+            Shape::EmbedFrom(_) => FieldValue::Text(self.next_string(8)),
         }
     }
 
@@ -218,6 +219,7 @@ impl RecordValueGen {
             Shape::Count => FieldValue::UInt(self.next_uint()),
             Shape::Expr => FieldValue::Expr(ExprValue::Num(self.next_f64())),
             Shape::Embed(_) => FieldValue::Text(self.next_string(8)),
+            Shape::EmbedFrom(_) => FieldValue::Text(self.next_string(8)),
         }
     }
 

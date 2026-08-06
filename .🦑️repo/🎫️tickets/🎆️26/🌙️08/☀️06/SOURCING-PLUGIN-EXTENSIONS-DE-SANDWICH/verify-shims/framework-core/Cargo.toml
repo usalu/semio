@@ -31,8 +31,7 @@ protocol_core = { path = "../../../../../../../../🧰️framework/🛍️produc
 # 🎯️ W6 kernel unification: `kernel::DocumentDiff` re-exports `protocol::DocumentDiff` (the binary
 # causal-envelope shape from W5), needing the full facade (protocol_causal's `DocumentDiff`, not
 # just protocol_core).
-protocol = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-dsl = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"

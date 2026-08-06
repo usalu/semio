@@ -4642,7 +4642,7 @@ pub mod app {
                 Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
                 None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
             };
-            self.config_store.set_state(parsed.envelope, applied, redo);
+            self.config_store.reset(parsed.envelope, applied, redo).map_err(|error| error.into_fault())?;
             self.cache = None;
             Ok(())
         }
@@ -4656,7 +4656,7 @@ pub mod app {
         fn ingest_operations(&mut self, operations: &[u8]) -> Result<(), Fault> {
             let envelopes = protocol::decode_envelopes(operations).map_err(|error| error.into_fault())?;
             for envelope in envelopes {
-                self.store.ingest_remote(envelope).map_err(|error| error.into_fault())?;
+                self.store.dispatch(store::DocumentCommand::IngestRemote { envelope }).map_err(|error| error.into_fault())?;
             }
             self.cache = None;
             Ok(())
@@ -4679,7 +4679,7 @@ pub mod app {
         fn load_document_text(&mut self, files: &store::DocumentTextFiles) -> Result<(), Fault> {
             let parsed: store::ParsedDocumentText<A::Projection, A::Operation> = store::parse_document_text(&files.dsl, &files.ops).map_err(|error| error.into_fault())?;
             let applied: Vec<String> = parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
-            self.store.set_envelope(parsed.envelope, applied);
+            self.store.reset(parsed.envelope, applied, Vec::new()).map_err(|error| error.into_fault())?;
             self.cache = None;
             Ok(())
         }
@@ -4697,7 +4697,7 @@ pub mod app {
                 Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
                 None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
             };
-            self.store.set_state(parsed.envelope, applied, redo);
+            self.store.reset(parsed.envelope, applied, redo).map_err(|error| error.into_fault())?;
             self.cache = None;
             Ok(())
         }

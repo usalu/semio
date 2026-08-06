@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@semio-tech/infinite-world-r3f",
+  "version": "0.1.0",
+  "description": "infinite · world r3f",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./🟦️glue.tsx"
+  },
+  "scripts": {
+    "test": "bun nx run @semio-tech/infinite-world-r3f:test"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.4.2",
+    "@semio-tech/ui-react": "workspace:*",
+    "@semio-tech/ui-styling": "workspace:*",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "three": "^0.182.0",
+    "three-mesh-bvh": "^0.9.10"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.180.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.17"
+  },
+  "bundleKind": "library",
+  "nx": {
+    "includedScripts": []
+  }
+}

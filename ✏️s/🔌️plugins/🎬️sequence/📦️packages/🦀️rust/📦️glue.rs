@@ -1,3 +1,4 @@
+extern crate infinite_canvas as infinite_board_port_directed_dag;
 //! 🎬️ Sequence plugin — declarative sequence play app bundled as a hot-swappable WASM component.
 //!
 //! WIRING ONLY. Every `mod` below points at exactly one taxonomy component file with a `#[path]` that
@@ -12,6 +13,10 @@
 //! are `run_command`/`stop_command`, so naming the owning module `run` too would trip clippy's
 //! `module_inception`. The directory keeps its taxonomy name (🏃️run); only the Rust identifier differs.
 
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<SequenceOperation, SequenceConfigOperation>, Fault>`, the exact signature
 // `DocumentApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a

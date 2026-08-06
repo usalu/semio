@@ -174,6 +174,13 @@ pub mod os_store {
   pub mod worker;
 }
 
+#[path = "."]
+pub mod os_engine {
+  #[path = "../../🔨️modules/⚙️engine/🦀️component.rs"]
+  mod component;
+  pub use component::*;
+}
+
 
 pub use crate::os_dsl::*;
 pub use crate::os_store::*;
@@ -183,4 +190,10 @@ pub use crate::os_pack::*;
 pub mod os_semio;
 
 pub use crate::os_vcs::*;
+pub use crate::os_engine::*;
 pub use crate::os_semio::*;
+
+// Former dsl_notation crate root surface
+pub use crate::os_dsl::notation::*;
+pub use crate::os_dsl::grammar::*;
+pub use crate::os_dsl::core::*;

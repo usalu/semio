@@ -1,0 +1,23 @@
+[package]
+name = "semio-framework-os-infinite"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "OS infinite family — world/canvas/board Shape V2 glue"
+
+[package.metadata.semio]
+role = "product"
+id = "os-infinite"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_os_infinite"
+path = "📦️glue.rs"
+
+[dependencies]
+semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"

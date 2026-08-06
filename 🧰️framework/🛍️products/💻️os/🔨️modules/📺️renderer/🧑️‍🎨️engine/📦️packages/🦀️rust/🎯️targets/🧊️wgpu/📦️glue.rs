@@ -7,6 +7,12 @@
 //!   component and the `WindowLayoutNode` tree helpers in `#region ShellHelpers`.
 //! - `interpreter`/widget rendering ~ React's `UiNode` component tree rendering.
 
+extern crate semio_framework_os_kernel as store_sync;
+extern crate semio_framework_os_kernel as dsl_core;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
 #[macro_export]
 macro_rules! action_args_json {
     ($($tt:tt)*) => {

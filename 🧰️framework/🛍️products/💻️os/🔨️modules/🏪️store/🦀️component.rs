@@ -26,7 +26,7 @@ use std::sync::{Arc, Mutex};
 // `Author`/`Change`/`Checkpoint`/`Alternative`/`VcsError`/etc through this crate, never through
 // `vcs` directly (see the crate doc comment above).
 pub use crate::os_vcs::{
-    apply_collection_operation, apply_operation, collection_diff_from_operation, content_addressed_checkpoint_id, create_document_vcs_id, invert_collection_operation, Alternative, Author, Change, Checkpoint, CollectionDiff, CollectionOperation,
+    apply_collection_operation, apply_operation, collection_diff_from_operation, content_addressed_checkpoint_id, content_addressed_entity_id, create_document_vcs_id, edit_scoped_id, invert_collection_operation, mint_alternative_id, mint_change_id, mint_edit_id, mint_operation_id, Alternative, Author, Change, Checkpoint, CollectionDiff, CollectionOperation,
     DocumentVcs, Identified, ItemPatch, Patchable, VcsError,
 };
 
@@ -113,8 +113,43 @@ pub enum DocumentCommand<Operation> {
         /// @emoji 🪢️ Matches the last uncommitted edit's `coalesce_key` to absorb into it instead of creating a new edit.
         coalesce_key: Option<String>,
     },
+    /// @emoji 🕸️ Feeds a remote OperationEnvelope through the causal DAG into the edit timeline.
+    IngestRemote {
+        #[serde(with = "operation_envelope_serde")]
+        envelope: crate::os_spr::OperationEnvelope,
+    },
+    /// @emoji 🧹 Clears volatile draft-lane history that must never enter a Change/Checkpoint.
+    PruneDrafts,
 }
 //#endregion 🔖️Schemas
+
+//#region 🔖️Authority
+/// @emoji 🧾 Receipt from the sole store write gate (`dispatch` / `reset`).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct CommandReceipt {
+    pub edit_ids: Vec<String>,
+    pub generation: u64,
+}
+
+/// @emoji 👁️ Read-only view over a document envelope — mutation is sealed through `dispatch`/`reset`.
+#[derive(Clone, Copy, Debug)]
+pub struct DocumentEnvelopeView<'a, P, Operation> {
+    envelope: &'a DocumentEnvelope<P, Operation>,
+}
+
+impl<'a, P, Operation> DocumentEnvelopeView<'a, P, Operation> {
+    pub fn schema(&self) -> &str { &self.envelope.schema }
+    pub fn id(&self) -> &str { &self.envelope.id }
+    pub fn vcs(&self) -> &DocumentVcs<P, Operation> { &self.envelope.vcs }
+    pub fn backbone(&self) -> Option<&DocumentBackboneRef> { self.envelope.backbone.as_ref() }
+    pub fn active_alternative_id(&self) -> Option<&str> { self.envelope.active_alternative_id.as_deref() }
+    pub fn cursor(&self) -> Option<&DocumentCursor> { self.envelope.cursor.as_ref() }
+    pub fn inner(&self) -> &'a DocumentEnvelope<P, Operation> { self.envelope }
+}
+
+/// @emoji 📝 Draft-lane store alias — same algebra as DocumentStore; PruneDrafts never enters a Change.
+pub type DraftStore<P, Operation> = DocumentStore<P, Operation>;
+//#endregion 🔖️Authority
 
 //#region 🔖️Text
 //#region 🔖️Text
@@ -560,10 +595,10 @@ where
         return Err(VcsError::NoCheckpoint);
     }
     let checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone()).ok_or(VcsError::NoCheckpoint)?;
-    let alternative_id = create_document_vcs_id("alternative");
+    let alternative_id = mint_alternative_id(alternative_name, &[checkpoint_id.clone()]);
     envelope.vcs.alternatives.push(Alternative { id: alternative_id.clone(), name: alternative_name.to_string(), checkpoint_ids: vec![checkpoint_id] });
     if let Some(message) = checkpoint_message {
-        let change = Change { id: create_document_vcs_id("change"), edit_ids: Vec::new(), description: Some(message), saved_at: now_iso() };
+        let change = Change { id: mint_change_id(&[], Some(&message)), edit_ids: Vec::new(), description: Some(message), saved_at: now_iso() };
         let parent = envelope.vcs.checkpoints.last();
         let parent_id = parent.map(|checkpoint| checkpoint.id.clone());
         let mut change_ids = parent.map(|checkpoint| checkpoint.change_ids.clone()).unwrap_or_default();
@@ -1081,7 +1116,7 @@ where
                 back.reverse();
                 backwards.extend(back);
                 operation_meta.push(OperationMeta {
-                    operation_id: Some(operation.operation_id().unwrap_or_else(|| OperationId(create_document_vcs_id("operation")))),
+                    operation_id: Some(operation.operation_id().unwrap_or_else(|| OperationId(mint_operation_id(&operation.encode_op().unwrap_or_default())))),
                     dependencies: operation.dependencies(),
                     base_version: operation.base_version().map(|version| version.0).unwrap_or(0),
                     author_id: Some(operation.author_id().unwrap_or_else(|| ActorId("local".into()))),
@@ -1222,7 +1257,7 @@ where
             back.reverse();
             backwards.extend(back);
             operation_meta.push(OperationMeta {
-                operation_id: Some(operation.operation_id().unwrap_or_else(|| OperationId(create_document_vcs_id("operation")))),
+                operation_id: Some(operation.operation_id().unwrap_or_else(|| OperationId(mint_operation_id(&serde_json::to_vec(operation).unwrap_or_default())))),
                 dependencies: operation.dependencies(),
                 base_version: operation.base_version().map(|version| version.0).unwrap_or(0),
                 author_id: Some(operation.author_id().unwrap_or_else(|| ActorId("local".into()))),
@@ -1340,6 +1375,22 @@ where
 //#endregion 🔖️TextFormat
 
 //#region 🔖️CommandFormat
+mod operation_envelope_serde {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    pub fn serialize<S: Serializer>(envelope: &crate::os_spr::OperationEnvelope, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut bytes = Vec::new();
+        crate::os_spr::encode_envelope(envelope, &mut bytes);
+        bytes.serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<crate::os_spr::OperationEnvelope, D::Error> {
+        let bytes = Vec::<u8>::deserialize(deserializer)?;
+        let mut pos = 0;
+        crate::os_spr::decode_envelope(&bytes, &mut pos).map_err(serde::de::Error::custom)
+    }
+}
+
 /// @emoji 🕹️ One structural `DocumentCommand` line — `apply`/`undo`/`redo`/`commit-checkpoint`/
 /// `create-alternative`/`switch-alternative`/`checkout`/`amend` — the command-level twin of
 /// `OpsHeaderLine`, re-derived on the same `dsl_schema` grammar engine. `Apply`/`Amend` carry no
@@ -1374,6 +1425,7 @@ enum CommandHeaderLine {
     Amend {
         key: Option<String>,
     },
+    PruneDrafts,
 }
 
 fn undo_policy_to_token(policy: UndoPolicy) -> &'static str {
@@ -1511,6 +1563,13 @@ pub fn print_command<Op: OpText>(command: &DocumentCommand<Op>) -> Result<String
             out.push('\n');
             print_indented_ops(&mut out, operations)?;
         }
+        DocumentCommand::IngestRemote { .. } => {
+            return Err(VcsError::Serialize("IngestRemote has no text command form".into()));
+        }
+        DocumentCommand::PruneDrafts => {
+            out.push_str(&CommandHeaderLine::PruneDrafts.print_op());
+            out.push('\n');
+        }
     }
     Ok(out)
 }
@@ -1565,6 +1624,7 @@ pub fn parse_command<Op: OpText>(text: &str) -> Result<DocumentCommand<Op>, Text
             }
             Ok(DocumentCommand::AmendLast { operations, coalesce_key: key })
         }
+        CommandHeaderLine::PruneDrafts => Ok(DocumentCommand::PruneDrafts),
     }
 }
 
@@ -1671,6 +1731,14 @@ impl<Op: OpBinary> OpBinary for DocumentCommand<Op> {
                 }
                 write_command_ops(&mut out, operations)?;
             }
+            DocumentCommand::IngestRemote { envelope } => {
+                crate::os_pack::write_varint_u64(&mut out, 9);
+                let mut bytes = Vec::new();
+                crate::os_spr::encode_envelope(envelope, &mut bytes);
+                crate::os_pack::write_varint_u64(&mut out, bytes.len() as u64);
+                out.extend_from_slice(&bytes);
+            }
+            DocumentCommand::PruneDrafts => crate::os_pack::write_varint_u64(&mut out, 10),
         }
         Ok(out)
     }
@@ -1724,6 +1792,14 @@ impl<Op: OpBinary> OpBinary for DocumentCommand<Op> {
                 let operations = read_command_ops(&mut reader)?;
                 Ok(DocumentCommand::AmendLast { operations, coalesce_key })
             }
+            9 => {
+                let len = reader.read_varint_u64()?;
+                let bytes = reader.read_bytes(len as usize)?;
+                let mut pos = 0;
+                let envelope = crate::os_spr::decode_envelope(bytes, &mut pos).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "ingest envelope", offset: 0, detail: error.to_string() })?;
+                Ok(DocumentCommand::IngestRemote { envelope })
+            }
+            10 => Ok(DocumentCommand::PruneDrafts),
             other => Err(crate::os_spr::ProtocolError::Malformed { what: "command variant", offset: 1, detail: format!("unknown command ordinal {other}") }),
         }
     }
@@ -1934,6 +2010,11 @@ where
         &self.envelope
     }
 
+    /// @emoji 👁️ Read-only envelope view — prefer this over mutating through public fields.
+    pub fn envelope_view(&self) -> DocumentEnvelopeView<'_, P, Operation> {
+        DocumentEnvelopeView { envelope: &self.envelope }
+    }
+
     pub fn applied_edit_ids(&self) -> &[String] {
         &self.applied_edit_ids
     }
@@ -1981,13 +2062,19 @@ where
         build_history_columns(&self.envelope)
     }
 
-    pub fn set_envelope(&mut self, envelope: DocumentEnvelope<P, Operation>, applied_edit_ids: Vec<String>) {
+    /// @emoji ♻️ Sole public reload API — replaces the former public `set_state`/`set_envelope` escape hatches.
+    pub fn reset(&mut self, envelope: DocumentEnvelope<P, Operation>, applied_edit_ids: Vec<String>, redo_edit_ids: Vec<String>) -> Result<CommandReceipt, VcsError> {
+        self.set_state(envelope, applied_edit_ids, redo_edit_ids);
+        Ok(CommandReceipt { edit_ids: self.applied_edit_ids.clone(), generation: self.generation() })
+    }
+
+    pub(crate) fn set_envelope(&mut self, envelope: DocumentEnvelope<P, Operation>, applied_edit_ids: Vec<String>) {
         self.set_state(envelope, applied_edit_ids, Vec::new());
     }
 
     /// @emoji 💾️ Restores full store state including the redo stack, so `Redo` survives
     /// round-tripping through a serialized envelope (e.g. one `dispatch` call per request).
-    pub fn set_state(&mut self, envelope: DocumentEnvelope<P, Operation>, applied_edit_ids: Vec<String>, redo_edit_ids: Vec<String>) {
+    pub(crate) fn set_state(&mut self, envelope: DocumentEnvelope<P, Operation>, applied_edit_ids: Vec<String>, redo_edit_ids: Vec<String>) {
         self.backbone = None;
         self.edit_sequence = envelope.vcs.edits.iter().map(|edit| edit.sequence_number).max().unwrap_or(0);
         self.current_checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
@@ -2060,16 +2147,24 @@ where
         &self.conflicts
     }
 
-    pub fn dispatch(&mut self, command: DocumentCommand<Operation>) -> Result<(), VcsError> {
+    pub fn dispatch(&mut self, command: DocumentCommand<Operation>) -> Result<CommandReceipt, VcsError> {
         self.pump()?;
+        let skip_flush = matches!(command, DocumentCommand::IngestRemote { .. } | DocumentCommand::PruneDrafts);
         let is_apply = matches!(command, DocumentCommand::Apply { .. });
+        let before = self.applied_edit_ids.len();
         self.dispatch_inner(command)?;
-        self.flush_outbound(is_apply)
+        if !skip_flush {
+            self.flush_outbound(is_apply)?;
+        }
+        Ok(CommandReceipt {
+            edit_ids: self.applied_edit_ids[before..].to_vec(),
+            generation: self.generation(),
+        })
     }
 
     fn dispatch_inner(&mut self, command: DocumentCommand<Operation>) -> Result<(), VcsError> {
         match command {
-            DocumentCommand::Undo => self.dispatch(DocumentCommand::UndoWithPolicy { policy: UndoPolicy::ExactBaseOnly, semantic_command: None }),
+            DocumentCommand::Undo => self.dispatch(DocumentCommand::UndoWithPolicy { policy: UndoPolicy::ExactBaseOnly, semantic_command: None }).map(|_| ()),
             DocumentCommand::UndoWithPolicy { policy, semantic_command } => match policy {
                 UndoPolicy::ExactBaseOnly => {
                     let last = self.applied_edit_ids.last().cloned().ok_or(VcsError::NothingToUndo)?;
@@ -2130,7 +2225,7 @@ where
                 if pending.is_empty() {
                     return Ok(());
                 }
-                let change = Change { id: create_document_vcs_id("change"), edit_ids: pending, description: message.clone(), saved_at: now_iso() };
+                let change = Change { id: mint_change_id(&pending, message.as_deref()), edit_ids: pending, description: message.clone(), saved_at: now_iso() };
                 let parent = self.current_checkpoint_id.as_ref().and_then(|id| self.envelope.vcs.checkpoints.iter().find(|cp| cp.id == *id));
                 let mut change_ids = parent.map(|cp| cp.change_ids.clone()).unwrap_or_default();
                 let parent_id = parent.map(|cp| cp.id.clone());
@@ -2157,7 +2252,7 @@ where
                     self.dispatch(DocumentCommand::CommitCheckpoint { message: None, authors: Vec::new() })?;
                 }
                 let checkpoint_id = self.current_checkpoint_id.clone().or_else(|| self.envelope.vcs.checkpoints.last().map(|cp| cp.id.clone())).ok_or(VcsError::NoCheckpoint)?;
-                let alt_id = create_document_vcs_id("alternative");
+                let alt_id = mint_alternative_id(&name, &[checkpoint_id.clone()]);
                 self.envelope.vcs.alternatives.push(Alternative { id: alt_id.clone(), name, checkpoint_ids: vec![checkpoint_id.clone()] });
                 self.envelope.active_alternative_id = Some(alt_id);
                 self.checkout_checkpoint_internal(checkpoint_id);
@@ -2196,7 +2291,8 @@ where
                 let actor = edit_actor_from_meta(&operation_meta);
                 self.local_actor_id = actor.clone();
                 self.edit_sequence += 1;
-                let edit = Edit { id: create_document_vcs_id("edit"), actor, forwards, backwards, operation_meta, description, coalesce_key: None, sequence_number: self.edit_sequence, started_at, finished_at: Some(now_iso()) };
+                let forwards_fingerprint = serde_json::to_vec(&forwards).unwrap_or_default();
+                let edit = Edit { id: mint_edit_id(actor.as_deref(), self.edit_sequence, &forwards_fingerprint), actor, forwards, backwards, operation_meta, description, coalesce_key: None, sequence_number: self.edit_sequence, started_at, finished_at: Some(now_iso()) };
                 self.tail_undo_cache = Some((edit.id.clone(), pre_projection));
                 self.applied_edit_ids.push(edit.id.clone());
                 self.envelope.vcs.edits.push(edit);
@@ -2237,7 +2333,8 @@ where
                     let actor = edit_actor_from_meta(&operation_meta);
                     self.local_actor_id = actor.clone();
                     self.edit_sequence += 1;
-                    let edit_id = create_document_vcs_id("edit");
+                    let forwards_fingerprint = serde_json::to_vec(&forwards).unwrap_or_default();
+                    let edit_id = mint_edit_id(actor.as_deref(), self.edit_sequence, &forwards_fingerprint);
                     let edit = Edit { id: edit_id.clone(), actor, forwards, backwards, operation_meta, description: None, coalesce_key, sequence_number: self.edit_sequence, started_at, finished_at: Some(now_iso()) };
                     self.tail_undo_cache = Some((edit_id, pre_projection));
                     self.applied_edit_ids.push(edit.id.clone());
@@ -2247,6 +2344,10 @@ where
                     self.bump();
                     Ok(())
                 }
+            }
+            DocumentCommand::PruneDrafts => {
+                // Reserved for draft-lane stores ({@link DraftStore}): real prune lands with draft ops.
+                Ok(())
             }
         }
     }
@@ -2263,7 +2364,7 @@ where
             back.reverse();
             backwards.extend(back);
             operation_meta.push(OperationMeta {
-                operation_id: Some(operation.operation_id().unwrap_or_else(|| OperationId(create_document_vcs_id("operation")))),
+                operation_id: Some(operation.operation_id().unwrap_or_else(|| OperationId(mint_operation_id(&operation.encode_op().unwrap_or_default())))),
                 dependencies: operation.dependencies(),
                 base_version: operation.base_version().map(|version| version.0).unwrap_or(0),
                 author_id: Some(operation.author_id().unwrap_or_else(|| ActorId("local".into()))),
@@ -2361,12 +2462,14 @@ where
     /// @emoji 🕸️ Feeds a remote {@link OperationEnvelope} through the causal DAG, applying it (and any
     /// now-unblocked dependents) into the edit timeline. Closes the sync gap between
     /// `framework/sync`'s `OpDag` and the vcs edit history.
-    pub fn ingest_remote(&mut self, envelope: crate::os_spr::OperationEnvelope) -> Result<(), VcsError> {
+    /// @emoji 🕸️ Sole public remote write gate — parallel to `dispatch` for causal envelopes.
+    pub fn ingest_remote(&mut self, envelope: crate::os_spr::OperationEnvelope) -> Result<CommandReceipt, VcsError> {
+        let before = self.applied_edit_ids.len();
         self.dag.insert(envelope).map_err(|error| VcsError::Backbone(error.to_string()))?;
         for envelope in self.dag.drain_applied_envelopes() {
             self.ingest_envelope(envelope)?;
         }
-        Ok(())
+        Ok(CommandReceipt { edit_ids: self.applied_edit_ids[before..].to_vec(), generation: self.generation() })
     }
 
     fn ingest_envelope(&mut self, envelope: crate::os_spr::OperationEnvelope) -> Result<(), VcsError> {
@@ -3028,10 +3131,10 @@ where
         if !alternative_id.is_empty() {
             let is_alternative_tip = self.envelope().vcs.alternatives.iter().find(|alternative| alternative.id == alternative_id).map(|alternative| alternative.checkpoint_ids.last().map(String::as_str) == Some(checkpoint_id)).unwrap_or(false);
             if is_alternative_tip {
-                return self.dispatch(DocumentCommand::SwitchAlternative { alternative_id: alternative_id.to_string() });
+                return self.dispatch(DocumentCommand::SwitchAlternative { alternative_id: alternative_id.to_string() }).map(|_| ());
             }
         }
-        self.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: checkpoint_id.to_string() })
+        self.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: checkpoint_id.to_string() }).map(|_| ())
     }
 
     fn create_alternative(&mut self, name: String) -> Result<String, VcsError> {
@@ -3058,11 +3161,11 @@ where
     }
 
     fn undo(&mut self) -> Result<(), VcsError> {
-        self.dispatch(DocumentCommand::Undo)
+        self.dispatch(DocumentCommand::Undo).map(|_| ())
     }
 
     fn redo(&mut self) -> Result<(), VcsError> {
-        self.dispatch(DocumentCommand::Redo)
+        self.dispatch(DocumentCommand::Redo).map(|_| ())
     }
 
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
@@ -3392,7 +3495,11 @@ impl SpaceHost {
             let checkpoint_id = member.current_checkpoint_id().ok_or(VcsError::NoCheckpoint)?;
             pins.push(SpaceMemberPin { document_id: document_id.clone(), checkpoint_id, alternative_id: member.current_alternative_id().unwrap_or_default() });
         }
-        let checkpoint_id = create_document_vcs_id("space-checkpoint");
+        let pins_fingerprint = serde_json::to_vec(&pins).unwrap_or_default();
+        let mut space_checkpoint_payload = message.as_bytes().to_vec();
+        space_checkpoint_payload.push(0);
+        space_checkpoint_payload.extend_from_slice(&pins_fingerprint);
+        let checkpoint_id = content_addressed_entity_id("space-checkpoint", &space_checkpoint_payload);
         let parent_id = self.meta.projection()?.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
         let checkpoint = SpaceCheckpoint { id: checkpoint_id.clone(), parent_id, message: message.clone(), authors, timestamp: HybridLogicalTimestamp::new(0, now_ms()), members: pins };
         // 🎯️ W6: the `Apply` below uses `dispatch_inner` (not `dispatch`), skipping its automatic
@@ -3411,9 +3518,12 @@ impl SpaceHost {
     /// @emoji 🌿️ Records a `SpaceAlternative` pinned at the current space checkpoint tip (or none,
     /// if nothing has been committed yet), so it can later be switched back into.
     pub fn create_space_alternative(&mut self, name: String) -> Result<String, VcsError> {
-        let checkpoint_id = self.meta.projection()?.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
-        let alternative_id = create_document_vcs_id("space-alternative");
-        let alternative = SpaceAlternative { id: alternative_id.clone(), name, checkpoint_ids: checkpoint_id.into_iter().collect() };
+        let checkpoint_ids: Vec<String> = self.meta.projection()?.checkpoints.last().map(|checkpoint| checkpoint.id.clone()).into_iter().collect();
+        let mut space_alternative_payload = name.as_bytes().to_vec();
+        space_alternative_payload.push(0);
+        space_alternative_payload.extend_from_slice(checkpoint_ids.join("\0").as_bytes());
+        let alternative_id = content_addressed_entity_id("space-alternative", &space_alternative_payload);
+        let alternative = SpaceAlternative { id: alternative_id.clone(), name, checkpoint_ids };
         self.meta.dispatch(DocumentCommand::Apply { operations: vec![SpaceHistoryOperation::CreateSpaceAlternative { alternative }], description: None })?;
         Ok(alternative_id)
     }
@@ -4035,7 +4145,7 @@ mod tests {
         store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply works purely against the in-memory graph");
         assert_eq!(store.projection().expect("projection").n, 1);
 
-        store.set_state(stale_envelope, Vec::new(), Vec::new());
+        store.reset(stale_envelope, Vec::new(), Vec::new()).expect("reset");
         assert!(store.tick().expect("tick after set_state with no live backbone is a no-operation") == false, "set_state must not resurrect IO from a stale backbone descriptor either");
     }
 
@@ -4135,7 +4245,7 @@ mod tests {
         let envelope: DocumentEnvelope<DemoProjection, DemoOperation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
         store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("local apply");
-        store.ingest_remote(foreign_operation_envelope("peer", DemoOperation::SetN { n: 2 })).expect("ingest foreign");
+        store.dispatch(DocumentCommand::IngestRemote { envelope: foreign_operation_envelope("peer", DemoOperation::SetN { n: 2 }) }).expect("ingest foreign");
         assert_eq!(store.projection().expect("projection").n, 2, "foreign edit sits at the tail");
 
         let error = store.dispatch(DocumentCommand::UndoWithPolicy { policy: UndoPolicy::ExactBaseOnly, semantic_command: None }).expect_err("undo must refuse a foreign tail");
@@ -4151,7 +4261,7 @@ mod tests {
         let local_edit_id = store.applied_edit_ids()[0].clone();
         let foreign = foreign_operation_envelope("peer", DemoOperation::SetN { n: 2 });
         let foreign_id = foreign.operation_id.0.clone();
-        store.ingest_remote(foreign).expect("ingest foreign");
+        store.dispatch(DocumentCommand::IngestRemote { envelope: foreign }).expect("ingest foreign");
         assert_eq!(store.applied_edit_ids().len(), 2, "local + foreign are both applied");
 
         store.dispatch(DocumentCommand::UndoWithPolicy { policy: UndoPolicy::TransformAgainstConcurrent, semantic_command: None }).expect("transform undo removes the local edit from mid-timeline");
@@ -5042,7 +5152,7 @@ mod tests {
         store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("local".into()), authors: Vec::new() }).expect("local commit");
 
         let mut remote_store = DocumentStore::new(store.envelope().clone());
-        remote_store.set_state(store.envelope().clone(), store.applied_edit_ids().to_vec(), Vec::new());
+        remote_store.reset(store.envelope().clone(), store.applied_edit_ids().to_vec(), Vec::new()).expect("reset remote");
         remote_store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None }).expect("remote apply");
         remote_store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("remote".into()), authors: Vec::new() }).expect("remote commit");
 

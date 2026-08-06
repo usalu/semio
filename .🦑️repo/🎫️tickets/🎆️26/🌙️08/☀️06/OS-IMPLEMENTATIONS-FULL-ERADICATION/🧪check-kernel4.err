@@ -1,0 +1,635 @@
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+error: cannot find derive macro `Serialize` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:656:41
+    |
+656 | #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+    |                                         ^^^^^^^^^
+    |
+    = note: derive macro `crate::os_store::test_support::Serialize` exists but is inaccessible
+help: consider importing this derive macro
+    |
+ 20 + use serde::Serialize;
+    |
+
+error: cannot find derive macro `Deserialize` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:656:52
+    |
+656 | #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+    |                                                    ^^^^^^^^^^^
+    |
+    = note: derive macro `crate::os_store::test_support::Deserialize` exists but is inaccessible
+help: consider importing this derive macro
+    |
+ 20 + use serde::Deserialize;
+    |
+
+error: cannot find attribute `serde` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:657:3
+    |
+657 | #[serde(rename_all = "camelCase")]
+    |   ^^^^^
+    |
+    = note: `serde` is in scope, but it is a crate, not an attribute
+help: `serde` is an attribute that can be used by the derive macros `Deserialize` and `Serialize`, you might be missing a `derive` attribute
+    |
+658 + #[derive(Deserialize, Serialize)]
+659 | pub struct PresencePoint {
+    |
+
+error: cannot find derive macro `Serialize` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:665:41
+    |
+665 | #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+    |                                         ^^^^^^^^^
+    |
+    = note: derive macro `crate::os_store::test_support::Serialize` exists but is inaccessible
+help: consider importing this derive macro
+    |
+ 20 + use serde::Serialize;
+    |
+
+error: cannot find derive macro `Deserialize` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:665:52
+    |
+665 | #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+    |                                                    ^^^^^^^^^^^
+    |
+    = note: derive macro `crate::os_store::test_support::Deserialize` exists but is inaccessible
+help: consider importing this derive macro
+    |
+ 20 + use serde::Deserialize;
+    |
+
+error: cannot find attribute `serde` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:666:3
+    |
+666 | #[serde(rename_all = "camelCase")]
+    |   ^^^^^
+    |
+    = note: `serde` is in scope, but it is a crate, not an attribute
+help: `serde` is an attribute that can be used by the derive macros `Deserialize` and `Serialize`, you might be missing a `derive` attribute
+    |
+667 + #[derive(Deserialize, Serialize)]
+668 | pub struct PresenceViewport {
+    |
+
+error: cannot find derive macro `Serialize` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:674:35
+    |
+674 | #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    |                                   ^^^^^^^^^
+    |
+    = note: derive macro `crate::os_store::test_support::Serialize` exists but is inaccessible
+help: consider importing this derive macro
+    |
+ 20 + use serde::Serialize;
+    |
+
+error: cannot find derive macro `Deserialize` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:674:46
+    |
+674 | #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    |                                              ^^^^^^^^^^^
+    |
+    = note: derive macro `crate::os_store::test_support::Deserialize` exists but is inaccessible
+help: consider importing this derive macro
+    |
+ 20 + use serde::Deserialize;
+    |
+
+error: cannot find attribute `serde` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:675:3
+    |
+675 | #[serde(rename_all = "camelCase")]
+    |   ^^^^^
+    |
+    = note: `serde` is in scope, but it is a crate, not an attribute
+help: `serde` is an attribute that can be used by the derive macros `Deserialize` and `Serialize`, you might be missing a `derive` attribute
+    |
+676 + #[derive(Deserialize, Serialize)]
+677 | pub struct PresencePeer {
+    |
+
+error: cannot find attribute `serde` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:678:7
+    |
+678 |     #[serde(default, skip_serializing_if = "Option::is_none")]
+    |       ^^^^^
+    |
+    = note: `serde` is an attribute that can be used by the derive macros `Deserialize` and `Serialize`, you might be missing a `derive` attribute
+    = note: `serde` is in scope, but it is a crate, not an attribute
+
+error: cannot find attribute `serde` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:680:7
+    |
+680 |     #[serde(default, skip_serializing_if = "Option::is_none")]
+    |       ^^^^^
+    |
+    = note: `serde` is an attribute that can be used by the derive macros `Deserialize` and `Serialize`, you might be missing a `derive` attribute
+    = note: `serde` is in scope, but it is a crate, not an attribute
+
+error: cannot find attribute `serde` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:684:7
+    |
+684 |     #[serde(default, skip_serializing_if = "Option::is_none")]
+    |       ^^^^^
+    |
+    = note: `serde` is an attribute that can be used by the derive macros `Deserialize` and `Serialize`, you might be missing a `derive` attribute
+    = note: `serde` is in scope, but it is a crate, not an attribute
+
+error: cannot find attribute `serde` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:687:7
+    |
+687 |     #[serde(default, skip_serializing_if = "Option::is_none")]
+    |       ^^^^^
+    |
+    = note: `serde` is an attribute that can be used by the derive macros `Deserialize` and `Serialize`, you might be missing a `derive` attribute
+    = note: `serde` is in scope, but it is a crate, not an attribute
+
+error: cannot find attribute `serde` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:690:7
+    |
+690 |     #[serde(default, skip_serializing_if = "Option::is_none")]
+    |       ^^^^^
+    |
+    = note: `serde` is an attribute that can be used by the derive macros `Deserialize` and `Serialize`, you might be missing a `derive` attribute
+    = note: `serde` is in scope, but it is a crate, not an attribute
+
+error: cannot find attribute `serde` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:693:7
+    |
+693 |     #[serde(default, skip_serializing_if = "Option::is_none")]
+    |       ^^^^^
+    |
+    = note: `serde` is an attribute that can be used by the derive macros `Deserialize` and `Serialize`, you might be missing a `derive` attribute
+    = note: `serde` is in scope, but it is a crate, not an attribute
+
+error: cannot find attribute `serde` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:696:7
+    |
+696 |     #[serde(default, skip_serializing_if = "Option::is_none")]
+    |       ^^^^^
+    |
+    = note: `serde` is an attribute that can be used by the derive macros `Deserialize` and `Serialize`, you might be missing a `derive` attribute
+    = note: `serde` is in scope, but it is a crate, not an attribute
+
+error[E0425]: cannot find function `decode_fused_edge_arrow` in module `dsl_notation`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:1062:51
+     |
+1062 |             let (directed, label) = dsl_notation::decode_fused_edge_arrow(&token.text.as_str())?;
+     |                                                   ^^^^^^^^^^^^^^^^^^^^^^^ not found in `dsl_notation`
+     |
+help: consider importing this function
+     |
+   8 + use crate::notation::decode_fused_edge_arrow;
+     |
+help: if you import `decode_fused_edge_arrow`, refer to it directly
+     |
+1062 -             let (directed, label) = dsl_notation::decode_fused_edge_arrow(&token.text.as_str())?;
+1062 +             let (directed, label) = decode_fused_edge_arrow(&token.text.as_str())?;
+     |
+
+error[E0422]: cannot find struct, variant or union type `EdgeNode` in module `dsl_notation`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2031:52
+     |
+2031 |     let map_node = |node: &WireNode| dsl_notation::EdgeNode {
+     |                                                    ^^^^^^^^ not found in `dsl_notation`
+     |
+help: consider importing this struct
+     |
+   8 + use crate::notation::EdgeNode;
+     |
+help: if you import `EdgeNode`, refer to it directly
+     |
+2031 -     let map_node = |node: &WireNode| dsl_notation::EdgeNode {
+2031 +     let map_node = |node: &WireNode| EdgeNode {
+     |
+
+error[E0422]: cannot find struct, variant or union type `EdgeValue` in module `dsl_notation`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2036:30
+     |
+ 289 | pub struct WireValue {
+     | -------------------- similarly named struct `WireValue` defined here
+...
+2036 |     let edge = dsl_notation::EdgeValue {
+     |                              ^^^^^^^^^
+     |
+help: a struct with a similar name exists
+     |
+2036 -     let edge = dsl_notation::EdgeValue {
+2036 +     let edge = dsl_notation::WireValue {
+     |
+help: consider importing this struct
+     |
+   8 + use crate::notation::EdgeValue;
+     |
+help: if you import `EdgeValue`, refer to it directly
+     |
+2036 -     let edge = dsl_notation::EdgeValue {
+2036 +     let edge = EdgeValue {
+     |
+
+error[E0422]: cannot find struct, variant or union type `EdgeLink` in module `dsl_notation`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2038:69
+     |
+2038 |         link: wire.edge.as_ref().map(|(directed, to)| dsl_notation::EdgeLink {
+     |                                                                     ^^^^^^^^ not found in `dsl_notation`
+     |
+help: consider importing this struct
+     |
+   8 + use crate::notation::EdgeLink;
+     |
+help: if you import `EdgeLink`, refer to it directly
+     |
+2038 -         link: wire.edge.as_ref().map(|(directed, to)| dsl_notation::EdgeLink {
+2038 +         link: wire.edge.as_ref().map(|(directed, to)| EdgeLink {
+     |
+
+error[E0422]: cannot find struct, variant or union type `EdgeLabel` in module `dsl_notation`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2040:34
+     |
+2040 |             label: dsl_notation::EdgeLabel { id: wire.edge_label.id.clone(), kind: wire.edge_label.kind.clone() },
+     |                                  ^^^^^^^^^ not found in `dsl_notation`
+     |
+help: consider importing this struct
+     |
+   8 + use crate::notation::EdgeLabel;
+     |
+help: if you import `EdgeLabel`, refer to it directly
+     |
+2040 -             label: dsl_notation::EdgeLabel { id: wire.edge_label.id.clone(), kind: wire.edge_label.kind.clone() },
+2040 +             label: EdgeLabel { id: wire.edge_label.id.clone(), kind: wire.edge_label.kind.clone() },
+     |
+
+error[E0425]: cannot find function `print_edge` in module `dsl_notation`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2044:31
+     |
+ 651 | pub fn print_expr(expr: &ExprValue) -> String {
+     | --------------------------------------------- similarly named function `print_expr` defined here
+...
+2044 |     writer.atom(dsl_notation::print_edge(&edge));
+     |                               ^^^^^^^^^^
+     |
+help: a function with a similar name exists
+     |
+2044 -     writer.atom(dsl_notation::print_edge(&edge));
+2044 +     writer.atom(dsl_notation::print_expr(&edge));
+     |
+help: consider importing this function
+     |
+   8 + use crate::notation::print_edge;
+     |
+help: if you import `print_edge`, refer to it directly
+     |
+2044 -     writer.atom(dsl_notation::print_edge(&edge));
+2044 +     writer.atom(print_edge(&edge));
+     |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:7:1
+  |
+7 | extern crate self as dsl_grammar;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+7 - extern crate self as dsl_grammar;
+  |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1
+   |
+11 | extern crate self as pack;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+11 - extern crate self as pack;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1
+   |
+12 | extern crate self as spr;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+12 - extern crate self as spr;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:13:1
+   |
+13 | extern crate self as vcs;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+13 - extern crate self as vcs;
+   |
+
+warning: private item shadows public glob re-export
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:14:1
+    |
+ 14 | extern crate self as semio_format;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+note: the name `semio_format` in the type namespace is supposed to be publicly re-exported here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:179:9
+    |
+179 | pub use crate::os_store::*;
+    |         ^^^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:14:1
+    |
+ 14 | extern crate self as semio_format;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(hidden_glob_reexports)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:345:11
+    |
+345 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:351:11
+    |
+351 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:178:9
+    |
+178 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `test_support` in the type namespace is first re-exported here
+179 | pub use crate::os_store::*;
+    |         ------------------ but the name `test_support` in the type namespace is also re-exported here
+    |
+    = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:178:9
+    |
+178 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `core` in the type namespace is first re-exported here
+...
+181 | pub use crate::os_pack::*;
+    |         ----------------- but the name `core` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `apply_collection_operation` in the value namespace is first re-exported here
+...
+185 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `apply_collection_operation` in the value namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `collection_diff_from_operation` in the value namespace is first re-exported here
+...
+185 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `collection_diff_from_operation` in the value namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `invert_collection_operation` in the value namespace is first re-exported here
+...
+185 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `invert_collection_operation` in the value namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Identified` in the type namespace is first re-exported here
+...
+185 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `Identified` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Patchable` in the type namespace is first re-exported here
+...
+185 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `Patchable` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `cli` in the type namespace is first re-exported here
+...
+186 | pub use crate::os_semio::*;
+    |         ------------------ but the name `cli` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `format` in the type namespace is first re-exported here
+181 | pub use crate::os_pack::*;
+    |         ----------------- but the name `format` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `io` in the type namespace is first re-exported here
+181 | pub use crate::os_pack::*;
+    |         ----------------- but the name `io` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `testkit` in the type namespace is first re-exported here
+181 | pub use crate::os_pack::*;
+    |         ----------------- but the name `testkit` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `read_varint_u64` in the value namespace is also re-exported here
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `read_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `write_varint_u64` in the value namespace is also re-exported here
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `write_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `recover_file` in the value namespace is also re-exported here
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `recover_file` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `RecoveryReport` in the type namespace is also re-exported here
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `RecoveryReport` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `VerificationLevel` in the type namespace is also re-exported here
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `VerificationLevel` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `WriteOptions` in the type namespace is also re-exported here
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `WriteOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `DecodeOptions` in the type namespace is also re-exported here
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `DecodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `EncodeOptions` in the type namespace is also re-exported here
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `EncodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `ItemPatch` in the type namespace is also re-exported here
+...
+185 | pub use crate::os_vcs::*;
+    |         ^^^^^^^^^^^^^^^^ the name `ItemPatch` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `CollectionDiff` in the type namespace is also re-exported here
+...
+185 | pub use crate::os_vcs::*;
+    |         ^^^^^^^^^^^^^^^^ the name `CollectionDiff` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `CollectionOperation` in the type namespace is also re-exported here
+...
+185 | pub use crate::os_vcs::*;
+    |         ^^^^^^^^^^^^^^^^ the name `CollectionOperation` in the type namespace is first re-exported here
+
+warning: unused variable: `len`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:1083:21
+     |
+1083 |                 let len = end_j - i;
+     |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+error[E0004]: non-exhaustive patterns: `&schema::Shape::EmbedFrom(_)` not covered
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:1188:11
+     |
+1188 |     match shape {
+     |           ^^^^^ pattern `&schema::Shape::EmbedFrom(_)` not covered
+     |
+note: `schema::Shape` defined here
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:33:10
+     |
+  33 | pub enum Shape {
+     |          ^^^^^
+...
+ 116 |     EmbedFrom(&'static str),
+     |     --------- not covered
+     = note: the matched value is of type `&schema::Shape`
+help: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern or an explicit pattern as shown
+     |
+1214 ~         Shape::Embed(_) => 26,
+1215 ~         &schema::Shape::EmbedFrom(_) => todo!(),
+     |
+
+error[E0004]: non-exhaustive patterns: `&schema::Shape::EmbedFrom(_)` not covered
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs:123:15
+    |
+123 |         match shape {
+    |               ^^^^^ pattern `&schema::Shape::EmbedFrom(_)` not covered
+    |
+note: `schema::Shape` defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:33:10
+    |
+ 33 | pub enum Shape {
+    |          ^^^^^
+...
+116 |     EmbedFrom(&'static str),
+    |     --------- not covered
+    = note: the matched value is of type `&schema::Shape`
+help: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern or an explicit pattern as shown
+    |
+186 ~             Shape::Embed(_) => FieldValue::Text(self.next_string(8)),
+187 ~             &schema::Shape::EmbedFrom(_) => todo!(),
+    |
+
+error[E0004]: non-exhaustive patterns: `&schema::Shape::EmbedFrom(_)` not covered
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs:195:15
+    |
+195 |         match shape {
+    |               ^^^^^ pattern `&schema::Shape::EmbedFrom(_)` not covered
+    |
+note: `schema::Shape` defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:33:10
+    |
+ 33 | pub enum Shape {
+    |          ^^^^^
+...
+116 |     EmbedFrom(&'static str),
+    |     --------- not covered
+    = note: the matched value is of type `&schema::Shape`
+help: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern or an explicit pattern as shown
+    |
+220 ~             Shape::Embed(_) => FieldValue::Text(self.next_string(8)),
+221 ~             &schema::Shape::EmbedFrom(_) => todo!(),
+    |
+
+Some errors have detailed explanations: E0004, E0422, E0425.
+For more information about an error, try `rustc --explain E0004`.
+warning: `semio-framework-os-kernel` (lib) generated 30 warnings
+error: could not compile `semio-framework-os-kernel` (lib) due to 25 previous errors; 30 warnings emitted

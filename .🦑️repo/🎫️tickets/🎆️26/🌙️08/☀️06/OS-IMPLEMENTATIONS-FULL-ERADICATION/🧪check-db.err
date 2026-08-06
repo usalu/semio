@@ -1,0 +1,1134 @@
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:7:1
+  |
+7 | extern crate self as dsl_grammar;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+7 - extern crate self as dsl_grammar;
+  |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1
+   |
+11 | extern crate self as pack;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+11 - extern crate self as pack;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1
+   |
+12 | extern crate self as spr;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+12 - extern crate self as spr;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:13:1
+   |
+13 | extern crate self as vcs;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+13 - extern crate self as vcs;
+   |
+
+warning: private item shadows public glob re-export
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:14:1
+    |
+ 14 | extern crate self as semio_format;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+note: the name `semio_format` in the type namespace is supposed to be publicly re-exported here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:179:9
+    |
+179 | pub use crate::os_store::*;
+    |         ^^^^^^^^^^^^^^^^^^
+note: but the private item here shadows it
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:14:1
+    |
+ 14 | extern crate self as semio_format;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(hidden_glob_reexports)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:345:11
+    |
+345 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:351:11
+    |
+351 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:178:9
+    |
+178 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `canonicalize` in the value namespace is first re-exported here
+...
+190 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `canonicalize` in the value namespace is also re-exported here
+    |
+    = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:178:9
+    |
+178 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `test_support` in the type namespace is first re-exported here
+179 | pub use crate::os_store::*;
+    |         ------------------ but the name `test_support` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:178:9
+    |
+178 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `core` in the type namespace is first re-exported here
+...
+181 | pub use crate::os_pack::*;
+    |         ----------------- but the name `core` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:178:9
+    |
+178 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Symbol` in the type namespace is first re-exported here
+...
+190 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `Symbol` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `apply_collection_operation` in the value namespace is first re-exported here
+...
+185 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `apply_collection_operation` in the value namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `collection_diff_from_operation` in the value namespace is first re-exported here
+...
+185 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `collection_diff_from_operation` in the value namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `invert_collection_operation` in the value namespace is first re-exported here
+...
+185 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `invert_collection_operation` in the value namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Identified` in the type namespace is first re-exported here
+...
+185 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `Identified` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Patchable` in the type namespace is first re-exported here
+...
+185 | pub use crate::os_vcs::*;
+    |         ---------------- but the name `Patchable` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `cli` in the type namespace is first re-exported here
+...
+186 | pub use crate::os_semio::*;
+    |         ------------------ but the name `cli` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `format` in the type namespace is first re-exported here
+181 | pub use crate::os_pack::*;
+    |         ----------------- but the name `format` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `io` in the type namespace is first re-exported here
+181 | pub use crate::os_pack::*;
+    |         ----------------- but the name `io` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `testkit` in the type namespace is first re-exported here
+181 | pub use crate::os_pack::*;
+    |         ----------------- but the name `testkit` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `read_varint_u64` in the value namespace is also re-exported here
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `read_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `write_varint_u64` in the value namespace is also re-exported here
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `write_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `recover_file` in the value namespace is also re-exported here
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `recover_file` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `RecoveryReport` in the type namespace is also re-exported here
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `RecoveryReport` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `VerificationLevel` in the type namespace is also re-exported here
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `VerificationLevel` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `WriteOptions` in the type namespace is also re-exported here
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `WriteOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `DecodeOptions` in the type namespace is also re-exported here
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `DecodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `EncodeOptions` in the type namespace is also re-exported here
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `EncodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `ItemPatch` in the type namespace is also re-exported here
+...
+185 | pub use crate::os_vcs::*;
+    |         ^^^^^^^^^^^^^^^^ the name `ItemPatch` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `CollectionDiff` in the type namespace is also re-exported here
+...
+185 | pub use crate::os_vcs::*;
+    |         ^^^^^^^^^^^^^^^^ the name `CollectionDiff` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ---------------- but the name `CollectionOperation` in the type namespace is also re-exported here
+...
+185 | pub use crate::os_vcs::*;
+    |         ^^^^^^^^^^^^^^^^ the name `CollectionOperation` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:190:9
+    |
+179 | pub use crate::os_store::*;
+    |         ------------------ but the name `Alternative` in the type namespace is also re-exported here
+...
+190 | pub use crate::os_dsl::grammar::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^ the name `Alternative` in the type namespace is first re-exported here
+
+warning: unused import: `crate::os_dsl::core::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:191:9
+    |
+191 | pub use crate::os_dsl::core::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `len`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:1083:21
+     |
+1083 |                 let len = end_j - i;
+     |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `print_edge_label` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 35 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+    Checking semio-framework-os-kernel-db v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust)
+error[E0432]: unresolved import `db_engine`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:30:9
+   |
+30 | pub use db_engine::{
+   |         ^^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+30 | pub use crate::db_engine::{
+   |         +++++++
+
+error[E0432]: unresolved import `db_engine`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:39:9
+   |
+39 | pub use db_engine::vcs_integration;
+   |         ^^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+39 | pub use crate::db_engine::vcs_integration;
+   |         +++++++
+
+error[E0432]: unresolved import `db_core`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:43:9
+   |
+43 | pub use db_core::DbError;
+   |         ^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+43 | pub use crate::db_core::DbError;
+   |         +++++++
+
+error[E0432]: unresolved import `db_core`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:55:13
+   |
+55 |     pub use db_core::*;
+   |             ^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+55 |     pub use crate::db_core::*;
+   |             +++++++
+
+error[E0432]: unresolved import `db_actor`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:61:13
+   |
+61 |     pub use db_actor::*;
+   |             ^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+61 |     pub use crate::db_actor::*;
+   |             +++++++
+
+error[E0432]: unresolved import `db_state`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:67:13
+   |
+67 |     pub use db_state::*;
+   |             ^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+67 |     pub use crate::db_state::*;
+   |             +++++++
+
+error[E0432]: unresolved import `db_storage`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:74:13
+   |
+74 |     pub use db_storage::*;
+   |             ^^^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+74 |     pub use crate::db_storage::*;
+   |             +++++++
+
+error[E0432]: unresolved import `db_wal`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:80:13
+   |
+80 |     pub use db_wal::*;
+   |             ^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+80 |     pub use crate::db_wal::*;
+   |             +++++++
+
+error[E0432]: unresolved import `db_snapshot`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:86:13
+   |
+86 |     pub use db_snapshot::*;
+   |             ^^^^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+86 |     pub use crate::db_snapshot::*;
+   |             +++++++
+
+error[E0432]: unresolved import `db_index`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:92:13
+   |
+92 |     pub use db_index::*;
+   |             ^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+92 |     pub use crate::db_index::*;
+   |             +++++++
+
+error[E0432]: unresolved import `db_conflict`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:98:13
+   |
+98 |     pub use db_conflict::*;
+   |             ^^^^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+98 |     pub use crate::db_conflict::*;
+   |             +++++++
+
+error[E0432]: unresolved import `db_projection`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:103:13
+    |
+103 |     pub use db_projection::*;
+    |             ^^^^^^^^^^^^^
+    |
+    = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+    |
+103 |     pub use crate::db_projection::*;
+    |             +++++++
+
+error[E0432]: unresolved import `db_query`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:109:13
+    |
+109 |     pub use db_query::*;
+    |             ^^^^^^^^
+    |
+    = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+    |
+109 |     pub use crate::db_query::*;
+    |             +++++++
+
+error[E0432]: unresolved import `db_preview`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:115:13
+    |
+115 |     pub use db_preview::*;
+    |             ^^^^^^^^^^
+    |
+    = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+    |
+115 |     pub use crate::db_preview::*;
+    |             +++++++
+
+error[E0432]: unresolved import `db_security`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:121:13
+    |
+121 |     pub use db_security::*;
+    |             ^^^^^^^^^^^
+    |
+    = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+    |
+121 |     pub use crate::db_security::*;
+    |             +++++++
+
+error[E0432]: unresolved import `db_document`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:128:13
+    |
+128 |     pub use db_document::*;
+    |             ^^^^^^^^^^^
+    |
+    = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+    |
+128 |     pub use crate::db_document::*;
+    |             +++++++
+
+error[E0432]: unresolved import `db_compact`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:134:13
+    |
+134 |     pub use db_compact::*;
+    |             ^^^^^^^^^^
+    |
+    = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+    |
+134 |     pub use crate::db_compact::*;
+    |             +++++++
+
+error[E0432]: unresolved import `db_sync`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:140:13
+    |
+140 |     pub use db_sync::*;
+    |             ^^^^^^^
+    |
+    = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+    |
+140 |     pub use crate::db_sync::*;
+    |             +++++++
+
+error[E0432]: unresolved import `db_cluster`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:146:13
+    |
+146 |     pub use db_cluster::*;
+    |             ^^^^^^^^^^
+    |
+    = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+    |
+146 |     pub use crate::db_cluster::*;
+    |             +++++++
+
+error[E0432]: unresolved import `db_observe`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:152:13
+    |
+152 |     pub use db_observe::*;
+    |             ^^^^^^^^^^
+    |
+    = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+    |
+152 |     pub use crate::db_observe::*;
+    |             +++++++
+
+error[E0432]: unresolved import `db_engine`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:160:13
+    |
+160 |     pub use db_engine::*;
+    |             ^^^^^^^^^
+    |
+    = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+    |
+160 |     pub use crate::db_engine::*;
+    |             +++++++
+
+error[E0433]: cannot find module or crate `db` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:36:5
+   |
+36 | use db::storage::{SnapshotStorage as _, WalStorage as _};
+   |     ^^ use of unresolved module or unlinked crate `db`
+   |
+   = help: if you wanted to use a crate named `db`, use `cargo add db` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `db_core`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🦀️component.rs:561:9
+    |
+561 |     use db_core::check_len;
+    |         ^^^^^^^
+    |
+    = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+    |
+561 |     use crate::db_core::check_len;
+    |         +++++++
+
+error[E0432]: unresolved import `db_core`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️preview/🦀️component.rs:30:5
+   |
+30 | use db_core::{check_len, ActorId, DbError, DbLimits, DocumentId, Frontier};
+   |     ^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+30 | use crate::db_core::{check_len, ActorId, DbError, DbLimits, DocumentId, Frontier};
+   |     +++++++
+
+error[E0432]: unresolved import `db_state`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️preview/🦀️component.rs:31:5
+   |
+31 | use db_state::TouchedSet;
+   |     ^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+31 | use crate::db_state::TouchedSet;
+   |     +++++++
+
+error[E0432]: unresolved import `db_core`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:18:5
+   |
+18 | use db_core::{check_len, ActorId, DbError, DocumentId, Frontier};
+   |     ^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+18 | use crate::db_core::{check_len, ActorId, DbError, DocumentId, Frontier};
+   |     +++++++
+
+error[E0432]: unresolved import `db_storage`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:19:5
+   |
+19 | use db_storage::IndexStorage;
+   |     ^^^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+19 | use crate::db_storage::IndexStorage;
+   |     +++++++
+
+error[E0432]: unresolved import `pack_core`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:20:5
+   |
+20 | use pack_core::{crc32c, ByteReader, ByteWriter};
+   |     ^^^^^^^^^ use of unresolved module or unlinked crate `pack_core`
+   |
+   = help: if you wanted to use a crate named `pack_core`, use `cargo add pack_core` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `db_core`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🦀️component.rs:23:5
+   |
+23 | use db_core::{check_len, DbError, DocumentId, DurabilityClass, EpochFence};
+   |     ^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+23 | use crate::db_core::{check_len, DbError, DocumentId, DurabilityClass, EpochFence};
+   |     +++++++
+
+error[E0432]: unresolved import `db_core`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🎭️actor/🦀️component.rs:27:5
+   |
+27 | use db_core::{DbError, GenerationId, MailboxCapacities, Priority};
+   |     ^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+27 | use crate::db_core::{DbError, GenerationId, MailboxCapacities, Priority};
+   |     +++++++
+
+error[E0432]: unresolved import `db_core`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:33:5
+   |
+33 | use db_core::DbError;
+   |     ^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+33 | use crate::db_core::DbError;
+   |     +++++++
+
+error[E0432]: unresolved import `db_storage`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:34:5
+   |
+34 | use db_storage::{CatalogStorage, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilit...
+   |     ^^^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+34 | use crate::db_storage::{CatalogStorage, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+   |     +++++++
+
+error[E0432]: unresolved import `db_core`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:43:5
+   |
+43 | use db_core::{check_len, DbError, DocumentId, EpochFence};
+   |     ^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+43 | use crate::db_core::{check_len, DbError, DocumentId, EpochFence};
+   |     +++++++
+
+error[E0432]: unresolved import `db_state`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:44:5
+   |
+44 | use db_state::Page;
+   |     ^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+44 | use crate::db_state::Page;
+   |     +++++++
+
+error[E0432]: unresolved import `db_storage`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:45:5
+   |
+45 | use db_storage::{LeaseInfo, LeaseStorage, SnapshotStorage};
+   |     ^^^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+45 | use crate::db_storage::{LeaseInfo, LeaseStorage, SnapshotStorage};
+   |     +++++++
+
+error[E0432]: unresolved import `db_core`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔘️state/🦀️component.rs:23:5
+   |
+23 | use db_core::DbError;
+   |     ^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+23 | use crate::db_core::DbError;
+   |     +++++++
+
+error[E0432]: unresolved import `db_core`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📽️projection/🦀️component.rs:50:5
+   |
+50 | use db_core::{DbError, DocumentId};
+   |     ^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+50 | use crate::db_core::{DbError, DocumentId};
+   |     +++++++
+
+error[E0432]: unresolved import `db_index`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📽️projection/🦀️component.rs:51:5
+   |
+51 | use db_index::ProjectionIndex;
+   |     ^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+51 | use crate::db_index::ProjectionIndex;
+   |     +++++++
+
+error[E0432]: unresolved import `db_state`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📽️projection/🦀️component.rs:52:5
+   |
+52 | use db_state::{PGraph, PMap, TouchedRegion, TouchedSet};
+   |     ^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+52 | use crate::db_state::{PGraph, PMap, TouchedRegion, TouchedSet};
+   |     +++++++
+
+error[E0432]: unresolved import `db_storage`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📽️projection/🦀️component.rs:53:5
+   |
+53 | use db_storage::IndexStorage;
+   |     ^^^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+53 | use crate::db_storage::IndexStorage;
+   |     +++++++
+
+error[E0432]: unresolved import `db_core`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗜️compact/🦀️component.rs:33:5
+   |
+33 | use db_core::{check_len, DbError, DocumentId};
+   |     ^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+33 | use crate::db_core::{check_len, DbError, DocumentId};
+   |     +++++++
+
+error[E0432]: unresolved import `db_state`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚔️conflict/🦀️component.rs:23:5
+   |
+23 | use db_state::{TouchKind, TouchedRegion, TouchedSet};
+   |     ^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+23 | use crate::db_state::{TouchKind, TouchedRegion, TouchedSet};
+   |     +++++++
+
+error[E0432]: unresolved import `db_core`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️document/🦀️component.rs:47:5
+   |
+47 | use db_core::DbError;
+   |     ^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+47 | use crate::db_core::DbError;
+   |     +++++++
+
+error[E0432]: unresolved import `db_core`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:32:5
+   |
+32 | use db_core::{check_len, DbError, Frontier};
+   |     ^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+32 | use crate::db_core::{check_len, DbError, Frontier};
+   |     +++++++
+
+error[E0432]: unresolved import `db_index`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:33:5
+   |
+33 | use db_index::{CommitIndex, FrontierIndex, FullTextIndex};
+   |     ^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+33 | use crate::db_index::{CommitIndex, FrontierIndex, FullTextIndex};
+   |     +++++++
+
+error[E0432]: unresolved import `db_projection`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:34:5
+   |
+34 | use db_projection::ProjectionState;
+   |     ^^^^^^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+34 | use crate::db_projection::ProjectionState;
+   |     +++++++
+
+error[E0432]: unresolved import `db_state`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:35:5
+   |
+35 | use db_state::PVec;
+   |     ^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+35 | use crate::db_state::PVec;
+   |     +++++++
+
+error[E0432]: unresolved import `db_core`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:45:5
+   |
+45 | use db_core::DbError;
+   |     ^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+45 | use crate::db_core::DbError;
+   |     +++++++
+
+error[E0432]: unresolved import `db_core`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:48:9
+   |
+48 | pub use db_core::{DbCapabilities, DbConfig, DurabilityClass, Profile};
+   |         ^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+48 | pub use crate::db_core::{DbCapabilities, DbConfig, DurabilityClass, Profile};
+   |         +++++++
+
+error[E0432]: unresolved import `db_storage`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:49:9
+   |
+49 | pub use db_storage::DbStorage;
+   |         ^^^^^^^^^^
+   |
+   = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+   |
+49 | pub use crate::db_storage::DbStorage;
+   |         +++++++
+
+error[E0432]: unresolved import `db_core`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:263:9
+    |
+263 |     use db_core::DbError;
+    |         ^^^^^^^
+    |
+    = note: `use` statements changed in Rust 2018; read more at <https://doc.rust-lang.org/edition-guide/rust-2018/module-system/path-clarity.html>
+help: a similar path exists
+    |
+263 |     use crate::db_core::DbError;
+    |         +++++++
+
+warning: `WriteOptions` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:427:41
+    |
+427 | fn segment_write_options() -> protocol::WriteOptions {
+    |                                         ^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `WriteOptions` could refer to the struct defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `WriteOptions` could also refer to the struct defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+    = note: `-W ambiguous-glob-imports` implied by `-W future-incompatible`
+    = help: to override `-W future-incompatible` add `#[allow(ambiguous_glob_imports)]`
+
+warning: `WriteOptions` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:428:15
+    |
+428 |     protocol::WriteOptions { required_flags: protocol_core::REQUIRED_HASH_CHAIN, optional_flags: 0 }
+    |               ^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `WriteOptions` could refer to the struct defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `WriteOptions` could also refer to the struct defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `read_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:251:25
+    |
+251 |     let seg_len = pack::read_varint_u64(&prefix[..read], &mut pos)?;
+    |                         ^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `read_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `read_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `WriteOptions` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:294:25
+    |
+294 |     let options = pack::WriteOptions { required_flags, optional_flags: 0, codec: pack::CodecId(0) };
+    |                         ^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `WriteOptions` could refer to the struct defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `WriteOptions` could also refer to the struct defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:415:91
+    |
+415 |         let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), pack::VerificationLevel::Standard)?;
+    |                                                                                           ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:416:70
+    |
+416 |         return Ok(file.read_chunk(pack::ChunkId(index as u32), pack::VerificationLevel::Standard)?);
+    |                                                                      ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:592:79
+    |
+592 |     pub fn verify(&self, document: &DocumentId, generation: u64, level: pack::VerificationLevel) -> Result<(), DbError> {
+    |                                                                               ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:403:59
+    |
+403 |         match manager.verify(&document, generation, pack::VerificationLevel::Full) {
+    |                                                           ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:424:56
+    |
+424 |             manager.verify(document, generation, pack::VerificationLevel::Full)?;
+    |                                                        ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:181:9
+    |
+181 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:180:9
+    |
+180 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+Some errors have detailed explanations: E0432, E0433.
+For more information about an error, try `rustc --explain E0432`.
+warning: `semio-framework-os-kernel-db` (lib) generated 9 warnings
+error: could not compile `semio-framework-os-kernel-db` (lib) due to 51 previous errors; 18 warnings emitted

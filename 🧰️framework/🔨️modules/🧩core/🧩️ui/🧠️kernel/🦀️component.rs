@@ -103,6 +103,7 @@ pub enum ArtifactKind {
     Asset,
     Network,
     Backbone,
+    Engine,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]

@@ -1,5 +1,9 @@
 //! 🥅️ Render-independent framework kernel: declarative {@link UiNode}, {@link Platform}, {@link ActionBus}.
 
+extern crate semio_framework_os_kernel as protocol_core;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as dsl;
+
 pub use ui_wgpu::wgpu::IconName;
 pub use ui_wgpu::wgpu::{Locale, Terminology};
 

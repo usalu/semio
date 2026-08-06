@@ -18,6 +18,10 @@
 //! once, while every per-standard fact — schema, ids, labels, compute — lives in that standard's own
 //! artifact and app nodes.
 
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as vcs;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<Operation, NormConfigOperation>, Fault>`, the exact signature `DocumentApp::handle` and
 // `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it here

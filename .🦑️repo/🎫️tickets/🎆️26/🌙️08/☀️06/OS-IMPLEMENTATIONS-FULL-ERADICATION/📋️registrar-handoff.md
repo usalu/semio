@@ -95,3 +95,12 @@ DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo check -p semio-framework
 ## Race note
 
 Parallel work briefly recreated `🗣️dsl/**/⚡️implementations` after first delete; re-deleted. Registrar should apply cut-over promptly so nothing re-links those paths.
+
+
+## Registrar applied 2026-08-06
+- Re-deleted restored dsl sandwiches (0 remain).
+- Members: host/db/plugin/plugin-host/run/neural/flow/infinite packages present.
+- Workspace deps retargeted; flow+infinite facades created for extension/world consumers.
+- Kernel compile fixes: dsl_notation/grammar reexports, wire serde import, EmbedFrom arms.
+- `cargo check -p semio-framework-os-kernel --lib` GREEN.
+- Ticket closed.

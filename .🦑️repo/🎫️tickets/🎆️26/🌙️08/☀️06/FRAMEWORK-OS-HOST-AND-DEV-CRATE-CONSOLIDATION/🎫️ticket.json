@@ -4,5 +4,11 @@
   "status": "open",
   "description": "Part of CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE. Goal 🎯aioptimizedrepo. Exclusive ownership of assigned tree. Never edit root Cargo.toml/package.json (registrar). Shape V2 only. Temp files in this ticket folder only.",
   "goal": "🎯aioptimizedrepo",
-  "sessions": []
+  "sessions": [
+    {
+      "client": "cursor-chat",
+      "llm": "cursor-grok-4.5",
+      "note": "os-dev e2e path restore after implementations eradication"
+    }
+  ]
 }
