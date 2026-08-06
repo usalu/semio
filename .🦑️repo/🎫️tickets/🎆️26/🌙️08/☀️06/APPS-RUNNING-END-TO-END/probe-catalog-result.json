@@ -1,0 +1,43 @@
+{
+  "rows": 58,
+  "fem": [
+    {
+      "variant": "fem2d",
+      "pluginId": "fem",
+      "cratePath": "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust",
+      "app": "fem2d-play",
+      "aliases": [
+        "fem 2d"
+      ],
+      "ports": {
+        "react": 6086,
+        "wgpu": 6186
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    },
+    {
+      "variant": "fem3d",
+      "pluginId": "fem",
+      "cratePath": "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust",
+      "app": "fem3d-play",
+      "aliases": [
+        "fem 3d"
+      ],
+      "ports": {
+        "react": 6087,
+        "wgpu": 6187
+      },
+      "examples": [],
+      "engines": [],
+      "assets": []
+    }
+  ],
+  "resolved": {
+    "plugin": "fem3d",
+    "rest": []
+  },
+  "catalogLen": 58,
+  "generated": true
+}

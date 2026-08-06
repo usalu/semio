@@ -1,0 +1,8 @@
+Implemented
+- classify, imprint, heal Wave 3 modules
+
+Validated by
+- brep::classify:: / imprint:: / heal:: lib tests
+
+Deferred
+- classify curved refinement (Wave 7)

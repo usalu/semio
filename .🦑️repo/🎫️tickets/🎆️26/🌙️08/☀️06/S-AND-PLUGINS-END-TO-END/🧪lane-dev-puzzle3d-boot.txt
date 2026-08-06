@@ -1,0 +1,16 @@
+
+> nx run @semio-tech/framework-os-dev:dev puzzle3d
+
+> bun ./📜️script.ts dev puzzle3d
+
+plugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated
+.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json
+[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)
+plugin registry catalog refreshed (37 plugin crates, 58 playgrounds, 16 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated
+.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json
+
+  VITE v7.3.6  ready in 5130 ms
+
+  ➜  Local:   http://127.0.0.1:6013/
+[DEBUG] program build scope: puzzle
+    Blocking waiting for file lock on build directory

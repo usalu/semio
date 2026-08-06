@@ -13,14 +13,14 @@ Status legend: `DRAFT` (stub only) → `FROZEN` (lane done; dependents may start
 | `int_cc` | `✂️int-cc/🦀️component.rs` | FROZEN | CurveCurveHit + intersect_curve_curve; analytic LL/LC/CC + Bezier clip general |
 | `int_cs` | `✂️int-cs/🦀️component.rs` | FROZEN | CurveSurfaceHit + intersect_curve_surface; analytic LP/LS/LC + Newton general |
 | `int_ss` | `✂️int-ss/🦀️component.rs` | FROZEN | `IntCurve{curve3}` + `intersect_surface_surface`; plane/plane + plane/cylinder analytic |
-| `classify` | `🏷️classify/🦀️component.rs` | DRAFT | Wave owns public API freeze before dependents start |
-| `imprint` | `🖋️imprint/🦀️component.rs` | DRAFT | Wave owns public API freeze before dependents start |
-| `boolean` | `🔀boolean/🦀️component.rs` | DRAFT | Wave owns public API freeze before dependents start |
+| `classify` | `🏷️classify/🦀️component.rs` | FROZEN | `point_in_loop`/`point_in_face_uv`/`point_in_solid` → `engine::PointClassification`; 🧾lane-3-classify-scope-note.txt |
+| `imprint` | `🖋️imprint/🦀️component.rs` | FROZEN | `split_planar_face_by_line`; UV line arrangement + euler face split; 🧾lane-3-imprint-scope-note.txt |
+| `boolean` | `🔀boolean/🦀️component.rs` | FROZEN | `boolean_solid`/`compound_cut`/`split_solid_by_plane`/`section_solid_by_plane`; 🧾lane-4-boolean-scope-note.txt |
 | `sew` | `🧵sew/🦀️component.rs` | FROZEN | `sew_faces(body, faces, tol) -> SolidId`; spatial-hash vertex merge + canonical edge pairing |
-| `heal` | `🩹heal/🦀️component.rs` | DRAFT | Wave owns public API freeze before dependents start |
+| `heal` | `🩹heal/🦀️component.rs` | FROZEN | `heal_solid`/`defeature`/`convert_to_nurbs` + `HealingReport`; see 🧾lane-3-heal-scope-note.txt |
 | `sweep` | `➡️sweep/🦀️component.rs` | FROZEN | Wave 2: `extrude_face` (plane/cylinder); revolve/loft/sweep/pipe/helical stub Operation; 🧾lane-2-sweep-scope-note.txt |
-| `offset` | `↔️offset/🦀️component.rs` | DRAFT | Wave owns public API freeze before dependents start |
-| `blend` | `🎨️blend/🦀️component.rs` | DRAFT | Wave owns public API freeze before dependents start |
+| `offset` | `↔️offset/🦀️component.rs` | FROZEN | `offset_face`/`thicken_face`/`offset_solid`/`shell_solid`/`draft_angle` |
+| `blend` | `🎨️blend/🦀️component.rs` | FROZEN | `fillet_edges`/`fillet_variable`/`chamfer_edges` |
 | `step` | `📄step/🦀️component.rs` | FROZEN | `write_step`/`read_step`; MANIFOLD_SOLID_BREP subset; see 🧾lane-2-step-scope-note.txt |
 | `mesh_io` | `📦mesh-io/🦀️component.rs` | FROZEN | `TriangleMesh`, `StlFormat`, STL/OBJ/GLB/DWG codecs + `import_triangle_mesh_to_body` / `export_solid_*` via tessellate |
 | engine (`BrepKernel`) | `⚙️engine/🦀️component.rs` | FROZEN | Trait frozen until Wave 6 |

@@ -1,0 +1,58 @@
+aggregator :: mit-bestand|entwerfen-mit-bestand
+animate :: 
+architect :: 
+aussuchen :: entwerfen-mit-bestand-aussuchen
+bearbeiten :: entwerfen-mit-bestand-bearbeiten
+block2d :: block 2d
+block3d :: block 3d
+block5d :: block 5d
+cad :: 
+dag :: 
+din16798 :: 
+din18599 :: 
+din4108 :: 
+draw :: 
+en1990 :: 
+en1991 :: 
+en1992 :: 
+en1993 :: 
+en1994 :: 
+en1995 :: 
+en1996 :: 
+en1997 :: 
+en1998 :: 
+en1999 :: 
+fem2d :: fem 2d
+fem3d :: fem 3d
+flow :: 
+forms :: 
+generator :: entwerfen-mit-bestand-generator
+gis2d :: gis 2d
+gis3d :: gis 3d
+imperative :: 
+iso16757 :: 
+koordinator :: entwerfen-mit-bestand-koordinator
+layout :: 
+lowpoly :: 
+mathematical :: mathematical|math
+note :: 
+playbook :: 
+procedural2d :: procedural 2d
+procedural3d :: procedural 3d
+process3d :: process 3d
+puzzle2d :: 2d
+puzzle3d :: 3d
+puzzle5d :: 5d
+raster :: 
+reasoning-wires :: wires
+remodel :: 
+s :: 
+sequence :: 
+shooting :: 
+sourcing :: curate
+trinity-jack :: trinity jack
+trinity-rewrite :: trinity rewrite
+vcs :: 
+vdi3805 :: 
+verfolgen :: entwerfen-mit-bestand-verfolgen
+writer :: 

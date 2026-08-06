@@ -30,7 +30,7 @@ import {
   playgroundTestPortString,
   type PlaygroundHostKind,
 } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
-import type { PlaygroundAssetSpec } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
+import type { PlaygroundAssetSpec } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
 // #endregion 🔌️Adapters
 
 export type { PlaygroundAssetSpec };
@@ -104,8 +104,6 @@ export function playgroundVitestDevStubPlugin(): Plugin {
 
 const PLAYGROUND_PLAYWRIGHT_DEV_STUB_ID = "\0playground-playwright-dev-stub";
 
-const PLAYGROUND_COMPOSE_SKETCHPAD_STUB_ID = "\0playground-compose-sketchpad-stub";
-const PLAYGROUND_COMPOSE_SKETCHPAD_MDX_STUB_ID = "\0playground-compose-sketchpad-mdx-stub";
 
 const PLAYGROUND_WASM_STUB_PREFIX = "\0playground-wasm-stub/";
 
@@ -224,100 +222,6 @@ export function playgroundFlowWasmDevStubPlugin(repoRoot: string): Plugin {
       return PLAYGROUND_WASM_JS_STUB;
     },
   };
-}
-
-/** @emoji 🧱️ Stubs compose-sketchpad when the monolithic play renderer is bundled outside the s playground. */
-export function playgroundComposeSketchpadStubPlugin(repoRoot: string): Plugin {
-  const sketchpadRoot = resolve(repoRoot, "compose/client/lib/sketchpad/js");
-  const sketchpadIndex = resolve(sketchpadRoot, "index.ts");
-  return {
-    name: "playground-compose-sketchpad-stub",
-    enforce: "pre",
-    resolveId(id) {
-      const cleanId = id.split("?", 1)[0] ?? id;
-      if (cleanId.endsWith(".mdx") && cleanId.includes("sketchpad") && cleanId.includes("/page/")) {
-        return PLAYGROUND_COMPOSE_SKETCHPAD_MDX_STUB_ID;
-      }
-      if (cleanId.includes("/compose/client/lib/sketchpad/js/page/") && cleanId.endsWith(".mdx")) {
-        return PLAYGROUND_COMPOSE_SKETCHPAD_MDX_STUB_ID;
-      }
-      if (
-        id === "@semio-tech/compose-sketchpad" ||
-        id === "@semio-tech/compose-sketchpad/boot" ||
-        id.startsWith("@semio-tech/compose-sketchpad/") ||
-        id === sketchpadIndex ||
-        id === sketchpadRoot ||
-        (id.startsWith(`${sketchpadRoot}/`) && !id.endsWith(".mdx"))
-      ) {
-        return PLAYGROUND_COMPOSE_SKETCHPAD_STUB_ID;
-      }
-      return undefined;
-    },
-    load(id) {
-      if (id === PLAYGROUND_COMPOSE_SKETCHPAD_MDX_STUB_ID) {
-        return "export default function SketchpadMdxStub() { return null; }";
-      }
-      if (id !== PLAYGROUND_COMPOSE_SKETCHPAD_STUB_ID) return;
-      return `export const COMPOSE_SKETCHPAD_PROGRAM_ID = "compose.sketchpad";
-export async function ensureSketchpadPlatform() {
-  throw new Error("compose-sketchpad is only available in the s playground");
-}
-export function buildSketchpadPlatformDefinition() {
-  return { id: COMPOSE_SKETCHPAD_PROGRAM_ID, name: "Compose Sketchpad", apiVersion: "1", apps: [], createPlatformApi: () => ({}) };
-}`;
-    },
-  };
-}
-
-/** @emoji 📄️ MDX support for sketchpad when manifest declares `sketchpad-mdx`, or a stub elsewhere. */
-export function playgroundComposeSketchpadVitePlugins(repoRoot: string, enableSketchpadMdx: boolean): Plugin[] {
-  const sketchpadIndex = resolve(repoRoot, "compose/client/lib/sketchpad/js/index.ts");
-  const mdxStubPlugins: Plugin[] = [
-    {
-      name: "playground-compose-sketchpad-mdx-stub-load",
-      enforce: "pre",
-      resolveId(id) {
-        const cleanId = id.split("?", 1)[0] ?? id;
-        if (cleanId.endsWith(".mdx") && cleanId.includes("sketchpad") && cleanId.includes("/page/")) {
-          return PLAYGROUND_COMPOSE_SKETCHPAD_MDX_STUB_ID;
-        }
-        return undefined;
-      },
-      load(id) {
-        if (id === PLAYGROUND_COMPOSE_SKETCHPAD_MDX_STUB_ID) {
-          return "export default function SketchpadMdxStub() { return null; }";
-        }
-        return undefined;
-      },
-    },
-  ];
-  if (enableSketchpadMdx) {
-    const sketchpadMdxStubSource = "export default function SketchpadMdxStub() { return null; }";
-    return [
-      {
-        name: "playground-compose-sketchpad-docs-mdx-stub",
-        enforce: "pre",
-        resolveId(id) {
-          const cleanId = id.split("?", 1)[0] ?? id;
-          if (cleanId.endsWith(".mdx") && cleanId.includes("/compose/client/lib/sketchpad/")) {
-            return PLAYGROUND_COMPOSE_SKETCHPAD_MDX_STUB_ID;
-          }
-          return undefined;
-        },
-        load(id) {
-          const cleanId = id.split("?", 1)[0] ?? id;
-          if (id === PLAYGROUND_COMPOSE_SKETCHPAD_MDX_STUB_ID) {
-            return sketchpadMdxStubSource;
-          }
-          if (cleanId.endsWith(".mdx") && cleanId.includes("/compose/client/lib/sketchpad/")) {
-            return sketchpadMdxStubSource;
-          }
-          return undefined;
-        },
-      },
-    ];
-  }
-  return [playgroundComposeSketchpadStubPlugin(repoRoot), ...mdxStubPlugins];
 }
 
 /** @emoji 🧱️ Stubs Playwright when test-only regions are pulled into the browser graph. */
@@ -1639,26 +1543,6 @@ export function findWorkspacePackages(repoRoot: string): string[] {
   return packages;
 }
 
-/** @emoji 📄️ Stubs all compose sketchpad MDX modules for s/os dev graphs (including worker bundles). */
-function playgroundSketchpadMdxGlobalStubPlugin(): Plugin {
-  const stub = "export default function SketchpadMdxStub() { return null; }";
-  const isSketchpadMdx = (id: string): boolean => {
-    const cleanId = id.split("?", 1)[0] ?? id;
-    return cleanId.endsWith(".mdx") && cleanId.includes("/compose/client/lib/sketchpad/");
-  };
-  return {
-    name: "playground-sketchpad-mdx-global-stub",
-    enforce: "pre",
-    resolveId(id) {
-      if (!isSketchpadMdx(id)) return;
-      return `\0playground-sketchpad-mdx:${id.split("?", 1)[0]}`;
-    },
-    load(id) {
-      if (id.startsWith("\0playground-sketchpad-mdx:") || isSketchpadMdx(id)) return stub;
-    },
-  };
-}
-
 /** @emoji 🛝️ `defineConfig` for `@puzzle/*-play` Vite entries with consistent renderer and core aliases. */
 export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOptions) {
   const { playDir, repoRoot, playEntryKind, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } = options;
@@ -1688,7 +1572,6 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
     plugins: [
       playgroundPlayBootHtmlPlugin(),
       playgroundFlowWasmDevStubPlugin(repoRoot),
-      playgroundComposeSketchpadStubPlugin(repoRoot),
       ...semioAssetsVitePlugin(repoRoot),
       ...semioFaviconVitePlugin(repoRoot),
       ...playgroundAssetVitePlugins(repoRoot, PLAYGROUND_PLAY_STATIC_ASSETS),

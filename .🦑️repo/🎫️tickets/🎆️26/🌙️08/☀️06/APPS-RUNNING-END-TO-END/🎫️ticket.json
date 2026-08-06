@@ -1,0 +1,8 @@
+{
+  "title": "Apps Running End To End",
+  "emoji": "🚀",
+  "status": "open",
+  "description": "After the heavy monorepo restructure, get all apps running end to end: fix playground catalog path, electron-forge bun.lock discovery, verify each bun run dev:* boots.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": []
+}

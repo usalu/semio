@@ -1452,11 +1452,6 @@ function engineWasmScriptPath(cratePath: string): string {
   throw new Error(`no wasm build script found for engine crate ${cratePath}`);
 }
 
-/** @emoji 🔌️ Builds every wasm engine a react-renderer dev session needs: the framework node-graph +
- * editor host engines unconditionally (shared studio chrome, not any one app), then whatever the
- * active playground variant declares via `engines = […]` on its `[[…playground]]` Cargo.toml row —
- * replaces the previous hardcoded `if (pluginId === "flow" | "gis2d" | "gis3d" | "raster" | "puzzle2d")` branches. */
-export 
 /** @emoji 🍎 Prefer Command Line Tools over an unlicensed Xcode.app so cargo/wasm-pack can link. */
 function ensureAppleDeveloperDir(): void {
   if (process.env.FORCE_XCODE === "1") return;
@@ -1468,7 +1463,11 @@ function ensureAppleDeveloperDir(): void {
   if (existsSync(sdk)) process.env.SDKROOT = sdk;
 }
 
-async function buildEngineWasm(variant: string, renderer: string): Promise<void> {
+/** @emoji 🔌️ Builds every wasm engine a react-renderer dev session needs: the framework node-graph +
+ * editor host engines unconditionally (shared studio chrome, not any one app), then whatever the
+ * active playground variant declares via `engines = […]` on its `[[…playground]]` Cargo.toml row —
+ * replaces the previous hardcoded `if (pluginId === "flow" | "gis2d" | "gis3d" | "raster" | "puzzle2d")` branches. */
+export async function buildEngineWasm(variant: string, renderer: string): Promise<void> {
   ensureAppleDeveloperDir();
   if (renderer !== "react" || process.env.SKIP_ENGINE_BUILD === "1") return;
   if (process.env.FORCE_ENGINE_BUILD !== "1") {

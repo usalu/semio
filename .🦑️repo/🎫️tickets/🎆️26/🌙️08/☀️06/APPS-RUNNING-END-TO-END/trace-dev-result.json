@@ -1,0 +1,35 @@
+{
+  "catalog": 58,
+  "results": {
+    "fem 3d": {
+      "plugin": "fem3d",
+      "rest": []
+    },
+    "fem 2d": {
+      "plugin": "fem2d",
+      "rest": []
+    },
+    "procedural 3d": {
+      "plugin": "procedural3d",
+      "rest": []
+    },
+    "puzzle 3d": null,
+    "cad": {
+      "plugin": "cad",
+      "rest": []
+    },
+    "s": {
+      "plugin": "s",
+      "rest": []
+    },
+    "block 3d": {
+      "plugin": "block3d",
+      "rest": []
+    },
+    "gis 3d": {
+      "plugin": "gis3d",
+      "rest": []
+    },
+    "os multi": null
+  }
+}

@@ -66,8 +66,6 @@ class TypecheckScript extends BundleScript {
  * is a stale entry (fails), a hit outside this list fails, a hit inside it is allowed. */
 export const UI_PRIMITIVES_ALLOWLIST: readonly string[] = [
   "✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript/📦️index.tsx",
-  "compose/client/lib/sketchpad/js/boot.tsx",
-  "compose/client/ui/3dm/ui/js/index.tsx",
   "♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx",
   "♻️mit-bestand/🧺️demonstrator/📦️index.tsx",
 ] as const;
@@ -188,14 +186,13 @@ class CheckUiPrimitivesScript extends BundleScript {
 export const CHROME_I18N_ALLOWLIST: readonly string[] = [];
 
 /** 🌳️ Every chrome-bearing surface: this bundle itself, the OS renderer engine, the demonstrator brand
- * shell, and the compose sketchpad app — walked recursively (mirrors {@link collectUiPrimitivesHits}'s
+ * shell — walked recursively (mirrors {@link collectUiPrimitivesHits}'s
  * walker) rather than a fixed file list, so a file rename or new chrome file can't silently drop out of
  * the scan the way the old hardcoded two-file list did. */
 const CHROME_I18N_SCANNED_ROOTS = [
   "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react",
   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react",
   "♻️mit-bestand/🧺️demonstrator",
-  "compose/client/lib/sketchpad",
 ] as const;
 
 const CHROME_I18N_SKIP_DIRS = new Set(["node_modules", "dist", "dist-staging", "target", ".🦑️repo", ".repo", "storybook-static", ".claude", ".git"]);

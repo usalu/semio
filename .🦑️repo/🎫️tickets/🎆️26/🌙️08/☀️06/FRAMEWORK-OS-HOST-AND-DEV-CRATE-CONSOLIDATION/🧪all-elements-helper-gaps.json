@@ -1,0 +1,17 @@
+{
+  "Shell": {
+    "file": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udcfa\ufe0frenderer/\ud83e\uddd1\ufe0f\u200d\ud83c\udfa8\ufe0fengine/\ud83e\uddf1\ufe0felements/Shell/\ud83d\udfe6\ufe0fcomponent.tsx",
+    "need_import": [
+      "applyTutorialUiSnapshotToShell"
+    ],
+    "need_export": []
+  },
+  "World3dHost": {
+    "file": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udcfa\ufe0frenderer/\ud83e\uddd1\ufe0f\u200d\ud83c\udfa8\ufe0fengine/\ud83e\uddf1\ufe0felements/World3dHost/\ud83d\udfe6\ufe0fcomponent.tsx",
+    "need_import": [
+      "RevealCutoffStore",
+      "shellLabel"
+    ],
+    "need_export": []
+  }
+}

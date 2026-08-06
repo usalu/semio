@@ -1,0 +1,8 @@
+Implemented
+- split_planar_face_by_line (planar outer-loop face split via Euler)
+
+Validated by
+- cargo test -p semio-s-3d --lib brep::imprint:: (3 passed)
+
+Deferred
+- Inner-loop faces; non-planar imprint

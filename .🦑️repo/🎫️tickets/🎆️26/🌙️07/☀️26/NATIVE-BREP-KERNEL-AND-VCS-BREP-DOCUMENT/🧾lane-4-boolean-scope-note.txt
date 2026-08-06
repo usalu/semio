@@ -1,0 +1,26 @@
+Lane 4-boolean scope note (2026-08-06)
+
+Owned file: ✏️s/🔨️modules/🧊️3d/📐️brep/🔀boolean/🦀️component.rs
+
+Implemented:
+- BooleanOp { Unite, Cut, Intersect }
+- boolean_solid(body, a, b, op, tol) -> Result<SolidId, KernelError>
+  AABB fast path:
+  - Intersect → make_box from intersection AABB (error if empty)
+  - Unite disjoint (gap ≥ tol) → single outer shell with all faces from A and B
+  - Unite overlapping when both are AABB boxes (6 faces, V≈bbox within 1e-6) → make_box(union AABB)
+  - Cut: B contains A → empty error; disjoint → clone A shells; A contains B → outer=A + inner=B; else mesh
+  Mesh fallback: tessellate + centroid point_in_solid keep + make_convex_hull
+- compound_cut(body, target, tools, tol) → folded Cut
+- section_solid_by_plane → empty Vec (MVP doc note; imprint section deferred)
+- split_solid_by_plane → hull of vertices on each half-space (near-plane on both)
+
+Validated by:
+- cargo test -p semio-s-3d --lib brep::boolean:: -- --test-threads=8
+  4 passed (disjoint unite V≈2; overlapping intersect dims; determinism; cut disjoint volume)
+  Evidence: 🧪lane-4-boolean-test-quick-run-1.txt
+
+Deferred:
+- True imprint→split→classify→stitch boolean (non-convex CSG)
+- section_solid_by_plane planar faces via imprint
+- Mesh fallback remains convex-hull MVP (not boundary-accurate for partial overlaps)

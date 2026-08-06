@@ -1,0 +1,13 @@
+{
+  "title": "Compose Technology Leakage Eradication",
+  "emoji": "🧹",
+  "status": "open",
+  "description": "Compose is legacy technology and must not appear anywhere inside framework, s, .storybook, or other non-compose trees. Scrub all path imports, package aliases, fixtures, storybook scopes/stories, asset brand folders, scan roots, and vite stubs that couple modern trees to ./compose. Keep puzzle domain compose (composition engine) if it is not the compose technology. Repo tooling may retain skip/exempt awareness of the compose root only as an isolation boundary, not as an integration surface.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2534"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪2f642e3d3dfa4b5a98efd269cd290c3f"
+  ]
+}

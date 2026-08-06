@@ -414,6 +414,10 @@ export class DevScript extends Script {
       this.runMcp(segments.slice(1));
       return;
     }
+    if (segments.length > 0) {
+      console.error(`[dev] unknown playground app ${JSON.stringify(segments.join(" "))} — regenerate the catalog with bun nx run @semio-tech/plugin-registry:generate if the variant should exist.`);
+      process.exit(1);
+    }
     runCmd("bun", ["nx", "run", "@semio-tech/compose-desktop:dev"], { cwd: this.root, ...daemonBudgetOpts() });
   }
 
@@ -1240,7 +1244,7 @@ function pluginWasmArtifactExists(repoRoot: string, wasmOut: string): boolean {
 }
 
 function missingPluginWasmArtifacts(repoRoot: string): string[] {
-  const registryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🔣️plugins.json");
+  const registryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🔣️plugins.json");
   if (!existsSync(registryPath)) return [];
   const entries = JSON.parse(readFileSync(registryPath, "utf8")) as OsPluginArtifact[];
   return entries.filter((entry) => !pluginWasmArtifactExists(repoRoot, entry.wasmOut)).map((entry) => entry.pluginId);

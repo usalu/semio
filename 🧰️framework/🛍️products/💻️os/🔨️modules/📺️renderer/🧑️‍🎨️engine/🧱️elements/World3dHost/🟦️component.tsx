@@ -89,7 +89,7 @@ import { CAMERA_SYNC_DEBOUNCE_MS } from "../Canvas2dHost/🟦️component.tsx";
 import { openSurfaceContextMenu, useShellContextMenuFallback, wireLabel } from "../Interpreter/🟦️component.tsx";
 import { WorldTerrainLayer } from "../WorldTerrainLayer/🟦️component.tsx";
 import { base64ToBytes } from "../Paint2dHost/🟦️component.tsx";
-import { createCoalescingActionDispatcher, createInFlightSkippingInterval, isRevealCutoffHidden, registeredPuzzle3dBrushMeshes, NOTE_WORLD_NAVIGATION_ACTION_ID, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, worldRevealCutoffStore } from "../ShellHelpers/🟦️component.tsx";
+import { createCoalescingActionDispatcher, createInFlightSkippingInterval, isRevealCutoffHidden, registeredPuzzle3dBrushMeshes, NOTE_WORLD_NAVIGATION_ACTION_ID, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, worldRevealCutoffStore, shellLabel } from "../ShellHelpers/🟦️component.tsx";
 import { SetWindowIconContext, SetWindowTitleContext, useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

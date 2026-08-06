@@ -1,0 +1,21 @@
+Lane 3-classify scope note (2026-08-06)
+
+Owned file:
+- ✏️s/🔨️modules/🧊️3d/📐️brep/🏷️classify/🦀️component.rs
+
+Public API (FROZEN):
+- `point_in_loop(body, face, loop_id, uv, tol) -> Result<bool, KernelError>` — robust UV winding on face loops (vertex loops on planes, dense edge samples on curved trims)
+- `point_in_face_uv(body, face, uv, tol) -> Result<bool, KernelError>` — outer minus inner loops
+- `point_in_solid(body, solid, point, tol) -> Result<PointClassification, KernelError>` — boundary via `measure::closest_point_on_solid`, then multi-ray parity with 6-direction retry table + `Iv`-widened plane hits + `int_cs` for curved faces
+
+Tests (inline `brep::classify::tests`, 7 quick):
+- unit box inside/outside/on-boundary; measure ray parity; UV loop/face; oracle SDF box + sphere outside + cylinder outside
+
+Verification:
+  SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk \
+  DEVELOPER_DIR=/Library/Developer/CommandLineTools \
+  cargo test -p semio-s-3d --lib brep::classify::
+
+Evidence: 🧪lane-3-classify-test-quick-run-1.txt (7 passed)
+
+Integrator: `measure::classify_point_on_solid` should delegate to `classify::point_in_solid` (see 📥️integration-requests.md).

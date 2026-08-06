@@ -1,0 +1,9 @@
+{
+  "url": "http://127.0.0.1:6070/",
+  "title": "",
+  "bodyPreview": "",
+  "errors": [
+    "goto:Error: goto: net::ERR_CONNECTION_RESET at http://127.0.0.1:6070/\nCall log:\n  - navigating to \"http://127.0.0.1:6070/\", waiting until \"domcontentloaded\"\n"
+  ],
+  "htmlLen": 39
+}

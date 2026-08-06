@@ -1,0 +1,555 @@
+[
+  {
+    "variant": "aggregator",
+    "aliases": [
+      "mit-bestand",
+      "entwerfen-mit-bestand"
+    ],
+    "app": "puzzle3d-play",
+    "ports": {
+      "react": 6023,
+      "wgpu": 6123
+    }
+  },
+  {
+    "variant": "animate",
+    "aliases": [],
+    "ports": {
+      "react": 6051,
+      "wgpu": 6151
+    }
+  },
+  {
+    "variant": "architect",
+    "aliases": [],
+    "ports": {
+      "react": 6090,
+      "wgpu": 6190
+    }
+  },
+  {
+    "variant": "aussuchen",
+    "aliases": [
+      "entwerfen-mit-bestand-aussuchen"
+    ],
+    "app": "sourcing-curate",
+    "ports": {
+      "react": 6030,
+      "wgpu": 6130
+    }
+  },
+  {
+    "variant": "bearbeiten",
+    "aliases": [
+      "entwerfen-mit-bestand-bearbeiten"
+    ],
+    "app": "process3d-play",
+    "ports": {
+      "react": 6031,
+      "wgpu": 6131
+    }
+  },
+  {
+    "variant": "block2d",
+    "aliases": [
+      "block 2d"
+    ],
+    "app": "block2d-play",
+    "ports": {
+      "react": 6024,
+      "wgpu": 6124
+    }
+  },
+  {
+    "variant": "block3d",
+    "aliases": [
+      "block 3d"
+    ],
+    "app": "block3d-play",
+    "ports": {
+      "react": 6025,
+      "wgpu": 6125
+    }
+  },
+  {
+    "variant": "block5d",
+    "aliases": [
+      "block 5d"
+    ],
+    "app": "block5d-play",
+    "ports": {
+      "react": 6026,
+      "wgpu": 6126
+    }
+  },
+  {
+    "variant": "cad",
+    "aliases": [],
+    "app": "cad-play",
+    "ports": {
+      "react": 6020,
+      "wgpu": 6120
+    }
+  },
+  {
+    "variant": "dag",
+    "aliases": [],
+    "ports": {
+      "react": 6017,
+      "wgpu": 6117
+    }
+  },
+  {
+    "variant": "din16798",
+    "aliases": [],
+    "app": "norm-din-en-16798-play",
+    "ports": {
+      "react": 6092,
+      "wgpu": 6192
+    }
+  },
+  {
+    "variant": "din18599",
+    "aliases": [],
+    "app": "norm-din-v-18599-play",
+    "ports": {
+      "react": 6093,
+      "wgpu": 6193
+    }
+  },
+  {
+    "variant": "din4108",
+    "aliases": [],
+    "app": "norm-din-4108-play",
+    "ports": {
+      "react": 6091,
+      "wgpu": 6191
+    }
+  },
+  {
+    "variant": "draw",
+    "aliases": [],
+    "ports": {
+      "react": 6064,
+      "wgpu": 6164
+    }
+  },
+  {
+    "variant": "en1990",
+    "aliases": [],
+    "app": "norm-en-1990-play",
+    "ports": {
+      "react": 6094,
+      "wgpu": 6194
+    }
+  },
+  {
+    "variant": "en1991",
+    "aliases": [],
+    "app": "norm-en-1991-play",
+    "ports": {
+      "react": 6095,
+      "wgpu": 6195
+    }
+  },
+  {
+    "variant": "en1992",
+    "aliases": [],
+    "app": "norm-en-1992-play",
+    "ports": {
+      "react": 6096,
+      "wgpu": 6196
+    }
+  },
+  {
+    "variant": "en1993",
+    "aliases": [],
+    "app": "norm-en-1993-play",
+    "ports": {
+      "react": 6097,
+      "wgpu": 6197
+    }
+  },
+  {
+    "variant": "en1994",
+    "aliases": [],
+    "app": "norm-en-1994-play",
+    "ports": {
+      "react": 6098,
+      "wgpu": 6198
+    }
+  },
+  {
+    "variant": "en1995",
+    "aliases": [],
+    "app": "norm-en-1995-play",
+    "ports": {
+      "react": 6099,
+      "wgpu": 6199
+    }
+  },
+  {
+    "variant": "en1996",
+    "aliases": [],
+    "app": "norm-en-1996-play",
+    "ports": {
+      "react": 6100,
+      "wgpu": 6200
+    }
+  },
+  {
+    "variant": "en1997",
+    "aliases": [],
+    "app": "norm-en-1997-play",
+    "ports": {
+      "react": 6101,
+      "wgpu": 6201
+    }
+  },
+  {
+    "variant": "en1998",
+    "aliases": [],
+    "app": "norm-en-1998-play",
+    "ports": {
+      "react": 6102,
+      "wgpu": 6202
+    }
+  },
+  {
+    "variant": "en1999",
+    "aliases": [],
+    "app": "norm-en-1999-play",
+    "ports": {
+      "react": 6103,
+      "wgpu": 6203
+    }
+  },
+  {
+    "variant": "fem2d",
+    "aliases": [
+      "fem 2d"
+    ],
+    "app": "fem2d-play",
+    "ports": {
+      "react": 6086,
+      "wgpu": 6186
+    }
+  },
+  {
+    "variant": "fem3d",
+    "aliases": [
+      "fem 3d"
+    ],
+    "app": "fem3d-play",
+    "ports": {
+      "react": 6087,
+      "wgpu": 6187
+    }
+  },
+  {
+    "variant": "flow",
+    "aliases": [],
+    "ports": {
+      "react": 6016,
+      "wgpu": 6116
+    }
+  },
+  {
+    "variant": "forms",
+    "aliases": [],
+    "ports": {
+      "react": 6058,
+      "wgpu": 6158
+    }
+  },
+  {
+    "variant": "generator",
+    "aliases": [
+      "entwerfen-mit-bestand-generator"
+    ],
+    "app": "procedural3d-play",
+    "ports": {
+      "react": 6027,
+      "wgpu": 6127
+    }
+  },
+  {
+    "variant": "gis2d",
+    "aliases": [
+      "gis 2d"
+    ],
+    "app": "gis2d-play",
+    "ports": {
+      "react": 6040,
+      "wgpu": 6140
+    }
+  },
+  {
+    "variant": "gis3d",
+    "aliases": [
+      "gis 3d"
+    ],
+    "app": "gis3d-play",
+    "ports": {
+      "react": 6083,
+      "wgpu": 6183
+    }
+  },
+  {
+    "variant": "imperative",
+    "aliases": [],
+    "ports": {
+      "react": 6076,
+      "wgpu": 6176
+    }
+  },
+  {
+    "variant": "iso16757",
+    "aliases": [],
+    "app": "norm-iso-16757-play",
+    "ports": {
+      "react": 6104,
+      "wgpu": 6204
+    }
+  },
+  {
+    "variant": "koordinator",
+    "aliases": [
+      "entwerfen-mit-bestand-koordinator"
+    ],
+    "app": "cad-play",
+    "ports": {
+      "react": 6028,
+      "wgpu": 6128
+    }
+  },
+  {
+    "variant": "layout",
+    "aliases": [],
+    "ports": {
+      "react": 6079,
+      "wgpu": 6179
+    }
+  },
+  {
+    "variant": "lowpoly",
+    "aliases": [],
+    "ports": {
+      "react": 6078,
+      "wgpu": 6178
+    }
+  },
+  {
+    "variant": "mathematical",
+    "aliases": [
+      "mathematical",
+      "math"
+    ],
+    "app": "mathematical-play",
+    "ports": {
+      "react": 6084,
+      "wgpu": 6184
+    }
+  },
+  {
+    "variant": "note",
+    "aliases": [],
+    "ports": {
+      "react": 6080,
+      "wgpu": 6180
+    }
+  },
+  {
+    "variant": "playbook",
+    "aliases": [],
+    "ports": {
+      "react": 6085,
+      "wgpu": 6185
+    }
+  },
+  {
+    "variant": "procedural2d",
+    "aliases": [
+      "procedural 2d"
+    ],
+    "app": "procedural2d-play",
+    "ports": {
+      "react": 6021,
+      "wgpu": 6121
+    }
+  },
+  {
+    "variant": "procedural3d",
+    "aliases": [
+      "procedural 3d"
+    ],
+    "app": "procedural3d-play",
+    "ports": {
+      "react": 6018,
+      "wgpu": 6118
+    }
+  },
+  {
+    "variant": "process3d",
+    "aliases": [
+      "process 3d"
+    ],
+    "app": "process3d-play",
+    "ports": {
+      "react": 6022,
+      "wgpu": 6122
+    }
+  },
+  {
+    "variant": "puzzle2d",
+    "aliases": [
+      "2d"
+    ],
+    "app": "puzzle2d-play",
+    "ports": {
+      "react": 6012,
+      "wgpu": 6112
+    }
+  },
+  {
+    "variant": "puzzle3d",
+    "aliases": [
+      "3d"
+    ],
+    "app": "puzzle3d-play",
+    "ports": {
+      "react": 6013,
+      "wgpu": 6113
+    }
+  },
+  {
+    "variant": "puzzle5d",
+    "aliases": [
+      "5d"
+    ],
+    "app": "puzzle5d-play",
+    "ports": {
+      "react": 6014,
+      "wgpu": 6114
+    }
+  },
+  {
+    "variant": "raster",
+    "aliases": [],
+    "ports": {
+      "react": 6060,
+      "wgpu": 6160
+    }
+  },
+  {
+    "variant": "reasoning-wires",
+    "aliases": [
+      "wires"
+    ],
+    "ports": {
+      "react": 6015,
+      "wgpu": 6115
+    }
+  },
+  {
+    "variant": "remodel",
+    "aliases": [],
+    "ports": {
+      "react": 6063,
+      "wgpu": 6163
+    }
+  },
+  {
+    "variant": "s",
+    "aliases": [],
+    "ports": {
+      "react": 6070,
+      "wgpu": 6066
+    }
+  },
+  {
+    "variant": "sequence",
+    "aliases": [],
+    "ports": {
+      "react": 6077,
+      "wgpu": 6177
+    }
+  },
+  {
+    "variant": "shooting",
+    "aliases": [],
+    "ports": {
+      "react": 6019,
+      "wgpu": 6119
+    }
+  },
+  {
+    "variant": "sourcing",
+    "aliases": [
+      "curate"
+    ],
+    "app": "sourcing-curate",
+    "ports": {
+      "react": 6081,
+      "wgpu": 6181
+    }
+  },
+  {
+    "variant": "trinity-jack",
+    "aliases": [
+      "trinity jack"
+    ],
+    "app": "trinity-jack-play",
+    "ports": {
+      "react": 6054,
+      "wgpu": 6154
+    }
+  },
+  {
+    "variant": "trinity-rewrite",
+    "aliases": [
+      "trinity rewrite"
+    ],
+    "app": "trinity-rewrite-play",
+    "ports": {
+      "react": 6056,
+      "wgpu": 6156
+    }
+  },
+  {
+    "variant": "vcs",
+    "aliases": [],
+    "ports": {
+      "react": 6075,
+      "wgpu": 6175
+    }
+  },
+  {
+    "variant": "vdi3805",
+    "aliases": [],
+    "app": "norm-vdi-3805-play",
+    "ports": {
+      "react": 6105,
+      "wgpu": 6205
+    }
+  },
+  {
+    "variant": "verfolgen",
+    "aliases": [
+      "entwerfen-mit-bestand-verfolgen"
+    ],
+    "app": "gis2d-play",
+    "ports": {
+      "react": 6032,
+      "wgpu": 6132
+    }
+  },
+  {
+    "variant": "writer",
+    "aliases": [],
+    "ports": {
+      "react": 6062,
+      "wgpu": 6162
+    }
+  }
+]

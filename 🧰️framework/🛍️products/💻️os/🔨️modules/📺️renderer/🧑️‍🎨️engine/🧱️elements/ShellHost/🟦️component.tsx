@@ -285,17 +285,100 @@ import {
 } from "../World3dHost/🟦️component.tsx";
 import {
   DEFAULT_PANEL_WIDTH_PX,
-  dispatchOpenedFiles,
   EMPTY_APP_LABELS_OVERLAY,
+  FRAMEWORK_CATEGORY_COMMAND_ID,
+  FRAMEWORK_CATEGORY_DISPLAY_ID,
+  FRAMEWORK_CATEGORY_TOOL_ID,
+  FRAMEWORK_RESERVED_ACTION_IDS,
+  LAYOUT_CHANGE_SETTLE_MS,
+  NOTE_WORLD_NAVIGATION_ACTION_ID,
+  PANEL_TAB_BAR_HOSTS,
+  PRESENCE_HEARTBEAT_INTERVAL_MS,
+  TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS,
+  actionCategoryId,
+  actionRequiresStagedForm,
+  appDocumentLabel,
+  appWindowDocumentLabel,
+  applyFrameworkLayoutSeed,
+  applyTutorialUiChangeToShell,
+  applyTutorialUiSnapshotToShell,
+  applyUiRefreshResponseToCache,
+  buildActiveUtilityByWindowId,
+  buildCommandCategoryTabs,
+  buildNoteShellCommandAction,
+  buildOsCommands,
+  buildSpacePanelState,
+  buildToolTabs,
+  buildUiRefreshRequest,
+  captureCurrentFrameworkLayout,
+  captureTutorialUiSnapshot,
+  categoryTabIcon,
+  classifyWindowLayoutChange,
+  commandCategories,
+  commandCategoryLabel,
+  dispatchOpenedFiles,
+  dispatchOsCommand,
+  downloadDataUrl,
+  downloadMediaExport,
+  flattenPanelTabLeaves,
+  introductionTargetsWindow,
   loadPluginModuleResilient,
+  makeEffectDispatchOne,
+  mergeRecordPreservingIdentity,
+  panelAnchorForGroup,
+  panelJsonFromState,
+  panelTabDefinitionToNode,
+  parsePanelState,
+  parseShellRoute,
+  patchDocumentTreeSelectedIds,
+  patchWorld3dChromeOntoNode,
+  presenceClientIdentity,
+  preserveJsonIdentity,
+  renderStagedArgControl,
+  requestFileOpen,
+  resolveAppDocument,
+  resolveAppLabel,
+  resolveCanvasBodyKey,
+  resolveCommands,
+  resolveDialogDefinition,
+  resolveDocumentByAppId,
+  resolveFrameworkLayoutSeed,
+  resolveIntroductionDefinition,
+  resolveKeybindingIntent,
+  resolveManifestLabel,
+  resolvePanelTabLabel,
+  resolveUtilityActivation,
+  resolveUtilityNodes,
+  resolveWindowEngagement,
+  retitleWindowLayoutNode,
   runRequestMediaFrames,
+  scheduleDispatchAction,
+  sessionWindowInstances,
   shellLabel,
+  shellTabIcon,
+  spawnedWindowChromeForKind,
+  studioPanelFocusingSpawned,
+  syncDocumentId,
+  synthesizeLocalizedLabel,
+  toolIdFromPanelTabId,
+  useUIHistory,
+  utilityBarNode,
+  utilityNodeTreeContainsId,
+  viewStateWithSpacePanel,
+  windowActionPaneNode,
+  windowEngagementToSearchSpec,
+  windowEngagementToSpec,
+  windowMeasureTreeContainsId,
+  windowMeasuresChrome,
+  type ResolvedCommand,
+  type UiRefreshCache,
 } from "../ShellHelpers/🟦️component.tsx";
+
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🟦️brand.ts";
 import { createFrameworkDisplayPanelTabs, createFrameworkPluginsPanelTabs, createFrameworkSettingsPanelTabs, type DisplayHostApi, PluginRecoveryPanel, type PluginsHostApi, type PluginsPanelEntry, type SettingsHostApi, ShellRouteNotFoundPage, useNamedLayoutHost } from "../ChromePanels/🟦️component.tsx";
 import { type PluginWasmHandle } from "../PluginRuntime/🟦️component.tsx";
-import { synthesizeLocalizedLabel } from "../ShellHelpers/🟦️component.tsx";
+
 import { SyncAttachCard } from "../ShellSync/🟦️component.tsx";
 import { UIFind, UIFindProvider, UISearch, type UISearchItem } from "../ShellSearch/🟦️component.tsx";
 import { UTILITY_CATEGORY_ICON_ID } from "../UtilityTree/🟦️component.tsx";
@@ -675,7 +758,7 @@ function FrameworkOsShellInner({
 
   const ensureBackboneWorker = useCallback((): Worker => {
     if (backboneWorkerRef.current) return backboneWorkerRef.current;
-    const worker = new Worker(new URL("../../../../../⚡️implementations/🟦️typescript/🟦️backbone-worker.ts", import.meta.url), { type: "module" });
+    const worker = new Worker(new URL("../../../../../🟦️backbone-worker.ts", import.meta.url), { type: "module" });
     worker.onmessage = (messageEvent: MessageEvent<BackboneWorkerResponse | { readonly wire: Uint8Array }>) => {
       const message = "wire" in messageEvent.data ? decodeBackboneWorkerResponse(messageEvent.data.wire) : messageEvent.data;
       if (message.kind !== "event") return;

@@ -1,0 +1,14 @@
+Implemented
+- offset_face (planar translate along outward normal)
+- thicken_face (extrude_face with convex-hull fallback)
+- offset_solid (AABB inflate for box-like solids; tessellate vertex-normal push + hull otherwise)
+- shell_solid (inward offset + boolean Cut or void-shell fallback)
+- draft_angle (zero-angle Operation error; AABB shear for boxes; solid copy otherwise)
+
+Validated by
+- cargo test -p semio-s-3d --lib brep::offset:: (5 passed)
+- offset box volume growth, thicken rectangle volume, shell face count, determinism
+
+Deferred
+- True face-local draft and non-planar face offset
+- Robust offset for non-convex / non-manifold solids beyond hull MVP

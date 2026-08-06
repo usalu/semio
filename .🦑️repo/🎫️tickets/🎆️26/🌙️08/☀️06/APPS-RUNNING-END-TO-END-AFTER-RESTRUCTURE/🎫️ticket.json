@@ -1,0 +1,14 @@
+{
+  "title": "Apps Running End To End After Restructure",
+  "emoji": "🚀",
+  "status": "closed",
+  "description": "After the heavy monorepo restructure, get all apps running end to end. Immediate failure: bun run dev:procedural:3d / compose-desktop cannot find electron because electron-forge only looks for npm/yarn/pnpm lockfiles, not bun.lock, under hoisted bun workspaces. Fix root causes and smoke-run the main app entrypoints.",
+  "summary": "Duplicate of open ticket 26/08/06/APPS-RUNNING-END-TO-END. Continuing on the existing ticket.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2533"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪758fd713d6f246acb4be500d5256a938"
+  ]
+}

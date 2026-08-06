@@ -791,6 +791,9 @@
       },
     },
   },
+  "patchedDependencies": {
+    "@electron-forge/core-utils@7.11.2": "patches/@electron-forge%2Fcore-utils@7.11.2.patch",
+  },
   "overrides": {
     "@radix-ui/react-slider": "^1.4.5",
     "@radix-ui/react-slot": "^1.2.5",

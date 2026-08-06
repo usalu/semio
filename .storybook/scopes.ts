@@ -1,7 +1,7 @@
 // #region 🧲️Header
 // 💻️ .storybook/scopes.ts
 // Specs: Single source of truth for the root Storybook's composable scope system.
-// Summary: Replaces the three hardcoded `ui`/`puzzle`/`compose` stacks in `main.ts` with a data-driven
+// Summary: Replaces the hardcoded `ui`/`puzzle`/`framework` stacks in `main.ts` with a data-driven
 // registry every consumer derives from: story globs, workspace aliases, watch-ignores, static-dir
 // assets (e.g. `/plugin-modules` for OS-shell program boot stories), and lazy scope-gated Vite plugins.
 // `STORY_SCOPES` = `HAND_CURATED_SCOPES` (scopes needing aliases/assets/vitePlugins, a cross-owner
@@ -56,7 +56,7 @@ const repoRelative = (path: string) => path;
  * @emoji 🗂️ Every HAND-CURATED Storybook scope — scopes that cannot (yet) be derived from a package's
  * own opt-in (custom `aliases`/`assets`/`vitePlugins`, a cross-owner `sourceRoots` entry, more than one
  * scope per package, or an owner under an area that hasn't migrated to `📦️packages` yet — `framework`,
- * `infinite`, `compose*`, `coda`). Add a row here + `stories/<id>/` for those; everything else should
+ * `infinite`). Add a row here + `stories/<id>/` for those; everything else should
  * prefer the package-catalog opt-in below (`GENERATED_SCOPES`) instead of a new row here — see
  * `26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG`.
  */

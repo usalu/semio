@@ -8,30 +8,11 @@
  * one exception is {@link planWorkflow}: a pure, side-effect-free scheduling function has no state
  * to keep in sync with a live wasm host, so it's hand-mirrored here against the Rust `plan_workflow`
  * (`framework/os/core/rs/lib.rs`) with shared fixtures (`framework/os/core/fixtures/`)
- * asserting parity. This file still exposes a small legacy `osBaselineArtifact`/
- * `mergeOsWorkflowDefinition`/`registerAppVcsHandler` app-registration shim kept alive only because
- * `compose/client/lib/sketchpad/js/index.ts` still calls it; do not extend that shim further.
+ * asserting parity.
  */
 // #endregion Header
 
 import type { Fault, PluginWasmHandle, UtilityLeaf } from "@semio-tech/framework-core";
-
-export type OsPluginArtifactMap = Readonly<Record<string, { readonly kind: string; readonly id: string; readonly label: string }>>;
-
-const programDefinitions = new Map<string, unknown>();
-const vcsHandlers = new Set<() => void>();
-
-export function osBaselineArtifact(kind: string, id: string, label: string) {
-  return { kind, id, label };
-}
-
-export function mergeOsWorkflowDefinition(pluginId: string, definition: unknown, resources?: OsPluginArtifactMap): void {
-  programDefinitions.set(pluginId, { definition, resources });
-}
-
-export function registerAppVcsHandler(handler: () => void): void {
-  vcsHandlers.add(handler);
-}
 
 //#region 🔖️Backbone
 export const FRAMEWORK_SYNC_CONTROLLER_ID = "framework.sync";

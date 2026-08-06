@@ -1,0 +1,21 @@
+{
+  "still_helper": [
+    "applyUiRefreshResponseToCache",
+    "buildActiveUtilityByWindowId",
+    "buildNoteShellCommandAction",
+    "buildOsCommands",
+    "buildUiRefreshRequest",
+    "mergeRecordPreservingIdentity",
+    "preserveJsonIdentity",
+    "resolveKeybindingIntent",
+    "retitleWindowLayoutNode",
+    "scheduleDispatchAction",
+    "viewStateWithSpacePanel"
+  ],
+  "shell_used": [
+    "PluginManifest",
+    "ShellState",
+    "bootFrameworkOs"
+  ],
+  "parseShellRoute": true
+}

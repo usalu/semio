@@ -186,7 +186,7 @@ import { loadPluginModule, type PluginWasmHandle } from "../PluginRuntime/🟦�
 // #endregion 🔌️Adapters
 
 //#region ShellHelpers
-function syncDocumentId(session: ActiveSession, panel: SpacePanelState | null, studioMode: boolean): string {
+export function syncDocumentId(session: ActiveSession, panel: SpacePanelState | null, studioMode: boolean): string {
   if (studioMode && panel?.activeSpawnedId) {
     const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
     if (spawned) return `${spawned.pluginId}-${spawned.instanceId}`;
@@ -198,15 +198,15 @@ function syncDocumentId(session: ActiveSession, panel: SpacePanelState | null, s
 export const DEFAULT_PANEL_WIDTH_PX = 300;
 
 /** @emoji 🌳️ Root category id for the nested dock tab tree — the top row of {@link defaultDock}'s bottom-left (Display) anchor tabs; top-left (Workbench), top-right (Details) and bottom-right (Settings) render their tabs flat instead of under a category branch. */
-const FRAMEWORK_CATEGORY_DISPLAY_ID = "framework.category.display";
+export const FRAMEWORK_CATEGORY_DISPLAY_ID = "framework.category.display";
 /** @emoji 🎛️ Root category id bundling every command-category leaf under one expandable Command toggle on bottom-middle (mirrors Display on bottom-left). */
-const FRAMEWORK_CATEGORY_COMMAND_ID = "framework.category.command";
+export const FRAMEWORK_CATEGORY_COMMAND_ID = "framework.category.command";
 /** @emoji 🛠️ Root category id bundling every mode-level tool leaf under one expandable Tool toggle on
  * bottom-middle, ordered left of the Command branch (mirrors Command's own bundling on the same anchor). */
-const FRAMEWORK_CATEGORY_TOOL_ID = "framework.category.tool";
+export const FRAMEWORK_CATEGORY_TOOL_ID = "framework.category.tool";
 
 /** @emoji 🎛️ Corner/top-middle/bottom-middle anchors park their *folded* root tab row in navbar/footer chrome (via {@link PanelChromeTabBar}); while open, the floating {@link Panel} hosts the full strip on its {@link WindowChrome}. The two side-middle anchors have no navbar/footer slot, so they're absent here and fall back to `"panel"` (see the `?..:"panel"` read site), carrying their own tab bar when folded too. */
-const PANEL_TAB_BAR_HOSTS: Partial<Record<Anchor, "navbar" | "footer">> = {
+export const PANEL_TAB_BAR_HOSTS: Partial<Record<Anchor, "navbar" | "footer">> = {
   "top-left": "navbar",
   "top-middle": "navbar",
   "top-right": "navbar",
@@ -231,7 +231,7 @@ const NOTE_SHELL_COMMAND_ACTION_ID = "noteShellCommand";
 
 /** 🛡️ Action ids intercepted by `VcsDocumentApp::dispatch_action` before `command_from_action` — undeclared
  * surface verbs (e.g. VFS `selectRows` on Home) must not be forwarded or they hard-error the bridge. */
-const FRAMEWORK_RESERVED_ACTION_IDS: ReadonlySet<string> = new Set([
+export const FRAMEWORK_RESERVED_ACTION_IDS: ReadonlySet<string> = new Set([
   "undo",
   "redo",
   "commitCheckpoint",
@@ -265,7 +265,7 @@ export function buildNoteShellCommandAction(controllerId: string, commandId: str
 export const TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS: ReadonlySet<string> = new Set([NOTE_WORLD_NAVIGATION_ACTION_ID, NOTE_SHELL_COMMAND_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, RECORD_TUTORIAL_ACTION_ID]);
 
 export const PRESENCE_CLIENT_STORAGE_KEY = "semio.presence.client";
-const PRESENCE_HEARTBEAT_INTERVAL_MS = 5000;
+export const PRESENCE_HEARTBEAT_INTERVAL_MS = 5000;
 
 function presenceIdentityPackBase64(identity: { readonly clientId: string; readonly name: string }): string {
   return packValueToBase64(identity);
@@ -281,7 +281,7 @@ function presenceIdentityFromPackBase64(encoded: string): { readonly clientId: s
   return null;
 }
 
-function presenceClientIdentity(ephemeral = false): { readonly clientId: string; readonly name: string } {
+export function presenceClientIdentity(ephemeral = false): { readonly clientId: string; readonly name: string } {
   if (typeof window === "undefined") return { clientId: "server", name: "Server" };
   if (!ephemeral) {
     const stored = window.sessionStorage.getItem(PRESENCE_CLIENT_STORAGE_KEY);
@@ -301,7 +301,7 @@ function readBrowserUri(): string {
   return `${window.location.pathname}${window.location.search}` || "/";
 }
 
-function useUIHistory(initialUri = "/", syncBrowser = false) {
+export function useUIHistory(initialUri = "/", syncBrowser = false) {
   const [history, setHistory] = useState<UIHistory>(() => ({
     entries: [{ uri: syncBrowser ? readBrowserUri() : initialUri }],
     index: 0,
@@ -359,7 +359,7 @@ function useUIHistory(initialUri = "/", syncBrowser = false) {
   return { uri, canGoBack, canGoForward, canGoUp, parentUri, goBack, goForward, goUp, navigate, syncUri };
 }
 
-function downloadMediaExport(filename: string, mimeType: string, data: string, encoding?: string): void {
+export function downloadMediaExport(filename: string, mimeType: string, data: string, encoding?: string): void {
   if (typeof document === "undefined") return;
   const payload = encoding === "base64" ? Uint8Array.from(atob(data), (char) => char.charCodeAt(0)) : data;
   const blob = new Blob([payload], { type: mimeType });
@@ -371,7 +371,7 @@ function downloadMediaExport(filename: string, mimeType: string, data: string, e
   URL.revokeObjectURL(url);
 }
 
-function downloadDataUrl(filename: string, dataUrl: string): void {
+export function downloadDataUrl(filename: string, dataUrl: string): void {
   if (typeof document === "undefined") return;
   const anchor = document.createElement("a");
   anchor.href = dataUrl;
@@ -383,7 +383,7 @@ function downloadDataUrl(filename: string, dataUrl: string): void {
  * always an array (empty on cancel) so single-file callers just read `[0]` and `multiple` callers can
  * fan out over the whole list; single-file behavior (one `<input>`, one resolved entry) is unchanged
  * when `multiple` is false/absent. */
-function requestFileOpen(accept: string, readAs?: string, multiple?: boolean): Promise<readonly { contents: string; name: string }[]> {
+export function requestFileOpen(accept: string, readAs?: string, multiple?: boolean): Promise<readonly { contents: string; name: string }[]> {
   if (typeof document === "undefined") return Promise.resolve([]);
   return new Promise((resolve) => {
     const input = document.createElement("input");
@@ -424,7 +424,7 @@ type EffectDispatchOne = (action: string, args?: Record<string, unknown>) => Pro
 /** 🔁️ Builds an {@link EffectDispatchOne} bound to one plugin instance + `applyHostEffects` closure —
  * extracted so the D3/D2/D5 fan-out loops below are plain functions testable without React/plugin
  * wiring, while production callers get the exact same `handleAction` + recursive-effects behavior. */
-function makeEffectDispatchOne(
+export function makeEffectDispatchOne(
   pluginEntry: LoadedProgramState,
   baseSession: ActiveSession,
   applyEffects: (effects: readonly HostEffect[], baseSession: ActiveSession, uiScope?: UiDirtyScope) => Promise<void>,
@@ -966,15 +966,15 @@ export function appWindowDocumentLabel(app: AppDefinition, terminology: string, 
   return override?.[override.length - 1]?.trim() || resolveManifestLabel(app.label, terminology, locale).trim();
 }
 
-function buildSpacePanelState(programs: readonly SpaceProgramEntry[], spawnedApps: readonly SpawnedAppEntry[], activePanelTab = "s-play-catalogue", activeSpawnedId?: string): SpacePanelState {
+export function buildSpacePanelState(programs: readonly SpaceProgramEntry[], spawnedApps: readonly SpawnedAppEntry[], activePanelTab = "s-play-catalogue", activeSpawnedId?: string): SpacePanelState {
   return { activePanelTab, programs, spawnedApps, activeSpawnedId };
 }
 
-function panelJsonFromState(state: SpacePanelState): string {
+export function panelJsonFromState(state: SpacePanelState): string {
   return packValueToBase64(state);
 }
 
-function parsePanelState(viewState: ViewModel): SpacePanelState | null {
+export function parsePanelState(viewState: ViewModel): SpacePanelState | null {
   if (!viewState.panelJson) return null;
   try {
     return packValueFromBase64(viewState.panelJson) as SpacePanelState;
@@ -1003,7 +1003,7 @@ export function viewStateWithSpacePanel(viewState: ViewModel, panel: SpacePanelS
 }
 
 /** @emoji 🧭️ Default anchor a plugin-declared panel-tab `group` docks into — groups only ever map to the four corners; the four edge-middle anchors start empty and are user-populated via drag-and-drop or a dock skeleton override. */
-function panelAnchorForGroup(group: string): Anchor {
+export function panelAnchorForGroup(group: string): Anchor {
   if (group === "workbench" || group === "document") return "top-left";
   if (group === "details") return "top-right";
   if (group === "display") return "bottom-left";
@@ -1174,7 +1174,7 @@ export function resolveFrameworkLayoutSeed(
 }
 
 /** @emoji 🪟️ Applies a resolved framework layout seed: registers one-shot world projections, then returns the live layout payload. */
-function applyFrameworkLayoutSeed(
+export function applyFrameworkLayoutSeed(
   layout: WindowLayout | undefined,
   windowKinds: readonly { readonly id: string; readonly label: LocalizedLabel | string }[],
   appLabelsOverlay: PluginAppLabelsOverlay,
@@ -1226,7 +1226,7 @@ function modeLayoutNodeToFramework(node: WindowLayoutNode, kindByInstanceId: Rea
   };
 }
 
-function captureCurrentFrameworkLayout(shellLayout: WindowLayoutNode | null, extraWindowInstances: readonly ExtraWindowInstance[], fallback?: WindowLayout): WindowLayout | undefined {
+export function captureCurrentFrameworkLayout(shellLayout: WindowLayoutNode | null, extraWindowInstances: readonly ExtraWindowInstance[], fallback?: WindowLayout): WindowLayout | undefined {
   if (!shellLayout) return fallback;
   const kindByInstanceId = new Map(extraWindowInstances.map((entry) => [entry.id, entry.windowKindId] as const));
   const root = modeLayoutNodeToFramework(shellLayout, kindByInstanceId);
@@ -1239,7 +1239,7 @@ function captureCurrentFrameworkLayout(shellLayout: WindowLayoutNode | null, ext
  * noting one `shell.windowResize`/`shell.windowMove` command for the whole gesture — matches Board2dHost's
  * own camera-sync settle debounce (`beginCameraInteraction`), the only precedent for this kind of
  * drag-settle pattern already in this file. */
-const LAYOUT_CHANGE_SETTLE_MS = 350;
+export const LAYOUT_CHANGE_SETTLE_MS = 350;
 
 /** 🪟️ Recursive skeleton of a {@link WindowLayoutNode} — kind/id/nesting only, stripping `size` (resize) and
  * a stack's `activeId` (mere focus echo) — so two trees compare equal here iff neither differs. */
@@ -1346,13 +1346,13 @@ function defaultViewportEngagement(): WindowEngagement {
   };
 }
 
-function resolveWindowEngagement(kind: AppDefinition["windowKinds"][number], windowId: string, byWindowId: Readonly<Record<string, WindowEngagement>>): WindowEngagement | undefined {
+export function resolveWindowEngagement(kind: AppDefinition["windowKinds"][number], windowId: string, byWindowId: Readonly<Record<string, WindowEngagement>>): WindowEngagement | undefined {
   const surfaceKind = (kind as { surfaceKind?: string }).surfaceKind;
   const declaredEngagement = kind.options.engagement.kind === "some" ? kind.options.engagement.value : undefined;
   return byWindowId[windowId] ?? declaredEngagement ?? (isViewportSurface(surfaceKind) ? defaultViewportEngagement() : undefined);
 }
 
-function windowEngagementToSpec(engagement: WindowEngagement | undefined, onAction: (action: ActionDescriptor) => void): EngagementSpec | undefined {
+export function windowEngagementToSpec(engagement: WindowEngagement | undefined, onAction: (action: ActionDescriptor) => void): EngagementSpec | undefined {
   if (!engagement) return undefined;
   const options = engagement.options?.map((option) => ({
     id: option.id,
@@ -1371,7 +1371,7 @@ function windowEngagementToSpec(engagement: WindowEngagement | undefined, onActi
 }
 
 /** @emoji 🔎️ Builds the top-middle window {@link SearchSpec} from the same Rust engagement payload: typed action input and autocomplete possibles. */
-function windowEngagementToSearchSpec(engagement: WindowEngagement | undefined, onAction: (action: ActionDescriptor) => void): SearchSpec | undefined {
+export function windowEngagementToSearchSpec(engagement: WindowEngagement | undefined, onAction: (action: ActionDescriptor) => void): SearchSpec | undefined {
   if (!engagement) return undefined;
   const input = engagement.input
     ? {
@@ -1408,7 +1408,7 @@ function panelTabIcon(tabId: string, group: string): React.FC<{ size?: number }>
 }
 
 /** @emoji 🌳️ Category-row icon: the first child's icon, or `fallback` when the category has no tabs yet. */
-function categoryTabIcon(tabs: readonly PanelTabNode[], fallback: IconName): React.FC<{ size?: number }> {
+export function categoryTabIcon(tabs: readonly PanelTabNode[], fallback: IconName): React.FC<{ size?: number }> {
   const FirstIcon = tabs[0]?.icon;
   return function CategoryTabIcon({ size = 16 }: { size?: number }) {
     return FirstIcon ? <FirstIcon size={size} /> : <Icon icon={fallback} size="small" />;
@@ -1452,7 +1452,7 @@ export function panelTabDefinitionToNode(
   });
 }
 
-function resolveCanvasBodyKey(app: AppDefinition): string {
+export function resolveCanvasBodyKey(app: AppDefinition): string {
   const windowKind = app.windowKinds[0];
   if (!windowKind) return "main";
   if (windowKind.bodyKey.includes("composite")) {
@@ -1730,7 +1730,7 @@ const FRAMEWORK_PANEL_TAB_LABEL_KEYS: Readonly<Record<string, UiTranslationKey>>
 };
 
 /** @emoji 🧭️ Framework-owned panel tabs resolve through the chrome schema (`shellLabel`); every other app-declared tab still resolves through the plugin overlay (`resolveAppLabel`). */
-function resolvePanelTabLabel(overlay: PluginAppLabelsOverlay, tabId: string, fallback: string): string {
+export function resolvePanelTabLabel(overlay: PluginAppLabelsOverlay, tabId: string, fallback: string): string {
   const chromeKey = FRAMEWORK_PANEL_TAB_LABEL_KEYS[tabId];
   return chromeKey ? shellLabel(chromeKey) : resolveAppLabel(overlay, "panelTab", tabId, fallback);
 }
@@ -1775,7 +1775,7 @@ export function resolveManifestLabel(label: LocalizedLabel | string | undefined,
 }
 
 /** @emoji 🗣️ Resolves a window-kind/panel-tab/mode/action/utility/example/actionArg/dialog/introduction/group id's locale-aware label from the active app's overlay, falling back to the static manifest label. */
-function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKind" | "panelTab" | "mode" | "action" | "utility" | "example" | "actionArg" | "dialog" | "introduction" | "group", id: string, fallback: string): string {
+export function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKind" | "panelTab" | "mode" | "action" | "utility" | "example" | "actionArg" | "dialog" | "introduction" | "group", id: string, fallback: string): string {
   const map =
     kind === "windowKind"
       ? overlay.windowKindLabels
@@ -1808,7 +1808,7 @@ function resolveActionArgDef(def: ActionArgDef, scopeId: string, overlay: Plugin
 }
 
 /** @emoji 🗣️ Resolves a `DialogDefinition`'s title/body/submitLabel/cancelLabel/args from the overlay's `dialogLabels`/`actionArgLabels` maps, keyed by the dialog's own id. `title`/`body`/`submitLabel`/`cancelLabel` are all manifest `LocalizedLabel` fields. */
-function resolveDialogDefinition(dialog: DialogDefinition, overlay: PluginAppLabelsOverlay, terminology: string, locale: string): DialogDefinition {
+export function resolveDialogDefinition(dialog: DialogDefinition, overlay: PluginAppLabelsOverlay, terminology: string, locale: string): DialogDefinition {
   return {
     ...dialog,
     title: resolveAppLabel(overlay, "dialog", `${dialog.id}.title`, resolveManifestLabel(dialog.title, terminology, locale)),
@@ -1823,7 +1823,7 @@ function resolveDialogDefinition(dialog: DialogDefinition, overlay: PluginAppLab
  * overlay's `introductionLabels` map. `title`/`body` are manifest `LocalizedLabel` fields;
  * `IntroductionInteraction.label` is a short checklist caption that is still a plain `String` on the Rust
  * side (not part of the `LocalizedLabel` migration), so it is left as-is. */
-function resolveIntroductionDefinition(introduction: IntroductionDefinition, overlay: PluginAppLabelsOverlay, terminology: string, locale: string): IntroductionDefinition {
+export function resolveIntroductionDefinition(introduction: IntroductionDefinition, overlay: PluginAppLabelsOverlay, terminology: string, locale: string): IntroductionDefinition {
   return {
     title: resolveAppLabel(overlay, "introduction", "intro.title", resolveManifestLabel(introduction.title, terminology, locale)),
     steps: introduction.steps.map(
@@ -1843,7 +1843,7 @@ function resolveIntroductionDefinition(introduction: IntroductionDefinition, ove
 
 //#region 🎥️TutorialUiBridge
 /** @emoji 🎥️ Captures the shell's current `ShellState` (+ active session) as a renderer-neutral `TutorialUiSnapshot` — the recorder's periodic full-snapshot keyframes and the `TutorialBar`'s "record" path both call this. See the Rust doc comment on `TutorialUiSnapshot` for why this is deliberately NOT a serialization of `ShellState` itself. */
-function captureTutorialUiSnapshot(state: ShellState, session: ActiveSession | null): TutorialUiSnapshot {
+export function captureTutorialUiSnapshot(state: ShellState, session: ActiveSession | null): TutorialUiSnapshot {
   const activeUtilityByWindowId: Record<string, string> = {};
   for (const [windowId, utilityId] of Object.entries(state.actionPane.activeUtilityByWindowId)) {
     if (utilityId) activeUtilityByWindowId[windowId] = utilityId;
@@ -1878,7 +1878,7 @@ type TutorialUiBridgeContext = {
 };
 
 /** @emoji 🎥️ Applies a full `TutorialUiSnapshot` (a `TutorialUiSample::Snapshot`, or the composed target of a seek/deviation-converge) onto the live `ShellState` — snaps every field instantly (camera is the only interpolated track, applied separately by the director). Dispatches the atomic `APPLY_TUTORIAL_UI_SNAPSHOT` for everything resolvable purely from `ShellState`, plus one `SET_SESSION` for the fields that live on `ActiveSession.viewState` (`activeModeId`/`panelJson`/`selectionJson`). */
-function applyTutorialUiSnapshotToShell(dispatch: (action: ShellAction) => void, snapshot: TutorialUiSnapshot, ctx: TutorialUiBridgeContext): void {
+export function applyTutorialUiSnapshotToShell(dispatch: (action: ShellAction) => void, snapshot: TutorialUiSnapshot, ctx: TutorialUiBridgeContext): void {
   const windowKinds = ctx.session?.app.windowKinds.map((kind) => ({ id: kind.id, label: kind.label })) ?? [];
   const seed = applyFrameworkLayoutSeed(snapshot.layout, windowKinds, ctx.appLabelsOverlay, ctx.terminology, ctx.locale);
   const panelPatches: Partial<Record<Anchor, { readonly visible: boolean; readonly path: readonly string[] }>> = {};
@@ -1922,7 +1922,7 @@ function applyTutorialUiSnapshotToShell(dispatch: (action: ShellAction) => void,
 }
 
 /** @emoji 🎥️ Applies one sparse `TutorialUiChange` (a `TutorialUiSample::Delta` entry, replayed by the director's per-tick `tutorialSlice`) onto the live `ShellState` by dispatching the SAME existing, targeted `ShellAction`s the real UI's own interactions use — never a bespoke tutorial-only mutation channel. */
-function applyTutorialUiChangeToShell(dispatch: (action: ShellAction) => void, change: TutorialUiChange, ctx: TutorialUiBridgeContext): void {
+export function applyTutorialUiChangeToShell(dispatch: (action: ShellAction) => void, change: TutorialUiChange, ctx: TutorialUiBridgeContext): void {
   switch (change.kind) {
     case "activeMode":
       if (!ctx.session) return;
@@ -2444,7 +2444,7 @@ export function SelectionUtilityOptions({ activeUtilityId, windowId, onAction }:
   );
 }
 
-function windowMeasuresChrome(
+export function windowMeasuresChrome(
   measures: readonly WindowMeasure[] | undefined,
   activeUtilityId: string | undefined,
   windowId: string,
@@ -2463,11 +2463,11 @@ function windowMeasuresChrome(
 
 /** @emoji 🎓️ Whether a utility node tree has a node (leaf or group) with the given id anywhere in it — used
  * to decide if this window's utility bar is the one an introduction step's `Utility` anchor targets. */
-function utilityNodeTreeContainsId(nodes: readonly UtilityNode[], targetId: string): boolean {
+export function utilityNodeTreeContainsId(nodes: readonly UtilityNode[], targetId: string): boolean {
   return nodes.some((node) => node.id === targetId || (node.kind === "collection" && utilityNodeTreeContainsId(node.children, targetId)));
 }
 
-function utilityBarNode(utilities: readonly UtilityNode[] | undefined, windowId: string, onAction: (action: ActionDescriptor) => void, revealUtilityId?: string | null, utilityOptions?: ReactNode): ReactNode {
+export function utilityBarNode(utilities: readonly UtilityNode[] | undefined, windowId: string, onAction: (action: ActionDescriptor) => void, revealUtilityId?: string | null, utilityOptions?: ReactNode): ReactNode {
   if (!utilities?.length && !utilityOptions) return undefined;
   const categories = groupUtilityNodesByCategory(utilities ?? [], UTILITY_CATEGORIES);
   if (!categories.length && !utilityOptions) return undefined;
@@ -2777,7 +2777,7 @@ type ActionPaneSlice = Pick<ActionPaneState, "expandedByWindowId" | "stagedArgsB
  * chip never renders). Rows render disabled while an active utility gates actions
  * (`allowsActionsWhileActive === false`).
  */
-function windowActionPaneNode(
+export function windowActionPaneNode(
   app: AppDefinition,
   windowKind: AppWindowKindDefinition,
   windowId: string,
@@ -2871,7 +2871,7 @@ function titleizeCommandCategory(category: string): string {
 }
 
 /** 🎛️ Resolves a command category's display label, reusing the existing `ui.settings.tab.*` keys for chrome-known ids and falling back to a loose title-case for open-set app/plugin categories. */
-function commandCategoryLabel(category: string): string {
+export function commandCategoryLabel(category: string): string {
   return CHROME_KNOWN_COMMAND_CATEGORIES.has(category) ? shellLabel(`ui.settings.tab.${category as "general" | "driver" | "app" | "appearance" | "layout" | "language" | "terminology" | "theme"}`) : titleizeCommandCategory(category);
 }
 
@@ -3322,7 +3322,7 @@ export function mergeRecordPreservingIdentity<V>(prev: Readonly<Record<string, V
 }
 
 /** @emoji 🎯️ Merges selection chrome into an existing world-3d component scene without touching instance geometry. */
-function patchWorld3dChromeOntoNode(node: UiNode, patch: { readonly selectionJson: string; readonly vorticesJson?: string }): UiNode {
+export function patchWorld3dChromeOntoNode(node: UiNode, patch: { readonly selectionJson: string; readonly vorticesJson?: string }): UiNode {
   if (node.type !== "component" || !node.world3d) return node;
   const next: UiNode = {
     ...node,
@@ -3336,7 +3336,7 @@ function patchWorld3dChromeOntoNode(node: UiNode, patch: { readonly selectionJso
 }
 
 /** @emoji 🌲️ Updates tree-level selection highlights without rebuilding structural sections. */
-function patchDocumentTreeSelectedIds(node: UiNode, selectedIds: readonly string[], highlightedIds?: readonly string[]): UiNode {
+export function patchDocumentTreeSelectedIds(node: UiNode, selectedIds: readonly string[], highlightedIds?: readonly string[]): UiNode {
   if (node.type !== "tree") return node;
   const next: UiNode = {
     ...node,
@@ -3366,7 +3366,7 @@ function uiRefreshWantsFlag(scope: UiDirtyScope, flag: "engagements" | "measures
  * every actual window, never collapsing two same-kind instances (e.g. split top/perspective panes) onto
  * one shared entry.
  */
-function sessionWindowInstances(
+export function sessionWindowInstances(
   app: { readonly windowKinds: readonly { readonly id: string; readonly bodyKey: string }[] },
   extraWindowInstances: readonly ExtraWindowInstance[],
 ): readonly { readonly id: string; readonly bodyKey: string; readonly windowKindId: string }[] {

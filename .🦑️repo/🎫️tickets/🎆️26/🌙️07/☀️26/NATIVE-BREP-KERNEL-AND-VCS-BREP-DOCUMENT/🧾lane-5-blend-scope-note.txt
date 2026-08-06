@@ -1,0 +1,11 @@
+Implemented
+- fillet_edges / fillet_variable / chamfer_edges on Body solids
+- Empty edges → InvalidInput; radius/distance must be positive and < min adjacent edge length
+- MVP: exclude selected-edge endpoints, sample face-inset (chamfer) or quarter-circle arc (fillet) points in the two-face normal plane, rebuild via make_convex_hull
+
+Validated by
+- cargo test -p semio-s-3d --lib brep::blend:: (5 passed)
+- chamfer all 12 box edges volume < original; fillet one edge yields solid; variable fillet runs; reject zero radius / empty edges
+
+Deferred
+- Exact rolling-ball topology surgery (cylindrical/toroidal blend faces, vertex spheres, coedge splits)

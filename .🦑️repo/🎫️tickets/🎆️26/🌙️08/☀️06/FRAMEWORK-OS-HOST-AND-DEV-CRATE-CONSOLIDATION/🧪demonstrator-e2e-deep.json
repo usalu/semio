@@ -1,0 +1,158 @@
+{
+  "visited": 84,
+  "okCount": 84,
+  "failedCount": 0,
+  "failed": [],
+  "okSample": [
+    {
+      "path": "/",
+      "status": 200,
+      "bytes": 2731
+    },
+    {
+      "path": "/📦️index.tsx",
+      "status": 200,
+      "bytes": 129618
+    },
+    {
+      "path": "/favicon.svg",
+      "status": 200,
+      "bytes": 782
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react_jsx-dev-runtime.js?v=139c847c",
+      "status": 200,
+      "bytes": 12511
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-dom_client.js?v=139c847c",
+      "status": 200,
+      "bytes": 3166
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react.js?v=139c847c",
+      "status": 200,
+      "bytes": 1512
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+      "status": 200,
+      "bytes": 3599806
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts",
+      "status": 200,
+      "bytes": 491
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+      "status": 200,
+      "bytes": 91301
+    },
+    {
+      "path": "/⚛️footer.tsx",
+      "status": 200,
+      "bytes": 56743
+    },
+    {
+      "path": "/🟦️brand.ts",
+      "status": 200,
+      "bytes": 109476
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-DIHQGMEE.js?v=139c847c",
+      "status": 200,
+      "bytes": 45644
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-RDKGUBC5.js?v=139c847c",
+      "status": 200,
+      "bytes": 15501
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/chunk-MTWRD4KM.js?v=139c847c",
+      "status": 200,
+      "bytes": 993829
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts",
+      "status": 200,
+      "bytes": 141780
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/i18next.js?v=139c847c",
+      "status": 200,
+      "bytes": 3520
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/i18next-browser-languagedetector.js?v=139c847c",
+      "status": 200,
+      "bytes": 13704
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/three.js?v=139c847c",
+      "status": 200,
+      "bytes": 66032
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/@react-three_drei.js?v=139c847c",
+      "status": 200,
+      "bytes": 3773894
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/@react-three_fiber.js?v=139c847c",
+      "status": 200,
+      "bytes": 8355
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/@xyflow_react.js?v=139c847c",
+      "status": 200,
+      "bytes": 387116
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/d3-force.js?v=139c847c",
+      "status": 200,
+      "bytes": 27694
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts",
+      "status": 200,
+      "bytes": 4664
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-dom.js?v=139c847c",
+      "status": 200,
+      "bytes": 2084
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-dom_server.js?v=139c847c",
+      "status": 200,
+      "bytes": 768323
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-hotkeys-hook.js?v=139c847c",
+      "status": 200,
+      "bytes": 12233
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-i18next.js?v=139c847c",
+      "status": 200,
+      "bytes": 50662
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/node_modules/.vite-mit-bestand-demonstrator/deps/react-router.js?v=139c847c",
+      "status": 200,
+      "bytes": 460634
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🔌Ports/🟦️component.tsx",
+      "status": 200,
+      "bytes": 15882
+    },
+    {
+      "path": "/@fs/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx",
+      "status": 200,
+      "bytes": 29864
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+import { createRequire } from "module";
+import { pathToFileURL } from "url";
+import path from "path";
+import { writeFileSync } from "fs";
+const root = process.cwd();
+const require = createRequire(path.join(root, "package.json"));
+const mod = await import(pathToFileURL(path.join(root, "node_modules/@electron-forge/core-utils/dist/electron-version.js")).href);
+const pkg = require(path.join(root, "compose/client/ui/desktop/package.json"));
+const dir = path.join(root, "compose/client/ui/desktop");
+const version = await mod.getElectronVersion(dir, pkg);
+const modulePath = await mod.getElectronModulePath(dir, pkg);
+const result = { version, modulePath };
+console.log(JSON.stringify(result, null, 2));
+writeFileSync(path.join(process.argv[2], "test-electron-find-result.json"), JSON.stringify(result, null, 2));

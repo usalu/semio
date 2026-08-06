@@ -13,16 +13,16 @@ todos:
     status: completed
   - id: wave3-classify-imprint
     content: "Wave 3 (3 parallel lanes): classify (point-in-loop/solid), imprint (UV arrangement + face split), heal + defeature + convert-to-nurbs"
-    status: in_progress
+    status: completed
   - id: wave4-boolean
     content: "Wave 4 (1 lane, flagship): boolean pipeline imprint->split->classify->select->stitch, plus section/split/compound_cut and native mesh-boolean fallback; SDF differential + volume additivity + determinism gates"
-    status: pending
+    status: completed
   - id: wave5-offset-blend
     content: "Wave 5 (2 parallel lanes): offset (offset face/thicken/offset solid/shell/draft) and blend (rolling-ball fillet, variable fillet, chamfer, edge-targeted variants)"
-    status: pending
+    status: completed
   - id: wave6-flip
     content: "Wave 6 (the flip, sequential): rewrite 🧰️kernel/🦀️component.rs as native Brep delegating to modules; drop six brepkit deps from Cargo.toml and Cargo.lock; rename BrepkitKernel->Brep across 12 consumer files; rewrite benches; delete differential harness"
-    status: pending
+    status: in_progress
   - id: wave7-hardening
     content: "Wave 7 (3 parallel lanes): exhaustive-tier fuzz and adversarial scale sweeps; consumer + wasm verification (flow_extension_brep, TS vitest, cargo build --workspace); runtime end-to-end confirmation of procedural-3d and CAD with [DEBUG] logs and Playwright screenshots in the ticket folder"
     status: pending

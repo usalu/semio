@@ -1,0 +1,21 @@
+Lane 3-heal scope note (2026-08-06)
+
+Owned file: ✏️s/🔨️modules/🧊️3d/📐️brep/🩹heal/🦀️component.rs
+
+Implemented:
+- heal_solid(body, solid, tolerance) -> Result<HealingReport, KernelError>
+  No-op when validate_body is clean; rejects dirty bodies with Operation error.
+- defeature(body, solid, faces_to_remove) -> Result<SolidId, KernelError>
+  Drops faces from outer shell (min 4 remain); optional sew_faces on exactly two kept coplanar neighbors per removed face.
+- convert_to_nurbs(body, solid) -> Result<usize, KernelError>
+  Plane -> bilinear Surface::Nurbs; edges via Curve3::to_nurbs(edge.range); cylinder/cone/sphere/torus surfaces deferred (no Surface::to_nurbs yet).
+
+Tests (inline): heal_solid_noop_on_valid_box, defeature_*, convert_to_nurbs_upgrades_box_planes_and_edges.
+
+Deferred:
+- Kernel still calls brepkit_operations::heal / defeature — wave 6 flip.
+- Full healing passes (merge vertices, sliver removal, orientation fix).
+- Analytic surface NURBS beyond planes; pcurve drop on convert.
+
+Evidence: 🧪lane-3-heal-test-quick-run-1.txt — 5 passed.
+Contract: heal FROZEN.

@@ -28,9 +28,7 @@ const storybookScope = process.env.STORYBOOK_SCOPE ?? "";
 
 const uiReactDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react");
 const uiStylingDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript");
-const composeJsDir = resolve(repoRootPath, "compose/client/lib/js");
-const composeAssetsDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript");
-const composeFixturesDir = resolve(repoRootPath, "compose/fixture");
+const assetsDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript");
 
 function toVitePath(value: string): string {
   return value.replaceAll("\\", "/");
@@ -54,10 +52,7 @@ function buildStorybookAliases(): Record<string, string> {
   const baseline: Record<string, string> = {
     "@semio-tech/ui-react": toVitePath(uiReactDir),
     "@semio-tech/ui-styling": toVitePath(uiStylingDir),
-    "@semio-tech/compose-js": toVitePath(composeJsDir),
-    "@semio-tech/compose-react": toVitePath(composeJsDir),
-    "@semio-tech/assets": toVitePath(composeAssetsDir),
-    "@semio-tech/compose-fixture": toVitePath(composeFixturesDir),
+    "@semio-tech/assets": toVitePath(assetsDir),
   };
   const scopeAliases = buildScopeAliases(activeScopes, {});
   const resolved: Record<string, string> = { ...baseline };
@@ -97,7 +92,6 @@ const config: StorybookConfig = {
     const aliasRecord: Record<string, string> = {
       ...buildStorybookAliases(),
       "vite/internal": resolve(repoRootPath, "node_modules/vite/dist/node/index.js"),
-      "@compose/ui": resolve(repoRootPath, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx"),
       "@semio-tech/framework-platform-core": resolve(repoRootPath, "🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts"),
       "@semio-tech/framework-playground-core": resolve(repoRootPath, "🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts"),
       "@semio-tech/framework-platform-renderer-react": resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx"),

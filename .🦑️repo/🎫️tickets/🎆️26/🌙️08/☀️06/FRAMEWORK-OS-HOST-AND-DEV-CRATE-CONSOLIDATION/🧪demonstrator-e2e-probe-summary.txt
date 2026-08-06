@@ -1,0 +1,7 @@
+{
+  "ready": true,
+  "indexStatus": 200,
+  "entryStatus": 200,
+  "failed": 0,
+  "failedPaths": []
+}

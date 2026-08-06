@@ -20,8 +20,6 @@ const repoRoot = getWorkspaceRoot();
 /** @emoji 📁️ Canonical `framework/ui/asset` directory (fonts, cursors, …). */
 export const ELEMENTS_ASSETS_ROOT = join(stylingRoot, "..", "asset");
 const elementsAssetsRoot = ELEMENTS_ASSETS_ROOT;
-const composeNetPaletteDir = join(repoRoot, "compose", "client", "lib", "net", "Elements.Styling", "Generated");
-
 const GOOGLE_FONTS_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
 const GOOGLE_FONT_QUERIES: Record<string, string> = {
@@ -714,7 +712,6 @@ export function generateStylingArtifacts(): void {
   mkdirSync(generatedCssDir, { recursive: true });
   mkdirSync(tsStylingDir, { recursive: true });
   mkdirSync(netPaletteDir, { recursive: true });
-  mkdirSync(composeNetPaletteDir, { recursive: true });
   mkdirSync(dirname(pyGeneratedPath), { recursive: true });
   const fonts = emitPaletteFonts(tokens);
   const theme = emitPaletteTheme(tokens);
@@ -725,7 +722,6 @@ export function generateStylingArtifacts(): void {
   writeFileSync(join(tsStylingDir, "🟦️tokens.generated.ts"), emitTypeScriptTokens(tokens, resolvedAppearances), "utf8");
   const cs = emitCSharp(tokens);
   writeFileSync(join(netPaletteDir, "Palette.g.cs"), cs, "utf8");
-  writeFileSync(join(composeNetPaletteDir, "Palette.g.cs"), cs, "utf8");
   writeFileSync(rustGeneratedPath, emitRust(tokens, resolvedAppearances), "utf8");
   writeFileSync(pyGeneratedPath, emitPython(tokens, resolvedAppearances), "utf8");
   validatePremadeThemes();
@@ -774,7 +770,7 @@ class TestScript extends BundleScript {
   }
 }
 
-const PX_SCAN_ROOTS = ["framework/module/ui/js/react", "framework/module/ui/styling/js", "framework/product/os", "framework/product/os/module/dev", "compose/client/ui", "s/plugin/flow", "s/plugin/cad/renderer", "s/plugin/puzzle", "framework/os/kernel/infinite/world", "s/plugin/gis/2d"] as const;
+const PX_SCAN_ROOTS = ["framework/module/ui/js/react", "framework/module/ui/styling/js", "framework/product/os", "framework/product/os/module/dev", "s/plugin/flow", "s/plugin/cad/renderer", "s/plugin/puzzle", "framework/os/kernel/infinite/world", "s/plugin/gis/2d"] as const;
 
 const PX_SCAN_SKIP = ["/.🦑️repo/", "/node_modules/", "/.storybook/", "/fixture/", "tokens.generated.", "session.json", ".plan.md"];
 
@@ -883,17 +879,14 @@ class CheckNoPxScript extends BundleScript {
 }
 
 /** @emoji 🗺️ Color scan walks its own root set: same as {@link PX_SCAN_ROOTS} minus `framework/ui/styling` (the source of truth
- * for tokens), plus `.storybook` and the whole `compose/client` tree (superseding the narrower `compose/client/ui` root
- * so it isn't walked twice). */
-const COLOR_SCAN_ROOTS = [...PX_SCAN_ROOTS.filter((root) => !root.startsWith("framework/module/ui/styling") && root !== "compose/client/ui"), ".storybook", "compose/client"] as const;
+ * for tokens), plus `.storybook`. */
+const COLOR_SCAN_ROOTS = [...PX_SCAN_ROOTS.filter((root) => !root.startsWith("framework/module/ui/styling")), ".storybook"] as const;
 
 /** @emoji 📋️ Files with pre-existing hardcoded-color usage surfaced by the full-palette/manual-dark-variant patterns
  * and the widened scan roots — tracked for follow-up migration, not fixed here. */
 const COLOR_SCAN_LEGACY_ALLOWLIST = [
-  ".storybook/compose/algorithm/kit-store/index.tsx",
   ".storybook/framework/os/index.tsx",
   ".storybook/preview.tsx",
-  ".storybook/stories/compose/algorithm/KitStore.stories.tsx",
   ".storybook/stories/ui/Avatar.stories.tsx",
   ".storybook/stories/ui/Footer.stories.tsx",
   ".storybook/stories/ui/Icons.stories.tsx",
