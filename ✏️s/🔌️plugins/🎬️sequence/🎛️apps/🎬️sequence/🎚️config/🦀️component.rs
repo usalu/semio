@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Config
 /// 🧮️ B1: sequence's real `DocumentApp::Config` — absorbs every former `SequencePlayRuntime` field
 /// (`selected_step_ids`/`last_run_json`/`orientation`) plus the node-graph viewport camera
-/// (session-only, never a document field) and the locale the pre-B1 host-pushed `ViewState` used to
+/// (session-only, never a document field) and the locale the pre-B1 host-pushed `ViewModel` used to
 /// carry (see `crate::apps::sequence::terminology::sequence_play_labels`) — same "absorb every
 /// runtime field" shape `shooting_engine::ShootingConfig` established for the pilot.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
@@ -35,7 +35,7 @@ pub struct SequenceConfig {
     /// `SequencePlayRuntime::camera`.
     #[dsl(block)]
     pub camera: SequenceCamera,
-    /// 🗣️ BCP-47 locale tag — was read off the host-pushed `ViewState.locale`.
+    /// 🗣️ BCP-47 locale tag — was read off the host-pushed `ViewModel.locale`.
     pub locale: String,
 }
 

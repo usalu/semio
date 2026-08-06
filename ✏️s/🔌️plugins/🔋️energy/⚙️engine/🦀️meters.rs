@@ -67,11 +67,11 @@ impl Meter {
 
 /// 📦️ All meters in a simulation run.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct MeterStore {
+pub struct MeterTable {
     pub meters: HashMap<String, Meter>,
 }
 
-impl MeterStore {
+impl MeterTable {
     pub fn get_or_create(&mut self, name: &str, fuel: FuelType, end_use: EndUse) -> &mut Meter {
         self.meters.entry(name.to_string()).or_insert_with(|| Meter { name: name.to_string(), fuel, end_use, energy_j: 0.0, peak_demand_w: 0.0, peak_demand_hour: 0.0 })
     }
@@ -113,7 +113,7 @@ mod tests {
 
     #[test]
     fn store_get_or_create_is_idempotent_and_totals_by_fuel() {
-        let mut store = MeterStore::default();
+        let mut store = MeterTable::default();
         store.get_or_create("Zone1 Heating", FuelType::Electricity, EndUse::Heating).accumulate(1000.0, 3600.0, 0.0);
         store.get_or_create("Zone1 Heating", FuelType::Electricity, EndUse::Heating).accumulate(1000.0, 3600.0, 1.0);
         store.get_or_create("Boiler Gas", FuelType::NaturalGas, EndUse::Heating).accumulate(2000.0, 3600.0, 0.0);
@@ -125,7 +125,7 @@ mod tests {
 
     #[test]
     fn end_use_breakdown_aggregates_by_category() {
-        let mut store = MeterStore::default();
+        let mut store = MeterTable::default();
         store.get_or_create("Zone1 Heating", FuelType::Electricity, EndUse::Heating).accumulate(1000.0, 3600.0, 0.0);
         store.get_or_create("Zone2 Heating", FuelType::Electricity, EndUse::Heating).accumulate(1000.0, 3600.0, 0.0);
         store.get_or_create("Fans", FuelType::Electricity, EndUse::Fans).accumulate(500.0, 3600.0, 0.0);

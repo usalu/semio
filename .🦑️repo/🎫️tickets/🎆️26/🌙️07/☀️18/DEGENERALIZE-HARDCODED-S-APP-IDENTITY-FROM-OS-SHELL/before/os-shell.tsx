@@ -297,8 +297,8 @@ export { nodeGraphActions, textEditorActions };
 /** 🌐️ Locale-resolved mixed-value placeholder for this renderer layer; framework/core/js/index.ts keeps its own non-reactive low-level default. */
 export const UI_INSPECTOR_MIXED_PLACEHOLDER = shellLabel("ui.common.mixedValues");
 
-/** 🎭️ Renderer-side view state passed to plugin wasm calls — structurally mirrors `@semio-tech/framework-core`'s {@link PluginViewState}, kept as a distinct local alias since `ViewState` is the established name used throughout this file. */
-export type ViewState = PluginViewState;
+/** 🎭️ Renderer-side view state passed to plugin wasm calls — structurally mirrors `@semio-tech/framework-core`'s {@link PluginViewState}, kept as a distinct local alias since `ViewModel` is the established name used throughout this file. */
+export type ViewModel = PluginViewState;
 
 /** ⚠️ Not folded into `@semio-tech/framework-core`'s `PluginManifest`: this shell-local shape types `apps`/`programs` richly (`AppDefinition[]`, `document` on programs) where core intentionally keeps the wasm-boundary shape loose (`Record<string, unknown>[]`) for other consumers (e.g. compose, coda). Left for a human to decide whether to widen core's `PluginManifest` itself. */
 export type PluginManifest = {
@@ -331,7 +331,7 @@ type ActiveSession = {
   readonly pluginId: string;
   readonly instanceId: number;
   readonly app: AppDefinition;
-  readonly viewState: ViewState;
+  readonly viewState: ViewModel;
 };
 
 type StudioProgramEntry = {
@@ -1104,7 +1104,7 @@ function panelJsonFromState(state: StudioPanelState): string {
   return JSON.stringify(state);
 }
 
-function parsePanelState(viewState: ViewState): StudioPanelState | null {
+function parsePanelState(viewState: ViewModel): StudioPanelState | null {
   if (!viewState.panelJson) return null;
   try {
     return JSON.parse(viewState.panelJson) as StudioPanelState;
@@ -2556,7 +2556,7 @@ export function FrameworkOsShell({
         dispatch({ type: "SET_SYNC_STATUS_FOR_DOCUMENT", documentId: message.documentId, status: { persisted: event.persisted, pendingOps: event.pendingOps, remote: event.remote } });
       } else if (event.kind === "presence") {
         // 👥️ Presence now flows only through here (the deleted `presence:` URI hack used to be the
-        // source) — plugins keep reading it via `ViewState.presencePeersJson`.
+        // source) — plugins keep reading it via `ViewModel.presencePeersJson`.
         const peersJson = JSON.stringify(event.peers.map((peer) => ({ clientId: peer.actor, name: peer.label ?? peer.actor, selectionCount: 0 })));
         dispatch({
           type: "SET_SESSION",
@@ -2631,7 +2631,7 @@ export function FrameworkOsShell({
   commandStagedArgsByCommandIdRef.current = commandStagedArgsByCommandId;
 
   /** 🧰️ Overlays the active window's host-owned `activeUtilityId` onto a view state at plugin-call time. */
-  const injectActiveUtility = useCallback((viewState: ViewState, windowId?: string | null): ViewState => {
+  const injectActiveUtility = useCallback((viewState: ViewModel, windowId?: string | null): ViewModel => {
     const key = windowId ?? activeWindowIdRef.current;
     const utilityId = key ? (activeUtilityByWindowIdRef.current[key] ?? undefined) : undefined;
     return viewState.activeUtilityId === utilityId ? viewState : { ...viewState, activeUtilityId: utilityId };
@@ -2675,7 +2675,7 @@ export function FrameworkOsShell({
           const programs = buildStudioPrograms(loadedState);
           const panelState = buildStudioPanelState(programs, []);
           const instanceId = await sPlugin.handle.createApp(sApp.id);
-          const viewState: ViewState = {
+          const viewState: ViewModel = {
             activeModeId: sApp.defaultModeId ?? sApp.modes[0]?.id,
             activeWindowKindId: sApp.windowKinds[0]?.id,
             panelJson: panelJsonFromState(panelState),
@@ -2750,7 +2750,7 @@ export function FrameworkOsShell({
       }
       const cache = uiRefreshCacheRef.current;
       const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
-      const viewState: ViewState = injectActiveUtility({ ...nextSession.viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology });
+      const viewState: ViewModel = injectActiveUtility({ ...nextSession.viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology });
       const panelTabLeaves = flattenPanelTabLeaves(nextSession.app.panelTabs);
       // 🐢️ One batched, hash-conditional round trip replaces the old ~12 sequential
       // render/utilities/windowEngagements/windowMeasures/appLabels calls — the plugin omits payloads for
@@ -2829,7 +2829,7 @@ export function FrameworkOsShell({
   }, [appLabelsOverlay]);
 
   const refreshSpawnedUi = useCallback(
-    async (spawned: SpawnedAppEntry, viewState: ViewState, scopeArg: UiDirtyScope = { kind: "full" }) => {
+    async (spawned: SpawnedAppEntry, viewState: ViewModel, scopeArg: UiDirtyScope = { kind: "full" }) => {
       if (scopeArg.kind === "none") return;
       const generation = ++spawnedRefreshGenerationRef.current;
       const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId);
@@ -2849,7 +2849,7 @@ export function FrameworkOsShell({
       }
       const cache = spawnedUiRefreshCacheRef.current;
       const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
-      const fullViewState: ViewState = injectActiveUtility({ ...viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology }, spawned.id);
+      const fullViewState: ViewModel = injectActiveUtility({ ...viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology }, spawned.id);
       const bodyKey = resolveCanvasBodyKey(app);
       // 🐢️ A spawned instance's view is a single body + utilities + engagements + measures (no panels, no
       // labels) — that's already the minimal grouping, so there is no narrower-than-full "partial" scope
@@ -2916,7 +2916,7 @@ export function FrameworkOsShell({
   }, []);
 
   const switchToSApp = useCallback(
-    async (appId: string, viewState?: ViewState): Promise<ActiveSession | null> => {
+    async (appId: string, viewState?: ViewModel): Promise<ActiveSession | null> => {
       const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === "s");
       const app = sPlugin?.manifest.apps.find((candidate) => candidate.id === appId);
       if (!sPlugin || !app) return null;
@@ -2929,7 +2929,7 @@ export function FrameworkOsShell({
       }
       const instanceId = await sPlugin.handle.createApp(app.id);
       const programs = buildStudioPrograms(loadedPlugins);
-      const nextViewState: ViewState = viewState ?? {
+      const nextViewState: ViewModel = viewState ?? {
         activeModeId: app.defaultModeId ?? app.modes[0]?.id,
         activeWindowKindId: app.windowKinds[0]?.id,
         panelJson: panelJsonFromState(buildStudioPanelState(programs, [])),
@@ -2955,7 +2955,7 @@ export function FrameworkOsShell({
     [loadedPlugins, refreshUi, session, appLabelsOverlay],
   );
 
-  const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, documentJson: string, viewState: ViewState) => {
+  const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, documentJson: string, viewState: ViewModel) => {
     try {
       const document = JSON.parse(documentJson) as Record<string, unknown>;
       await plugin.handleAction(pluginInstanceId, JSON.stringify({ controllerId: app.controllerId, action: "setDocument", args: { document } }), viewState);
@@ -3133,7 +3133,7 @@ export function FrameworkOsShell({
   );
 
   const applyShellUri = useCallback(
-    async (uri: string, preservedViewState?: ViewState) => {
+    async (uri: string, preservedViewState?: ViewModel) => {
       const currentSession = sessionRef.current;
       if (!studioMode || !currentSession || loadedPlugins.length === 0) return;
       const path = uri.split("?")[0] ?? "/";
@@ -3334,7 +3334,7 @@ export function FrameworkOsShell({
         const pluginEntry = findPluginForAction(action);
         const plugin = pluginEntry?.handle;
         if (plugin) {
-          const viewState: ViewState = { ...session.viewState, activeUtilityId: next ?? undefined };
+          const viewState: ViewModel = { ...session.viewState, activeUtilityId: next ?? undefined };
           const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { utilityId: next } };
           void plugin
             .handleAction(session.instanceId, JSON.stringify(forwarded), viewState)
@@ -4800,11 +4800,11 @@ export type PluginWasmHandle = {
   readonly manifest: PluginManifest;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
-  readonly handleAction: (instanceId: number, actionJson: string, viewState: ViewState) => Promise<InvocationResponse>;
+  readonly handleAction: (instanceId: number, actionJson: string, viewState: ViewModel) => Promise<InvocationResponse>;
   /** 🎛️ Dispatches a scoped command (os/plugin/app/mode) — optional since not every plugin declares commands. */
-  readonly handleCommand?: (instanceId: number, commandJson: string, viewState: ViewState) => Promise<InvocationResponse>;
-  readonly render: (instanceId: number, bodyKey: string, viewState: ViewState) => Promise<UiNode>;
-  readonly renderWithDocument?: (instanceId: number, bodyKey: string, viewState: ViewState, documentJson: string) => Promise<UiNode>;
+  readonly handleCommand?: (instanceId: number, commandJson: string, viewState: ViewModel) => Promise<InvocationResponse>;
+  readonly render: (instanceId: number, bodyKey: string, viewState: ViewModel) => Promise<UiNode>;
+  readonly renderWithDocument?: (instanceId: number, bodyKey: string, viewState: ViewModel, documentJson: string) => Promise<UiNode>;
   readonly refreshUi: (instanceId: number, request: PluginUiRefreshRequest) => Promise<PluginUiRefreshResponse>;
   /** 🔗️ The `DocumentApp` document-sync surface (WS-D) — optional since not every plugin has migrated onto it yet (WS-F). */
   readonly applyOperations?: (instanceId: number, operationsJson: string) => Promise<void>;

@@ -38,13 +38,13 @@ mod tests {
     #[test]
     fn dag_play_labels_resolve_native_english_and_german() {
         let mut app = testkit::new_app();
-        let node = app.render(DAG_PLAY_BODY_DOCUMENT, None, &semio_framework_plugin::ViewState::default()).expect("render");
+        let node = app.render(DAG_PLAY_BODY_DOCUMENT, None, &semio_framework_plugin::ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Nodes"));
         assert!(json.contains("Edges"));
 
         app.dispatch_typed(DagCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), &semio_framework_plugin::testkit::meta("local")).expect("set locale");
-        let node = app.render(DAG_PLAY_BODY_DOCUMENT, None, &semio_framework_plugin::ViewState::default()).expect("render");
+        let node = app.render(DAG_PLAY_BODY_DOCUMENT, None, &semio_framework_plugin::ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Knoten"));
         assert!(json.contains("Kanten"));

@@ -307,17 +307,21 @@ fn hash_value<T: Serialize>(value: &T) -> u64 {
 /// 🧊️ Concrete (not boxed-trait) so `SolidExporter`/`SolidImporter` (STEP/OBJ/STL/GLB import+export)
 /// can borrow `&BrepkitKernel`/`&mut BrepkitKernel` directly; `&mut BrepkitKernel` still coerces to
 /// `&mut dyn BrepKernel` at every existing call site below, so the CSG replay path is unaffected.
-struct ProcessKernelSession {
+struct ProcessKernelReplay {
     host: BrepEngineHost,
-    memo: HashMap<u64, GeometryHandle>,
+    tables: ProcessKernelMemo,
     stock_signature: u64,
 }
 
-impl ProcessKernelSession {
+struct ProcessKernelMemo {
+    memo: HashMap<u64, GeometryHandle>,
+}
+
+impl ProcessKernelReplay {
     fn new() -> Self {
         Self {
             host: BrepEngineHost::new(64 * 1024 * 1024),
-            memo: HashMap::new(),
+            tables: ProcessKernelMemo { memo: HashMap::new() },
             stock_signature: 0,
         }
     }
@@ -385,10 +389,10 @@ fn tool_solid_for_measure(kernel: &mut dyn BrepKernel, measure: &ProcessMeasure)
 }
 
 /// 🧠️ Replays enabled steps up to the cursor, reusing the longest memoized prefix.
-fn replay_process(session: &mut ProcessKernelSession, doc: &Process3dDocument) -> Option<GeometryHandle> {
+fn replay_process(session: &mut ProcessKernelReplay, doc: &Process3dDocument) -> Option<GeometryHandle> {
     let stock_signature = hash_value(&doc.stock);
     if stock_signature != session.stock_signature {
-        session.memo.clear();
+        session.tables.memo.clear();
         session.stock_signature = stock_signature;
     }
     let limit = doc.resolved_up_to.unwrap_or(doc.steps.len()).min(doc.steps.len());
@@ -398,7 +402,7 @@ fn replay_process(session: &mut ProcessKernelSession, doc: &Process3dDocument) -
     let mut kernel = session.kernel().lock().ok()?;
     let mut current: Option<GeometryHandle> = loop {
         let signature = prefix_signature(stock_signature, &enabled_steps[..start]);
-        if let Some(handle) = session.memo.get(&signature) {
+        if let Some(handle) = session.tables.memo.get(&signature) {
             break Some(handle.clone());
         }
         if start == 0 {
@@ -409,7 +413,7 @@ fn replay_process(session: &mut ProcessKernelSession, doc: &Process3dDocument) -
     if current.is_none() {
         current = solid_for_spec(&mut *kernel, &doc.stock.solid, &doc.stock.pose);
         if let Some(handle) = &current {
-            session.memo.insert(prefix_signature(stock_signature, &[]), handle.clone());
+            session.tables.memo.insert(prefix_signature(stock_signature, &[]), handle.clone());
         }
     }
     let mut handle = current?;
@@ -419,18 +423,18 @@ fn replay_process(session: &mut ProcessKernelSession, doc: &Process3dDocument) -
             ProcessMeasure::Attach { .. } => semio_s_3d::brep::engine::block_on(kernel.fuse(&handle, &tool)).ok()?,
             _ => semio_s_3d::brep::engine::block_on(kernel.cut(&handle, &tool)).ok()?,
         };
-        session.memo.insert(prefix_signature(stock_signature, &enabled_steps[..=index]), handle.clone());
+        session.tables.memo.insert(prefix_signature(stock_signature, &enabled_steps[..=index]), handle.clone());
     }
-    if session.memo.len() > PROCESS3D_KERNEL_MEMO_CAP {
-        if let Some(key) = session.memo.keys().next().copied() {
-            session.memo.remove(&key);
+    if session.tables.memo.len() > PROCESS3D_KERNEL_MEMO_CAP {
+        if let Some(key) = session.tables.memo.keys().next().copied() {
+            session.tables.memo.remove(&key);
         }
     }
     Some(handle)
 }
 
 pub fn processed_mesh(doc: &Process3dDocument) -> Option<MeshData> {
-    let mut session = ProcessKernelSession::new();
+    let mut session = ProcessKernelReplay::new();
     let handle = replay_process(&mut session, doc)?;
     let mesh = semio_s_3d::brep::engine::block_on(session.kernel().lock().ok()?.tessellate(&handle, PROCESS3D_TESSELLATION_TOLERANCE)).ok()?;
     let face_groups: Vec<(u32, u32, u32)> = mesh.face_groups.iter().map(|group| (group.entity_id.parse().unwrap_or(0), group.start, group.count)).collect();
@@ -438,7 +442,7 @@ pub fn processed_mesh(doc: &Process3dDocument) -> Option<MeshData> {
 }
 
 pub fn processed_volume(doc: &Process3dDocument) -> Option<f64> {
-    let mut session = ProcessKernelSession::new();
+    let mut session = ProcessKernelReplay::new();
     let handle = replay_process(&mut session, doc)?;
     semio_s_3d::brep::engine::block_on(session.kernel().lock().ok()?.volume(&handle)).ok()
 }
@@ -474,7 +478,7 @@ pub fn export_process3d_model(fixture: &Process3dDocument, format: &str) -> Opti
         "stl" => Box::new(StlSolidExporter),
         _ => Box::new(StepSolidExporter),
     };
-    let mut session = ProcessKernelSession::new();
+    let mut session = ProcessKernelReplay::new();
     let handle = replay_process(&mut session, fixture)?;
     let bytes = exporter.export(&*session.kernel().lock().ok()?, &[handle], PROCESS3D_TESSELLATION_TOLERANCE).ok()?;
     let media_format = exporter.format();
@@ -515,9 +519,9 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dDoc
     } else {
         return None;
     };
-    let mut session = ProcessKernelSession::new();
+    let mut session = ProcessKernelReplay::new();
     let handle = importer.import(&mut *session.kernel().lock().ok()?, &bytes, PROCESS3D_TESSELLATION_TOLERANCE).ok()?.into_iter().next()?;
-    session.memo.clear();
+    session.tables.memo.clear();
     session.stock_signature = 0;
     fixture.stock = Stock { id: "stock".into(), label: label.into(), solid: SolidSpec::ImportedSolid { solid_handle: handle.0 }, pose: Pose::default() };
     Some(fixture)
@@ -557,7 +561,7 @@ pub fn remove_step_operations(fixture: &Process3dDocument, id: &str) -> Option<V
 mod tests {
     use super::*;
 
-    fn session_volume(session: &mut ProcessKernelSession, fixture: &Process3dDocument) -> f64 {
+    fn session_volume(session: &mut ProcessKernelReplay, fixture: &Process3dDocument) -> f64 {
         let handle = replay_process(session, fixture).expect("replayed handle");
         semio_s_3d::brep::engine::block_on(session.kernel().lock().expect("kernel lock").volume(&handle)).expect("replayed volume")
     }
@@ -609,7 +613,7 @@ mod tests {
 
     #[test]
     fn drill_reduces_volume_below_stock() {
-        let mut session = ProcessKernelSession::new();
+        let mut session = ProcessKernelReplay::new();
         let mut fixture = Process3dDocument::default();
         fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
         let stock_volume = session_volume(&mut session, &fixture);
@@ -627,7 +631,7 @@ mod tests {
     #[test]
     fn attach_increases_volume_above_stock() {
         for _ in 0..32 {
-            let mut session = ProcessKernelSession::new();
+            let mut session = ProcessKernelReplay::new();
             let mut fixture = Process3dDocument::default();
             fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
             let stock_volume = session_volume(&mut session, &fixture);
@@ -645,7 +649,7 @@ mod tests {
 
     #[test]
     fn disabled_step_is_skipped_on_replay() {
-        let mut session = ProcessKernelSession::new();
+        let mut session = ProcessKernelReplay::new();
         let mut fixture = Process3dDocument::default();
         fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
         let stock_volume = session_volume(&mut session, &fixture);
@@ -656,7 +660,7 @@ mod tests {
 
     #[test]
     fn cursor_zero_yields_stock_volume() {
-        let mut session = ProcessKernelSession::new();
+        let mut session = ProcessKernelReplay::new();
         let mut fixture = Process3dDocument::default();
         fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
         let stock_volume = session_volume(&mut session, &fixture);
@@ -698,13 +702,13 @@ mod tests {
 
     #[test]
     fn kernel_replay_memoizes_prefixes_across_cursor_scrub() {
-        let mut session = ProcessKernelSession::new();
+        let mut session = ProcessKernelReplay::new();
         let mut fixture = Process3dDocument::default();
         fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
         fixture.steps.push(ProcessStep { id: "drill-1".into(), label: "Drill".into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.1, depth: 1.0, pose: Pose::default() } });
         fixture.resolved_up_to = Some(1);
         session_volume(&mut session, &fixture);
-        assert!(session.memo.len() >= 2, "expected stock + drilled prefixes memoized, got {}", session.memo.len());
+        assert!(session.tables.memo.len() >= 2, "expected stock + drilled prefixes memoized, got {}", session.tables.memo.len());
     }
 }
 //#endregion 🧪️Tests

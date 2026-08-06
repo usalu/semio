@@ -64,11 +64,11 @@ semio_framework_plugin::app_labels! {
     }
 }
 
-/// 🗣️ B1: `cfg.locale`-driven counterpart of the deleted `ViewState`-driven `is_de_locale`.
+/// 🗣️ B1: `cfg.locale`-driven counterpart of the deleted `ViewModel`-driven `is_de_locale`.
 pub fn cad_is_de_locale(cfg: &CadConfig) -> bool {
     cfg.locale.starts_with("de")
 }
-/// 🗣️ `CadConfig.locale` (a BCP-47 tag, was shell-provided `ViewState.locale` pre-B1) mapped onto the
+/// 🗣️ `CadConfig.locale` (a BCP-47 tag, was shell-provided `ViewModel.locale` pre-B1) mapped onto the
 /// SDK's exhaustive `Locale` enum.
 pub fn cad_locale(cfg: &CadConfig) -> Locale {
     if cad_is_de_locale(cfg) {
@@ -89,7 +89,7 @@ pub fn cad_terminology(cfg: &CadConfig) -> Terminology {
 }
 
 /// 🗣️ Resolves the active `CadLabels` cell from the config-carried locale/terminology (was
-/// shell-provided `ViewState`, deleted by B1) via the SDK's two-axis `AppLabels::labels`.
+/// shell-provided `ViewModel`, deleted by B1) via the SDK's two-axis `AppLabels::labels`.
 pub fn cad_labels(cfg: &CadConfig) -> &'static CadLabels {
     CadLabels::labels(cad_locale(cfg), cad_terminology(cfg))
 }

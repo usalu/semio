@@ -119,22 +119,22 @@ mod tests {
         let node_id = app.projection().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
 
         app.dispatch_typed(DagCommand::SetSelection(set_selection::SetSelection { ids: vec![node_id.clone()] }), &semio_framework_plugin::testkit::meta("local")).expect("setSelection");
-        assert!(serde_json::to_string(&app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewState::default()).expect("render")).unwrap().contains(&node_id));
+        assert!(serde_json::to_string(&app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewModel::default()).expect("render")).unwrap().contains(&node_id));
 
         app.dispatch_typed(DagCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {}), &semio_framework_plugin::testkit::meta("local")).expect("clear");
         app.dispatch_typed(DagCommand::SelectNode(select_node::SelectNode { node_id: node_id.clone() }), &semio_framework_plugin::testkit::meta("local")).expect("selectNode");
-        assert!(serde_json::to_string(&app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewState::default()).expect("render")).unwrap().contains(&node_id));
+        assert!(serde_json::to_string(&app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewModel::default()).expect("render")).unwrap().contains(&node_id));
 
         app.dispatch_typed(DagCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {}), &semio_framework_plugin::testkit::meta("local")).expect("clear");
         app.dispatch_typed(DagCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { node_ids: vec![node_id.clone()] }), &semio_framework_plugin::testkit::meta("local")).expect("nodeGraphSelect");
-        assert!(serde_json::to_string(&app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewState::default()).expect("render")).unwrap().contains(&node_id));
+        assert!(serde_json::to_string(&app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewModel::default()).expect("render")).unwrap().contains(&node_id));
     }
 
     #[test]
     fn node_graph_viewport_drives_the_rendered_camera() {
         let mut app = testkit::new_app();
         app.dispatch_typed(DagCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { x: 10.0, y: 20.0, zoom: 2.0 }), &semio_framework_plugin::testkit::meta("local")).expect("viewport");
-        let node = app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewState::default()).expect("render");
+        let node = app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewModel::default()).expect("render");
         let payload: Value = serde_json::to_value(&node).unwrap();
         assert_eq!(payload["nodeGraph"]["viewport"], json!({ "x": 10.0, "y": 20.0, "zoom": 2.0 }));
     }
@@ -155,7 +155,7 @@ mod tests {
         let node_id = app.projection().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
         app.dispatch_typed(DagCommand::SetSelection(set_selection::SetSelection { ids: vec![node_id] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
         app.dispatch_typed(DagCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {}), &semio_framework_plugin::testkit::meta("local")).expect("clear");
-        let node = app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewState::default()).expect("render");
+        let node = app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewModel::default()).expect("render");
         let payload: Value = serde_json::to_value(&node).unwrap();
         assert_eq!(payload["nodeGraph"]["selection"], Value::Null, "an empty selection must omit the key: {payload}");
     }

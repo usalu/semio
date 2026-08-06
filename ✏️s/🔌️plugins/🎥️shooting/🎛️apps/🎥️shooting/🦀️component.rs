@@ -360,7 +360,7 @@ pub fn create_shooting_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewState, WindowMeasure};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel, WindowMeasure};
 
     pub type ShootingApp = VcsDocumentApp<ShootingPlayApp>;
 
@@ -379,7 +379,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut ShootingApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
     pub fn scene_window_measures(app: &mut ShootingApp) -> Vec<WindowMeasure> {
@@ -398,7 +398,7 @@ mod tests {
     use super::*;
     use crate::apps::shooting::testkit::{dispatch, shooting_app, shooting_app_with_registry, ShootingApp};
     use semio_framework_plugin::testkit;
-    use semio_framework_plugin::{ActionKind, HostEffect, PluginApp, ViewState};
+    use semio_framework_plugin::{ActionKind, HostEffect, PluginApp, ViewModel};
     use serde_json::{json, Value};
 
     fn default_camera(position: [f64; 3]) -> crate::artifacts::shooting::ShootingCamera {
@@ -565,7 +565,7 @@ mod tests {
             dispatch(&mut app, ShootingCommand::SetCamera(set_camera::SetCamera { camera: default_camera(position) }));
         }
         let camera_position = |app: &mut ShootingApp| -> Value {
-            let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState::default()).expect("render");
+            let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewModel::default()).expect("render");
             let payload: Value = serde_json::to_value(&node).unwrap();
             let camera: Value = serde_json::from_str(payload["world3d"]["cameraJson"].as_str().unwrap()).unwrap();
             camera["position"].clone()

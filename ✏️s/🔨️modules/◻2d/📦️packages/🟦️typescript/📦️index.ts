@@ -1,3 +1,4 @@
+import { ephemeralBox } from "@semio-tech/framework-core";
 // #region 🧲️Header
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
@@ -345,7 +346,7 @@ type DrawingWasmModule = {
   default?: (input?: unknown) => Promise<unknown>;
 };
 
-let drawingWasm: DrawingWasmModule | null = null;
+const drawingWasm = ephemeralBox<DrawingWasmModule | null>("s.modules.2d.packages.typescript.index.ts.drawingWasm", null);
 
 function parseSceneJson(json: string): DrawingScene {
   const parsed = JSON.parse(json) as DrawingScene & { error?: string };
@@ -399,7 +400,7 @@ export function drawingSceneFromPreviewPayload(payload: unknown): DrawingScene |
 
 /** @emoji ⏳️ Loads flow-core drawing WASM exports. */
 export async function ensureDrawingWasmLoaded(): Promise<DrawingWasmModule> {
-  if (drawingWasm) return drawingWasm;
+  if (drawingWasm.current) return drawingWasm.current;
   if (import.meta.env.VITEST) {
     const { readFileSync } = await import("node:fs");
     const { dirname, join } = await import("node:path");
@@ -407,7 +408,7 @@ export async function ensureDrawingWasmLoaded(): Promise<DrawingWasmModule> {
     const here = dirname(fileURLToPath(import.meta.url));
     const mod = (await import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/⚡️implementations/🦀️rust/flow_core.js")) as DrawingWasmModule;
     mod.initSync?.({ module: readFileSync(join(here, "../../../../framework/product/os/module/flow/core/rs/pkg/flow_core_bg.wasm")) });
-    drawingWasm = mod;
+    drawingWasm.current = mod;
     return mod;
   }
   const [{ default: initFlow, render_drawing_scene, export_drawing_svg, export_drawing_pdf, dispose_drawing, trace_drawing_bitmap, boolean_drawing_segments, export_drawing_dwg, import_drawing_dwg }, { default: wasmUrl }] = await Promise.all([
@@ -418,7 +419,7 @@ export async function ensureDrawingWasmLoaded(): Promise<DrawingWasmModule> {
     throw new Error("flow_core drawing exports missing — rebuild flow/core wasm");
   }
   if (initFlow) await initFlow({ module_or_path: wasmUrl });
-  drawingWasm = {
+  drawingWasm.current = {
     render_drawing_scene,
     export_drawing_svg,
     export_drawing_pdf,
@@ -428,7 +429,7 @@ export async function ensureDrawingWasmLoaded(): Promise<DrawingWasmModule> {
     export_drawing_dwg,
     import_drawing_dwg,
   };
-  return drawingWasm;
+  return drawingWasm.current;
 }
 
 function traceBitmapViaWasm(module: DrawingWasmModule, width: number, height: number, maskOrLuma: Uint8Array, threshold: number, simplifyEpsilon: number): PathSegment[] {

@@ -8,7 +8,7 @@
 //! 🔌️ Plugin bridge for wasm C-ABI modules (browser JS loader + wasmtime host).
 
 use semio_framework_core::kernel::HostEffect;
-use semio_framework_core::{PluginManifest, ViewState};
+use semio_framework_core::{PluginManifest, ViewModel};
 use std::collections::HashMap;
 use std::sync::Arc;
 use ui_wgpu::wgpu::{UiNode, UtilityNode, WindowEngagement, WindowMeasure};
@@ -61,7 +61,7 @@ mod wasm_program_exchange {
         from_dsl_value(value)
     }
 
-    fn pack_view_state(view_state: &ViewState) -> Result<Vec<u8>, String> {
+    fn pack_view_state(view_state: &ViewModel) -> Result<Vec<u8>, String> {
         encode_wire(view_state)
     }
 
@@ -148,7 +148,7 @@ mod wasm_program_exchange {
         })
     }
 
-    pub fn handle_action(runtime: &WasmPluginRuntime, instance_id: u32, action_json: &str, view_state: &ViewState) -> Result<InvocationResult, String> {
+    pub fn handle_action(runtime: &WasmPluginRuntime, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<InvocationResult, String> {
         let action: serde_json::Value = serde_json::from_str(action_json).map_err(|error| error.to_string())?;
         let action_name = action.get("action").and_then(|value| value.as_str()).unwrap_or("");
         let args = action.get("args").cloned();
@@ -189,7 +189,7 @@ mod wasm_program_exchange {
         expect_done(&frames, seq)
     }
 
-    pub fn render_with_document(runtime: &WasmPluginRuntime, instance_id: u32, body_key: &str, view_state: &ViewState, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<HostEffect>>) -> Result<UiNode, String> {
+    pub fn render_with_document(runtime: &WasmPluginRuntime, instance_id: u32, body_key: &str, view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<HostEffect>>) -> Result<UiNode, String> {
         let _ = _document_dsl;
         let seq = next_seq();
         let frames = exchange(runtime, instance_id, vec![AppCommand::RefreshUi { seq, sections: vec![SectionProbe { kind: SECTION_KIND_WINDOW, key: body_key.to_string(), hash: None }], view_state: pack_view_state(view_state)? }])?;
@@ -214,15 +214,15 @@ mod wasm_program_exchange {
         Err(format!("plugin sent no UiSection for seq {seq}"))
     }
 
-    pub fn window_engagements(runtime: &WasmPluginRuntime, instance_id: u32, view_state: &ViewState) -> Result<HashMap<String, WindowEngagement>, String> {
+    pub fn window_engagements(runtime: &WasmPluginRuntime, instance_id: u32, view_state: &ViewModel) -> Result<HashMap<String, WindowEngagement>, String> {
         refresh_hash_map_section(runtime, instance_id, view_state, SECTION_KIND_ENGAGEMENTS, "engagements")
     }
 
-    pub fn window_measures(runtime: &WasmPluginRuntime, instance_id: u32, view_state: &ViewState) -> Result<HashMap<String, Vec<WindowMeasure>>, String> {
+    pub fn window_measures(runtime: &WasmPluginRuntime, instance_id: u32, view_state: &ViewModel) -> Result<HashMap<String, Vec<WindowMeasure>>, String> {
         refresh_hash_map_section(runtime, instance_id, view_state, SECTION_KIND_MEASURES, "measures")
     }
 
-    fn refresh_hash_map_section<T: DeserializeOwned + Default>(runtime: &WasmPluginRuntime, instance_id: u32, view_state: &ViewState, kind: u8, key: &str) -> Result<T, String> {
+    fn refresh_hash_map_section<T: DeserializeOwned + Default>(runtime: &WasmPluginRuntime, instance_id: u32, view_state: &ViewModel, kind: u8, key: &str) -> Result<T, String> {
         let seq = next_seq();
         let frames = exchange(runtime, instance_id, vec![AppCommand::RefreshUi { seq, sections: vec![SectionProbe { kind, key: key.to_string(), hash: None }], view_state: pack_view_state(view_state)? }])?;
         for frame in &frames {
@@ -322,7 +322,7 @@ impl ProgramBridgeEntry {
         }
     }
 
-    pub async fn handle_action(&self, instance_id: u32, action_json: &str, view_state: &ViewState) -> Result<semio_framework_core::kernel::InvocationResult, String> {
+    pub async fn handle_action(&self, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<semio_framework_core::kernel::InvocationResult, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => handle_action_js(handle, instance_id, action_json, view_state).await,
@@ -357,11 +357,11 @@ impl ProgramBridgeEntry {
         }
     }
 
-    pub async fn render(&self, instance_id: u32, body_key: &str, view_state: &ViewState) -> Result<UiNode, String> {
+    pub async fn render(&self, instance_id: u32, body_key: &str, view_state: &ViewModel) -> Result<UiNode, String> {
         self.render_with_document(instance_id, body_key, view_state, None, None).await
     }
 
-    pub async fn render_with_document(&self, instance_id: u32, body_key: &str, view_state: &ViewState, document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<HostEffect>>) -> Result<UiNode, String> {
+    pub async fn render_with_document(&self, instance_id: u32, body_key: &str, view_state: &ViewModel, document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<HostEffect>>) -> Result<UiNode, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => render_with_document_js(handle, instance_id, body_key, view_state, document_dsl).await,
@@ -370,7 +370,7 @@ impl ProgramBridgeEntry {
         }
     }
 
-    pub async fn window_engagements(&self, instance_id: u32, view_state: &ViewState) -> Result<HashMap<String, WindowEngagement>, String> {
+    pub async fn window_engagements(&self, instance_id: u32, view_state: &ViewModel) -> Result<HashMap<String, WindowEngagement>, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => window_engagements_js(handle, instance_id, view_state).await,
@@ -379,7 +379,7 @@ impl ProgramBridgeEntry {
         }
     }
 
-    pub async fn window_measures(&self, instance_id: u32, view_state: &ViewState) -> Result<HashMap<String, Vec<WindowMeasure>>, String> {
+    pub async fn window_measures(&self, instance_id: u32, view_state: &ViewModel) -> Result<HashMap<String, Vec<WindowMeasure>>, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => window_measures_js(handle, instance_id, view_state).await,
@@ -436,7 +436,7 @@ fn destroy_app_js(handle: &Rc<JsValue>, instance_id: u32) {
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &str, view_state: &ViewState) -> Result<semio_framework_core::kernel::InvocationResult, String> {
+async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<semio_framework_core::kernel::InvocationResult, String> {
     let action = Reflect::get(handle.as_ref(), &JsValue::from_str("handleAction")).ok().and_then(|v| v.dyn_into::<Function>().ok());
     let Some(action) = action else {
         return Ok(semio_framework_core::kernel::InvocationResult {
@@ -478,12 +478,12 @@ async fn context_menu_js(handle: &Rc<JsValue>, instance_id: u32, request: &serde
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn render_js(handle: &Rc<JsValue>, instance_id: u32, body_key: &str, view_state: &ViewState) -> Result<UiNode, String> {
+async fn render_js(handle: &Rc<JsValue>, instance_id: u32, body_key: &str, view_state: &ViewModel) -> Result<UiNode, String> {
     render_with_document_js(handle, instance_id, body_key, view_state, None).await
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, body_key: &str, view_state: &ViewState, document_dsl: Option<&str>) -> Result<UiNode, String> {
+async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, body_key: &str, view_state: &ViewModel, document_dsl: Option<&str>) -> Result<UiNode, String> {
     let render =
         if document_dsl.is_some() { Reflect::get(handle.as_ref(), &JsValue::from_str("renderWithDocument")).ok().and_then(|v| v.dyn_into::<Function>().ok()).or_else(|| get_fn(handle, "render").ok()) } else { get_fn(handle, "render").ok() };
     let render = render.ok_or("render failed")?;
@@ -500,7 +500,7 @@ async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, body_ke
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn window_engagements_js(handle: &Rc<JsValue>, instance_id: u32, view_state: &ViewState) -> Result<HashMap<String, WindowEngagement>, String> {
+async fn window_engagements_js(handle: &Rc<JsValue>, instance_id: u32, view_state: &ViewModel) -> Result<HashMap<String, WindowEngagement>, String> {
     let engagements = Reflect::get(handle.as_ref(), &JsValue::from_str("windowEngagements")).ok().and_then(|v| v.dyn_into::<Function>().ok());
     let Some(engagements) = engagements else {
         return Ok(HashMap::new());
@@ -513,7 +513,7 @@ async fn window_engagements_js(handle: &Rc<JsValue>, instance_id: u32, view_stat
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn window_measures_js(handle: &Rc<JsValue>, instance_id: u32, view_state: &ViewState) -> Result<HashMap<String, Vec<WindowMeasure>>, String> {
+async fn window_measures_js(handle: &Rc<JsValue>, instance_id: u32, view_state: &ViewModel) -> Result<HashMap<String, Vec<WindowMeasure>>, String> {
     let measures = Reflect::get(handle.as_ref(), &JsValue::from_str("windowMeasures")).ok().and_then(|v| v.dyn_into::<Function>().ok());
     let Some(measures) = measures else {
         return Ok(HashMap::new());

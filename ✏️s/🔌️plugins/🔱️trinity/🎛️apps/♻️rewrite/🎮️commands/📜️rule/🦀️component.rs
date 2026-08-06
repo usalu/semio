@@ -6,7 +6,7 @@ use crate::apps::rewrite::config::RewriteConfigOperation;
 use crate::artifacts::jack::{Graph, GraphFixture, PropertyValue};
 use crate::artifacts::rewrite::engine::{ParameterKind, Rhs};
 use crate::artifacts::rewrite::op::RewriteRuleOperation;
-use crate::artifacts::rewrite::RewriteRuleState;
+use crate::artifacts::rewrite::RewriteRuleModel;
 use semio_framework_plugin::{Emit, Fault};
 use serde_json::Value;
 
@@ -65,7 +65,7 @@ fn remove_at<T>(items: &mut Vec<T>, index: usize) -> bool {
     }
 }
 
-pub(crate) fn delete_rule_clause(state: &mut RewriteRuleState, node_id: &str) -> bool {
+pub(crate) fn delete_rule_clause(state: &mut RewriteRuleModel, node_id: &str) -> bool {
     let Some(clause_ref) = parse_clause_ref(node_id) else {
         return false;
     };
@@ -104,7 +104,7 @@ pub(crate) fn delete_rule_clause(state: &mut RewriteRuleState, node_id: &str) ->
 }
 
 /// ➕️ Appends a default instance of `clause_kind` to the rule (rewrite.where/create/merge/set/delete/parameter).
-fn add_rule_clause(state: &mut RewriteRuleState, clause_kind: &str) -> bool {
+fn add_rule_clause(state: &mut RewriteRuleModel, clause_kind: &str) -> bool {
     let Ok(mut lhs) = serde_json::from_str::<crate::artifacts::rewrite::engine::Lhs>(&state.lhs_json) else {
         return false;
     };
@@ -154,7 +154,7 @@ fn add_rule_clause(state: &mut RewriteRuleState, clause_kind: &str) -> bool {
 
 /// 🖊️ Applies node-graph editor operations (drag layout / delete-selection) to `state` in place,
 /// returning `(document_changed, should_clear_selection)`.
-fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteRuleState, selected_node_ids: &[String], surface_id: &str, operations: &[Value]) -> (bool, bool) {
+fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteRuleModel, selected_node_ids: &[String], surface_id: &str, operations: &[Value]) -> (bool, bool) {
     let mut changed = false;
     let mut clear_selection = false;
     for operation in operations {
@@ -227,7 +227,7 @@ fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, val
     Graph::from_fixture(fixture).ok()?.fixture_json().ok()
 }
 
-pub(crate) fn node_graph_edit(state: &RewriteRuleState, selected_node_ids: &[String], surface_id: &str, operations_json: &str) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation>, Fault> {
+pub(crate) fn node_graph_edit(state: &RewriteRuleModel, selected_node_ids: &[String], surface_id: &str, operations_json: &str) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation>, Fault> {
     let operations: Vec<Value> = serde_json::from_str(operations_json).unwrap_or_default();
     let mut next = state.clone();
     let (changed, clear_selection) = apply_rewrite_node_graph_edit_operations(&mut next, selected_node_ids, surface_id, &operations);
@@ -238,7 +238,7 @@ pub(crate) fn node_graph_edit(state: &RewriteRuleState, selected_node_ids: &[Str
     Ok(Emit { document_operations: vec![RewriteRuleOperation::SetState { state: next }], config_operations, ..Default::default() })
 }
 
-pub(crate) fn set_lhs_json(state: &RewriteRuleState, value: &str) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation>, Fault> {
+pub(crate) fn set_lhs_json(state: &RewriteRuleModel, value: &str) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation>, Fault> {
     let mut next = state.clone();
     next.lhs_json = value.to_string();
     if &next == state {
@@ -248,7 +248,7 @@ pub(crate) fn set_lhs_json(state: &RewriteRuleState, value: &str) -> Result<Emit
     }
 }
 
-pub(crate) fn set_rhs_json(state: &RewriteRuleState, value: &str) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation>, Fault> {
+pub(crate) fn set_rhs_json(state: &RewriteRuleModel, value: &str) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation>, Fault> {
     let mut next = state.clone();
     next.rhs_json = value.to_string();
     next.parameter_bindings = crate::apps::rewrite::default_parameter_bindings(&next.rhs_json);
@@ -259,7 +259,7 @@ pub(crate) fn set_rhs_json(state: &RewriteRuleState, value: &str) -> Result<Emit
     }
 }
 
-pub(crate) fn set_parameter(state: &RewriteRuleState, name: &str, value: &str) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation>, Fault> {
+pub(crate) fn set_parameter(state: &RewriteRuleModel, name: &str, value: &str) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation>, Fault> {
     if name.is_empty() {
         return Ok(Emit::default());
     }
@@ -286,7 +286,7 @@ pub(crate) fn set_parameter(state: &RewriteRuleState, name: &str, value: &str) -
     }
 }
 
-pub(crate) fn add_rule_clause_command(state: &RewriteRuleState, kind: &str) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation>, Fault> {
+pub(crate) fn add_rule_clause_command(state: &RewriteRuleModel, kind: &str) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation>, Fault> {
     let mut next = state.clone();
     if add_rule_clause(&mut next, kind) {
         Ok(Emit::operations(vec![RewriteRuleOperation::SetState { state: next }]))
@@ -295,7 +295,7 @@ pub(crate) fn add_rule_clause_command(state: &RewriteRuleState, kind: &str) -> R
     }
 }
 
-pub(crate) fn reset_rule(state: &RewriteRuleState) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation>, Fault> {
+pub(crate) fn reset_rule(state: &RewriteRuleModel) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation>, Fault> {
     let next = crate::apps::rewrite::default_rule_state();
     let camera = crate::apps::rewrite::seed_before_pane_camera(&next);
     let config_operations = vec![RewriteConfigOperation::SetBeforePaneCamera { camera }];
@@ -306,7 +306,7 @@ pub(crate) fn reset_rule(state: &RewriteRuleState) -> Result<Emit<RewriteRuleOpe
     }
 }
 
-pub(crate) fn patch_nodes(state: &RewriteRuleState, node_ids: &[String], field: &str, value: &str) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation>, Fault> {
+pub(crate) fn patch_nodes(state: &RewriteRuleModel, node_ids: &[String], field: &str, value: &str) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation>, Fault> {
     let trimmed = value.trim();
     if node_ids.is_empty() || field.is_empty() || trimmed.is_empty() {
         return Ok(Emit::default());

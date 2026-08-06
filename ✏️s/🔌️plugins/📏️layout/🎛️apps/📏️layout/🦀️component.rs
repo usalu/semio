@@ -312,7 +312,7 @@ pub fn create_layout_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
 
     pub type LayoutApp = VcsDocumentApp<LayoutPlayApp>;
 
@@ -331,7 +331,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut LayoutApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
     pub fn test_screen_point(camera_x: f64, camera_y: f64, zoom: f64, width: f64, height: f64, world_x: f64, world_y: f64) -> (f64, f64) {

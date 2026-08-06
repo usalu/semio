@@ -1,6 +1,6 @@
 //! 🧮️ Raster app — view-state configuration (constitutional: general/config). B1: this absorbs every
 //! former `RasterPlayRuntime` (`ui`-crate `RefCell`) field (selection, hover, brush size/opacity,
-//! navigator composite-viewport size, the session-only free camera) plus the two former `ViewState`-
+//! navigator composite-viewport size, the session-only free camera) plus the two former `ViewModel`-
 //! driven fields the raster UI actually reads (`active_utility_id`/`locale` — mirrors
 //! `shooting_engine::ShootingConfig`'s identical B1 migration). `RasterConfigOperation` lives here too,
 //! next to the `RasterConfig` it patches (TEMPLATE.md §4).
@@ -32,7 +32,7 @@ pub struct RasterConfig {
     #[dsl(block)]
     pub camera: RasterCamera,
     /// 🧰️ The active composite-window utility — was read off `view_state.active_utility_id`
-    /// (host-pushed `ViewState`, deleted by B1). Default mirrors the app's `RASTER_DEFAULT_UTILITY`.
+    /// (host-pushed `ViewModel`, deleted by B1). Default mirrors the app's `RASTER_DEFAULT_UTILITY`.
     pub active_utility_id: String,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
     pub locale: String,

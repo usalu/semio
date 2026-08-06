@@ -5,7 +5,7 @@
 //! nothing in it survives into the `.mathematical` document. It still round-trips through a real
 //! `DocumentStore` (with a real `backwards`), so camera/locale edits are VCS'd exactly like document
 //! content — absorbs the former app-struct `RefCell` (`MathPlayRuntime::camera`, the node-graph viewport)
-//! plus the locale the UI used to read off the deleted `ViewState`.
+//! plus the locale the UI used to read off the deleted `ViewModel`.
 
 use crate::artifacts::mathematical::MathCamera;
 use protocol::Operation;

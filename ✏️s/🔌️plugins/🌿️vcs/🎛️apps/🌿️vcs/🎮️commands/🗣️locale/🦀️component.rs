@@ -39,7 +39,7 @@ mod tests {
     }
 
     /// 🗣️ B1: locale is now `cfg.locale`, set via the typed `SetLocale` config command — no more passing
-    /// a `ViewState` into `render`/`app_labels` for this purpose (mirrors `shooting_ui`'s identical test).
+    /// a `ViewModel` into `render`/`app_labels` for this purpose (mirrors `shooting_ui`'s identical test).
     #[test]
     fn vcs_labels_resolve_german_locale() {
         use crate::apps::vcs::{VCS_PLAY_BODY_DOCUMENT, VCS_PLAY_BODY_EDITOR, VCS_PLAY_BODY_INSPECTION};

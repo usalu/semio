@@ -473,7 +473,7 @@ pub fn create_procedural3d_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
 
     pub type Procedural3dApp = VcsDocumentApp<Procedural3dPlayApp>;
 
@@ -490,7 +490,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut Procedural3dApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
     /// 🧵️ A `flowEvalTick` chain self-dispatches via `requestedEffects`, which only the JS renderer

@@ -31,7 +31,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use std::sync::LazyLock;
 
 //#region 🔖️Constants
 pub const PUZZLE5D_PLAY_APP_ID: &str = "puzzle5d-play";
@@ -60,7 +59,7 @@ pub const PUZZLE5D_PROXIMITY_RADIUS: f64 = 0.75;
 /// the DSL-text example fixtures are parsed once into the typed projection and re-serialized to the
 /// JSON string this module's `document_from_json`/`.example(...)` call sites expect.
 fn concrete_forest_example_json() -> String { parse_example_dsl(crate::artifacts::puzzle5d::dsl::PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest") }
-fn nakagin_example_json() -> String { parse_example_dsl(crate::artifacts::puzzle5d::dsl::PUZZLE5D_NAKAGIN_EXAMPLE_TEXT, "nakagin") }
+pub(crate) fn nakagin_example_json() -> String { parse_example_dsl(crate::artifacts::puzzle5d::dsl::PUZZLE5D_NAKAGIN_EXAMPLE_TEXT, "nakagin") }
 
 fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
     let projection = <Puzzle5dProjection as store::DocumentDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
@@ -1919,7 +1918,7 @@ pub fn register_puzzle5d_exports() {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::{testkit, ActionMeta, InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{testkit, ActionMeta, InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
 
     pub type Puzzle5dApp = VcsDocumentApp<Puzzle5dPlayApp>;
 
@@ -1951,7 +1950,7 @@ pub(crate) mod testkit {
 
     /// 🖼️ The rendered body, as a JSON string — every panel/window assertion greps this value.
     pub fn render_body(app: &mut Puzzle5dApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("serialize rendered node")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("serialize rendered node")
     }
 
     pub fn projection_of(app: &Puzzle5dApp) -> Value {

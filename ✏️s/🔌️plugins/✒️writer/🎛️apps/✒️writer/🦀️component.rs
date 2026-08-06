@@ -369,7 +369,7 @@ pub fn create_writer_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app as framework_new_app, new_app_with_registry as framework_new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
 
     pub type WriterApp = VcsDocumentApp<WriterPlayApp>;
 
@@ -395,7 +395,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut WriterApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
     pub fn main_window_measures(app: &mut WriterApp) -> Vec<WindowMeasure> {
@@ -671,11 +671,11 @@ mod tests {
     #[test]
     fn writer_labels_resolve_native_english_by_default_across_every_surface() {
         let mut app = testkit::new_app();
-        let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &semio_framework_plugin::ViewState::default()).expect("render");
+        let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &semio_framework_plugin::ViewModel::default()).expect("render");
         let inspection_json = serde_json::to_string(&inspection).unwrap();
         assert!(inspection_json.contains("\"Document\""));
         assert!(inspection_json.contains("\"Camera\""));
-        let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &semio_framework_plugin::ViewState::default()).expect("render");
+        let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &semio_framework_plugin::ViewModel::default()).expect("render");
         let catalogue_json = serde_json::to_string(&catalogue).unwrap();
         assert!(catalogue_json.contains("\"Language\""));
         assert!(catalogue_json.contains("Cypher-inspired"));
@@ -694,12 +694,12 @@ mod tests {
     fn writer_labels_resolve_german_locale_across_every_surface() {
         let mut app = testkit::new_app();
         app.dispatch_typed(WriterCommand::SetLocale(set_locale::SetLocale { value: "de".into() }), &semio_framework_plugin::testkit::meta("local")).expect("set locale");
-        let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &semio_framework_plugin::ViewState::default()).expect("render");
+        let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &semio_framework_plugin::ViewModel::default()).expect("render");
         let inspection_json = serde_json::to_string(&inspection).unwrap();
         assert!(inspection_json.contains("Dokument"));
         assert!(inspection_json.contains("Kamera"));
         assert!(!inspection_json.contains("\"Camera\""));
-        let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &semio_framework_plugin::ViewState::default()).expect("render");
+        let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &semio_framework_plugin::ViewModel::default()).expect("render");
         let catalogue_json = serde_json::to_string(&catalogue).unwrap();
         assert!(catalogue_json.contains("Sprache"));
         let measures = app.window_measures();

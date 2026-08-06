@@ -48,7 +48,7 @@ semio-s-plugin-cad = { path = "✏️s/🔌️plugins/📐️cad/📦️packages
   — `cad_document` dev-dependency repointed from `semio-s-app-cad` to `semio-s-plugin-cad`
   (`📦️packages/🦀️rust`), matching the writer/vcs/animate precedent already in that file.
 * `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/⚡️implementations/🦀️rust/📦️lib.rs`
-  — `use cad_document::CadScene;` → `use cad_document::artifacts::cad::CadScene;`.
+  — `use cad_document::CadProjection;` → `use cad_document::artifacts::cad::CadProjection;`.
 
 ## ⚠️ Cross-plugin dependents this agent did NOT edit
 

@@ -1,0 +1,12 @@
+command: cargo test -p semio-s-3d --lib bvh -- --nocapture
+env: SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk DEVELOPER_DIR=/Library/Developer/CommandLineTools
+date: 2026-08-06
+
+running 5 tests
+test spatial::tests::empty_bvh_returns_no_matches ... ok
+test brep::bvh::tests::missing_solid_returns_kernel_error ... ok
+test brep::bvh::tests::empty_solid_yields_empty_face_bvh_queries ... ok
+test brep::bvh::tests::edge_bvh_builds_six_edges_on_tetrahedron ... ok
+test brep::bvh::tests::face_bvh_builds_over_tetrahedron_with_four_faces ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 383 filtered out

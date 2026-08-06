@@ -7020,6 +7020,7 @@ dependencies = [
  "libc",
  "parley",
  "pollster",
+ "semio-framework-math",
  "semio-framework-os-kernel",
  "semio-framework-ui-styling",
  "serde",

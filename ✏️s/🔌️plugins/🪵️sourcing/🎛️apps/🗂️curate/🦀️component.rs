@@ -247,7 +247,7 @@ pub fn create_sourcing_curate_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app as new_app_impl, new_app_with_registry as new_app_with_registry_impl};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
 
     pub type SourcingApp = VcsDocumentApp<SourcingCurateApp>;
 
@@ -266,7 +266,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut SourcingApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
 //#endregion 🧪️Testkit

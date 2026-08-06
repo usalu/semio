@@ -2,7 +2,7 @@
 
 use semio_framework_core::{
     kernel::{ArtifactKind, CapabilityRequirement, Rights, Scope},
-    PluginManifest, ViewState,
+    PluginManifest, ViewModel,
 };
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -77,10 +77,33 @@ impl SessionLanePack {
         self.pending_binary_ops.clear();
     }
 
-    /// 🧾 Records Emit op bytes for this lane (host-authoritative apply pending).
-    pub fn record_emit_ops(&mut self, ops: Vec<u8>) {
-        if !ops.is_empty() {
+    /// 🧾 Applies guest `AppFrame::Emit` op bytes onto this lane via `DocumentCodec` when `schema` is set.
+    pub fn apply_emit_ops(&mut self, schema: Option<&str>, ops: Vec<u8>) {
+        if ops.is_empty() {
+            return;
+        }
+        let Some(schema) = schema.filter(|s| !s.is_empty()) else {
             self.pending_binary_ops = ops;
+            return;
+        };
+        let Some(codec) = store::document_codec(schema) else {
+            self.pending_binary_ops = ops;
+            return;
+        };
+        if self.pack.is_empty() && self.spr.is_empty() {
+            self.pending_binary_ops = ops;
+            return;
+        }
+        match (codec.apply_ops_binary)(&self.pack, &self.spr, &ops) {
+            Ok((pack, spr, ops_text)) => {
+                self.pack = pack;
+                self.spr = spr;
+                self.ops = ops_text;
+                self.pending_binary_ops.clear();
+            }
+            Err(error) => {
+                self.pending_binary_ops = ops;
+            }
         }
     }
 
@@ -97,6 +120,9 @@ impl SessionLanePack {
 pub struct DocumentSession {
     pub generation: u64,
     pub command_log_len: u64,
+    pub document_schema: Option<String>,
+    pub config_schema: Option<String>,
+    pub draft_schema: Option<String>,
     pub document: SessionLanePack,
     pub config: SessionLanePack,
     pub draft: SessionLanePack,
@@ -387,13 +413,37 @@ impl WasmPluginRuntime {
         Self::prepare_call(&mut store);
         let result = bindings.semio_framework_plugin().call_instantiate_app(&mut *store, app_id, app_id).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let instance_id = Self::plugin_result(result)?;
-        store.data_mut().ensure_session(instance_id);
+        let manifest = self.manifest.clone();
+        let host = store.data_mut();
+        let session = host.ensure_session(instance_id);
+        if let Some(app) = manifest.apps.iter().find(|app| app.id == app_id) {
+            let doc = app.io.document_schema.clone();
+            if !doc.is_empty() {
+                session.document_schema = Some(doc);
+            }
+        }
         Ok(instance_id)
     }
 
     pub fn destroy_app(&self, instance_id: u32) {
         if let Ok(mut store) = self.store_guard() {
             store.data_mut().sessions.remove(&instance_id);
+        }
+    }
+
+    /// Bind document/config/draft schema ids so Emit can fold through DocumentCodec.
+    pub fn bind_session_schemas(
+        &self,
+        instance_id: u32,
+        document_schema: impl Into<Option<String>>,
+        config_schema: impl Into<Option<String>>,
+        draft_schema: impl Into<Option<String>>,
+    ) {
+        if let Ok(mut store) = self.store_guard() {
+            let session = store.data_mut().ensure_session(instance_id);
+            session.document_schema = document_schema.into();
+            session.config_schema = config_schema.into();
+            session.draft_schema = draft_schema.into();
         }
     }
 
@@ -512,18 +562,18 @@ impl WasmPluginRuntime {
                 }
                 AppFrame::Emit { document_ops, config_ops, draft_ops, .. } => {
                     let session = host.ensure_session(instance_id);
-                    session.document.record_emit_ops(document_ops);
-                    session.config.record_emit_ops(config_ops);
-                    session.draft.record_emit_ops(draft_ops);
+                    let document_schema = session
+                        .document_schema
+                        .clone()
+                        .or_else(|| store::lane_schema_from_spr(&session.document.spr));
+                    let config_schema = session.config_schema.clone().or_else(|| store::lane_schema_from_spr(&session.config.spr));
+                    let draft_schema = session.draft_schema.clone().or_else(|| store::lane_schema_from_spr(&session.draft.spr));
+                    session.document.apply_emit_ops(document_schema.as_deref(), document_ops);
+                    session.config.apply_emit_ops(config_schema.as_deref(), config_ops);
+                    session.draft.apply_emit_ops(draft_schema.as_deref(), draft_ops);
                     session.command_log_len = session.command_log_len.saturating_add(1);
                     session.generation = session.generation.saturating_add(1);
                     eprintln!(
-                        "[DEBUG] host Emit recorded pending ops doc={} cfg={} draft={} gen={}",
-                        session.document.pending_binary_ops.len(),
-                        session.config.pending_binary_ops.len(),
-                        session.draft.pending_binary_ops.len(),
-                        session.generation
-                    );
                 }
                 _ => {}
             }
@@ -578,15 +628,15 @@ impl WasmPluginRuntime {
         bindings.semio_framework_plugin().call_clear_instance_guard(&mut *store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))
     }
 
-    pub fn utilities(&self, _instance_id: u32, _view_state: &ViewState) -> Result<Vec<UtilityNode>, PluginHostError> {
+    pub fn utilities(&self, _instance_id: u32, _view_state: &ViewModel) -> Result<Vec<UtilityNode>, PluginHostError> {
         Ok(Vec::new())
     }
 
-    pub fn window_engagements(&self, _instance_id: u32, _view_state: &ViewState) -> Result<HashMap<String, WindowEngagement>, PluginHostError> {
+    pub fn window_engagements(&self, _instance_id: u32, _view_state: &ViewModel) -> Result<HashMap<String, WindowEngagement>, PluginHostError> {
         Ok(HashMap::new())
     }
 
-    pub fn window_measures(&self, _instance_id: u32, _view_state: &ViewState) -> Result<HashMap<String, Vec<WindowMeasure>>, PluginHostError> {
+    pub fn window_measures(&self, _instance_id: u32, _view_state: &ViewModel) -> Result<HashMap<String, Vec<WindowMeasure>>, PluginHostError> {
         Ok(HashMap::new())
     }
 

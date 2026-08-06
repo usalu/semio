@@ -6,7 +6,7 @@
 
 // #region Adapters
 import * as React from "react";
-import { type StoragePort, createBrowserStoragePort } from "@semio-tech/framework-core";
+import { type StoragePort, createBrowserStoragePort, ephemeralBox } from "@semio-tech/framework-core";
 import { reactHostPort } from "../🔌Ports/🟦️component.tsx";
 // #endregion Adapters
 
@@ -131,16 +131,16 @@ export function readStoredUiDriver(storage: StoragePort): UiDriver {
 
 const UiDriverContext = reactHostPort.createContext<UiDriver | null>(null);
 
-let _uiDriverProvider: (() => UiDriver) | null = null;
+const _uiDriverProvider = ephemeralBox<(() => UiDriver) | null>("framework.modules.ui.elements.core.UiDriver.component.tsx._uiDriverProvider", null);
 
 /** @emoji 🚗️ Registers the active driver resolver for non-React consumers (e.g. {@link resolveTranslationLabel}). */
 export function setUiDriverProvider(fn: () => UiDriver): void {
-  _uiDriverProvider = fn;
+  _uiDriverProvider.current = fn;
 }
 
 /** @emoji 🚗️ Resolves the active driver outside React render context. */
 export function activeUiDriver(): UiDriver {
-  return _uiDriverProvider ? _uiDriverProvider() : readStoredUiDriver(createBrowserStoragePort());
+  return _uiDriverProvider.current ? _uiDriverProvider.current() : readStoredUiDriver(createBrowserStoragePort());
 }
 
 /** @emoji 🚗️ The active driver controlling labels, drag affordances, chrome/gumball reveal, and tooltips. */
@@ -180,11 +180,11 @@ export function useUiDriverTooltips(): UiDriverTooltips {
   return useUiDriver().tooltips;
 }
 
-let _controlLabelIdResolver: (id: string) => string = (id) => id;
+const _controlLabelIdResolver = ephemeralBox<(id: string) => string>("framework.modules.ui.elements.core.UiDriver.component.tsx._controlLabelIdResolver", (id) => id);
 
 /** @emoji 🏷️ Registers a product-specific mapper from shell control ids (`ui.*`) to i18n keys. */
 export function setControlLabelIdResolver(resolver: (id: string) => string): void {
-  _controlLabelIdResolver = resolver;
+  _controlLabelIdResolver.current = resolver;
 }
 
 /** @emoji 🏷️ Maps shell control ids to i18n keys for inline labels (identity until a product resolver is set). */
@@ -192,43 +192,43 @@ export function resolveControlLabelId(id: string): string {
   if (id.startsWith("ui.nav.")) {
     const segment = id.slice("ui.nav.".length);
     if (segment === "back" || segment === "forward" || segment === "up") {
-      return _controlLabelIdResolver(`ui.nav.${segment}`);
+      return _controlLabelIdResolver.current(`ui.nav.${segment}`);
     }
   }
   if (id === "ui.search.toggle") {
-    return _controlLabelIdResolver("ui.search.toggle");
+    return _controlLabelIdResolver.current("ui.search.toggle");
   }
   if (id === "ui.find.toggle") {
-    return _controlLabelIdResolver("ui.find.toggle");
+    return _controlLabelIdResolver.current("ui.find.toggle");
   }
   if (id === "ui.fullscreen.toggle") {
-    return _controlLabelIdResolver("ui.fullscreen.toggle");
+    return _controlLabelIdResolver.current("ui.fullscreen.toggle");
   }
   if (id === "ui.mobilePanel.toggle") {
-    return _controlLabelIdResolver("ui.mobilePanel.toggle");
+    return _controlLabelIdResolver.current("ui.mobilePanel.toggle");
   }
   if (id.startsWith("ui.panelToggle.")) {
-    return _controlLabelIdResolver(`ui.panelToggle.${id.slice("ui.panelToggle.".length)}`);
+    return _controlLabelIdResolver.current(`ui.panelToggle.${id.slice("ui.panelToggle.".length)}`);
   }
   if (id.startsWith("ui.ribbon.group.")) {
-    return _controlLabelIdResolver(`ui.ribbon.parent.${id.slice("ui.ribbon.group.".length)}`);
+    return _controlLabelIdResolver.current(`ui.ribbon.parent.${id.slice("ui.ribbon.group.".length)}`);
   }
   if (id.startsWith("ui.ribbon.") && id.includes(".group.")) {
-    return _controlLabelIdResolver(`ui.ribbon.parent.${id.slice(id.lastIndexOf(".group.") + ".group.".length)}`);
+    return _controlLabelIdResolver.current(`ui.ribbon.parent.${id.slice(id.lastIndexOf(".group.") + ".group.".length)}`);
   }
   if (id === "ui.windowSearch.suggestions") {
-    return _controlLabelIdResolver("ui.windowSearch.suggestions");
+    return _controlLabelIdResolver.current("ui.windowSearch.suggestions");
   }
   if (id === "ui.engagement.actions") {
-    return _controlLabelIdResolver("ui.engagement.actions");
+    return _controlLabelIdResolver.current("ui.engagement.actions");
   }
   if (id === "search-input" || id === "ui.windowSearch.action") {
-    return _controlLabelIdResolver("ui.windowSearch.action");
+    return _controlLabelIdResolver.current("ui.windowSearch.action");
   }
   if (id.startsWith("playground.panel.")) {
-    return _controlLabelIdResolver(`ui.panelToggle.${id.slice("playground.panel.".length)}`);
+    return _controlLabelIdResolver.current(`ui.panelToggle.${id.slice("playground.panel.".length)}`);
   }
-  return _controlLabelIdResolver(id);
+  return _controlLabelIdResolver.current(id);
 }
 
 /** @emoji 🏷️ Panel kind slug from a panel-toggle control id (`ui.panelToggle.*`, `playground.panel.*`, sketchpad navbar keys). */

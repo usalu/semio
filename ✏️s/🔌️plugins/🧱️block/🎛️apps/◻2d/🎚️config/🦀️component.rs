@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 pub struct Block2dConfig {
     /// 👁️ Multi-selected row ids in the document tree — was `Block2dPlayApp::selected_ids`.
     pub selected_ids: Vec<String>,
-    /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewState.locale`.
+    /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewModel.locale`.
     pub locale: String,
 }
 

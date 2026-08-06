@@ -1,0 +1,2 @@
+Wave0 baseline (CLT SDK): 381 passed, 1 failed (pre-existing brep::kernel::tests::curve_curve_intersect_finds_crossing_point), 3 slow torus tests skipped.
+Stubs compile. Log: 🧪wave0-test-quick-run-2.txt

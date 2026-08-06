@@ -271,9 +271,9 @@ fn apply_force_layout_to_trinity_graph(graph: &mut Graph) -> Result<(), TrinityR
 }
 //#endregion 🔖️Lod
 
-//#region 🔖️TrinityHost
+//#region 🔖️TrinityBridge
 /// 🖥️ Retained trinity graph host on the directed port board engine.
-pub struct TrinityHost {
+pub struct TrinityBridge {
     pub graph: Graph,
     store: crate::artifacts::jack::op::TrinityGraphStore,
     pub engine: TrinityBoardEngine,
@@ -290,7 +290,7 @@ pub struct TrinityHost {
     forced_draw_lod: Option<TrinityDrawLod>,
 }
 
-impl TrinityHost {
+impl TrinityBridge {
     pub fn from_graph(graph: &Graph) -> Self {
         let fixture = graph.to_fixture();
         let store = crate::artifacts::jack::op::TrinityGraphStore::new(crate::artifacts::jack::op::create_trinity_graph_envelope("trinity-host", fixture));
@@ -668,7 +668,7 @@ struct JackRunWithFixture {
     result: QueryResult,
     fixture_json: String,
 }
-//#endregion 🔖️TrinityHost
+//#endregion 🔖️TrinityBridge
 
 //#region 🔖️WasmBridge
 #[cfg(target_arch = "wasm32")]
@@ -737,7 +737,7 @@ mod wasm_session {
     use web_sys::HtmlCanvasElement;
 
     struct TrinitySessionInner {
-        host: TrinityHost,
+        host: TrinityBridge,
         gpu: canvas::gpu_session::CanvasGpuSession,
         width: u32,
         height: u32,
@@ -754,17 +754,17 @@ mod wasm_session {
         #[wasm_bindgen(constructor)]
         pub fn new() -> Self {
             let dsl = include_str!("../../../🗿️artifacts/🔌️jack/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.trinity.jack.dsl.semio");
-            let host = GraphFixture::parse_dsl(dsl).ok().and_then(|fixture| Graph::from_fixture(fixture).ok()).map(|g| TrinityHost::from_graph(&g)).unwrap_or_else(|| {
+            let host = GraphFixture::parse_dsl(dsl).ok().and_then(|fixture| Graph::from_fixture(fixture).ok()).map(|g| TrinityBridge::from_graph(&g)).unwrap_or_else(|| {
                 let empty =
                     GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "empty".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None };
-                TrinityHost::from_graph(&Graph::from_fixture(empty).expect("hardcoded empty fixture with a compile-time-valid manifest id is always graph-valid"))
+                TrinityBridge::from_graph(&Graph::from_fixture(empty).expect("hardcoded empty fixture with a compile-time-valid manifest id is always graph-valid"))
             });
             Self { state: Rc::new(RefCell::new(TrinitySessionInner { host, gpu: canvas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
         }
 
         #[wasm_bindgen(js_name = loadFixtureJson)]
         pub fn load_fixture_json(&self, json: &str) -> Result<(), JsValue> {
-            let host = TrinityHost::load_fixture_json(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let host = TrinityBridge::load_fixture_json(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
             self.state.borrow_mut().host = host;
             Ok(())
         }
@@ -989,7 +989,7 @@ mod tests {
 
     #[test]
     fn trinity_host_rebuilds_engine() {
-        let host = TrinityHost::from_graph(&nakagin_graph());
+        let host = TrinityBridge::from_graph(&nakagin_graph());
         assert_eq!(host.engine.nodes.len(), 9);
         assert!(!host.engine.edges.is_empty());
         assert!(!host.engine.enforce_acyclic);
@@ -999,7 +999,7 @@ mod tests {
 
     #[test]
     fn trinity_host_reorganize_moves_nodes() {
-        let mut host = TrinityHost::from_graph(&nakagin_graph());
+        let mut host = TrinityBridge::from_graph(&nakagin_graph());
         let before: Vec<(f64, f64)> = host.graph.nodes.values().map(|n| (n.x, n.y)).collect();
         host.reorganize();
         let after: Vec<(f64, f64)> = host.graph.nodes.values().map(|n| (n.x, n.y)).collect();
@@ -1008,7 +1008,7 @@ mod tests {
 
     #[test]
     fn trinity_host_tokenize_jack_json() {
-        let host = TrinityHost::from_graph(&nakagin_graph());
+        let host = TrinityBridge::from_graph(&nakagin_graph());
         let json = host.tokenize_jack_json("MATCH (a:Piece)").unwrap();
         let tokens: Vec<JackTokenSpan> = serde_json::from_str(&json).unwrap();
         assert!(tokens.iter().any(|row| row.start == 0));
@@ -1016,7 +1016,7 @@ mod tests {
 
     #[test]
     fn trinity_host_complete_jack_json() {
-        let host = TrinityHost::from_graph(&nakagin_graph());
+        let host = TrinityBridge::from_graph(&nakagin_graph());
         let json = host.complete_jack_json("MAT", 3).unwrap();
         let items: Vec<JackCompletion> = serde_json::from_str(&json).unwrap();
         assert!(items.iter().any(|row| row.label == "MATCH"));
@@ -1024,7 +1024,7 @@ mod tests {
 
     #[test]
     fn trinity_host_jack_create_undo() {
-        let mut host = TrinityHost::from_graph(&nakagin_graph());
+        let mut host = TrinityBridge::from_graph(&nakagin_graph());
         let before = host.graph.nodes.len();
         host.run_jack("CREATE (n:Piece)").unwrap();
         assert_eq!(host.graph.nodes.len(), before + 1);
@@ -1122,7 +1122,7 @@ mod tests {
 
     #[test]
     fn trinity_host_apply_rewrite_json_end_to_end() {
-        let mut host = TrinityHost::from_graph(&nakagin_graph());
+        let mut host = TrinityBridge::from_graph(&nakagin_graph());
         let rule = Rule {
             name: "label-core".into(),
             lhs: Lhs { pattern: PatternJson { left_var: "a".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }, where_clause: Some("a.name = 'b'".into()) },
@@ -1138,7 +1138,7 @@ mod tests {
 
     #[test]
     fn trinity_host_run_jack_json_and_with_fixture() {
-        let mut host = TrinityHost::from_graph(&nakagin_graph());
+        let mut host = TrinityBridge::from_graph(&nakagin_graph());
         let json = host.run_jack_json("MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name").unwrap();
         let result: QueryResult = serde_json::from_str(&json).unwrap();
         assert_eq!(result.rows.len(), 1);
@@ -1152,7 +1152,7 @@ mod tests {
 
     #[test]
     fn trinity_host_selected_and_highlighted_node_ids() {
-        let mut host = TrinityHost::from_graph(&nakagin_graph());
+        let mut host = TrinityBridge::from_graph(&nakagin_graph());
         host.set_viewport(800, 600, 1.0);
         host.pointer_down(400.0, 300.0, false);
         let json = host.selected_node_ids_json().unwrap();
@@ -1164,7 +1164,7 @@ mod tests {
 
     #[test]
     fn trinity_host_viewport_camera_and_wheel() {
-        let mut host = TrinityHost::from_graph(&nakagin_graph());
+        let mut host = TrinityBridge::from_graph(&nakagin_graph());
         host.set_viewport(800, 600, 1.0);
         let before_zoom = host.graph.camera.zoom;
         host.wheel_screen(400.0, 300.0, -100.0);
@@ -1175,7 +1175,7 @@ mod tests {
 
     #[test]
     fn trinity_host_pointer_drag_commits_position() {
-        let mut host = TrinityHost::from_graph(&nakagin_graph());
+        let mut host = TrinityBridge::from_graph(&nakagin_graph());
         host.set_viewport(800, 600, 1.0);
         let node_id = "7dc5b737-3b6b-4068-b315-b7bacc91c2e1";
         assert_eq!((host.graph.nodes[node_id].x, host.graph.nodes[node_id].y), (0.0, 0.0));
@@ -1189,7 +1189,7 @@ mod tests {
 
     #[test]
     fn trinity_host_commit_checkpoint_and_redo_and_store_generation() {
-        let mut host = TrinityHost::from_graph(&nakagin_graph());
+        let mut host = TrinityBridge::from_graph(&nakagin_graph());
         let gen0 = host.store_generation();
         host.run_jack("CREATE (n:Piece)").unwrap();
         assert!(host.store_generation() > gen0);
@@ -1203,7 +1203,7 @@ mod tests {
 
     #[test]
     fn trinity_host_forced_and_automatic_draw_lod_label() {
-        let mut host = TrinityHost::from_graph(&nakagin_graph());
+        let mut host = TrinityBridge::from_graph(&nakagin_graph());
         host.set_camera(0.0, 0.0, 0.05);
         assert_eq!(host.draw_lod_label(), "minimap");
         host.set_automatic_lod(false);

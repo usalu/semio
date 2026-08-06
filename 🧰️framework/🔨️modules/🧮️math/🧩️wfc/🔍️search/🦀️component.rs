@@ -10,7 +10,7 @@ use crate::wfc::domain::{DomainStore, RestrictResult};
 use crate::wfc::heuristics::{self, ObserveHeuristic};
 use crate::wfc::ids::{DecisionId, NodeId, PatternId};
 use crate::wfc::model::CompiledModel;
-use crate::wfc::nogood::{NogoodConfig, NogoodStore};
+use crate::wfc::nogood::{NogoodConfig, NogoodIndex};
 use crate::wfc::outcome::{ContradictionReport, PartialState, RunReport, Solution, SolveOutcome, UnsatReport};
 use crate::wfc::prop_ac3;
 use crate::wfc::propagate::PropQueue;
@@ -153,7 +153,7 @@ fn backtrack_and_repair<T: Topology>(
     metrics: &mut Metrics,
     local_remaining: &mut Option<u64>,
     sink: &mut EventSink,
-    nogoods: &mut NogoodStore,
+    nogoods: &mut NogoodIndex,
 ) -> RepairOutcome {
     // The trail's current decision prefix is exactly what caused this contradiction (whether an
     // ordinary propagation wipeout or a rejected complete assignment) — record it once, before any
@@ -237,7 +237,7 @@ fn decide_and_propagate<T: Topology>(
     decision_counter: &mut u32,
     node: NodeId,
     sink: &mut EventSink,
-    nogoods: &mut NogoodStore,
+    nogoods: &mut NogoodIndex,
 ) -> Option<NodeId> {
     let rng_snapshot = rng.state();
     let candidate = sample::sample_pattern(config.sampler, domains.get(node), model, rng);
@@ -271,7 +271,7 @@ fn drive<T: Topology>(
     local_backtrack_budget: Option<u64>,
     constraints: Option<&ConstraintSet<'_>>,
     sink: &mut EventSink,
-    nogoods: &mut NogoodStore,
+    nogoods: &mut NogoodIndex,
 ) -> StepOutcome {
     let mut local_remaining = local_backtrack_budget;
     loop {
@@ -349,7 +349,7 @@ fn drive_all<T: Topology>(
     limit: usize,
     constraints: Option<&ConstraintSet<'_>>,
     sink: &mut EventSink,
-    nogoods: &mut NogoodStore,
+    nogoods: &mut NogoodIndex,
 ) -> StepOutcome {
     let mut local_remaining = None;
     loop {
@@ -504,7 +504,7 @@ fn solve_inner<T: Topology>(
     let mut restarts = 0u64;
     // Persists across restarts: every attempt shares the same `init_domains`/`fixed`/constraints,
     // so a nogood learned in one restart is exactly as valid — and as watchable — in the next.
-    let mut nogood_store = NogoodStore::new(config.nogood);
+    let mut nogood_store = NogoodIndex::new(config.nogood);
 
     loop {
         let mut init = initialize(model, topo, init_domains, fixed, constraints);
@@ -591,7 +591,7 @@ fn solve_all_inner<T: Topology>(model: &CompiledModel, topo: &T, config: &Search
     let mut init = initialize(model, topo, init_domains, fixed, constraints);
     let mut decision_counter = 0u32;
     let mut raw_solutions = Vec::new();
-    let mut nogood_store = NogoodStore::new(config.nogood);
+    let mut nogood_store = NogoodIndex::new(config.nogood);
     if init.wipeout.is_none() {
         init.wipeout = nogood_store.rewatch_for_new_attempt(model, topo, &mut init.domains, &mut init.queue, &mut init.trail, &mut init.metrics);
     }

@@ -1,17 +1,17 @@
 //! 🎒️ CAD artifact — the binary document surface: `encode`/`decode` over the derive-generated
-//! `store::DocumentPack`, and the law that pack and dsl are two projections of the same `CadScene`.
+//! `store::DocumentPack`, and the law that pack and dsl are two projections of the same `CadProjection`.
 
-use crate::artifacts::cad::CadScene;
+use crate::artifacts::cad::CadProjection;
 use store::PackError;
 
-/// 📦️ Encodes a `CadScene` to its binary pack form.
-pub fn encode(document: &CadScene) -> Vec<u8> {
+/// 📦️ Encodes a `CadProjection` to its binary pack form.
+pub fn encode(document: &CadProjection) -> Vec<u8> {
     store::DocumentPack::encode_pack(document)
 }
 
-/// 📖️ Decodes a `CadScene` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<CadScene, PackError> {
-    <CadScene as store::DocumentPack>::decode_pack(bytes)
+/// 📖️ Decodes a `CadProjection` from its binary pack form.
+pub fn decode(bytes: &[u8]) -> Result<CadProjection, PackError> {
+    <CadProjection as store::DocumentPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -20,7 +20,7 @@ mod tests {
     use super::*;
     use crate::artifacts::cad::testkit::{sample_geometry_without_anchors, sample_object, sample_scene_with};
 
-    fn sample_scene() -> CadScene {
+    fn sample_scene() -> CadProjection {
         sample_scene_with(sample_geometry_without_anchors())
     }
 
@@ -52,10 +52,10 @@ mod tests {
         use protocol::{DocumentId, Edit, SchemaId};
         use store::{create_document_envelope, DocumentCommand, DocumentStore};
 
-        let mut store: DocumentStore<CadScene, CadOperation> = DocumentStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad-demo", empty_cad_projection(), None));
+        let mut store: DocumentStore<CadProjection, CadOperation> = DocumentStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad-demo", empty_cad_projection(), None));
         store.dispatch(DocumentCommand::Apply { operations: vec![CadOperation::AddObject { pane: CadPaneId::Shape, object: sample_object("object-1") }], description: None }).expect("apply");
         let edit: &Edit<CadOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<CadScene, CadOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::test_support::assert_command_envelope_round_trip::<CadProjection, CadOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

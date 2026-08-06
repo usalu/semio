@@ -4,7 +4,7 @@
 use crate::apps::remodel::config::RemodelConfig;
 use crate::apps::remodel::modes::model::windows::model::options::layers;
 use crate::apps::remodel::terminology::RemodelLabels;
-use crate::artifacts::remodel::{PackedF32, RemodelScene};
+use crate::artifacts::remodel::{PackedF32, RemodelProjection};
 use semio_framework_plugin::{
     build_world_3d_scene, world3d_camera_json, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions, WorldSunConfig,
 };
@@ -44,7 +44,7 @@ pub fn window_measures(config: &RemodelConfig, labels: &RemodelLabels) -> Vec<Wi
 //#endregion 🔖️Definition
 
 //#region 🔖️Scene
-fn world_meshes_json(scene: &RemodelScene) -> String {
+fn world_meshes_json(scene: &RemodelProjection) -> String {
     serde_json::to_string(&vec![json!({ "id": REMODEL_MESH_ID, "data": scene.results.mesh.mesh })]).unwrap_or_else(|_| "[]".into())
 }
 
@@ -71,7 +71,7 @@ fn world_instances_json(config: &RemodelConfig) -> String {
 /// layer: a synchronous run only ever publishes the FINAL sparse cloud, never an interior one.
 /// `PackedF32`/`PackedU8`'s inner string is already a base64 little-endian buffer, matching
 /// `positionsB64`/`colorsB64`'s wire shape byte-for-byte — no decode/re-encode round trip needed.
-fn world_points_json(scene: &RemodelScene, config: &RemodelConfig) -> Option<String> {
+fn world_points_json(scene: &RemodelProjection, config: &RemodelConfig) -> Option<String> {
     let mut layers: Vec<Value> = Vec::new();
     if config.layers.sparse {
         if let Some(sparse) = &scene.results.sparse {
@@ -126,7 +126,7 @@ fn world_points_json(scene: &RemodelScene, config: &RemodelConfig) -> Option<Str
     }
 }
 
-pub fn render(scene: &RemodelScene, config: &RemodelConfig) -> UiNode {
+pub fn render(scene: &RemodelProjection, config: &RemodelConfig) -> UiNode {
     let mut world_scene = world3d_scene(
         world3d_camera_json(config.camera.position, config.camera.target, config.camera.fov),
         world_meshes_json(scene),

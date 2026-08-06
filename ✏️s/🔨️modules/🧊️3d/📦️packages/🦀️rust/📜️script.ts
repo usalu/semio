@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀️ `semio-s-3d` router: `bun ./📜️script.ts test`. */
-import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
@@ -16,6 +16,14 @@ class BenchScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("bench", BenchScript);
+
+/** 🧹️Zero-warning clippy gate: `cargo clippy -p semio-s-3d --all-targets -- -D warnings`. */
+class LintScript extends BundleScript {
+  run(segments: string[]): void {
+    runCargoLint(["semio-s-3d"], this.repoRoot, segments);
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("bench", BenchScript).register("lint", LintScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

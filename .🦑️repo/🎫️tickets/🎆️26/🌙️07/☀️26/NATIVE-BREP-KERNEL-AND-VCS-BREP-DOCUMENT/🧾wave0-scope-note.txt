@@ -1,0 +1,14 @@
+Wave 0 scope note (2026-08-06)
+
+Implemented:
+- Reopened/resumed ticket 26/07/26/NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT (status kept open; session note added; repo MCP unavailable; CLI rebuild blocked by Xcode license).
+- Coordination: 👥️ownership.md, 📥️integration-requests.md, 🚦️lane-status.md, 📐️module-contracts.md, 🧾prompts/*.
+- 17 stub modules under 📐️brep registered in 📦️glue.rs.
+- Lint target + LintScript on semio-s-3d; launch.json entries 🧪test/🧪test-quick/🧪lint for semio-s-3d.
+- Build workaround documented: SDKROOT+DEVELOPER_DIR -> CommandLineTools (Xcode license).
+
+Validated by:
+- cargo check -p semio-s-3d --lib with CLT SDK: success after glue fix.
+- cargo test -p semio-s-3d --lib started; log 🧪wave0-test-quick-run-1.txt.
+
+Deferred: full Wave 0 gate completion pending test process; VCS .brep document layer.

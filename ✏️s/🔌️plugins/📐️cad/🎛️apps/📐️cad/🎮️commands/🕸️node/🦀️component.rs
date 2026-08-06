@@ -3,7 +3,7 @@
 use crate::apps::cad::config::{CadConfig, CadConfigOperation};
 use crate::apps::cad::CadDispatchCtx;
 use crate::artifacts::cad::op::CadOperation;
-use crate::artifacts::cad::CadScene;
+use crate::artifacts::cad::CadProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::apps::cad::{runtime_of, snapshot_of};
@@ -21,7 +21,7 @@ pub mod add_node {
         pub kind: String,
     }
 
-    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &AddNode, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         let document = doc.projection;
         let mut runtime = runtime_of(cfg);
         let id = next_cad_id("node");
@@ -46,7 +46,7 @@ pub mod rename_node {
         pub value: String,
     }
 
-    pub fn handle(payload: &RenameNode, _doc: &DocumentView<'_, CadScene>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &RenameNode, _doc: &DocumentView<'_, CadProjection>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         if payload.node_id.is_empty() || payload.value.is_empty() {
             return Ok(Emit::default());
         }

@@ -4,6 +4,7 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
+import { ephemeralBox } from "@semio-tech/framework-core";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { chmodSync, existsSync, fstatSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { devNull, homedir } from "node:os";
@@ -1071,11 +1072,11 @@ interface CrateIndexRecord {
   libName: string;
 }
 
-let cachedCrateIndex: {
+const cachedCrateIndex = ephemeralBox<{
   exactPkgNames: Set<string>;
   libNameToCrates: Map<string, CrateIndexRecord[]>;
   aliasToCrates: Map<string, CrateIndexRecord[]>;
-} | null = null;
+} | null>("framework.products.repo.modules.lib.packages.typescript.index.ts.cachedCrateIndex", null);
 
 const CARGO_PREFIX_WORDS = new Set(["semio", "s", "framework", "os", "kernel", "plugin", "module", "tech", "app"]);
 
@@ -1104,7 +1105,7 @@ function generateCargoVariants(name: string): string[] {
 }
 
 function getCargoWorkspaceIndex(repoRoot = getWorkspaceRoot()) {
-  if (cachedCrateIndex) return cachedCrateIndex;
+  if (cachedCrateIndex.current) return cachedCrateIndex.current;
   const exactPkgNames = new Set<string>();
   const libNameToCrates = new Map<string, CrateIndexRecord[]>();
   const aliasToCrates = new Map<string, CrateIndexRecord[]>();
@@ -1153,8 +1154,8 @@ function getCargoWorkspaceIndex(repoRoot = getWorkspaceRoot()) {
   };
 
   walk(repoRoot);
-  cachedCrateIndex = { exactPkgNames, libNameToCrates, aliasToCrates };
-  return cachedCrateIndex;
+  cachedCrateIndex.current = { exactPkgNames, libNameToCrates, aliasToCrates };
+  return cachedCrateIndex.current;
 }
 
 export function resolveCargoPackageName(pkg: string, cwd: string): string {
@@ -1849,11 +1850,11 @@ function buildPlaygroundPortsFromManifests(): Record<string, PlaygroundPortSpec>
   };
 }
 
-let playgroundPortsCache: Record<string, PlaygroundPortSpec> | undefined;
+const playgroundPortsCache = ephemeralBox<Record<string, PlaygroundPortSpec> | undefined>("framework.products.repo.modules.lib.packages.typescript.index.ts.playgroundPortsCache", undefined);
 
 function resolvePlaygroundPorts(): Record<string, PlaygroundPortSpec> {
-  playgroundPortsCache ??= buildPlaygroundPortsFromManifests();
-  return playgroundPortsCache;
+  playgroundPortsCache.current ??= buildPlaygroundPortsFromManifests();
+  return playgroundPortsCache.current;
 }
 
 export const PLAYGROUND_PORTS: Record<string, PlaygroundPortSpec> = new Proxy({} as Record<string, PlaygroundPortSpec>, {

@@ -3,7 +3,7 @@
 use crate::apps::cad::config::{CadConfig, CadConfigOperation};
 use crate::apps::cad::CadDispatchCtx;
 use crate::artifacts::cad::op::CadOperation;
-use crate::artifacts::cad::CadScene;
+use crate::artifacts::cad::CadProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::apps::cad::{runtime_of, snapshot_of, CadPlayRuntime};
@@ -20,7 +20,7 @@ pub mod focus_model_definition {
         pub model_definition_id: String,
     }
 
-    pub fn handle(payload: &FocusModelDefinition, _doc: &DocumentView<'_, CadScene>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &FocusModelDefinition, _doc: &DocumentView<'_, CadProjection>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         Ok(Emit::operations(vec![CadOperation::SetActiveModelDefinition { model_definition_id: payload.model_definition_id.clone() }]))
     }
 }
@@ -36,7 +36,7 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         let _ = runtime_of(cfg);
         let (scene, runtime) = if payload.example_id.is_empty() {
             (default_document(), CadPlayRuntime::default())

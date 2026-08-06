@@ -1,0 +1,23 @@
+Lane 2-sweep scope note (2026-08-06)
+
+Owned file: ✏️s/🔨️modules/🧊️3d/📐️brep/➡️sweep/🦀️component.rs
+
+Implemented (via euler + plane/cylinder surfaces; no brepkit deps):
+- extrude_face(body, face, direction, distance) -> Result<SolidId, KernelError>
+  Planar polygonal outer loop -> prism solid (bottom/top + planar sides).
+  Single closed circular outer edge extruded along circle axis -> analytic Cylinder solid.
+- revolve_face / loft_profiles / sweep_along_path / pipe / helical_sweep
+  Stubbed with KernelError::Operation (extrude is the Wave-2 gate).
+
+Tests:
+- extrude rectangle (2x3) by 4 along Z -> V=8 E=12 F=6, volume=24 matching make_box.
+- extrude via make_rectangle_wire + make_planar_face_from_wire -> volume=1.
+- rejects zero direction/distance; revolve_face returns Operation stub error.
+
+Deferred:
+- Full revolve/loft/path-sweep/pipe/helical (stub errors until follow-on).
+- Inner-loop (holes) extrusion.
+- Non-planar profile faces.
+
+Evidence: 🧪lane-2-sweep-test-quick-run-1.txt — 4 passed.
+Contract: sweep FROZEN.

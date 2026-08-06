@@ -507,7 +507,7 @@ pub struct InvocationResult {
 pub struct ActionContext {
     pub invocation: ActionInvocation,
     pub document_projection: DslValue,
-    pub view_state: super::ViewState,
+    pub view_state: super::ViewModel,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub granted_capabilities: Vec<CapabilityGrant>,
 }
@@ -519,7 +519,7 @@ pub struct ActionContext {
 #[serde(rename_all = "camelCase")]
 pub struct CommandContext {
     pub invocation: CommandInvocation,
-    pub view_state: super::ViewState,
+    pub view_state: super::ViewModel,
 }
 //#endregion 🔖️Invocation
 

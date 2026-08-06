@@ -3,7 +3,7 @@
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigOperation};
 use crate::artifacts::remodel::engine::next_remodel_id;
 use crate::artifacts::remodel::op::RemodelOperation;
-use crate::artifacts::remodel::{CameraCalibration, GcpObservation, GroundControlPoint, RemodelScene};
+use crate::artifacts::remodel::{CameraCalibration, GcpObservation, GroundControlPoint, RemodelProjection};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -30,7 +30,7 @@ pub mod edit_calibration {
         pub locked: bool,
     }
 
-    pub fn handle(payload: &EditCalibration, doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(payload: &EditCalibration, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
         let entry = CameraCalibration {
             id: payload.camera_id.clone(),
             label: payload.label.clone(),
@@ -67,7 +67,7 @@ pub mod calibrate_cameras {
     /// for every camera id referenced by a stream that has no calibration entry yet. A documented
     /// simplification standing in for a real Zhang/checkerboard calibration pass (no calibration target
     /// detection is wired into this program).
-    pub fn handle(_payload: &CalibrateCameras, doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(_payload: &CalibrateCameras, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
         let scene = doc.projection;
         let mut calibration = scene.calibration.clone();
         for stream in &scene.streams {
@@ -111,7 +111,7 @@ pub mod add_gcp {
         pub world_z: f64,
     }
 
-    pub fn handle(payload: &AddGcp, doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(payload: &AddGcp, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
         let id = next_remodel_id("gcp");
         let mut gcps = doc.projection.gcps.clone();
         gcps.push(GroundControlPoint { id, name: payload.name.clone(), world_position: [payload.world_x, payload.world_y, payload.world_z], observations: Vec::new() });
@@ -130,7 +130,7 @@ pub mod remove_gcp {
         pub gcp_id: String,
     }
 
-    pub fn handle(payload: &RemoveGcp, doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(payload: &RemoveGcp, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
         let gcps: Vec<GroundControlPoint> = doc.projection.gcps.iter().filter(|gcp| gcp.id != payload.gcp_id).cloned().collect();
         Ok(Emit::operations(vec![RemodelOperation::SetGcps { gcps }]))
     }
@@ -151,7 +151,7 @@ pub mod place_gcp_observation {
         pub pixel_y: f32,
     }
 
-    pub fn handle(payload: &PlaceGcpObservation, doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(payload: &PlaceGcpObservation, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
         let mut gcps = doc.projection.gcps.clone();
         let Some(gcp) = gcps.iter_mut().find(|gcp| gcp.id == payload.gcp_id) else { return Ok(Emit::default()) };
         gcp.observations.push(GcpObservation { stream_id: payload.stream_id.clone(), frame_index: payload.frame_index, pixel: [payload.pixel_x, payload.pixel_y] });

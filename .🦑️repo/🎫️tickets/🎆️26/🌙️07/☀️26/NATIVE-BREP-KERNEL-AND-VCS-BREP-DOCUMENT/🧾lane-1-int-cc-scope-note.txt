@@ -1,0 +1,15 @@
+Lane 1-int-cc scope note
+========================
+Owned file: int-cc/component.rs under brep
+
+Public API (FROZEN):
+- CurveCurveHit { point: Pnt3, t_a: f64, t_b: f64 }
+- intersect_curve_curve(a: &Curve3, b: &Curve3, tol: f64) -> Result<Vec<CurveCurveHit>, IntersectError>
+
+Implementation:
+- Analytic Line/Line, Line/Circle, coplanar Circle/Circle
+- General NURBS via to_nurbs + knot-insert Bezier spans + RationalBezier3 AABB clip + Newton
+- sample+Newton fallback
+
+Tests: cargo test -p semio-s-3d --lib int_cc -> 4 passed
+No integrator requests.

@@ -3,7 +3,7 @@
 use crate::apps::cad::config::{CadConfig, CadConfigOperation};
 use crate::apps::cad::CadDispatchCtx;
 use crate::artifacts::cad::op::CadOperation;
-use crate::artifacts::cad::CadScene;
+use crate::artifacts::cad::CadProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::apps::cad::{cad_config_from_runtime, cad_pane_id_from_suffix, cad_window_id_for_pane, runtime_of, snapshot_of};
@@ -20,7 +20,7 @@ pub mod set_active_utility {
         pub utility_id: String,
     }
 
-    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         // 🧰️ Switching the active utility is config-only: it never mutates the document. Clear
         // any in-progress engagement session / rubber-band scratch so a stale preview cannot
         // leak across a utility switch.
@@ -49,7 +49,7 @@ pub mod set_dislocate_option {
         pub pressed: Option<bool>,
     }
 
-    pub fn handle(payload: &SetDislocateOption, _doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetDislocateOption, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let pane = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_suffix);
         let window_id = cad_window_id_for_pane(pane);

@@ -273,7 +273,7 @@ import {
   type SpacePanelState,
   type SpaceProgramEntry,
   type SpawnedAppEntry,
-  type ViewState,
+  type ViewModel,
 } from "../Shell/🟦️component.tsx";
 import {
   beginInteractivePluginAction,
@@ -771,7 +771,7 @@ function FrameworkOsShellInner({
         // still real, live state, so `SpacePanelState` itself stays.
         const panelState = buildSpacePanelState([], []);
         const instanceId = await handle.createApp(sApp.id);
-        const viewState: ViewState = { activeModeId: sApp.defaultModeId ?? sApp.modes[0]?.id, panelJson: panelJsonFromState(panelState) };
+        const viewState: ViewModel = { activeModeId: sApp.defaultModeId ?? sApp.modes[0]?.id, panelJson: panelJsonFromState(panelState) };
         // 🪟️ Seed default-layout panes (Top/Perspective) before any effect can fire actions — otherwise
         // boot `setActiveExample` races the session-switch refresh and wipes pane bodies.
         const seeded = applyFrameworkLayoutSeed(sApp.defaultLayout, sApp.windowKinds, EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
@@ -1184,13 +1184,13 @@ function FrameworkOsShellInner({
 
   /** 🛠️ Overlays the mode-level host-owned `activeToolId` onto a view state at plugin-call time —
    * mirrors `injectActiveUtility` but is windowless (a tool is scoped to the active mode, not a window). */
-  const injectActiveTool = useCallback((viewState: ViewState): ViewState => {
+  const injectActiveTool = useCallback((viewState: ViewModel): ViewModel => {
     const toolId = activeToolIdRef.current ?? undefined;
     return viewState.activeToolId === toolId ? viewState : { ...viewState, activeToolId: toolId };
   }, []);
 
   /** 🧰️ Overlays the active window's host-owned `activeUtilityId` (and the mode's `activeToolId`) onto a view state at plugin-call time. */
-  const injectActiveUtility = useCallback((viewState: ViewState, windowId?: string | null): ViewState => {
+  const injectActiveUtility = useCallback((viewState: ViewModel, windowId?: string | null): ViewModel => {
     const key = windowId ?? activeWindowIdRef.current;
     const utilityId = key ? (activeUtilityByWindowIdRef.current[key] ?? undefined) : undefined;
     const withUtility = viewState.activeUtilityId === utilityId ? viewState : { ...viewState, activeUtilityId: utilityId };
@@ -1368,7 +1368,7 @@ function FrameworkOsShellInner({
       // space app's own statically-linked copy of the same os-core crate, so nothing crosses the wasm
       // boundary unless this shell pushes it explicitly.
       const appRegistrationsJson = JSON.stringify(loadedPlugins.flatMap((entry) => (entry.manifest.apps ?? []).map((app) => ({ pluginId: entry.handle.pluginId, app }))));
-      const viewState: ViewState = injectActiveTool({
+      const viewState: ViewModel = injectActiveTool({
         ...nextSession.viewState,
         contributionsJson,
         locale: uiLocale,
@@ -1536,7 +1536,7 @@ function FrameworkOsShellInner({
   }, [uiTerminology, uiLocale]);
 
   const refreshSpawnedUi = useCallback(
-    async (spawned: SpawnedAppEntry, viewState: ViewState, scopeArg: UiDirtyScope = { kind: "full" }) => {
+    async (spawned: SpawnedAppEntry, viewState: ViewModel, scopeArg: UiDirtyScope = { kind: "full" }) => {
       if (scopeArg.kind === "none") return;
       const generation = ++spawnedRefreshGenerationRef.current;
       const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId);
@@ -1557,7 +1557,7 @@ function FrameworkOsShellInner({
       const cache = spawnedUiRefreshCacheRef.current;
       const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
       const bodyKey = resolveCanvasBodyKey(app);
-      const fullViewState: ViewState = injectActiveUtility(
+      const fullViewState: ViewModel = injectActiveUtility(
         { ...viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology, windowId: bodyKey, windowInstances: [{ id: bodyKey, windowKindId: bodyKey }] },
         spawned.id,
       );
@@ -1628,7 +1628,7 @@ function FrameworkOsShellInner({
   // 🏠️🧳️ Generic replacement for the old `switchToSApp` — switches to either the host plugin's landing
   // or host app by id (both resolved via `hostConfig`, never a specific app's identity).
   const switchToManagedApp = useCallback(
-    async (appId: string, viewState?: ViewState): Promise<ActiveSession | null> => {
+    async (appId: string, viewState?: ViewModel): Promise<ActiveSession | null> => {
       const sPlugin = hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined;
       const app = sPlugin?.manifest.apps.find((candidate) => candidate.id === appId);
       if (!sPlugin || !app) return null;
@@ -1641,7 +1641,7 @@ function FrameworkOsShellInner({
       }
       const instanceId = await sPlugin.handle.createApp(app.id);
       // 🪦️ See `establishPrimarySession`'s comment above — `programs` is permanently empty now.
-      const nextViewState: ViewState = viewState ?? {
+      const nextViewState: ViewModel = viewState ?? {
         activeModeId: app.defaultModeId ?? app.modes[0]?.id,
         panelJson: panelJsonFromState(buildSpacePanelState([], [])),
       };
@@ -1663,7 +1663,7 @@ function FrameworkOsShellInner({
     [loadedPlugins, refreshUi, session, appLabelsOverlay, hostConfig, landingAppId, uiTerminology, uiLocale],
   );
 
-  const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, documentJson: string, viewState: ViewState) => {
+  const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, documentJson: string, viewState: ViewModel) => {
     try {
       const document = JSON.parse(documentJson) as Record<string, unknown>;
       await plugin.handleAction(pluginInstanceId, encodeActionWire({ controllerId: app.controllerId, action: "setDocument", args: { document } }), viewState);
@@ -1673,7 +1673,7 @@ function FrameworkOsShellInner({
   }, []);
 
   const ensureSpawnedPlugin = useCallback(
-    async (program: SpaceProgramEntry, label?: string, osInstanceId?: string, documentJson?: string, sourceViewState?: ViewState): Promise<SpacePanelState | null> => {
+    async (program: SpaceProgramEntry, label?: string, osInstanceId?: string, documentJson?: string, sourceViewState?: ViewModel): Promise<SpacePanelState | null> => {
       const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === program.pluginId);
       if (!pluginEntry || !session) return null;
       const app = pluginEntry.manifest.apps.find((candidate) => candidate.id === program.appId);
@@ -1980,7 +1980,7 @@ function FrameworkOsShellInner({
   );
 
   const applyShellUri = useCallback(
-    async (uri: string, preservedViewState?: ViewState) => {
+    async (uri: string, preservedViewState?: ViewModel) => {
       const currentSession = sessionRef.current;
       if (!hostConfig || !currentSession || loadedPlugins.length === 0) return;
       const path = uri.split("?")[0] ?? "/";
@@ -2254,7 +2254,7 @@ function FrameworkOsShellInner({
         const pluginEntry = findPluginForAction(action);
         const program = pluginEntry?.handle;
         if (plugin) {
-          const viewState: ViewState = { ...session.viewState, activeUtilityId: next ?? undefined, activeToolId: next ? undefined : activeToolIdRef.current ?? undefined, windowId };
+          const viewState: ViewModel = { ...session.viewState, activeUtilityId: next ?? undefined, activeToolId: next ? undefined : activeToolIdRef.current ?? undefined, windowId };
           const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { utilityId: next } };
           void program
             .handleAction(session.instanceId, encodeActionWire(forwarded), viewState)
@@ -2278,7 +2278,7 @@ function FrameworkOsShellInner({
         const pluginEntry = findPluginForAction(action);
         const program = pluginEntry?.handle;
         if (plugin) {
-          const viewState: ViewState = { ...session.viewState, activeToolId: next ?? undefined, activeUtilityId: next ? undefined : session.viewState.activeUtilityId };
+          const viewState: ViewModel = { ...session.viewState, activeToolId: next ?? undefined, activeUtilityId: next ? undefined : session.viewState.activeUtilityId };
           const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { toolId: next } };
           void program
             .handleAction(session.instanceId, encodeActionWire(forwarded), viewState)

@@ -2,11 +2,11 @@
 
 use crate::apps::rewrite::config::RewriteConfig;
 use crate::apps::rewrite::terminology::TrinityRewriteLabels;
-use crate::artifacts::rewrite::RewriteRuleState;
+use crate::artifacts::rewrite::RewriteRuleModel;
 use semio_framework_plugin::{tree_item_with_action, Label, PanelTreeBuilder, UiNode, UiTreeItemNode, ui_text};
 use serde_json::json;
 
-pub(crate) fn render(state: &RewriteRuleState, cfg: &RewriteConfig, labels: &TrinityRewriteLabels) -> UiNode {
+pub(crate) fn render(state: &RewriteRuleModel, cfg: &RewriteConfig, labels: &TrinityRewriteLabels) -> UiNode {
     let Some(fixture) = crate::apps::rewrite::parse_fixture_json(&state.before_fixture_json) else {
         return ui_text(Label::data("Invalid trinity fixture"));
     };

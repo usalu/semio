@@ -5,7 +5,7 @@
 //! `DocumentStore` (with a real `backwards`), so selection/drag/locale edits are VCS'd exactly like
 //! document content. Absorbs everything that used to live in the pre-B1 `ReasoningWiresPlayApp`'s
 //! ephemeral `WiresPlayRuntime` (selection + in-flight pointer drag of one board node) plus the `locale`
-//! the deleted `ViewState` used to carry.
+//! the deleted `ViewModel` used to carry.
 
 use protocol::Operation;
 use serde::{Deserialize, Serialize};

@@ -3,7 +3,7 @@
 
 use crate::apps::puzzle5d::config::{Puzzle5dRuntime, Puzzle5dSelection};
 use crate::apps::puzzle5d::{
-    default_document, document_from_json, empty_document, Puzzle5dActionCtx, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dPart, NAKAGIN_EXAMPLE_JSON, PUZZLE5D_EXAMPLE_CONCRETE_FOREST, PUZZLE5D_EXAMPLE_NAKAGIN,
+    default_document, document_from_json, empty_document, nakagin_example_json, Puzzle5dActionCtx, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dPart, PUZZLE5D_EXAMPLE_CONCRETE_FOREST, PUZZLE5D_EXAMPLE_NAKAGIN,
 };
 use crate::artifacts::puzzle5d::engine::import_compose_design_json;
 use serde_json::Value;
@@ -25,7 +25,7 @@ pub fn set_active_example(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>)
     } else if example_id == PUZZLE5D_EXAMPLE_CONCRETE_FOREST || example_id == "concrete" {
         Some(default_document())
     } else if example_id == PUZZLE5D_EXAMPLE_NAKAGIN || example_id == "nakagin" {
-        Some(document_from_json(NAKAGIN_EXAMPLE_JSON.as_str()))
+        Some(document_from_json(nakagin_example_json().as_str()))
     } else {
         None
     };

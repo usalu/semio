@@ -197,6 +197,20 @@ module.exports = {
       from: { pathNot: "^🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/" },
       to: { path: "^🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🔣️plugins\\.json$" },
     },
+    {
+      name: "no-state-outside-os",
+      severity: "error",
+      comment:
+        "OS-exclusive state authority: ✏️s and non-OS framework must not import OS host DocumentStore/session internals via deep relative paths — go through @semio-tech packages / public host APIs",
+      from: {
+        path: "^(✏️s/|🧰️framework/)",
+        pathNot: "^🧰️framework/🛍️products/💻️os/",
+      },
+      to: {
+        path: "^🧰️framework/🛍️products/💻️os/.*/(🏪️store|🖥️host)/",
+        dependencyTypes: ["local"],
+      },
+    },
     ...crossTechnologyRules(),
     ...crossPluginRules(),
     noImplSegmentRule(),

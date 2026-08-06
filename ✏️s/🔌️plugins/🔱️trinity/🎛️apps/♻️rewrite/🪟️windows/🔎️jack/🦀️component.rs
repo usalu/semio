@@ -2,7 +2,7 @@
 //! this rule, with hover/select variable occurrences).
 
 use crate::apps::rewrite::config::RewriteConfig;
-use crate::artifacts::rewrite::RewriteRuleState;
+use crate::artifacts::rewrite::RewriteRuleModel;
 use semio_framework_plugin::{build_text_editor_scene, text_identifier_bounds_at, TextEditorScene, UiNode};
 use serde_json::json;
 
@@ -27,7 +27,7 @@ fn var_occurrences_json(text: &str, var: &str) -> Option<String> {
     Some(json!({ "selection": ranges_json, "hover": ranges_json }).to_string())
 }
 
-pub(crate) fn render(state: &RewriteRuleState, cfg: &RewriteConfig) -> UiNode {
+pub(crate) fn render(state: &RewriteRuleModel, cfg: &RewriteConfig) -> UiNode {
     let query = crate::apps::rewrite::compiled_jack_query(state);
     let active_var = if !cfg.active_hover_var.is_empty() { cfg.active_hover_var.as_str() } else { cfg.active_select_var.as_str() };
     build_text_editor_scene(

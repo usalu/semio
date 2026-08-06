@@ -8,14 +8,14 @@ pub mod cache {
     use std::path::{Path, PathBuf};
 
     /// 💾️ Partial-movie cache keyed by animation hash with LRU eviction.
-    pub struct PartialMovieCache {
+    pub struct PartialMovieLut {
         root: PathBuf,
         entries: HashMap<String, PathBuf>,
         access_order: Vec<String>,
         max_entries: usize,
     }
 
-    impl PartialMovieCache {
+    impl PartialMovieLut {
         /// 📂️ Opens or creates a cache directory.
         pub fn open(root: impl Into<PathBuf>) -> Result<Self, VideoError> {
             Self::open_with_limit(root, usize::MAX)
@@ -141,10 +141,10 @@ pub mod cache {
 
         #[test]
         fn segment_hash_is_stable() {
-            let a = PartialMovieCache::segment_hash("abc", 0, 10);
-            let b = PartialMovieCache::segment_hash("abc", 0, 10);
+            let a = PartialMovieLut::segment_hash("abc", 0, 10);
+            let b = PartialMovieLut::segment_hash("abc", 0, 10);
             assert_eq!(a, b);
-            assert_ne!(a, PartialMovieCache::segment_hash("abc", 0, 11));
+            assert_ne!(a, PartialMovieLut::segment_hash("abc", 0, 11));
         }
 
         #[test]
@@ -152,7 +152,7 @@ pub mod cache {
             let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
             let root = std::env::temp_dir().join(format!("animate_cache_lru_{stamp}"));
             let _ = fs::remove_dir_all(&root);
-            let mut cache = PartialMovieCache::open_with_limit(&root, 2).expect("open");
+            let mut cache = PartialMovieLut::open_with_limit(&root, 2).expect("open");
             let first = root.join("first.mp4");
             let second = root.join("second.mp4");
             let third = root.join("third.mp4");
@@ -322,16 +322,16 @@ pub mod preview {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::present::engine::animate_core::{BasicScene, Camera, Scene, SectionList, Sobject, VSobject};
+        use crate::artifacts::present::engine::animate_core::{BasicStage, Camera, Scene, SectionList, Sobject, VSobject};
         use std::collections::HashMap;
 
         struct DemoScene {
-            base: BasicScene,
+            base: BasicStage,
         }
 
         impl DemoScene {
             fn new(config: AnimateConfig) -> Self {
-                Self { base: BasicScene::new(config) }
+                Self { base: BasicStage::new(config) }
             }
         }
 
@@ -388,7 +388,7 @@ pub mod render {
     use std::fs;
     use std::path::PathBuf;
 
-    use crate::artifacts::present::engine::animate_video::cache::PartialMovieCache;
+    use crate::artifacts::present::engine::animate_video::cache::PartialMovieLut;
     use crate::artifacts::present::engine::animate_video::renderer::{frame_hash, CapturedFrame, VelloRenderer};
     use crate::artifacts::present::engine::animate_video::writer::{write_sections_srt, SceneFileWriter};
     use crate::artifacts::present::engine::animate_video::VideoError;
@@ -430,7 +430,7 @@ pub mod render {
         let camera = recorder.inner.camera().clone();
         let mut renderer = VelloRenderer::new(config.width, config.height)?;
         let mut writer = SceneFileWriter::new(config, formats)?;
-        let mut cache = if config.cache.enabled { Some(PartialMovieCache::open_with_limit(config.cache.partial_movie_dir.clone(), config.cache.max_entries)?) } else { None };
+        let mut cache = if config.cache.enabled { Some(PartialMovieLut::open_with_limit(config.cache.partial_movie_dir.clone(), config.cache.max_entries)?) } else { None };
 
         let mut current_hash = String::new();
         let mut current_partial: Option<PathBuf> = None;
@@ -577,16 +577,16 @@ pub mod render {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::present::engine::animate_core::{BasicScene, Scene, VSobject};
+        use crate::artifacts::present::engine::animate_core::{BasicStage, Scene, VSobject};
         use std::time::{SystemTime, UNIX_EPOCH};
 
         struct DemoScene {
-            base: BasicScene,
+            base: BasicStage,
         }
 
         impl DemoScene {
             fn new(config: AnimateConfig) -> Self {
-                Self { base: BasicScene::new(config) }
+                Self { base: BasicStage::new(config) }
             }
         }
 
@@ -845,18 +845,18 @@ pub mod renderer {
 pub mod scenes {
     //! 🎬️ Built-in scenes resolved by content hash for present/video export.
 
-    use crate::artifacts::present::engine::animate_core::{AnimateConfig, BasicScene, Camera, Scene, Section, SectionList, Sobject, VSobject};
+    use crate::artifacts::present::engine::animate_core::{AnimateConfig, BasicStage, Camera, Scene, Section, SectionList, Sobject, VSobject};
     use std::collections::HashMap;
 
     /// 🧩️ Demo scene used when no bespoke scene is registered for a hash.
     pub struct HashDemoScene {
-        base: BasicScene,
+        base: BasicStage,
         hash: String,
     }
 
     impl HashDemoScene {
         pub fn new(config: AnimateConfig, hash: impl Into<String>) -> Self {
-            Self { base: BasicScene::new(config), hash: hash.into() }
+            Self { base: BasicStage::new(config), hash: hash.into() }
         }
     }
 
@@ -930,7 +930,7 @@ pub mod writer {
 
     /// 🧹️ Clears partial-movie cache directories from config.
     pub fn flush_partial_movie_cache(config: &AnimateConfig) -> Result<usize, VideoError> {
-        crate::artifacts::present::engine::animate_video::cache::PartialMovieCache::flush(&config.cache.partial_movie_dir)
+        crate::artifacts::present::engine::animate_video::cache::PartialMovieLut::flush(&config.cache.partial_movie_dir)
     }
 
     /// 📝️ Writes section timings as an SRT subtitle sidecar.
@@ -1128,7 +1128,7 @@ pub mod writer {
     }
 }
 
-pub use cache::PartialMovieCache;
+pub use cache::PartialMovieLut;
 pub use preview::{preview_scene_headless, preview_scene_window, PreviewOutcome};
 pub use render::{render_scene, OutputFormat, OutputPaths};
 pub use renderer::VelloRenderer;

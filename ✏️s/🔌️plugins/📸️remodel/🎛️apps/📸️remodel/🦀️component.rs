@@ -17,7 +17,7 @@ use crate::apps::remodel::panels::{calibration as calibration_panel, document, m
 use crate::apps::remodel::terminology::remodel_labels;
 use crate::artifacts::remodel::engine::decode_still_image;
 use crate::artifacts::remodel::op::RemodelOperation;
-use crate::artifacts::remodel::{default_remodel_scene, FrameRef, ImageAsset, MediaKind, MediaStream, RemodelScene, REMODEL_DOCUMENT_SCHEMA};
+use crate::artifacts::remodel::{default_remodel_scene, FrameRef, ImageAsset, MediaKind, MediaStream, RemodelProjection, REMODEL_DOCUMENT_SCHEMA};
 use base64::Engine as _;
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
@@ -51,7 +51,7 @@ semio_framework_plugin::app_commands! {
     /// kebab-case `#[dsl(key = ..)]` the codec uses) — genuinely different vocabularies:
     /// `"setSelection" as "selection"` and `"setLocale" as "locale"` are the rows that prove it.
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum RemodelCommand for RemodelScene, RemodelOperation, RemodelConfig, RemodelConfigOperation {
+    pub enum RemodelCommand for RemodelProjection, RemodelOperation, RemodelConfig, RemodelConfigOperation {
         // 🚀️ Staged reconstruction — fully synchronous; there is no advance/cancel tick.
         "runReconstruction" as "run-reconstruction" => run_reconstruction::RunReconstruction,
         "retryStage" as "retry-stage" => retry_stage::RetryStage,
@@ -325,7 +325,7 @@ mod args_bridge {
 pub struct RemodelPlayApp;
 
 impl DocumentApp for RemodelPlayApp {
-    type Projection = RemodelScene;
+    type Projection = RemodelProjection;
     type Operation = RemodelOperation;
     type Config = RemodelConfig;
     type ConfigOperation = RemodelConfigOperation;
@@ -337,7 +337,7 @@ impl DocumentApp for RemodelPlayApp {
     const APP_ID: &'static str = REMODEL_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = REMODEL_DOCUMENT_SCHEMA;
 
-    fn initial_projection() -> RemodelScene {
+    fn initial_projection() -> RemodelProjection {
         default_remodel_scene()
     }
 
@@ -348,7 +348,7 @@ impl DocumentApp for RemodelPlayApp {
     /// 🎞️ `mesh:out` (the current reconstructed mesh, GLB-encoded) plus the inherited `document:out`
     /// default (the pack of `doc.projection`, replicated inline — overriding `export_media` shadows the
     /// trait's provided body for every port, not just the new one).
-    fn export_media(port: &str, doc: &DocumentView<'_, RemodelScene>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, RemodelProjection>) -> Result<Media, MediaError> {
         match port {
             "mesh:out" => {
                 let mesh = &doc.projection.results.mesh.mesh;
@@ -369,7 +369,7 @@ impl DocumentApp for RemodelPlayApp {
     /// `document:in` stays `MediaError::NotImplemented`, unchanged from the inherited default: remodel
     /// has no whole-document-replace `Operation` variant to satisfy `whole_document_operation`
     /// (`RemodelOperation` is deliberately field-granular — see that enum's doc comment).
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RemodelScene>) -> Result<Emit<RemodelOperation, RemodelConfigOperation, Self::DraftOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RemodelProjection>) -> Result<Emit<RemodelOperation, RemodelConfigOperation, Self::DraftOperation>, MediaError> {
         match port {
             "photos:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -419,11 +419,11 @@ impl DocumentApp for RemodelPlayApp {
         args_bridge::command_from_action(action, args)
     }
 
-    fn handle(command: &RemodelCommand, doc: &DocumentView<'_, RemodelScene>, cfg: &ConfigView<'_, RemodelConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RemodelOperation, RemodelConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &RemodelCommand, doc: &DocumentView<'_, RemodelProjection>, cfg: &ConfigView<'_, RemodelConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RemodelOperation, RemodelConfigOperation, Self::DraftOperation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, RemodelScene>, cfg: &ConfigView<'_, RemodelConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, RemodelProjection>, cfg: &ConfigView<'_, RemodelConfig>) -> UiNode {
         let scene = doc.projection;
         let config = cfg.projection;
         let labels = remodel_labels(config);
@@ -444,7 +444,7 @@ impl DocumentApp for RemodelPlayApp {
 
     /// 👁️ Dynamic per-render window measures — the Model window's layer toggles must reflect the LIVE
     /// config, so they are supplied here rather than frozen into the manifest.
-    fn window_measures(_doc: &DocumentView<'_, RemodelScene>, cfg: &ConfigView<'_, RemodelConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &DocumentView<'_, RemodelProjection>, cfg: &ConfigView<'_, RemodelConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(model::windows::model::REMODEL_PLAY_WINDOW_MAIN.to_string(), model::windows::model::window_measures(cfg.projection, remodel_labels(cfg.projection)))])
     }
 }
@@ -667,7 +667,7 @@ pub fn create_remodel_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
 
     pub type RemodelApp = VcsDocumentApp<RemodelPlayApp>;
 
@@ -686,7 +686,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut RemodelApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
 //#endregion 🧪️Testkit

@@ -22,19 +22,19 @@ pub enum SchemaError {
 include!("🤖️generated.rs");
 //#endregion 🔖️EntityCatalog
 
-//#region 🔖️SchemaRegistry
-pub struct SchemaRegistry {
+//#region 🔖️SchemaCatalog
+pub struct SchemaCatalog {
     schemas: HashMap<String, Value>,
     validators: HashMap<String, Validator>,
 }
 
-impl Default for SchemaRegistry {
+impl Default for SchemaCatalog {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl SchemaRegistry {
+impl SchemaCatalog {
     pub fn new() -> Self {
         Self { schemas: HashMap::new(), validators: HashMap::new() }
     }
@@ -64,4 +64,4 @@ impl SchemaRegistry {
         validator.validate(value).map_err(|error| SchemaError::Validation(error.to_string()))
     }
 }
-//#endregion 🔖️SchemaRegistry
+//#endregion 🔖️SchemaCatalog

@@ -1,0 +1,764 @@
+[
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx",
+    "line": 112,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx",
+    "line": 112,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx",
+    "line": 6512,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx",
+    "line": 6513,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx",
+    "line": 10881,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx",
+    "line": 10881,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🏃️runtime/🟦️component.ts",
+    "line": 25,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🏃️runtime/🟦️component.ts",
+    "line": 56,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx",
+    "line": 1744,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx",
+    "line": 2000,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/🟦️component.tsx",
+    "line": 2871,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 37,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 40,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 41,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 42,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 43,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 44,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 45,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 46,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 47,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 49,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 78,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 130,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 184,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 390,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: *Store classes must live under the OS product or be deleted."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 1054,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 1970,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 2418,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 2571,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 3360,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 3630,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 4764,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 5505,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 6691,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/🟦️component.ts",
+    "line": 7,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/🟦️component.ts",
+    "line": 8,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/🟦️component.ts",
+    "line": 9,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/🟦️component.ts",
+    "line": 10,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔨️modules/◻2d/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 348,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 281,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/✏️s/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 370,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 507,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 508,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 905,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 927,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 928,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 932,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts",
+    "line": 1146,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts",
+    "line": 1147,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts",
+    "line": 1277,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📜️script.ts",
+    "line": 75,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📜️script.ts",
+    "line": 201,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📜️script.ts",
+    "line": 209,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 250,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 537,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 1224,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 1393,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 1397,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 1398,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 1399,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 1400,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 1444,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 1445,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 1446,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 3433,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 3483,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 4302,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 5593,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 6351,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 6352,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 8179,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 8180,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🟦️component.tsx",
+    "line": 30,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🟦️component.tsx",
+    "line": 31,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨Canvas/🟦️component.tsx",
+    "line": 94,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬Scene/🟦️component.tsx",
+    "line": 60,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/📁VirtualFileSystem/🧪️story.tsx",
+    "line": 59,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣Icons/🟦️component.tsx",
+    "line": 221,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣Icons/🟦️component.tsx",
+    "line": 437,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵Tree/🟦️component.tsx",
+    "line": 875,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵Tree/🟦️component.tsx",
+    "line": 2581,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵Tree/🟦️component.tsx",
+    "line": 2583,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🌈️Surface/🟦️component.tsx",
+    "line": 130,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🌈️Surface/🟦️component.tsx",
+    "line": 131,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🌈️Surface/🟦️component.tsx",
+    "line": 132,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🌈️Surface/🟦️component.tsx",
+    "line": 133,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx",
+    "line": 71,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx",
+    "line": 128,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx",
+    "line": 129,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx",
+    "line": 130,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx",
+    "line": 131,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🚗️UiDriver/🟦️component.tsx",
+    "line": 134,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🚗️UiDriver/🟦️component.tsx",
+    "line": 183,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📜️script.ts",
+    "line": 515,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.test.ts",
+    "line": 173,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1618,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1622,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1626,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1630,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1641,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1645,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1645,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1649,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1652,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1677,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1681,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1921,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1925,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1929,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 2412,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 2416,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 2974,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 3150,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 1074,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 1080,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 1852,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 2481,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 2483,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 3509,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 4083,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔍️discovery/🟦️component.ts",
+    "line": 126,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔍️discovery/🟦️component.ts",
+    "line": 379,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔍️discovery/🟦️component.ts",
+    "line": 417,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔍️discovery/🟦️component.ts",
+    "line": 434,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🗂️workspaces/🟦️component.ts",
+    "line": 22,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/webhooks/github/route.ts",
+    "line": 23,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS product."
+  },
+  {
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️lib/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 18,
+    "rule": "no-restricted-syntax",
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product."
+  }
+]

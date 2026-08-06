@@ -1,18 +1,23 @@
-# Infinite crate status
+# Infinite compile unblock
 
-## Progress
-- Kernel aliases (`os_store`/`os_dsl`/`os_spr`/`os_vcs`/`os_pack`) + `extern crate self as infinite` in glue.
-- Terrain: path-mounted `framework_surface_terrain` from surface/terrain (avoids surface↔infinite cargo cycle); imports use `crate::framework_surface_terrain`.
-- Error count: ~186 → ~75.
+## Result
+`cargo check -p semio-framework-os-infinite --lib` — **GREEN** (warnings only). Log: `🧪w2-infinite-check11.err`.
 
-## Remaining blockers (~75)
-- `ui_wgpu::wgpu::{GpuContext, draw_text, HitKind, widgets, ...}` — symbols not present in current UI crate (likely dissolved).
-- Canvas `self::` region imports (vello types via wrong parent).
-- Board `self::canvas` / mid-path `crate` errors.
-- `semio_s_3d` missing `project_point` / `MirrorAxis` etc.
+## Trajectory
+| Check | Errors |
+|-------|-------:|
+| check3 (baseline this pass) | ~79 |
+| check4–9 (fonts, wgpu-engine, scene path-mount) | 14 → build/ui issues |
+| check10 | 14 (dag/os_dsl drift) |
+| check11 | **0** |
 
-## Impact
-Blocks layout/flow/space/sequence plugins that depend on `semio-framework-os-infinite`.
+## Key fixes
+1. `ui_wgpu` features `wgpu` + `wgpu-engine`
+2. Canvas fonts → local `🖼️assets/`; build.rs wired + asset path depth fixed
+3. 3d `🎬️scene` path-mounted into ui as `kernel_3d_scene` (no ui→s-3d→core cycle)
+4. World/root draw types from `ui_wgpu::wgpu::{ScenePass3d,…}`
+5. DAG helpers on `math::graph::dsl::{WireNode,WireEdge,wire_literal_from_dag}` + fixture `include_str` path
 
-## Next
-Restore or reexport missing UI wgpu host APIs, or cfg-out world/canvas render modules behind `render` until APIs land.
+## Follow-ups
+- Dependents (layout/flow plugins) re-check
+- Strip `[DEBUG]` later (Wave 5)

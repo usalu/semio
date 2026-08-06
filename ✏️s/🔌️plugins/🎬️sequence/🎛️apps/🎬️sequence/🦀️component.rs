@@ -268,7 +268,7 @@ pub fn create_sequence_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
 
     pub type SequenceApp = VcsDocumentApp<SequencePlayApp>;
 
@@ -287,7 +287,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut SequenceApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
 //#endregion 🧪️Testkit

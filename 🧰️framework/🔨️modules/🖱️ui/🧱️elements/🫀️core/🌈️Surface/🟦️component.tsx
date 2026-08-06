@@ -5,6 +5,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { ephemeralBox, ephemeralSet } from "@semio-tech/framework-core";
 import * as React from "react";
 import { reactHostPort } from "../🔌Ports/🟦️component.tsx";
 import { cn } from "../🏷️ClassNames/🟦️component.tsx";
@@ -127,10 +128,10 @@ export const Surface = reactHostPort.forwardRef<HTMLDivElement, SurfaceProps>(({
 });
 Surface.displayName = "Surface";
 
-const surfaceActiveRoots = new Set<HTMLElement>();
-let surfaceActiveRoot: HTMLElement | null = null;
-const surfaceActiveSubscribers = new Set<() => void>();
-let surfaceActiveListenersInstalled = false;
+const surfaceActiveRoots = ephemeralSet<HTMLElement>("framework.modules.ui.elements.core.Surface.component.tsx.surfaceActiveRoots");
+const surfaceActiveRoot = ephemeralBox<HTMLElement | null>("framework.modules.ui.elements.core.Surface.component.tsx.surfaceActiveRoot", null);
+const surfaceActiveSubscribers = ephemeralSet<() => void>("framework.modules.ui.elements.core.Surface.component.tsx.surfaceActiveSubscribers");
+const surfaceActiveListenersInstalled = ephemeralBox("framework.modules.ui.elements.core.Surface.component.tsx.surfaceActiveListenersInstalled", false);
 
 /** @emoji 🎯️ Drops introduction stamps on an activated surface so the pulse cannot outrank the active stroke. */
 function clearIntroducedStamps(root: HTMLElement): void {
@@ -139,9 +140,9 @@ function clearIntroducedStamps(root: HTMLElement): void {
 }
 
 export function setSurfaceActiveRoot(next: HTMLElement | null): void {
-  if (surfaceActiveRoot === next) return;
+  if (surfaceActiveRoot.current === next) return;
   if (next) clearIntroducedStamps(next);
-  surfaceActiveRoot = next;
+  surfaceActiveRoot.current = next;
   surfaceActiveSubscribers.forEach((notify) => notify());
 }
 
@@ -183,8 +184,8 @@ function resolveSurfaceActiveRoot(target: EventTarget | null): HTMLElement | nul
 }
 
 function installSurfaceActiveDocumentListeners(): void {
-  if (surfaceActiveListenersInstalled || typeof document === "undefined") return;
-  surfaceActiveListenersInstalled = true;
+  if (surfaceActiveListenersInstalled.current || typeof document === "undefined") return;
+  surfaceActiveListenersInstalled.current = true;
   const onPointerDown = (event: Event): void => {
     setSurfaceActiveRoot(isSurfaceActiveBackgroundPointer(event) ? null : resolveSurfaceActiveRoot(event.target));
   };
@@ -216,7 +217,7 @@ export function useSurfaceActive(ref: React.RefObject<HTMLElement | null>): read
       // 🎯️ Effect re-runs every commit (ref may attach late). Defer the clear so a same-commit
       // re-register can reclaim the root before we drop the active stroke.
       queueMicrotask(() => {
-        if (surfaceActiveRoot === element && !surfaceActiveRoots.has(element)) setSurfaceActiveRoot(null);
+        if (surfaceActiveRoot.current === element && !surfaceActiveRoots.has(element)) setSurfaceActiveRoot(null);
       });
     };
   });
@@ -237,6 +238,6 @@ export function useSurfaceActive(ref: React.RefObject<HTMLElement | null>): read
     }),
     [ref],
   );
-  return [ref.current !== null && surfaceActiveRoot === ref.current, bind] as const;
+  return [ref.current !== null && surfaceActiveRoot.current === ref.current, bind] as const;
 }
 // #endregion 🎈️Surface

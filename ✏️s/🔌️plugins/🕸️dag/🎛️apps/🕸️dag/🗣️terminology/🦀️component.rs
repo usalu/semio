@@ -37,7 +37,7 @@ semio_framework_plugin::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Resolvers
-/// 🗣️ `cfg.locale`-driven counterpart to the deleted `ViewState`-driven locale read.
+/// 🗣️ `cfg.locale`-driven counterpart to the deleted `ViewModel`-driven locale read.
 pub fn is_de_locale(cfg: &DagConfig) -> bool {
     cfg.locale.starts_with("de")
 }

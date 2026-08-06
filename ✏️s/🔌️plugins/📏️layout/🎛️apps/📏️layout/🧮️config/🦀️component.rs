@@ -25,7 +25,7 @@ pub struct LayoutDropPreviewState {
 /// 🧮️ B1: layout's real `DocumentApp::Config` — absorbs every field that used to live on
 /// `layout_ui::LayoutPlayApp`'s `RefCell<LayoutPlayRuntime>` (active page, selection, hover, drop-ghost,
 /// engagement draft, and the two independent blueprint/preview camera poses) plus `locale`, the one
-/// `ViewState` field the layout UI actually reads — session-only view state now round-trips through the
+/// `ViewModel` field the layout UI actually reads — session-only view state now round-trips through the
 /// config `DocumentStore` exactly like document content, with a real `backwards` per
 /// `LayoutConfigOperation` instead of never being VCS'd at all.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]

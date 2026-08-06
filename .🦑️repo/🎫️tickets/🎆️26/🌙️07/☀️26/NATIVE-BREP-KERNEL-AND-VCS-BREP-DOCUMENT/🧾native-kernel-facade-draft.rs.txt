@@ -1,0 +1,20 @@
+// Draft for Wave 6 — NOT compiled. Shows how BrepkitKernel becomes Brep delegating to native modules.
+// Final edit lands in 📐️brep/🧰️kernel/🦀️component.rs only during Wave 6.
+
+pub struct Brep {
+    pub body: crate::brep::topo::Body,
+    live: std::collections::HashSet<String>,
+    // content-addressed handle registry stays; Entity becomes native ids
+}
+
+impl Brep {
+    pub fn new() -> Self { Self { body: crate::brep::topo::Body::new(), live: Default::default() } }
+    pub fn box_prim_sync(&mut self, w: f64, d: f64, h: f64) -> Result<GeometryHandle, BrepError> {
+        let solid = crate::brep::primitives::make_box(&mut self.body, w, d, h)?;
+        self.register_solid(solid)
+    }
+    // fuse_sync -> boolean::fuse
+    // tessellate -> tessellate::tessellate_solid
+    // export_step -> step::write_step
+    // ... 1:1 BrepKernel methods
+}

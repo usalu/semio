@@ -35,7 +35,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap, HashSet};
-use std::sync::LazyLock;
 
 //#region 🔖️Constants
 pub const PUZZLE2D_PLAY_APP_ID: &str = "puzzle2d-play";
@@ -711,8 +710,8 @@ puzzle2d_command_variants! {
     BrushFillSessionClear = "brushFillSessionClear",
     LodScaleJson = "lodScaleJson",
     SetActiveUtility = SET_ACTIVE_UTILITY_ACTION_ID,
-    // 🗣️ B1: locale/terminology used to be host-pushed `ViewState` fields with no app-level action of
-    // their own; now that `ViewState` is gone from the app-facing surface, they need a real Command.
+    // 🗣️ B1: locale/terminology used to be host-pushed `ViewModel` fields with no app-level action of
+    // their own; now that `ViewModel` is gone from the app-facing surface, they need a real Command.
     SetLocale = "setLocale",
     SetTerminology = "setTerminology",
 }
@@ -1189,7 +1188,7 @@ pub fn register_puzzle2d_exports() {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::{ActionMeta, InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{ActionMeta, InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
 
     pub type Puzzle2dApp = VcsDocumentApp<Puzzle2dPlayApp>;
 
@@ -1227,7 +1226,7 @@ pub(crate) mod testkit {
 
     /// 🖼️ The rendered body, serialized — every panel/window assertion greps this string.
     pub fn render_body(app: &mut Puzzle2dApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("serialize rendered node")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("serialize rendered node")
     }
 
     /// 🧾️ A standalone `Puzzle2dScene` for the measure/engagement builders that take one directly.
@@ -1587,7 +1586,7 @@ mod tests {
     //#endregion 🔖️Convergence
 
     //#region 🔖️Registry
-    /// 🧰️ B1: `setActiveUtility` is a real typed `Puzzle2dCommand` now (was a host-applied `ViewState`
+    /// 🧰️ B1: `setActiveUtility` is a real typed `Puzzle2dCommand` now (was a host-applied `ViewModel`
     /// notification): switching utilities must still emit no DOCUMENT operations — the new value lands
     /// in `Puzzle2dConfig::active_utility_by_window_id` as a config operation instead.
     #[test]

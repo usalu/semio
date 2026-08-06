@@ -2,7 +2,7 @@
 
 ## Scope
 - Jack graph app: `trinity/ram/rs/lib.rs` — `GraphFixture` (DocumentDsl, ext `trinity`), `TrinityGraphOperation` (OpText).
-- Rewrite app: `trinity/rewrite/engine/rs/lib.rs` — `RewriteRuleState` (DocumentDsl, ext `rewrite`), `RewriteRuleOperation` (OpText).
+- Rewrite app: `trinity/rewrite/engine/rs/lib.rs` — `RewriteRuleModel` (DocumentDsl, ext `rewrite`), `RewriteRuleOperation` (OpText).
 
 ## Grammar summary
 - `.trinity` doc: header lines `manifest <id|->`, `name "<text>"`, `camera x y zoom`, optional `root <id>`,
@@ -15,7 +15,7 @@
   scalars — real gap found when nakagin's `position: {x,y,z}` needed round-tripping).
 - Op-text: one keyword per `TrinityGraphOperation` variant, e.g. `createNode id:kind x y w h [ports] "name"`,
   `createEdge id:kind src->tgt {props}`, `setDataProperty node:id key value`, `setFixture "<escaped whole dsl doc>"`.
-- `.rewrite` doc: `before "<escaped json>"` / `lhs "<...>"` / `rhs "<...>"` (RewriteRuleState's own `_json`
+- `.rewrite` doc: `before "<escaped json>"` / `lhs "<...>"` / `rhs "<...>"` (RewriteRuleModel's own `_json`
   fields keep their JSON contract — only line framing is new), then `binding <key> <value>` /
   `layout <key> <x> <y>` lines. Reuses `trinity_ram::print_property_value`/`parse_property_value_line`
   (made `pub`) instead of a second value-literal parser.

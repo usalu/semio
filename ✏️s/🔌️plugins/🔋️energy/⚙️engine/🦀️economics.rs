@@ -1,6 +1,6 @@
 //! 💰️ Utility tariffs and life-cycle costing (non-physics post-pass).
 
-use crate::meters::{FuelType, MeterStore};
+use crate::meters::{FuelType, MeterTable};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖️Tariff
@@ -84,7 +84,7 @@ pub struct EconomicsResult {
 }
 
 /// 💰️ Apply tariffs to meter store (annual run).
-pub fn apply_tariffs(meters: &MeterStore, tariffs: &[UtilityTariff]) -> EconomicsResult {
+pub fn apply_tariffs(meters: &MeterTable, tariffs: &[UtilityTariff]) -> EconomicsResult {
     let mut annual_energy_cost = 0.0;
     let mut annual_demand_cost = 0.0;
     for meter in meters.meters.values() {

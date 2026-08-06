@@ -3,7 +3,7 @@
 use crate::apps::cad::config::{CadConfig, CadConfigOperation};
 use crate::apps::cad::CadDispatchCtx;
 use crate::artifacts::cad::op::CadOperation;
-use crate::artifacts::cad::CadScene;
+use crate::artifacts::cad::CadProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::apps::cad::{cad_solid_export_effect, cad_spatial_export_effect, export_solid_for_pane, export_solid_modelspace, export_spatial_json, runtime_of, snapshot_of, CadPlayView};
@@ -25,7 +25,7 @@ pub mod import_cad_file {
         pub payload: String,
     }
 
-    pub fn handle(payload: &ImportCadFile, _doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &ImportCadFile, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let name_lower = payload.name.to_ascii_lowercase();
         let payload_value: Value = serde_json::from_str(&payload.payload).unwrap_or_else(|_| Value::String(payload.payload.clone()));
@@ -36,7 +36,7 @@ pub mod import_cad_file {
             return Ok(emit);
         }
         let unwrapped = unwrap_spatial_load_payload(&payload_value).unwrap_or(payload_value);
-        let scene = scene_from_spatial_payload(&unwrapped).or_else(|| serde_json::from_value::<CadScene>(unwrapped).ok());
+        let scene = scene_from_spatial_payload(&unwrapped).or_else(|| serde_json::from_value::<CadProjection>(unwrapped).ok());
         if let Some(scene) = scene {
             runtime.selected_object_ids.clear();
             runtime.engagement_session = None;
@@ -57,7 +57,7 @@ pub mod save_selected {
     #[dsl(keyword = "save-selected")]
     pub struct SaveSelected {}
 
-    pub fn handle(_payload: &SaveSelected, doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(_payload: &SaveSelected, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         let view = CadPlayView { document: doc.projection.clone(), runtime: runtime_of(cfg) };
         Ok(Emit::effect(cad_spatial_export_effect(&export_spatial_json(&view, "selected"), "cad.selected.spatial.dsl")))
     }
@@ -72,7 +72,7 @@ pub mod save_in_play {
     #[dsl(keyword = "save-in-play")]
     pub struct SaveInPlay {}
 
-    pub fn handle(_payload: &SaveInPlay, doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(_payload: &SaveInPlay, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         let view = CadPlayView { document: doc.projection.clone(), runtime: runtime_of(cfg) };
         let effect = match export_solid_modelspace(&view, OsMediaFormat::Step) {
             Some(export) => cad_solid_export_effect(export),
@@ -93,7 +93,7 @@ pub mod save_current {
         pub format: Option<String>,
     }
 
-    pub fn handle(payload: &SaveCurrent, doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SaveCurrent, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         let document = doc.projection;
         let format = match payload.format.as_deref() {
             Some("obj") => OsMediaFormat::Obj,
@@ -119,7 +119,7 @@ pub mod load_raw_request {
     #[dsl(keyword = "load-raw-request")]
     pub struct LoadRawRequest {}
 
-    pub fn handle(_payload: &LoadRawRequest, _doc: &DocumentView<'_, CadScene>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(_payload: &LoadRawRequest, _doc: &DocumentView<'_, CadProjection>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         Ok(Emit::effect(HostEffect::RequestFileOpen {
             accept: ".dsl,.spatial.dsl,.spk,.ops,.stp,.step,.obj,.stl,.glb,application/octet-stream,text/plain".into(),
             read_as: Some("dataUrl".into()),

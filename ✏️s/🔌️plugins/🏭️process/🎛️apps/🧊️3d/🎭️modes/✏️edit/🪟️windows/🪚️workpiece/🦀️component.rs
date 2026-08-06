@@ -121,35 +121,8 @@ fn hash_value<T: Serialize>(value: &T) -> u64 {
     hasher.finish()
 }
 
-/// 🧊️ In-memory memo of the last evaluated preview payload, keyed by document signature — `render`
-/// only sees `&self`, so this lives in a process-wide `Mutex` (mirrors the artifact engine's kernel
-/// session) rather than the app struct.
-struct Process3dPreviewCache {
-    signature: u64,
-    meshes_json: String,
-    instances_json: String,
-}
-
-static PROCESS3D_PREVIEW_CACHE: OnceLock<Mutex<Option<Process3dPreviewCache>>> = OnceLock::new();
-
-fn process3d_preview_cache() -> &'static Mutex<Option<Process3dPreviewCache>> {
-    PROCESS3D_PREVIEW_CACHE.get_or_init(|| Mutex::new(None))
-}
-
 fn preview_payload_cached(fixture: &Process3dDocument) -> (String, String) {
-    let signature = hash_value(fixture);
-    if let Ok(cache) = process3d_preview_cache().lock() {
-        if let Some(entry) = cache.as_ref() {
-            if entry.signature == signature {
-                return (entry.meshes_json.clone(), entry.instances_json.clone());
-            }
-        }
-    }
-    let (meshes_json, instances_json) = evaluated_preview_payload(fixture);
-    if let Ok(mut cache) = process3d_preview_cache().lock() {
-        *cache = Some(Process3dPreviewCache { signature, meshes_json: meshes_json.clone(), instances_json: instances_json.clone() });
-    }
-    (meshes_json, instances_json)
+    evaluated_preview_payload(fixture)
 }
 //#endregion 🔖️PreviewCache
 

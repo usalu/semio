@@ -1137,6 +1137,7 @@ async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonl
  * variant's own isolated dev/build) can call this directly per variant instead of shelling out to this
  * script's own CLI once per variant. */
 export async function buildPlugins(filterPlugin?: string): Promise<void> {
+  ensureAppleDeveloperDir();
   const targets = await preparePluginBuildTargets(filterPlugin);
   for (const target of targets) {
     await buildPlugin(target);
@@ -1455,8 +1456,30 @@ function engineWasmScriptPath(cratePath: string): string {
  * editor host engines unconditionally (shared studio chrome, not any one app), then whatever the
  * active playground variant declares via `engines = […]` on its `[[…playground]]` Cargo.toml row —
  * replaces the previous hardcoded `if (pluginId === "flow" | "gis2d" | "gis3d" | "raster" | "puzzle2d")` branches. */
-export async function buildEngineWasm(variant: string, renderer: string): Promise<void> {
+export 
+/** @emoji 🍎 Prefer Command Line Tools over an unlicensed Xcode.app so cargo/wasm-pack can link. */
+function ensureAppleDeveloperDir(): void {
+  if (process.env.FORCE_XCODE === "1") return;
+  const clt = "/Library/Developer/CommandLineTools";
+  if (!existsSync(clt)) return;
+  // Prefer CLT over an installed-but-unlicensed Xcode.app (cargo/cc otherwise die with exit 69).
+  process.env.DEVELOPER_DIR = clt;
+  const sdk = `${clt}/SDKs/MacOSX.sdk`;
+  if (existsSync(sdk)) process.env.SDKROOT = sdk;
+}
+
+async function buildEngineWasm(variant: string, renderer: string): Promise<void> {
+  ensureAppleDeveloperDir();
   if (renderer !== "react" || process.env.SKIP_ENGINE_BUILD === "1") return;
+  if (process.env.FORCE_ENGINE_BUILD !== "1") {
+    const surfacePkgJs = join(repoRoot, "./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/pkg/framework_surface.js");
+    const editorPkgJs = join(repoRoot, "./🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg/framework_editor.js");
+    const flowPkgJs = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js");
+    if (existsSync(surfacePkgJs) && existsSync(editorPkgJs) && existsSync(flowPkgJs)) {
+      console.log("[DEBUG] reusing existing engine wasm pkg/ stubs (set FORCE_ENGINE_BUILD=1 to rebuild)");
+      return;
+    }
+  }
   // Each recurses into a crate's own `wasm` script (wasm-pack/cargo build under the hood) — budgeted at
   // the build class rather than the generic command default since those inner builds can legitimately
   // approach [[buildBudgetMs]] themselves.
@@ -1468,8 +1491,11 @@ export async function buildEngineWasm(variant: string, renderer: string): Promis
   if (runCmdStatus("bun", [boardScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-surface-board-2d wasm build failed");
   // React renderer always `import("@semio-tech/flow-core")` for `createFlowSession`, so the
   // pkg must exist even when the active playground's `engines = []` (e.g. Aggregator / puzzle).
-  const flowCoreScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts");
-  if (runCmdStatus("bun", [flowCoreScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("flow-core wasm build failed");
+  const flowCorePkgJs = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js");
+  if (!existsSync(flowCorePkgJs)) {
+    const flowCoreScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts");
+    if (runCmdStatus("bun", [flowCoreScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("flow-core wasm build failed");
+  }
   const row = playgroundCatalog.find((entry) => entry.variant === variant);
   for (const engineCratePath of row?.engines ?? []) {
     if (engineCratePath === "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust" || engineCratePath === "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🟦️typescript/🫀️core") continue;
@@ -1484,6 +1510,7 @@ const FRAMEWORK_OS_MULTI_HARNESS_PORT = "6071";
 
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    ensureAppleDeveloperDir();
     if (segments[0] === "multi") {
       // 🐚️ The multi-shell harness mounts several already-built playground variants' plugin modules
       // side by side (see `🧩️multi.tsx`) — it doesn't own any one variant's plugin/engine build, so it

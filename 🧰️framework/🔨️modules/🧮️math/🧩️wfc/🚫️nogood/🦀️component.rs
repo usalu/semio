@@ -72,14 +72,14 @@ struct Nogood {
 /// one `search::solve*` call (constructed once, outside the per-attempt loop) — restarts share the
 /// same `init_domains`/`fixed`/constraints, so a nogood learned in attempt N is just as valid, and
 /// just as watchable, in attempt N+1.
-pub(crate) struct NogoodStore {
+pub(crate) struct NogoodIndex {
     config: NogoodConfig,
     nogoods: Vec<Nogood>,
     /// 🧠️ `(node, pattern) -> indices into `nogoods` currently watching that exact literal.
     watchers: HashMap<(NodeId, PatternId), Vec<u32>>,
 }
 
-impl NogoodStore {
+impl NogoodIndex {
     pub fn new(config: NogoodConfig) -> Self {
         Self { config, nogoods: Vec::new(), watchers: HashMap::new() }
     }
@@ -118,7 +118,7 @@ impl NogoodStore {
     }
 
     /// 🧠️ Records the given decision prefix as a nogood (skipped if disabled, empty, or over
-    /// `max_len`). Does not watch it yet — [`NogoodStore::rewatch_for_new_attempt`] does that once
+    /// `max_len`). Does not watch it yet — [`NogoodIndex::rewatch_for_new_attempt`] does that once
     /// per attempt, against that attempt's actual domain state.
     pub fn record(&mut self, mut literals: Vec<(NodeId, PatternId)>) {
         if !self.config.enabled || literals.is_empty() || literals.len() > self.config.max_len {
@@ -328,14 +328,14 @@ mod tests {
 
     #[test]
     fn disabled_store_records_and_watches_nothing() {
-        let mut store = NogoodStore::new(NogoodConfig { enabled: false, ..Default::default() });
+        let mut store = NogoodIndex::new(NogoodConfig { enabled: false, ..Default::default() });
         store.record(vec![(NodeId(0), PatternId(0)), (NodeId(1), PatternId(1))]);
         assert_eq!(store.len(), 0);
     }
 
     #[test]
     fn record_skips_empty_and_over_length_clauses() {
-        let mut store = NogoodStore::new(NogoodConfig { enabled: true, max_len: 2, max_count: 10 });
+        let mut store = NogoodIndex::new(NogoodConfig { enabled: true, max_len: 2, max_count: 10 });
         store.record(vec![]);
         assert_eq!(store.len(), 0);
         store.record(vec![(NodeId(0), PatternId(0)), (NodeId(1), PatternId(0)), (NodeId(2), PatternId(0))]);
@@ -346,7 +346,7 @@ mod tests {
 
     #[test]
     fn eviction_keeps_store_at_max_count() {
-        let mut store = NogoodStore::new(NogoodConfig { enabled: true, max_len: 8, max_count: 2 });
+        let mut store = NogoodIndex::new(NogoodConfig { enabled: true, max_len: 8, max_count: 2 });
         store.record(vec![(NodeId(0), PatternId(0))]);
         store.record(vec![(NodeId(1), PatternId(0))]);
         store.record(vec![(NodeId(2), PatternId(0))]);
@@ -364,7 +364,7 @@ mod tests {
         let mut trail = Trail::new();
         let mut queue = PropQueue::new(2);
         let mut metrics = Metrics::default();
-        let mut store = NogoodStore::new(NogoodConfig { enabled: true, ..Default::default() });
+        let mut store = NogoodIndex::new(NogoodConfig { enabled: true, ..Default::default() });
         store.record(vec![(NodeId(0), PatternId(1))]);
 
         let conflict = store.rewatch_for_new_attempt(&model, &topo, &mut domains, &mut queue, &mut trail, &mut metrics);
@@ -385,7 +385,7 @@ mod tests {
         let mut trail = Trail::new();
         let mut queue = PropQueue::new(1);
         let mut metrics = Metrics::default();
-        let mut store = NogoodStore::new(NogoodConfig { enabled: true, ..Default::default() });
+        let mut store = NogoodIndex::new(NogoodConfig { enabled: true, ..Default::default() });
         store.record(vec![(NodeId(0), PatternId(0))]);
 
         let conflict = store.rewatch_for_new_attempt(&model, &topo, &mut domains, &mut queue, &mut trail, &mut metrics);
@@ -404,7 +404,7 @@ mod tests {
         let mut trail = Trail::new();
         let mut queue = PropQueue::new(2);
         let mut metrics = Metrics::default();
-        let mut store = NogoodStore::new(NogoodConfig { enabled: true, ..Default::default() });
+        let mut store = NogoodIndex::new(NogoodConfig { enabled: true, ..Default::default() });
         store.record(vec![(NodeId(0), PatternId(0)), (NodeId(1), PatternId(0))]);
 
         let conflict = store.rewatch_for_new_attempt(&model, &topo, &mut domains, &mut queue, &mut trail, &mut metrics);
@@ -421,7 +421,7 @@ mod tests {
         let mut trail = Trail::new();
         let mut queue = PropQueue::new(2);
         let mut metrics = Metrics::default();
-        let mut store = NogoodStore::new(NogoodConfig { enabled: true, ..Default::default() });
+        let mut store = NogoodIndex::new(NogoodConfig { enabled: true, ..Default::default() });
         store.record(vec![(NodeId(0), PatternId(0)), (NodeId(1), PatternId(1))]);
         store.rewatch_for_new_attempt(&model, &topo, &mut domains, &mut queue, &mut trail, &mut metrics);
 
@@ -447,7 +447,7 @@ mod tests {
         let mut trail = Trail::new();
         let mut queue = PropQueue::new(2);
         let mut metrics = Metrics::default();
-        let mut store = NogoodStore::new(NogoodConfig { enabled: true, ..Default::default() });
+        let mut store = NogoodIndex::new(NogoodConfig { enabled: true, ..Default::default() });
         store.record(vec![(NodeId(0), PatternId(0)), (NodeId(1), PatternId(1))]);
         store.rewatch_for_new_attempt(&model, &topo, &mut domains, &mut queue, &mut trail, &mut metrics);
 
@@ -471,7 +471,7 @@ mod tests {
         let mut trail = Trail::new();
         let mut queue = PropQueue::new(3);
         let mut metrics = Metrics::default();
-        let mut store = NogoodStore::new(NogoodConfig { enabled: true, ..Default::default() });
+        let mut store = NogoodIndex::new(NogoodConfig { enabled: true, ..Default::default() });
         store.record(vec![(NodeId(0), PatternId(0)), (NodeId(1), PatternId(1)), (NodeId(2), PatternId(2))]);
         store.rewatch_for_new_attempt(&model, &topo, &mut domains, &mut queue, &mut trail, &mut metrics);
 
@@ -493,7 +493,7 @@ mod tests {
         let mut trail = Trail::new();
         let mut queue = PropQueue::new(2);
         let mut metrics = Metrics::default();
-        let mut store = NogoodStore::new(NogoodConfig { enabled: true, ..Default::default() });
+        let mut store = NogoodIndex::new(NogoodConfig { enabled: true, ..Default::default() });
         store.record(vec![(NodeId(0), PatternId(0)), (NodeId(1), PatternId(1))]);
         store.rewatch_for_new_attempt(&model, &topo, &mut domains, &mut queue, &mut trail, &mut metrics);
 
@@ -526,7 +526,7 @@ mod tests {
         let mut trail = Trail::new();
         let mut queue = PropQueue::new(3);
         let mut metrics = Metrics::default();
-        let mut store = NogoodStore::new(NogoodConfig { enabled: true, ..Default::default() });
+        let mut store = NogoodIndex::new(NogoodConfig { enabled: true, ..Default::default() });
         store.record(vec![(NodeId(0), PatternId(0)), (NodeId(1), PatternId(1))]);
         store.rewatch_for_new_attempt(&model, &topo, &mut domains, &mut queue, &mut trail, &mut metrics);
 

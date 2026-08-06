@@ -32,7 +32,7 @@ mod tests {
     use block::artifacts::block2d::Block2dDefinition;
     use block::artifacts::block3d::Block3dDefinition;
     use block::artifacts::block5d::Block5dDefinition;
-    use cad_document::artifacts::cad::CadScene;
+    use cad_document::artifacts::cad::CadProjection;
     use dag_app::DagDocument;
     use norm::artifacts::din16798::Document as Din16798Document;
     use norm::artifacts::din18599::Document as Din18599Document;
@@ -75,8 +75,8 @@ mod tests {
     use puzzle::artifacts::puzzle5d::Puzzle5dProjection;
     use raster::artifacts::raster::RasterProjection;
     use reasoning_mindmap_plugin::artifacts::wires::MindmapWiresDocument;
-    use remodel::artifacts::remodel::RemodelScene;
-    use trinity::artifacts::rewrite::RewriteRuleState;
+    use remodel::artifacts::remodel::RemodelProjection;
+    use trinity::artifacts::rewrite::RewriteRuleModel;
     use semio_framework_os::WorkflowDocument;
     use sequence::artifacts::sequence::SequenceFixture;
     use shooting::artifacts::shooting::ShootingFixture;
@@ -111,7 +111,7 @@ mod tests {
             ("lowpoly", <LowpolyProjection as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<LowpolyProjection>),
             ("reasoning_wires", <MindmapWiresDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<MindmapWiresDocument>),
             ("layout", <LayoutDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<LayoutDocument>),
-            ("cad_document", <CadScene as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<CadScene>),
+            ("cad_document", <CadProjection as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<CadProjection>),
             ("iso16757", <Iso16757Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Iso16757Document>),
             ("vdi3805", <Vdi3805Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Vdi3805Document>),
             ("din4108", <Din4108Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Din4108Document>),
@@ -129,8 +129,8 @@ mod tests {
             ("din18599", <Din18599Document as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Din18599Document>),
             ("playbook", <PlaybookSpec as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<PlaybookSpec>),
             ("imperative", <ImperativeDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<ImperativeDocument>),
-            ("remodel", <RemodelScene as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<RemodelScene>),
-            ("rewrite", <RewriteRuleState as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<RewriteRuleState>),
+            ("remodel", <RemodelProjection as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<RemodelProjection>),
+            ("rewrite", <RewriteRuleModel as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<RewriteRuleModel>),
             ("trinity_ram", <GraphFixture as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<GraphFixture>),
             ("dag_app", <DagDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<DagDocument>),
             ("draw", <DrawDocument as crate::os_store::DocumentDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<DrawDocument>),

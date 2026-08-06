@@ -13,12 +13,12 @@ mod tests {
     }
 
     fn render_json(app: &mut VcsDocumentApp<LayoutPlayApp>, body: &str) -> String {
-        let node = app.render(body, None, &ViewState::default()).expect("render");
+        let node = app.render(body, None, &ViewModel::default()).expect("render");
         serde_json::to_string(&node).unwrap()
     }
 
     fn render_json_locale(app: &mut VcsDocumentApp<LayoutPlayApp>, body: &str, locale: &str) -> String {
-        let view_state = ViewState { locale: Some(locale.into()), ..ViewState::default() };
+        let view_state = ViewModel { locale: Some(locale.into()), ..ViewModel::default() };
         let node = app.render(body, None, &view_state).expect("render");
         serde_json::to_string(&node).unwrap()
     }
@@ -97,7 +97,7 @@ mod tests {
     #[test]
     fn set_selection_reflects_in_inspector() {
         let mut app = new_app();
-        app.handle_action("setSelection", Some(&json!({ "ids": ["frame-text-1"] })), &ViewState::default(), &meta("local")).expect("select");
+        app.handle_action("setSelection", Some(&json!({ "ids": ["frame-text-1"] })), &ViewModel::default(), &meta("local")).expect("select");
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_INSPECTION);
         assert!(json.contains("frame-text-1"));
     }
@@ -113,7 +113,7 @@ mod tests {
     fn add_frame_action_appends_rect() {
         let mut app = new_app();
         let before = app.projection().expect("projection").pages[0].frames.len();
-        let result = app.handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewState::default(), &meta("local")).expect("add");
+        let result = app.handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewModel::default(), &meta("local")).expect("add");
         assert_eq!(result.operations.len(), 1);
         assert_eq!(app.projection().expect("projection").pages[0].frames.len(), before + 1);
     }
@@ -122,11 +122,11 @@ mod tests {
     fn undo_redo_round_trips_add_frame() {
         let mut app = new_app();
         let before = app.projection().expect("projection").pages[0].frames.len();
-        app.handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewState::default(), &meta("local")).expect("add");
+        app.handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewModel::default(), &meta("local")).expect("add");
         assert_eq!(app.projection().expect("projection").pages[0].frames.len(), before + 1);
-        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        app.handle_action("undo", None, &ViewModel::default(), &meta("local")).expect("undo");
         assert_eq!(app.projection().expect("projection").pages[0].frames.len(), before);
-        app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+        app.handle_action("redo", None, &ViewModel::default(), &meta("local")).expect("redo");
         assert_eq!(app.projection().expect("projection").pages[0].frames.len(), before + 1);
     }
 
@@ -141,11 +141,11 @@ mod tests {
             ("columnsGutter", 18.0),
         ] {
             let result = app
-                .handle_action("patchPage", Some(&json!({ "pageId": "page-1", "field": field, "value": value })), &ViewState::default(), &meta("local"))
+                .handle_action("patchPage", Some(&json!({ "pageId": "page-1", "field": field, "value": value })), &ViewModel::default(), &meta("local"))
                 .expect("patch");
             assert_eq!(result.operations.len(), 1, "field {field} should apply");
         }
-        app.handle_action("patchPage", Some(&json!({ "pageId": "page-1", "field": "columnsCount", "value": 3 })), &ViewState::default(), &meta("local")).expect("cols");
+        app.handle_action("patchPage", Some(&json!({ "pageId": "page-1", "field": "columnsCount", "value": 3 })), &ViewModel::default(), &meta("local")).expect("cols");
         let page = app.projection().expect("projection").pages.into_iter().find(|page| page.id == "page-1").unwrap();
         assert_eq!(page.columns.count, 3);
     }
@@ -154,13 +154,13 @@ mod tests {
     fn patch_frame_supports_rect_fill_and_stroke() {
         let mut app = new_app();
         let before = app.projection().expect("projection").pages[0].frames.len();
-        app.handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewState::default(), &meta("local")).expect("add");
+        app.handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewModel::default(), &meta("local")).expect("add");
         let frame_id = format!("frame-{}", before + 1);
         let result = app
             .handle_action(
                 "patchFrame",
                 Some(&json!({ "frameId": frame_id, "pageId": "page-1", "field": "fill", "value": "0.5, 0.4, 0.3, 1" })),
-                &ViewState::default(),
+                &ViewModel::default(),
                 &meta("local"),
             )
             .expect("patch");
@@ -177,7 +177,7 @@ mod tests {
         app.handle_action(
             "patchFrame",
             Some(&json!({ "frameId": "frame-text-1", "pageId": "page-1", "field": "storyContent", "value": "Edited story body." })),
-            &ViewState::default(),
+            &ViewModel::default(),
             &meta("local"),
         )
         .expect("story");
@@ -187,7 +187,7 @@ mod tests {
         app.handle_action(
             "patchFrame",
             Some(&json!({ "frameId": "frame-text-1", "pageId": "page-1", "field": "wrapMode", "value": "contour" })),
-            &ViewState::default(),
+            &ViewModel::default(),
             &meta("local"),
         )
         .expect("wrap");
@@ -203,7 +203,7 @@ mod tests {
         app.handle_action(
             "patchFrame",
             Some(&json!({ "frameId": "frame-image-1", "pageId": "page-1", "field": "linkPath", "value": "assets/updated.png" })),
-            &ViewState::default(),
+            &ViewModel::default(),
             &meta("local"),
         )
         .expect("link");
@@ -220,7 +220,7 @@ mod tests {
             ("exportPdf", "application/pdf"),
             ("exportPackage", "application/zip"),
         ] {
-            let result = app.handle_action(action, Some(&json!({ "pageId": "page-1" })), &ViewState::default(), &meta("local")).expect("export");
+            let result = app.handle_action(action, Some(&json!({ "pageId": "page-1" })), &ViewModel::default(), &meta("local")).expect("export");
             match result.requested_effects.first() {
                 Some(HostEffect::DownloadMediaExport { mime_type: mime, data, .. }) => {
                     assert_eq!(mime, mime_type, "{action}");
@@ -234,7 +234,7 @@ mod tests {
     #[test]
     fn blueprint_scene_has_page_background_and_guides() {
         let mut app = new_app();
-        let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, None, &ViewState::default()).expect("render");
+        let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, None, &ViewModel::default()).expect("render");
         let layers_json = scene_layers_json(&node);
         assert!(layers_json.contains("layout.page-bg"));
         assert!(layers_json.contains("0.97"));
@@ -248,7 +248,7 @@ mod tests {
     #[test]
     fn preview_scene_has_white_background_and_no_guides() {
         let mut app = new_app();
-        let node = app.render(LAYOUT_PLAY_BODY_PREVIEW, None, &ViewState::default()).expect("render");
+        let node = app.render(LAYOUT_PLAY_BODY_PREVIEW, None, &ViewModel::default()).expect("render");
         let layers_json = scene_layers_json(&node);
         assert!(layers_json.contains("layout.page-bg"));
         assert!(!layers_json.contains("layout.guide."));
@@ -257,7 +257,7 @@ mod tests {
     #[test]
     fn inherited_frame_gets_dashed_stroke_in_blueprint() {
         let mut app = new_app();
-        let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, None, &ViewState::default()).expect("render");
+        let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, None, &ViewModel::default()).expect("render");
         let layers_json = scene_layers_json(&node);
         assert!(layers_json.contains("\"dash\":[4.0,3.0]"));
     }
@@ -265,10 +265,10 @@ mod tests {
     #[test]
     fn selected_and_hovered_frames_get_chrome_strokes() {
         let mut app = new_app();
-        app.handle_action("setSelection", Some(&json!({ "ids": ["frame-text-1"] })), &ViewState::default(), &meta("local")).expect("select");
+        app.handle_action("setSelection", Some(&json!({ "ids": ["frame-text-1"] })), &ViewModel::default(), &meta("local")).expect("select");
         assert!(render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("2.5"));
 
-        app.handle_action("setHover", Some(&json!({ "id": "frame-image-1" })), &ViewState::default(), &meta("local")).expect("hover");
+        app.handle_action("setHover", Some(&json!({ "id": "frame-image-1" })), &ViewModel::default(), &meta("local")).expect("hover");
         assert!(render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("1.75"));
     }
 
@@ -279,7 +279,7 @@ mod tests {
             .handle_action(
                 "setCamera",
                 Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "camera": { "x": 10.0, "y": 20.0, "zoom": 1.5 } })),
-                &ViewState::default(),
+                &ViewModel::default(),
                 &meta("local"),
             )
             .expect("camera");
@@ -298,7 +298,7 @@ mod tests {
         app.handle_action(
             "canvasPointerDown",
             Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0, "button": 0 })),
-            &ViewState::default(),
+            &ViewModel::default(),
             &meta("local"),
         )
         .expect("pointer");
@@ -311,7 +311,7 @@ mod tests {
         let mut app = new_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 156.0, 220.0);
         let args = json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0 });
-        let result = app.handle_action("canvasPointerMove", Some(&args), &ViewState::default(), &meta("local")).expect("move");
+        let result = app.handle_action("canvasPointerMove", Some(&args), &ViewModel::default(), &meta("local")).expect("move");
         assert!(result.operations.is_empty(), "hover is a view action, not an operation");
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
         assert!(json.contains("layout-document.frame.frame-text-1"));
@@ -326,7 +326,7 @@ mod tests {
             .handle_action(
                 "canvasDrop",
                 Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0, "dragData": drag_data })),
-                &ViewState::default(),
+                &ViewModel::default(),
                 &meta("local"),
             )
             .expect("drop");
@@ -347,7 +347,7 @@ mod tests {
             .handle_action(
                 "canvasDrop",
                 Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": 0.0, "y": 0.0, "width": 800.0, "height": 600.0, "dragData": drag_data })),
-                &ViewState::default(),
+                &ViewModel::default(),
                 &meta("local"),
             )
             .expect("drop");
@@ -365,13 +365,13 @@ mod tests {
                 "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0,
                 "types": [format!("{LAYOUT_CATALOGUE_KIND_MIME_PREFIX}rect")],
             })),
-            &ViewState::default(),
+            &ViewModel::default(),
             &meta("local"),
         )
         .expect("over");
         assert!(render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("layout.drop-preview"));
 
-        app.handle_action("canvasDragLeave", Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT })), &ViewState::default(), &meta("local")).expect("leave");
+        app.handle_action("canvasDragLeave", Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT })), &ViewModel::default(), &meta("local")).expect("leave");
         assert!(!render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("layout.drop-preview"));
     }
 
@@ -473,7 +473,7 @@ mod tests {
     #[test]
     fn window_engagements_cover_both_windows() {
         let mut app = new_app();
-        let engagements = app.window_engagements(&ViewState::default());
+        let engagements = app.window_engagements(&ViewModel::default());
         let blueprint = engagements.get(LAYOUT_PLAY_WINDOW_BLUEPRINT).expect("blueprint engagement");
         let status = blueprint.status.as_ref().and_then(|rows| rows.first()).expect("status");
         assert!(status.text.contains("Page"));
@@ -485,7 +485,7 @@ mod tests {
     #[test]
     fn tools_expose_undo_redo_and_exports() {
         let mut app = new_app();
-        let tools = app.tools(&ViewState::default());
+        let tools = app.tools(&ViewModel::default());
         let json = serde_json::to_string(&tools).unwrap();
         for needle in [
             "layout-tools-undo",
@@ -502,7 +502,7 @@ mod tests {
     #[test]
     fn engagement_submit_triggers_export() {
         let mut app = new_app();
-        let result = app.handle_action("engagementSubmit", Some(&json!({ "value": "export png" })), &ViewState::default(), &meta("local")).expect("submit");
+        let result = app.handle_action("engagementSubmit", Some(&json!({ "value": "export png" })), &ViewModel::default(), &meta("local")).expect("submit");
         assert!(matches!(result.requested_effects.first(), Some(HostEffect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
     }
 
@@ -511,7 +511,7 @@ mod tests {
         // The React shell PascalCases and strips separators from every draft before submitting it
         // (`normalizeEngagementActionText`), so "export png" arrives as "ExportPng".
         let mut app = new_app();
-        let result = app.handle_action("engagementSubmit", Some(&json!({ "value": "ExportPng" })), &ViewState::default(), &meta("local")).expect("submit");
+        let result = app.handle_action("engagementSubmit", Some(&json!({ "value": "ExportPng" })), &ViewModel::default(), &meta("local")).expect("submit");
         assert!(matches!(result.requested_effects.first(), Some(HostEffect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
     }
 

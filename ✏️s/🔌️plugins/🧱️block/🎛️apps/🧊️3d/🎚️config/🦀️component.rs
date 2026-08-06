@@ -71,7 +71,7 @@ pub struct Block3dConfig {
     /// 🏷️ Tag filter for `puzzle3d_catalog_fragment`'s active-representation resolution. Empty means
     /// "all tags".
     pub wanted_tags: Vec<String>,
-    /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewState.locale`.
+    /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewModel.locale`.
     pub locale: String,
     #[serde(default)]
     #[dsl(table)]

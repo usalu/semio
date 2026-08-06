@@ -14,7 +14,11 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts dev",
-        "forwardAllArgs": true
+        "forwardAllArgs": true,
+        "env": {
+          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
+          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+        }
       }
     },
     "build": {
@@ -22,16 +26,26 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts build",
-        "forwardAllArgs": true
+        "forwardAllArgs": true,
+        "env": {
+          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
+          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+        }
       },
-      "dependsOn": ["@semio-tech/assets:build"]
+      "dependsOn": [
+        "@semio-tech/assets:build"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
-        "forwardAllArgs": true
+        "forwardAllArgs": true,
+        "env": {
+          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
+          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+        }
       }
     },
     "test-quick": {
@@ -39,7 +53,11 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test quick",
-        "forwardAllArgs": true
+        "forwardAllArgs": true,
+        "env": {
+          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
+          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+        }
       }
     },
     "test-long": {
@@ -47,7 +65,11 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test long",
-        "forwardAllArgs": true
+        "forwardAllArgs": true,
+        "env": {
+          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
+          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+        }
       }
     },
     "test-exhaustive": {
@@ -55,7 +77,11 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test exhaustive",
-        "forwardAllArgs": true
+        "forwardAllArgs": true,
+        "env": {
+          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
+          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+        }
       }
     },
     "verify": {
@@ -63,7 +89,11 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify",
-        "forwardAllArgs": true
+        "forwardAllArgs": true,
+        "env": {
+          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
+          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+        }
       }
     },
     "plugin": {
@@ -71,7 +101,11 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts plugin",
-        "forwardAllArgs": true
+        "forwardAllArgs": true,
+        "env": {
+          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
+          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+        }
       }
     },
     "parity": {
@@ -79,7 +113,11 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts parity",
-        "forwardAllArgs": true
+        "forwardAllArgs": true,
+        "env": {
+          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
+          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+        }
       }
     }
   }

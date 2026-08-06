@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Config
 /// 🧮️ B1: animate present's real `DocumentApp::Config` — absorbs every former
 /// `AnimatePresentPlayRuntime` field (`selected_ids`/`engagement_input`) plus the locale the pre-B1
-/// host-pushed `ViewState` used to carry (see `crate::apps::present::terminology`) — same "absorb every
+/// host-pushed `ViewModel` used to carry (see `crate::apps::present::terminology`) — same "absorb every
 /// runtime field" shape `shooting_engine::ShootingConfig` established for the pilot.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
@@ -23,7 +23,7 @@ pub struct PresentConfig {
     pub selected_ids: Vec<String>,
     /// ⌨️ In-progress engagement-bar input draft — was `AnimatePresentPlayRuntime::engagement_input`.
     pub engagement_input: String,
-    /// 🗣️ BCP-47 locale tag — was read off the host-pushed `ViewState.locale`.
+    /// 🗣️ BCP-47 locale tag — was read off the host-pushed `ViewModel.locale`.
     pub locale: String,
 }
 

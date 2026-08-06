@@ -1,0 +1,35 @@
+Lane 1-tessellate — scope note
+==============================
+
+Owned file
+  ✏️s/🔨️modules/️3d/📐️brep/🧩tessellate/🦀️component.rs
+
+Public API (FROZEN)
+  tessellate_solid(body: &Body, solid: SolidId, deflection: f64) -> Result<MeshTransfer, KernelError>
+  tessellate_face(body: &Body, face: FaceId, deflection: f64) -> Result<MeshTransfer, KernelError>
+  sample_edge_polyline(body: &Body, edge: EdgeId, deflection: f64) -> Vec<f32>
+
+Algorithm
+  - Edge-first shared discretization: each EdgeId sampled once into a cache, reused by adjacent faces.
+  - Lines -> endpoints; circles/ellipses -> chord+angular segment count; NURBS -> adaptive chord refine.
+  - Per-face: walk outer wire (oriented coedges) -> UV-project via surface_ops::closest_point -> ear-clip
+    (fan fallback). Planar faces stay boundary-only; non-planar may add UV-grid interiors.
+  - MeshTransfer: packed position/normal/index; face_groups (start/count into index buffer,
+    entity_id = face.raw_index()); edges as packed line segments from shared edge samples.
+  - Face normals from Surface::normal (respects Face::flipped). No brepkit dependency.
+
+Tests (inline in component.rs)
+  - unit_box_has_six_face_groups_and_unit_normals (euler-built unit box -> 6 face groups, unit normals)
+  - tessellate_face_matches_one_box_face
+  - sample_edge_polyline_returns_line_endpoints
+  - shared_edge_samples_are_identical_across_adjacent_faces
+  - circle_edge_samples_respect_deflection
+  - missing_solid_returns_missing_entity
+
+Out of scope / follow-ups
+  - Full CDT for faces with holes (returns KernelError::Operation for now).
+  - Integrator wiring into kernel (still uses brepkit until Wave 6).
+
+Evidence
+  cargo test -p semio-s-3d --lib tessellate -> 12 passed
+  See 🧪lane-1-tessellate-test-quick-run-1.txt

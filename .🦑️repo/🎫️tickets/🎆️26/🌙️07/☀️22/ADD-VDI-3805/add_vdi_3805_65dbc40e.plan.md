@@ -6,7 +6,7 @@ todos:
     content: ticket_open under NORM; scaffold norm/vdi/3805 + workspace/plugin/launch/AGENTS/NormFamilyId wiring
     status: completed
   - id: shared-schema
-    content: Implement Shared domain + SchemaRegistry (sheets 1-100, statuses, corrections, domain queries)
+    content: Implement Shared domain + SchemaCatalog (sheets 1-100, statuses, corrections, domain queries)
     status: completed
   - id: part1-engines
     content: Implement Part 1 record model + io/validate/geometry/functions/catalog engines
@@ -27,7 +27,7 @@ isProject: false
 - **Technology home:** extend existing [`norm/`](norm/) under goal **Norm** (`NORM`). Do **not** create a top-level `vdi3805` multi-crate workspace.
 - **Layout:** one family crate at [`norm/vdi/3805/`](norm/vdi/3805/) named `norm_vdi_3805`, matching `norm/iso/16757` → `norm_iso_16757` and `norm/din/v/18599` → `norm_din_v_18599`.
 - **Parts as modules, not crates:** map every proposed `vdi3805-*` crate onto regions/modules inside a single [`norm/vdi/3805/rs/lib.rs`](norm/vdi/3805/rs/lib.rs).
-- **No Cargo feature forest:** no `part-*`, `all-current`, domain, or platform features. Every non-reserved sheet module is always compiled (same as all existing norm families). Sheet/edition selection is **runtime** via `SheetId` / `EditionId` / `SchemaStatus` / `SchemaRegistry`.
+- **No Cargo feature forest:** no `part-*`, `all-current`, domain, or platform features. Every non-reserved sheet module is always compiled (same as all existing norm families). Sheet/edition selection is **runtime** via `SheetId` / `EditionId` / `SchemaStatus` / `SchemaCatalog`.
 - **Surface:** headless Rust API + `NormFamily` session + plugin DocumentApp. **No** `vdi3805-cli` crate; repo uses `launch.json` + `script.ts test`.
 - **Copyright:** hand-implement public architecture, record-family seed, sheet scope metadata, and correction overlay **structure** only. Exact licensed field tables, enum codes, formulas and limits stay as **extensible registries** with public-known entries plus explicit unknown/unsupported diagnostics. Do not embed copyrighted prose or proprietary tables.
 - **National annex:** all checks report `AnnexChoice::De` (German VDI series).
@@ -46,7 +46,7 @@ flowchart TB
 
   subgraph crate [norm_vdi_3805 lib.rs]
     shared["Shared identity values units"]
-    schema["SchemaRegistry editions corrections"]
+    schema["SchemaCatalog editions corrections"]
     p01["part_1 fundamentals"]
     parts["part_2..part_100 modules"]
     engines["io validate geometry functions catalog"]
@@ -99,8 +99,8 @@ impl NormFamily for Vdi3805Family { /* family_id: Vdi3805 */ }
 - `EditionId { year, month }`
 - `SchemaStatus` — Published | Checked | Draft | Project | Withdrawn | Superseded | HistoricalProposal | Reserved
 - `CorrectionOverlay { sheet, base_edition, effective_year_month, … }`
-- `SchemaRegistry::current()` — operative set used by default `Document`
-- `SchemaRegistry::with_status(SchemaStatus)` — drafts/projects/legacy opt-in at runtime
+- `SchemaCatalog::current()` — operative set used by default `Document`
+- `SchemaCatalog::with_status(SchemaStatus)` — drafts/projects/legacy opt-in at runtime
 - Domain helpers: `registry.sheets_in_domain(Domain::Heating)` etc.
 
 Default `Document` uses operative published/checked editions **plus** applicable corrections as of a configurable date; drafts/projects/legacy never implicit.

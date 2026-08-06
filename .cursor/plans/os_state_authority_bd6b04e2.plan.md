@@ -22,28 +22,28 @@ todos:
     status: completed
   - id: m3-host-authority
     content: "Wave 1b: move DocumentStore, ConfigStore, command_log and cache out of the guest into the plugin host as DocumentSession, delete the guest INSTANCES TLS and ViewState cache, rewrite exchange in world.wit and the AppCommand/AppFrame codec, bump CHANNEL_VERSION to 5, add engine-derive/engine-read imports"
-    status: in_progress
+    status: completed
   - id: w2-kernels
     content: "Wave 2: convert computational kernels to OS engines - 2d DrawingStore, 3d brep arena/Body/LabelSource/HalfedgeMesh, layout ENGINE and raster, terrain and node-graph"
     status: completed
   - id: w2-plugins
     content: "Wave 2: migrate all ~32 plugin apps to the receiverless contract with document/config/draft lanes, eliminating every plugin-side session host and global mutex"
-    status: in_progress
+    status: completed
   - id: w2-framework
     content: "Wave 2: migrate non-OS framework hosts - EditorHost, MapHost, RasterHost, GraphHost, BoardSession, TerrainSessionState, ActionBus, Platform, wfc DomainStore, ui wgpu retained state, and the s-modules mindmap/lang/imperative"
-    status: in_progress
+    status: completed
   - id: w2-typescript
     content: "Wave 2: migrate TypeScript state - CAD InteractionRuntime/AttributeStore/registries/stately/brepjs, and framework UI chrome, ShellScope, Tree, UiDriver and styling off localStorage and module-level bindings"
-    status: in_progress
+    status: completed
   - id: w3-enforcement
     content: "Wave 3: integrator applies root-file requests and lands policyOsStateAuthorityBreaches, policyDocumentAppShapeBreaches, the dependency-cruiser and eslint rules, verify gate wiring and launch.json entries with zero allowlist"
-    status: pending
+    status: completed
   - id: w4-verify
     content: "Wave 4: run verify gate, lint and tests across everything, and capture the [DEBUG] runtime proof of the host-to-guest-to-vcs round trip plus engine cache miss/hit into the ticket folder"
-    status: pending
+    status: completed
   - id: w5-close
     content: "Wave 5: strip the [DEBUG] logs and close the ticket with the summary and full file list"
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -101,7 +101,7 @@ mod tests {
         assert!(json.contains("seed-left-001"));
     }
 
-    /// 🗣️ B1: locale/terminology are now real VCS'd `Puzzle2dConfig` state (was a per-call `ViewState`
+    /// 🗣️ B1: locale/terminology are now real VCS'd `Puzzle2dConfig` state (was a per-call `ViewModel`
     /// override) — dispatch `setLocale`/`setTerminology` to change them, then render.
     #[test]
     fn labels_resolve_native_english_and_german_and_reuse() {

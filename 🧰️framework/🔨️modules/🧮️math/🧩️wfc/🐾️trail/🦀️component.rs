@@ -84,7 +84,7 @@ impl Trail {
     }
 
     /// ↩️ Every still-active decision's `(node, chosen-pattern)`, in the order each was made —
-    /// exactly the combination [`crate::wfc::nogood::NogoodStore::record`] needs to learn from a
+    /// exactly the combination [`crate::wfc::nogood::NogoodIndex::record`] needs to learn from a
     /// contradiction: these decisions, together, are what led to it.
     pub fn active_decisions(&self) -> Vec<(NodeId, PatternId)> {
         self.frames.iter().map(|f| (f.node, f.candidate)).collect()

@@ -59,6 +59,9 @@ import type {
   IntroductionCursor as GeneratedIntroductionCursor,
   IntroductionDemonstration as GeneratedIntroductionDemonstration,
   DialogDefinition as GeneratedDialogDefinition,
+  UiPresence as GeneratedUiPresence,
+  UiState as GeneratedUiState,
+  UiStatus as GeneratedUiStatus,
 } from "./🤖️generated/🟦️manifest.ts";
 // #endregion 🧬️GeneratedMirror
 
@@ -152,6 +155,46 @@ export type CanvasHoverFocus = {
 
 /** 🧬️ Generated from Rust `ActionDescriptor` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type ActionDescriptor = GeneratedActionDescriptor;
+
+export type UiPresence = GeneratedUiPresence;
+export type UiState = GeneratedUiState;
+export type UiStatus = GeneratedUiStatus;
+
+//#region 🧭️UiPresence
+const DEFAULT_UI_PRESENCE: UiPresence = { state: "normal", status: "idle", hover: false, selected: false };
+
+/** @emoji 🧭️ Resolves optional wire-format `presence` to the shared default inert model. */
+export function resolveUiPresence(presence?: UiPresence): UiPresence {
+  return presence ?? DEFAULT_UI_PRESENCE;
+}
+
+/** @emoji 🧭️ True when the element should show a skeleton instead of its content. */
+export function uiPresenceShowsSkeleton(presence?: UiPresence): boolean {
+  const status = resolveUiPresence(presence).status;
+  return status === "loading" || status === "waiting";
+}
+
+/** @emoji 🧭️ Maps measure chrome booleans to the shared status axis until generated `WindowMeasure` gains `presence`. */
+export function windowMeasureChromeStatus(measure: { readonly loading?: boolean; readonly waiting?: boolean }): UiStatus {
+  if (measure.loading) return "loading";
+  if (measure.waiting) return "waiting";
+  return "idle";
+}
+
+/** @emoji 🧭️ Shared presence stamp for shell surfaces waiting on `refreshUi`. */
+export const UI_PENDING_PRESENCE: UiPresence = { state: "normal", status: "loading", hover: false, selected: false };
+
+/** @emoji 🦴 Declarative placeholder node while a window body is still loading. */
+export function pendingWindowUiNode(): UiStackNode {
+  return { type: "stack", direction: "column", children: [], presence: UI_PENDING_PRESENCE };
+}
+
+/** @emoji 🦴 Declarative placeholder node while a panel tab body is still loading. */
+export function pendingPanelUiNode(): UiTreeNode {
+  return { type: "tree", sections: [], presence: UI_PENDING_PRESENCE };
+}
+//#endregion 🧭️UiPresence
+
 
 export type WindowLayoutWindowNode = {
   readonly kind: "window";
@@ -323,7 +366,7 @@ export type UiTreeNode = {
   readonly highlightedIds?: readonly string[];
   readonly selectionChange?: ActionDescriptor;
   readonly dropAction?: ActionDescriptor;
-  readonly menu?: UiMenuRef;
+  readonly menu?: UiMenuRef;  readonly presence?: UiPresence;
 };
 
 export type UiControlNode = UiInputNode | UiSelectNode | UiToggleNode | UiButtonNode | UiKeyValueNode | UiSliderNode | UiNumberStepperNode | UiRingNode | UiIconSelectNode;
@@ -489,7 +532,7 @@ export type UiStackNode = {
   readonly dropAction?: ActionDescriptor;
   readonly dropOverlay?: UiDropOverlaySpec;
   readonly menu?: UiMenuRef;
-  readonly children: readonly UiNode[];
+  readonly children: readonly UiNode[];  readonly presence?: UiPresence;
 };
 
 /** 📥️ Hover-state copy for a {@link UiStackNode}'s `dropOverlay` — shown while a drag is over the stack, ahead of `dropAction` firing on release. */
@@ -1605,6 +1648,57 @@ export function createMemoryStoragePort(): StoragePort {
     },
   };
 }
+
+//#region EphemeralLane
+/** 🫧 Process-local box for module ephemeral values — sole lane until OS draft projection owns these keys. */
+export type EphemeralBox<T> = { current: T };
+
+const ephemeralBoxes = new Map<string, EphemeralBox<unknown>>();
+const ephemeralMaps = new Map<string, Map<unknown, unknown>>();
+const ephemeralSets = new Map<string, Set<unknown>>();
+
+/** 🫧 Get-or-create a mutable box keyed for OS draft projection. */
+export function ephemeralBox<T>(key: string, init: T | (() => T)): EphemeralBox<T> {
+  let box = ephemeralBoxes.get(key) as EphemeralBox<T> | undefined;
+  if (!box) {
+    box = { current: typeof init === "function" ? (init as () => T)() : init };
+    ephemeralBoxes.set(key, box as EphemeralBox<unknown>);
+  }
+  return box;
+}
+
+/** 🫧 Get-or-create a process-local Map owned by the ephemeral lane. */
+export function ephemeralMap<K, V>(key: string): Map<K, V> {
+  let map = ephemeralMaps.get(key) as Map<K, V> | undefined;
+  if (!map) {
+    map = new Map();
+    ephemeralMaps.set(key, map as Map<unknown, unknown>);
+  }
+  return map;
+}
+
+/** 🫧 Get-or-create a process-local Set owned by the ephemeral lane. */
+export function ephemeralSet<T>(key: string): Set<T> {
+  let set = ephemeralSets.get(key) as Set<T> | undefined;
+  if (!set) {
+    set = new Set();
+    ephemeralSets.set(key, set as Set<unknown>);
+  }
+  return set;
+}
+
+const ephemeralWeakMaps = new Map<string, WeakMap<object, unknown>>();
+
+/** 🫧 Get-or-create a process-local WeakMap owned by the ephemeral lane. */
+export function ephemeralWeakMap<K extends object, V>(key: string): WeakMap<K, V> {
+  let map = ephemeralWeakMaps.get(key) as WeakMap<K, V> | undefined;
+  if (!map) {
+    map = new WeakMap();
+    ephemeralWeakMaps.set(key, map as WeakMap<object, unknown>);
+  }
+  return map;
+}
+//#endregion EphemeralLane
 
 /** 🐚️ Namespaces a {@link StoragePort} under `semio.shell.<namespace>.` so several {@link FrameworkOsShell}
  * instances sharing one browser storage origin (e.g. several demonstrator panes) don't read/write each

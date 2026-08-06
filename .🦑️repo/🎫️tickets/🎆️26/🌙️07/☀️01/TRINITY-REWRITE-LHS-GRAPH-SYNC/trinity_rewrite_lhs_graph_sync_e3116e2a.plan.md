@@ -21,7 +21,7 @@ todos:
    content: Wire LHS/RHS Puzzle2dCanvas hosts and Jack WriterCanvas host to the new bridge props in the playground renderer
    status: completed
  - id: before-after-highlight
-   content: Add highlighted_ids channel to shared BoardHost + TrinityHost + TrinityCanvasProps, and compute bound node ids via MATCH...RETURN against Before/After fixtures
+   content: Add highlighted_ids channel to shared BoardHost + TrinityBridge + TrinityCanvasProps, and compute bound node ids via MATCH...RETURN against Before/After fixtures
    status: completed
  - id: validate
    content: Extend existing vitest/cargo tests, rebuild WASM, and re-screenshot the dev server to confirm the fix and sync behavior
@@ -120,7 +120,7 @@ Add to `TrinityRewritePlayController`:
 This needs one new, genuinely-shared capability since it does not exist yet: `TrinityCanvasProps` has no externally-controlled highlight channel today (only `onSelectionChange` fires _out_). The underlying shared engine already has an unused-for-this-purpose `BoardElementStyleKind::Highlighted` render style with its own theme colors ([mathematical/graph/port/directed/normal/lib.rs:939,1161,1171,1230](mathematical/graph/port/directed/normal/lib.rs)), currently only driven internally by area-select/link-compat previews.
 
 - Add a `highlighted_ids: BTreeSet<String>` field + `set_highlighted_ids_json`/`highlighted_ids_json` wasm-bindgen pair to the shared `BoardHost` (same file), feeding `hovered_style_kind`-style resolution so `Highlighted` wins when an id isn't already `Selected`/`Hovered`.
-- Thread it through `TrinityHost` in [trinity/rewrite/engine/lib.rs](trinity/rewrite/engine/lib.rs) (mirrors existing `selected_node_ids_json`, ~756) and add `highlightedNodeIds`/`onHighlightedNodeIdsChange`-style prop to `TrinityCanvasProps` in [trinity/react/index.tsx:358](trinity/react/index.tsx).
+- Thread it through `TrinityBridge` in [trinity/rewrite/engine/lib.rs](trinity/rewrite/engine/lib.rs) (mirrors existing `selected_node_ids_json`, ~756) and add `highlightedNodeIds`/`onHighlightedNodeIdsChange`-style prop to `TrinityCanvasProps` in [trinity/react/index.tsx:358](trinity/react/index.tsx).
 - Add `rewriteLhsMatchQuery(lhsJson): string` in trinity-rewrite-react building `MATCH (pattern) [WHERE clause] RETURN <activeVar>`; call the existing `runJackOnFixture(fixtureJson, query)` ([trinity/react/index.tsx:134-138](trinity/react/index.tsx)) against Before/After fixtures — a bare-var `RETURN` already yields a `graphFixture` subgraph of exactly the bound node(s) ([trinity/jack/core/lib.rs:1409-1421](trinity/jack/core/lib.rs), `return_items_want_graph`/`collect_graph_entities`), so no new Rust query logic is needed there.
 - Wire `TrinityRewriteBeforeSurfaceHost`/`AfterSurfaceHost` to pass the computed ids through the new prop.
 - Known limitation to note in the ticket: only works for variables that exist in the LHS-matched pre-image (RHS-only `CREATE` variables have no Before-side node and simply highlight nothing).

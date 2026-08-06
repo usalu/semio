@@ -10,7 +10,7 @@
 
 ## Crate regions
 - [x] Shared — VdiValue, VdiUnit, LocalizedText, ExtensionBag, ManufacturerFile, ProductIdentity, relationships, SecurityLimits
-- [x] Schema — SheetId, EditionId, SchemaStatus, Domain, SheetEntry (1–100), CorrectionOverlay (parts 2–32), SchemaRegistry
+- [x] Schema — SheetId, EditionId, SchemaStatus, Domain, SheetEntry (1–100), CorrectionOverlay (parts 2–32), SchemaCatalog
 - [x] Part1 — record families 010–970.41, parse/serialize native text, building-system number, validate_structure
 - [x] Geometry — parametric bbox, connections, clearance
 - [x] Functions — linear interpolation, characteristic curves

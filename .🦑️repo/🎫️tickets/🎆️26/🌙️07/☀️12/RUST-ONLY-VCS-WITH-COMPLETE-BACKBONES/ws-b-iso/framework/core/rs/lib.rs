@@ -6103,7 +6103,7 @@ pub struct PluginManifest {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
-pub struct ViewState {
+pub struct ViewModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub active_mode_id: Option<String>,
@@ -6129,7 +6129,7 @@ pub struct ViewState {
     pub terminology: Option<String>,
 }
 
-/// 🗣️ Locale/terminology-aware label patch for an already-instantiated app's manifest, resolved fresh per `ViewState`
+/// 🗣️ Locale/terminology-aware label patch for an already-instantiated app's manifest, resolved fresh per `ViewModel`
 /// (unlike `AppDefinition`, which is assembled once at plugin-load time and cannot itself react to locale changes).
 /// The shell merges this over the static `AppDefinition` labels by id; ids absent from a map keep their static English label.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -6502,7 +6502,7 @@ pub struct ActionResult {
 pub struct ActionContext {
     pub invocation: ActionInvocation,
     pub document_projection: Value,
-    pub view_state: super::ViewState,
+    pub view_state: super::ViewModel,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub granted_capabilities: Vec<CapabilityGrant>,
 }
@@ -6927,7 +6927,7 @@ mod app_document_tests {
         crate::ui::ExampleDefinition::export().unwrap();
         crate::ui::Contribution::export().unwrap();
         crate::ui::PluginManifest::export().unwrap();
-        crate::ui::ViewState::export().unwrap();
+        crate::ui::ViewModel::export().unwrap();
         crate::ui::AppLabelsOverlay::export().unwrap();
         crate::ui::kernel::CapabilityRequirement::export().unwrap();
         crate::ui::kernel::Rights::export().unwrap();

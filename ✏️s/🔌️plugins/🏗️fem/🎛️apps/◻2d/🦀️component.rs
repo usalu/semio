@@ -136,7 +136,7 @@ fn results_map_json(results: &HashMap<String, crate::core::StaticResult>) -> Val
 
 //#region 🔖️Fem2dPlayApp
 /// 🧪️ B1: unit struct — every former `Fem2dPlayApp` `RefCell` field (`result_display`, `camera`) plus
-/// the deleted `ViewState::locale` now live in `crate::apps::fem2d::config::Fem2dConfig`, written
+/// the deleted `ViewModel::locale` now live in `crate::apps::fem2d::config::Fem2dConfig`, written
 /// through `Fem2dConfigOperation`s. v0 design unchanged: results are never persisted or cached —
 /// `fem2d_solve`/`fem2d_solve_all` run fresh inside `render()`/`export_media` whenever the results
 /// window is drawn or the `"results:out"` port is read.
@@ -358,7 +358,7 @@ pub fn create_fem2d_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
 
     pub type Fem2dApp = VcsDocumentApp<Fem2dPlayApp>;
 
@@ -377,7 +377,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut Fem2dApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
 //#endregion 🧪️Testkit

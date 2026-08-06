@@ -131,3 +131,22 @@
 - Implementations live under `🛍️products/💻️os/🔨️modules/{🏪️store/🔄️sync,🪐️space,🔁️workflow}` and expect `crate::os_*` (kernel).
 - Registrar must path-mount them into `semio-framework-os-kernel` glue and re-export; host then `use store::…` / kernel aliases. Do not mount into host facade.
 - Host Cargo.toml needs tokio/time, futures_util, tokio-tungstenite, notify, zip if sync/space stay host-side (not recommended).
+
+## 2026-08-06 — Wave 3 Integrator — Zero-breach flip applied
+
+**Why:** `policyOsStateAuthorityBreaches` + `policyDocumentAppShapeBreaches` report 0; enforce unconditionally.
+
+**Files / globs:**
+- `📜️script.ts` — remove `SEMIO_OS_STATE_AUTHORITY` gate; verify gate asserts OS policies only (full `policy` CLI still has unrelated breaches)
+- `.dependency-cruiser.cjs` — `no-state-outside-os`
+- `eslint.config.mjs` — OS state authority TS rules (module `let`/`var`, empty Map/Set, `*Store` classes, browser storage globals); framework-core StoragePort/ephemeral lane allowlisted
+- `.vscode/launch.json` — `⚖️policy`, `✅verify🎛gate` under `4_build` 900/901
+
+**Exact ask:**
+- [x] Remove env gate
+- [x] Verify gate OS authority assertion
+- [x] dep-cruiser / eslint / launch entries
+
+**Depends on:** Wave 2 authority-struct-map rename + TS ephemeral lane migration
+
+**Status:** applied 2026-08-06

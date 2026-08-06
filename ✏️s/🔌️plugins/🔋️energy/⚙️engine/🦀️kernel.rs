@@ -142,7 +142,7 @@ pub struct SurfaceState {
 
 /// 🔄️ Full simulation state.
 #[derive(Clone, Debug)]
-pub struct SimulationState {
+pub struct SimulationModel {
     pub zones: HashMap<EntityId, ZoneState>,
     pub surfaces: HashMap<EntityId, SurfaceState>,
     pub warmup_complete: bool,
@@ -152,7 +152,7 @@ pub struct SimulationState {
     pub plant_supply_c: f64,
 }
 
-impl Default for SimulationState {
+impl Default for SimulationModel {
     fn default() -> Self {
         Self { zones: HashMap::new(), surfaces: HashMap::new(), warmup_complete: false, hour: 0, delivered_total: DeliveredEnergy::default(), battery_soc: 0.5, plant_supply_c: 55.0 }
     }
@@ -165,8 +165,8 @@ pub struct SimulationKernel;
 
 impl SimulationKernel {
     /// 🔄️ Initialize state from model and precomputed data.
-    pub fn initialize(model: &Model, pre: &PrecomputedModel, weather: &WeatherRecord) -> SimulationState {
-        let mut state = SimulationState::default();
+    pub fn initialize(model: &Model, pre: &PrecomputedModel, weather: &WeatherRecord) -> SimulationModel {
+        let mut state = SimulationModel::default();
         for zone in &model.zones {
             state.zones.insert(zone.id, ZoneState { air: ZoneAirState::new(weather.dry_bulb_c, weather.humidity_ratio()), ..ZoneState::empty() });
         }
@@ -177,7 +177,7 @@ impl SimulationKernel {
     }
 
     /// 🔄️ Run warmup until temperature and load convergence.
-    pub fn warmup(model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationState, weather_records: &[WeatherRecord]) -> Result<(), Error> {
+    pub fn warmup(model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationModel, weather_records: &[WeatherRecord]) -> Result<(), Error> {
         let warmup_hours = config.warmup_days * 24;
         let dt_s = pre.zone_timestep_s;
         let mut prev_temps: HashMap<EntityId, f64> = HashMap::new();
@@ -211,7 +211,7 @@ impl SimulationKernel {
     }
 
     /// 🔄️ Advance one zone timestep with predictor-corrector HVAC coupling.
-    pub fn advance_timestep(model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationState, weather: &WeatherRecord, date: &SimDate, hour: f64, dt_s: f64) -> Result<(), Error> {
+    pub fn advance_timestep(model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationModel, weather: &WeatherRecord, date: &SimDate, hour: f64, dt_s: f64) -> Result<(), Error> {
         let ctx = ScheduleContext { year: date.year, month: date.month, day: date.day, hour: weather.hour, day_of_week: date.day_of_week(), timestep_index: hour as u32, is_dst: false };
 
         let day_of_year = date.day_of_year();
@@ -519,7 +519,7 @@ impl SimulationKernel {
         Ok(())
     }
 
-    fn simulate_secondary(model: &Model, config: &SimulationConfig, _pre: &PrecomputedModel, state: &mut SimulationState, weather: &WeatherRecord, ctx: &ScheduleContext, sun_alt: f64, sun_az: f64, dt_s: f64) {
+    fn simulate_secondary(model: &Model, config: &SimulationConfig, _pre: &PrecomputedModel, state: &mut SimulationModel, weather: &WeatherRecord, ctx: &ScheduleContext, sun_alt: f64, sun_az: f64, dt_s: f64) {
         for plant in &model.plant_loops {
             let total_load: f64 = state.zones.values().map(|z| z.heating_demand_w + z.cooling_demand_w).sum();
             let dispatcher = Dispatcher::new(DispatchScheme::Sequential, plant.equipment_ids.iter().map(|id| EquipmentPriority { equipment_id: id.0, priority: 1, min_runtime_hours: 0.0, capacity_w: 100_000.0 }).collect());

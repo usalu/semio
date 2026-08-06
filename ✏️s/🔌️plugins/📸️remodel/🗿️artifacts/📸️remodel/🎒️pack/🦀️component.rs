@@ -1,16 +1,16 @@
 //! 📦️ Remodel artifact — the binary document surface (`pack`) and its laws.
 
-use crate::artifacts::remodel::RemodelScene;
+use crate::artifacts::remodel::RemodelProjection;
 use store::PackError;
 
-/// 📦️ Encodes a `RemodelScene` to its binary pack form.
-pub fn encode(scene: &RemodelScene) -> Vec<u8> {
+/// 📦️ Encodes a `RemodelProjection` to its binary pack form.
+pub fn encode(scene: &RemodelProjection) -> Vec<u8> {
     store::DocumentPack::encode_pack(scene)
 }
 
-/// 📖️ Decodes a `RemodelScene` from its binary pack form.
-pub fn decode(bytes: &[u8]) -> Result<RemodelScene, PackError> {
-    <RemodelScene as store::DocumentPack>::decode_pack(bytes)
+/// 📖️ Decodes a `RemodelProjection` from its binary pack form.
+pub fn decode(bytes: &[u8]) -> Result<RemodelProjection, PackError> {
+    <RemodelProjection as store::DocumentPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -24,7 +24,7 @@ mod tests {
 
     /// 🏗️ Verbatim duplicate of the `rs` crate's own private test-only fixture builder — see that
     /// crate's `populated_scene_fixture` doc comment for why this is copied rather than shared.
-    fn populated_scene_fixture() -> RemodelScene {
+    fn populated_scene_fixture() -> RemodelProjection {
         let mut scene = default_remodel_scene();
         scene.streams.push(MediaStream {
             id: "stream-1".into(),

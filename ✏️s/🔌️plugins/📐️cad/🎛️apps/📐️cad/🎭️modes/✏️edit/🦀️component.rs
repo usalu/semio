@@ -8,7 +8,7 @@ use crate::apps::cad::{cad_action, cad_pane_camera_runtime, cad_pane_suffix, cam
 use crate::apps::cad::config::CadDislocateOptions;
 use crate::artifacts::cad::engine::interaction::{keyed_transitions, list_interactions_for_model_definition, preview_display_items};
 use crate::artifacts::cad::engine::{collect_mesh_urls, object_mesh_data, object_scale_json, resolve_object_mesh_url};
-use crate::artifacts::cad::{cad_all_objects, cad_pane_geometry, cad_pane_objects, CadGeometry, CadObject, CadPaneId, CadScene};
+use crate::artifacts::cad::{cad_all_objects, cad_pane_geometry, cad_pane_objects, CadGeometry, CadObject, CadPaneId, CadProjection};
 use semio_framework_plugin::{
     build_world_3d_scene, mesh_from_kind, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, LocalizedLabel, ModeDefinition, UiNode, WindowEngagement,
     WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
@@ -63,7 +63,7 @@ pub fn gumball_active(runtime: &CadPlayRuntime, active_utility: Option<&str>, op
 }
 
 /// @emoji 🎯️ World-space pivot for the gumball: centroid of selected objects across all panes.
-pub fn gumball_target_for(document: &CadScene, selected_ids: &[String]) -> Option<[f64; 3]> {
+pub fn gumball_target_for(document: &CadProjection, selected_ids: &[String]) -> Option<[f64; 3]> {
     let mut sum = [0.0; 3];
     let mut count = 0usize;
     for (object, _) in cad_all_objects(document) {
@@ -129,7 +129,7 @@ pub fn world_meshes_json(objects: &[CadObject], geometry: Option<&CadGeometry>) 
     serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
 }
 
-pub fn world_selection_json(document: &CadScene, runtime: &CadPlayRuntime, active_utility: Option<&str>, options: CadDislocateOptions) -> String {
+pub fn world_selection_json(document: &CadProjection, runtime: &CadPlayRuntime, active_utility: Option<&str>, options: CadDislocateOptions) -> String {
     let mut value: Value = serde_json::from_str(&world3d_selection_json(&runtime.selection_method, runtime.selected_object_ids.as_slice(), runtime.hovered_object_id.as_deref())).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         let active = gumball_active(runtime, active_utility, options);
@@ -172,7 +172,7 @@ pub fn world_selection_json(document: &CadScene, runtime: &CadPlayRuntime, activ
     value.to_string()
 }
 
-pub fn world_references_json(document: &CadScene, pane: CadPaneId) -> Option<String> {
+pub fn world_references_json(document: &CadProjection, pane: CadPaneId) -> Option<String> {
     let references = document.references_by_model_definition_id.get(pane.model_definition_id())?;
     if references.is_empty() {
         return None;
@@ -262,7 +262,7 @@ pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &C
     WindowEngagement {
         session_active: Some(session_active),
         // 🧰️ The move/rotate/scale transform switcher now lives in the framework utility bar (derived
-        // from `UtilityDefinition`s + `ViewState::active_utility_id`); the engagement HUD no longer
+        // from `UtilityDefinition`s + `ViewModel::active_utility_id`); the engagement HUD no longer
         // duplicates it — utilities must have exactly one surface.
         options: None,
         input: Some(WindowEngagementInput {

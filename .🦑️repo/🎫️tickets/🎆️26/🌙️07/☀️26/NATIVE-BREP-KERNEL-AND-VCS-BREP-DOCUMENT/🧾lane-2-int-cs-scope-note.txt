@@ -1,0 +1,15 @@
+Lane 2-int-cs scope note
+========================
+Owned file: int-cs/component.rs under brep
+
+Public API (FROZEN):
+- CurveSurfaceHit { point: Pnt3, t: f64, u: f64, v: f64 }
+- intersect_curve_surface(curve: &Curve3, surface: &Surface, tol: f64) -> Result<Vec<CurveSurfaceHit>, IntersectError>
+
+Implementation:
+- Analytic Line/Plane, Line/Sphere, Line/Cylinder
+- General: sample curve domain + surface_ops::closest_point seeds + Newton on C(t)-S(u,v)=0 (3x3 Cramer / Tikhonov)
+- Dedup by world distance; sort by curve parameter
+
+Tests: cargo test -p semio-s-3d --lib brep::int_cs:: -> 5 passed
+No integrator requests.

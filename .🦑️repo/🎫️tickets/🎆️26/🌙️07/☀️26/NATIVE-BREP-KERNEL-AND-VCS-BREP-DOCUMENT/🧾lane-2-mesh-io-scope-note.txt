@@ -1,0 +1,42 @@
+Lane 2-mesh-io — scope note
+===========================
+
+Owned file
+  ✏️s/🔨️modules/🧊️3d/📐️brep/📦mesh-io/🦀️component.rs (~434 lines)
+
+Public API (FROZEN)
+  TriangleMesh, StlFormat { Binary, Ascii }
+  triangle_mesh_from_transfer / mesh_to_mesh_data / mesh_from_mesh_data
+  export_stl / import_stl, export_obj / import_obj, export_glb / import_glb, export_dwg / import_dwg
+  export_solid_stl|obj|glb|dwg(body, solid, deflection, …)
+  import_stl_to_body / import_obj_to_body / import_glb_to_body / import_dwg_to_body
+  import_triangle_mesh_to_body(body, mesh, tolerance) -> SolidId
+
+Implementation
+  - Export: tessellate_solid -> TriangleMesh -> semio_framework_core codecs (STL binary via mesh_to_stl; ASCII hand-rolled; OBJ mesh_to_obj; GLB GlbExporter; DWG mesh_to_dwg_drawing + dwg_to_bytes).
+  - Import: decode to TriangleMesh; one planar face per triangle via make_planar_face_from_points; shell + solid via euler add_shell/add_solid.
+  - STL: binary/ASCII auto-detect (brepkit-style length check); ASCII reader/writer native.
+  - Winding: per-vertex normals when present; else signed-volume flip heuristic.
+  - Sew lane not wired yet — triangle soup shell, not edge-welded manifold.
+
+Tests (inline)
+  export_box_mesh_stl_nonempty
+  import_stl_produces_faces
+  stl_ascii_round_trip_preserves_triangle_count
+  obj_export_import_round_trip
+  glb_export_import_round_trip
+  import_glb_to_body_has_faces
+
+Out of scope / follow-ups
+  - Wave 6 kernel wiring (BrepkitKernel still uses brepkit_io for STL/OBJ).
+  - Vertex merge on import (tolerance reserved; faces built from triangle corners).
+  - DWG round-trip test omitted (codec covered by framework-core).
+
+Concurrent unblock (not owned)
+  Fixed missing parens in int-ss find_seeds_bvh stack.push (lines 379–380) so semio-s-3d lib tests compile.
+
+Evidence
+  cargo test -p semio-s-3d --lib brep::mesh_io:: -> 6 passed
+  See 🧪lane-2-mesh-io-test-quick-run-1.txt
+
+Contract: mesh_io FROZEN (📐️module-contracts.md)

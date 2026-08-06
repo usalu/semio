@@ -578,12 +578,12 @@ pub mod layout {
     }
 
     /// 🖱️ The plugin-facing on-demand menu request — deliberately does NOT carry view state (this crate
-    /// must never reference `semio_framework_core`'s `ViewState`, same boundary as every other type
-    /// here). Mirrors `handle_action`/`render`/`tool_measures`, which all take `view_state: &ViewState`
+    /// must never reference `semio_framework_core`'s `ViewModel`, same boundary as every other type
+    /// here). Mirrors `handle_action`/`render`/`tool_measures`, which all take `view_state: &ViewModel`
     /// as a separate `DocumentApp` method parameter rather than embedding it in the request payload; the
     /// plugin SDK's `plugin_context_menu` free function parses the WIT-level combined JSON (which DOES
     /// carry `viewState`, matching the TS `PluginContextMenuRequest` wire shape) and splits it into this
-    /// smaller struct plus a typed `ViewState` before calling `DocumentApp::context_menu`.
+    /// smaller struct plus a typed `ViewModel` before calling `DocumentApp::context_menu`.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
@@ -927,7 +927,7 @@ pub mod layout {
             #[cfg_attr(feature = "typegen", ts(optional, rename = "defaultOpen"))]
             default_open: Option<bool>,
             /// 🎯️ When `Some(utility_id)`, this group is *utility-scoped chrome*: the shell surfaces it only while
-            /// `ViewState.active_utility_id == utility_id`, and renders it in the dedicated "Utility Options" rail
+            /// `ViewModel.active_utility_id == utility_id`, and renders it in the dedicated "Utility Options" rail
             /// beside the utility bar — never in the always-on Measures overlay. When absent, the group is a
             /// general measure and stays in the Measures overlay exactly as before. See [`partition_window_measures`].
             #[serde(skip_serializing_if = "Option::is_none")]

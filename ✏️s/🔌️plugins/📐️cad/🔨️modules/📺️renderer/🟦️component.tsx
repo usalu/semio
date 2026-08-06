@@ -51,7 +51,7 @@ import {
   type SearchSpec,
   type ThreeEvent,
 } from "@semio-tech/ui-react";
-import { canvasPickTargetKey } from "@semio-tech/framework-core";
+import { canvasPickTargetKey, ephemeralBox, ephemeralMap } from "@semio-tech/framework-core";
 import { clearColorResolveCache, resolveSemanticColorHex, tokenHex } from "@semio-tech/ui-styling";
 import { Fragment, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌️Adapters
@@ -1741,7 +1741,7 @@ function defaultDisplayItemNode(item: DisplayItem, geometry?: SpatialPickGeometr
 /** @emoji 🖼️ Host hook that renders one resolved `DisplayItem` inside `<InteractionDisplay>`. */
 export type SpatialDisplayItemRenderer = (item: DisplayItem, geometry: SpatialPickGeometry | null | undefined, defaultRender: () => ReactNode) => ReactNode;
 
-const spatialDisplayItemRenderers = new Map<string, SpatialDisplayItemRenderer>();
+const spatialDisplayItemRenderers = ephemeralMap<string, SpatialDisplayItemRenderer>("s.plugins.cad.modules.renderer.component.tsx.spatialDisplayItemRenderers");
 
 /** @emoji 🖼️ Registers a custom display kind; returns unregister. Libraries extend without forking the package. */
 export function registerSpatialDisplayItemKind(kind: string, render: SpatialDisplayItemRenderer): () => void {
@@ -1997,18 +1997,18 @@ function readSpatialCssColor(variable: string, fallbackKey: string): string {
   return resolveSemanticColorHex(variable, fallbackKey);
 }
 
-let spatialSceneColorCache: SpatialSceneColorPalette | null = null;
+const spatialSceneColorCache = ephemeralBox<SpatialSceneColorPalette | null>("s.plugins.cad.modules.renderer.component.tsx.spatialSceneColorCache", null);
 
 /** @emoji 🎨️ Reads `--canvas`, `--accent`, and selection tokens for Three.js materials. */
 export function spatialSceneColors(): SpatialSceneColorPalette {
-  if (spatialSceneColorCache) return spatialSceneColorCache;
+  if (spatialSceneColorCache.current) return spatialSceneColorCache.current;
   const accent = readSpatialCssColor("--accent", "tertiary");
   const accentSecondary = readSpatialCssColor("--accent-secondary", "gray");
   const foreground = readSpatialCssColor("--foreground", "dark");
   const muted = readSpatialCssColor("--muted-foreground", "gray");
   const selected = readSpatialCssColor("--color-changed-selected", "primary");
   const hovered = readSpatialCssColor("--color-changed-hovered", "secondary");
-  spatialSceneColorCache = {
+  spatialSceneColorCache.current = {
     canvas: readSpatialCssColor("--canvas", "light-6-7"),
     accent,
     accentEmissive: readSpatialCssColor("--active-base", "dark-5-7"),
@@ -2043,12 +2043,12 @@ export function spatialSceneColors(): SpatialSceneColorPalette {
     construction: accent,
     constructionEmissive: readSpatialCssColor("--active-base", "dark-5-7"),
   };
-  return spatialSceneColorCache;
+  return spatialSceneColorCache.current;
 }
 
 /** @emoji 🔄️ Clears cached CSS palette (tests or theme switches). */
 export function resetSpatialSceneColorCache(): void {
-  spatialSceneColorCache = null;
+  spatialSceneColorCache.current = null;
   clearColorResolveCache();
 }
 
@@ -2868,7 +2868,7 @@ function SpatialPickHitTarget({
 // #endregion 🧲️GeometryInteraction
 
 // #region 🎨️TypologyPatternMaterial
-const typologyPatternMaterialCache = new Map<string, THREE.MeshStandardMaterial>();
+const typologyPatternMaterialCache = ephemeralMap<string, THREE.MeshStandardMaterial>("s.plugins.cad.modules.renderer.component.tsx.typologyPatternMaterialCache");
 
 function typologyPatternKindUniform(kind: ResolvedTypologyStyle["pattern"]["kind"]): number {
   if (kind === "hatch") return 1;

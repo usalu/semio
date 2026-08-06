@@ -30,7 +30,7 @@ mod tests {
     use crate::apps::wires::{WiresCommand, WIRES_PLAY_BODY_DOCUMENT};
 
     /// 🗣️ B1: locale is now `cfg.locale`, set via the typed `SetLocale` config command — no more
-    /// `ViewState.locale` threaded through `render` (the trait dropped `ViewState` entirely).
+    /// `ViewModel.locale` threaded through `render` (the trait dropped `ViewModel` entirely).
     #[test]
     fn wires_labels_resolve_native_in_german() {
         let mut app = metabolism_app();

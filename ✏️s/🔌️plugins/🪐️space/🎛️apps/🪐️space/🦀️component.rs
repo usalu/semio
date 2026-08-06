@@ -544,9 +544,7 @@ pub(crate) mod testkit {
 
     use std::cell::RefCell;
 
-    thread_local! {
-        static STUDIO_TEST_APP: RefCell<SpaceApp> = RefCell::new(SpaceApp::default());
-    }
+    
 
     pub(crate) fn studio_emit(projection: &WorkflowDocument, config: &SpaceConfig, command: &SpaceCommand) -> Result<Emit<WorkflowOperation, crate::apps::space::config::SpaceConfigOperation>, Fault> {
         STUDIO_TEST_APP.with(|app| {

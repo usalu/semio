@@ -3,7 +3,7 @@
 use crate::artifacts::remodel::op::{apply_remodel_operation, RemodelOperation};
 use crate::artifacts::remodel::{
     CalibrationState, CameraTrajectory, DenseCloud, DenseParams, FeatureParams, GeoParams, GeoProducts, GroundControlPoint, ImageAsset, IngestParams, MatchParams, MediaStream, MeshParams, MotionParams, MotionTrackSummary, QcReportSnapshot,
-    ReconstructionJob, RemodelMesh, RemodelScene, SfmParams, SparseCloud,
+    ReconstructionJob, RemodelMesh, RemodelProjection, SfmParams, SparseCloud,
 };
 use protocol::OperationDiff;
 use serde::{Deserialize, Serialize};
@@ -83,8 +83,8 @@ pub enum RemodelDiff {
     },
 }
 
-impl OperationDiff<RemodelScene> for RemodelDiff {
-    fn apply(&self, projection: &RemodelScene) -> RemodelScene {
+impl OperationDiff<RemodelProjection> for RemodelDiff {
+    fn apply(&self, projection: &RemodelProjection) -> RemodelProjection {
         let operation = match self {
             RemodelDiff::Empty => return projection.clone(),
             RemodelDiff::SetStreams { streams } => RemodelOperation::SetStreams { streams: streams.clone() },

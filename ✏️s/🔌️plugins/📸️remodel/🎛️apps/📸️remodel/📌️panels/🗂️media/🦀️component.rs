@@ -4,7 +4,7 @@
 use crate::apps::remodel::commands::shell::REMODEL_MEDIA_ACCEPT;
 use crate::apps::remodel::remodel_action;
 use crate::apps::remodel::terminology::RemodelLabels;
-use crate::artifacts::remodel::{MediaKind, RemodelScene};
+use crate::artifacts::remodel::{MediaKind, RemodelProjection};
 use semio_framework_plugin::{ui_import_drop_zone, ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode};
 
 //#region 🔖️Constants
@@ -19,7 +19,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(scene: &RemodelScene, labels: &RemodelLabels) -> UiNode {
+pub fn render(scene: &RemodelProjection, labels: &RemodelLabels) -> UiNode {
     let mut lines = vec![
         ui_import_drop_zone("remodel-media-drop", labels.panel_media.into(), labels.no_streams.into(), Some(REMODEL_MEDIA_ACCEPT), remodel_action("importFramePayload", None)),
         ui_text(Label::data(format!("{}: {} - {}: {}", labels.streams.as_str(), scene.streams.len(), labels.assets.as_str(), scene.assets.len()))),

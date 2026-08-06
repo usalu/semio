@@ -1,4 +1,4 @@
-//! ⚙️ CAD artifact — headless compute over the `CadScene` projection: the shared brep kernel, the
+//! ⚙️ CAD artifact — headless compute over the `CadProjection` projection: the shared brep kernel, the
 //! quad play fixture importer, mesh/typology tessellation, native geometry import/export, and the
 //! plugin-level `register()` that wires cad's exporters/importers into the host.
 //!
@@ -10,7 +10,7 @@
 //! that consumer's file; two or more consumers put it here.
 
 use base64::Engine as _;
-use crate::artifacts::cad::{cad_all_objects, cad_pane_from_model_definition_id, cad_pane_geometry, CadCamera, CadGeometry, CadNode, CadObject, CadPaneId, CadPrimitiveSlot, CadProjectionDsl, CadReference, CadScene, CAD_PLAY_DOCUMENT_SCHEMA};
+use crate::artifacts::cad::{cad_all_objects, cad_pane_from_model_definition_id, cad_pane_geometry, CadCamera, CadGeometry, CadNode, CadObject, CadPaneId, CadPrimitiveSlot, CadProjectionDsl, CadReference, CadProjection, CAD_PLAY_DOCUMENT_SCHEMA};
 use crate::artifacts::cad::engine::geometry_import::{cad_object_from_mesh, cad_object_from_solid_handle, centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture};
 use semio_s_3d::brep::kernel::{mesh_data_from_mesh_transfer, BrepkitKernel};
 use semio_s_3d::brep::engine::{block_on, BrepEngineHost, BrepKernel, GeometryHandle, MeshTransfer};
@@ -58,13 +58,12 @@ pub const CAD_FOREST_REFERENCE_PLANE_Z: f64 = 0.01;
 
 pub const CAD_FOREST_REFERENCE_Y_OFFSET_RATIO: f64 = 0.2;
 
-static CAD_BREP_HOST: OnceLock<BrepEngineHost> = OnceLock::new();
 
 const CAD_BREP_CACHE_BUDGET_BYTES: usize = 64 * 1024 * 1024;
 
 /// @emoji 🖥️ Host-owned brep session (`EngineHost` + compute-scoped kernel registry).
 pub fn cad_brep_host() -> &'static BrepEngineHost {
-    CAD_BREP_HOST.get_or_init(|| BrepEngineHost::new(CAD_BREP_CACHE_BUDGET_BYTES))
+    (|| BrepEngineHost::new(CAD_BREP_CACHE_BUDGET_BYTES)())
 }
 
 /// @emoji 🔩 Lock the cad brep kernel for synchronous `BrepKernel` calls.
@@ -209,8 +208,8 @@ pub fn typology_mesh_kind(typology: &str) -> &'static str {
     }
 }
 
-pub fn default_document() -> CadScene {
-    CadScene {
+pub fn default_document() -> CadProjection {
+    CadProjection {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
         id: "cad".into(),
         objects: vec![CadObject {
@@ -243,12 +242,12 @@ pub fn default_document() -> CadScene {
 /// @emoji 📟️ Builds the quad play document: shape/building/energy/structure-classic panes each
 /// sourced from their own model definition inside the shared fixture JSON. Empty panes stay empty —
 /// never collapse to `default_document` (that single-box placeholder was the cut-concrete bug).
-fn forest_play_document(source_json: &str, id: &str) -> CadScene {
+fn forest_play_document(source_json: &str, id: &str) -> CadProjection {
     let (shape_objects, shape_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_SHAPE);
     let (building_objects, building_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_BUILDING);
     let (energy_objects, energy_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_ENERGY);
     let (structure_classic_objects, structure_classic_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_STRUCTURE_CLASSIC);
-    CadScene {
+    CadProjection {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
         id: id.into(),
         objects: shape_objects,
@@ -265,11 +264,11 @@ fn forest_play_document(source_json: &str, id: &str) -> CadScene {
     }
 }
 
-/// @emoji 🌲️ The Concrete Forest Left example projection — a bare `CadScene` (no runtime/history),
+/// @emoji 🌲️ The Concrete Forest Left example projection — a bare `CadProjection` (no runtime/history),
 /// wrapped into a `DocumentStore` by `VcsDocumentApp` when spawned. Cached so manifest registration,
 /// `initial_projection`, and `setActiveExample` share one BREP import instead of rebuilding thrice.
-pub fn forest_play_scene() -> CadScene {
-    static FOREST_PLAY_SCENE: OnceLock<CadScene> = OnceLock::new();
+pub fn forest_play_scene() -> CadProjection {
+    static FOREST_PLAY_SCENE: OnceLock<CadProjection> = OnceLock::new();
     FOREST_PLAY_SCENE.get_or_init(|| forest_play_document(FOREST_LEFT_MODEL_JSON, CAD_EXAMPLE_FOREST_LEFT)).clone()
 }
 
@@ -282,7 +281,7 @@ pub fn next_cad_id(prefix: &str) -> String {
 }
 
 /// 🌲️ The initial per-pane camera for the Concrete Forest Left example — session-only runtime state
-/// now (camera moved off `CadScene`), matching the pose the document used to carry before the
+/// now (camera moved off `CadProjection`), matching the pose the document used to carry before the
 /// camera-as-View-action refactor.
 pub fn forest_play_camera() -> CadCamera {
     CadCamera { position: [12.0, -12.0, 8.0], target: [5.4, 2.34, 1.5], zoom: 1.0, fov: 50.0, projection: CadProjectionDsl::default() }
@@ -467,7 +466,7 @@ pub fn unwrap_spatial_load_payload(raw: &Value) -> Option<Value> {
     Some(raw.clone())
 }
 
-pub fn scene_from_spatial_payload(payload: &Value) -> Option<CadScene> {
+pub fn scene_from_spatial_payload(payload: &Value) -> Option<CadProjection> {
     if payload.get("schema").and_then(|value| value.as_str()) == Some("spatial.modelspace") {
         let models = payload.get("models")?.as_array()?;
         let mut scene = default_document();
@@ -583,7 +582,7 @@ pub fn object_scale_json(object: &CadObject) -> [f64; 3] {
 /// @emoji 🧵️ Tessellates a representative mesh for the OS mesh-exporter boundary — the document's
 /// first object across panes, or the default box typology for an empty scene (no runtime selection
 /// exists at this boundary).
-pub fn export_mesh_from_scene(document: &CadScene) -> MeshData {
+pub fn export_mesh_from_scene(document: &CadProjection) -> MeshData {
     let first = cad_all_objects(document).next();
     let typology = first.map_or("spatial.shape.primitive.box", |(object, _)| object.typology.as_str());
     let extent = first.and_then(|(object, _)| object.extent);
@@ -593,7 +592,7 @@ pub fn export_mesh_from_scene(document: &CadScene) -> MeshData {
 }
 
 pub fn cad_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
-    let scene: CadScene = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
+    let scene: CadProjection = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
     Ok(export_mesh_from_scene(&scene))
 }
 
@@ -620,7 +619,7 @@ pub fn cad_document_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Resu
     serde_json::to_value(&scene).map_err(|err| err.to_string())
 }
 
-/// @emoji 🧵️ Bridges a `MeshImporter`-decoded mesh (currently only GLB) back into a bare `CadScene`
+/// @emoji 🧵️ Bridges a `MeshImporter`-decoded mesh (currently only GLB) back into a bare `CadProjection`
 /// document, reusing the same OBJ-text-roundtrip kernel import as the DWG/STL/`importCadFile` paths.
 pub fn cad_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
     let mut scene = default_document();
@@ -636,7 +635,7 @@ pub fn cad_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
 /// the cad play app plus every native geometry exporter/importer the `3d.cad` artifact kind
 /// advertises. Was the bundle crate's `register_cad_exports`.
 pub fn register() {
-    // 📦️ pack binary codec for `CadScene` (`CadPlayApp::document_schema()` == `CAD_DOCUMENT_SCHEMA`).
+    // 📦️ pack binary codec for `CadProjection` (`CadPlayApp::document_schema()` == `CAD_DOCUMENT_SCHEMA`).
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::cad::CadPlayApp>(crate::artifacts::cad::CAD_DOCUMENT_SCHEMA);
     semio_framework_os::register_solid_exporter("3d.cad", Box::new(semio_s_3d::brep::kernel::ObjSolidExporter));
     semio_framework_os::register_solid_exporter("3d.cad", Box::new(semio_s_3d::brep::kernel::StlSolidExporter));

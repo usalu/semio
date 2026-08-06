@@ -9,7 +9,7 @@
 use crate::artifacts::jack::{Camera, GraphFixture, Node, PropertyValue};
 use crate::artifacts::rewrite::engine::{ParameterKind, Rhs};
 use crate::artifacts::rewrite::op::RewriteRuleOperation;
-use crate::artifacts::rewrite::{LayoutPoint, RewriteRuleState, REWRITE_RULE_SCHEMA};
+use crate::artifacts::rewrite::{LayoutPoint, RewriteRuleModel, REWRITE_RULE_SCHEMA};
 use crate::apps::rewrite::config::{RewriteConfig, RewriteConfigOperation};
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     ActionArgDef, ActionArgOption, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
@@ -71,7 +71,7 @@ const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
 //#endregion 🔖️Constants
 
 //#region 🔖️DocumentHelpers
-/// 📦️ JSON text of the bundled Nakagin fixture — `RewriteRuleState`'s own `_json` fields keep their
+/// 📦️ JSON text of the bundled Nakagin fixture — `RewriteRuleModel`'s own `_json` fields keep their
 /// JSON contract, so the `.trinity` DSL source is parsed once and re-serialized here.
 fn nakagin_fixture_json() -> String {
     GraphFixture::parse_dsl(NAKAGIN_FIXTURE_DSL).expect("bundled nakagin fixture parses").to_json().expect("fixture serializes")
@@ -84,15 +84,15 @@ pub(crate) fn default_parameter_bindings(rhs_json: &str) -> BTreeMap<String, Pro
     rhs.parameters.iter().map(|param| (param.name.clone(), param.default.clone())).collect()
 }
 
-pub(crate) fn default_rule_state() -> RewriteRuleState {
-    let mut state = RewriteRuleState { before_fixture_json: nakagin_fixture_json(), lhs_json: DEFAULT_LHS_JSON.into(), rhs_json: DEFAULT_RHS_JSON.into(), parameter_bindings: BTreeMap::new(), rule_layout: BTreeMap::new() };
+pub(crate) fn default_rule_state() -> RewriteRuleModel {
+    let mut state = RewriteRuleModel { before_fixture_json: nakagin_fixture_json(), lhs_json: DEFAULT_LHS_JSON.into(), rhs_json: DEFAULT_RHS_JSON.into(), parameter_bindings: BTreeMap::new(), rule_layout: BTreeMap::new() };
     state.parameter_bindings = default_parameter_bindings(&state.rhs_json);
     state
 }
 
-/// 🌱️ Reads `RewriteRuleState.before_fixture_json`'s seed-only `camera` field once — the one place a
+/// 🌱️ Reads `RewriteRuleModel.before_fixture_json`'s seed-only `camera` field once — the one place a
 /// before-fixture's initial framing is consumed into the app's live config camera.
-pub(crate) fn seed_before_pane_camera(state: &RewriteRuleState) -> Camera {
+pub(crate) fn seed_before_pane_camera(state: &RewriteRuleModel) -> Camera {
     parse_fixture_json(&state.before_fixture_json).map(|fixture| fixture.camera).unwrap_or_default()
 }
 
@@ -104,13 +104,13 @@ pub(crate) fn parse_fixture_json(json: &str) -> Option<GraphFixture> {
     GraphFixture::from_json(json).ok()
 }
 
-fn build_rule_from_state(state: &RewriteRuleState) -> Result<crate::artifacts::rewrite::engine::Rule, String> {
+fn build_rule_from_state(state: &RewriteRuleModel) -> Result<crate::artifacts::rewrite::engine::Rule, String> {
     let lhs: crate::artifacts::rewrite::engine::Lhs = serde_json::from_str(&state.lhs_json).map_err(|e| e.to_string())?;
     let rhs: Rhs = serde_json::from_str(&state.rhs_json).map_err(|e| e.to_string())?;
     Ok(crate::artifacts::rewrite::engine::Rule { name: TRINITY_REWRITE_PLAY_RULE_NAME.into(), lhs, rhs })
 }
 
-pub(crate) fn compiled_jack_query(state: &RewriteRuleState) -> String {
+pub(crate) fn compiled_jack_query(state: &RewriteRuleModel) -> String {
     let rule_json = match build_rule_from_state(state) {
         Ok(rule) => serde_json::to_string(&rule).unwrap_or_default(),
         Err(_) => return String::new(),
@@ -123,7 +123,7 @@ pub(crate) fn compiled_jack_query(state: &RewriteRuleState) -> String {
         .unwrap_or_else(|| build_rule_from_state(state).map(|rule| crate::artifacts::rewrite::engine::build_rule_query(&rule, &state.parameter_bindings)).unwrap_or_default())
 }
 
-fn apply_rewrite_to_fixture(before_json: &str, state: &RewriteRuleState) -> String {
+fn apply_rewrite_to_fixture(before_json: &str, state: &RewriteRuleModel) -> String {
     let Ok(mut graph) = crate::artifacts::jack::Graph::load_json(before_json) else {
         return before_json.into();
     };
@@ -139,7 +139,7 @@ fn apply_rewrite_to_fixture(before_json: &str, state: &RewriteRuleState) -> Stri
 
 /// ♻️ Pure computation of the rule-applied result graph — reused both by the `After` window's render
 /// and by `DocumentApp::export_media`'s `"graph:out"` port.
-pub(crate) fn after_fixture_json(state: &RewriteRuleState) -> String {
+pub(crate) fn after_fixture_json(state: &RewriteRuleModel) -> String {
     apply_rewrite_to_fixture(&state.before_fixture_json, state)
 }
 
@@ -150,7 +150,7 @@ pub(crate) fn sync_select_var_from_node(fixture_json: &str, node_id: &str) -> Op
 }
 
 /// 🧭️ Resolves which fixture backs a given rewrite graph surface (Before/After/LHS/RHS), for hover/select var lookup.
-pub(crate) fn fixture_json_for_surface(surface_id: &str, state: &RewriteRuleState) -> String {
+pub(crate) fn fixture_json_for_surface(surface_id: &str, state: &RewriteRuleModel) -> String {
     if surface_id == TRINITY_REWRITE_PLAY_SURFACE_AFTER {
         after_fixture_json(state)
     } else if surface_id == TRINITY_REWRITE_PLAY_SURFACE_LHS {
@@ -402,12 +402,12 @@ pub enum TrinityRewriteCommand {
 //#endregion 🔖️TrinityRewriteCommand
 
 //#region 🔖️TrinityRewritePlayApp
-/// ♻️ Trinity Rewrite play app — a parametric-rewrite editor over a {@link RewriteRuleState} projection.
+/// ♻️ Trinity Rewrite play app — a parametric-rewrite editor over a {@link RewriteRuleModel} projection.
 #[derive(Default)]
 pub struct TrinityRewritePlayApp;
 
 impl DocumentApp for TrinityRewritePlayApp {
-    type Projection = RewriteRuleState;
+    type Projection = RewriteRuleModel;
     type Operation = RewriteRuleOperation;
     type Config = RewriteConfig;
     type ConfigOperation = RewriteConfigOperation;
@@ -419,7 +419,7 @@ impl DocumentApp for TrinityRewritePlayApp {
     const APP_ID: &'static str = TRINITY_REWRITE_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;
 
-    fn initial_projection() -> RewriteRuleState {
+    fn initial_projection() -> RewriteRuleModel {
         default_rule_state()
     }
 
@@ -432,14 +432,14 @@ impl DocumentApp for TrinityRewritePlayApp {
         Some(rewrite_io())
     }
 
-    fn whole_document_operation(projection: RewriteRuleState) -> Option<RewriteRuleOperation> {
+    fn whole_document_operation(projection: RewriteRuleModel) -> Option<RewriteRuleOperation> {
         Some(RewriteRuleOperation::SetState { state: projection })
     }
 
     /// 🔌️ `"graph:in"` loads an incoming `trinity.graph` pack as this rule's `before_fixture_json`
     /// working graph. `"document:in"` reimplements the default `DocumentApp::import_media` body for
     /// the rule document itself.
-    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RewriteRuleState>) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation, Self::DraftOperation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &DocumentView<'_, RewriteRuleModel>) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation, Self::DraftOperation>, MediaError> {
         match port {
             "graph:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -457,7 +457,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                     return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let projection = <RewriteRuleState as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let projection = <RewriteRuleModel as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 match Self::whole_document_operation(projection) {
                     Some(operation) => Ok(Emit::operations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
@@ -468,7 +468,7 @@ impl DocumentApp for TrinityRewritePlayApp {
     }
 
     /// 🔌️ `"graph:out"` re-emits the rule-applied result graph, alongside the implicit `"document:out"`.
-    fn export_media(port: &str, doc: &DocumentView<'_, RewriteRuleState>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &DocumentView<'_, RewriteRuleModel>) -> Result<Media, MediaError> {
         match port {
             "graph:out" => {
                 let fixture_json = after_fixture_json(doc.projection);
@@ -508,7 +508,7 @@ impl DocumentApp for TrinityRewritePlayApp {
         }
     }
 
-    fn handle(command: &TrinityRewriteCommand, doc: &DocumentView<'_, RewriteRuleState>, cfg: &ConfigView<'_, RewriteConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation, Self::DraftOperation>, Fault> {
+    fn handle(command: &TrinityRewriteCommand, doc: &DocumentView<'_, RewriteRuleModel>, cfg: &ConfigView<'_, RewriteConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation, Self::DraftOperation>, Fault> {
         let state = doc.projection;
         let config = cfg.projection;
         match command {
@@ -531,7 +531,7 @@ impl DocumentApp for TrinityRewritePlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &DocumentView<'_, RewriteRuleState>, cfg: &ConfigView<'_, RewriteConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &DocumentView<'_, RewriteRuleModel>, cfg: &ConfigView<'_, RewriteConfig>) -> UiNode {
         let state = doc.projection;
         let config = cfg.projection;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::apps::rewrite::terminology::TrinityRewriteLabels>(&config.locale);
@@ -549,7 +549,7 @@ impl DocumentApp for TrinityRewritePlayApp {
         }
     }
 
-    fn window_measures(_doc: &DocumentView<'_, RewriteRuleState>, cfg: &ConfigView<'_, RewriteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &DocumentView<'_, RewriteRuleModel>, cfg: &ConfigView<'_, RewriteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.projection;
         let mode_for = |window_id: &str| config.lod_mode_by_window.get(window_id).map_or(TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
         HashMap::from([
@@ -560,7 +560,7 @@ impl DocumentApp for TrinityRewritePlayApp {
         ])
     }
 
-    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, RewriteRuleState>, cfg: &ConfigView<'_, RewriteConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &DocumentView<'_, RewriteRuleModel>, cfg: &ConfigView<'_, RewriteConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let is_de = cfg.projection.locale.starts_with("de");
@@ -710,7 +710,7 @@ mod tests {
     use super::*;
     use crate::artifacts::rewrite::engine::Rhs;
     use protocol::{OpBinary, OpText};
-    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, Locale, Terminology, ViewState};
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, Locale, Terminology, ViewModel};
 
     fn meta(actor: &str) -> semio_framework_plugin::ActionMeta {
         testkit::meta(actor)
@@ -766,8 +766,8 @@ mod tests {
     #[test]
     fn renders_before_and_after_graphs() {
         let mut app = new_app();
-        let before = app.render(TRINITY_REWRITE_PLAY_BODY_BEFORE, None, &ViewState::default()).expect("render");
-        let after = app.render(TRINITY_REWRITE_PLAY_BODY_AFTER, None, &ViewState::default()).expect("render");
+        let before = app.render(TRINITY_REWRITE_PLAY_BODY_BEFORE, None, &ViewModel::default()).expect("render");
+        let after = app.render(TRINITY_REWRITE_PLAY_BODY_AFTER, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&before).unwrap().contains("node-graph"));
         assert!(serde_json::to_string(&after).unwrap().contains("node-graph"));
     }
@@ -779,7 +779,7 @@ mod tests {
         let result = app.dispatch_typed(TrinityRewriteCommand::SetViewport { surface_id: Some(TRINITY_REWRITE_PLAY_SURFACE_BEFORE.into()), viewport_json: serde_json::json!({ "x": 10.0, "y": 20.0, "zoom": 2.5 }).to_string() }, &meta("local")).expect("viewport");
         assert!(result.operations.is_empty(), "camera is a config-only command, no document operations");
         assert_eq!(app.projection().unwrap(), before_state, "document is untouched by a viewport pan");
-        let before = app.render(TRINITY_REWRITE_PLAY_BODY_BEFORE, None, &ViewState::default()).expect("render");
+        let before = app.render(TRINITY_REWRITE_PLAY_BODY_BEFORE, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&before).unwrap().contains("2.5"), "render reads the live config camera");
     }
 
@@ -799,8 +799,8 @@ mod tests {
     #[test]
     fn renders_lhs_rhs_graphs() {
         let mut app = new_app();
-        let lhs_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_LHS, None, &ViewState::default()).expect("render")).unwrap();
-        let rhs_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_RHS, None, &ViewState::default()).expect("render")).unwrap();
+        let lhs_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_LHS, None, &ViewModel::default()).expect("render")).unwrap();
+        let rhs_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_RHS, None, &ViewModel::default()).expect("render")).unwrap();
         assert!(lhs_json.contains("node-graph"));
         assert!(rhs_json.contains("node-graph"));
         assert!(lhs_json.contains("\"editable\":true"));
@@ -836,14 +836,14 @@ mod tests {
         let mut app = new_app();
         let result = app.dispatch_typed(TrinityRewriteCommand::TextSelect { var: Some("a".into()), start: None }, &meta("local")).expect("text select");
         assert!(result.operations.is_empty(), "text selection is a config-only command, no document operations");
-        let node = app.render(TRINITY_REWRITE_PLAY_BODY_JACK, None, &ViewState::default()).expect("render");
+        let node = app.render(TRINITY_REWRITE_PLAY_BODY_JACK, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("occurrencesJson"));
     }
 
     #[test]
     fn graph_scenes_have_lod_json() {
         let mut app = new_app();
-        let before = app.render(TRINITY_REWRITE_PLAY_BODY_BEFORE, None, &ViewState::default()).expect("render");
+        let before = app.render(TRINITY_REWRITE_PLAY_BODY_BEFORE, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&before).unwrap().contains("lodJson"));
     }
 
@@ -858,7 +858,7 @@ mod tests {
     #[test]
     fn trinity_rewrite_labels_resolve_native_by_default() {
         let mut app = new_app();
-        let json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render")).unwrap();
+        let json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render")).unwrap();
         assert!(json.contains("\"Pieces\""));
         assert!(!json.contains("Stücke"));
     }
@@ -867,14 +867,14 @@ mod tests {
     fn trinity_rewrite_labels_translate_panels_in_german() {
         let mut app = new_app();
         app.dispatch_typed(TrinityRewriteCommand::SetLocale { value: "de-DE".into() }, &meta("local")).expect("set locale");
-        let document_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render")).unwrap();
+        let document_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render")).unwrap();
         assert!(document_json.contains("Stücke"));
         assert!(!document_json.contains("\"Pieces\""));
-        let catalogue_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render")).unwrap();
+        let catalogue_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).expect("render")).unwrap();
         assert!(catalogue_json.contains("Katalog"));
         assert!(catalogue_json.contains("Zu LHS hinzufügen"));
         assert!(catalogue_json.contains("Zu RHS hinzufügen"));
-        let parameters_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_PARAMETERS, None, &ViewState::default()).expect("render")).unwrap();
+        let parameters_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_PARAMETERS, None, &ViewModel::default()).expect("render")).unwrap();
         assert!(parameters_json.contains("\"Parameter\""));
         let definition = create_rewrite_app().definition;
         let reset_rule = definition.actions.iter().find(|action| action.id == "resetRule").expect("resetRule action");

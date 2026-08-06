@@ -100,7 +100,7 @@ semio_framework_plugin::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Locale
-/// 🗣️ B1: local replacement for the deleted `semio_framework_plugin::is_de_locale(&ViewState)`.
+/// 🗣️ B1: local replacement for the deleted `semio_framework_plugin::is_de_locale(&ViewModel)`.
 pub fn is_de_locale(config: &Puzzle3dConfig) -> bool {
     config.locale.starts_with("de")
 }

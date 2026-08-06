@@ -637,7 +637,7 @@ export { nodeGraphActions, textEditorActions };
 //#region 🔖️types
 import {
   UI_INSPECTOR_MIXED_PLACEHOLDER,
-  type ViewState,
+  type ViewModel,
   type PluginManifest,
   type PluginPanelStatus,
   type PluginSupervisorState,
@@ -665,7 +665,7 @@ import {
 } from "../../../../🧱️elements/Shell/🟦️component.tsx";
 export {
   UI_INSPECTOR_MIXED_PLACEHOLDER,
-  type ViewState,
+  type ViewModel,
   type PluginManifest,
   type PluginPanelStatus,
   type PluginSupervisorState,

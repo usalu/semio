@@ -353,7 +353,7 @@ pub fn create_procedural2d_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
 
     pub type Procedural2dApp = VcsDocumentApp<Procedural2dPlayApp>;
 
@@ -370,7 +370,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut Procedural2dApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
 //#endregion 🧪️Testkit

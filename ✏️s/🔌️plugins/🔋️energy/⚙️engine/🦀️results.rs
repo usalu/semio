@@ -1,9 +1,9 @@
 //! 📋️ Canonical simulation results and summary tables.
 
 use crate::error::Diagnostics;
-use crate::meters::MeterStore;
+use crate::meters::MeterTable;
 use crate::metrics::{EnvironmentalMetrics, ResilienceMetrics};
-use crate::output::TimeSeriesStore;
+use crate::output::TimeSeriesTable;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -54,8 +54,8 @@ pub struct SizingTables {
 /// 📋️ Complete simulation results (canonical structured format).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Results {
-    pub time_series: TimeSeriesStore,
-    pub meters: MeterStore,
+    pub time_series: TimeSeriesTable,
+    pub meters: MeterTable,
     pub summaries: SummaryTables,
     pub sizing: SizingTables,
     pub environmental: EnvironmentalMetrics,

@@ -7,7 +7,7 @@
 use crate::apps::cad::config::{CadConfig, CadConfigOperation};
 use crate::apps::cad::CadDispatchCtx;
 use crate::artifacts::cad::op::CadOperation;
-use crate::artifacts::cad::CadScene;
+use crate::artifacts::cad::CadProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::apps::cad::{cad_config_from_runtime, runtime_of};
@@ -23,7 +23,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         let mut config = cad_config_from_runtime(&runtime_of(cfg), cfg.projection);
         config.locale = payload.value.clone();
         Ok(Emit::config(vec![CadConfigOperation::Snapshot { config }]))
@@ -41,7 +41,7 @@ pub mod set_terminology {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetTerminology, _doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetTerminology, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         let mut config = cad_config_from_runtime(&runtime_of(cfg), cfg.projection);
         config.terminology = payload.value.clone();
         Ok(Emit::config(vec![CadConfigOperation::Snapshot { config }]))

@@ -1,5 +1,5 @@
 // #region ui
-//! 🧩️ App manifest (`AppDefinition`/`ModeDefinition`/`WindowKindDefinition`/`PluginManifest`/`ViewState`)
+//! 🧩️ App manifest (`AppDefinition`/`ModeDefinition`/`WindowKindDefinition`/`PluginManifest`/`ViewModel`)
 //! and kernel types shared by plugins and renderers; the declarative `UiNode` component model itself
 //! lives in `ui_wgpu`'s `component` region.
 
@@ -573,7 +573,7 @@ impl From<String> for ActionRef {
 //#region 🔖️Utilities
 /// @emoji 🧰️ Declares one interactive utility (a live-preview pointer mode) an app exposes. Distinct from
 /// an `ActionDefinition`: exactly one utility is active per window kind at a time, and activation is
-/// host-owned session view state (`ViewState.active_utility_id`), never a document field or VCS operation.
+/// host-owned session view state (`ViewModel.active_utility_id`), never a document field or VCS operation.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -755,7 +755,7 @@ impl From<String> for CommandRef {
 /// @emoji 🛠️ Declares one mode-level tool: an activatable, stateful capability of a whole app mode.
 /// Distinct from `UtilityDefinition` (a per-window pointer mode — a utility is a tool for a specific
 /// window) and `CommandDefinition` (a fire-once verb): exactly one tool is active per app at a time,
-/// and activation is host-owned session view state (`ViewState.active_tool_id`), never a document
+/// and activation is host-owned session view state (`ViewModel.active_tool_id`), never a document
 /// field or VCS operation. A tool's live options are supplied dynamically via `DocumentApp::tool_measures`,
 /// keyed by tool id — not part of this static declaration.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1620,7 +1620,7 @@ pub enum TutorialUiSample {
     Delta { changes: Vec<TutorialUiChange> }
 }
 
-/// @emoji 🧮️ Renderer-neutral restore point for chrome/UI state — a superset of `ViewState` plus the
+/// @emoji 🧮️ Renderer-neutral restore point for chrome/UI state — a superset of `ViewModel` plus the
 /// dock/panel/dialog state neither shell serializes today. Deliberately NOT a serialization of either
 /// shell's internal store: each shell implements its own `captureUiSnapshot`/`applyUiSnapshot` against
 /// this shape. Locale/terminology are excluded on purpose — a tutorial plays in the viewer's own locale.
@@ -1634,7 +1634,7 @@ pub struct TutorialUiSnapshot {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub focused_window_id: Option<String>,
-    /// 🧰️ Mirrors `ViewState.active_utility_by_window_id`.
+    /// 🧰️ Mirrors `ViewModel.active_utility_by_window_id`.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub active_utility_by_window_id: std::collections::HashMap<String, String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1646,7 +1646,7 @@ pub struct TutorialUiSnapshot {
     /// 📑️ Active tab id per panel group; groups absent from the map are collapsed/closed.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub active_panel_tab_by_group: std::collections::HashMap<String, String>,
-    /// 🗂️ Opaque program vocabulary, verbatim `ViewState.panel_json`/`selection_json`.
+    /// 🗂️ Opaque program vocabulary, verbatim `ViewModel.panel_json`/`selection_json`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub panel_json: Option<String>,
@@ -2761,7 +2761,7 @@ pub struct PluginManifest {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
-pub struct ViewState {
+pub struct ViewModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub active_mode_id: Option<String>,
@@ -4160,7 +4160,7 @@ mod app_document_tests {
         crate::ui::Contribution::export().unwrap();
         crate::ui::PluginManifest::export().unwrap();
         crate::ui::ViewWindowInstance::export().unwrap();
-        crate::ui::ViewState::export().unwrap();
+        crate::ui::ViewModel::export().unwrap();
         // 🎗️ `AppLabelsOverlay` deleted — see the region comment at its former definition site.
         crate::ui::kernel::CapabilityRequirement::export().unwrap();
         crate::ui::kernel::Rights::export().unwrap();

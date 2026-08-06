@@ -194,14 +194,18 @@ struct Entry {
     entity: Entity,
 }
 
+struct BrepkitSideTables {
+    entity_lut: std::collections::HashMap<EngineKey, Entry>,
+    mesh_boolean_cache: std::collections::HashMap<EngineKey, brepkit_operations::tessellate::TriangleMesh>,
+    mesh_keys_by_solid: std::collections::HashMap<SolidId, std::collections::HashSet<EngineKey>>,
+}
+
 pub struct BrepkitKernel {
     session_id: [u8; 16],
     topo: Topology,
     cache: EngineCache,
     live: std::collections::HashSet<String>,
-    entity_lut: std::collections::HashMap<EngineKey, Entry>,
-    mesh_boolean_cache: std::collections::HashMap<EngineKey, brepkit_operations::tessellate::TriangleMesh>,
-    mesh_keys_by_solid: std::collections::HashMap<SolidId, std::collections::HashSet<EngineKey>>,
+    tables: BrepkitSideTables,
 }
 
 impl Default for BrepkitKernel {
@@ -223,9 +227,11 @@ impl BrepkitKernel {
             topo: Topology::new(),
             cache,
             live: std::collections::HashSet::new(),
-            entity_lut: std::collections::HashMap::new(),
-            mesh_boolean_cache: std::collections::HashMap::new(),
-            mesh_keys_by_solid: std::collections::HashMap::new(),
+            tables: BrepkitSideTables {
+                entity_lut: std::collections::HashMap::new(),
+                mesh_boolean_cache: std::collections::HashMap::new(),
+                mesh_keys_by_solid: std::collections::HashMap::new(),
+            },
         }
     }
 
@@ -241,9 +247,11 @@ impl BrepkitKernel {
             topo: Topology::new(),
             cache,
             live: std::collections::HashSet::new(),
-            entity_lut: std::collections::HashMap::new(),
-            mesh_boolean_cache: std::collections::HashMap::new(),
-            mesh_keys_by_solid: std::collections::HashMap::new(),
+            tables: BrepkitSideTables {
+                entity_lut: std::collections::HashMap::new(),
+                mesh_boolean_cache: std::collections::HashMap::new(),
+                mesh_keys_by_solid: std::collections::HashMap::new(),
+            },
         }
     }
 
@@ -265,21 +273,21 @@ impl BrepkitKernel {
     }
 
     fn invalidate_solid_derived_caches(&mut self, solid: SolidId) {
-        if let Some(keys) = self.mesh_keys_by_solid.remove(&solid) {
+        if let Some(keys) = self.tables.mesh_keys_by_solid.remove(&solid) {
             for key in keys {
-                self.mesh_boolean_cache.remove(&key);
+                self.tables.mesh_boolean_cache.remove(&key);
             }
         }
     }
 
     fn cached_tessellate_solid(&mut self, solid: SolidId, deflection: f64) -> Result<brepkit_operations::tessellate::TriangleMesh, BrepError> {
         let key = Self::mesh_cache_key(solid, deflection);
-        if let Some(mesh) = self.mesh_boolean_cache.get(&key) {
+        if let Some(mesh) = self.tables.mesh_boolean_cache.get(&key) {
             return Ok(mesh.clone());
         }
         let mesh = tessellate_solid_with_tolerance(&self.topo, solid, deflection, 0.2).map_err(Self::map_err)?;
-        self.mesh_boolean_cache.insert(key, mesh.clone());
-        self.mesh_keys_by_solid.entry(solid).or_default().insert(key);
+        self.tables.mesh_boolean_cache.insert(key, mesh.clone());
+        self.tables.mesh_keys_by_solid.entry(solid).or_default().insert(key);
         Ok(mesh)
     }
 
@@ -318,7 +326,7 @@ impl BrepkitKernel {
         let kernel_handle = self.cache.derive(BREP_ENTITY_ENGINE_ID, &pack).map_err(map_engine_fault)?;
         let handle = geometry_handle_from_key(kernel_handle.key);
         self.live.insert(handle.as_str().to_string());
-        self.entity_lut.insert(kernel_handle.key, Entry { kind, entity });
+        self.tables.entity_lut.insert(kernel_handle.key, Entry { kind, entity });
         Ok(handle)
     }
 
@@ -331,7 +339,7 @@ impl BrepkitKernel {
             return Err(BrepError::MissingHandle(handle.as_str().to_string()));
         }
         let kernel_handle = kernel_handle_for_geometry(handle)?;
-        self.entity_lut
+        self.tables.entity_lut
             .get(&kernel_handle.key)
             .cloned()
             .ok_or_else(|| BrepError::MissingHandle("engine entity evicted from lut".into()))
@@ -1786,7 +1794,7 @@ impl BrepkitKernel {
 
     pub fn dispose_sync(&mut self, handle: &GeometryHandle) {
         if let Ok(kernel_handle) = kernel_handle_for_geometry(handle) {
-            if let Some(Entry { entity: Entity::Solid(solid), .. }) = self.entity_lut.remove(&kernel_handle.key) {
+            if let Some(Entry { entity: Entity::Solid(solid), .. }) = self.tables.entity_lut.remove(&kernel_handle.key) {
                 self.invalidate_solid_derived_caches(solid);
             }
         }
@@ -1808,7 +1816,7 @@ impl BrepkitKernel {
             })
             .collect();
         self.live.retain(|handle| live.contains(handle));
-        self.entity_lut.retain(|key, _| {
+        self.tables.entity_lut.retain(|key, _| {
             self.live.iter().any(|handle| {
                 kernel_handle_for_geometry(&GeometryHandle(handle.clone()))
                     .ok()

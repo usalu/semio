@@ -4,6 +4,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { ephemeralBox } from "@semio-tech/framework-core";
 import { Pool, type PoolClient } from "pg";
 import { createHash } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
@@ -15,19 +16,19 @@ import PgBoss from "pg-boss";
 // 🗄️Database configuration from environment variables.
 const DATABASE_URL = process.env.DATABASE_URL || "postgresql://compose:compose@localhost:5432/compose_repo";
 
-let pool: Pool | null = null;
+const pool = ephemeralBox<Pool | null>("framework.products.repo.modules.server.lib.packages.typescript.index.ts.pool", null);
 
 export function getPool(): Pool {
-  if (!pool) {
-    pool = new Pool({ connectionString: DATABASE_URL, max: 20 });
+  if (!pool.current) {
+    pool.current = new Pool({ connectionString: DATABASE_URL, max: 20 });
   }
-  return pool;
+  return pool.current;
 }
 
 export async function closePool(): Promise<void> {
-  if (pool) {
-    await pool.end();
-    pool = null;
+  if (pool.current) {
+    await pool.current.end();
+    pool.current = null;
   }
 }
 // #endregion ⏱️Config

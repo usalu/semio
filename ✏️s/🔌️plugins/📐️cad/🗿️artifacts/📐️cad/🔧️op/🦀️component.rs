@@ -3,7 +3,7 @@
 //! The materialized diff shape lives beside this in `🔺️diff/🦀️component.rs`.
 
 use crate::artifacts::cad::diff::{apply_reference_patch, CadDiff};
-use crate::artifacts::cad::{cad_pane_objects, CadNode, CadObject, CadPaneId, CadReference, CadScene};
+use crate::artifacts::cad::{cad_pane_objects, CadNode, CadObject, CadPaneId, CadReference, CadProjection};
 use protocol::{CollectionDiff, ItemPatch, Operation};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -113,7 +113,7 @@ pub enum CadOperation {
     },
     SetScene {
         #[dsl(block)]
-        scene: Box<CadScene>,
+        scene: Box<CadProjection>,
     },
 }
 fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
@@ -129,10 +129,10 @@ fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
     let s = half.sin();
     [ax / len * s, ay / len * s, az / len * s, half.cos()]
 }
-impl Operation<CadScene> for CadOperation {
+impl Operation<CadProjection> for CadOperation {
     type Diff = CadDiff;
 
-    fn diff(&self, projection: &CadScene) -> CadDiff {
+    fn diff(&self, projection: &CadProjection) -> CadDiff {
         match self {
             CadOperation::AddObject { pane, object } => CadDiff {
                 objects: pane_collection_diff_for_add(*pane, object),
@@ -198,7 +198,7 @@ impl Operation<CadScene> for CadOperation {
         }
     }
 
-    fn backwards(&self, projection: &CadScene) -> Vec<Self> {
+    fn backwards(&self, projection: &CadProjection) -> Vec<Self> {
         match self {
             CadOperation::AddObject { pane, object } => vec![CadOperation::RemoveObject { pane: *pane, object_id: object.id.clone() }],
             CadOperation::RemoveObject { pane, object_id } => cad_pane_objects(projection, *pane).iter().find(|object| object.id == *object_id).map(|object| vec![CadOperation::AddObject { pane: *pane, object: object.clone() }]).unwrap_or_default(),
@@ -306,7 +306,7 @@ fn set_pane_collection_diff(diff: &mut CadDiff, pane: CadPaneId, collection: Col
     }
 }
 
-fn transform_objects_diff(projection: &CadScene, object_ids: &[String], patch_for: impl Fn(&CadObject) -> CadObjectPatch) -> CadDiff {
+fn transform_objects_diff(projection: &CadProjection, object_ids: &[String], patch_for: impl Fn(&CadObject) -> CadObjectPatch) -> CadDiff {
     let mut diff = CadDiff::default();
     for pane in CadPaneId::all() {
         let mut modified = Vec::new();

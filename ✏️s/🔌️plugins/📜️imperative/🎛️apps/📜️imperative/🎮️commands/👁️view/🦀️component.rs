@@ -1,5 +1,5 @@
 //! 👁️ Imperative play app commands — ephemeral view state / runtime effect. Selection is scratch, `run`
-//! evaluates into config, `setLocale` is config-only (was ephemeral `ViewState::locale`).
+//! evaluates into config, `setLocale` is config-only (was ephemeral `ViewModel::locale`).
 
 use crate::apps::imperative::config::ImperativeConfigOperation;
 use crate::artifacts::imperative::engine::ImperativeHost;

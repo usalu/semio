@@ -6457,7 +6457,7 @@ pub mod plugin_bridge {
 // #region plugin_bridge
 //! 🔌️ Plugin bridge for wasm C-ABI modules (browser JS loader + wasmtime host).
 
-use semio_framework_core::{PluginManifest, ViewState};
+use semio_framework_core::{PluginManifest, ViewModel};
 use semio_framework_ui_wgpu::{UtilityNode, UiNode, WindowEngagement, WindowMeasure};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -6572,7 +6572,7 @@ impl PluginBridgeEntry {
         &self,
         instance_id: u32,
         action_json: &str,
-        view_state: &ViewState,
+        view_state: &ViewModel,
     ) -> Result<semio_framework_core::kernel::InvocationResult, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
@@ -6586,7 +6586,7 @@ impl PluginBridgeEntry {
         &self,
         instance_id: u32,
         body_key: &str,
-        view_state: &ViewState,
+        view_state: &ViewModel,
     ) -> Result<UiNode, String> {
         self.render_with_document(instance_id, body_key, view_state, None)
             .await
@@ -6596,7 +6596,7 @@ impl PluginBridgeEntry {
         &self,
         instance_id: u32,
         body_key: &str,
-        view_state: &ViewState,
+        view_state: &ViewModel,
         document_json: Option<&str>,
     ) -> Result<UiNode, String> {
         match &self.backend {
@@ -6614,7 +6614,7 @@ impl PluginBridgeEntry {
     pub async fn window_engagements(
         &self,
         instance_id: u32,
-        view_state: &ViewState,
+        view_state: &ViewModel,
     ) -> Result<HashMap<String, WindowEngagement>, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
@@ -6627,7 +6627,7 @@ impl PluginBridgeEntry {
     pub async fn window_measures(
         &self,
         instance_id: u32,
-        view_state: &ViewState,
+        view_state: &ViewModel,
     ) -> Result<HashMap<String, Vec<WindowMeasure>>, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
@@ -6668,7 +6668,7 @@ async fn handle_action_js(
     handle: &Rc<JsValue>,
     instance_id: u32,
     action_json: &str,
-    view_state: &ViewState,
+    view_state: &ViewModel,
 ) -> Result<semio_framework_core::kernel::InvocationResult, String> {
     let action = Reflect::get(handle.as_ref(), &JsValue::from_str("handleAction"))
         .ok()
@@ -6742,7 +6742,7 @@ async fn render_js(
     handle: &Rc<JsValue>,
     instance_id: u32,
     body_key: &str,
-    view_state: &ViewState,
+    view_state: &ViewModel,
 ) -> Result<UiNode, String> {
     render_with_document_js(handle, instance_id, body_key, view_state, None).await
 }
@@ -6752,7 +6752,7 @@ async fn render_with_document_js(
     handle: &Rc<JsValue>,
     instance_id: u32,
     body_key: &str,
-    view_state: &ViewState,
+    view_state: &ViewModel,
     document_json: Option<&str>,
 ) -> Result<UiNode, String> {
     let render = if document_json.is_some() {
@@ -6797,7 +6797,7 @@ async fn render_with_document_js(
 async fn window_engagements_js(
     handle: &Rc<JsValue>,
     instance_id: u32,
-    view_state: &ViewState,
+    view_state: &ViewModel,
 ) -> Result<HashMap<String, WindowEngagement>, String> {
     let engagements = Reflect::get(handle.as_ref(), &JsValue::from_str("windowEngagements"))
         .ok()
@@ -6828,7 +6828,7 @@ async fn window_engagements_js(
 async fn window_measures_js(
     handle: &Rc<JsValue>,
     instance_id: u32,
-    view_state: &ViewState,
+    view_state: &ViewModel,
 ) -> Result<HashMap<String, Vec<WindowMeasure>>, String> {
     let measures = Reflect::get(handle.as_ref(), &JsValue::from_str("windowMeasures"))
         .ok()
@@ -14105,7 +14105,7 @@ use semio_framework_sync::{
 };
 use semio_framework_core::{
     app_document_label, app_window_document_label, resolve_app_document, AppDefinition, ExampleDefinition,
-    ModeDefinition, PanelGroup, PanelTabDefinition, ViewState,
+    ModeDefinition, PanelGroup, PanelTabDefinition, ViewModel,
 };
 use semio_framework_ui_wgpu::component::layout::WindowEngagementPossible;
 use semio_framework_ui_wgpu::{
@@ -14259,7 +14259,7 @@ pub struct ActiveSession {
     pub plugin_id: String,
     pub instance_id: u32,
     pub app: AppDefinition,
-    pub view_state: ViewState,
+    pub view_state: ViewModel,
 }
 
 //#region 🔖️NativeSyncChannel
@@ -14397,7 +14397,7 @@ async fn resolve_external_slots_in_tree(
     node: UiNode,
     plugins: &[PluginBridgeEntry],
     contributor_instances: &mut HashMap<String, u32>,
-    view_state: &ViewState,
+    view_state: &ViewModel,
 ) -> Result<UiNode, String> {
     match node {
         UiNode::ExternalSlot(slot) => {
@@ -14757,7 +14757,7 @@ impl ShellState {
             .collect()
     }
 
-    pub fn panel_state_from_view(view_state: &ViewState) -> Option<StudioPanelState> {
+    pub fn panel_state_from_view(view_state: &ViewModel) -> Option<StudioPanelState> {
         view_state
             .panel_json
             .as_ref()
@@ -14805,7 +14805,7 @@ impl ShellState {
                 active_spawned_id: None,
             };
             let instance_id = semio_s_plugin_space.create_app(&s_app.id).await?;
-            let view_state = ViewState {
+            let view_state = ViewModel {
                 active_mode_id: Some(s_app.default_mode_id.clone()),
                 active_window_kind_id: Some(s_app.window_kinds.first().id.clone()),
                 active_utility_id: None,
@@ -14835,7 +14835,7 @@ impl ShellState {
                 plugin_id: plugin.plugin_id.clone(),
                 instance_id,
                 app: app.clone(),
-                view_state: ViewState {
+                view_state: ViewModel {
                     active_mode_id: Some(app.default_mode_id.clone()),
                     active_window_kind_id: self.active_window_id.clone(),
                     active_utility_id: None,
@@ -15001,7 +15001,7 @@ impl ShellState {
     async fn resolve_external_slots(
         &mut self,
         node: UiNode,
-        view_state: &ViewState,
+        view_state: &ViewModel,
     ) -> Result<UiNode, String> {
         let plugins = self.plugins.clone();
         resolve_external_slots_in_tree(node, &plugins, &mut self.contributor_instances, view_state).await
@@ -15087,7 +15087,7 @@ impl ShellState {
                             .find(|app| app.id == spawned.app_id);
                         if let Some(app) = spawned_app {
                             let body_key = app.window_kinds.first().body_key.clone();
-                            let view_state = ViewState {
+                            let view_state = ViewModel {
                                 active_mode_id: Some(app.default_mode_id.clone()),
                                 active_window_kind_id: Some(app.window_kinds.first().id.clone()),
                                 active_utility_id: None,
@@ -15683,9 +15683,9 @@ impl ShellState {
                     changed = true;
                 }
                 DocumentEvent::Presence { .. } => {
-                    // 👥️ The Rust `semio_framework_core::ViewState` has no presence field yet (only the
+                    // 👥️ The Rust `semio_framework_core::ViewModel` has no presence field yet (only the
                     // TS shell threads `presencePeersJson`); presence roster display in the native
-                    // wgpu shell is a documented follow-up once core `ViewState` carries it.
+                    // wgpu shell is a documented follow-up once core `ViewModel` carries it.
                 }
                 DocumentEvent::Conflict(_) => {
                     self.sync_card_kind = Some("conflict".into());
@@ -15918,7 +15918,7 @@ impl ShellState {
         }
         // 🧰️ Intercept the framework `setActiveUtility` View action to update the host-owned active-utility
         // map before forwarding to the plugin (which reacts by clearing its live-preview scratch). The
-        // authoritative state is the shell map + the `ViewState.active_utility_id` it injects on render.
+        // authoritative state is the shell map + the `ViewModel.active_utility_id` it injects on render.
         if action.action == semio_framework_core::SET_ACTIVE_UTILITY_ACTION_ID {
             if let Some(session) = self.session.clone() {
                 if action.controller_id == session.app.controller_id {
@@ -16146,7 +16146,7 @@ impl ShellState {
     async fn switch_to_s_app(
         &mut self,
         app_id: &str,
-        view_state: Option<ViewState>,
+        view_state: Option<ViewModel>,
     ) -> Result<(), String> {
         let semio_s_plugin_space = self
             .plugins
@@ -16180,7 +16180,7 @@ impl ShellState {
             spawned_apps: vec![],
             active_spawned_id: None,
         };
-        let next_view_state = view_state.unwrap_or_else(|| ViewState {
+        let next_view_state = view_state.unwrap_or_else(|| ViewModel {
             active_mode_id: Some(app.default_mode_id.clone()),
             active_window_kind_id: Some(app.window_kinds.first().id.clone()),
             active_utility_id: None,
@@ -16249,7 +16249,7 @@ impl ShellState {
         self.apply_shell_uri(&uri).await
     }
 
-    async fn spawn_program(&mut self, program_id: &str, mut view_state: ViewState) -> Result<(), String> {
+    async fn spawn_program(&mut self, program_id: &str, mut view_state: ViewModel) -> Result<(), String> {
         let programs = self.build_studio_programs();
         let Some(program) = programs.iter().find(|p| p.program_id == program_id).cloned() else {
             return Ok(());
@@ -19839,7 +19839,7 @@ mod command_registry_tests {
             plugin_id: "test".into(),
             instance_id: 0,
             app: test_app(vec![], vec![]),
-            view_state: semio_framework_core::ViewState::default(),
+            view_state: semio_framework_core::ViewModel::default(),
         });
         let terminology_command = shell
             .build_os_commands()
@@ -19926,7 +19926,7 @@ mod command_registry_tests {
             plugin_id: "test".into(),
             instance_id: 0,
             app: test_app(vec![], vec![]),
-            view_state: semio_framework_core::ViewState::default(),
+            view_state: semio_framework_core::ViewModel::default(),
         });
         let items = shell.command_search_items();
         let appearance_dark = items
@@ -19954,7 +19954,7 @@ mod command_registry_tests {
             plugin_id: "test".into(),
             instance_id: 0,
             app: test_app(vec![], vec![]),
-            view_state: semio_framework_core::ViewState::default(),
+            view_state: semio_framework_core::ViewModel::default(),
         });
         shell.layout_override = Some(shell.dock.to_window_layout());
         pollster::block_on(shell.apply_os_command("os.resetDock", None)).expect("reset dock never errors");
@@ -19968,7 +19968,7 @@ mod command_registry_tests {
             plugin_id: "test".into(),
             instance_id: 0,
             app: test_app(vec![], vec![]),
-            view_state: semio_framework_core::ViewState::default(),
+            view_state: semio_framework_core::ViewModel::default(),
         });
         pollster::block_on(shell.apply_os_command("os.setLocale", Some("de"))).expect("set locale never errors");
         assert_eq!(shell.locale_id, "de");
@@ -19991,7 +19991,7 @@ mod command_registry_tests {
             plugin_id: "test".into(),
             instance_id: 0,
             app: test_app(vec![], vec![]),
-            view_state: semio_framework_core::ViewState::default(),
+            view_state: semio_framework_core::ViewModel::default(),
         });
         let UiNode::Stack(panel) = shell.build_command_panel_ui() else {
             panic!("expected a stack root");

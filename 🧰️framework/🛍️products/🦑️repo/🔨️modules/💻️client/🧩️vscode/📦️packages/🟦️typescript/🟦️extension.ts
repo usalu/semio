@@ -12,6 +12,7 @@
 // Imports MUST include VS Code API, Node.js utilities, and compose validation.
 
 // import { deserializeKit, Problem, validateKit } from "@semio-tech/compose-js/compose";
+import { ephemeralBox, ephemeralMap } from "@semio-tech/framework-core";
 import { exec, execFile } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
@@ -1615,19 +1616,19 @@ interface GraphqlSection {
 
 // #region 🎩️Globals
 // 🔌️Globals MUST hold module-level state for output channel, diagnostics, caches, and providers.
-let outputChannel: vscode.OutputChannel;
+const outputChannel = ephemeralBox<vscode.OutputChannel>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.outputChannel", undefined);
 /**
- * repoDiagnosticCollection holds the data fields for a repoDiagnosticCollection record.
+ * repoDiagnosticCollection.current holds the data fields for a repoDiagnosticCollection.current record.
  **/
-let repoDiagnosticCollection: vscode.DiagnosticCollection;
+const repoDiagnosticCollection = ephemeralBox<vscode.DiagnosticCollection>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.repoDiagnosticCollection", undefined);
 /**
- * kitDiagnosticCollection holds the data fields for a kitDiagnosticCollection record.
+ * kitDiagnosticCollection.current holds the data fields for a kitDiagnosticCollection.current record.
  **/
-let kitDiagnosticCollection: vscode.DiagnosticCollection;
+const kitDiagnosticCollection = ephemeralBox<vscode.DiagnosticCollection>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.kitDiagnosticCollection", undefined);
 /**
  * fileBreachsMap holds the data fields for a fileBreachsMap record.
  **/
-const fileBreachsMap = new Map<string, Breach[]>();
+const fileBreachsMap = ephemeralMap<string, Breach[]>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.fileBreachsMap");
 /**
  * BundleInfo holds the data fields for a BundleInfo record.
  **/
@@ -1636,49 +1637,49 @@ interface BundleInfo {
   root: string;
 }
 /**
- * bundleCache holds the data fields for a bundleCache record.
+ * bundleCache.current holds the data fields for a bundleCache.current record.
  **/
-let bundleCache: BundleInfo[] = [];
+const bundleCache = ephemeralBox<BundleInfo[]>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.bundleCache", []);
 /**
- * cachedRepoBaseUrl holds the data fields for a cachedRepoBaseUrl record.
+ * cachedRepoBaseUrl.current holds the data fields for a cachedRepoBaseUrl.current record.
  **/
-let cachedRepoBaseUrl: string | undefined = undefined;
+const cachedRepoBaseUrl = ephemeralBox<string | undefined>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.cachedRepoBaseUrl", undefined);
 /**
  * runningProcesses holds the data fields for a runningProcesses record.
  **/
-const runningProcesses = new Map<string, AbortController>();
+const runningProcesses = ephemeralMap<string, AbortController>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.runningProcesses");
 // 🔢️Maximum number of concurrent CLI subprocess spawns to prevent system overload.
 const CLI_CONCURRENCY_LIMIT = 2;
-let cliActiveCount = 0;
+const cliActiveCount = ephemeralBox("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.cliActiveCount", 0);
 const cliWaitQueue: (() => void)[] = [];
 
 function acquireCliSlot(): Promise<void> {
-  if (cliActiveCount < CLI_CONCURRENCY_LIMIT) {
-    cliActiveCount++;
+  if (cliActiveCount.current < CLI_CONCURRENCY_LIMIT) {
+    cliActiveCount.current++;
     return Promise.resolve();
   }
   return new Promise<void>((resolve) => {
     cliWaitQueue.push(() => {
-      cliActiveCount++;
+      cliActiveCount.current++;
       resolve();
     });
   });
 }
 
 function releaseCliSlot(): void {
-  cliActiveCount--;
+  cliActiveCount.current--;
   const next = cliWaitQueue.shift();
   if (next) next();
 }
 
 /**
- * filterProvider holds the data fields for a filterProvider record.
+ * filterProvider.current holds the data fields for a filterProvider.current record.
  **/
-let filterProvider: FilterTreeDataProvider | undefined;
+const filterProvider = ephemeralBox<FilterTreeDataProvider | undefined>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.filterProvider", undefined);
 /**
- * monorepoProvider holds the data fields for a monorepoProvider record.
+ * monorepoProvider.current holds the data fields for a monorepoProvider.current record.
  **/
-let monorepoProvider: MonorepoTreeDataProvider | undefined;
+const monorepoProvider = ephemeralBox<MonorepoTreeDataProvider | undefined>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.monorepoProvider", undefined);
 // #endregion 🎩️Globals
 
 // #region 🎼️Utilities
@@ -1690,7 +1691,7 @@ let monorepoProvider: MonorepoTreeDataProvider | undefined;
 function writeLog(level: string, args: any[]): void {
   const message = args.map((a) => (typeof a === "object" ? JSON.stringify(a, null, 2) : String(a))).join(" ");
   const prefix = level === "ERROR" ? "[ERROR] " : "";
-  outputChannel?.appendLine(prefix + message);
+  outputChannel.current?.appendLine(prefix + message);
   try {
     const logPath = path.join(getWorkspaceRoot() || "", "📋️activation.log");
     fs.appendFileSync(logPath, `[${level}] ${message}\n`);
@@ -1775,22 +1776,22 @@ function resolveCheckpointSha(checkpoint: string | { sha?: string } | undefined)
 /** getGitHubRepoBaseUrl holds the data fields for a getGitHubRepoBaseUrl record.
  **/
 function getGitHubRepoBaseUrl(): string | undefined {
-  if (cachedRepoBaseUrl !== undefined) return cachedRepoBaseUrl;
+  if (cachedRepoBaseUrl.current !== undefined) return cachedRepoBaseUrl.current;
   const root = getWorkspaceRoot();
-  if (!root) return (cachedRepoBaseUrl = undefined);
+  if (!root) return (cachedRepoBaseUrl.current = undefined);
   const packagePath = path.join(root, "package.json");
-  if (!fs.existsSync(packagePath)) return (cachedRepoBaseUrl = undefined);
+  if (!fs.existsSync(packagePath)) return (cachedRepoBaseUrl.current = undefined);
   const raw = fs.readFileSync(packagePath, "utf8");
   const parsed = JSON.parse(raw) as { repository?: { url?: string } | string };
   const repoUrl = typeof parsed.repository === "string" ? parsed.repository : parsed.repository?.url;
-  if (!repoUrl) return (cachedRepoBaseUrl = undefined);
+  if (!repoUrl) return (cachedRepoBaseUrl.current = undefined);
   let cleaned = repoUrl.replace(/^git\+/, "").replace(/\.git$/, "");
   if (cleaned.startsWith("git@")) {
     const match = cleaned.match(/^git@([^:]+):(.+)$/);
     if (match) cleaned = `https://${match[1]}/${match[2]}`;
   }
-  cachedRepoBaseUrl = cleaned.startsWith("http://") || cleaned.startsWith("https://") ? cleaned : undefined;
-  return cachedRepoBaseUrl;
+  cachedRepoBaseUrl.current = cleaned.startsWith("http://") || cleaned.startsWith("https://") ? cleaned : undefined;
+  return cachedRepoBaseUrl.current;
 }
 
 /**
@@ -1916,17 +1917,17 @@ export interface TreeNodeData {
 }
 
 /**
- * treeNodeCache holds the data fields for a treeNodeCache record.
+ * treeNodeCache.current holds the data fields for a treeNodeCache.current record.
  **/
-let treeNodeCache: Map<string, TreeNodeData> | null = null;
+const treeNodeCache = ephemeralBox<Map<string, TreeNodeData> | null>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.treeNodeCache", null);
 /**
- * treeRootCache holds the data fields for a treeRootCache record.
+ * treeRootCache.current holds the data fields for a treeRootCache.current record.
  **/
-let treeRootCache: TreeNodeData | null = null;
+const treeRootCache = ephemeralBox<TreeNodeData | null>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.treeRootCache", null);
 /**
- * treeNodeCacheTime holds the data fields for a treeNodeCacheTime record.
+ * treeNodeCacheTime.current holds the data fields for a treeNodeCacheTime.current record.
  **/
-let treeNodeCacheTime = 0;
+const treeNodeCacheTime = ephemeralBox("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.treeNodeCacheTime", 0);
 /**
  * TREE_CACHE_TTL holds the data fields for a TREE_CACHE_TTL record.
  **/
@@ -2069,8 +2070,8 @@ function flattenTree(node: TreeNodeData, result: Map<string, TreeNodeData>): voi
  **/
 async function getTreeNodeCache(): Promise<Map<string, TreeNodeData>> {
   const now = Date.now();
-  if (treeNodeCache && now - treeNodeCacheTime < TREE_CACHE_TTL) {
-    return treeNodeCache;
+  if (treeNodeCache.current && now - treeNodeCacheTime.current < TREE_CACHE_TTL) {
+    return treeNodeCache.current;
   }
   const root = getWorkspaceRoot();
   const command = getRepoCommand();
@@ -2078,16 +2079,16 @@ async function getTreeNodeCache(): Promise<Map<string, TreeNodeData>> {
   await acquireCliSlot();
   try {
     const { stdout } = await execAsync(`"${command}" --json search`, { cwd: root, timeout: 60000, maxBuffer: 50 * 1024 * 1024 });
-    if (!stdout.trim()) return treeNodeCache ?? new Map();
+    if (!stdout.trim()) return treeNodeCache.current ?? new Map();
     const events = parseRepoEvents(stdout);
     const result = extractRepoResult(events);
     const tree = result.data as TreeNodeData | undefined;
     if (tree) {
       const cache = new Map<string, TreeNodeData>();
       flattenTree(tree, cache);
-      treeNodeCache = cache;
-      treeRootCache = tree;
-      treeNodeCacheTime = now;
+      treeNodeCache.current = cache;
+      treeRootCache.current = tree;
+      treeNodeCacheTime.current = now;
       return cache;
     }
   } catch (error) {
@@ -2095,7 +2096,7 @@ async function getTreeNodeCache(): Promise<Map<string, TreeNodeData>> {
   } finally {
     releaseCliSlot();
   }
-  return treeNodeCache ?? new Map();
+  return treeNodeCache.current ?? new Map();
 }
 
 /**
@@ -2103,7 +2104,7 @@ async function getTreeNodeCache(): Promise<Map<string, TreeNodeData>> {
  **/
 async function getTreeRoot(): Promise<TreeNodeData | null> {
   await getTreeNodeCache();
-  return treeRootCache;
+  return treeRootCache.current;
 }
 
 /**
@@ -2131,9 +2132,9 @@ async function fetchTreeWithArgs(args: string[]): Promise<TreeNodeData | null> {
  * Implementations MUST reset all cache fields and the timestamp.
  **/
 export function invalidateTreeNodeCache(): void {
-  treeNodeCache = null;
-  treeRootCache = null;
-  treeNodeCacheTime = 0;
+  treeNodeCache.current = null;
+  treeRootCache.current = null;
+  treeNodeCacheTime.current = 0;
 }
 
 /**
@@ -2322,7 +2323,7 @@ function extractFilePathFromScope(scope: string): string | undefined {
   }
 
   let bestBundle: BundleInfo | undefined;
-  for (const b of bundleCache) {
+  for (const b of bundleCache.current) {
     if (cleanScope.startsWith(b.id + "/")) {
       if (!bestBundle || b.id.length > bestBundle.id.length) {
         bestBundle = b;
@@ -2403,7 +2404,7 @@ async function updateBundleCache() {
     for (const child of node.Children || []) walk(child);
   }
   walk(root);
-  if (bundles.length > 0) bundleCache = bundles;
+  if (bundles.length > 0) bundleCache.current = bundles;
 }
 
 /**
@@ -2443,7 +2444,7 @@ async function analyzeFile(document: vscode.TextDocument): Promise<void> {
   const root = getWorkspaceRoot();
   if (!root) return;
 
-  if (bundleCache.length === 0) {
+  if (bundleCache.current.length === 0) {
     await updateBundleCache();
   }
 
@@ -2470,7 +2471,7 @@ async function analyzeFile(document: vscode.TextDocument): Promise<void> {
       updateFileDiagnostics(document, breachs);
     } else {
       fileBreachsMap.delete(fileUri.toString());
-      repoDiagnosticCollection.delete(fileUri);
+      repoDiagnosticCollection.current.delete(fileUri);
     }
   } catch (error) {
     if (!controller.signal.aborted) {
@@ -2517,7 +2518,7 @@ function updateFileDiagnostics(document: vscode.TextDocument, breachs: Breach[])
     diagnosticsByUri.get(uriKey)!.diagnostics.push(diagnostic);
   }
   for (const { uri, diagnostics } of diagnosticsByUri.values()) {
-    repoDiagnosticCollection.set(uri, diagnostics);
+    repoDiagnosticCollection.current.set(uri, diagnostics);
   }
 }
 
@@ -2575,10 +2576,10 @@ function validateKitDocument(document: vscode.TextDocument): void {
     const diagnostics = result.problems.map((problem: Problem) => {
       return new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0), problem.message);
     });
-    kitDiagnosticCollection.set(document.uri, diagnostics);
+    kitDiagnosticCollection.current.set(document.uri, diagnostics);
   } catch (error) {
     logError("Failed to validate compose kit:", error);
-    kitDiagnosticCollection.delete(document.uri);
+    kitDiagnosticCollection.current.delete(document.uri);
   }
 }
 
@@ -2738,7 +2739,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
     if ((key === "none" || key === "all") && this.filters[kind] && hasRealKeys) {
       for (const k of Object.keys(this.filters[kind])) this.filters[kind][k] = key === "all";
       this.refresh();
-      monorepoProvider?.refresh();
+      monorepoProvider.current?.refresh();
       return;
     }
     if (kind === "time") {
@@ -2759,7 +2760,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
       this.filters[kind][key] = !this.filters[kind][key];
     }
     this.refresh();
-    monorepoProvider?.refresh();
+    monorepoProvider.current?.refresh();
   }
 
   setTimeMode(kind: "year" | "month" | "day", mode: "all" | "none") {
@@ -2767,28 +2768,28 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
     if (kind === "month") this.excludedMonths = mode === "all" ? [] : [...this.availableMonths];
     if (kind === "day") this.excludedDays = mode === "all" ? [] : [...this.availableDays];
     this.refresh();
-    monorepoProvider?.refresh();
+    monorepoProvider.current?.refresh();
   }
 
   toggleYear(year: number) {
     if (this.excludedYears.includes(year)) this.excludedYears = this.excludedYears.filter((y) => y !== year);
     else this.excludedYears.push(year);
     this.refresh();
-    monorepoProvider?.refresh();
+    monorepoProvider.current?.refresh();
   }
 
   toggleMonth(month: number) {
     if (this.excludedMonths.includes(month)) this.excludedMonths = this.excludedMonths.filter((m) => m !== month);
     else this.excludedMonths.push(month);
     this.refresh();
-    monorepoProvider?.refresh();
+    monorepoProvider.current?.refresh();
   }
 
   toggleDay(day: number) {
     if (this.excludedDays.includes(day)) this.excludedDays = this.excludedDays.filter((d) => d !== day);
     else this.excludedDays.push(day);
     this.refresh();
-    monorepoProvider?.refresh();
+    monorepoProvider.current?.refresh();
   }
 }
 
@@ -2838,7 +2839,7 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
   private _onDidChangeTreeData = new vscode.EventEmitter<MonorepoTreeItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-  constructor(public filterProvider?: FilterTreeDataProvider) {}
+  constructor(public filterProvider.current?: FilterTreeDataProvider) {}
 
   refresh(): void {
     this._onDidChangeTreeData.fire();
@@ -2854,7 +2855,7 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
 
   async getChildren(element?: MonorepoTreeItem): Promise<MonorepoTreeItem[]> {
     if (!element) {
-      const args = buildCliTreeArgs(this.filterProvider);
+      const args = buildCliTreeArgs(this.filterProvider.current);
       const tree = await fetchTreeWithArgs(args);
       if (!tree?.Children) return [];
       return tree.Children.map(treeNodeToItem);
@@ -3145,14 +3146,14 @@ class ComposeCodeLensProvider implements vscode.CodeLensProvider {
 }
 
 /**
- * composeGutterIcon holds the data fields for a composeGutterIcon record.
+ * composeGutterIcon.current holds the data fields for a composeGutterIcon.current record.
  **/
-let composeGutterIcon: vscode.TextEditorDecorationType;
+const composeGutterIcon = ephemeralBox<vscode.TextEditorDecorationType>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.composeGutterIcon", undefined);
 
 /** updateComposeDecorations holds the data fields for a updateComposeDecorations record.
  **/
 function updateComposeDecorations(editor: vscode.TextEditor) {
-  if (!editor || !composeGutterIcon) return;
+  if (!editor || !composeGutterIcon.current) return;
   const text = editor.document.getText();
   const regex = buildEntityIdRegex();
   const decorations: vscode.DecorationOptions[] = [];
@@ -3164,7 +3165,7 @@ function updateComposeDecorations(editor: vscode.TextEditor) {
     decorations.push({ range: new vscode.Range(startPos, endPos) });
   }
 
-  editor.setDecorations(composeGutterIcon, decorations);
+  editor.setDecorations(composeGutterIcon.current, decorations);
 }
 
 // #endregion 🪵️Providers
@@ -3176,11 +3177,11 @@ function updateComposeDecorations(editor: vscode.TextEditor) {
  * registerSidebarViews holds the data fields for a registerSidebarViews record.
  **/
 function registerSidebarViews(context: vscode.ExtensionContext): void {
-  filterProvider = new FilterTreeDataProvider();
-  vscode.window.registerTreeDataProvider("compose.filter", filterProvider);
+  filterProvider.current = new FilterTreeDataProvider();
+  vscode.window.registerTreeDataProvider("compose.filter", filterProvider.current);
 
-  monorepoProvider = new MonorepoTreeDataProvider(filterProvider);
-  vscode.window.registerTreeDataProvider("compose.monorepo", monorepoProvider);
+  monorepoProvider.current = new MonorepoTreeDataProvider(filterProvider.current);
+  vscode.window.registerTreeDataProvider("compose.monorepo", monorepoProvider.current);
 
   const sectionsProvider = new SectionsTreeDataProvider(context);
   vscode.window.registerTreeDataProvider("compose.sections", sectionsProvider);
@@ -3214,29 +3215,29 @@ function registerCommands(context: vscode.ExtensionContext): void {
   });
 
   register("compose.refreshMonorepo", () => {
-    monorepoProvider?.refresh();
+    monorepoProvider.current?.refresh();
   });
 
   register("compose.refreshCodebase", () => {
-    filterProvider?.refresh();
-    monorepoProvider?.refresh();
+    filterProvider.current?.refresh();
+    monorepoProvider.current?.refresh();
   });
 
   register("compose.refreshItem", (item: MonorepoTreeItem) => {
-    monorepoProvider?.refreshItem(item);
+    monorepoProvider.current?.refreshItem(item);
   });
 
   register("compose.filter.search", async () => {
     const q = await vscode.window.showInputBox({ prompt: "Search..." });
-    if (q !== undefined && filterProvider) {
-      filterProvider.searchQuery = q;
-      filterProvider.refresh();
-      monorepoProvider?.refresh();
+    if (q !== undefined && filterProvider.current) {
+      filterProvider.current.searchQuery = q;
+      filterProvider.current.refresh();
+      monorepoProvider.current?.refresh();
     }
   });
 
   register("compose.filter.toggle", (kind: string, key: string) => {
-    filterProvider?.toggle(kind, key);
+    filterProvider.current?.toggle(kind, key);
   });
 
   const filterToggleEntries: Record<string, string[]> = {
@@ -3255,7 +3256,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
   };
   for (const [kind, keys] of Object.entries(filterToggleEntries)) {
     for (const key of keys) {
-      register(`compose.filter.toggle.${kind}.${key}`, () => filterProvider?.toggle(kind, key));
+      register(`compose.filter.toggle.${kind}.${key}`, () => filterProvider.current?.toggle(kind, key));
     }
   }
 
@@ -3268,12 +3269,12 @@ function registerCommands(context: vscode.ExtensionContext): void {
     ["day", "all"],
   ];
   for (const [unit, mode] of timeModes) {
-    register(`compose.filter.time.${unit}.${mode}`, () => filterProvider?.setTimeMode(unit, mode));
+    register(`compose.filter.time.${unit}.${mode}`, () => filterProvider.current?.setTimeMode(unit, mode));
   }
 
-  register("compose.filter.toggleYear", (year: number) => filterProvider?.toggleYear(year));
-  register("compose.filter.toggleMonth", (month: number) => filterProvider?.toggleMonth(month));
-  register("compose.filter.toggleDay", (day: number) => filterProvider?.toggleDay(day));
+  register("compose.filter.toggleYear", (year: number) => filterProvider.current?.toggleYear(year));
+  register("compose.filter.toggleMonth", (month: number) => filterProvider.current?.toggleMonth(month));
+  register("compose.filter.toggleDay", (day: number) => filterProvider.current?.toggleDay(day));
 
   const searchToggles: Array<[string, keyof FilterTreeDataProvider]> = [
     ["compose.filter.search.matchCase", "matchCase"],
@@ -3282,10 +3283,10 @@ function registerCommands(context: vscode.ExtensionContext): void {
   ];
   for (const [cmd, prop] of searchToggles) {
     register(cmd, () => {
-      if (filterProvider) {
-        (filterProvider as any)[prop] = !(filterProvider as any)[prop];
-        filterProvider.refresh();
-        monorepoProvider?.refresh();
+      if (filterProvider.current) {
+        (filterProvider.current as any)[prop] = !(filterProvider.current as any)[prop];
+        filterProvider.current.refresh();
+        monorepoProvider.current?.refresh();
       }
     });
   }
@@ -3377,7 +3378,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         if (!binaryPath) return;
         const cp = require("child_process");
         cp.execSync(`${binaryPath} ticket close ${ticketId} "Closed via VS Code" .`, { cwd: getWorkspaceRoot() });
-        monorepoProvider?.refresh();
+        monorepoProvider.current?.refresh();
       }
     });
   });
@@ -3397,7 +3398,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
       if (!binaryPath) return;
       const cp = require("child_process");
       cp.execSync(`${binaryPath} ticket reopen ${ticketId} "${prompt}" copilot-chat`, { cwd: getWorkspaceRoot() });
-      monorepoProvider?.refresh();
+      monorepoProvider.current?.refresh();
     });
   });
 
@@ -3408,7 +3409,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     if (!binaryPath) return;
     const cp = require("child_process");
     cp.execSync(`${binaryPath} draft create "${title}"`, { cwd: getWorkspaceRoot() });
-    monorepoProvider?.refresh();
+    monorepoProvider.current?.refresh();
   });
 
   register("compose.draftDelete", (item: MonorepoTreeItem) => {
@@ -3421,7 +3422,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         if (!binaryPath) return;
         const cp = require("child_process");
         cp.execSync(`${binaryPath} draft delete ${slug}`, { cwd: getWorkspaceRoot() });
-        monorepoProvider?.refresh();
+        monorepoProvider.current?.refresh();
       }
     });
   });
@@ -3558,13 +3559,13 @@ async function loadAvailableFilterValues(): Promise<void> {
     walk(tree.Children);
   }
 
-  if (filterProvider) {
-    filterProvider.availableYears = Array.from(years).sort((a, b) => b - a);
-    filterProvider.availableMonths = Array.from(months).sort((a, b) => a - b);
-    filterProvider.availableDays = Array.from(days).sort((a, b) => a - b);
-    filterProvider.availableContributors = Array.from(contributors).sort();
-    filterProvider.availablePolicies = Array.from(policies).sort();
-    filterProvider.refresh();
+  if (filterProvider.current) {
+    filterProvider.current.availableYears = Array.from(years).sort((a, b) => b - a);
+    filterProvider.current.availableMonths = Array.from(months).sort((a, b) => a - b);
+    filterProvider.current.availableDays = Array.from(days).sort((a, b) => a - b);
+    filterProvider.current.availableContributors = Array.from(contributors).sort();
+    filterProvider.current.availablePolicies = Array.from(policies).sort();
+    filterProvider.current.refresh();
   }
 }
 
@@ -3573,19 +3574,19 @@ async function loadAvailableFilterValues(): Promise<void> {
  *Implementations MUST register sidebar views, commands, diagnostics, and event handlers.
  **/
 export function activate(context: vscode.ExtensionContext) {
-  outputChannel = vscode.window.createOutputChannel("repo");
-  context.subscriptions.push(outputChannel);
+  outputChannel.current = vscode.window.createOutputChannel("repo");
+  context.subscriptions.push(outputChannel.current);
   log("[ACTIVATION] repo extension activating...");
 
   try {
     registerSidebarViews(context);
     registerCommands(context);
 
-    repoDiagnosticCollection = vscode.languages.createDiagnosticCollection("compose");
-    kitDiagnosticCollection = vscode.languages.createDiagnosticCollection("compose-kit");
-    context.subscriptions.push(repoDiagnosticCollection, kitDiagnosticCollection);
+    repoDiagnosticCollection.current = vscode.languages.createDiagnosticCollection("compose");
+    kitDiagnosticCollection.current = vscode.languages.createDiagnosticCollection("compose-kit");
+    context.subscriptions.push(repoDiagnosticCollection.current, kitDiagnosticCollection.current);
 
-    composeGutterIcon = vscode.window.createTextEditorDecorationType({
+    composeGutterIcon.current = vscode.window.createTextEditorDecorationType({
       gutterIconPath: vscode.Uri.file(context.asAbsolutePath("🔣️compose_codeicon.svg")),
       gutterIconSize: "contain",
     });
@@ -3605,7 +3606,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
       vscode.workspace.onDidSaveTextDocument((document) => {
         invalidateTreeNodeCache();
-        monorepoProvider?.refresh();
+        monorepoProvider.current?.refresh();
         if (shouldAnalyzeFile(document)) analyzeFile(document);
         if (isKitDocument(document)) validateKitDocument(document);
       }),

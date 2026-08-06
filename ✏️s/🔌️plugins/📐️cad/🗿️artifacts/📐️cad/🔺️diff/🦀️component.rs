@@ -1,9 +1,9 @@
 //! 🔺️ CAD artifact — the `OperationDiff` half of the op/diff pair: the materialized `CadDiff` shape
-//! `CadOperation::diff` produces and the `apply`/`absorb` laws the store folds it onto a `CadScene`
+//! `CadOperation::diff` produces and the `apply`/`absorb` laws the store folds it onto a `CadProjection`
 //! with.
 
 use crate::artifacts::cad::op::{CadNodePatch, CadObjectPatch, CadReferencePatch};
-use crate::artifacts::cad::{CadNode, CadObject, CadReference, CadScene};
+use crate::artifacts::cad::{CadNode, CadObject, CadReference, CadProjection};
 use protocol::{CollectionDiff, OperationDiff};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -19,7 +19,7 @@ pub struct CadDiff {
     pub references_by_model_definition_id: Option<BTreeMap<String, Vec<CadReference>>>,
     pub nodes: Option<CollectionDiff<String, CadNodePatch, CadNode>>,
     pub active_model_definition_id: Option<String>,
-    pub scene: Option<Box<CadScene>>,
+    pub scene: Option<Box<CadProjection>>,
 }
 
 fn apply_object_collection_diff(objects: &mut Vec<CadObject>, diff: &CollectionDiff<String, CadObjectPatch, CadObject>) {
@@ -102,8 +102,8 @@ pub fn apply_reference_patch(reference: &mut CadReference, patch: &CadReferenceP
     }
 }
 
-impl OperationDiff<CadScene> for CadDiff {
-    fn apply(&self, projection: &CadScene) -> CadScene {
+impl OperationDiff<CadProjection> for CadDiff {
+    fn apply(&self, projection: &CadProjection) -> CadProjection {
         if let Some(scene) = &self.scene {
             return (**scene).clone();
         }

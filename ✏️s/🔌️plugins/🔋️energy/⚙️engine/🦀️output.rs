@@ -92,11 +92,11 @@ impl TimeSeries {
 
 /// 📦️ All time-series output.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct TimeSeriesStore {
+pub struct TimeSeriesTable {
     pub series: HashMap<String, TimeSeries>,
 }
 
-impl TimeSeriesStore {
+impl TimeSeriesTable {
     pub fn record(&mut self, key: impl Into<String>, t_hours: f64, value: f64, unit: crate::units::Unit) {
         let key = key.into();
         let entry = self.series.entry(key.clone()).or_insert_with(|| TimeSeries { key, timestamps_hours: Vec::new(), values: Vec::new(), unit });
@@ -160,7 +160,7 @@ mod tests {
 
     #[test]
     fn store_record_get_and_csv() {
-        let mut store = TimeSeriesStore::default();
+        let mut store = TimeSeriesTable::default();
         store.record("Zone1 Temp", 0.0, 21.0, crate::units::Unit::Celsius);
         store.record("Zone1 Temp", 1.0, 22.0, crate::units::Unit::Celsius);
         let series = store.get("Zone1 Temp").unwrap();

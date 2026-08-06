@@ -117,7 +117,7 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🔖️NotePlayApp
-/// 🧪️ B1: unit struct — every former `NotePlayRuntime`/`ViewState`-read field now lives in
+/// 🧪️ B1: unit struct — every former `NotePlayRuntime`/`ViewModel`-read field now lives in
 /// `NoteConfig` (see `DocumentApp::Config`), written through `NoteConfigOperation`s.
 #[derive(Default)]
 pub struct NotePlayApp;
@@ -324,7 +324,7 @@ pub fn create_note_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
 
     pub type NoteApp = VcsDocumentApp<NotePlayApp>;
 
@@ -343,7 +343,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut NoteApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
 //#endregion 🧪️Testkit

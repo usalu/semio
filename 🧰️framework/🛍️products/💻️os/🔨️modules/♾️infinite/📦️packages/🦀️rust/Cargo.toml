@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
 description = "OS infinite family — world/canvas/board Shape V2 glue"
+build = "../../🖼️canvas/build.rs"
 
 [package.metadata.semio]
 role = "product"
@@ -32,7 +33,7 @@ semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", 
 semio-framework-core = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-core" }
 math = { path = "../../../../../../🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
 semio_s_3d = { path = "../../../../../../../✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust", package = "semio-s-3d" }
 compiler = { path = "../../../../../../🔨️modules/📚️compiler/📦️packages/🦀️rust", package = "semio-framework-compiler" }
 serde = { version = "1.0.219", features = ["derive"] }
@@ -53,3 +54,7 @@ js-sys = "0.3.83"
 wasm-bindgen = "0.2.106"
 wasm-bindgen-futures = "0.4.71"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window", "Request", "RequestInit", "RequestMode", "Response", "console"] }
+
+[build-dependencies]
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

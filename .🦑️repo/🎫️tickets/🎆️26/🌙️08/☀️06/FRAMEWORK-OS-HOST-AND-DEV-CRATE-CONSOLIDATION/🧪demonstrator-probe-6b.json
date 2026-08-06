@@ -1,0 +1,21 @@
+{
+  "entry": [
+    {
+      "path": "/\u269b\ufe0ffooter.tsx",
+      "code": "200",
+      "size": 57253,
+      "is_html": false,
+      "markers": []
+    },
+    {
+      "path": "/\ud83d\udfe6\ufe0fbrand.ts",
+      "code": "200",
+      "size": 109719,
+      "is_html": false,
+      "markers": []
+    }
+  ],
+  "deep_errs": [],
+  "post_restart_errors": 0,
+  "url": "http://127.0.0.1:6029/"
+}

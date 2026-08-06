@@ -4,6 +4,7 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
+import { ephemeralMap, ephemeralBox } from "@semio-tech/framework-core";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -123,14 +124,14 @@ export interface Taxonomy {
   readonly areas: Readonly<Record<string, AreaState>>;
 }
 
-let cachedTaxonomy: Taxonomy | undefined;
+const cachedTaxonomy = ephemeralBox<Taxonomy | undefined>("framework.products.repo.modules.lib.discovery.component.ts.cachedTaxonomy", undefined);
 
 /** 📖️ Reads and parses `🔣️taxonomy.json` (sibling to this module, resolved via `import.meta.url` like `getLibRoot` in `📦️index.ts` of this same package) — cached after the first call. */
 export function loadTaxonomy(): Taxonomy {
-  if (cachedTaxonomy) return cachedTaxonomy;
+  if (cachedTaxonomy.current) return cachedTaxonomy.current;
   const path = join(__dirname, "../🔣️taxonomy.json");
-  cachedTaxonomy = JSON.parse(readFileSync(path, "utf8")) as Taxonomy;
-  return cachedTaxonomy;
+  cachedTaxonomy.current = JSON.parse(readFileSync(path, "utf8")) as Taxonomy;
+  return cachedTaxonomy.current;
 }
 
 /**
@@ -431,7 +432,7 @@ interface DiscoveryScan {
   readonly burndown: DiscoveryBurndown;
 }
 
-const scanCache = new Map<string, DiscoveryScan>();
+const scanCache = ephemeralMap<string, DiscoveryScan>("framework.products.repo.modules.lib.discovery.component.ts.scanCache");
 
 /** 🧹️ Drops the memoized repo scan — call after mutating the tree inside one process (tests, generators). */
 export function clearDiscoveryCache(): void {

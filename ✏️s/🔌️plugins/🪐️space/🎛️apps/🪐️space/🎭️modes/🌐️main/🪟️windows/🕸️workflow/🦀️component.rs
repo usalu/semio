@@ -131,17 +131,17 @@ mod tests {
 
     #[test]
     fn renders_workflow_scene() {
-        use semio_framework_plugin::{PluginApp, ViewState, VcsDocumentApp};
+        use semio_framework_plugin::{PluginApp, ViewModel, VcsDocumentApp};
         let mut app = VcsDocumentApp::new(crate::apps::space::SpaceApp);
-        let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewState::default()).expect("render");
+        let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
     }
 
     #[test]
     fn workflow_scene_uses_flow_engine_with_fixture() {
-        use semio_framework_plugin::{PluginApp, ViewState, VcsDocumentApp};
+        use semio_framework_plugin::{PluginApp, ViewModel, VcsDocumentApp};
         let mut app = VcsDocumentApp::new(crate::apps::space::SpaceApp);
-        let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewState::default()).expect("render");
+        let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains(r#"\"engine\":\"flow\""#));
         assert!(json.contains("fixtureJson"));

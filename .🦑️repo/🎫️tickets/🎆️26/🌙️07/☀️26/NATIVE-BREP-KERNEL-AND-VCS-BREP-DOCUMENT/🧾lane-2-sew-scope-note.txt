@@ -1,0 +1,20 @@
+Lane 2-sew scope note (2026-08-06)
+
+Owned file: ✏️s/🔨️modules/🧊️3d/📐️brep/🧵sew/🦀️component.rs
+
+Implemented:
+- sew_faces(body, faces, tolerance) -> Result<SolidId, KernelError>
+  Snapshots outer loops; spatial-hash vertex merge; canonical (v_lo,v_hi) edge dedup with coedge orientation;
+  rebuilds faces via euler; add_shell + add_solid.
+
+Tests (inline):
+- sew_two_adjacent_quads_shares_one_edge (7 unique edges)
+- sew_six_box_faces_into_solid (6 faces, 12 edges)
+- sew_single_face_rejects
+
+Deferred:
+- Kernel still calls brepkit_operations::sew::sew_faces — integration request for wave 6 flip.
+- Inner loops / non-planar surfaces not specialized (outer loop only).
+
+Evidence: 🧪lane-2-sew-test-quick-run-1.txt — 3 passed.
+Contract: sew FROZEN.

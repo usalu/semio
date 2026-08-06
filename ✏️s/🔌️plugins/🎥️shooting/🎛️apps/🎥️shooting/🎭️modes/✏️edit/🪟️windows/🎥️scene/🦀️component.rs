@@ -225,12 +225,12 @@ mod tests {
     use super::*;
     use crate::apps::shooting::testkit::{scene_window_measures, shooting_app};
     use crate::apps::shooting::SHOOTING_PLAY_BODY_SCENE as BODY_SCENE;
-    use semio_framework_plugin::{PluginApp, ViewState};
+    use semio_framework_plugin::{PluginApp, ViewModel};
 
     #[test]
     fn renders_world_model_scene() {
         let mut app = shooting_app();
-        let node = app.render(BODY_SCENE, None, &ViewState::default()).expect("render");
+        let node = app.render(BODY_SCENE, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("world-3d"));
         let payload: Value = serde_json::from_str(&json).unwrap();
@@ -250,7 +250,7 @@ mod tests {
     #[test]
     fn model_scene_uses_asset_mesh_urls() {
         let mut app = shooting_app();
-        let node = app.render(BODY_SCENE, None, &ViewState::default()).expect("render");
+        let node = app.render(BODY_SCENE, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("mesh:🧊️base"));
         assert!(json.contains("/mesh/🧊️base.glb"));

@@ -1,0 +1,65 @@
+command: cargo test -p semio-s-3d --lib tessellate
+env: SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk DEVELOPER_DIR=/Library/Developer/CommandLineTools
+cwd: ✏️s/�Library/Developer/CommandLineTools/SDKs/MacOSX.sdk DEVELOPER_DIR=/Library/Developer/CommandLineTools
+cwd: ✏️s/🔨️modules/️3d/📦️packages/🦀️rust
+
+...
+198 | pub use crate::os_dsl::grammar::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^ the name `Alternative` in the type namespace is first re-exported here
+
+warning: unused import: `crate::os_dsl::core::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:199:9
+    |
+199 | pub use crate::os_dsl::core::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `len`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:1083:21
+     |
+1083 |                 let len = end_j - i;
+     |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2125:19
+     |
+2019 | / impl<P, Operation> DocumentStore<P, Operation>
+2020 | | where
+2021 | |     P: Clone + Serialize + DeserializeOwned + DocumentPack,
+2022 | |     Operation: Clone + Serialize + DeserializeOwned + self::Operation<P> + OpBinary + OpText,
+     | |_____________________________________________________________________________________________- method in this implementation
+...
+2125 |       pub(crate) fn set_envelope(&mut self, envelope: DocumentEnvelope<P, Operation>, applied_edit_ids: Vec<String>) {
+     |                     ^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `print_edge_label` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: `semio-framework-os-kernel` (lib) generated 27 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 3.57s
+     Running unittests 📦️glue.rs (/Users/ueli/Documents/semio/target/debug/deps/semio_s_3d-f0368c0fd128de62)
+
+running 12 tests
+test brep::tessellate::tests::missing_solid_returns_missing_entity ... ok
+test brep::tessellate::tests::sample_edge_polyline_returns_line_endpoints ... ok
+test brep::tessellate::tests::circle_edge_samples_respect_deflection ... ok
+test brep::tessellate::tests::shared_edge_samples_are_identical_across_adjacent_faces ... ok
+test brep::tessellate::tests::tessellate_face_matches_one_box_face ... ok
+test brep::tessellate::tests::unit_box_has_six_face_groups_and_unit_normals ... ok
+test mesh::tests::tessellate_has_positions_and_indices ... ok
+test mesh::tests::tessellate_concave_face_tags_all_triangles_with_one_face_id ... ok
+test mesh::tests::weld_coincident_vertices_unifies_independently_tessellated_seam ... ok
+test brep::kernel::tests::tessellate_face_carries_boundary_edge_positions ... ok
+test brep::kernel::tests::tessellate_to_mesh_data_carries_face_ids ... ok
+test brep::kernel::tests::box_and_tessellate ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 403 filtered out; finished in 0.01s
+

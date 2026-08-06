@@ -17,7 +17,7 @@ use crate::scenes::{clear_graph_node_context, resolve_graph_context_action, seed
 use infinite_world::{
     fetch_pending_glb_meshes, fetch_pending_reference_images, fetch_pending_terrain_tiles, handle_world3d_paint_actions, handle_world3d_pointer_button, handle_world3d_pointer_drag, handle_world3d_pointer_move, handle_world3d_wheel, World3dState,
 };
-use semio_framework_core::{app_document_label, app_window_document_label, resolve_app_document, AppDefinition, ExampleDefinition, IconName, ModeDefinition, PanelGroup, PanelTabDefinition, ViewState};
+use semio_framework_core::{app_document_label, app_window_document_label, resolve_app_document, AppDefinition, ExampleDefinition, IconName, ModeDefinition, PanelGroup, PanelTabDefinition, ViewModel};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 #[cfg(not(target_arch = "wasm32"))]
@@ -114,7 +114,7 @@ pub fn take_find_items() -> Vec<ShellFindItem> {
 }
 
 /// 🖱️ Best-effort `ContextMenuSurfaceTarget.selection` groups from the session's already-tracked (opaque,
-/// app-owned) `ViewState.selectionJson` — tries the common `{selectedIds: [...]}` shape, then a bare id
+/// app-owned) `ViewModel.selectionJson` — tries the common `{selectedIds: [...]}` shape, then a bare id
 /// array, and yields nothing rather than guessing at an unrecognized shape.
 fn context_menu_selection_groups(selection_json: Option<&str>) -> Vec<serde_json::Value> {
     #[derive(Deserialize, Default)]
@@ -387,7 +387,7 @@ pub struct ActiveSession {
     pub plugin_id: String,
     pub instance_id: u32,
     pub app: AppDefinition,
-    pub view_state: ViewState,
+    pub view_state: ViewModel,
 }
 
 //#region 🔖️NativeSyncChannel
@@ -530,7 +530,7 @@ pub struct ShellState {
 }
 //#endregion ShellTypes
 
-async fn resolve_external_slots_in_tree(node: UiNode, plugins: &[ProgramBridgeEntry], contributor_instances: &mut HashMap<String, u32>, view_state: &ViewState) -> Result<UiNode, String> {
+async fn resolve_external_slots_in_tree(node: UiNode, plugins: &[ProgramBridgeEntry], contributor_instances: &mut HashMap<String, u32>, view_state: &ViewModel) -> Result<UiNode, String> {
     match node {
         UiNode::ExternalSlot(slot) => {
             let program = plugins.iter().find(|entry| entry.plugin_id == slot.plugin_id).cloned().ok_or_else(|| format!("contributor program missing: {}", slot.plugin_id))?;
@@ -843,7 +843,7 @@ impl ShellState {
             .collect()
     }
 
-    pub fn panel_state_from_view(view_state: &ViewState) -> Option<SpacePanelState> {
+    pub fn panel_state_from_view(view_state: &ViewModel) -> Option<SpacePanelState> {
         view_state.panel_json.as_ref().and_then(|json| serde_json::from_str(json).ok())
     }
 
@@ -872,7 +872,7 @@ impl ShellState {
             let workflows = self.build_space_workflows();
             let panel_state = SpacePanelState { active_panel_tab: self.host_catalogue_tab_id().unwrap_or_default(), workflows, spawned_apps: vec![], active_spawned_id: None };
             let instance_id = semio_s_plugin_space.create_app(&s_app.id).await?;
-            let view_state = ViewState {
+            let view_state = ViewModel {
                 active_mode_id: Some(s_app.default_mode_id.clone()),
                 active_window_kind_id: Some(s_app.window_kinds.first().id.clone()),
                 active_utility_id: None,
@@ -896,7 +896,7 @@ impl ShellState {
                 plugin_id: program.plugin_id.clone(),
                 instance_id,
                 app: app.clone(),
-                view_state: ViewState {
+                view_state: ViewModel {
                     active_mode_id: Some(app.default_mode_id.clone()),
                     active_window_kind_id: self.active_window_id.clone(),
                     active_utility_id: None,
@@ -1011,7 +1011,7 @@ impl ShellState {
         serde_json::to_string(&entries).unwrap_or_else(|_| "[]".into())
     }
 
-    async fn resolve_external_slots(&mut self, node: UiNode, view_state: &ViewState) -> Result<UiNode, String> {
+    async fn resolve_external_slots(&mut self, node: UiNode, view_state: &ViewModel) -> Result<UiNode, String> {
         let plugins = self.plugins.clone();
         resolve_external_slots_in_tree(node, &plugins, &mut self.contributor_instances, view_state).await
     }
@@ -1061,7 +1061,7 @@ impl ShellState {
                         let spawned_app = spawn_plugin.manifest.apps.iter().find(|app| app.id == spawned.app_id);
                         if let Some(app) = spawned_app {
                             let body_key = app.window_kinds.first().body_key.clone();
-                            let view_state = ViewState {
+                            let view_state = ViewModel {
                                 active_mode_id: Some(app.default_mode_id.clone()),
                                 active_window_kind_id: Some(app.window_kinds.first().id.clone()),
                                 active_utility_id: None,
@@ -1688,9 +1688,9 @@ impl ShellState {
                     changed = true;
                 }
                 DocumentEvent::Presence { .. } => {
-                    // 👥️ The Rust `semio_framework_core::ViewState` has no presence field yet (only the
+                    // 👥️ The Rust `semio_framework_core::ViewModel` has no presence field yet (only the
                     // TS shell threads `presencePeersJson`); presence roster display in the native
-                    // wgpu shell is a documented follow-up once core `ViewState` carries it.
+                    // wgpu shell is a documented follow-up once core `ViewModel` carries it.
                 }
                 DocumentEvent::Conflict(_) => {
                     self.sync_card_kind = Some("conflict".into());
@@ -1895,7 +1895,7 @@ impl ShellState {
         }
         // 🧰️ Intercept the framework `setActiveUtility` View action to update the host-owned active-utility
         // map before forwarding to the plugin (which reacts by clearing its live-preview scratch). The
-        // authoritative state is the shell map + the `ViewState.active_utility_id` it injects on render.
+        // authoritative state is the shell map + the `ViewModel.active_utility_id` it injects on render.
         if action.action == semio_framework_core::SET_ACTIVE_UTILITY_ACTION_ID {
             if let Some(session) = self.session.clone() {
                 if action.controller_id == session.app.controller_id {
@@ -2123,7 +2123,7 @@ impl ShellState {
 
     // 🏠️🧳️ Generic replacement for the old `switch_to_s_app` — switches to either the host plugin's
     // landing or host app by id (both resolved via `host_config()`, never a specific app's identity).
-    async fn switch_to_managed_app(&mut self, app_id: &str, view_state: Option<ViewState>) -> Result<(), String> {
+    async fn switch_to_managed_app(&mut self, app_id: &str, view_state: Option<ViewModel>) -> Result<(), String> {
         let cfg = self.host_config().ok_or("host config missing")?;
         let semio_s_plugin_space = self.plugins.iter().find(|program| program.plugin_id == cfg.plugin_id).ok_or("host program missing")?;
         let app = semio_s_plugin_space.manifest.apps.iter().find(|candidate| candidate.id == app_id).ok_or("host app missing")?.clone();
@@ -2142,7 +2142,7 @@ impl ShellState {
         let instance_id = semio_s_plugin_space.create_app(&app.id).await?;
         let workflows = self.build_space_workflows();
         let panel_state = SpacePanelState { active_panel_tab: self.host_catalogue_tab_id().unwrap_or_default(), workflows, spawned_apps: vec![], active_spawned_id: None };
-        let next_view_state = view_state.unwrap_or_else(|| ViewState {
+        let next_view_state = view_state.unwrap_or_else(|| ViewModel {
             active_mode_id: Some(app.default_mode_id.clone()),
             active_window_kind_id: Some(app.window_kinds.first().id.clone()),
             active_utility_id: None,
@@ -2205,7 +2205,7 @@ impl ShellState {
         self.apply_shell_uri(&uri).await
     }
 
-    async fn spawn_plugin(&mut self, plugin_id: &str, mut view_state: ViewState) -> Result<(), String> {
+    async fn spawn_plugin(&mut self, plugin_id: &str, mut view_state: ViewModel) -> Result<(), String> {
         let workflows = self.build_space_workflows();
         let Some(workflow) = workflows.iter().find(|entry| entry.plugin_id == plugin_id).cloned() else {
             return Ok(());
@@ -5447,7 +5447,7 @@ mod command_registry_tests {
     #[test]
     fn build_os_commands_terminology_options_include_app_terminologies() {
         let mut shell = test_shell_state();
-        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework_core::ViewState::default() });
+        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework_core::ViewModel::default() });
         let terminology_command = shell.build_os_commands().into_iter().find(|command| command.id == "os.setTerminology").expect("terminology command present");
         let ActionArgControl::Select { options } = &terminology_command.args[0].control else {
             panic!("expected a select control");
@@ -5497,7 +5497,7 @@ mod command_registry_tests {
     #[test]
     fn command_search_items_expands_select_options_and_tags_os_category() {
         let mut shell = test_shell_state();
-        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework_core::ViewState::default() });
+        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework_core::ViewModel::default() });
         let items = shell.command_search_items();
         let appearance_dark = items.iter().find(|item| item.id == "command.os.setAppearance.dark").expect("expanded dark option present");
         assert_eq!(appearance_dark.label, "Set Appearance: Dark");
@@ -5514,7 +5514,7 @@ mod command_registry_tests {
     #[test]
     fn apply_os_command_reset_dock_clears_layout_override_locally() {
         let mut shell = test_shell_state();
-        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework_core::ViewState::default() });
+        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework_core::ViewModel::default() });
         shell.layout_override = Some(shell.dock.to_window_layout());
         pollster::block_on(shell.apply_os_command("os.resetDock", None)).expect("reset dock never errors");
         assert!(shell.layout_override.is_none());
@@ -5523,7 +5523,7 @@ mod command_registry_tests {
     #[test]
     fn apply_os_command_set_locale_dispatches_through_framework_controller() {
         let mut shell = test_shell_state();
-        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework_core::ViewState::default() });
+        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework_core::ViewModel::default() });
         pollster::block_on(shell.apply_os_command("os.setLocale", Some("de"))).expect("set locale never errors");
         assert_eq!(shell.locale_id, "de");
     }
@@ -5554,7 +5554,7 @@ mod command_registry_tests {
     #[test]
     fn build_command_panel_ui_groups_rows_under_category_headers() {
         let mut shell = test_shell_state();
-        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework_core::ViewState::default() });
+        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework_core::ViewModel::default() });
         let UiNode::Stack(panel) = shell.build_command_panel_ui() else {
             panic!("expected a stack root");
         };
@@ -6241,7 +6241,7 @@ fn tutorial_converge_pose(tween: &TutorialCameraConverge, elapsed_ms: f64) -> se
 
 //#region 🧮️UiSnapshot
 /// 🧮️ `ShellState` → `TutorialUiSnapshot` (Design Decision 4). Fields with no home in this shell's state
-/// today (`activeToolId` has one — `ViewState.active_tool_id`; `expandedTreeIds` does not) are noted
+/// today (`activeToolId` has one — `ViewModel.active_tool_id`; `expandedTreeIds` does not) are noted
 /// inline rather than inventing new cross-cutting state to fill them.
 fn tutorial_capture_ui_snapshot(state: &ShellState) -> semio_framework_core::TutorialUiSnapshot {
     let mut active_panel_tab_by_group: HashMap<String, String> = HashMap::new();

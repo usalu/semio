@@ -1,0 +1,16 @@
+Lane 2-int-ss scope note
+========================
+Owned file: int-ss/component.rs under brep
+
+Public API (FROZEN):
+- IntCurve { curve3: Curve3 }
+- intersect_surface_surface(a: &Surface, b: &Surface, tol: f64) -> Result<Vec<IntCurve>, IntersectError>
+
+Implementation:
+- Analytic Plane/Plane -> Curve3::Line (empty if parallel disjoint; Tangent if coincident)
+- Analytic Plane/Cylinder -> Circle (axis-perp), Ellipse (oblique), or two Lines (axis-parallel)
+- Other pairs -> IntersectError::Unresolved
+- Pcurves deferred
+
+Tests: cargo test -p semio-s-3d --lib brep::int_ss:: -> 4 passed
+No integrator requests.

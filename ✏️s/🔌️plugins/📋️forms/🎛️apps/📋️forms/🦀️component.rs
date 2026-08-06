@@ -80,7 +80,7 @@ pub fn parse_value_json(value_json: &str) -> Value {
 //#endregion 🔖️Values
 
 //#region 🔖️Contributions
-/// 🧩️ One host-declared plugin contribution — the config-driven counterpart of a deleted `ViewState`
+/// 🧩️ One host-declared plugin contribution — the config-driven counterpart of a deleted `ViewModel`
 /// field. The host pushes contributions into config via `FormsCommand::SetContributions`/
 /// `FormsConfigOperation::SetContributions` (mirrors `SetLocale`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -405,7 +405,7 @@ pub fn create_forms_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
 
     pub type FormsApp = VcsDocumentApp<FormsPlayApp>;
 
@@ -425,7 +425,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut FormsApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
     /// 🧩️ A host contribution registering `"buildingComponent"` as an extension question kind rendered

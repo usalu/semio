@@ -88,14 +88,14 @@ mod tests {
     #[test]
     fn clear_tiles_action_empties_tiles_and_selection() {
         use crate::apps::present::PRESENT_PLAY_BODY_DETAILS;
-        use semio_framework_plugin::{PluginApp, ViewState};
+        use semio_framework_plugin::{PluginApp, ViewModel};
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 }));
         let first_id = app.projection().expect("projection").tiles[0].id.clone();
         dispatch(&mut app, PresentCommand::SetSelectedIds(crate::apps::present::commands::view::set_selected_ids::SetSelectedIds { ids: vec![first_id] }));
         dispatch(&mut app, PresentCommand::ClearTiles(clear_tiles::ClearTiles {}));
         assert!(app.projection().expect("projection").tiles.is_empty());
-        let node = app.render(PRESENT_PLAY_BODY_DETAILS, None, &ViewState::default()).expect("render details");
+        let node = app.render(PRESENT_PLAY_BODY_DETAILS, None, &ViewModel::default()).expect("render details");
         let json_str = serde_json::to_string(&node).unwrap();
         assert!(json_str.contains("Select a tile"), "selection was cleared alongside tiles");
     }

@@ -1,0 +1,18 @@
+=== bvh exit=0
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 411 filtered out; finished in 0.01s
+
+=== primitives exit=0
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 405 filtered out; finished in 0.01s
+
+=== measure exit=101
+test brep::measure::tests::distance_and_closest_point_between_boxes ... FAILED
+test result: FAILED. 6 passed; 1 failed; 0 ignored; 0 measured; 408 filtered out; finished in 0.01s
+
+=== tessellate exit=0
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 409 filtered out; finished in 0.00s
+
+=== oracle exit=0
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 405 filtered out; finished in 0.00s
+
+=== int_cc exit=0
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 411 filtered out; finished in 0.00s

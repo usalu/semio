@@ -93,7 +93,7 @@ pub struct LowpolyObject {
     // ``` must be alone on its line" rule. Confirmed empirically (fails even with a single object):
     // reparsing the printed output errors with "unterminated fenced block". This is a genuine ENGINE
     // GAP distinct from the already-documented multi-`Shape::Embed`-field Lines-layout bug (see
-    // `trinity::rewrite::RewriteRuleState`) — out of scope here, do not annotate until the engine's
+    // `trinity::rewrite::RewriteRuleModel`) — out of scope here, do not annotate until the engine's
     // `Writer` forces a boundary after every `Shape::Embed` chunk regardless of what follows it.
     pub mesh_json: String,
     #[serde(default)]

@@ -4991,12 +4991,12 @@ impl Dfa {
 /// doesn't re-walk every token's bytes through the DFA on every step at the same automaton state.
 /// Bounded by `max_entries`; a full-clear eviction policy (not LRU) once the bound is hit — simple
 /// and correct, if not optimal; a proper clock/LRU is a hardening-wave follow-up.
-pub struct DfaTokenCache {
+pub struct DfaTokenMemo {
     entries: std::collections::HashMap<u32, (TokenBitset, Vec<u32>)>,
     max_entries: usize,
 }
 
-impl DfaTokenCache {
+impl DfaTokenMemo {
     pub fn new(max_entries: usize) -> Self {
         Self { entries: std::collections::HashMap::new(), max_entries }
     }
@@ -5039,7 +5039,7 @@ impl DfaTokenCache {
 /// final generated text must end in an accept state).
 pub struct RegexConstraint {
     dfa: std::rc::Rc<Dfa>,
-    cache: DfaTokenCache,
+    cache: DfaTokenMemo,
     max_cache_entries: usize,
     state: u32,
     snapshots: Vec<u32>,
@@ -5049,7 +5049,7 @@ impl RegexConstraint {
     pub fn new(pattern: &str, limits: &SamplingLimits) -> Result<Self, SamplingError> {
         let dfa = Dfa::from_pattern(pattern, limits)?;
         let start = dfa.start();
-        Ok(Self { dfa: std::rc::Rc::new(dfa), cache: DfaTokenCache::new(limits.max_dfa_cache_entries), max_cache_entries: limits.max_dfa_cache_entries, state: start, snapshots: Vec::new() })
+        Ok(Self { dfa: std::rc::Rc::new(dfa), cache: DfaTokenMemo::new(limits.max_dfa_cache_entries), max_cache_entries: limits.max_dfa_cache_entries, state: start, snapshots: Vec::new() })
     }
 }
 
@@ -5095,7 +5095,7 @@ impl Constraint for RegexConstraint {
         self.snapshots.clear();
     }
     fn fork(&self) -> Box<dyn Constraint> {
-        Box::new(Self { dfa: self.dfa.clone(), cache: DfaTokenCache::new(self.max_cache_entries), max_cache_entries: self.max_cache_entries, state: self.state, snapshots: self.snapshots.clone() })
+        Box::new(Self { dfa: self.dfa.clone(), cache: DfaTokenMemo::new(self.max_cache_entries), max_cache_entries: self.max_cache_entries, state: self.state, snapshots: self.snapshots.clone() })
     }
 }
 
@@ -5263,7 +5263,7 @@ enum JsonExpect {
 /// reactively as token bytes are accepted. Numbers, booleans, and `null` are treated as atomic
 /// (their internal digits/characters aren't byte-validated) — a deliberate simplification, not a
 /// full JSON-number grammar. Does not proactively mask (`fill_mask` is a no-operation): building a
-/// per-state token-feasibility cache for this hand-written automaton (mirroring [`DfaTokenCache`])
+/// per-state token-feasibility cache for this hand-written automaton (mirroring [`DfaTokenMemo`])
 /// is a hardening-wave follow-up.
 pub struct JsonModeConstraint {
     stack: Vec<JsonFrame>,
@@ -5582,7 +5582,7 @@ fn compile_grammar_expr(expr: &GrammarExpr, grammar: &EbnfGrammar, budget: &mut 
 }
 
 /// 🧱️ An EBNF-grammar constraint, compiled through [`compile_grammar_expr`] into the same
-/// DFA/[`DfaTokenCache`] machinery as [`RegexConstraint`] — see [`EbnfGrammar`]'s doc for the
+/// DFA/[`DfaTokenMemo`] machinery as [`RegexConstraint`] — see [`EbnfGrammar`]'s doc for the
 /// supported (non-recursive/boundedly-recursive) grammar subset.
 pub struct EbnfConstraint(RegexConstraint);
 
@@ -5597,7 +5597,7 @@ impl EbnfConstraint {
         builder.nodes[frag.accept].accept = true;
         let dfa = subset_construct(&builder.nodes, frag.start, limits)?;
         let start = dfa.start();
-        Ok(Self(RegexConstraint { dfa: std::rc::Rc::new(dfa), cache: DfaTokenCache::new(limits.max_dfa_cache_entries), max_cache_entries: limits.max_dfa_cache_entries, state: start, snapshots: Vec::new() }))
+        Ok(Self(RegexConstraint { dfa: std::rc::Rc::new(dfa), cache: DfaTokenMemo::new(limits.max_dfa_cache_entries), max_cache_entries: limits.max_dfa_cache_entries, state: start, snapshots: Vec::new() }))
     }
 }
 
@@ -5630,7 +5630,7 @@ impl Constraint for EbnfConstraint {
         self.0.reset();
     }
     fn fork(&self) -> Box<dyn Constraint> {
-        Box::new(Self(RegexConstraint { dfa: self.0.dfa.clone(), cache: DfaTokenCache::new(self.0.max_cache_entries), max_cache_entries: self.0.max_cache_entries, state: self.0.state, snapshots: self.0.snapshots.clone() }))
+        Box::new(Self(RegexConstraint { dfa: self.0.dfa.clone(), cache: DfaTokenMemo::new(self.0.max_cache_entries), max_cache_entries: self.0.max_cache_entries, state: self.0.state, snapshots: self.0.snapshots.clone() }))
     }
 }
 
@@ -9016,7 +9016,7 @@ mod tests {
         let dfa = Dfa::from_pattern("ab", &limits).unwrap();
         let tokens: Vec<&[u8]> = vec![b"a", b"b", b"x"];
         let adapter = SliceTextAdapter::new(&tokens);
-        let mut cache = DfaTokenCache::new(16);
+        let mut cache = DfaTokenMemo::new(16);
         let (allowed, next) = cache.get_or_compute(&dfa, dfa.start(), &adapter);
         assert!(allowed.get(TokenId::new(0)));
         assert!(!allowed.get(TokenId::new(1)));
@@ -9075,7 +9075,7 @@ mod tests {
         let dfa = Dfa::from_pattern("a*b", &limits).unwrap();
         let tokens: Vec<&[u8]> = vec![b"a", b"b"];
         let adapter = SliceTextAdapter::new(&tokens);
-        let mut cache = DfaTokenCache::new(1);
+        let mut cache = DfaTokenMemo::new(1);
         let start = dfa.start();
         cache.get_or_compute(&dfa, start, &adapter);
         let after_a = dfa.step(start, b'a');

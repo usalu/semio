@@ -1,0 +1,14 @@
+Lane: 1-bvh (Wave 1)
+Owned file: ✏️s/🔨️modules/🧊️3d/📐️brep/🌳bvh/🦀️component.rs
+
+Landed:
+- FaceBvh / EdgeBvh newtypes wrapping crate::spatial::Bvh<FaceId|EdgeId>
+- BvhIndex enum (Faces | Edges) for dual-index consumers
+- build_face_bvh / build_edge_bvh(body, solid) -> Result<_, KernelError>
+- face_aabb / edge_aabb helpers (curve segment samples + loop vertices)
+- query_ray / query_aabb / query_nearest on both index types
+
+Out of scope (no glue/Cargo edits):
+- Kernel wiring to native BVH (Wave 6 / integrator)
+
+Dependencies: read-only topo/euler/curve/engine/spatial/error/arena

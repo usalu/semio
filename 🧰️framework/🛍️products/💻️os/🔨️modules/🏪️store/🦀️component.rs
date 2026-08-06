@@ -490,6 +490,8 @@ pub struct DocumentCodec {
     /// envelope's opaque `OpBinary` payload back into a concrete `Operation` just long enough to
     /// print it, for schema-agnostic callers that otherwise never see a concrete op type.
     pub edit_text_from_envelope: fn(&crate::os_spr::OperationEnvelope) -> Result<String, VcsError>,
+    /// Host-authoritative Emit apply: (pack, spr, encode_ops_vec) -> (pack, spr, ops text).
+    pub apply_ops_binary: fn(&[u8], &[u8], &[u8]) -> Result<(Vec<u8>, Vec<u8>, String), VcsError>,
 }
 
 impl DocumentCodec {
@@ -521,6 +523,42 @@ impl DocumentCodec {
             print_document_text(&parsed.envelope)
         }
 
+        fn apply_ops_binary_impl<P, Operation>(pack: &[u8], spr: &[u8], ops_vec: &[u8]) -> Result<(Vec<u8>, Vec<u8>, String), VcsError>
+        where
+            P: Clone + Serialize + DeserializeOwned + DocumentDsl + DocumentPack,
+            Operation: OpText + OpBinary + self::Operation<P>,
+        {
+            if ops_vec.is_empty() {
+                if pack.is_empty() && spr.is_empty() {
+                    return Ok((Vec::new(), Vec::new(), String::new()));
+                }
+                let parsed = parse_document_pack::<P, Operation>(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                let files = print_document_pack(&parsed.envelope)?;
+                return Ok((files.pack, files.spr, files.ops));
+            }
+            let op_blobs = crate::os_spr::decode_ops_vec(ops_vec).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+            let operations: Vec<Operation> = op_blobs
+                .iter()
+                .map(|bytes| Operation::decode_op(bytes).map_err(|error| VcsError::Deserialize(error.to_string())))
+                .collect::<Result<_, _>>()?;
+            let mut store = if pack.is_empty() && spr.is_empty() {
+                return Err(VcsError::Deserialize("apply_ops_binary: lane has no pack+spr baseline".into()));
+            } else {
+                let parsed = parse_document_pack::<P, Operation>(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                let (applied, redo) = match &parsed.envelope.cursor {
+                    Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
+                    None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
+                };
+                let envelope = parsed.envelope;
+                let mut store = DocumentStore::new(envelope.clone());
+                store.reset(envelope, applied, redo)?;
+                store
+            };
+            store.dispatch(DocumentCommand::Apply { operations, description: None })?;
+            let files = print_document_pack(store.envelope())?;
+            Ok((files.pack, files.spr, files.ops))
+        }
+
         fn edit_text_from_envelope_impl<P, Operation>(envelope: &crate::os_spr::OperationEnvelope) -> Result<String, VcsError>
         where
             Operation: OpText + OpBinary,
@@ -536,6 +574,7 @@ impl DocumentCodec {
             compile_dsl: compile_dsl_impl::<P, Operation>,
             print_mirror: print_mirror_impl::<P, Operation>,
             edit_text_from_envelope: edit_text_from_envelope_impl::<P, Operation>,
+            apply_ops_binary: apply_ops_binary_impl::<P, Operation>,
         }
     }
 }
@@ -557,6 +596,17 @@ pub fn register_document_codec(codec: DocumentCodec) {
 pub fn document_codec(schema: &str) -> Option<DocumentCodec> {
     let registry = document_codec_registry().read().unwrap_or_else(|poisoned| poisoned.into_inner());
     registry.get(schema).cloned()
+}
+
+/// @emoji 📜️ Reads the document schema id from an encoded `.spr` history log.
+pub fn lane_schema_from_spr(spr: &[u8]) -> Option<String> {
+    if spr.is_empty() {
+        return None;
+    }
+    crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default())
+        .ok()
+        .map(|log| log.schema)
+        .filter(|schema| !schema.is_empty())
 }
 //#endregion 🔖️CodecRegistry
 

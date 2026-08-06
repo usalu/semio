@@ -3,14 +3,14 @@
 use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::{
     CalibrationState, CameraTrajectory, DenseCloud, DenseParams, FeatureParams, GeoParams, GeoProducts, GroundControlPoint, ImageAsset, IngestParams, MatchParams, MediaStream, MeshParams, MotionParams, MotionTrackSummary, QcReportSnapshot,
-    ReconstructionJob, RemodelMesh, RemodelScene, SfmParams, SparseCloud,
+    ReconstructionJob, RemodelMesh, RemodelProjection, SfmParams, SparseCloud,
 };
 use protocol::Operation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Operations
 /// 🔁️ The document mutation vocabulary — one field-granular LWW register setter per independent
-/// `RemodelScene` field/sub-field, so disjoint-field edits by concurrent instances converge cleanly.
+/// `RemodelProjection` field/sub-field, so disjoint-field edits by concurrent instances converge cleanly.
 /// There is no `setDocument` catch-all: reconstruction is field-granular (import a stream, tune one
 /// param group, publish a partial result) and each operation carries its own inverse from the pre-edit state.
 /// `SetAsset` is per-key (not a whole-map replace) so two peers importing different frames converge
@@ -107,7 +107,7 @@ pub enum RemodelOperation {
     },
 }
 
-pub fn apply_remodel_operation(scene: &RemodelScene, operation: &RemodelOperation) -> RemodelScene {
+pub fn apply_remodel_operation(scene: &RemodelProjection, operation: &RemodelOperation) -> RemodelProjection {
     let mut next = scene.clone();
     match operation {
         RemodelOperation::SetStreams { streams } => next.streams = streams.clone(),
@@ -141,10 +141,10 @@ pub fn apply_remodel_operation(scene: &RemodelScene, operation: &RemodelOperatio
     next
 }
 
-impl Operation<RemodelScene> for RemodelOperation {
+impl Operation<RemodelProjection> for RemodelOperation {
     type Diff = RemodelDiff;
 
-    fn diff(&self, _projection: &RemodelScene) -> RemodelDiff {
+    fn diff(&self, _projection: &RemodelProjection) -> RemodelDiff {
         match self {
             RemodelOperation::SetStreams { streams } => RemodelDiff::SetStreams { streams: streams.clone() },
             RemodelOperation::SetAsset { key, value } => RemodelDiff::SetAsset { key: key.clone(), value: value.clone() },
@@ -169,7 +169,7 @@ impl Operation<RemodelScene> for RemodelOperation {
         }
     }
 
-    fn backwards(&self, projection: &RemodelScene) -> Vec<Self> {
+    fn backwards(&self, projection: &RemodelProjection) -> Vec<Self> {
         vec![match self {
             RemodelOperation::SetStreams { .. } => RemodelOperation::SetStreams { streams: projection.streams.clone() },
             RemodelOperation::SetAsset { key, .. } => RemodelOperation::SetAsset { key: key.clone(), value: projection.assets.get(key).cloned() },
@@ -467,7 +467,7 @@ mod tests {
     /// 🏗️ Verbatim duplicate of the `rs` crate's own private test-only fixture builder (see that
     /// crate's `populated_scene_fixture` doc comment) — needed here so every `RemodelOperation`
     /// variant below can be exercised against a document that actually populates every field.
-    fn populated_scene_fixture() -> RemodelScene {
+    fn populated_scene_fixture() -> RemodelProjection {
         let mut scene = default_remodel_scene();
         scene.streams.push(MediaStream {
             id: "stream-1".into(),

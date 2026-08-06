@@ -9,7 +9,7 @@
 import * as React from "react";
 import { I18nextProvider } from "react-i18next";
 import i18next from "i18next";
-import { type StoragePort, createBrowserStoragePort } from "@semio-tech/framework-core";
+import { type StoragePort, createBrowserStoragePort, ephemeralBox, ephemeralSet } from "@semio-tech/framework-core";
 import { type SelectionMergeMode, type UiLocale, createShellI18nInstance } from "../../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
@@ -68,12 +68,12 @@ export interface ShellScope {
   readonly i18n: typeof i18next;
 }
 
-let shellScopeAutoIdSeq = 0;
+const shellScopeAutoIdSeq = ephemeralBox("framework.modules.ui.elements.core.ShellScope.component.tsx.shellScopeAutoIdSeq", 0);
 
 /** @emoji 🐚️ Creates a fresh {@link ShellScope}. Call once per shell mount (e.g. from a lazy `useState`
  * initializer) — the scope's identity must stay stable for the shell instance's lifetime. */
 export function createShellScope(options: { readonly shellId?: string; readonly storage: StoragePort; readonly ownsPage?: boolean; readonly initialLocale?: UiLocale }): ShellScope {
-  const shellId = options.shellId ?? `shell-${(shellScopeAutoIdSeq += 1)}`;
+  const shellId = options.shellId ?? `shell-${(shellScopeAutoIdSeq.current += 1)}`;
   const rootRef: { current: HTMLElement | null } = { current: null };
   const portalLayerRef: { current: HTMLElement | null } = { current: null };
   return {
@@ -125,14 +125,14 @@ export function shellScopeStorageOrBrowserFallback(scope: ShellScope | null): St
  * the `🪟️WindowChrome` region's `surfaceActiveRoots` tracker (which does the same thing for
  * panel/pane/window activity within ONE page) to the shell level, so a page hosting several mounted
  * shells can tell which one the user is actually interacting with. */
-const shellActivityRoots = new Set<HTMLElement>();
-let activeShellRootValue: HTMLElement | null = null;
-const shellActivitySubscribers = new Set<() => void>();
-let shellActivityListenersInstalled = false;
+const shellActivityRoots = ephemeralSet<HTMLElement>("framework.modules.ui.elements.core.ShellScope.component.tsx.shellActivityRoots");
+const activeShellRootValue = ephemeralBox<HTMLElement | null>("framework.modules.ui.elements.core.ShellScope.component.tsx.activeShellRootValue", null);
+const shellActivitySubscribers = ephemeralSet<() => void>("framework.modules.ui.elements.core.ShellScope.component.tsx.shellActivitySubscribers");
+const shellActivityListenersInstalled = ephemeralBox("framework.modules.ui.elements.core.ShellScope.component.tsx.shellActivityListenersInstalled", false);
 
 function setActiveShellRoot(next: HTMLElement | null): void {
-  if (activeShellRootValue === next) return;
-  activeShellRootValue = next;
+  if (activeShellRootValue.current === next) return;
+  activeShellRootValue.current = next;
   shellActivitySubscribers.forEach((notify) => notify());
 }
 
@@ -146,8 +146,8 @@ function resolveActiveShellRoot(target: EventTarget | null): HTMLElement | null 
 }
 
 function installShellActivityListeners(): void {
-  if (shellActivityListenersInstalled || typeof document === "undefined") return;
-  shellActivityListenersInstalled = true;
+  if (shellActivityListenersInstalled.current || typeof document === "undefined") return;
+  shellActivityListenersInstalled.current = true;
   const onActivity = (event: Event) => {
     const root = resolveActiveShellRoot(event.target);
     if (root) setActiveShellRoot(root);
@@ -162,17 +162,17 @@ function installShellActivityListeners(): void {
 export function registerShellActivityRoot(root: HTMLElement): () => void {
   installShellActivityListeners();
   shellActivityRoots.add(root);
-  if (activeShellRootValue === null) setActiveShellRoot(root);
+  if (activeShellRootValue.current === null) setActiveShellRoot(root);
   return () => {
     shellActivityRoots.delete(root);
-    if (activeShellRootValue === root) setActiveShellRoot(shellActivityRoots.values().next().value ?? null);
+    if (activeShellRootValue.current === root) setActiveShellRoot(shellActivityRoots.values().next().value ?? null);
   };
 }
 
 /** @emoji 🐚️ The shell root most recently interacted with, among registered roots — `null` before any
  * shell has registered. */
 export function activeShellRoot(): HTMLElement | null {
-  return activeShellRootValue;
+  return activeShellRootValue.current;
 }
 
 /**

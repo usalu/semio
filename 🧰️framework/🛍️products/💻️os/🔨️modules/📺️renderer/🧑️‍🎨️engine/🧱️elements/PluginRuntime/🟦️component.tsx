@@ -33,7 +33,7 @@ import {
   faultDisplayMessage,
   type SectionProbe,
 } from "@semio-tech/framework-os-core";
-import { type PluginManifest, type ViewState } from "../Shell/🟦️component.tsx";
+import { type PluginManifest, type ViewModel } from "../Shell/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️plugin-runtime
@@ -43,9 +43,9 @@ export type PluginWasmHandle = {
   readonly manifest: PluginManifest;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
-  readonly handleAction: (instanceId: number, actionJson: string, viewState: ViewState) => Promise<InvocationResponse>;
+  readonly handleAction: (instanceId: number, actionJson: string, viewState: ViewModel) => Promise<InvocationResponse>;
   /** 🎛️ Dispatches a scoped command (os/plugin/app/mode) — optional since not every program declares commands. */
-  readonly handleCommand?: (instanceId: number, commandJson: string, viewState: ViewState) => Promise<InvocationResponse>;
+  readonly handleCommand?: (instanceId: number, commandJson: string, viewState: ViewModel) => Promise<InvocationResponse>;
   readonly refreshUi: (instanceId: number, request: PluginUiRefreshRequest) => Promise<PluginUiRefreshResponse>;
   readonly contextMenu: (instanceId: number, request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
   /** 🔗️ The `DocumentApp` document-sync surface (WS-D) — optional since not every program has migrated onto it yet (WS-F).

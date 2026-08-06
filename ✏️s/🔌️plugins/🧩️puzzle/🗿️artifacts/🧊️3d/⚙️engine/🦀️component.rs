@@ -7,7 +7,7 @@
 //! math, the placement pose solver and the collision/AABB primitives), `🦀️brush.rs` (the
 //! compatibility rulebook, candidate ranking/weighting and one accepted placement's splice into a
 //! fixture), `🦀️fill.rs` (the running fill plan's state), `🦀️session.rs` (the two precompute lanes,
-//! the `Puzzle3dEngine` they drive and the typed `Puzzle3dEngineCommand` dispatch envelope).
+//! the `Puzzle3dCollision` they drive and the typed `Puzzle3dEngineCommand` dispatch envelope).
 //!
 //! 🧭️ Placement rule for helpers reaching across nodes: a helper with exactly ONE consumer lives in
 //! that consumer's file; two or more consumers put it here. Helpers taking an app-only view-state
@@ -206,7 +206,7 @@ pub struct Fixture {
 }
 
 /// 📨️ The full typed payload `Puzzle3dEngineCommand::SetScene` carries — the exact same shape
-/// `Puzzle3dEngine::set_scene`'s JSON payload has always deserialized into, just reused directly
+/// `Puzzle3dCollision::set_scene`'s JSON payload has always deserialized into, just reused directly
 /// instead of re-declared, so the command enum's field IS this type, not a mirror of it.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct SceneConfig {

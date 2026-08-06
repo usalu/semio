@@ -61,55 +61,7 @@ import {
 // this barrel, never straight from "@semio-tech/ui-styling") can resolve these — a bare `import {...}
 // from "@semio-tech/ui-styling"` above does not itself make a name part of this module's public surface.
 export { resolveColorHex, resolveSemanticColorHex, resolveSpatialAxisColors, themeColorVar, tokenVar, uiSpacingPx };
-import {
-  CANVAS_HOVER_SOURCE_CANVAS,
-  CANVAS_HOVER_SOURCE_PICK_MENU,
-  canvasHoverFocusFromTarget,
-  canvasPickTargetKey,
-  effectiveActionArgs,
-  missingRequiredArgs,
-  SHELL_LOCALES,
-  SHELL_TERMINOLOGIES,
-  type ActionArgDef,
-  type CanvasHoverFocus,
-  type CanvasPickRequest,
-  type CanvasPickTarget,
-  type DialogDefinition,
-  type DockSkeleton,
-  type DockTabSkeleton,
-  type IntroductionCursor,
-  type IntroductionDefinition,
-  type IntroductionDemonstration,
-  type IntroductionGesture,
-  type IntroductionKeyModifier,
-  type IntroductionLogo,
-  type IntroductionPlacement,
-  type IntroductionPoint,
-  type IntroductionStepDefinition,
-  type ShellLocale,
-  type ShellTerminology,
-  type StoragePort,
-  createBrowserStoragePort,
-  createMemoryStoragePort,
-  panelTabFirstDraggableElementId,
-  pickMostSpecificCanvasTarget,
-  sortCanvasPickTargetsGeneralFirst,
-  START_TUTORIAL_ACTION_ID,
-  RECORD_TUTORIAL_ACTION_ID,
-  TUTORIAL_CONVERGE_MS,
-  type TutorialDefinition,
-  type TutorialChapter,
-  type TutorialUiSnapshot,
-  type TutorialUiChange,
-  type TutorialCameraKeyframe,
-  type TutorialCameraState,
-  type TutorialEasing,
-  type TutorialEvent,
-  type TutorialDocumentEvent,
-  type TutorialGestureCue,
-  type TutorialOverlayRect,
-  type WindowLayout,
-} from "@semio-tech/framework-core";
+import { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU, canvasHoverFocusFromTarget, canvasPickTargetKey, effectiveActionArgs, missingRequiredArgs, SHELL_LOCALES, SHELL_TERMINOLOGIES, type ActionArgDef, type CanvasHoverFocus, type CanvasPickRequest, type CanvasPickTarget, type DialogDefinition, type DockSkeleton, type DockTabSkeleton, type IntroductionCursor, type IntroductionDefinition, type IntroductionDemonstration, type IntroductionGesture, type IntroductionKeyModifier, type IntroductionLogo, type IntroductionPlacement, type IntroductionPoint, type IntroductionStepDefinition, type ShellLocale, type ShellTerminology, type StoragePort, createBrowserStoragePort, createMemoryStoragePort, panelTabFirstDraggableElementId, panelTabElementId, windowElementId, pickMostSpecificCanvasTarget, sortCanvasPickTargetsGeneralFirst, START_TUTORIAL_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, TUTORIAL_CONVERGE_MS, type TutorialDefinition, type TutorialChapter, type TutorialUiSnapshot, type TutorialUiChange, type TutorialCameraKeyframe, type TutorialCameraState, type TutorialEasing, type TutorialEvent, type TutorialDocumentEvent, type TutorialGestureCue, type TutorialOverlayRect, type WindowLayout, ephemeralBox, ephemeralMap, ephemeralSet } from "@semio-tech/framework-core";
 import * as dagre from "dagre";
 import { format, formatDistanceToNow } from "date-fns";
 import Fuse, { type FuseResult } from "fuse.js";
@@ -247,7 +199,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
 
 const GLB_MESH_FRAME_ROTATION_X = Math.PI / 2;
-const ICON_RENDER_GLB_CACHE = new Map<string, Promise<THREE.Group>>();
+const ICON_RENDER_GLB_CACHE = ephemeralMap<string, Promise<THREE.Group>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.ICON_RENDER_GLB_CACHE");
 
 /** @emoji ☀️ Sun position on a sphere from azimuth/elevation degrees, see https://en.wikipedia.org/wiki/Horizontal_coordinate_system. */
 export function sunPositionFromAzimuthElevation(azimuthDeg: number, elevationDeg: number, distance = 120): [number, number, number] {
@@ -534,16 +486,16 @@ async function rasterizeReferenceImage(url: string): Promise<{ readonly canvas: 
   return { canvas, width, height };
 }
 
-let referencePdfWorkerReady: Promise<void> | null = null;
+const referencePdfWorkerReady = ephemeralBox<Promise<void> | null>("framework.modules.ui.packages.typescript.targets.react.index.tsx.referencePdfWorkerReady", null);
 
 async function loadReferencePdfModule(): Promise<typeof import("pdfjs-dist")> {
   const pdfjs = await import("pdfjs-dist");
-  if (!referencePdfWorkerReady) {
-    referencePdfWorkerReady = Promise.resolve().then(() => {
+  if (!referencePdfWorkerReady.current) {
+    referencePdfWorkerReady.current = Promise.resolve().then(() => {
       pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
     });
   }
-  await referencePdfWorkerReady;
+  await referencePdfWorkerReady.current;
   return pdfjs;
 }
 
@@ -895,6 +847,7 @@ export type CanvasPickMenuProps = {
 };
 
 export { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU, canvasHoverFocusFromTarget, canvasPickTargetKey, pickMostSpecificCanvasTarget, sortCanvasPickTargetsGeneralFirst } from "@semio-tech/framework-core";
+export { windowElementId, panelTabElementId, panelTabFirstDraggableElementId } from "@semio-tech/framework-core";
 export type { CanvasHoverFocus, CanvasPickRequest, CanvasPickTarget } from "@semio-tech/framework-core";
 
 /** @emoji 🎯️ Fixed DOM pick list for overlapping canvas targets (not painted on the infinite canvas). */
@@ -1088,8 +1041,9 @@ export function useCanvasPickInteraction({ resolveTargetsAtClient, onHoverFocus,
 // #endregion 🔖️CanvasPickMenu
 
 // #region 🔖️Icon
-import { resolveIconSizePx, decodeIcon, encodeIcon, classifyIconSelectorMode, resolveIconUrlsInBoardJson, resolveCatalogIconSvg, resolveMetabolismIconSvg, renderControlIcon, iconSvgMarkup, iconMaskImage, Icon, createIconComponent, AddIcon, AlertCircleIcon, ArrowLeftIcon, AwardIcon, BookIcon, BoxIcon, CameraIcon, ChatIcon, CheckIcon, CheckIconAlt, ChevronDownIcon, ChevronDownIconAlt, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronsUpDownIcon, CircleDotIcon, CloseIcon, CloseIconAlt, CodeIcon, ComponentIcon, ConnectionIcon, ConnectorIcon, CopyIcon, DetailsIcon, DiagramIcon, DisconnectIcon, DocumentIcon, ExternalLinkIcon, FileArchiveIcon, FileCodeIcon, FileImageIcon, FileJsonIcon, FileSpreadsheetIcon, FileTypeIcon, FileVideoIcon, FilterIcon, FindInViewIcon, FocusIcon, FolderIcon, FolderOpenIcon, GlobeIcon, GripVerticalIcon, HandIcon, HashIcon, HomeIcon, HudIcon, HudPanelIcon, InfoIcon, IntersectIcon, LandmarkIcon, LassoIcon, LayoutIcon, LayoutGridIcon, LeftSidePanelIcon, LightbulbIcon, LinkIcon, LoaderIcon, LocalKitIcon, Maximize2Icon, MessageCircle, MessageSquareIcon, Minimize2Icon, MonitorIcon, MoonIcon, MoreHorizontalIcon, MousePointerIcon, MoveIcon, NavigateBackIcon, NavigateForwardIcon, NavigateUpIcon, PanelRightIcon, PauseIcon, PieceIcon, PlayIcon, PlugIcon, PlusIcon, PortIcon, Puzzle2dIconFileImportIcon, Puzzle2dIconMathGlyphIcon, Puzzle2dIconRasterGlyphIcon, RecordIcon, RemoteKitIcon, RemoveIcon, ResetIcon, RightSidePanelIcon, SceneIcon, SearchIcon, SelectUtilityIcon, Settings2Icon, SettingsIcon, SkipBackIcon, SkipForwardIcon, SmartphoneIcon, SortAscendingIcon, SortDescendingIcon, StatsIcon, StopIcon, SunIcon, TabletIcon, TableViewIcon, TemporaryKitIcon, TriangleAlertIcon, TutorialIcon, TypeIcon, UserIcon, UsersIcon, UtilitiesIcon, UtilityBarIcon, WorkbenchIcon, Cursor, type IconSizeToken, type Icon, type IconSelectorMode, type IconSource, type ControlIcon, type IconProps } from "../../../../🧱️elements/🔣Icons/🟦️component.tsx";
-export { resolveIconSizePx, decodeIcon, encodeIcon, classifyIconSelectorMode, resolveIconUrlsInBoardJson, resolveCatalogIconSvg, resolveMetabolismIconSvg, renderControlIcon, iconSvgMarkup, iconMaskImage, Icon, createIconComponent, AddIcon, AlertCircleIcon, ArrowLeftIcon, AwardIcon, BookIcon, BoxIcon, CameraIcon, ChatIcon, CheckIcon, CheckIconAlt, ChevronDownIcon, ChevronDownIconAlt, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronsUpDownIcon, CircleDotIcon, CloseIcon, CloseIconAlt, CodeIcon, ComponentIcon, ConnectionIcon, ConnectorIcon, CopyIcon, DetailsIcon, DiagramIcon, DisconnectIcon, DocumentIcon, ExternalLinkIcon, FileArchiveIcon, FileCodeIcon, FileImageIcon, FileJsonIcon, FileSpreadsheetIcon, FileTypeIcon, FileVideoIcon, FilterIcon, FindInViewIcon, FocusIcon, FolderIcon, FolderOpenIcon, GlobeIcon, GripVerticalIcon, HandIcon, HashIcon, HomeIcon, HudIcon, HudPanelIcon, InfoIcon, IntersectIcon, LandmarkIcon, LassoIcon, LayoutIcon, LayoutGridIcon, LeftSidePanelIcon, LightbulbIcon, LinkIcon, LoaderIcon, LocalKitIcon, Maximize2Icon, MessageCircle, MessageSquareIcon, Minimize2Icon, MonitorIcon, MoonIcon, MoreHorizontalIcon, MousePointerIcon, MoveIcon, NavigateBackIcon, NavigateForwardIcon, NavigateUpIcon, PanelRightIcon, PauseIcon, PieceIcon, PlayIcon, PlugIcon, PlusIcon, PortIcon, Puzzle2dIconFileImportIcon, Puzzle2dIconMathGlyphIcon, Puzzle2dIconRasterGlyphIcon, RecordIcon, RemoteKitIcon, RemoveIcon, ResetIcon, RightSidePanelIcon, SceneIcon, SearchIcon, SelectUtilityIcon, Settings2Icon, SettingsIcon, SkipBackIcon, SkipForwardIcon, SmartphoneIcon, SortAscendingIcon, SortDescendingIcon, StatsIcon, StopIcon, SunIcon, TabletIcon, TableViewIcon, TemporaryKitIcon, TriangleAlertIcon, TutorialIcon, TypeIcon, UserIcon, UsersIcon, UtilitiesIcon, UtilityBarIcon, WorkbenchIcon, Cursor, type IconSizeToken, type Icon, type IconSelectorMode, type IconSource, type ControlIcon, type IconProps };
+import { resolveIconSizePx, decodeIcon, encodeIcon, classifyIconSelectorMode, resolveIconUrlsInBoardJson, resolveCatalogIconSvg, resolveMetabolismIconSvg, renderControlIcon, iconSvgMarkup, iconMaskImage, Icon, createIconComponent, AddIcon, AlertCircleIcon, ArrowLeftIcon, AwardIcon, BookIcon, BoxIcon, CameraIcon, ChatIcon, CheckIcon, CheckIconAlt, ChevronDownIcon, ChevronDownIconAlt, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronsUpDownIcon, CircleDotIcon, CloseIcon, CloseIconAlt, CodeIcon, ComponentIcon, ConnectionIcon, ConnectorIcon, CopyIcon, DetailsIcon, DiagramIcon, DisconnectIcon, DocumentIcon, ExternalLinkIcon, FileArchiveIcon, FileCodeIcon, FileImageIcon, FileJsonIcon, FileSpreadsheetIcon, FileTypeIcon, FileVideoIcon, FilterIcon, FindInViewIcon, FocusIcon, FolderIcon, FolderOpenIcon, GlobeIcon, GripVerticalIcon, HandIcon, HashIcon, HomeIcon, HudIcon, HudPanelIcon, InfoIcon, IntersectIcon, LandmarkIcon, LassoIcon, LayoutIcon, LayoutGridIcon, LeftSidePanelIcon, LightbulbIcon, LinkIcon, LoaderIcon, LocalKitIcon, Maximize2Icon, MessageCircle, MessageSquareIcon, Minimize2Icon, MonitorIcon, MoonIcon, MoreHorizontalIcon, MousePointerIcon, MoveIcon, NavigateBackIcon, NavigateForwardIcon, NavigateUpIcon, PanelRightIcon, PauseIcon, PieceIcon, PlayIcon, PlugIcon, PlusIcon, PortIcon, Puzzle2dIconFileImportIcon, Puzzle2dIconMathGlyphIcon, Puzzle2dIconRasterGlyphIcon, RecordIcon, RemoteKitIcon, RemoveIcon, ResetIcon, RightSidePanelIcon, SceneIcon, SearchIcon, SelectUtilityIcon, Settings2Icon, SettingsIcon, SkipBackIcon, SkipForwardIcon, SmartphoneIcon, SortAscendingIcon, SortDescendingIcon, StatsIcon, StopIcon, SunIcon, TabletIcon, TableViewIcon, TemporaryKitIcon, TriangleAlertIcon, TutorialIcon, TypeIcon, UserIcon, UsersIcon, UtilitiesIcon, UtilityBarIcon, WorkbenchIcon, Cursor, type IconSizeToken, type IconSelectorMode, type IconSource, type ControlIcon, type IconProps } from "../../../../🧱️elements/🔣Icons/🟦️component.tsx";
+export { resolveIconSizePx, decodeIcon, encodeIcon, classifyIconSelectorMode, resolveIconUrlsInBoardJson, resolveCatalogIconSvg, resolveMetabolismIconSvg, renderControlIcon, iconSvgMarkup, iconMaskImage, Icon, createIconComponent, AddIcon, AlertCircleIcon, ArrowLeftIcon, AwardIcon, BookIcon, BoxIcon, CameraIcon, ChatIcon, CheckIcon, CheckIconAlt, ChevronDownIcon, ChevronDownIconAlt, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronsUpDownIcon, CircleDotIcon, CloseIcon, CloseIconAlt, CodeIcon, ComponentIcon, ConnectionIcon, ConnectorIcon, CopyIcon, DetailsIcon, DiagramIcon, DisconnectIcon, DocumentIcon, ExternalLinkIcon, FileArchiveIcon, FileCodeIcon, FileImageIcon, FileJsonIcon, FileSpreadsheetIcon, FileTypeIcon, FileVideoIcon, FilterIcon, FindInViewIcon, FocusIcon, FolderIcon, FolderOpenIcon, GlobeIcon, GripVerticalIcon, HandIcon, HashIcon, HomeIcon, HudIcon, HudPanelIcon, InfoIcon, IntersectIcon, LandmarkIcon, LassoIcon, LayoutIcon, LayoutGridIcon, LeftSidePanelIcon, LightbulbIcon, LinkIcon, LoaderIcon, LocalKitIcon, Maximize2Icon, MessageCircle, MessageSquareIcon, Minimize2Icon, MonitorIcon, MoonIcon, MoreHorizontalIcon, MousePointerIcon, MoveIcon, NavigateBackIcon, NavigateForwardIcon, NavigateUpIcon, PanelRightIcon, PauseIcon, PieceIcon, PlayIcon, PlugIcon, PlusIcon, PortIcon, Puzzle2dIconFileImportIcon, Puzzle2dIconMathGlyphIcon, Puzzle2dIconRasterGlyphIcon, RecordIcon, RemoteKitIcon, RemoveIcon, ResetIcon, RightSidePanelIcon, SceneIcon, SearchIcon, SelectUtilityIcon, Settings2Icon, SettingsIcon, SkipBackIcon, SkipForwardIcon, SmartphoneIcon, SortAscendingIcon, SortDescendingIcon, StatsIcon, StopIcon, SunIcon, TabletIcon, TableViewIcon, TemporaryKitIcon, TriangleAlertIcon, TutorialIcon, TypeIcon, UserIcon, UsersIcon, UtilitiesIcon, UtilityBarIcon, WorkbenchIcon, Cursor, type IconSizeToken, type IconSelectorMode, type IconSource, type ControlIcon, type IconProps };
+export type { Icon } from "../../../../🧱️elements/🔣Icons/🟦️component.tsx";
 
 
 
@@ -1221,7 +1175,7 @@ export function composeControlKeybindings(
   return map;
 }
 
-const EMPTY_CONTROL_KEYBINDINGS = new Map<string, string>();
+const EMPTY_CONTROL_KEYBINDINGS = ephemeralMap<string, string>("framework.modules.ui.packages.typescript.targets.react.index.tsx.EMPTY_CONTROL_KEYBINDINGS");
 
 const UiKeybindingsContext = reactHostPort.createContext<ReadonlyMap<string, string>>(EMPTY_CONTROL_KEYBINDINGS);
 
@@ -1390,14 +1344,14 @@ export function isElementsSurfaceChromeDarkApplied(rootOverride?: HTMLElement): 
 
 type ElementsSurfaceChromeLease = { readonly id: number; readonly input: ElementsSurfaceChromeInput };
 
-let elementsSurfaceChromeLeaseSeq = 0;
+const elementsSurfaceChromeLeaseSeq = ephemeralBox("framework.modules.ui.packages.typescript.targets.react.index.tsx.elementsSurfaceChromeLeaseSeq", 0);
 /** @emoji 🐚️ One independent lease stack per surface-chrome root — was a single page-global stack, which
  * meant a second mounted shell's appearance/driver/device lease silently won (last-wins) over the
  * first's for the WHOLE page instead of just its own subtree. */
-const elementsSurfaceChromeLeasesByRoot = new Map<HTMLElement, ElementsSurfaceChromeLease[]>();
-const elementsSurfaceChromeDeferredClearFrames = new Map<HTMLElement, number>();
-let elementsSurfaceChromeDomBindings: ReturnType<typeof createDOMEventBinding> | null = null;
-let elementsSurfaceChromeSystemListenersInstalled = false;
+const elementsSurfaceChromeLeasesByRoot = ephemeralMap<HTMLElement, ElementsSurfaceChromeLease[]>("framework.modules.ui.packages.typescript.targets.react.index.tsx.elementsSurfaceChromeLeasesByRoot");
+const elementsSurfaceChromeDeferredClearFrames = ephemeralMap<HTMLElement, number>("framework.modules.ui.packages.typescript.targets.react.index.tsx.elementsSurfaceChromeDeferredClearFrames");
+const elementsSurfaceChromeDomBindings = ephemeralBox<ReturnType<typeof createDOMEventBinding> | null>("framework.modules.ui.packages.typescript.targets.react.index.tsx.elementsSurfaceChromeDomBindings", null);
+const elementsSurfaceChromeSystemListenersInstalled = ephemeralBox("framework.modules.ui.packages.typescript.targets.react.index.tsx.elementsSurfaceChromeSystemListenersInstalled", false);
 
 function activeElementsSurfaceChromeInput(root: HTMLElement): ElementsSurfaceChromeInput | undefined {
   const leases = elementsSurfaceChromeLeasesByRoot.get(root);
@@ -1441,9 +1395,9 @@ const CHROME_REVEAL_EDGE_BAND_PX = 8;
 /** @emoji 🐚️ One independent reveal controller per surface-chrome root — was a single page-global
  * controller, which meant hovering ANY mounted shell revealed hover-reveal chrome for EVERY shell that
  * had opted into it (and a pointer-move over shell B's DOM would drive shell A's reveal state). */
-const chromeRevealBindingsByRoot = new Map<HTMLElement, ReturnType<typeof createDOMEventBinding>>();
-const chromeRevealFrameByRoot = new Map<HTMLElement, number>();
-const chromeRevealLastPointByRoot = new Map<HTMLElement, { x: number; y: number }>();
+const chromeRevealBindingsByRoot = ephemeralMap<HTMLElement, ReturnType<typeof createDOMEventBinding>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.chromeRevealBindingsByRoot");
+const chromeRevealFrameByRoot = ephemeralMap<HTMLElement, number>("framework.modules.ui.packages.typescript.targets.react.index.tsx.chromeRevealFrameByRoot");
+const chromeRevealLastPointByRoot = ephemeralMap<HTMLElement, { x: number; y: number }>("framework.modules.ui.packages.typescript.targets.react.index.tsx.chromeRevealLastPointByRoot");
 
 function chromeRevealStackAncestor(region: HTMLElement): HTMLElement | null {
   return region.closest<HTMLElement>('[data-slot="window-chrome-stack"], [data-slot="mode-dock-stack"]');
@@ -1593,14 +1547,14 @@ function syncElementsSurfaceChromeDomFromLeaseStack(root: HTMLElement): void {
  * one system preference), but each root's lease stack (and therefore whether it even has a "system"
  * lease) stays independent. */
 function ensureElementsSurfaceChromeSystemListeners(): void {
-  if (elementsSurfaceChromeSystemListenersInstalled || typeof window === "undefined" || typeof document === "undefined") {
+  if (elementsSurfaceChromeSystemListenersInstalled.current || typeof window === "undefined" || typeof document === "undefined") {
     return;
   }
-  elementsSurfaceChromeSystemListenersInstalled = true;
+  elementsSurfaceChromeSystemListenersInstalled.current = true;
   const bindings = createDOMEventBinding();
   if (typeof window.matchMedia !== "function") {
     installElementsSurfaceBrowserDefaultSuppression(bindings);
-    elementsSurfaceChromeDomBindings = bindings;
+    elementsSurfaceChromeDomBindings.current = bindings;
     return;
   }
   const mq = window.matchMedia("(prefers-color-scheme: dark)");
@@ -1613,7 +1567,7 @@ function ensureElementsSurfaceChromeSystemListeners(): void {
   };
   bindings.listen(mq, "change", onSystemAppearanceChange);
   installElementsSurfaceBrowserDefaultSuppression(bindings);
-  elementsSurfaceChromeDomBindings = bindings;
+  elementsSurfaceChromeDomBindings.current = bindings;
 }
 
 /**
@@ -1625,7 +1579,7 @@ function ensureElementsSurfaceChromeSystemListeners(): void {
 export function applyElementsSurfaceChrome(input: ElementsSurfaceChromeInput, rootOverride?: HTMLElement): () => void {
   const root = resolveElementsSurfaceChromeRoot(rootOverride);
   if (!root) return () => {};
-  const lease: ElementsSurfaceChromeLease = { id: ++elementsSurfaceChromeLeaseSeq, input };
+  const lease: ElementsSurfaceChromeLease = { id: ++elementsSurfaceChromeLeaseSeq.current, input };
   const leases = elementsSurfaceChromeLeasesByRoot.get(root) ?? [];
   leases.push(lease);
   elementsSurfaceChromeLeasesByRoot.set(root, leases);
@@ -3430,7 +3384,7 @@ const registeredUiTranslationBundles: { readonly [L in UiLocale]: { readonly tra
 /** 🐚️ Every currently-mounted shell's own i18next instance — {@link registerUiTranslationBundles}
  * replays a late-registering bundle (e.g. a lazily-loaded product module importing after some shells
  * already mounted) into each of these too, not just the shared singleton. */
-const liveShellI18nInstances = new Set<typeof i18next>();
+const liveShellI18nInstances = ephemeralSet<typeof i18next>("framework.modules.ui.packages.typescript.targets.react.index.tsx.liveShellI18nInstances");
 
 function applyUiTranslationBundleTo(instance: typeof i18next, bundle: { readonly [L in UiLocale]: { readonly translation: Record<string, unknown> } }): void {
   for (const [language, resource] of Object.entries(bundle)) {
@@ -3480,7 +3434,7 @@ export function createTerminologyLabelResolver<Keys extends string>(sets: Readon
   return (terminologyId, locale) => (sets[terminologyId] ?? sets[UI_TERMINOLOGY_NATIVE])![locale];
 }
 
-const uiTerminologyChangeListeners = new Set<() => void>();
+const uiTerminologyChangeListeners = ephemeralSet<() => void>("framework.modules.ui.packages.typescript.targets.react.index.tsx.uiTerminologyChangeListeners");
 
 /** @emoji 🗣️ React hook giving TS-native products (no Rust `AppDefinition`) read/write access to the shared `ui.chrome.terminology` contract — the same localStorage key the shell's Settings terminology dropdown drives — without depending on `os-shell` state or any Rust type. */
 export function useUiTerminology(): { readonly terminology: string; readonly setTerminology: (id: string) => void } {
@@ -4299,7 +4253,7 @@ export type IntroductionSurfaceResolver = {
   readonly entity?: (domain: string, entity: string) => IntroductionResolvedGeometry | null;
 };
 
-const introductionSurfaceResolvers = new Map<string, IntroductionSurfaceResolver>();
+const introductionSurfaceResolvers = ephemeralMap<string, IntroductionSurfaceResolver>("framework.modules.ui.packages.typescript.targets.react.index.tsx.introductionSurfaceResolvers");
 
 /** @emoji 🧭️ Registers the demonstration-targeting resolver for the surface shown by window element
  * `windowId` — call from the window's own host component (has the live camera/session/DOM refs),
@@ -5590,7 +5544,7 @@ export type TutorialCameraDriver = {
   readonly set: (camera: TutorialCameraState) => void;
 };
 
-const tutorialCameraDrivers = new Map<string, TutorialCameraDriver>();
+const tutorialCameraDrivers = ephemeralMap<string, TutorialCameraDriver>("framework.modules.ui.packages.typescript.targets.react.index.tsx.tutorialCameraDrivers");
 
 /** @emoji 🎥️ Registers the tutorial camera driver for window instance `windowId` — call from the window's own host component (e.g. `World3dHost`), unregister on unmount via the returned disposer. */
 export function registerTutorialCameraDriver(windowId: string, driver: TutorialCameraDriver): () => void {
@@ -6348,26 +6302,26 @@ export interface PanelTreeUnitDragSession {
   readonly label: string;
 }
 
-let activePanelTreeUnitDragSession: PanelTreeUnitDragSession | null = null;
-const panelTreeUnitDragListeners = new Set<() => void>();
+const activePanelTreeUnitDragSession = ephemeralBox<PanelTreeUnitDragSession | null>("framework.modules.ui.packages.typescript.targets.react.index.tsx.activePanelTreeUnitDragSession", null);
+const panelTreeUnitDragListeners = ephemeralSet<() => void>("framework.modules.ui.packages.typescript.targets.react.index.tsx.panelTreeUnitDragListeners");
 
 /** @emoji 🌱️ Records the active tree-unit drag until drop or dragend. */
 export function beginPanelTreeUnitDrag(session: PanelTreeUnitDragSession): void {
-  activePanelTreeUnitDragSession = session;
+  activePanelTreeUnitDragSession.current = session;
   panelGhostSessionBridge?.begin(null);
   panelTreeUnitDragListeners.forEach((listener) => listener());
 }
 
 /** @emoji 🌱️ Clears the active tree-unit drag session. */
 export function endPanelTreeUnitDrag(): void {
-  activePanelTreeUnitDragSession = null;
+  activePanelTreeUnitDragSession.current = null;
   panelGhostSessionBridge?.end();
   panelTreeUnitDragListeners.forEach((listener) => listener());
 }
 
 /** @emoji 🌱️ Returns the in-flight tree-unit drag, if any. */
 export function readActivePanelTreeUnitDrag(): PanelTreeUnitDragSession | null {
-  return activePanelTreeUnitDragSession;
+  return activePanelTreeUnitDragSession.current;
 }
 
 /** @emoji 🌱️ True while a tree-unit drag is in flight — re-renders drop-zone consumers. */
@@ -6377,7 +6331,7 @@ export function usePanelTreeUnitDragActive(): boolean {
       panelTreeUnitDragListeners.add(listener);
       return () => panelTreeUnitDragListeners.delete(listener);
     },
-    () => activePanelTreeUnitDragSession !== null,
+    () => activePanelTreeUnitDragSession.current !== null,
     () => false,
   );
 }
@@ -7932,10 +7886,6 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../../🧱�
 export { HoverCard, HoverCardContent, HoverCardTrigger };
 // #endregion 🔧️HoverCard
 
-// #region 🛒️Icons
-import { Cursor } from "../../../../🧱️elements/🔣Icons/🟦️component.tsx";
-export { Cursor };
-// #endregion 🛒️Icons
 
 // #region 🖲️Section
 // Collapsible section container with heading and specificity.
@@ -8180,8 +8130,8 @@ export function useDocumentFullscreen(root?: Element): { isFullscreen: boolean; 
 
 // 🐚️ Keyed by shell root (falling back to `document.documentElement` outside any shell) so two navbars
 // of different widths — one per shell — never overwrite each other's measured reserve.
-const shellNavbarTrailingEndWidthByRoot = new Map<HTMLElement, number>();
-const shellNavbarTrailingEndWidthListenersByRoot = new Map<HTMLElement, Set<() => void>>();
+const shellNavbarTrailingEndWidthByRoot = ephemeralMap<HTMLElement, number>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellNavbarTrailingEndWidthByRoot");
+const shellNavbarTrailingEndWidthListenersByRoot = ephemeralMap<HTMLElement, Set<() => void>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellNavbarTrailingEndWidthListenersByRoot");
 
 function publishShellNavbarTrailingEndWidthPx(root: HTMLElement | undefined, width: number): void {
   const key = resolveElementsSurfaceChromeRoot(root);

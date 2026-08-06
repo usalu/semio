@@ -1,5 +1,6 @@
 // #region 🧲️Header
 /** @emoji 🧭️ `@semio-tech/cad-js/core` — model-definition runtime: `Model`, typology/action/interaction catalogs, `ActionRegistry`, `InteractionRegistry`, `StateEngine`, `SpatialKernel`. See `cad/AGENTS.md` and `cad/asset/modelDefinition`. */
+import { ephemeralBox, ephemeralMap, ephemeralWeakMap } from "@semio-tech/framework-core";
 import type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 } from "@semio-tech/kernel-3d-js";
 import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/kernel-3d-js";
 export type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 };
@@ -34,30 +35,30 @@ const emptyModelDefinitionAssetModules = (): ModelDefinitionAssetModules => ({
   transformations: {},
 });
 
-let modelDefinitionAssetModules: ModelDefinitionAssetModules = emptyModelDefinitionAssetModules();
+const modelDefinitionAssetModules = ephemeralBox<ModelDefinitionAssetModules>("s.plugins.cad.modules.core.component.ts.modelDefinitionAssetModules", emptyModelDefinitionAssetModules());
 
-/** Derived indexes from {@link modelDefinitionAssetModules} — not authoritative document state; cleared on {@link registerModelDefinitionAssets}. */
-let modelDefinitionFolderIdMapCache: ReadonlyMap<string, string> | null = null;
-let typologyOwnerByIdCache: ReadonlyMap<string, string> | null = null;
-let actionOwnerByIdCache: ReadonlyMap<string, string> | null = null;
-let interactionOwnerByIdCache: ReadonlyMap<string, string> | null = null;
-let attributeOwnerByIdCache: ReadonlyMap<string, string> | null = null;
-let propertyOwnerByIdCache: ReadonlyMap<string, string> | null = null;
-let statOwnerByIdCache: ReadonlyMap<string, string> | null = null;
-let defaultModelDefinitionIdCache: string | null = null;
+/** Derived indexes from {@link modelDefinitionAssetModules.current} — not authoritative document state; cleared on {@link registerModelDefinitionAssets}. */
+const modelDefinitionFolderIdMapCache = ephemeralBox<ReadonlyMap<string, string> | null>("s.plugins.cad.modules.core.component.ts.modelDefinitionFolderIdMapCache", null);
+const typologyOwnerByIdCache = ephemeralBox<ReadonlyMap<string, string> | null>("s.plugins.cad.modules.core.component.ts.typologyOwnerByIdCache", null);
+const actionOwnerByIdCache = ephemeralBox<ReadonlyMap<string, string> | null>("s.plugins.cad.modules.core.component.ts.actionOwnerByIdCache", null);
+const interactionOwnerByIdCache = ephemeralBox<ReadonlyMap<string, string> | null>("s.plugins.cad.modules.core.component.ts.interactionOwnerByIdCache", null);
+const attributeOwnerByIdCache = ephemeralBox<ReadonlyMap<string, string> | null>("s.plugins.cad.modules.core.component.ts.attributeOwnerByIdCache", null);
+const propertyOwnerByIdCache = ephemeralBox<ReadonlyMap<string, string> | null>("s.plugins.cad.modules.core.component.ts.propertyOwnerByIdCache", null);
+const statOwnerByIdCache = ephemeralBox<ReadonlyMap<string, string> | null>("s.plugins.cad.modules.core.component.ts.statOwnerByIdCache", null);
+const defaultModelDefinitionIdCache = ephemeralBox<string | null>("s.plugins.cad.modules.core.component.ts.defaultModelDefinitionIdCache", null);
 
-let typologyStyleCache: ReadonlyMap<string, ResolvedTypologyStyle> | null = null;
+const typologyStyleCache = ephemeralBox<ReadonlyMap<string, ResolvedTypologyStyle> | null>("s.plugins.cad.modules.core.component.ts.typologyStyleCache", null);
 
 function resetModelDefinitionCaches(): void {
-  modelDefinitionFolderIdMapCache = null;
-  typologyOwnerByIdCache = null;
-  actionOwnerByIdCache = null;
-  interactionOwnerByIdCache = null;
-  attributeOwnerByIdCache = null;
-  propertyOwnerByIdCache = null;
-  statOwnerByIdCache = null;
-  defaultModelDefinitionIdCache = null;
-  typologyStyleCache = null;
+  modelDefinitionFolderIdMapCache.current = null;
+  typologyOwnerByIdCache.current = null;
+  actionOwnerByIdCache.current = null;
+  interactionOwnerByIdCache.current = null;
+  attributeOwnerByIdCache.current = null;
+  propertyOwnerByIdCache.current = null;
+  statOwnerByIdCache.current = null;
+  defaultModelDefinitionIdCache.current = null;
+  typologyStyleCache.current = null;
 }
 
 function mergeModelDefinitionAssetModules(base: ModelDefinitionAssetModules, patch: ModelDefinitionAssetModules): ModelDefinitionAssetModules {
@@ -75,45 +76,45 @@ function mergeModelDefinitionAssetModules(base: ModelDefinitionAssetModules, pat
   };
 }
 
-let interactionCompileCacheClear: () => void = () => {};
+const interactionCompileCacheClear = ephemeralBox<() => void>("s.plugins.cad.modules.core.component.ts.interactionCompileCacheClear", () => {});
 
 /** @emoji 📥️ Merges model-definition asset catalogs (host or module injection). */
 export function registerModelDefinitionAssets(modules: ModelDefinitionAssetModules): void {
-  modelDefinitionAssetModules = mergeModelDefinitionAssetModules(modelDefinitionAssetModules, modules);
+  modelDefinitionAssetModules.current = mergeModelDefinitionAssetModules(modelDefinitionAssetModules.current, modules);
   resetModelDefinitionCaches();
-  interactionCompileCacheClear();
+  interactionCompileCacheClear.current();
 }
 
 function modelDefinitionTypologyCatalog(): readonly unknown[] {
-  return Object.values(modelDefinitionAssetModules.typologies);
+  return Object.values(modelDefinitionAssetModules.current.typologies);
 }
 
 function modelDefinitionActionCatalog(): readonly unknown[] {
-  return Object.values(modelDefinitionAssetModules.actions);
+  return Object.values(modelDefinitionAssetModules.current.actions);
 }
 
 function modelDefinitionInteractionCatalog(): readonly unknown[] {
-  return Object.values(modelDefinitionAssetModules.interactions);
+  return Object.values(modelDefinitionAssetModules.current.interactions);
 }
 
 function modelDefinitionManifestCatalog(): readonly unknown[] {
-  return [...Object.values(modelDefinitionAssetModules.manifests), ...Object.values(modelDefinitionAssetModules.extensions)];
+  return [...Object.values(modelDefinitionAssetModules.current.manifests), ...Object.values(modelDefinitionAssetModules.current.extensions)];
 }
 
 function modelDefinitionAttributeCatalog(): readonly unknown[] {
-  return Object.values(modelDefinitionAssetModules.attributes);
+  return Object.values(modelDefinitionAssetModules.current.attributes);
 }
 
 function modelDefinitionPropertyCatalog(): readonly unknown[] {
-  return [...Object.values(modelDefinitionAssetModules.propertyDefinitions), ...Object.values(modelDefinitionAssetModules.properties)];
+  return [...Object.values(modelDefinitionAssetModules.current.propertyDefinitions), ...Object.values(modelDefinitionAssetModules.current.properties)];
 }
 
 function modelDefinitionStatCatalog(): readonly unknown[] {
-  return Object.values(modelDefinitionAssetModules.statDefinitions);
+  return Object.values(modelDefinitionAssetModules.current.statDefinitions);
 }
 
 function modelDefinitionTransformationModules(): Readonly<Record<string, unknown>> {
-  return modelDefinitionAssetModules.transformations;
+  return modelDefinitionAssetModules.current.transformations;
 }
 // #endregion 📥️ModelDefinitionRegistry
 
@@ -127,7 +128,7 @@ export interface ModelImportProfile {
   readonly namespacedDomain?: string;
 }
 
-const importProfiles = new Map<string, ModelImportProfile>();
+const importProfiles = ephemeralMap<string, ModelImportProfile>("s.plugins.cad.modules.core.component.ts.importProfiles");
 
 /** @emoji 📥️ Registers STEP layer → typology mapping for one model definition. */
 export function registerImportProfile(modelDefinitionId: string, profile: ModelImportProfile): void {
@@ -387,7 +388,7 @@ export function clearPathTarget(t: PathTarget, env: ExprEnv): void {
 
 // #region 🏷️Metadata
 /** @emoji 🏷️ Sidecar semantic fields keyed by geometry or derived entity id (`FaceRef`, `EdgeRef`, …); never stored on brepjs shapes. */
-export class AttributeStore {
+export class AttributeTable {
   private readonly byId = new Map<string, Record<string, unknown>>();
 
   constructor(private readonly bumpRevision: () => void) {}
@@ -430,8 +431,8 @@ export class AttributeStore {
   }
 
   /** @emoji 🧭️ Hydrates sidecar attributes from JSON rows. */
-  static fromJSON(rows: readonly { readonly id: string; readonly fields: Readonly<Record<string, unknown>> }[]): AttributeStore {
-    const store = new AttributeStore(() => {});
+  static fromJSON(rows: readonly { readonly id: string; readonly fields: Readonly<Record<string, unknown>> }[]): AttributeTable {
+    const store = new AttributeTable(() => {});
     for (const row of rows ?? []) store.byId.set(row.id, { ...row.fields });
     return store;
   }
@@ -564,7 +565,7 @@ export interface ExprEnv {
   readonly params?: Record<string, unknown>;
   readonly vars?: Record<string, unknown>;
   readonly model?: Model;
-  readonly metadata?: AttributeStore;
+  readonly metadata?: AttributeTable;
   readonly activeModelDefinitionId?: string | null;
   readonly kernel?: SpatialKernel;
   readonly actionId?: string;
@@ -1051,7 +1052,7 @@ export function parseInteractionSpec(raw: unknown): InteractionSpec | null {
   return spec;
 }
 
-const COMPILED_INITIAL_CONTEXTS = new WeakMap<InteractionSpec, Record<string, unknown>>();
+const COMPILED_INITIAL_CONTEXTS = ephemeralWeakMap<InteractionSpec, Record<string, unknown>>("s.plugins.cad.modules.core.component.ts.COMPILED_INITIAL_CONTEXTS");
 
 function initialStartTransition(spec: InteractionSpec): TransitionSpec | null {
   const initial = findState(spec, spec.machine.initial);
@@ -1312,7 +1313,7 @@ export class Model {
   faces: Record<string, FaceRecord> = {};
   shells: Record<string, ShellRecord> = {};
   solids: Record<string, SolidRecord> = {};
-  readonly metadata: AttributeStore = new AttributeStore(() => this.bump());
+  readonly metadata: AttributeTable = new AttributeTable(() => this.bump());
 
   /** @emoji 🧭️ Serializes to `ModelJson` (stable id-sorted arrays). */
   toJSON(): ModelJson {
@@ -1704,7 +1705,7 @@ export function emitSpatialUdaProperty(writer: StepEntityWriter, contextId: numb
   writer.emitNew(`PROPERTY_DEFINITION_REPRESENTATION(#${propId}, #${reprId})`);
 }
 
-/** @emoji 🪜️ Restores `AttributeStore` fields from parsed `spatial.attribute.*` UDA keys. */
+/** @emoji 🪜️ Restores `AttributeTable` fields from parsed `spatial.attribute.*` UDA keys. */
 export function applySpatialAttributesFromUda(model: Model, uda: Readonly<Record<string, string>>): void {
   for (const [key, json] of Object.entries(uda)) {
     if (!key.startsWith("spatial.attribute.")) continue;
@@ -1735,7 +1736,7 @@ export function modelSpaceFromSpatialUda(uda: Readonly<Record<string, string>>, 
 /** @emoji 🧭️ Reads `name` from metadata, geometry records, or model objects. */
 export function readModelEntityProperty(
   model: Model,
-  meta: AttributeStore | undefined,
+  meta: AttributeTable | undefined,
   kind: ModelEntityKind,
   id: string,
   name: string,
@@ -1824,11 +1825,11 @@ export interface ModelDefinitionManifest {
 
 /** @emoji 🧭️ Default geometry-edit model definition id (manifest `default: true`). */
 export function defaultModelDefinitionId(): string {
-  if (defaultModelDefinitionIdCache) return defaultModelDefinitionIdCache;
+  if (defaultModelDefinitionIdCache.current) return defaultModelDefinitionIdCache.current;
   const manifests = listModelDefinitionManifests();
   const row = manifests.find((m) => m.default) ?? manifests[0];
-  defaultModelDefinitionIdCache = row?.id ?? "";
-  return defaultModelDefinitionIdCache;
+  defaultModelDefinitionIdCache.current = row?.id ?? "";
+  return defaultModelDefinitionIdCache.current;
 }
 
 /** @emoji 🧭️ True when the active definition is geometry edit (`ModelDefinition`) rather than typology objects. */
@@ -2117,11 +2118,11 @@ export function typologyStyleCacheKey(style: ResolvedTypologyStyle): string {
 
 /** @emoji 🎨️ Resolves display style for a typology (deterministic auto fallback + optional asset override). */
 export function resolveTypologyStyle(typology: string): ResolvedTypologyStyle {
-  if (typologyStyleCache?.has(typology)) return typologyStyleCache.get(typology)!;
+  if (typologyStyleCache.current?.has(typology)) return typologyStyleCache.current.get(typology)!;
   const authored = loadTypology(typology)?.style;
   const resolved = mergeTypologyStyle(typology, authored);
-  if (!typologyStyleCache) typologyStyleCache = new Map();
-  typologyStyleCache.set(typology, resolved);
+  if (!typologyStyleCache.current) typologyStyleCache.current = new Map();
+  typologyStyleCache.current.set(typology, resolved);
   return resolved;
 }
 // #endregion 🎨️TypologyStyle
@@ -2415,7 +2416,7 @@ export interface PropertyComputeContext {
 /** @emoji 📐️ Registered property computer for one property definition id. */
 export type PropertyComputer = (ctx: PropertyComputeContext) => Promise<Record<string, unknown>>;
 
-const propertyComputers = new Map<string, PropertyComputer>();
+const propertyComputers = ephemeralMap<string, PropertyComputer>("s.plugins.cad.modules.core.component.ts.propertyComputers");
 
 /** @emoji 📐️ Registers a TypeScript computer for one property definition id. */
 export function registerPropertyComputer(propertyId: string, computer: PropertyComputer): void {
@@ -2518,15 +2519,15 @@ export function loadStatDefinition(statId: string): StatDefinitionSpec | null {
 }
 
 function statOwnerById(): ReadonlyMap<string, string> {
-  if (statOwnerByIdCache) return statOwnerByIdCache;
+  if (statOwnerByIdCache.current) return statOwnerByIdCache.current;
   const map = new Map<string, string>();
-  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.statDefinitions)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.current.statDefinitions)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseStatDefinitionSpec(raw);
     if (!owner || !spec) continue;
     map.set(spec.id, owner);
   }
-  statOwnerByIdCache = map;
+  statOwnerByIdCache.current = map;
   return map;
 }
 
@@ -2568,7 +2569,7 @@ export interface StatComputeContext {
 /** @emoji 📊️ Registered stat computer for one stat definition id. */
 export type StatComputer = (ctx: StatComputeContext) => Promise<Record<string, number>>;
 
-const statComputers = new Map<string, StatComputer>();
+const statComputers = ephemeralMap<string, StatComputer>("s.plugins.cad.modules.core.component.ts.statComputers");
 
 /** @emoji 📊️ Registers a TypeScript computer for one stat definition id. */
 export function registerStatComputer(statId: string, computer: StatComputer): void {
@@ -3039,11 +3040,11 @@ function modelDefinitionFolderFromAssetPath(assetPath: string): string | null {
 }
 
 function modelDefinitionFolderIdMap(): ReadonlyMap<string, string> {
-  if (modelDefinitionFolderIdMapCache) return modelDefinitionFolderIdMapCache;
+  if (modelDefinitionFolderIdMapCache.current) return modelDefinitionFolderIdMapCache.current;
   const map = new Map<string, string>();
   const modules = {
-    ...modelDefinitionAssetModules.manifests,
-    ...modelDefinitionAssetModules.extensions,
+    ...modelDefinitionAssetModules.current.manifests,
+    ...modelDefinitionAssetModules.current.extensions,
   };
   for (const [path, raw] of Object.entries(modules)) {
     const folder = modelDefinitionFolderFromAssetPath(path);
@@ -3051,7 +3052,7 @@ function modelDefinitionFolderIdMap(): ReadonlyMap<string, string> {
     if (!folder || !manifest) continue;
     map.set(folder, manifest.id);
   }
-  modelDefinitionFolderIdMapCache = map;
+  modelDefinitionFolderIdMapCache.current = map;
   return map;
 }
 
@@ -3063,15 +3064,15 @@ export function modelDefinitionIdFromAssetPath(assetPath: string): string | null
 }
 
 function typologyOwnerById(): ReadonlyMap<string, string> {
-  if (typologyOwnerByIdCache) return typologyOwnerByIdCache;
+  if (typologyOwnerByIdCache.current) return typologyOwnerByIdCache.current;
   const map = new Map<string, string>();
-  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.typologies)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.current.typologies)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseTypologySpec(raw);
     if (!owner || !spec) continue;
     map.set(spec.id, owner);
   }
-  typologyOwnerByIdCache = map;
+  typologyOwnerByIdCache.current = map;
   return map;
 }
 
@@ -3082,15 +3083,15 @@ export function listTypologiesForModelDefinition(modelDefinitionId: string): rea
 }
 
 function actionOwnerById(): ReadonlyMap<string, string> {
-  if (actionOwnerByIdCache) return actionOwnerByIdCache;
+  if (actionOwnerByIdCache.current) return actionOwnerByIdCache.current;
   const map = new Map<string, string>();
-  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.actions)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.current.actions)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseActionSpec(raw);
     if (!owner || !spec) continue;
     map.set(spec.id, owner);
   }
-  actionOwnerByIdCache = map;
+  actionOwnerByIdCache.current = map;
   return map;
 }
 
@@ -3113,15 +3114,15 @@ export interface SpatialInteraction {
 }
 
 function interactionOwnerById(): ReadonlyMap<string, string> {
-  if (interactionOwnerByIdCache) return interactionOwnerByIdCache;
+  if (interactionOwnerByIdCache.current) return interactionOwnerByIdCache.current;
   const map = new Map<string, string>();
-  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.interactions)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.current.interactions)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseInteractionSpec(raw);
     if (!owner || !spec) continue;
     map.set(spec.id, owner);
   }
-  interactionOwnerByIdCache = map;
+  interactionOwnerByIdCache.current = map;
   return map;
 }
 
@@ -3152,15 +3153,15 @@ export function listSpatialInteractionsForModelDefinition(modelDefinitionId: str
 }
 
 function attributeOwnerById(): ReadonlyMap<string, string> {
-  if (attributeOwnerByIdCache) return attributeOwnerByIdCache;
+  if (attributeOwnerByIdCache.current) return attributeOwnerByIdCache.current;
   const map = new Map<string, string>();
-  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.attributes)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.current.attributes)) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parseAttributeDefinitionSpec(raw);
     if (!owner || !spec) continue;
     map.set(spec.id, owner);
   }
-  attributeOwnerByIdCache = map;
+  attributeOwnerByIdCache.current = map;
   return map;
 }
 
@@ -3171,18 +3172,18 @@ export function listAttributeDefinitionsForModelDefinition(modelDefinitionId: st
 }
 
 function propertyOwnerById(): ReadonlyMap<string, string> {
-  if (propertyOwnerByIdCache) return propertyOwnerByIdCache;
+  if (propertyOwnerByIdCache.current) return propertyOwnerByIdCache.current;
   const map = new Map<string, string>();
   for (const [path, raw] of Object.entries({
-    ...modelDefinitionAssetModules.propertyDefinitions,
-    ...modelDefinitionAssetModules.properties,
+    ...modelDefinitionAssetModules.current.propertyDefinitions,
+    ...modelDefinitionAssetModules.current.properties,
   })) {
     const owner = modelDefinitionIdFromAssetPath(path);
     const spec = parsePropertyDefinitionSpec(raw);
     if (!owner || !spec) continue;
     map.set(spec.id, owner);
   }
-  propertyOwnerByIdCache = map;
+  propertyOwnerByIdCache.current = map;
   return map;
 }
 
@@ -3252,7 +3253,7 @@ export function listActionsForModelDefinition(modelDefinitionId: string): readon
       if (actionOwnedByModelDefinition(actionId, modelDefinitionId)) ids.add(actionId);
     }
   }
-  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.actions)) {
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.current.actions)) {
     if (modelDefinitionIdFromAssetPath(path) !== modelDefinitionId) continue;
     const spec = parseActionSpec(raw);
     if (spec) ids.add(spec.id);
@@ -3357,7 +3358,7 @@ export function resolveModelDefinitionScope(modelDefinitionId: string): ModelDef
 /** @emoji 🔄️ Registered transformation applier for one qualified transformation id. */
 export type TransformationApplier = (spec: TransformationSpec, source: Model) => Model;
 
-const transformationAppliers = new Map<string, TransformationApplier>();
+const transformationAppliers = ephemeralMap<string, TransformationApplier>("s.plugins.cad.modules.core.component.ts.transformationAppliers");
 
 /** @emoji 🔄️ Registers a model-definition-specific transformation implementation. */
 export function registerTransformationApplier(qualifiedTransformationId: string, applier: TransformationApplier): void {
@@ -3627,11 +3628,11 @@ export function capabilityActionSpecJson(id: string, label: string): ActionSpec 
   } as ActionSpec;
 }
 
-let typologyConstructKitByInteractionCache: ReadonlyMap<string, TypologyConstructKit> | null = null;
+const typologyConstructKitByInteractionCache = ephemeralBox<ReadonlyMap<string, TypologyConstructKit> | null>("s.plugins.cad.modules.core.component.ts.typologyConstructKitByInteractionCache", null);
 
 /** @emoji 🧭️ Maps each typology construct interaction id to its mode actions (not the interaction id). */
 export function typologyConstructKitByInteraction(): ReadonlyMap<string, TypologyConstructKit> {
-  if (typologyConstructKitByInteractionCache) return typologyConstructKitByInteractionCache;
+  if (typologyConstructKitByInteractionCache.current) return typologyConstructKitByInteractionCache.current;
   const map = new Map<string, TypologyConstructKit>();
   for (const typology of listModelDefinitionTypologies()) {
     const ids = typologyConstructAssetIds(typology.id, typology.label);
@@ -3643,7 +3644,7 @@ export function typologyConstructKitByInteraction(): ReadonlyMap<string, Typolog
       constructFromSurface: ids.constructFromSurface,
     });
   }
-  typologyConstructKitByInteractionCache = map;
+  typologyConstructKitByInteractionCache.current = map;
   return map;
 }
 
@@ -6688,9 +6689,9 @@ export function modelDefinitionInteractionRegistry(): InteractionRegistry {
   return map;
 }
 
-const COMPILED_INTERACTION_BY_ID = new Map<string, InteractionSpec>();
+const COMPILED_INTERACTION_BY_ID = ephemeralMap<string, InteractionSpec>("s.plugins.cad.modules.core.component.ts.COMPILED_INTERACTION_BY_ID");
 /** Clears the derived interaction compile cache when model-definition assets change. */
-interactionCompileCacheClear = () => COMPILED_INTERACTION_BY_ID.clear();
+interactionCompileCacheClear.current = () => COMPILED_INTERACTION_BY_ID.clear();
 
 /** @emoji 📚️ Loads a model-definition interaction by stable `id` (compiled once per id for stable React runtime identity). */
 export function loadSpatialInteraction(interactionId: string): InteractionSpec | null {
@@ -7308,7 +7309,7 @@ if (import.meta.vitest) {
   });
 
   describe("@semio-tech/cad-js/core metadata", () => {
-    it("AttributeStore setField bumps model revision", () => {
+    it("AttributeTable setField bumps model revision", () => {
       const g = new Model();
       const r0 = g.revision;
       g.metadata.setField("e1", "exposure", "external");
@@ -7316,13 +7317,13 @@ if (import.meta.vitest) {
       expect(g.metadata.get("e1")?.exposure).toBe("external");
     });
 
-    it("AttributeStore entries and JSON roundtrip", () => {
-      const store = new AttributeStore(() => {});
+    it("AttributeTable entries and JSON roundtrip", () => {
+      const store = new AttributeTable(() => {});
       store.setField("face-1", "exposure", "external");
       store.setField("face-2", "uValue", 0.25);
       const json = store.toJSON();
       expect(json).toHaveLength(2);
-      const restored = AttributeStore.fromJSON(json);
+      const restored = AttributeTable.fromJSON(json);
       expect(restored.get("face-1")?.exposure).toBe("external");
       expect(restored.get("face-2")?.uValue).toBe(0.25);
     });
@@ -7334,7 +7335,7 @@ if (import.meta.vitest) {
       expect(back.metadata.get("solid-a")?.tag).toBe("roof");
     });
 
-    it("AttributeStore getEntityFlags and setEntityFlag roundtrip", () => {
+    it("AttributeTable getEntityFlags and setEntityFlag roundtrip", () => {
       const g = new Model();
       expect(g.getEntityFlags("obj-1")).toEqual({});
       g.setEntityFlag("obj-1", "hidden", true);

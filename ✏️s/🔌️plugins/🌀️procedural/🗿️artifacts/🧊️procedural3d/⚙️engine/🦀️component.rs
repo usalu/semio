@@ -561,9 +561,7 @@ pub fn register() {
 pub(crate) mod test_support {
     use std::sync::{Mutex, MutexGuard};
 
-    #[cfg(test)]
-static TEST_SERIAL: Mutex<()> = Mutex::new(());
-
+    
     pub fn lock() -> MutexGuard<'static, ()> {
         TEST_SERIAL.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
     }

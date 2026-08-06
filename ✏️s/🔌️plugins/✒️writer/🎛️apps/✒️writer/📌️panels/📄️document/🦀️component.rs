@@ -100,7 +100,7 @@ mod tests {
     fn renders_document_tree_for_jack() {
         use semio_framework_plugin::PluginApp;
         let mut app = new_app();
-        let node = app.render(WRITER_PLAY_BODY_DOCUMENT, Some(&crate::artifacts::writer::engine::jack_example_json()), &semio_framework_plugin::ViewState::default()).expect("render");
+        let node = app.render(WRITER_PLAY_BODY_DOCUMENT, Some(&crate::artifacts::writer::engine::jack_example_json()), &semio_framework_plugin::ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("\"type\":\"tree\""));
         assert!(json.contains("Query"));

@@ -248,7 +248,7 @@ pub fn create_vcs_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
     use store::DocumentEnvelope;
 
     pub type VcsApp = VcsDocumentApp<VcsPlayApp>;
@@ -268,7 +268,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(instance: &mut VcsApp, body_key: &str) -> String {
-        serde_json::to_string(&instance.render(body_key, None, &ViewState::default()).expect("render")).expect("render json")
+        serde_json::to_string(&instance.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
     /// 📦️ Parses `document_pack()` (the full envelope) for tests that need to inspect raw

@@ -439,7 +439,7 @@ pub fn create_trinity_jack_app() -> App {
 mod tests {
     use super::*;
     use protocol::{OpBinary, OpText};
-    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, ViewModel};
 
     /// 🎫️ Permanent wire guard (TEMPLATE.md §7): every `TrinityJackCommand` variant round-trips
     /// through both its binary (`OpBinary`, via `#[derive(dsl::DslOps)]`) and text (`OpText`) codecs.
@@ -483,14 +483,14 @@ mod tests {
     #[test]
     fn renders_node_graph_scene() {
         let mut app = new_app();
-        let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewState::default()).expect("render");
+        let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
     }
 
     #[test]
     fn renders_jack_editor() {
         let mut app = new_app();
-        let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewState::default()).expect("render");
+        let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("text-editor"));
         assert!(json.contains(TRINITY_JACK_DEFAULT_QUERY));
@@ -499,7 +499,7 @@ mod tests {
     #[test]
     fn run_query_populates_results_and_a_set_query_mutates_projection() {
         let mut app = new_app();
-        app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, &ViewState::default()).expect("render");
+        app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, &ViewModel::default()).expect("render");
         let result = app.dispatch_typed(TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'ran-label'".into()) }, &meta("local")).expect("run");
         assert!(!result.operations.is_empty(), "a SET query emits operations");
         let projection = app.projection().expect("projection");
@@ -512,7 +512,7 @@ mod tests {
         let node_id = node_id_at(&app, 0);
         let result = app.dispatch_typed(TrinityJackCommand::SetSelection { ids: vec![node_id.clone()] }, &meta("local")).expect("select");
         assert!(result.operations.is_empty(), "selection is a config-only command, no document operations");
-        let tree = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
+        let tree = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&tree).unwrap().contains(&format!("trinity-document.node.{node_id}")));
     }
 
@@ -524,7 +524,7 @@ mod tests {
     #[test]
     fn editor_scene_has_tokens_and_diagnostics() {
         let mut app = new_app();
-        let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewState::default()).expect("render");
+        let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("tokensJson"));
         assert!(json.contains("diagnosticsJson"));
@@ -536,14 +536,14 @@ mod tests {
         let mut app = new_app();
         let result = app.dispatch_typed(TrinityJackCommand::TextEdit { text: "MATCH (a:Piece) RETURN a.name".into() }, &meta("local")).expect("edit");
         assert!(result.operations.is_empty());
-        let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewState::default()).expect("render");
+        let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("MATCH (a:Piece) RETURN a.name"));
     }
 
     #[test]
     fn graph_scene_has_lod_json() {
         let mut app = new_app();
-        let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewState::default()).expect("render");
+        let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("lodJson"));
         assert!(json.contains("automatic"));
@@ -560,7 +560,7 @@ mod tests {
     #[test]
     fn catalogue_tree_renders() {
         let mut app = new_app();
-        let node = app.render(TRINITY_JACK_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
+        let node = app.render(TRINITY_JACK_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("trinity-jack-catalogue"));
     }
 
@@ -569,7 +569,7 @@ mod tests {
         let mut app = new_app();
         let node_id = node_id_at(&app, 0);
         app.dispatch_typed(TrinityJackCommand::SetSelection { ids: vec![node_id] }, &meta("local")).expect("select");
-        let node = app.render(TRINITY_JACK_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
+        let node = app.render(TRINITY_JACK_PLAY_BODY_INSPECTION, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("trinity-inspector.identity"));
     }
 
@@ -577,7 +577,7 @@ mod tests {
     fn document_tree_de_locale_translates_labels() {
         let mut app = new_app();
         app.dispatch_typed(TrinityJackCommand::SetLocale { value: "de-DE".into() }, &meta("local")).expect("set locale");
-        let node = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
+        let node = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("Stücke"));
     }
 
@@ -586,7 +586,7 @@ mod tests {
         let mut app = new_app();
         let result = app.dispatch_typed(TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() }, &meta("local")).expect("set active example");
         assert!(!result.operations.is_empty());
-        let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewState::default()).expect("render");
+        let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("RETURN a, r, b"));
     }
 

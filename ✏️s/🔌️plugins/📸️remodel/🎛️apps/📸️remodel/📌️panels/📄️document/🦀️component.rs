@@ -4,7 +4,7 @@
 use crate::apps::remodel::config::RemodelConfig;
 use crate::apps::remodel::terminology::RemodelLabels;
 use crate::artifacts::remodel::engine::stage_display;
-use crate::artifacts::remodel::{ReconstructionStage, RemodelScene};
+use crate::artifacts::remodel::{ReconstructionStage, RemodelProjection};
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL};
 
 //#region 🔖️Constants
@@ -27,7 +27,7 @@ pub fn definition() -> PanelTabDefinition {
 /// 🚦️ `running` is derived from the persisted job stage (not a live engine handle): a synchronous run
 /// never leaves the document in a non-terminal stage, so this is effectively always "Idle" once a run
 /// finishes — the documented, accepted trade-off of the pure-trait conversion.
-pub fn render(scene: &RemodelScene, config: &RemodelConfig, active_utility: &str, labels: &RemodelLabels) -> UiNode {
+pub fn render(scene: &RemodelProjection, config: &RemodelConfig, active_utility: &str, labels: &RemodelLabels) -> UiNode {
     let job = &scene.job;
     let job_label = format!("{}: {} ({:.0}%){}", labels.reconstruction.as_str(), stage_display(job.stage), job.progress_0_1 * 100.0, job.error.as_ref().map(|error| format!(" - {}: {error}", labels.error.as_str())).unwrap_or_default());
     let running = !matches!(job.stage, ReconstructionStage::Idle | ReconstructionStage::Done | ReconstructionStage::Failed);

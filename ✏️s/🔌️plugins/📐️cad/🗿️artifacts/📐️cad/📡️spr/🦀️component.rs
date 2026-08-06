@@ -4,7 +4,7 @@
 //! unchanged (`dsl::DslOps`'s generated `OpBinary`).
 
 use crate::artifacts::cad::op::CadOperation;
-use crate::artifacts::cad::CadScene;
+use crate::artifacts::cad::CadProjection;
 use protocol::OpBinary;
 use store::{DocumentEnvelope, DocumentStore};
 
@@ -19,8 +19,8 @@ pub fn decode_op(bytes: &[u8]) -> Result<CadOperation, protocol::ProtocolError> 
 }
 
 //#region 🔖️Store
-pub type CadEnvelope = DocumentEnvelope<CadScene, CadOperation>;
-pub type CadStore = DocumentStore<CadScene, CadOperation>;
+pub type CadEnvelope = DocumentEnvelope<CadProjection, CadOperation>;
+pub type CadStore = DocumentStore<CadProjection, CadOperation>;
 //#endregion 🔖️Store
 
 //#region 🧪️Tests

@@ -6,6 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { ephemeralMap } from "@semio-tech/framework-core";
 import * as React from "react";
 import { domSizePx, activeUiTheme, subscribeActiveUiTheme, STYLING_COMPACT_ROOT_PX, type UiTheme } from "@semio-tech/ui-styling";
 import {
@@ -218,7 +219,7 @@ function resolveShortcodeIcon(code: string): Icon {
   return { kind: "shortcode", code: key };
 }
 
-const iconUrlDataCache = new Map<string, string>();
+const iconUrlDataCache = ephemeralMap<string, string>("framework.modules.ui.elements.Icons.component.tsx.iconUrlDataCache");
 
 async function fetchIconUrlAsDataUrl(url: string): Promise<string | undefined> {
   const cached = iconUrlDataCache.get(url);
@@ -434,7 +435,7 @@ export function iconSvgMarkup(name: IconName): string {
   return resolveCatalogIconSvg(name);
 }
 
-const ICON_MASK_CACHE = new Map<string, string>();
+const ICON_MASK_CACHE = ephemeralMap<string, string>("framework.modules.ui.elements.Icons.component.tsx.ICON_MASK_CACHE");
 
 /** @emoji 🩻️ Alpha-mask image for an icon's own resolved SVG — lets CSS paint gradients (e.g. the celebrate conic) through the glyph instead of behind it. `currentColor` is baked to opaque black because a mask image renders in its own context and only its alpha channel is read. */
 export function iconMaskImage(svgMarkup: string): string {

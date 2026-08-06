@@ -65,7 +65,7 @@ Only the tree-driven commands (`worldHover`, `setSelection`) exist, so hovering/
 Fix: generalize the match using the same `is_two_point_height(id)` / `is_base_height(id)` predicates already used by `apply_event`/`commit_object`, covering their generic state names (`footprint_first` / `footprint_second` / `slab_height` / `ready`, and `column_base` / `column_height` / `ready`) in addition to the energy-specific ones already handled:
 
 ```rust
-pub fn preview_display_items(session: &CadEngagementSession) -> Vec<Value> {
+pub fn preview_display_items(session: &CadEngagementScratch) -> Vec<Value> {
     let id = session.interaction_id.as_str();
     match (id, session.state.as_str()) {
         ("primitive.box", "diagonal_rubber" | "first_corner_height" | "ready") => { /* unchanged */ }

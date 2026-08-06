@@ -1,0 +1,16 @@
+Verification re-run (2026-08-06, CLT SDK)
+
+Command:
+SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk \
+DEVELOPER_DIR=/Library/Developer/CommandLineTools \
+cargo test -p semio-s-3d --lib brep::step::
+
+Result:
+running 3 tests
+test brep::step::tests::read_step_rejects_missing_data_section ... ok
+test brep::step::tests::write_step_rejects_empty_solids ... ok
+test brep::step::tests::box_round_trip_topology_counts ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 429 filtered out
+
+Note: initial attempt hit transient int-ss compile errors (since fixed elsewhere); step module unchanged.

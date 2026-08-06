@@ -42,12 +42,14 @@ wgpu-engine = [
     "dep:wasm-bindgen-futures",
     "dep:web-sys",
     "dep:arboard",
+    "dep:semio-framework-math",
 ]
 # 🧬️ TypeScript mirror for boundary/protocol types on the `wgpu` target's `component` region.
 typegen = ["wgpu", "dep:ts-rs"]
 
 [dependencies]
 ui_styling = { path = "../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+semio-framework-math = { path = "../../../🧮️math/📦️packages/🦀️rust", package = "semio-framework-math", optional = true }
 unicode-width = { version = "0.2.2", optional = true }
 dsl = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", optional = true }
 serde = { version = "1.0.219", features = ["derive"], optional = true }

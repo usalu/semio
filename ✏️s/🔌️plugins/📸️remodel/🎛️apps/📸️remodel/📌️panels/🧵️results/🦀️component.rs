@@ -1,7 +1,7 @@
 //! 🧵️ Remodel play app panel — the Results tab: the products a run (partially) produced.
 
 use crate::apps::remodel::terminology::RemodelLabels;
-use crate::artifacts::remodel::RemodelScene;
+use crate::artifacts::remodel::RemodelProjection;
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode};
 
 //#region 🔖️Constants
@@ -16,7 +16,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(scene: &RemodelScene, labels: &RemodelLabels) -> UiNode {
+pub fn render(scene: &RemodelProjection, labels: &RemodelLabels) -> UiNode {
     let results = &scene.results;
     let mesh_label = format!("{}: {:?}, {} {}, {} {}", labels.mesh.as_str(), results.mesh.source, results.mesh.mesh.vertex_count(), labels.vertices.as_str(), results.mesh.mesh.triangle_count(), labels.triangles.as_str());
     let sparse_label = results.sparse.as_ref().map_or_else(|| format!("{}: {}", labels.sparse_cloud.as_str(), labels.results_none.as_str()), |sparse| format!("{}: {}", labels.sparse_cloud.as_str(), sparse.points.to_f32_vec().len() / 3));

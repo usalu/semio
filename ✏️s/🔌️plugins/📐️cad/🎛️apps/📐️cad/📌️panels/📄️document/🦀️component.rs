@@ -4,7 +4,7 @@
 use crate::apps::cad::terminology::{typology_label, CadLabels};
 use crate::apps::cad::{cad_action, cad_pane_suffix, cad_tree_item, CadPlayRuntime, CadPlayView};
 use crate::artifacts::cad::engine::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
-use crate::artifacts::cad::{cad_find_object_pane, CadObject, CadPaneId, CadReference, CadScene};
+use crate::artifacts::cad::{cad_find_object_pane, CadObject, CadPaneId, CadReference, CadProjection};
 use semio_framework_plugin::{
     Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 };
@@ -126,11 +126,11 @@ pub fn reference_tree_item(model_definition_id: &str, reference: &CadReference, 
 }
 
 /// 🗂️ The `document.references_by_model_definition_id` lookup repeated once per pane in `build_document_tree`.
-pub fn references_for<'a>(document: &'a CadScene, model_definition_id: &str) -> &'a [CadReference] {
+pub fn references_for<'a>(document: &'a CadProjection, model_definition_id: &str) -> &'a [CadReference] {
     document.references_by_model_definition_id.get(model_definition_id).map_or(&[][..], |rows| rows.as_slice())
 }
 
-pub fn document_tree_selected_ids(document: &CadScene, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
+pub fn document_tree_selected_ids(document: &CadProjection, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
     if let (Some(model_definition_id), Some(reference_id)) = (runtime.selected_reference_model_definition_id.as_deref(), runtime.selected_reference_id.as_deref()) {
         return Some(vec![format!("cad-reference:{model_definition_id}:{reference_id}")]);
     }
@@ -147,7 +147,7 @@ pub fn document_tree_selected_ids(document: &CadScene, runtime: &CadPlayRuntime)
     }
 }
 
-pub fn document_tree_highlighted_ids(document: &CadScene, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
+pub fn document_tree_highlighted_ids(document: &CadProjection, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
     let hovered = runtime.hovered_object_id.as_deref()?;
     if let Some(reference_id) = hovered.strip_prefix("reference:") {
         for pane in CadPaneId::all() {
@@ -167,7 +167,7 @@ pub fn document_pane_section(label: impl Into<Label>, id_suffix: &str, objects: 
 }
 
 /// 🌳️ One pane's references section: collapsed by default, "(none)"-placeholder when empty.
-pub fn document_references_section(document: &CadScene, model_definition_id: &str, labels: &CadLabels) -> (String, Option<Label>, bool, Vec<UiTreeItemNode>) {
+pub fn document_references_section(document: &CadProjection, model_definition_id: &str, labels: &CadLabels) -> (String, Option<Label>, bool, Vec<UiTreeItemNode>) {
     (format!("cad-play-document.references.{model_definition_id}"), Some(labels.references.into()), false, references_for(document, model_definition_id).iter().map(|reference| reference_tree_item(model_definition_id, reference, labels)).collect())
 }
 
@@ -212,12 +212,12 @@ mod tests {
     use crate::apps::cad::config::CadConfig;
     use crate::apps::cad::{CadPlayApp, CadPlayRuntime};
     use crate::artifacts::cad::engine::{default_document, forest_play_scene};
-    use semio_framework_plugin::{DocumentView, PluginApp, SelectionSet, UiNode, ViewState};
+    use semio_framework_plugin::{DocumentView, PluginApp, SelectionSet, UiNode, ViewModel};
 
     #[test]
     fn document_lists_objects_and_nodes() {
         let mut app = new_app();
-        let node = app.render(CAD_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
+        let node = app.render(CAD_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("cad-object:"));
         assert!(json.contains("cad-node:"));
@@ -249,7 +249,7 @@ mod tests {
     #[test]
     fn document_tree_includes_primitive_children() {
         let mut app = new_app();
-        let node = app.render(CAD_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
+        let node = app.render(CAD_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("cad-primitive:"));
         assert!(json.contains("hoverAction"));

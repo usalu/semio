@@ -1,3 +1,4 @@
+import { ephemeralBox } from "@semio-tech/framework-core";
 // #region 🧲️Header
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
@@ -278,7 +279,7 @@ type BrepWasmModule = {
   readonly dispose: (handle: string) => void;
 };
 
-let brepWasm: BrepWasmModule | null = null;
+const brepWasm = ephemeralBox<BrepWasmModule | null>("s.modules.3d.packages.typescript.index.ts.brepWasm", null);
 
 async function tessellateGeometryJson(handle: string, tolerance: number): Promise<string> {
   const module = await ensureBrepWasmLoaded();
@@ -333,7 +334,7 @@ export function createBrepWasmBridge(module: BrepWasmModule): BrepWasmBridge {
 
 /** @emoji ⏳️ Loads brep tessellation WASM (flow_core in browser — same kernel as flow eval). */
 export async function ensureBrepWasmLoaded(): Promise<BrepWasmModule> {
-  if (brepWasm) return brepWasm;
+  if (brepWasm.current) return brepWasm.current;
   if (import.meta.env.VITEST) {
     const { readFileSync } = await import("node:fs");
     const { dirname, join } = await import("node:path");
@@ -343,7 +344,7 @@ export async function ensureBrepWasmLoaded(): Promise<BrepWasmModule> {
       initSync?: (input: { module: BufferSource }) => void;
     };
     mod.initSync?.({ module: readFileSync(join(here, "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/📐️brep/pkg/flow_extension_brep_bg.wasm")) });
-    brepWasm = mod;
+    brepWasm.current = mod;
     return mod;
   }
   const [{ default: initFlow, tessellate, dispose }, { default: wasmUrl }] = await Promise.all([import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/⚡️implementations/🦀️rust/flow_core.js"), import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/⚡️implementations/🦀️rust/flow_core_bg.wasm?url")]);
@@ -351,8 +352,8 @@ export async function ensureBrepWasmLoaded(): Promise<BrepWasmModule> {
     throw new Error("flow_core brep tessellation exports missing — rebuild flow/core wasm");
   }
   if (initFlow) await initFlow({ module_or_path: wasmUrl });
-  brepWasm = { tessellate, dispose };
-  return brepWasm;
+  brepWasm.current = { tessellate, dispose };
+  return brepWasm.current;
 }
 
 export async function createDefaultBrepWasmBridge(): Promise<BrepWasmBridge> {
@@ -367,11 +368,11 @@ type BrepModuleWasm = {
   readonly default?: (input?: unknown) => Promise<unknown>;
 };
 
-let brepModuleWasm: BrepModuleWasm | null = null;
+const brepModuleWasm = ephemeralBox<BrepModuleWasm | null>("s.modules.3d.packages.typescript.index.ts.brepModuleWasm", null);
 
 /** @emoji ⏳️ Loads flow brep module WASM for geometry IO operators. */
 export async function ensureBrepModuleWasmLoaded(): Promise<BrepModuleWasm> {
-  if (brepModuleWasm) return brepModuleWasm;
+  if (brepModuleWasm.current) return brepModuleWasm.current;
   if (import.meta.env.VITEST) {
     const { readFileSync } = await import("node:fs");
     const { dirname, join } = await import("node:path");
@@ -380,7 +381,7 @@ export async function ensureBrepModuleWasmLoaded(): Promise<BrepModuleWasm> {
     const mod = (await import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/📐️brep/pkg/flow_extension_brep.js")) as BrepModuleWasm;
     mod.initSync?.({ module: readFileSync(join(here, "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/📐️brep/pkg/flow_extension_brep_bg.wasm")) });
     mod.activate();
-    brepModuleWasm = mod;
+    brepModuleWasm.current = mod;
     return mod;
   }
   const [{ default: initBrep, evaluate, activate }, { default: wasmUrl }] = await Promise.all([import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/📐️brep/pkg/flow_extension_brep.js"), import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/📐️brep/pkg/flow_extension_brep_bg.wasm?url")]);
@@ -389,8 +390,8 @@ export async function ensureBrepModuleWasmLoaded(): Promise<BrepModuleWasm> {
   }
   if (initBrep) await initBrep({ module_or_path: wasmUrl });
   activate();
-  brepModuleWasm = { evaluate, activate };
-  return brepModuleWasm;
+  brepModuleWasm.current = { evaluate, activate };
+  return brepModuleWasm.current;
 }
 
 function brepGeometryInput(handle: GeometryRef): string {

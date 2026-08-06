@@ -62,7 +62,7 @@ pub fn puzzle2d_labels(config: &Puzzle2dConfig) -> &'static Puzzle2dLabels {
 //#endregion 🔖️Labels
 
 //#region 🔖️Locale
-/// 🗣️ B1: local replacement for the deleted `semio_framework_plugin::is_de_locale(&ViewState)`.
+/// 🗣️ B1: local replacement for the deleted `semio_framework_plugin::is_de_locale(&ViewModel)`.
 pub fn is_de_locale(config: &Puzzle2dConfig) -> bool {
     config.locale.starts_with("de")
 }

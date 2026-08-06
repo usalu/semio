@@ -80,13 +80,13 @@ mod tests {
     use super::*;
     use crate::apps::shooting::testkit::{icon_window_measures, shooting_app};
     use crate::apps::shooting::SHOOTING_PLAY_BODY_ICON as BODY_ICON;
-    use semio_framework_plugin::{PluginApp, ViewState};
+    use semio_framework_plugin::{PluginApp, ViewModel};
     use serde_json::{json, Value};
 
     #[test]
     fn renders_icon_render_scene_with_real_request() {
         let mut app = shooting_app();
-        let node = app.render(BODY_ICON, None, &ViewState::default()).expect("render");
+        let node = app.render(BODY_ICON, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("icon-render"));
         let payload: Value = serde_json::from_str(&json).unwrap();

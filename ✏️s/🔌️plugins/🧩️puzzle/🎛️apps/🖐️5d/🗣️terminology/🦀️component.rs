@@ -67,14 +67,14 @@ semio_framework_plugin::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Locale
-/// 🗣️ B1: local replacement for the deleted `semio_framework_plugin::is_de_locale(&ViewState)`.
+/// 🗣️ B1: local replacement for the deleted `semio_framework_plugin::is_de_locale(&ViewModel)`.
 pub fn puzzle5d_is_de_locale(config: &Puzzle5dConfig) -> bool {
     config.locale.starts_with("de")
 }
 
 /// 🗣️ Resolves the active label set from this document's persisted locale/terminology config
 /// (see `Puzzle5dConfig::locale`/`.terminology` — this app VCS's its own axes rather than reading
-/// `ViewState`, so `resolve_labels::<Puzzle5dLabels>(view_state)` doesn't apply here).
+/// `ViewModel`, so `resolve_labels::<Puzzle5dLabels>(view_state)` doesn't apply here).
 pub fn puzzle5d_labels(config: &Puzzle5dConfig) -> &'static Puzzle5dLabels {
     let locale = if puzzle5d_is_de_locale(config) { Locale::De } else { Locale::En };
     let terminology = if config.terminology == "reuse" { Terminology::Reuse } else { Terminology::Native };

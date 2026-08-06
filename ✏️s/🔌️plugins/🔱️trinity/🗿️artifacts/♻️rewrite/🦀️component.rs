@@ -70,7 +70,7 @@ impl From<LayoutPoint> for (f64, f64) {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "rewrite", layout = "lines")]
-pub struct RewriteRuleState {
+pub struct RewriteRuleModel {
     pub before_fixture_json: String,
     pub lhs_json: String,
     #[dsl(lang = "json")]
@@ -89,7 +89,7 @@ pub const REWRITE_RULE_SCHEMA: &str = "trinity.rewrite.rule";
 // `ArtifactKindSpec` of its own; it only declares `.io(rewrite_io())`, whose `graph:in`/`graph:out`
 // ports reuse jack's `"graph.trinity"` kind id. Not a gap — preserved verbatim.
 
-// 📜️ `RewriteRuleState`/`RewriteRuleOperation` derive their `store::DocumentDsl`/`protocol::OpText`
+// 📜️ `RewriteRuleModel`/`RewriteRuleOperation` derive their `store::DocumentDsl`/`protocol::OpText`
 // impls directly (see `#[derive(dsl::DslDocument)]` above and `#[derive(dsl::DslOps)]` in `🔧️op`) —
 // every field already binds through the `dsl::` engine with no foreign types, so no hand-written
 // parser/printer or twin type is needed anywhere in this artifact (unlike `jack`'s `GraphFixture`).

@@ -3,7 +3,7 @@
 use crate::apps::rewrite::config::RewriteConfig;
 use crate::apps::rewrite::terminology::TrinityRewriteLabels;
 use crate::artifacts::jack::{Node, PropertyValue};
-use crate::artifacts::rewrite::RewriteRuleState;
+use crate::artifacts::rewrite::RewriteRuleModel;
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, Label, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER,
@@ -24,7 +24,7 @@ fn fixture_with_derived(fixture_json: &str) -> Option<crate::artifacts::jack::Gr
     Some(graph.to_fixture())
 }
 
-pub(crate) fn render(state: &RewriteRuleState, cfg: &RewriteConfig, term_labels: &TrinityRewriteLabels) -> UiNode {
+pub(crate) fn render(state: &RewriteRuleModel, cfg: &RewriteConfig, term_labels: &TrinityRewriteLabels) -> UiNode {
     let jack_action = crate::apps::rewrite::rewrite_action;
     let Some(fixture) = crate::apps::rewrite::parse_fixture_json(&state.before_fixture_json) else {
         return ui_declarative_sections_to_tree(&[UiSectionNode {

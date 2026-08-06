@@ -324,7 +324,7 @@ pub fn create_raster_app() -> App {
 pub(crate) mod testkit {
     //! 🧪️ Shared harness for every `apps::raster` node's tests — mirrors TEMPLATE.md §7.
     use super::*;
-    use semio_framework_plugin::{testkit as framework_testkit, InvocationResult, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{testkit as framework_testkit, InvocationResult, VcsDocumentApp, ViewModel};
 
     pub type RasterApp = VcsDocumentApp<RasterPlayApp>;
 
@@ -343,7 +343,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut RasterApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).unwrap()
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).unwrap()
     }
 
     pub fn main_window_measures(app: &mut RasterApp) -> Vec<WindowMeasure> {

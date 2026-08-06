@@ -3,7 +3,7 @@ name: CAD Wgpu Premigration Parity
 overview: Restore the CAD module's premigration feature set (as it existed at the `premigration` git tag, before the React/JS renderer was deleted) inside the new wgpu/Rust plugin stack, without reintroducing a React renderer.
 todos:
  - id: schema-foundation
-   content: Extend cad_document (cad/rs/lib.rs) CadNode/CadOp/CadScene to represent real object data (typology, transform, visible, locked) instead of the id/label/kind stub
+   content: Extend cad_document (cad/rs/lib.rs) CadNode/CadOp/CadProjection to represent real object data (typology, transform, visible, locked) instead of the id/label/kind stub
    status: completed
  - id: undoable-edits
    content: Route addObject/patchObject/translate/rotate/scale through vcs::DocumentVcsCommand + CadOp so undo/redo covers real object edits

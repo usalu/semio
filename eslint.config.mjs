@@ -49,7 +49,49 @@ const CROSS_PACKAGE_FAMILIES = [
  * so without this `ignores`, this override would flag ~30 files of noise on an already-litigated
  * non-issue instead of a new real finding. */
 function crossPackageRelativeOverrides() {
-  const overrides = [];
+  const overrides = [
+  {
+    files: ["✏️s/**/*.{ts,tsx}", "🧰️framework/**/*.{ts,tsx}"],
+    ignores: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/pkg/**",
+      "🧰️framework/🛍️products/💻️os/**",
+      "compose/**",
+      "♻️mit-bestand/**",
+      "🌎️hub/**",
+      // Sole transitional browser StoragePort adapter until OS chrome document projection owns persistence.
+      "🧰️framework/🔨️modules/🧩core/🟦️component.ts",
+    ],
+    rules: {
+      "no-restricted-globals": [
+        "error",
+        { name: "localStorage", message: "OS-exclusive state authority: persist via OS DocumentStore / host APIs, not localStorage." },
+        { name: "sessionStorage", message: "OS-exclusive state authority: persist via OS DocumentStore / host APIs, not sessionStorage." },
+        { name: "indexedDB", message: "OS-exclusive state authority: persist via OS DocumentStore / host APIs, not indexedDB." },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Program > VariableDeclaration[kind='let'] > VariableDeclarator > Identifier",
+          message: "OS-exclusive state authority: no module-level `let` mutable bindings outside the OS product.",
+        },
+        {
+          selector: "Program > VariableDeclaration[kind='var']",
+          message: "OS-exclusive state authority: no module-level `var` outside the OS product.",
+        },
+        {
+          selector: "Program > VariableDeclaration > VariableDeclarator[init.type='NewExpression'][init.callee.name=/^(Map|Set|WeakMap|WeakSet)$/][init.arguments.length=0]",
+          message: "OS-exclusive state authority: no module-scope empty new Map()/Set() outside the OS product — use ephemeralMap/ephemeralSet from framework-core.",
+        },
+        {
+          selector: "ClassDeclaration[id.name=/Store$/]",
+          message: "OS-exclusive state authority: *Store classes must live under the OS product or be deleted.",
+        },
+      ],
+    },
+  },
+];
   for (const { root, members } of CROSS_PACKAGE_FAMILIES) {
     for (const member of members) {
       const siblings = members.filter((other) => other !== member);

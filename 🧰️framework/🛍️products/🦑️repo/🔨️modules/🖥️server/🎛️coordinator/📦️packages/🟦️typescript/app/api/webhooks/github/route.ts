@@ -10,6 +10,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { ephemeralMap } from "@semio-tech/framework-core";
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 // #endregion 🔌️Adapters
@@ -20,7 +21,7 @@ import { removeContributorWorkForCheckpoint } from "@/lib";
 const GITHUB_SECRET = process.env.GITHUB_WEBHOOK_SECRET || "";
 
 // 💬️In-memory comment cache (same as Go server)
-const commentCache = new Map<string, { body: string; actor: string; repo: string; issue: number; time: Date }>();
+const commentCache = ephemeralMap<string, { body: string; actor: string; repo: string; issue: number; time: Date }>("framework.products.repo.modules.server.coordinator.packages.typescript.app.api.webhooks.github.route.ts.commentCache");
 
 function verifySignature(body: string, signature: string): boolean {
   if (!GITHUB_SECRET) return true;

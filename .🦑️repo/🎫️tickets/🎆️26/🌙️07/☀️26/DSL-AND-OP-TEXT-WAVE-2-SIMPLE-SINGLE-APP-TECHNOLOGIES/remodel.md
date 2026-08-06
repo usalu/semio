@@ -3,7 +3,7 @@
 ## Files touched
 - remodel/rs/lib.rs
   - added `use vcs::{DocumentDsl, Operation, OperationDiff, OpText, TextError, TextSpan};`
-  - added `//#region 🔖️Dsl` (private `mod remodel_text` hand-rolled lexer/parser/printer + `impl DocumentDsl for RemodelScene`, EXTENSION = "remodel")
+  - added `//#region 🔖️Dsl` (private `mod remodel_text` hand-rolled lexer/parser/printer + `impl DocumentDsl for RemodelProjection`, EXTENSION = "remodel")
   - added `//#region 🔖️OpText` (`impl OpText for RemodelOperation`)
   - extended `//#region 🧪️Tests` with `//#region 🔖️DslAndOpText`: `populated_scene_fixture()` helper (also now reused by the pre-existing `populated_scene_roundtrips_through_json`), `default_scene_roundtrips_through_dsl`, `populated_scene_roundtrips_through_dsl`, `every_operation_variant_roundtrips_through_op_text` (all 20 variants incl. None/Some branches), `store_roundtrips_through_document_text` (DocumentVcsStore + assert_document_text_round_trip)
 - remodel/plugin/rs/lib.rs

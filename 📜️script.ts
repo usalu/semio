@@ -673,6 +673,19 @@ export class VerifyScript extends Script {
     this.checkLeveledTestTargets();
     console.log("[verify] storybook scope freshness…");
     this.checkStorybookFreshness();
+    console.log("[verify] OS exclusive state authority policies…");
+    {
+      const osBreaches = [
+        ...policyOsStateAuthorityBreaches(this.root),
+        ...policyDocumentAppShapeBreaches(this.root),
+      ];
+      if (osBreaches.length > 0) {
+        for (const b of osBreaches) {
+          console.error(`[verify] ${b.kind}: ${b.summary}`);
+        }
+        throw new Error(`[verify] ${osBreaches.length} OS exclusive state authority policy breach(es)`);
+      }
+    }
     console.log("[verify] dsl fixture laws…");
     // Quick level here: the full repo-wide sweep (parse→print→reparse fixpoint, canonicalize
     // idempotence over every real 📚️examples fixture — @semio-tech/dsl-fixture-sweep-rs) runs at
@@ -4225,13 +4238,8 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyTsFacadeBreaches(repoRoot));
   breaches.push(...policyProtocolMigrationBreaches(repoRoot));
   breaches.push(...policyDbServerOnlyBreaches(repoRoot));
-  // Wave 3 OS-exclusive state authority — gated on SEMIO_OS_STATE_AUTHORITY=1 until Wave 2
-  // migrations clear all breaches (default verify/policy stays green). Flip to unconditional
-  // registration once `policyOsStateAuthorityBreaches` + `policyDocumentAppShapeBreaches` report zero.
-  if (process.env.SEMIO_OS_STATE_AUTHORITY === "1") {
-    breaches.push(...policyOsStateAuthorityBreaches(repoRoot));
-    breaches.push(...policyDocumentAppShapeBreaches(repoRoot));
-  }
+  breaches.push(...policyOsStateAuthorityBreaches(repoRoot));
+  breaches.push(...policyDocumentAppShapeBreaches(repoRoot));
   breaches.push(...policyNoPackFilesBreaches(repoRoot));
   breaches.push(...policyRawSpawnBreaches(repoRoot));
   breaches.push(...policyBudgetNullBreaches(repoRoot));

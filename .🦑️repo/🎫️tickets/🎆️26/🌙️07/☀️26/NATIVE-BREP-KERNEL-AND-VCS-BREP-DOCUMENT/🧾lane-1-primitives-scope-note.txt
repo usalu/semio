@@ -1,0 +1,29 @@
+Lane 1-primitives scope note (2026-08-06)
+
+Owned file: ✏️s/🔨️modules/🧊️3d/📐️brep/🧱primitives/🦀️component.rs (~29699 bytes)
+
+Implemented (via euler + curve/surface stores; no brepkit deps):
+- make_box(body, w, d, h) -> Result<SolidId, KernelError>
+  Axis-aligned box [0,w]x[0,d]x[0,h]; V=8 E=12 F=6; chi=2; validate_body clean.
+- make_sphere(body, radius, segments) -> Result<SolidId, KernelError>
+  Two hemispheres sharing segments-gon equator (segments >= 4); chi=2.
+- make_cylinder(body, radius, height, segments) -> Result<SolidId, KernelError>
+  Analytic Cylinder + 2 planar caps + seam; segments >= 3 (tessellation hint).
+- make_cone(body, radius, height, segments) -> Result<SolidId, KernelError>
+  Pointed cone (apex at z=height); Cone surface + base cap; segments >= 3.
+- make_torus(body, major, minor, segments) -> Result<SolidId, KernelError>
+  Single Torus face, fundamental-polygon seams; chi=0 (genus 1); segments >= 4.
+- make_convex_hull(body, points) -> Result<SolidId, KernelError>
+  Inline Quickhull -> planar triangular shell.
+- Wire: make_polyline_wire / make_rectangle_wire / make_regular_polygon_wire
+- Face: make_planar_face_from_points / make_planar_face_from_wire
+- pub struct Wire { members, vertices, closed }
+
+Deferred / notes:
+- Volume/measure checks left to 1-measure (topology + validate rings covered here).
+- Cylinder/cone/torus segments are API-compatible hints; analytic topology uses seam wires.
+- Fallible solid makers return Result (InvalidInput) rather than bare SolidId.
+- No glue/Cargo changes; no integration requests.
+
+Evidence: 🧪lane-1-primitives-test-quick-run-1.txt — 11 passed.
+Contract: primitives FROZEN.

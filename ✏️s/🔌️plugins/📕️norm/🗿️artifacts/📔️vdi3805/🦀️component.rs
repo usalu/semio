@@ -331,7 +331,7 @@ impl CorrectionOverlay {
 
 /// 📚️ Runtime edition registry.
 #[derive(Clone, Debug, PartialEq)]
-pub struct SchemaRegistry {
+pub struct SchemaCatalog {
     sheets: Vec<SheetEntry>,
     corrections: &'static [CorrectionOverlay],
     filter: Option<SchemaStatus>,
@@ -508,7 +508,7 @@ pub const CORRECTION_OVERLAYS: &[CorrectionOverlay] = &[
     CorrectionOverlay { id: "part-32-corr-2019-07", sheet: SheetId(32), base_edition: EditionId::new(2019, 7), effective: EditionId::new(2019, 9), summary_de: "Korrektur Blatt 32", summary_en: "Correction sheet 32" },
 ];
 
-impl SchemaRegistry {
+impl SchemaCatalog {
     fn build(filter: Option<SchemaStatus>) -> Self {
         let sheets: Vec<SheetEntry> = SHEET_ENTRIES.iter().filter(|s| filter.is_none_or(|f| s.status == f)).copied().collect();
         Self { sheets, corrections: CORRECTION_OVERLAYS, filter }
@@ -1207,7 +1207,7 @@ mod tests {
 
     #[test]
     fn correction_overlay_applicability() {
-        let registry = SchemaRegistry::current();
+        let registry = SchemaCatalog::current();
         let corrections = registry.corrections_for_sheet(SheetId(2));
         let corr = corrections.first().expect("part 2 correction");
         assert!(corr.id.starts_with("part-02-corr-"));
@@ -1217,9 +1217,9 @@ mod tests {
 
     #[test]
     fn schema_registry_with_status_and_sheet_lookup() {
-        let registry = SchemaRegistry::with_status(SchemaStatus::Reserved);
+        let registry = SchemaCatalog::with_status(SchemaStatus::Reserved);
         assert!(registry.sheets().iter().all(|s| s.status == SchemaStatus::Reserved));
-        let full = SchemaRegistry::current();
+        let full = SchemaCatalog::current();
         let sheet = full.sheet(SheetId(2)).expect("sheet 2");
         assert_eq!(sheet.title_en, "Control valves heating");
         assert!(full.sheet(SheetId(9999)).is_none());
@@ -1227,7 +1227,7 @@ mod tests {
 
     #[test]
     fn schema_registry_sheets_in_domain_and_reserved_numbers() {
-        let registry = SchemaRegistry::current();
+        let registry = SchemaCatalog::current();
         let heating = registry.sheets_in_domain(Domain::Heating);
         assert!(heating.iter().any(|s| s.id == SheetId(2)));
         let reserved = registry.reserved_numbers();

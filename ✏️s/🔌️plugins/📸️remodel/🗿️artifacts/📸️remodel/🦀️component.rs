@@ -126,7 +126,7 @@ impl dsl::DslField for PackedU8 {
 
 //#region 🔖️Domain
 /// 🖼️ One embedded pixel asset (video frame, ortho tile, texture) referenced by id from
-/// `RemodelScene::assets`, `MediaStream.frames`, `RemodelMesh.texture_asset_id`, or
+/// `RemodelProjection::assets`, `MediaStream.frames`, `RemodelMesh.texture_asset_id`, or
 /// `GeoProducts.{dsm,dtm,ortho}_asset_id`. Sampled video frames use `image/jpeg` (~10x smaller than
 /// PNG for photographic content); PNG stays reserved for exports/textures/rasters that need
 /// lossless round trips.
@@ -191,7 +191,7 @@ pub struct FrameRef {
 }
 
 /// 🎞️ One imported media source (an image sequence or a video), decoded into `FrameRef`s pointing at
-/// `RemodelScene::assets`. Multiple cameras/angles are multiple streams, joined by `camera_id`.
+/// `RemodelProjection::assets`. Multiple cameras/angles are multiple streams, joined by `camera_id`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MediaStream {
@@ -924,7 +924,7 @@ pub struct ReconstructionResults {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[dsl(extension = "remodel")]
 #[serde(rename_all = "camelCase")]
-pub struct RemodelScene {
+pub struct RemodelProjection {
     pub schema: String,
     pub id: String,
     #[serde(default)]
@@ -951,8 +951,8 @@ pub struct RemodelScene {
 
 /// 🌱️ An empty scene seeded with a placeholder box mesh, so the 3D editor/preview always has
 /// something to render before any media has been imported/reconstructed.
-pub fn default_remodel_scene() -> RemodelScene {
-    RemodelScene {
+pub fn default_remodel_scene() -> RemodelProjection {
+    RemodelProjection {
         schema: REMODEL_DOCUMENT_SCHEMA.into(),
         id: "remodel".into(),
         streams: Vec::new(),
@@ -976,7 +976,7 @@ mod tests {
     /// pre-existing `populated_scene_roundtrips_through_json`) actually walk the full document shape
     /// instead of just `default_remodel_scene()`'s mostly-empty surface. Duplicated verbatim into every
     /// taxonomy node that needs it (`🗣️dsl`, `🔧️op`, `🎒️pack`) since it is a private test-only builder.
-    fn populated_scene_fixture() -> RemodelScene {
+    fn populated_scene_fixture() -> RemodelProjection {
         let mut scene = default_remodel_scene();
         scene.streams.push(MediaStream {
             id: "stream-1".into(),
@@ -1081,7 +1081,7 @@ mod tests {
     fn scene_roundtrips_through_json() {
         let scene = default_remodel_scene();
         let json = serde_json::to_string(&scene).expect("serialize");
-        let parsed: RemodelScene = serde_json::from_str(&json).expect("deserialize");
+        let parsed: RemodelProjection = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(parsed, scene);
     }
 
@@ -1089,7 +1089,7 @@ mod tests {
     fn populated_scene_roundtrips_through_json() {
         let scene = populated_scene_fixture();
         let json = serde_json::to_string(&scene).expect("serialize");
-        let parsed: RemodelScene = serde_json::from_str(&json).expect("deserialize");
+        let parsed: RemodelProjection = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(parsed, scene);
     }
 

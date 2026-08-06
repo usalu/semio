@@ -4,7 +4,7 @@
 use crate::wgpu::shaders::{BLUR_DOWNSAMPLE_SHADER, GLASS_SHADER, SCENE_BLIT_SHADER, UI_SHADER, VECTOR_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER};
 use crate::wgpu::theme::{GlassStyle, Level, Rgba, Theme};
 use bytemuck::{Pod, Zeroable};
-use kernel_3d_scene::ScenePass3d;
+use super::kernel_3d_scene::ScenePass3d;
 use wgpu::util::DeviceExt;
 
 pub const KIND_SOLID: f32 = 3.0;
@@ -2181,7 +2181,7 @@ mod tests {
     use super::{ear_clip_polygon, mesh_content_version, DrawList, ScissorRect, WORLD_GLOBALS_SLOT_SIZE};
     use crate::wgpu::geometry::Rect;
     use crate::wgpu::theme::Rgba;
-    use kernel_3d_scene::ScenePass3d;
+    use super::kernel_3d_scene::ScenePass3d;
 
     #[test]
     fn scissor_intersects_child() {
@@ -2242,7 +2242,7 @@ mod tests {
 
     #[test]
     fn mesh_instances_without_lines_are_valid_world_pass() {
-        use kernel_3d_scene::{Instance3d, SceneDraw3d, ScenePass3d};
+        use super::kernel_3d_scene::{Instance3d, SceneDraw3d, ScenePass3d};
 
         let pass = ScenePass3d {
             viewport: [0.0, 0.0, 320.0, 240.0],

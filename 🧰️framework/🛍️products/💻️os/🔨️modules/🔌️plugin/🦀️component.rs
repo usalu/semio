@@ -90,7 +90,7 @@ pub mod app {
         note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition,
         start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppDefinition, AppIo, CommandDefinition, CommandGrammar, CommandRef, CommandScope, ConfigSpec, Contribution, DialogDefinition, ExampleDefinition,
         IconName, IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ToolDefinition, ToolRef,
-        TutorialDefinition, UtilityDefinition, UtilityRef, ViewState, WindowKindDefinition, WindowKinds, Fault, FaultCode, FaultFrom, FaultOrigin, NOTE_SHELL_COMMAND_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
+        TutorialDefinition, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition, WindowKinds, Fault, FaultCode, FaultFrom, FaultOrigin, NOTE_SHELL_COMMAND_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
         SET_HISTORY_COMMAND_FILTER_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, UI_FOOTER_ELEMENT_ID, UI_NAVBAR_ELEMENT_ID,
     };
     use serde::de::DeserializeOwned;
@@ -1348,8 +1348,8 @@ pub mod app {
 
     pub use ui_wgpu::wgpu::AppLabels;
 
-    /// 🗣️ Anything `resolve_labels` can resolve a label set from — `ViewState` (locale+terminology
-    /// from the shell) and, since the B1 config-driven apps stopped threading `ViewState` through
+    /// 🗣️ Anything `resolve_labels` can resolve a label set from — `ViewModel` (locale+terminology
+    /// from the shell) and, since the B1 config-driven apps stopped threading `ViewModel` through
     /// render, any per-app `Config` exposing just a raw `cfg.locale` string (region-tolerant: `"de"`
     /// and `"de-DE"` both resolve to `Locale::De`, matching every hand-rolled `is_de_locale` this
     /// replaces) — `terminology()` defaults to `Native`, matching every one of those apps' behavior
@@ -1361,7 +1361,7 @@ pub mod app {
         }
     }
 
-    impl LabelAxes for ViewState {
+    impl LabelAxes for ViewModel {
         fn locale(&self) -> Locale {
             self.locale
         }
@@ -1459,10 +1459,10 @@ pub mod app {
 
         #[test]
         fn resolve_labels_is_exhaustive_over_all_four_cells() {
-            let native_en = ViewState { locale: Locale::En, terminology: Terminology::Native, ..ViewState::default() };
-            let native_de = ViewState { locale: Locale::De, terminology: Terminology::Native, ..ViewState::default() };
-            let reuse_en = ViewState { locale: Locale::En, terminology: Terminology::Reuse, ..ViewState::default() };
-            let reuse_de = ViewState { locale: Locale::De, terminology: Terminology::Reuse, ..ViewState::default() };
+            let native_en = ViewModel { locale: Locale::En, terminology: Terminology::Native, ..ViewModel::default() };
+            let native_de = ViewModel { locale: Locale::De, terminology: Terminology::Native, ..ViewModel::default() };
+            let reuse_en = ViewModel { locale: Locale::En, terminology: Terminology::Reuse, ..ViewModel::default() };
+            let reuse_de = ViewModel { locale: Locale::De, terminology: Terminology::Reuse, ..ViewModel::default() };
             assert_eq!(resolve_labels::<SampleLabels>(&native_en).greeting.as_str(), "Hello");
             assert_eq!(resolve_labels::<SampleLabels>(&native_de).greeting.as_str(), "Hallo");
             assert_eq!(resolve_labels::<SampleLabels>(&reuse_en).greeting.as_str(), "Hi");
@@ -3577,8 +3577,8 @@ pub mod app {
         fn detach_backbone(&mut self);
         /// @emoji 🕰️ `view_state` is kept here ONLY for wrapper-owned framework chrome (the injected
         /// history panel body's locale — see `VcsDocumentApp::render`); it is never forwarded into
-        /// `DocumentApp::render`, which dropped `ViewState` entirely in B1.
-        fn render(&mut self, body_key: &str, projection_override_json: Option<&str>, view_state: &ViewState) -> Result<UiNode, Fault>;
+        /// `DocumentApp::render`, which dropped `ViewModel` entirely in B1.
+        fn render(&mut self, body_key: &str, projection_override_json: Option<&str>, view_state: &ViewModel) -> Result<UiNode, Fault>;
         fn window_engagements(&mut self) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
@@ -3729,7 +3729,7 @@ pub mod app {
                 Some(definition) => {
                     self.items.push(ContextMenuItemSpec {
                         id: action_id.clone(),
-                        // 🚧️ `DocumentApp::context_menu` carries no `ViewState` (dropped entirely in B1), so
+                        // 🚧️ `DocumentApp::context_menu` carries no `ViewModel` (dropped entirely in B1), so
                         // there is no locale/terminology to resolve against here — hardcoded to
                         // native/English pending a protocol change to thread the active axes through
                         // context-menu construction. Flagged as a follow-up, not fixed in this pass.
@@ -4037,7 +4037,7 @@ pub mod app {
         /// not just the last dispatch that folded into it.
         fn record_command(&mut self, action_id: &str, kind: ActionKind, label: Option<String>, edit_id: Option<String>, config_edit_id: Option<String>, inverse: Option<InverseAction>) {
             // 🚧️ Same locale-context gap as `Menu::action_with_args` — history log entries are recorded
-            // without a `ViewState`, so a fallback label resolves native/English pending a protocol change.
+            // without a `ViewModel`, so a fallback label resolves native/English pending a protocol change.
             let label = label
                 .or_else(|| self.registry.get(action_id).map(|def| def.label.resolve(Terminology::Native, Locale::En).to_string()))
                 .or_else(|| self.registry.get_command(action_id).map(|def| def.label.resolve(Terminology::Native, Locale::En).to_string()))
@@ -4286,7 +4286,6 @@ pub mod app {
         /// never touch `KernelOperation`/space-sync — see `🔖️CommandLog`'s doc region for why).
         fn dispatch_emit(&mut self, verb: &str, emit: Emit<A::Operation, A::ConfigOperation, A::DraftOperation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let Emit { document_operations, config_operations, draft_operations, description, coalesce_key, effects, events, ui_scope } = emit;
-            eprintln!("[DEBUG] dispatch_emit doc_ops={} cfg_ops={} draft_ops={}", document_operations.len(), config_operations.len(), draft_operations.len());
             self.last_emit_wire = Some((
                 protocol::encode_ops_vec(&document_operations.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>()),
                 protocol::encode_ops_vec(&config_operations.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>()),
@@ -4810,7 +4809,7 @@ pub mod app {
             self.cache = None;
         }
 
-        fn render(&mut self, body_key: &str, projection_override_json: Option<&str>, view_state: &ViewState) -> Result<UiNode, Fault> {
+        fn render(&mut self, body_key: &str, projection_override_json: Option<&str>, view_state: &ViewModel) -> Result<UiNode, Fault> {
             self.refresh_cache()?;
             if body_key == FRAMEWORK_HISTORY_BODY_KEY {
                 // 🕰️ Framework-owned, projection-independent — served before any app body-key match.
@@ -5018,7 +5017,7 @@ pub mod plugin_runtime {
     use dsl::{from_dsl_value, to_dsl_value};
     use semio_framework_core::{
         kernel::{HostEffect, InvocationResult},
-        Fault, FaultCode, FaultFrom, FaultOrigin, PluginManifest, ViewState,
+        Fault, FaultCode, FaultFrom, FaultOrigin, PluginManifest, ViewModel,
     };
     use serde::de::DeserializeOwned;
     use serde::{Deserialize, Serialize};
@@ -5078,13 +5077,13 @@ pub mod plugin_runtime {
         INSTANCE_ACTORS.with(|slot| slot.borrow().get(&instance_id).cloned()).unwrap_or_else(|| "local".to_string())
     }
 
-    /// 🗣️ Decodes a packed `ViewState` payload (empty → default). No process-global    /// 🗣️ Decodes a packed `ViewState` payload (empty → default). No process-global cache —
+    /// 🗣️ Decodes a packed `ViewModel` payload (empty → default). No process-global    /// 🗣️ Decodes a packed `ViewModel` payload (empty → default). No process-global cache —
     /// host-authoritative chrome/draft owns locale; every command/refresh carries view_state on the wire.
-    fn decode_view_state(view_state_bytes: &[u8]) -> ViewState {
+    fn decode_view_state(view_state_bytes: &[u8]) -> ViewModel {
         if view_state_bytes.is_empty() {
-            ViewState::default()
+            ViewModel::default()
         } else {
-            store::pack_rt::decode_wire_value(view_state_bytes).ok().and_then(|value| from_dsl_value::<ViewState>(value).ok()).unwrap_or_default()
+            store::pack_rt::decode_wire_value(view_state_bytes).ok().and_then(|value| from_dsl_value::<ViewModel>(value).ok()).unwrap_or_default()
         }
     }
 
@@ -5349,7 +5348,7 @@ pub mod plugin_runtime {
         struct WindowRenderInput {
             #[serde(default)]
             body_key: String,
-            view_state: ViewState,
+            view_state: ViewModel,
             #[serde(default)]
             document_json: Option<String>,
         }
@@ -5360,7 +5359,7 @@ pub mod plugin_runtime {
             let key = if input.body_key.is_empty() { body_key.to_string() } else { input.body_key };
             (key, input.view_state, input.document_json.or_else(|| projection_override_json.map(str::to_string)))
         } else {
-            let view_state: ViewState = serde_json::from_str(view_state_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
+            let view_state: ViewModel = serde_json::from_str(view_state_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
             (body_key.to_string(), view_state, projection_override_json.map(str::to_string))
         };
         with_instances_mut(|list| {
@@ -5445,7 +5444,7 @@ pub mod plugin_runtime {
         #[derive(Deserialize)]
         #[serde(rename_all = "camelCase")]
         struct RefreshRequest {
-            view_state: ViewState,
+            view_state: ViewModel,
             #[serde(default)]
             windows: Vec<SectionRequest>,
             #[serde(default)]
@@ -5508,7 +5507,7 @@ pub mod plugin_runtime {
                 // rendering, so a `DocumentApp` can key per-window options and utility-driven scene state off
                 // `view_state.window_id` / `view_state.active_utility_id` and never off the focused window alone.
                 let active_utility_id = request.view_state.active_utility_by_window_id.get(&entry.key).cloned().or_else(|| request.view_state.active_utility_id.clone());
-                let window_view_state = ViewState { window_id: Some(entry.key.clone()), active_utility_id, ..request.view_state.clone() };
+                let window_view_state = ViewModel { window_id: Some(entry.key.clone()), active_utility_id, ..request.view_state.clone() };
                 let node = instance.app.render(&entry.body_key, None, &window_view_state)?;
                 let (hash, value) = ui_refresh_section(&node, entry.hash.as_deref());
                 response.windows.push(SectionResponse { key: entry.key.clone(), hash, value });
@@ -5555,7 +5554,7 @@ pub mod plugin_runtime {
 
     //#region 🔖️ContextMenu
     /// 🖱️ Wire shape for an on-demand context-menu request — mirrors TS `PluginContextMenuRequest` minus
-    /// `viewState` (B1 dropped `ViewState` from `DocumentApp::context_menu` entirely, so this struct no
+    /// `viewState` (B1 dropped `ViewModel` from `DocumentApp::context_menu` entirely, so this struct no
     /// longer parses-and-discards a field it never forwards). Module-scoped (not nested in
     /// `plugin_context_menu`) so `plugin_exchange`'s `AppCommand::ContextMenu` arm below can decode the
     /// same typed shape directly off the binary wire instead of round-tripping through JSON strings.
@@ -5631,7 +5630,7 @@ pub mod plugin_runtime {
     /// mapped onto the existing magic action-name interception rather than a real typed
     /// `store::DocumentCommand` wire codec; `AppCommand::RefreshUi` carries a packed `view_state` so first-paint
     /// labels/locale resolve correctly before any `AppCommand::Command` has been seen (via
-    /// `instance_view_state`), defaulting to `ViewState::default()` before any `Command` has been
+    /// `instance_view_state`), defaulting to `ViewModel::default()` before any `Command` has been
     /// processed; the unsolicited outbox (backbone-driven `AppFrame::DocumentChanged`, a persistent
     /// per-instance frame queue surviving across calls) is NOT implemented — only `pending_effects` is
     /// drained, once, at the end of the batch, whenever a dispatched command mutated the document,
@@ -6015,7 +6014,7 @@ pub mod plugin_runtime {
         use super::ContextMenuWireRequest;
         use crate::app::{ui_history_panel, ActionMeta, App, AppActionRegistry, CommandView, ConfigView, DocumentApp, DocumentView, DraftView, Emit, HistoryCommandFilter, HistoryView, Menu, NoDraft, NoDraftOperation, PluginApp, VcsDocumentApp};
         use store::EngineHandles;
-        use crate::{selection_count_phrase, ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewState};
+        use crate::{selection_count_phrase, ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewModel};
         use protocol::{Operation, OperationDiff};
         use semio_framework_core::kernel::{AppEvent, ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement, UiDirtyScope};
         use semio_framework_core::{ActionArgDef, ActionDefinition, ActionKind, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
@@ -6782,9 +6781,9 @@ pub mod plugin_runtime {
         #[test]
         fn rendering_the_history_body_reflects_a_log_only_change_with_no_store_generation_bump() {
             let mut app = VcsDocumentApp::new(TestApp::default());
-            app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewState::default()).expect("render before");
+            app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::default()).expect("render before");
             app.dispatch_typed(TestCommand::Select { id: Some("x".into()) }, &meta()).expect("select");
-            let rendered = app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewState::default()).expect("render after");
+            let rendered = app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::default()).expect("render after");
             let UiNode::Tree(tree) = rendered else { panic!("expected a Tree root like Document/Catalogue") };
             assert_eq!(tree.sections.len(), 2, "Actions + Commands");
             assert_eq!(tree.sections[1].items.len(), 1, "a log-only cache key change (no store generation bump) must still refresh the rendered panel");

@@ -43,7 +43,7 @@ mod tests {
         assert!(!json.contains("Kartenansicht"));
     }
 
-    /// 🗣️ Locale is `cfg.locale`, set via the typed `SetLocale` config command — no `ViewState`-pushed
+    /// 🗣️ Locale is `cfg.locale`, set via the typed `SetLocale` config command — no `ViewModel`-pushed
     /// locale anywhere.
     #[test]
     fn gis2d_labels_translate_inspector_and_layers_in_german() {

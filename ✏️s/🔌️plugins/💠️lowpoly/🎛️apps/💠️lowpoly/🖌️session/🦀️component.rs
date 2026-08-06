@@ -39,7 +39,7 @@ pub struct TransformSession {
 /// @emoji 🗃️ Pure render-side cache of composited paint textures (base64 PNG per object), invalidated
 /// by a fingerprint over the document's paint pixels + the live stroke dirty counter. Never serialized.
 #[derive(Default)]
-pub struct PaintTextureCache {
+pub struct PaintTextureLut {
     fingerprint: Option<u64>,
     pub textures: HashMap<String, String>,
 }
@@ -185,7 +185,7 @@ pub struct LowpolyScratch {
     stroke_dirty: u64,
     transform: Option<TransformSession>,
     transform_drag_active: bool,
-    texture_cache: PaintTextureCache,
+    texture_cache: PaintTextureLut,
     /// 👻️ Per-`key` monotone counter for `gesture_preview` — see `//#region 🔖️GesturePreview`.
     preview_seq: u64,
 }
@@ -280,7 +280,7 @@ impl LowpolyScratch {
                 textures.insert(object.id.clone(), base64::engine::general_purpose::STANDARD.encode(png_bytes));
             }
         }
-        self.texture_cache = PaintTextureCache { fingerprint: Some(fingerprint), textures };
+        self.texture_cache = PaintTextureLut { fingerprint: Some(fingerprint), textures };
     }
 
     pub fn textures(&self) -> &HashMap<String, String> {

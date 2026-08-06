@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 /** 🖨️ `@semio-tech/print` router: `bun ./📜️script.ts generate|fonts|build|watch|test|test-e2e`. */
+import { ephemeralBox } from "@semio-tech/framework-core";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { arch, platform } from "node:os";
@@ -512,21 +513,21 @@ async function downloadTectonicBinary(): Promise<string> {
   return binPath;
 }
 
-let tectonicCommandCache: string | undefined;
+const tectonicCommandCache = ephemeralBox<string | undefined>("framework.products.print.packages.typescript.script.ts.tectonicCommandCache", undefined);
 
 async function ensureTectonic(): Promise<string> {
-  if (tectonicCommandCache) return tectonicCommandCache;
+  if (tectonicCommandCache.current) return tectonicCommandCache.current;
   try {
     const probe = runProbe("tectonic", ["--version"]);
     if (probe.status === 0) {
-      tectonicCommandCache = "tectonic";
-      return tectonicCommandCache;
+      tectonicCommandCache.current = "tectonic";
+      return tectonicCommandCache.current;
     }
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
   }
-  tectonicCommandCache = await downloadTectonicBinary();
-  return tectonicCommandCache;
+  tectonicCommandCache.current = await downloadTectonicBinary();
+  return tectonicCommandCache.current;
 }
 
 const DARK_TEX_DIR = ".semio-dark";

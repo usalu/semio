@@ -81,7 +81,7 @@ mod tests {
     use crate::apps::sequence::testkit::{dispatch, new_app};
     use crate::apps::sequence::SequenceCommand;
     use crate::artifacts::sequence::SequenceCamera;
-    use semio_framework_plugin::{PluginApp, ViewState};
+    use semio_framework_plugin::{PluginApp, ViewModel};
     use serde_json::{json, Value};
 
     use super::set_viewport::SetViewport;
@@ -93,7 +93,7 @@ mod tests {
         let mut app = new_app();
         let result = app.dispatch_typed(SequenceCommand::SetViewport(SetViewport { camera: SequenceCamera { x: 5.0, y: 6.0, zoom: 2.0 } }), &semio_framework_plugin::testkit::meta("local")).expect("viewport pan/zoom");
         assert!(result.operations.is_empty(), "setViewport must not emit a VCS operation");
-        let node = app.render(crate::apps::sequence::modes::edit::windows::main::SEQUENCE_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
+        let node = app.render(crate::apps::sequence::modes::edit::windows::main::SEQUENCE_PLAY_BODY_MAIN, None, &ViewModel::default()).expect("render");
         let payload: Value = serde_json::to_value(&node).unwrap();
         assert_eq!(payload["nodeGraph"]["viewport"]["zoom"], json!(2.0));
     }

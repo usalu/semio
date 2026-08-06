@@ -6,6 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { ephemeralBox } from "@semio-tech/framework-core";
 import * as React from "react";
 import * as ResizablePrimitive from "react-resizable-panels";
 import { type IconName } from "@semio-tech/assets";
@@ -91,23 +92,23 @@ export function setPanelGhostSessionBridge(bridge: PanelGhostSessionBridge | nul
   panelGhostSessionBridge = bridge;
 }
 
-let activeWindowTemplateDragSession: WindowTemplateDragSession | null = null;
+const activeWindowTemplateDragSession = ephemeralBox<WindowTemplateDragSession | null>("framework.modules.ui.elements.Canvas.component.tsx.activeWindowTemplateDragSession", null);
 
 /** @emoji 🪟️ Records the active palette template drag until drop or dragend. */
 export function beginWindowTemplateDrag(session: WindowTemplateDragSession): void {
-  activeWindowTemplateDragSession = session;
+  activeWindowTemplateDragSession.current = session;
   panelGhostSessionBridge?.begin(null);
 }
 
 /** @emoji 🪟️ Clears the active palette template drag session. */
 export function endWindowTemplateDrag(): void {
-  activeWindowTemplateDragSession = null;
+  activeWindowTemplateDragSession.current = null;
   panelGhostSessionBridge?.end();
 }
 
 /** @emoji 🪟️ Returns the in-flight palette template drag, if any. */
 export function readActiveWindowTemplateDragSession(): WindowTemplateDragSession | null {
-  return activeWindowTemplateDragSession;
+  return activeWindowTemplateDragSession.current;
 }
 
 /** @emoji 🖱️ Active pointer-driven window-template drag from the Display tree. */

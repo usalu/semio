@@ -9,6 +9,16 @@ import { semioBackboneVitePlugin, semioBlobVitePlugin } from "../../🧰️frame
 import { DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_HOST, DEMONSTRATOR_PANES } from "./🟦️brand.ts";
 
 const playDir = path.dirname(fileURLToPath(import.meta.url));
+
+/** @emoji 🚫️ Keep wasm-pack engine packages out of Vite's dep optimizer — their `pkg/` entries are produced by `buildEngineWasm`. */
+const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = [
+  "@semio-tech/framework-surface-rs",
+  "@semio-tech/framework-editor-rs",
+  "@semio-tech/framework-surface-node-graph-rs",
+  "@semio-tech/framework-surface-board-2d-rs",
+  "@semio-tech/flow-core",
+];
+
 const repoRoot = path.resolve(playDir, "../..");
 const pluginModulesDir = path.join(playDir, "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules");
 
@@ -73,7 +83,7 @@ export default defineConfig({
   optimizeDeps: {
     entries: [path.join(playDir, "🌐️index.html")],
     include: ["react-reconciler", "react-reconciler/constants", "three", "@react-three/fiber", "fuse.js"],
-    exclude: ["playwright", "playwright-core", "chromium-bidi", "fsevents"],
+    exclude: ["playwright", "playwright-core", "chromium-bidi", "fsevents", ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE],
   },
   build: semioViteProductionBuild(),
 });

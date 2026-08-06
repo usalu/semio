@@ -7,7 +7,7 @@ use protocol::{Operation, OperationDiff};
 use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{NoDraft, NoDraftOperation, DraftView, 
     app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppLabels, ConfigView,
-    Contribution, DocumentApp, DocumentView, Emit, Fault, Label, Locale, LocalizedLabel, PluginBundle, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, ViewState, WorldSunConfig,
+    Contribution, DocumentApp, DocumentView, Emit, Fault, Label, Locale, LocalizedLabel, PluginBundle, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, ViewModel, WorldSunConfig,
 };
 use store::EngineHandles;
 use serde::{Deserialize, Serialize};
@@ -74,7 +74,7 @@ app_labels! {
     }
 }
 
-/// 🕳️ B1: `render`/`handle` dropped `ViewState` entirely and this module's `Config` is `NoConfig`
+/// 🕳️ B1: `render`/`handle` dropped `ViewModel` entirely and this module's `Config` is `NoConfig`
 /// (no locale/terminology axis of its own), so there is no locale signal left to resolve against at
 /// this render call site — same native-only-render gap other `NoConfig`-backed slots hit in this
 /// migration. Defaults to the native English cell until this block-kind slot grows its own locale
@@ -758,21 +758,21 @@ mod tests {
     fn preview_body_emits_world_scene() {
         let mut app = new_app();
         let document = payload_json(json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }));
-        let node = app.render(BODY_PREVIEW, Some(&document), &ViewState::default()).expect("render");
+        let node = app.render(BODY_PREVIEW, Some(&document), &ViewModel::default()).expect("render");
         assert!(matches!(node, UiNode::ComponentScene(_)));
     }
 
     #[test]
     fn params_body_lists_flow_inputs() {
         let mut app = new_app();
-        let node = app.render(BODY_PARAMS, None, &ViewState::default()).expect("render");
+        let node = app.render(BODY_PARAMS, None, &ViewModel::default()).expect("render");
         assert!(matches!(node, UiNode::Stack(_)));
     }
 
     #[test]
     fn params_body_includes_media_export_buttons() {
         let mut app = new_app();
-        let node = app.render(BODY_PARAMS, None, &ViewState::default()).expect("render");
+        let node = app.render(BODY_PARAMS, None, &ViewModel::default()).expect("render");
         let UiNode::Stack(stack) = node else {
             panic!("expected a stack node");
         };
@@ -821,7 +821,7 @@ mod tests {
         let mut app = VcsDocumentApp::with_registry(ModuleApp, registry);
         // exportSolid fired with no args: the declared `format` default is materialized before dispatch,
         // so the whole-payload operation still applies and stashes a result.
-        app.handle_action(ACTION_EXPORT_SOLID, None, &ViewState::default(), &meta()).expect("export");
+        app.handle_action(ACTION_EXPORT_SOLID, None, &ViewModel::default(), &meta()).expect("export");
         assert!(app.projection().expect("projection").params.get("__solidExport").is_some(), "export result stashed under the materialized format");
     }
 
@@ -829,13 +829,13 @@ mod tests {
     fn unknown_action_yields_no_document_change() {
         let mut app = new_app();
         let before = app.projection().expect("projection");
-        app.handle_action("noSuchAction", None, &ViewState::default(), &meta()).expect("noOperation");
+        app.handle_action("noSuchAction", None, &ViewModel::default(), &meta()).expect("noOperation");
         assert_eq!(app.projection().expect("projection"), before);
     }
 
     #[test]
     fn module_labels_resolve_native_english_by_default() {
-        let labels = module_labels(&ViewState::default());
+        let labels = module_labels(&ViewModel::default());
         assert_eq!(labels.no_flow_inputs, "No flow inputs.");
         assert_eq!(labels.no_procedural_parameters, "No procedural parameters.");
         let node = ui_text(labels.no_procedural_parameters.to_string());
@@ -845,7 +845,7 @@ mod tests {
 
     #[test]
     fn module_labels_resolve_german_locale() {
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let view_state = ViewModel { locale: Some("de".into()), ..ViewModel::default() };
         let labels = module_labels(&view_state);
         assert_eq!(labels.no_flow_inputs, "Keine Flow-Eingaben.");
         assert_eq!(labels.no_procedural_parameters, "Keine prozeduralen Parameter.");

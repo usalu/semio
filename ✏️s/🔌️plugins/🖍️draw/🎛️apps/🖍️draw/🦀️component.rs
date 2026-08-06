@@ -102,7 +102,7 @@ use canvas::{canvas_commit_draft, canvas_double_click, canvas_escape, canvas_poi
 //#endregion 🔖️Commands
 
 //#region 🔖️DrawPlayApp
-/// 🧪️ Unit struct apart from `session`: every former `DrawInteractionState`/`ViewState`-derived field
+/// 🧪️ Unit struct apart from `session`: every former `DrawInteractionState`/`ViewModel`-derived field
 /// lives in [`DrawConfig`], written through [`DrawConfigOperation`]s. `session` holds the one piece of
 /// state that is neither document nor view-config — the live gesture statechart — threaded into every
 /// command handler as the `app_commands!` dispatch context.
@@ -370,7 +370,7 @@ mod tests {
     use crate::artifacts::draw::engine::{create_draw_shape_layer_rect, default_draw_document, layer_id, semio_draw_example_json};
     use crate::artifacts::draw::DrawLayerNode;
     use semio_framework_plugin::kernel::HostEffect;
-    use semio_framework_plugin::{testkit as fw_testkit, PluginApp, ViewState, SET_ACTIVE_UTILITY_ACTION_ID};
+    use semio_framework_plugin::{testkit as fw_testkit, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};
     use testkit::{draw_app, draw_app_with_registry, set_utility, DrawApp};
 
     fn first_layer_id(app: &DrawApp) -> String {
@@ -386,7 +386,7 @@ mod tests {
     fn renders_canvas_scene_with_segments() {
         let mut app = draw_app();
         let example_json = semio_draw_example_json();
-        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, Some(example_json.as_str()), &ViewState::default()).expect("render");
+        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, Some(example_json.as_str()), &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("canvas-2d"));
         let value = serde_json::to_value(&node).unwrap();
@@ -405,7 +405,7 @@ mod tests {
     #[test]
     fn default_document_exposes_artboard_dimensions_on_canvas() {
         let mut app = draw_app();
-        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render");
+        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).expect("render");
         let value = serde_json::to_value(&node).unwrap();
         let layers_json = value.pointer("/canvas2d/layersJson").and_then(|v| v.as_str()).expect("layersJson string");
         assert!(layers_json.contains("1024 × 1024"), "blank documents show default artboard dimensions");
@@ -414,7 +414,7 @@ mod tests {
     #[test]
     fn layers_panel_lists_default_layer() {
         let mut app = draw_app();
-        let node = app.render(DRAW_PLAY_BODY_LAYERS, None, &ViewState::default()).expect("render");
+        let node = app.render(DRAW_PLAY_BODY_LAYERS, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("draw-play-layers.add.path"));
         assert!(json.contains("Layer 1"));
@@ -423,7 +423,7 @@ mod tests {
     #[test]
     fn catalogue_panel_lists_boolean_operations() {
         let mut app = draw_app();
-        let node = app.render(DRAW_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
+        let node = app.render(DRAW_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("draw-play-catalogue.path"));
         assert!(json.contains("Boolean union"));
@@ -465,7 +465,7 @@ mod tests {
         let id = first_layer_id(&app);
         let result = app.dispatch_typed(DrawCommand::SetSelection(set_selection::SetSelection { ids: vec![id] }), &fw_testkit::meta("local")).expect("select");
         assert!(result.operations.is_empty(), "selection is ephemeral view state, not a document operation");
-        let node = app.render(DRAW_PLAY_BODY_PROPERTIES, None, &ViewState::default()).expect("render");
+        let node = app.render(DRAW_PLAY_BODY_PROPERTIES, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Orientation"));
         assert!(json.contains("Position X"));
@@ -571,7 +571,7 @@ mod tests {
         app.dispatch_typed(DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 400.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("down");
         app.dispatch_typed(DrawCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 460.0, y: 360.0, width: 800.0, height: 600.0 }), &fw_testkit::meta("local")).expect("move");
         app.dispatch_typed(DrawCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("up");
-        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render");
+        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains(&format!("overlay:sel:{rect_a_id}")), "the contained rect A is selected");
         assert!(!json.contains(&format!("overlay:sel:{rect_b_id}")), "the outside rect B is not selected");
@@ -584,7 +584,7 @@ mod tests {
         let result = app.dispatch_typed(DrawCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::draw::DrawCamera { x: 5.0, y: 5.0, zoom: 2.0 } }), &fw_testkit::meta("local")).expect("camera");
         assert!(result.operations.is_empty(), "camera is a view action and emits no operations");
         assert_eq!(app.projection().expect("projection"), before, "camera never mutates the document");
-        let json = serde_json::to_string(&app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap();
+        let json = serde_json::to_string(&app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).expect("render")).unwrap();
         assert!(json.contains(r#""zoom":2.0"#), "composite scene camera reflects runtime state: {json}");
         assert!(json.contains(r#""cameraX":5.0"#), "composite scene camera reflects runtime state: {json}");
     }
@@ -595,7 +595,7 @@ mod tests {
         app.dispatch_typed(DrawCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::draw::DrawCamera { x: 4.0, y: 5.0, zoom: 1.0 } }), &fw_testkit::meta("local")).expect("set camera");
         let result = app.dispatch_typed(DrawCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 3.0 }), &fw_testkit::meta("local")).expect("set camera zoom");
         assert!(result.operations.is_empty(), "camera zoom is a view action and emits no operations");
-        let json = serde_json::to_string(&app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap();
+        let json = serde_json::to_string(&app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).expect("render")).unwrap();
         assert!(json.contains(r#""zoom":3.0"#), "zoom updated: {json}");
         assert!(json.contains(r#""cameraX":4.0"#), "pan preserved across zoom-only update: {json}");
     }
@@ -626,7 +626,7 @@ mod tests {
         app.dispatch_typed(DrawCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).expect("add");
         let id = last_layer_id(&app);
         app.dispatch_typed(DrawCommand::SetSelection(set_selection::SetSelection { ids: vec![id.clone()] }), &fw_testkit::meta("local")).expect("select");
-        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render");
+        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains(&format!("overlay:sel:{id}")));
     }
@@ -634,7 +634,7 @@ mod tests {
     #[test]
     fn draw_labels_resolve_native_by_default() {
         let mut app = draw_app();
-        let node = app.render(DRAW_PLAY_BODY_LAYERS, None, &ViewState::default()).expect("render");
+        let node = app.render(DRAW_PLAY_BODY_LAYERS, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Add Path"));
         assert!(json.contains("Add Rectangle"));
@@ -645,12 +645,12 @@ mod tests {
     fn draw_labels_translate_panels_in_german() {
         let mut app = draw_app();
         app.dispatch_typed(DrawCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), &fw_testkit::meta("local")).expect("set locale");
-        let layers_node = app.render(DRAW_PLAY_BODY_LAYERS, None, &ViewState::default()).expect("render");
+        let layers_node = app.render(DRAW_PLAY_BODY_LAYERS, None, &ViewModel::default()).expect("render");
         let layers_json = serde_json::to_string(&layers_node).unwrap();
         assert!(layers_json.contains("Pfad hinzufügen"));
         assert!(layers_json.contains("Rechteck hinzufügen"));
         assert!(!layers_json.contains("Add Path"));
-        let catalogue_node = app.render(DRAW_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
+        let catalogue_node = app.render(DRAW_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).expect("render");
         let catalogue_json = serde_json::to_string(&catalogue_node).unwrap();
         assert!(catalogue_json.contains("\"Ellipse\""));
         assert!(catalogue_json.contains("Nachzeichnung"));

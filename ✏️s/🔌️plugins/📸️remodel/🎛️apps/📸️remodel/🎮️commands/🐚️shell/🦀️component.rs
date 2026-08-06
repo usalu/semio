@@ -3,7 +3,7 @@
 
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigOperation};
 use crate::artifacts::remodel::op::RemodelOperation;
-use crate::artifacts::remodel::RemodelScene;
+use crate::artifacts::remodel::RemodelProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault, HostEffect};
 use serde::{Deserialize, Serialize};
 
@@ -22,7 +22,7 @@ pub mod import_frames {
     #[dsl(keyword = "import-frames")]
     pub struct ImportFrames {}
 
-    pub fn handle(_payload: &ImportFrames, _doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(_payload: &ImportFrames, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
         Ok(Emit::effect(HostEffect::RequestFileOpen { accept: REMODEL_MEDIA_ACCEPT.into(), read_as: Some("dataUrl".into()), import_action: "importFramePayload".into(), multiple: true }))
     }
 }
@@ -38,7 +38,7 @@ pub mod import_video {
 
     /// 🎞️ Asks the host to decode and sample the picked video, using the document's own ingest params;
     /// `fallback_action` hands the raw container back when the host cannot decode it.
-    pub fn handle(_payload: &ImportVideo, doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(_payload: &ImportVideo, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
         let ingest = &doc.projection.params.ingest;
         Ok(Emit::effect(HostEffect::RequestMediaFrames {
             accept: REMODEL_VIDEO_ACCEPT.into(),
@@ -64,7 +64,7 @@ pub mod export_qc_report {
     #[dsl(keyword = "export-qc-report")]
     pub struct ExportQcReport {}
 
-    pub fn handle(_payload: &ExportQcReport, doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(_payload: &ExportQcReport, doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
         match &doc.projection.results.qc {
             Some(qc) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: "remodel-qc-report.ops".into(), mime_type: "text/plain".into(), data: serde_json::to_string_pretty(qc).unwrap_or_default(), encoding: None })),
             None => Ok(Emit::default()),

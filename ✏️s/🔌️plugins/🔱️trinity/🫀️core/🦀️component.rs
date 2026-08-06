@@ -21,12 +21,8 @@ pub mod queryable {
     use math::graph::dsl::{QueryableEdge, QueryableGraph};
     use math::graph::manifest::{manifest_by_id, GraphManifest, PropertyValue};
     use std::collections::BTreeSet;
-    use std::sync::OnceLock;
-
-    static TRINITY_JACK_MANIFEST: OnceLock<GraphManifest> = OnceLock::new();
-
-    fn trinity_jack_manifest() -> &'static GraphManifest {
-        TRINITY_JACK_MANIFEST.get_or_init(|| manifest_by_id("nakagin").expect("nakagin manifest"))
+    fn trinity_jack_manifest() -> GraphManifest {
+        manifest_by_id("nakagin").expect("nakagin manifest").clone()
     }
 
     fn trinity_queryable_edges(graph: &Graph) -> Vec<QueryableEdge> {

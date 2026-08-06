@@ -106,7 +106,7 @@ fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::apps::da
 //#endregion 🔖️ContextMenu
 
 //#region 🔖️DagPlayApp
-/// 🧪️ Unit struct — every former `DagPlayRuntime`/`ViewState.locale` field now lives in [`DagConfig`],
+/// 🧪️ Unit struct — every former `DagPlayRuntime`/`ViewModel.locale` field now lives in [`DagConfig`],
 /// written through [`DagConfigOperation`]s.
 #[derive(Default)]
 pub struct DagPlayApp;
@@ -234,7 +234,7 @@ pub fn create_dag_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app as framework_new_app, new_app_with_registry as framework_new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
 
     pub type DagApp = VcsDocumentApp<DagPlayApp>;
 
@@ -253,7 +253,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut DagApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
 //#endregion 🧪️Testkit

@@ -1,0 +1,25 @@
+Lane 1-oracle scope note (2026-08-06)
+
+Owned edits:
+- ✏️s/🔨️modules/🧊️3d/📐️brep/🔮️oracle/🦀️component.rs — Wave 1 oracle extensions
+- Ticket: 🧪differential/compare-notes.md, 🧪lane-1-oracle-test-quick-run-1.txt, this file
+- Ticket: 📐️module-contracts.md (`oracle` row FROZEN), 🚦️lane-status.md (1-oracle done)
+
+API landed:
+- `Sdf::Cone { radius, half_height, placement }` — capped cone along local z (iq-style SDF)
+- `Sdf::Torus { major_radius, minor_radius, placement }` — z-axis torus tube SDF
+- `ClosedFormMass::{box,sphere,cylinder}_{volume,surface_area}`
+- `WatertightnessVerdict`, `WatertightnessReport`, `watertightness_from_boundary_edge_count`, `watertightness_stub_unchecked`
+
+Tests (inline `brep::oracle::tests`, 10 cases):
+- Prior SDF/boolean/placement tests retained
+- torus_sdf_*, cone_sdf_*, closed_form_mass_*, watertightness_stub_*
+
+Verification command:
+  SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk \
+  DEVELOPER_DIR=/Library/Developer/CommandLineTools \
+  cargo test -p semio-s-3d --lib oracle
+
+Verification command (2026-08-06): all 14 tests matching filter `oracle` passed (10 in `brep::oracle::tests`, 4 cross-module oracle regression tests).
+
+No brepkit production deps added.

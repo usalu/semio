@@ -297,7 +297,7 @@ pub fn create_architect_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app as sdk_new_app, new_app_with_registry};
-    use semio_framework_plugin::{HistoryView, InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{HistoryView, InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
 
     pub type ArchitectApp = VcsDocumentApp<ArchitectPlayApp>;
 
@@ -315,7 +315,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut ArchitectApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
     /// 🔀️ Drives a typed `ArchitectCommand` straight through `handle` against a bare

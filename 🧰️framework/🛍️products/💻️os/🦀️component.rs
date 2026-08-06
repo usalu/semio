@@ -10,7 +10,7 @@ pub mod host {
     use crate::instance::{create_os_id, OsInstanceState};
     use crate::registry::{os_app_registration, resolve_os_app_definition, PluginRegistry};
     use protocol::Operation;
-    use semio_framework_core::{AppDefinition, Contribution, PluginManifest, ViewState};
+    use semio_framework_core::{AppDefinition, Contribution, PluginManifest, ViewModel};
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
     use std::sync::{Arc, LazyLock, Mutex};
@@ -172,7 +172,7 @@ pub mod host {
             let app = self.registry.find_app(app_id)?;
             let id = self.next_instance_id;
             self.next_instance_id += 1;
-            self.instances.insert(id, OsInstanceState { id, app_id: app.id.clone(), controller_id: app.controller_id.clone(), document_json, view_state: ViewState::default(), generation: 0 });
+            self.instances.insert(id, OsInstanceState { id, app_id: app.id.clone(), controller_id: app.controller_id.clone(), document_json, view_state: ViewModel::default(), generation: 0 });
             Some(id)
         }
 
@@ -187,7 +187,7 @@ pub mod host {
         //#region 🔖️ActionKernel
 
         /// @emoji 🩺️ Delegates to `ui_wgpu::wgpu::ui_recovery_panel`'s `🔖️StatusBuilders` builder — this host
-        /// has no locale on hand at this call site (no `ViewState` threaded into `recovery_ui`), so
+        /// has no locale on hand at this call site (no `ViewModel` threaded into `recovery_ui`), so
         /// `is_de` is pinned to `false` (English) until a locale source is plumbed through.
         pub fn recovery_ui(&self, plugin_id: &str) -> UiNode {
             let quarantined = self.supervisor.get(plugin_id).copied() == Some(ProgramSupervisorState::Quarantined);
@@ -195,7 +195,7 @@ pub mod host {
         }
         //#endregion 🔖️ActionKernel
 
-        pub fn set_view_state(&mut self, instance_id: u32, view_state: ViewState) {
+        pub fn set_view_state(&mut self, instance_id: u32, view_state: ViewModel) {
             if let Some(instance) = self.instances.get_mut(&instance_id) {
                 instance.view_state = view_state;
                 instance.generation += 1;
@@ -782,7 +782,7 @@ pub mod host {
     // duplex `PresencePeer`/`HubServerFrame::Presence` frames (`framework/core/rs`'s 🔖️HubProtocol
     // region) via `framework/sync`'s `DocumentHost::subscribe` yielding `DocumentEvent::Presence`; the
     // `host_runtime` module below is where a native host translates that event into
-    // `ViewState.presence_peers_json` — the plugin read-side contract is unchanged.
+    // `ViewModel.presence_peers_json` — the plugin read-side contract is unchanged.
 
     //#region 🔖️SpaceCatalog
     pub const OS_HOME_VFS_ROOT_ID: &str = "os-home-root";
@@ -1812,7 +1812,7 @@ pub mod host_runtime {
     //! 4. `DocumentHost::subscribe(&document_id)` → `broadcast::Receiver<DocumentEvent>`; on each event:
     //!    - `RemoteOperations`/`SnapshotReplaced` are already pushed into the store's inbound queue by the actor
     //!      — the caller just needs to call `store.tick()` (step 5) to materialize them.
-    //!    - `Presence{peers}` translates into `ViewState.presence_peers_json` via
+    //!    - `Presence{peers}` translates into `ViewModel.presence_peers_json` via
     //!      {@link presence_peers_json} — the ONLY place presence now flows through; the old `presence:`
     //!      backbone-URI hack is gone entirely.
     //!    - `Status`/`Conflict` surface on the shell's sync-status badge / conflict card.
@@ -1864,7 +1864,7 @@ pub mod host_runtime {
         host.close(document_id);
     }
 
-    /// @emoji 👥️ Translates a `DocumentEvent::Presence` into the `ViewState.presence_peers_json` contract
+    /// @emoji 👥️ Translates a `DocumentEvent::Presence` into the `ViewModel.presence_peers_json` contract
     /// plugins already read (`semio_framework_core::PresencePeer` → JSON array) — the new (only) source
     /// of presence data; the deleted `presence:` backbone hack used to be it.
     pub fn presence_peers_json(event: &DocumentEvent) -> Option<String> {
@@ -1947,7 +1947,7 @@ pub mod instance {
         pub app_id: String,
         pub controller_id: String,
         pub document_json: String,
-        pub view_state: semio_framework_core::ViewState,
+        pub view_state: semio_framework_core::ViewModel,
         pub generation: u64,
     }
 

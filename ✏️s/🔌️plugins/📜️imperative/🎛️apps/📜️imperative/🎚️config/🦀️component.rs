@@ -6,7 +6,7 @@
 //! `DocumentStore` (with a real `backwards`), so selection/run-output/locale edits are VCS'd exactly like
 //! document content — absorbing the former app-struct `RefCell` (`ImperativePlayRuntime`'s
 //! `selected_step_ids`/`run_output_json`) plus the locale the UI used to read off the deleted
-//! `ViewState`.
+//! `ViewModel`.
 
 use serde::{Deserialize, Serialize};
 

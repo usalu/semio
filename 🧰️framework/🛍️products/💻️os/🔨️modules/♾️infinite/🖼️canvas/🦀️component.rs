@@ -289,7 +289,7 @@ pub mod theme {
     // #region theme
     //! @emoji 🎨️ Default canvas paint helpers from centralized styling tokens.
 
-    use self::Color;
+    use super::Color;
     use ui_styling::{appearance::AppearanceName, CANVAS_LIGHT};
 
     /// @emoji 🌈️ Maps a linear-sRGB token color to `Color`.
@@ -357,9 +357,9 @@ pub mod theme {
 pub mod icon_assets {
     //! @emoji 📎️ Static bytes for icon rendering; `include_bytes!` paths are relative to this `lib.rs` file.
 
-    pub static NOTO_COLOR_EMOJI_SUBSET_TTF: &[u8] = include_bytes!("../../../🖼️canvas/⚡️implementations/🦀️rust/🖼️assets/🔤️NotoColorEmoji-subset.ttf");
+    pub static NOTO_COLOR_EMOJI_SUBSET_TTF: &[u8] = include_bytes!("🖼️assets/🔤️NotoColorEmoji-subset.ttf");
 
-    pub static MAP_LABEL_SANS_TTF: &[u8] = include_bytes!("../../../🖼️canvas/⚡️implementations/🦀️rust/🖼️assets/🔤️MapLabelSans.ttf");
+    pub static MAP_LABEL_SANS_TTF: &[u8] = include_bytes!("🖼️assets/🔤️MapLabelSans.ttf");
 }
 
 // #endregion 🏷️IconAssets
@@ -367,8 +367,8 @@ pub mod icon_assets {
 pub mod svg_icon {
     use std::sync::{Arc, OnceLock};
 
-    use self::usvg;
-    use self::{Affine, BezPath, Color, FillRule, Point, Scene, ShapeRef, Stroke};
+    use super::usvg;
+    use super::{Affine, BezPath, Color, FillRule, Point, Scene, ShapeRef, Stroke};
 
     // #region 🔖️IconUsvgParseOptions
 
@@ -655,20 +655,20 @@ pub mod svg_icon {
     }
 
     /// @emoji 🏷️ Parses SVG source and renders it themed into `scene`.
-    pub fn append_svg_str_themed(scene: &mut Scene, svg: &str, fg: Color, bg: Color) -> Result<(), self::CanvasError> {
-        let tree = usvg::Tree::from_str(svg, usvg_options_icons()).map_err(|e| self::CanvasError::SvgParse(e.to_string()))?;
+    pub fn append_svg_str_themed(scene: &mut Scene, svg: &str, fg: Color, bg: Color) -> Result<(), super::CanvasError> {
+        let tree = usvg::Tree::from_str(svg, usvg_options_icons()).map_err(|e| super::CanvasError::SvgParse(e.to_string()))?;
         render_svg_tree_themed(scene, &tree, fg, bg);
         Ok(())
     }
 
     /// @emoji 🏷️ Parses SVG source and renders it with the default icon theme into `scene`.
-    pub fn append_svg_str(scene: &mut Scene, svg: &str) -> Result<(), self::CanvasError> {
-        append_svg_str_themed(scene, svg, self::theme::default_icon_fg(), self::theme::default_icon_bg())
+    pub fn append_svg_str(scene: &mut Scene, svg: &str) -> Result<(), super::CanvasError> {
+        append_svg_str_themed(scene, svg, super::theme::default_icon_fg(), super::theme::default_icon_bg())
     }
 
     /// @emoji 📐️ Parses SVG and returns visible content bounds in absolute SVG space.
-    pub fn svg_icon_content_bounds_from_str(svg: &str) -> Result<(f64, f64, f64, f64), self::CanvasError> {
-        let tree = usvg::Tree::from_str(svg, usvg_options_icons()).map_err(|e| self::CanvasError::SvgParse(e.to_string()))?;
+    pub fn svg_icon_content_bounds_from_str(svg: &str) -> Result<(f64, f64, f64, f64), super::CanvasError> {
+        let tree = usvg::Tree::from_str(svg, usvg_options_icons()).map_err(|e| super::CanvasError::SvgParse(e.to_string()))?;
         Ok(svg_icon_content_bounds(&tree))
     }
 }
@@ -700,9 +700,9 @@ impl SvgDocument {
 pub mod text {
     use std::sync::{Arc, OnceLock};
 
-    use self::svg_icon::render_svg_tree_literal;
-    use self::usvg;
-    use self::{Affine, Color, Point, Scene, Vec2};
+    use super::svg_icon::render_svg_tree_literal;
+    use super::usvg;
+    use super::{Affine, Color, Point, Scene, Vec2};
 
     static MAP_LABEL_USVG_OPTIONS: OnceLock<usvg::Options<'static>> = OnceLock::new();
 
@@ -786,7 +786,7 @@ pub mod text {
             text = escape_xml_attr(body),
         );
         let tree = usvg::Tree::from_str(&svg, usvg_options_map_labels()).ok()?;
-        let (bx, _, bw, bh) = self::svg_icon::svg_icon_content_bounds(&tree);
+        let (bx, _, bw, bh) = super::svg_icon::svg_icon_content_bounds(&tree);
         if bw <= 0.0 || bh <= 0.0 {
             return None;
         }
@@ -821,7 +821,7 @@ pub mod text {
         let Ok(tree) = usvg::Tree::from_str(&svg, usvg_options_map_labels()) else {
             return label_advance(prefix, px);
         };
-        let (bx, _, bw, bh) = self::svg_icon::svg_icon_content_bounds(&tree);
+        let (bx, _, bw, bh) = super::svg_icon::svg_icon_content_bounds(&tree);
         if bw <= 0.0 || bh <= 0.0 {
             return label_advance(prefix, px);
         }
@@ -868,7 +868,7 @@ pub mod text {
         let Ok(tree) = usvg::Tree::from_str(&svg, usvg_options_map_labels()) else {
             return;
         };
-        let (bx, by, bw, bh) = self::svg_icon::svg_icon_content_bounds(&tree);
+        let (bx, by, bw, bh) = super::svg_icon::svg_icon_content_bounds(&tree);
         if bw <= 0.0 || bh <= 0.0 {
             return;
         }
@@ -915,7 +915,7 @@ pub mod text {
         let Ok(tree) = usvg::Tree::from_str(&svg, usvg_options_map_labels()) else {
             return;
         };
-        let (bx, by, bw, bh) = self::svg_icon::svg_icon_content_bounds(&tree);
+        let (bx, by, bw, bh) = super::svg_icon::svg_icon_content_bounds(&tree);
         if bw <= 0.0 || bh <= 0.0 {
             return;
         }
@@ -930,7 +930,7 @@ pub mod text {
 
 // #region 🔖️Camera
 pub mod camera {
-    use self::{Affine, Point};
+    use super::{Affine, Point};
 
     pub const CANVAS_CAMERA_ZOOM_MIN: f64 = ui_styling::metrics::camera::ZOOM_MIN;
     pub const CANVAS_CAMERA_ZOOM_MAX: f64 = ui_styling::metrics::camera::ZOOM_MAX;
@@ -1059,7 +1059,7 @@ pub mod lod {
 
 // #region 🔖️Raster
 pub mod raster {
-    use self::{Affine, RasterImage, Scene};
+    use super::{Affine, RasterImage, Scene};
     use std::collections::HashMap;
     use std::sync::Arc;
 
@@ -1092,7 +1092,7 @@ pub mod raster {
 
 // #region 🔖️Render
 pub mod render {
-    use self::{Affine, Scene};
+    use super::{Affine, Scene};
 
     /// @emoji 📐️ Scales a logical-viewport scene to the physical GPU surface (device pixel ratio).
     pub fn scale_scene_for_device_pixel_ratio(scene: Scene, dpr: f64) -> Scene {
@@ -1109,7 +1109,7 @@ pub mod render {
 
 // #region 🔖️CanvasContent
 pub mod canvas_content {
-    use self::{Color, Scene};
+    use super::{Color, Scene};
 
     pub trait CanvasContent {
         fn build_scene(&self) -> Scene;
@@ -1121,8 +1121,8 @@ pub mod canvas_content {
 // #region 🔖️GpuSession
 #[cfg(target_arch = "wasm32")]
 pub mod gpu_session {
-    use self::renderer::vello_backend::{util, vello, wgpu};
-    use self::{Color, Scene};
+    use super::renderer::vello_backend::{util, vello, wgpu};
+    use super::{Color, Scene};
     use wasm_bindgen::prelude::JsValue;
     use web_sys::HtmlCanvasElement;
 
@@ -1664,7 +1664,7 @@ mod tests {
     use super::lod::{Lod, LodScale};
     use super::text;
     use super::theme;
-    use self::{Point, Scene};
+    use super::{Point, Scene};
 
     #[test]
     fn scale_scene_for_device_pixel_ratio_scales_logical_scene() {

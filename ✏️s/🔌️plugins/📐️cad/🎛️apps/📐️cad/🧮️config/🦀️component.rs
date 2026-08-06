@@ -1,6 +1,6 @@
 //! 🧮️ CAD app — `DocumentApp::Config`: every field that used to live in the app struct's ephemeral
 //! `CadPlayRuntime` (selection, hover, engagement session, per-pane cameras, sun, dislocate handles)
-//! plus the locale/terminology/active-utility the shell used to push through the deleted `ViewState`.
+//! plus the locale/terminology/active-utility the shell used to push through the deleted `ViewModel`.
 //! Session view state round-trips through the config `DocumentStore` exactly like document content,
 //! with a real `backwards` via `CadConfigOperation` at the bottom of this file.
 
@@ -64,7 +64,7 @@ impl Default for CadComponentSelection {
 }
 
 /// 🎛️ Per-pane handle groups exposed by the Dislocate gumball utility — was keyed by an arbitrary
-/// host-pushed `ViewState.window_id` (`cad_ui::CadPlayRuntime::dislocate_options_by_window_id`); the
+/// host-pushed `ViewModel.window_id` (`cad_ui::CadPlayRuntime::dislocate_options_by_window_id`); the
 /// pure `DocumentApp::render`/`window_measures` surface has no per-window-instance parameter anymore
 /// (only `body_key`, which already resolves 1:1 to one of the 4 fixed CAD panes), so `CadConfig` keys
 /// this by PANE instead — one named field per pane, mirroring `camera`/`camera_building`/…
@@ -113,7 +113,7 @@ pub fn cad_sun_config_to_world(sun: &CadSunConfig) -> semio_framework_plugin::Wo
 /// `semio_framework_plugin::SelectionSet`, which is foreign and has no `dsl` derive); `cad_ui` still
 /// uses the richer `SelectionSet` internally and converts at the boundary.
 /// `engagement_session_json` is the pre-serialized JSON of `cad_document_engine::interaction::
-/// CadEngagementSession` — that type's `context: HashMap<String, Value>` field has no `dsl` shape
+/// CadEngagementScratch` — that type's `context: HashMap<String, Value>` field has no `dsl` shape
 /// (arbitrary JSON), so it round-trips as an opaque string rather than a nested `#[dsl(block)]`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
@@ -152,7 +152,7 @@ pub struct CadConfig {
     pub selected_primitive_kind: Option<String>,
     /// 👁️ Was `CadPlayRuntime::engagement_pane`.
     pub engagement_pane: Option<String>,
-    /// 👁️ Was `CadPlayRuntime::engagement_session` (`Option<CadEngagementSession>`) — see the struct
+    /// 👁️ Was `CadPlayRuntime::engagement_session` (`Option<CadEngagementScratch>`) — see the struct
     /// doc comment for why this is an opaque JSON string here.
     pub engagement_session_json: Option<String>,
     /// 👁️ Was `CadPlayRuntime::last_finalized_interaction_id`.
@@ -183,7 +183,7 @@ pub struct CadConfig {
     #[dsl(block)]
     pub dislocate_structure_classic: CadDislocateOptions,
     /// 🧰️ The active transform-gumball utility — was read off `view_state.active_utility_id`
-    /// (host-pushed `ViewState`, deleted by B1).
+    /// (host-pushed `ViewModel`, deleted by B1).
     pub active_utility_id: String,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
     pub locale: String,

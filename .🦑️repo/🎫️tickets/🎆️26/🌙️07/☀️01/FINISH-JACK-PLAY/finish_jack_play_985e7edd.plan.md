@@ -12,7 +12,7 @@ todos:
    content: Add runJackJsonWithFixture WASM export; sync mutated fixtureJson to docStore; route Results host table vs TrinityCanvas
    status: completed
  - id: trinity-lod
-   content: Implement 6-band LOD, wheel_screen, real paint_scene tiers in TrinityHost; expose LOD helpers on TrinityCanvas
+   content: Implement 6-band LOD, wheel_screen, real paint_scene tiers in TrinityBridge; expose LOD helpers on TrinityCanvas
    status: completed
  - id: play-lod-fixtures
    content: Add LOD mode to Jack play controller; fixture catalog with nakagin-table and branch-chain-graph presets + branch-chain.trinity.json
@@ -59,7 +59,7 @@ Follow the established 3-layer pattern (same as DAG / puzzle 2d):
 ```
 trinity/jack/core     — Jack parse/execute (SSOT for query semantics)
 trinity/ram           — Trinity graph model + fixture JSON
-trinity/rewrite/engine — TrinityHost: syncs Graph ↔ BoardEngine, LOD paint, WASM session
+trinity/rewrite/engine — TrinityBridge: syncs Graph ↔ BoardEngine, LOD paint, WASM session
 trinity/react         — TrinityCanvas + Jack bridge types/helpers
 trinity/jack/play     — PlayController, fixture catalog, window layout
 framework/playground  — Surface hosts only (thin wiring)
@@ -139,7 +139,7 @@ Remove `[DEBUG]` console logs in Jack surface hosts once verified.
 
 ## Phase 2 — Mathematical zoom + LOD on Trinity canvas
 
-### 2a. TrinityHost LOD ([trinity/rewrite/engine/lib.rs](trinity/rewrite/engine/lib.rs))
+### 2a. TrinityBridge LOD ([trinity/rewrite/engine/lib.rs](trinity/rewrite/engine/lib.rs))
 
 - Define `TRINITY_LODS` (same 6 `max_zoom` thresholds as [PUZZLE_2D_LODS](mathematical/graph/port/directed/normal/lib.rs)).
 - Add `TrinityDrawLod` enum + `draw_lod_for_frame()` using `automatic_lod` / `forced_draw_lod_label` fields (replace no-ops).
@@ -152,7 +152,7 @@ Remove `[DEBUG]` console logs in Jack surface hosts once verified.
 
 ### 2b. Wheel + camera sync
 
-- Add `TrinityHost::wheel_screen(sx, sy, delta_y)` using `infinite_canvas::camera::wheel_screen` on `engine.camera`, sync back to `graph.camera`.
+- Add `TrinityBridge::wheel_screen(sx, sy, delta_y)` using `infinite_canvas::camera::wheel_screen` on `engine.camera`, sync back to `graph.camera`.
 - WASM: `wheelScreen` binding on `TrinitySession`.
 - [trinity/react/index.tsx](trinity/react/index.tsx): `wheel` listener on canvas (passive: false, `preventDefault`), call session, `onFixtureChange(session.fixtureJson())`, `renderFrame()`.
 

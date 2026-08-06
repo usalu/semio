@@ -4785,7 +4785,7 @@ mod scene {
     }
 
     /// 🏗️ Default scene implementation backing most user scenes.
-    pub struct BasicScene {
+    pub struct BasicStage {
         pub config: AnimateConfig,
         pub camera: Camera,
         pub mobjects: HashMap<u64, Box<dyn Sobject>>,
@@ -4793,7 +4793,7 @@ mod scene {
         pub scene_time: f64,
     }
 
-    impl BasicScene {
+    impl BasicStage {
         pub fn new(config: AnimateConfig) -> Self {
             let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
             Self { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 }
@@ -4806,7 +4806,7 @@ mod scene {
         }
     }
 
-    impl Scene for BasicScene {
+    impl Scene for BasicStage {
         fn construct(&mut self) {}
 
         fn config(&self) -> &AnimateConfig {
@@ -4852,12 +4852,12 @@ mod scene {
 
     /// 🧪️ Specialized scene for unit tests with fixed frame rate.
     pub struct TestScene {
-        inner: BasicScene,
+        inner: BasicStage,
     }
 
     impl TestScene {
         pub fn new() -> Self {
-            Self { inner: BasicScene::new(AnimateConfig::default().with_frame_rate(60.0)) }
+            Self { inner: BasicStage::new(AnimateConfig::default().with_frame_rate(60.0)) }
         }
     }
 
@@ -4903,14 +4903,14 @@ mod scene {
 
     /// 🎥️ Scene with a panning/zooming {@link MovingCamera}.
     pub struct MovingCameraScene {
-        inner: BasicScene,
+        inner: BasicStage,
         pub moving_camera: MovingCamera,
     }
 
     impl MovingCameraScene {
         pub fn new(config: AnimateConfig) -> Self {
             let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
-            Self { moving_camera: MovingCamera::new(camera.clone()), inner: BasicScene { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 } }
+            Self { moving_camera: MovingCamera::new(camera.clone()), inner: BasicStage { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 } }
         }
     }
 
@@ -4954,14 +4954,14 @@ mod scene {
 
     /// 🧊️ Scene using a perspective {@link ThreeDCamera}.
     pub struct ThreeDScene {
-        inner: BasicScene,
+        inner: BasicStage,
         pub three_d_camera: ThreeDCamera,
     }
 
     impl ThreeDScene {
         pub fn new(config: AnimateConfig) -> Self {
             let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
-            Self { three_d_camera: ThreeDCamera::new(camera.clone()), inner: BasicScene { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 } }
+            Self { three_d_camera: ThreeDCamera::new(camera.clone()), inner: BasicStage { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 } }
         }
     }
 
@@ -5001,14 +5001,14 @@ mod scene {
 
     /// 🔍️ Scene with a picture-in-picture {@link ZoomedCamera} inset.
     pub struct ZoomedScene {
-        inner: BasicScene,
+        inner: BasicStage,
         pub zoomed_camera: ZoomedCamera,
     }
 
     impl ZoomedScene {
         pub fn new(config: AnimateConfig, zoom_factor: f64) -> Self {
             let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
-            Self { zoomed_camera: ZoomedCamera::new(camera.clone(), zoom_factor), inner: BasicScene { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 } }
+            Self { zoomed_camera: ZoomedCamera::new(camera.clone(), zoom_factor), inner: BasicStage { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 } }
         }
     }
 
@@ -5048,12 +5048,12 @@ mod scene {
 
     /// ➡️ Scene for vector-field and linear-transformation animations.
     pub struct VectorScene {
-        inner: BasicScene,
+        inner: BasicStage,
     }
 
     impl VectorScene {
         pub fn new(config: AnimateConfig) -> Self {
-            Self { inner: BasicScene::new(config) }
+            Self { inner: BasicStage::new(config) }
         }
     }
 
@@ -6404,13 +6404,11 @@ mod text {
         Some(typst_svg::svg_merged(&doc, Abs::pt(4.0)))
     }
 
-    static TYPST_FONTS: OnceLock<Vec<Font>> = OnceLock::new();
-    static TYPST_BOOK: OnceLock<LazyHash<FontBook>> = OnceLock::new();
-
+        
     /// 🖨️ Compile Typst markup to merged SVG.
     pub fn typst_markup_to_svg(markup: &str) -> Option<String> {
         let fonts = TYPST_FONTS.get_or_init(typst_asset_font_list);
-        let book = TYPST_BOOK.get_or_init(|| LazyHash::new(FontBook::from_fonts(fonts.iter())));
+        let book = (LazyHash::new(FontBook::from_fonts(fonts.iter())));
         typst_compile_markup_to_svg(markup, fonts.as_slice(), book)
     }
 

@@ -14,12 +14,16 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 
 //#region 🔖️Types
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[serde(transparent)]
+pub struct CadEngagementContext(pub HashMap<String, Value>);
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CadEngagementSession {
+pub struct CadEngagementScratch {
     pub interaction_id: String,
     pub state: String,
-    pub context: HashMap<String, Value>,
+    pub context: CadEngagementContext,
     pub pane: CadPaneId,
     #[serde(default)]
     pub last_response: Option<String>,
@@ -103,20 +107,16 @@ fn is_legacy_building_id(id: &str) -> bool {
     LEGACY_BUILDING_INTERACTION_IDS.contains(&id)
 }
 
-static PARSED_SPECS: OnceLock<Vec<(&'static str, InteractionSpec)>> = OnceLock::new();
-
-fn parsed_specs() -> &'static [(&'static str, InteractionSpec)] {
-    PARSED_SPECS.get_or_init(|| RAW_INTERACTION_ASSETS.iter().filter_map(|(model_def, raw)| serde_json::from_str::<InteractionSpec>(raw).ok().map(|spec| (*model_def, spec))).collect())
+fn parsed_specs() -> Vec<(&'static str, InteractionSpec)> {
+    RAW_INTERACTION_ASSETS.iter().filter_map(|(model_def, raw)| serde_json::from_str::<InteractionSpec>(raw).ok().map(|spec| (*model_def, spec))).collect()
 }
 
-fn spec_by_id(id: &str) -> Option<&'static InteractionSpec> {
-    parsed_specs().iter().find(|(_, spec)| spec.id == id).map(|(_, spec)| spec)
+fn spec_by_id(id: &str) -> Option<InteractionSpec> {
+    parsed_specs().into_iter().find(|(_, spec)| spec.id == id).map(|(_, spec)| spec)
 }
 
-static CATALOG: OnceLock<Vec<InteractionCatalogEntry>> = OnceLock::new();
-
-fn catalog() -> &'static [InteractionCatalogEntry] {
-    CATALOG.get_or_init(|| {
+fn catalog() -> Vec<InteractionCatalogEntry> {
+    {
         let mut entries = vec![
             InteractionCatalogEntry { id: "building.building.constructWall".to_string(), label: "Wall".to_string(), key: "w".to_string(), model_definition_id: "aec.building".to_string(), produces_typology: "building.building.wall".to_string() },
             InteractionCatalogEntry { id: "building.building.constructBeam".to_string(), label: "Beam".to_string(), key: "m".to_string(), model_definition_id: "aec.building".to_string(), produces_typology: "building.building.beam".to_string() },
@@ -171,19 +171,19 @@ fn parse_vec3(value: &Value) -> Option<[f64; 3]> {
     Some([array[0].as_f64()?, array[1].as_f64()?, array[2].as_f64()?])
 }
 
-fn context_point(session: &CadEngagementSession, field: &str) -> Option<[f64; 3]> {
+fn context_point(session: &CadEngagementScratch, field: &str) -> Option<[f64; 3]> {
     session.context.get(field).and_then(parse_vec3)
 }
 
-pub fn start_session(interaction_id: &str, pane: CadPaneId) -> Option<CadEngagementSession> {
+pub fn start_session(interaction_id: &str, pane: CadPaneId) -> Option<CadEngagementScratch> {
     if is_legacy_building_id(interaction_id) {
-        return Some(CadEngagementSession { interaction_id: interaction_id.to_string(), state: "idle".to_string(), context: HashMap::new(), pane, last_response: None });
+        return Some(CadEngagementScratch { interaction_id: interaction_id.to_string(), state: "idle".to_string(), context: HashMap::new(), pane, last_response: None });
     }
     let spec = spec_by_id(interaction_id)?;
-    Some(CadEngagementSession { interaction_id: spec.id.clone(), state: spec.machine.initial.clone(), context: HashMap::new(), pane, last_response: None })
+    Some(CadEngagementScratch { interaction_id: spec.id.clone(), state: spec.machine.initial.clone(), context: HashMap::new(), pane, last_response: None })
 }
 
-pub fn keyed_transitions(session: &CadEngagementSession) -> Vec<KeyedTransition> {
+pub fn keyed_transitions(session: &CadEngagementScratch) -> Vec<KeyedTransition> {
     if is_legacy_building_id(&session.interaction_id) {
         return legacy_keyed_transitions(session);
     }
@@ -204,7 +204,7 @@ pub fn keyed_transitions(session: &CadEngagementSession) -> Vec<KeyedTransition>
     out
 }
 
-pub fn can_commit(session: &CadEngagementSession) -> bool {
+pub fn can_commit(session: &CadEngagementScratch) -> bool {
     if is_legacy_building_id(&session.interaction_id) {
         return session.state == "ready";
     }
@@ -289,7 +289,7 @@ fn run_named_action_effect(context: &mut HashMap<String, Value>, payload: Option
     }
 }
 
-fn apply_effect(session: &mut CadEngagementSession, payload: Option<&Value>, effect: &Effect, raised: &mut Vec<String>) {
+fn apply_effect(session: &mut CadEngagementScratch, payload: Option<&Value>, effect: &Effect, raised: &mut Vec<String>) {
     let empty_vars = HashMap::new();
     match effect {
         Effect::Assign { target, value } => {
@@ -331,7 +331,7 @@ fn apply_effect(session: &mut CadEngagementSession, payload: Option<&Value>, eff
     }
 }
 
-fn apply_event_generic(session: &mut CadEngagementSession, event_kind: &str, raw_payload: Option<&Value>, depth: u8) -> bool {
+fn apply_event_generic(session: &mut CadEngagementScratch, event_kind: &str, raw_payload: Option<&Value>, depth: u8) -> bool {
     if depth > 8 {
         return false;
     }
@@ -370,14 +370,14 @@ fn apply_event_generic(session: &mut CadEngagementSession, event_kind: &str, raw
     true
 }
 
-fn legacy_keyed_transitions(session: &CadEngagementSession) -> Vec<KeyedTransition> {
+fn legacy_keyed_transitions(session: &CadEngagementScratch) -> Vec<KeyedTransition> {
     if session.state == "idle" {
         return vec![KeyedTransition { key: "s".into(), label: "Start".into(), event_kind: "start".into() }];
     }
     Vec::new()
 }
 
-fn legacy_apply_event(session: &mut CadEngagementSession, event_kind: &str, payload: Option<&Value>) -> bool {
+fn legacy_apply_event(session: &mut CadEngagementScratch, event_kind: &str, payload: Option<&Value>) -> bool {
     let is_column = session.interaction_id == "building.building.constructColumn";
     let changed = match (session.state.as_str(), event_kind) {
         ("idle", "start") => {
@@ -437,7 +437,7 @@ fn legacy_apply_event(session: &mut CadEngagementSession, event_kind: &str, payl
     changed
 }
 
-pub fn apply_event(session: &mut CadEngagementSession, event_kind: &str, payload: Option<&Value>) -> bool {
+pub fn apply_event(session: &mut CadEngagementScratch, event_kind: &str, payload: Option<&Value>) -> bool {
     if is_legacy_building_id(&session.interaction_id) {
         return legacy_apply_event(session, event_kind, payload);
     }
@@ -615,7 +615,7 @@ fn commit_command_finish(kernel: &mut dyn BrepKernel, params: &HashMap<String, V
     }
 }
 
-fn legacy_commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementSession, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+fn legacy_commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     let entry = interaction_by_id(&session.interaction_id)?;
     if session.interaction_id == "building.building.constructColumn" {
         let base = context_point(session, "base")?;
@@ -675,7 +675,7 @@ fn legacy_commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementSess
     })
 }
 
-pub fn commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementSession, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+pub fn commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     if is_legacy_building_id(&session.interaction_id) {
         return legacy_commit_object(kernel, session, label_count, next_id);
     }
@@ -699,7 +699,7 @@ pub fn commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementSession
 //#endregion 🔖️CommitRunner
 
 //#region 🔖️Preview
-fn preview_two_point_footprint(session: &CadEngagementSession, include_segment: bool) -> Vec<Value> {
+fn preview_two_point_footprint(session: &CadEngagementScratch, include_segment: bool) -> Vec<Value> {
     let mut items = Vec::new();
     if let Some(corner_a) = context_point(session, "cornerA") {
         items.push(json!({ "kind": "point", "role": "cornerA", "position": corner_a }));
@@ -712,7 +712,7 @@ fn preview_two_point_footprint(session: &CadEngagementSession, include_segment: 
     items
 }
 
-fn legacy_preview_display_items(session: &CadEngagementSession) -> Vec<Value> {
+fn legacy_preview_display_items(session: &CadEngagementScratch) -> Vec<Value> {
     if session.interaction_id == "building.building.constructColumn" {
         return match session.state.as_str() {
             "column_height" | "ready" => {
@@ -785,7 +785,7 @@ fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMa
     }
 }
 
-pub fn preview_display_items(session: &CadEngagementSession) -> Vec<Value> {
+pub fn preview_display_items(session: &CadEngagementScratch) -> Vec<Value> {
     if is_legacy_building_id(&session.interaction_id) {
         return legacy_preview_display_items(session);
     }

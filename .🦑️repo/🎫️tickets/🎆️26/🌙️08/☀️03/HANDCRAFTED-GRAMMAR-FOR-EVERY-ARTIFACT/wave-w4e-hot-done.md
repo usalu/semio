@@ -14,7 +14,7 @@ Replaced bulk `statement*` / `family-geo` / wrong `grammar 2d.*` stubs with arti
 | **procedural** (2d/3d) | graph + generation tables | Flow fixture + `generations` / `selected-generation` / `preview-text` |
 | **puzzle** (2d/3d/5d) | document + SoA tables | `grammar puzzle.puzzle{N}d`, extension `puzzle{N}d`; camera/meta/nodes/edges (or 3d/5d tables) — not generic graph `document = statement*` |
 | **block** (2d/3d/5d) | `family-catalog` + kind tables | `block.block{N}d` / `block{N}d`; node/object/part kind blocks, handle/vortex/grip catalogs |
-| **cad** | `family-scene` + scene sections | `cad.document`; pane `*-geometry`, `*-objects`, `nodes` per `CadScene` example DSL |
+| **cad** | `family-scene` + scene sections | `cad.document`; pane `*-geometry`, `*-objects`, `nodes` per `CadProjection` example DSL |
 | **vcs** | document fields | `vcs.document` / `vcsdemo`; counter/title/notes/status/tags — removed erroneous `family-geo` |
 
 **Graph-family** (`flow`, `procedural`): `edge-arrow` productions retain `EDGEARROW` (notation style guide).

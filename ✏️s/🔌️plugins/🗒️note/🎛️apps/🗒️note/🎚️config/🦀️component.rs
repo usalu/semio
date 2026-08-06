@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Config
 /// 🧮️ Note's real `DocumentApp::Config` — mirrors `shooting_engine::ShootingConfig`'s pilot shape.
 /// Absorbs every field that used to live on the old ui crate's `NotePlayRuntime` (selection, hover, the
-/// in-progress engagement-rename input, and the free/live canvas camera) plus the two `ViewState`
+/// in-progress engagement-rename input, and the free/live canvas camera) plus the two `ViewModel`
 /// fields the note UI actually reads (`locale`/`active_utility_id`) — see
 /// `crate::apps::note::NotePlayApp::render`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
@@ -31,7 +31,7 @@ pub struct NoteConfig {
     #[dsl(block)]
     pub camera: NoteCamera,
     /// 🧰️ The active canvas utility (select/pencil/eraser/…) — was read off
-    /// `view_state.active_utility_id` (host-pushed `ViewState`, deleted by the pure-trait migration).
+    /// `view_state.active_utility_id` (host-pushed `ViewModel`, deleted by the pure-trait migration).
     pub active_utility_id: String,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
     pub locale: String,

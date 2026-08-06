@@ -1,20 +1,20 @@
 //! 🗣️ CAD artifact — the textual `.cad` document grammar surface: `parse_dsl`/`print_dsl` over the
 //! derive-generated `store::DocumentDsl`, plus the handcrafted `default` example the app registers.
 
-use crate::artifacts::cad::CadScene;
+use crate::artifacts::cad::CadProjection;
 
 /// 📄️ The `default` example scene, handcrafted in the `.cad` DSL — a small structural column with
 /// a two-vertex/one-edge/one-wire/one-face/one-shell/one-solid brep, a site-photo reference, and
 /// objects across the shape/building/structure-classic panes.
 pub const CAD_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️default/🗣️dsls/♻️default/🧬️component.cad.cad.dsl.semio");
 
-/// 📖️ Parses `.cad` DSL text into a `CadScene`.
-pub fn parse_dsl(text: &str) -> Result<CadScene, store::TextError> {
-    <CadScene as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.cad` DSL text into a `CadProjection`.
+pub fn parse_dsl(text: &str) -> Result<CadProjection, store::TextError> {
+    <CadProjection as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `CadScene` back to `.cad` DSL text.
-pub fn print_dsl(document: &CadScene) -> String {
+/// 🖨️ Prints a `CadProjection` back to `.cad` DSL text.
+pub fn print_dsl(document: &CadProjection) -> String {
     store::DocumentDsl::print_dsl(document)
 }
 

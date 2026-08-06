@@ -2,57 +2,58 @@
  * guards it depends on (`isJsonRpcRequest`/`isJsonRpcNotification`/`isJsonRpcResponse`/`LanguageServer`/
  * `LspMessage`) are defined locally below (see the `🔖️protocol` region) rather than imported — a
  * sibling `./protocol.ts` never existed on disk, so the previous import of the same names was dead. */
+import { ephemeralBox } from "@semio-tech/framework-core";
 import init, { JackLspSession } from "./📦️packages/🦀️rust/pkg/trinity_jack_lsp.js";
 
-let session: JackLspSession | null = null;
-let fixtureJson = "";
-let graphDomain = "trinity";
-let initPromise: Promise<void> | null = null;
+const session = ephemeralBox<JackLspSession | null>("s.plugins.trinity.modules.jack.lsp.component.ts.session", null);
+const fixtureJson = ephemeralBox("s.plugins.trinity.modules.jack.lsp.component.ts.fixtureJson", "");
+const graphDomain = ephemeralBox("s.plugins.trinity.modules.jack.lsp.component.ts.graphDomain", "trinity");
+const initPromise = ephemeralBox<Promise<void> | null>("s.plugins.trinity.modules.jack.lsp.component.ts.initPromise", null);
 
 function applyFixtureToSession(): void {
-  if (!session || !fixtureJson) return;
-  if (typeof session.loadFixtureForDomain === "function") {
-    session.loadFixtureForDomain(fixtureJson, graphDomain);
+  if (!session.current || !fixtureJson.current) return;
+  if (typeof session.current.loadFixtureForDomain === "function") {
+    session.current.loadFixtureForDomain(fixtureJson.current, graphDomain.current);
     return;
   }
-  session.loadFixtureJson(fixtureJson);
+  session.current.loadFixtureJson(fixtureJson.current);
 }
 
 function ensureSession(): Promise<void> {
-  if (!initPromise) {
-    initPromise = (async () => {
+  if (!initPromise.current) {
+    initPromise.current = (async () => {
       await init();
-      session = new JackLspSession();
+      session.current = new JackLspSession();
       applyFixtureToSession();
     })();
   }
-  return initPromise;
+  return initPromise.current;
 }
 
 const server: LanguageServer = {
   handle(message) {
-    if (!session) return [];
+    if (!session.current) return [];
     if (isJsonRpcRequest(message) && message.method === "jack/loadFixture" && message.params) {
-      const params = message.params as { json?: string; graphDomain?: string };
+      const params = message.params as { json?: string; graphDomain.current?: string };
       if (params.json) {
-        fixtureJson = params.json;
+        fixtureJson.current = params.json;
       }
-      if (params.graphDomain) {
-        graphDomain = params.graphDomain;
+      if (params.graphDomain.current) {
+        graphDomain.current = params.graphDomain.current;
       }
       applyFixtureToSession();
       return message.id == null ? [] : [{ jsonrpc: "2.0", id: message.id, result: null }];
     }
-    return JSON.parse(session.handleMessageJson(JSON.stringify(message))) as LspMessage[];
+    return JSON.parse(session.current.handleMessageJson(JSON.stringify(message))) as LspMessage[];
   },
 };
 
-self.addEventListener("message", (event: MessageEvent<LspMessage | { operation?: string; fixtureJson?: string }>) => {
+self.addEventListener("message", (event: MessageEvent<LspMessage | { operation?: string; fixtureJson.current?: string }>) => {
   const data = event.data;
   if (!data || typeof data !== "object") return;
   if ("operation" in data) {
     if (data.operation !== "init") return;
-    if (data.fixtureJson) fixtureJson = data.fixtureJson;
+    if (data.fixtureJson.current) fixtureJson.current = data.fixtureJson.current;
     void ensureSession().then(() => {
       self.postMessage({ operator: "ready" });
     });

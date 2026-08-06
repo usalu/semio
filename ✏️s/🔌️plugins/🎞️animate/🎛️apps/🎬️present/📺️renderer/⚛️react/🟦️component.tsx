@@ -3,6 +3,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { ephemeralBox } from "@semio-tech/framework-core";
 import type {
     AffiliationEntry,
     AffiliationsEmbodiment,
@@ -109,16 +110,16 @@ const defaultMarkdownHtmlCompiler: MarkdownHtmlCompiler = {
 	},
 };
 
-let markdownHtmlCompiler: MarkdownHtmlCompiler = defaultMarkdownHtmlCompiler;
+const markdownHtmlCompiler = ephemeralBox<MarkdownHtmlCompiler>("s.plugins.animate.apps.present.renderer.react.component.tsx.markdownHtmlCompiler", defaultMarkdownHtmlCompiler);
 
 /** @emoji 🔌️ Replaces the markdown HTML compiler (tests or alternate renderers). */
 export function setMarkdownHtmlCompiler(compiler: MarkdownHtmlCompiler): void {
-	markdownHtmlCompiler = compiler;
+	markdownHtmlCompiler.current = compiler;
 }
 
 /** @emoji 📝️ Compiles markdown through the active {@link MarkdownHtmlCompiler}. */
 export function compileMarkdownToHtml(markdown: string): Promise<string> {
-	return markdownHtmlCompiler.compile(markdown);
+	return markdownHtmlCompiler.current.compile(markdown);
 }
 
 if (import.meta.vitest) {
@@ -6509,8 +6510,8 @@ export const PresentationDeck: FC<{
 //#endregion 🔖️PresentationDeck
 
 //#region 🔖️Mount
-let mountedRoot: Root | null = null;
-let surfaceChromeCleanup: (() => void) | null = null;
+const mountedRoot = ephemeralBox<Root | null>("s.plugins.animate.apps.present.renderer.react.component.tsx.mountedRoot", null);
+const surfaceChromeCleanup = ephemeralBox<(() => void) | null>("s.plugins.animate.apps.present.renderer.react.component.tsx.surfaceChromeCleanup", null);
 
 /** @emoji 🚀️ Mounts a declarative presentation into a DOM root via React + reveal.js (eg-ice-25 reveal wiring). */
 export function mountPresentation(
@@ -6518,23 +6519,23 @@ export function mountPresentation(
 	presentation: Presentation,
 	options?: PresentationMountOptions,
 ): void {
-	surfaceChromeCleanup?.();
-	surfaceChromeCleanup = null;
+	surfaceChromeCleanup.current?.();
+	surfaceChromeCleanup.current = null;
 	const chrome = options?.surfaceChrome;
 	if (chrome !== false) {
-		surfaceChromeCleanup = applyElementsSurfaceChrome(chrome ?? DEFAULT_SURFACE_CHROME);
+		surfaceChromeCleanup.current = applyElementsSurfaceChrome(chrome ?? DEFAULT_SURFACE_CHROME);
 	}
-	mountedRoot?.unmount();
-	mountedRoot = createRoot(rootEl);
-	mountedRoot.render(<PresentationDeck presentation={presentation} options={options} />);
+	mountedRoot.current?.unmount();
+	mountedRoot.current = createRoot(rootEl);
+	mountedRoot.current.render(<PresentationDeck presentation={presentation} options={options} />);
 }
 
 /** @emoji 🧹️ Unmounts a presentation previously mounted with {@link mountPresentation}. */
 export function unmountPresentation(): void {
-	mountedRoot?.unmount();
-	mountedRoot = null;
-	surfaceChromeCleanup?.();
-	surfaceChromeCleanup = null;
+	mountedRoot.current?.unmount();
+	mountedRoot.current = null;
+	surfaceChromeCleanup.current?.();
+	surfaceChromeCleanup.current = null;
 }
 //#endregion 🔖️Mount
 
@@ -10878,16 +10879,16 @@ const defaultJsonTreeRenderer: JsonTreeRenderer = {
 	},
 };
 
-let jsonTreeRenderer: JsonTreeRenderer = defaultJsonTreeRenderer;
+const jsonTreeRenderer = ephemeralBox<JsonTreeRenderer>("s.plugins.animate.apps.present.renderer.react.component.tsx.jsonTreeRenderer", defaultJsonTreeRenderer);
 
 /** @emoji 🔌️ Replaces the JSON tree renderer (tests or alternate renderers). */
 export function setJsonTreeRenderer(renderer: JsonTreeRenderer): void {
-	jsonTreeRenderer = renderer;
+	jsonTreeRenderer.current = renderer;
 }
 
 /** @emoji 🧬️ Renders JSON through the active {@link JsonTreeRenderer}. */
 export function renderJsonTree(data: unknown): ReactNode {
-	return jsonTreeRenderer.render(data);
+	return jsonTreeRenderer.current.render(data);
 }
 //#endregion 🔖️Renderer
 

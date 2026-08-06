@@ -20,11 +20,12 @@ struct Fonts {
     emoji: Font<'static>,
 }
 
-static FONTS: OnceLock<Fonts> = OnceLock::new();
 
 /// @emoji 🌍️ Lazily parses the embedded font set once per process — every `compile_snippet_to_svg`
 /// call after the first reuses the same parsed `Font`s.
 fn fonts() -> &'static Fonts {
+    use std::sync::OnceLock;
+    static FONTS: OnceLock<Fonts> = OnceLock::new();
     FONTS.get_or_init(|| {
         let embedded = crate::world::embedded_fonts();
         Fonts {

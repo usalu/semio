@@ -12,11 +12,11 @@ struct GeneratedShortcodes {
 }
 
 fn repo_ui_assets(manifest_dir: &Path) -> PathBuf {
-    manifest_dir.join("../../../../../🔨️modules/🖼️assets")
+    manifest_dir.join("../../../../../../🔨️modules/🖼️assets")
 }
 
 fn metabolism_icons_dir(manifest_dir: &Path) -> PathBuf {
-    manifest_dir.join("../../../../../🔨️modules/🖼️assets/🌱️metabolism/🔣️icons")
+    manifest_dir.join("../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🔣️icons")
 }
 
 fn main() {

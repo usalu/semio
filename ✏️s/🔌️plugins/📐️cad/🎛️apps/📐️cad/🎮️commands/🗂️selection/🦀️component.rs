@@ -3,7 +3,7 @@
 use crate::apps::cad::config::{CadConfig, CadConfigOperation};
 use crate::apps::cad::CadDispatchCtx;
 use crate::artifacts::cad::op::CadOperation;
-use crate::artifacts::cad::CadScene;
+use crate::artifacts::cad::CadProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::apps::cad::{apply_component_selection, cad_pane_id_from_suffix, cad_pane_id_from_surface_id, clear_component_selection, resolve_active_object_id, runtime_of, snapshot_of};
@@ -26,7 +26,7 @@ pub mod set_selection {
         pub merge: String,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         let mut runtime = runtime_of(cfg);
         runtime.selected_node_ids.clear();
         runtime.selected_primitive_id = None;
@@ -50,7 +50,7 @@ pub mod set_node_selection {
         pub node_ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetNodeSelection, _doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetNodeSelection, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         let mut runtime = runtime_of(cfg);
         runtime.selected_node_ids = payload.node_ids.clone();
         runtime.selected_object_ids.clear();
@@ -70,7 +70,7 @@ pub mod world_select {
         pub merge: String,
     }
 
-    pub fn handle(payload: &WorldSelect, _doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &WorldSelect, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         let mut runtime = runtime_of(cfg);
         runtime.selected_object_ids = merge_world_selection_ids(&runtime.selected_object_ids, &payload.ids, &payload.merge);
         runtime.selected_node_ids.clear();
@@ -95,7 +95,7 @@ pub mod world_hover {
         pub object_id: Option<String>,
     }
 
-    pub fn handle(payload: &WorldHover, _doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &WorldHover, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         let mut runtime = runtime_of(cfg);
         runtime.hovered_object_id = payload.object_id.clone();
         runtime.hovered_target = runtime.hovered_object_id.as_ref().map(|object_id| CadHoverTarget { object_id: Some(object_id.clone()), mode: Some("mesh".into()), id: Some(0) });
@@ -116,7 +116,7 @@ pub mod set_hover {
         pub id: Option<u32>,
     }
 
-    pub fn handle(payload: &SetHover, doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetHover, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         let document = doc.projection;
         let mut runtime = runtime_of(cfg);
         if payload.object_id.is_none() {
@@ -155,7 +155,7 @@ pub mod world_pick {
         pub pane: Option<String>,
     }
 
-    pub fn handle(payload: &WorldPick, doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &WorldPick, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         let document = doc.projection;
         let mut runtime = runtime_of(cfg);
         if payload.id.is_none() {
@@ -222,7 +222,7 @@ pub mod set_selection_method {
         pub method: String,
     }
 
-    pub fn handle(payload: &SetSelectionMethod, _doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetSelectionMethod, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         let mut runtime = runtime_of(cfg);
         runtime.selection_method = payload.method.clone();
         Ok(Emit::config(vec![snapshot_of(&runtime, cfg.projection)]))
@@ -242,7 +242,7 @@ pub mod set_primitive_selection {
         pub kind: Option<String>,
     }
 
-    pub fn handle(payload: &SetPrimitiveSelection, _doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
+    pub fn handle(payload: &SetPrimitiveSelection, _doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         let mut runtime = runtime_of(cfg);
         runtime.selected_object_ids = SelectionSet::from(vec![payload.object_id.clone()]);
         runtime.selected_node_ids.clear();

@@ -495,7 +495,7 @@ pub fn evaluate(document: &Document) -> CheckReport {
         report.push(check);
     }
 
-    let registry = SchemaRegistry::current();
+    let registry = SchemaCatalog::current();
     let reserved = registry.reserved_numbers();
     for n in 15u16..=98 {
         if reserved.contains(&n) {
@@ -603,7 +603,7 @@ mod tests {
     fn evaluate_reaches_operative_sheet_families() {
         let report = evaluate(&Document::default());
         let parts: BTreeSet<String> = report.checks.iter().map(|c| c.clause.part.clone()).filter(|p| p.chars().all(|ch| ch.is_ascii_digit())).collect();
-        let registry = SchemaRegistry::current();
+        let registry = SchemaCatalog::current();
         for sheet in registry.operative_sheets() {
             let part = sheet.id.0.to_string();
             if sheet.status == SchemaStatus::Reserved {

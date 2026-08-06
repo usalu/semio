@@ -266,7 +266,7 @@ pub fn create_animate_present_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
 
     pub type PresentApp = VcsDocumentApp<AnimatePresentPlayApp>;
 
@@ -285,7 +285,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut PresentApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
 //#endregion 🧪️Testkit
@@ -317,9 +317,9 @@ mod tests {
 
     #[test]
     fn render_unknown_body_key_reports_it_by_name() {
-        use semio_framework_plugin::ViewState;
+        use semio_framework_plugin::ViewModel;
         let mut app = present_app();
-        let node = app.render("some.unknown.body", None, &ViewState::default()).expect("render unknown");
+        let node = app.render("some.unknown.body", None, &ViewModel::default()).expect("render unknown");
         let json_str = serde_json::to_string(&node).unwrap();
         assert!(json_str.contains("Unknown body: some.unknown.body"));
     }

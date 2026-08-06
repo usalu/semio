@@ -166,7 +166,7 @@ mod tests {
     use crate::apps::writer::testkit::app_with_jack;
     use crate::apps::writer::{WriterCommand, WRITER_PLAY_BODY_DOCUMENT, WRITER_PLAY_BODY_MAIN};
     use crate::artifacts::writer::engine::parse_jack_ast;
-    use semio_framework_plugin::{PluginApp, ViewState};
+    use semio_framework_plugin::{PluginApp, ViewModel};
     use serde_json::Value;
 
     #[test]
@@ -175,10 +175,10 @@ mod tests {
         let root = parse_jack_ast(&app.projection().expect("projection").text);
         let result = app.dispatch_typed(WriterCommand::SetAstHover(set_ast_hover::SetAstHover { id: Some(root.id.clone()) }), &semio_framework_plugin::testkit::meta("local")).expect("hover");
         assert!(result.operations.is_empty());
-        let tree_node = app.render(WRITER_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render tree");
+        let tree_node = app.render(WRITER_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render tree");
         let tree_json = serde_json::to_string(&tree_node).unwrap();
         assert!(tree_json.contains(&root.id));
-        let scene_node = app.render(WRITER_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render scene");
+        let scene_node = app.render(WRITER_PLAY_BODY_MAIN, None, &ViewModel::default()).expect("render scene");
         let scene_value = serde_json::to_value(&scene_node).unwrap();
         let hover_json = scene_value["textEditor"]["hoverJson"].as_str().expect("hoverJson string");
         let hover_range: Value = serde_json::from_str(hover_json).unwrap();

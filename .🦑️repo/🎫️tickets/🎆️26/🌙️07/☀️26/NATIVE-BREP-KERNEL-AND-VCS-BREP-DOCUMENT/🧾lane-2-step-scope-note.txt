@@ -1,0 +1,24 @@
+Lane 2-step scope note (2026-08-06)
+
+Owned file: ✏️s/🔨️modules/🧊️3d/📐️brep/📄step/🦀️component.rs
+
+Implemented (hand-rolled ISO 10303-21 subset; no brepkit deps):
+- write_step(body, solids: &[SolidId]) -> Result<String, StepError>
+  MANIFOLD_SOLID_BREP / CLOSED_SHELL / ADVANCED_FACE / bounds / EDGE_LOOP / ORIENTED_EDGE /
+  EDGE_CURVE; analytic LINE/CIRCLE/ELLIPSE + PLANE/CYLINDER/CONE/SPHERE/TOROIDAL;
+  B_SPLINE_CURVE_WITH_KNOTS / B_SPLINE_SURFACE_WITH_KNOTS; AP203 product structure header.
+- read_step(text) -> Result<Body, StepError>
+  Rebuilds solids via euler editors; caches VERTEX_POINT and EDGE_CURVE instances.
+
+Tests (inline):
+- box_round_trip_topology_counts: make_box 2×3×4 → STEP → read; V=8 E=12 F=6 S=1
+- write_step_rejects_empty_solids
+- read_step_rejects_missing_data_section
+
+Deferred:
+- Kernel/engine wiring still uses brepkit_io STEP until Wave 6 flip (see integration-requests).
+- Rational NURBS weights on read default to 1.0 unless extended later.
+- No glue/Cargo changes.
+
+Evidence: 🧪lane-2-step-test-quick-run-1.txt — 3 passed.
+Contract: step FROZEN.

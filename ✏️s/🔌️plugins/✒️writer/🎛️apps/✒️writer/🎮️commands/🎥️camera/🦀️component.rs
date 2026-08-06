@@ -31,7 +31,7 @@ mod tests {
     use crate::apps::writer::testkit::new_app;
     use crate::apps::writer::{WriterCommand, WRITER_PLAY_BODY_MAIN};
     use crate::artifacts::writer::WriterCamera;
-    use semio_framework_plugin::{PluginApp, ViewState};
+    use semio_framework_plugin::{PluginApp, ViewModel};
     use serde_json::{json, Value};
 
     /// 🎥️ `SetCamera` is a config-only command — it must never emit a `WriterOperation` (no VCS edit,
@@ -41,7 +41,7 @@ mod tests {
         let mut app = new_app();
         let result = app.dispatch_typed(WriterCommand::SetCamera(set_camera::SetCamera { camera: WriterCamera { x: 3.0, y: 4.0, zoom: 2.0 } }), &semio_framework_plugin::testkit::meta("local")).expect("set camera");
         assert!(result.operations.is_empty(), "setCamera must not emit a VCS operation");
-        let node = app.render(WRITER_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
+        let node = app.render(WRITER_PLAY_BODY_MAIN, None, &ViewModel::default()).expect("render");
         let payload: Value = serde_json::to_value(&node).unwrap();
         let camera: Value = serde_json::from_str(payload["textEditor"]["cameraJson"].as_str().unwrap()).unwrap();
         assert_eq!(camera["x"], json!(3.0));

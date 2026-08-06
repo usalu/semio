@@ -4,15 +4,15 @@
 //! file, so there is no `REMODEL_EXAMPLE_TEXT` constant here — its single "default" example is
 //! generated at runtime from `default_remodel_scene().print_dsl()` (see `create_remodel_app`).
 
-use crate::artifacts::remodel::RemodelScene;
+use crate::artifacts::remodel::RemodelProjection;
 
-/// 📖️ Parses `.remodel` DSL text into a `RemodelScene`.
-pub fn parse_dsl(text: &str) -> Result<RemodelScene, store::TextError> {
-    <RemodelScene as store::DocumentDsl>::parse_dsl(text)
+/// 📖️ Parses `.remodel` DSL text into a `RemodelProjection`.
+pub fn parse_dsl(text: &str) -> Result<RemodelProjection, store::TextError> {
+    <RemodelProjection as store::DocumentDsl>::parse_dsl(text)
 }
 
-/// 🖨️ Prints a `RemodelScene` back to `.remodel` DSL text.
-pub fn print_dsl(scene: &RemodelScene) -> String {
+/// 🖨️ Prints a `RemodelProjection` back to `.remodel` DSL text.
+pub fn print_dsl(scene: &RemodelProjection) -> String {
     store::DocumentDsl::print_dsl(scene)
 }
 
@@ -27,7 +27,7 @@ mod tests {
 
     /// 🏗️ Verbatim duplicate of the `rs` crate's own private test-only fixture builder — see that
     /// crate's `populated_scene_fixture` doc comment for why this is copied rather than shared.
-    fn populated_scene_fixture() -> RemodelScene {
+    fn populated_scene_fixture() -> RemodelProjection {
         let mut scene = default_remodel_scene();
         scene.streams.push(MediaStream {
             id: "stream-1".into(),

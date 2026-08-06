@@ -1,7 +1,7 @@
 //! ⚡️ `trinity.rewrite.rule` artifact — operation enum + laws (constitutional: op).
 
 use crate::artifacts::rewrite::diff::RewriteRuleDiff;
-use crate::artifacts::rewrite::{RewriteRuleState, TrinityRewriteError, REWRITE_RULE_SCHEMA};
+use crate::artifacts::rewrite::{RewriteRuleModel, TrinityRewriteError, REWRITE_RULE_SCHEMA};
 use protocol::Operation;
 use serde::{Deserialize, Serialize};
 use store::{create_document_envelope, DocumentCommand, DocumentEnvelope, DocumentStore};
@@ -9,31 +9,31 @@ use store::{create_document_envelope, DocumentCommand, DocumentEnvelope, Documen
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum RewriteRuleOperation {
-    SetState { state: RewriteRuleState },
+    SetState { state: RewriteRuleModel },
 }
 
-impl Operation<RewriteRuleState> for RewriteRuleOperation {
+impl Operation<RewriteRuleModel> for RewriteRuleOperation {
     type Diff = RewriteRuleDiff;
 
-    fn diff(&self, _projection: &RewriteRuleState) -> Self::Diff {
+    fn diff(&self, _projection: &RewriteRuleModel) -> Self::Diff {
         match self {
             RewriteRuleOperation::SetState { state } => RewriteRuleDiff { next: Some(state.clone()) },
         }
     }
 
-    fn backwards(&self, projection: &RewriteRuleState) -> Vec<Self> {
+    fn backwards(&self, projection: &RewriteRuleModel) -> Vec<Self> {
         vec![RewriteRuleOperation::SetState { state: projection.clone() }]
     }
 }
 
-pub type RewriteRuleEnvelope = DocumentEnvelope<RewriteRuleState, RewriteRuleOperation>;
-pub type RewriteRuleStore = DocumentStore<RewriteRuleState, RewriteRuleOperation>;
+pub type RewriteRuleEnvelope = DocumentEnvelope<RewriteRuleModel, RewriteRuleOperation>;
+pub type RewriteRuleStore = DocumentStore<RewriteRuleModel, RewriteRuleOperation>;
 
-pub fn create_rewrite_rule_envelope(id: &str, state: RewriteRuleState) -> RewriteRuleEnvelope {
+pub fn create_rewrite_rule_envelope(id: &str, state: RewriteRuleModel) -> RewriteRuleEnvelope {
     create_document_envelope(REWRITE_RULE_SCHEMA, id, state, None)
 }
 
-pub fn dispatch_rewrite_rule_state(store: &mut RewriteRuleStore, state: RewriteRuleState) -> Result<(), TrinityRewriteError> {
+pub fn dispatch_rewrite_rule_state(store: &mut RewriteRuleStore, state: RewriteRuleModel) -> Result<(), TrinityRewriteError> {
     let current = store.projection()?;
     if current == state {
         return Ok(());
@@ -51,13 +51,13 @@ mod tests {
     use std::collections::BTreeMap;
     use store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
 
-    fn sample_rule_state() -> RewriteRuleState {
+    fn sample_rule_state() -> RewriteRuleModel {
         let mut parameter_bindings = BTreeMap::new();
         parameter_bindings.insert("label".to_string(), PropertyValue::String("nakagin-core".into()));
         parameter_bindings.insert("count".to_string(), PropertyValue::Number(3.0));
         let mut rule_layout = BTreeMap::new();
         rule_layout.insert("a".to_string(), LayoutPoint::from((10.5, -20.25)));
-        RewriteRuleState {
+        RewriteRuleModel {
             before_fixture_json: "{\"schema\":\"trinity.graph\",\"name\":\"x \\\"quoted\\\"\\nline\"}".to_string(),
             lhs_json: r#"{"pattern":{"leftVar":"a","leftKind":"Piece"}}"#.to_string(),
             rhs_json: r#"{"set":[{"var":"a","prop":"label","value":"$label"}]}"#.to_string(),
@@ -98,7 +98,7 @@ mod tests {
         next.lhs_json = "{}".into();
         dispatch_rewrite_rule_state(&mut store, next).unwrap();
         let edit: &Edit<RewriteRuleOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::test_support::assert_command_envelope_round_trip::<RewriteRuleState, RewriteRuleOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::test_support::assert_command_envelope_round_trip::<RewriteRuleModel, RewriteRuleOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
 }
 //#endregion 🧪️Tests

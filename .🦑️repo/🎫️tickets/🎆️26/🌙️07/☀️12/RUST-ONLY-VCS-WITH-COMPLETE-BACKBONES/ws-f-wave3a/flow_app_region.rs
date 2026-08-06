@@ -105,7 +105,7 @@ impl DocumentApp for FlowPlayApp {
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, FlowFixture>,
-        _view_state: &ViewState,
+        _view_state: &ViewModel,
     ) -> ActionEmit<FlowOp> {
         let fixture = doc.projection;
         match action {
@@ -363,7 +363,7 @@ impl DocumentApp for FlowPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, FlowFixture>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, FlowFixture>, view_state: &ViewModel) -> UiNode {
         let fixture = doc.projection;
         let labels = flow_labels(view_state);
         match body_key {
@@ -379,7 +379,7 @@ impl DocumentApp for FlowPlayApp {
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+    fn app_labels(&self, view_state: &ViewModel) -> semio_framework_plugin::AppLabelsOverlay {
         let labels = flow_labels(view_state);
         semio_framework_plugin::AppLabelsOverlay {
             app_label: None,

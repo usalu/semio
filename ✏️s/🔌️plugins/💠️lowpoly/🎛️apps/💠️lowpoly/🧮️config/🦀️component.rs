@@ -1,7 +1,7 @@
 //! 🧮️ Lowpoly play app — view state (`LowpolyConfig`) and its patch operations
 //! (`LowpolyConfigOperation`). Absorbs every field that used to live in the old ui crate's
 //! `LowpolyPlayRuntime` app-struct `RefCell` (selection, active object, paint utility/layer, selection
-//! method/mode, hover, world camera, sun, show-edges) plus the two `ViewState` fields lowpoly actually
+//! method/mode, hover, world camera, sun, show-edges) plus the two `ViewModel` fields lowpoly actually
 //! read (`active_utility_id`/`locale`) — session-only view state round-trips through the config
 //! `DocumentStore` exactly like document content, with a real `backwards` per
 //! `LowpolyConfigOperation`, mirroring the `shooting_engine::ShootingConfig` pilot. Nested value types
@@ -70,9 +70,9 @@ pub struct LowpolyConfig {
     pub sun_elevation: f64,
     pub sun_intensity: f64,
     pub sun_color: String,
-    /// 🧰️ Was read off the host-pushed `ViewState::active_utility_id` (deleted for migrated apps).
+    /// 🧰️ Was read off the host-pushed `ViewModel::active_utility_id` (deleted for migrated apps).
     pub active_utility_id: String,
-    /// 🗣️ Was read off `ViewState::locale`.
+    /// 🗣️ Was read off `ViewModel::locale`.
     pub locale: String,
 }
 

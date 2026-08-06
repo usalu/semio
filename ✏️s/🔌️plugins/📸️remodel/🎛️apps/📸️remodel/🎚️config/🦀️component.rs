@@ -61,7 +61,7 @@ pub struct RemodelFrameCursor {
 }
 
 /// 🧮️ Remodel's `DocumentApp::Config` — absorbs every former `RemodelPlayRuntime` view/session field
-/// (camera/selection/layers/frame cursor/report table selection) plus the two `ViewState`-sourced
+/// (camera/selection/layers/frame cursor/report table selection) plus the two `ViewModel`-sourced
 /// fields the UI actually reads (`active_utility_id`/`locale`).
 /// The live `engine::reconstruction::ReconstructionEngine` and the video-import blur-gate rolling
 /// window are deliberately NOT here: neither is `Clone + Serialize + Deserialize` in a way that

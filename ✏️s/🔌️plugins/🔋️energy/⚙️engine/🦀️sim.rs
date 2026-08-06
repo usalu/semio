@@ -3,10 +3,10 @@
 use crate::economics::{compute_lcca, LccaParameters, UtilityTariff};
 use crate::error::Error;
 use crate::kernel::{SimulationConfig, SimulationEnvironment, SimulationKernel};
-use crate::meters::{EndUse, FuelType, MeterStore};
+use crate::meters::{EndUse, FuelType, MeterTable};
 use crate::metrics::{compute_environmental, compute_resilience, EmissionFactors, SourceEnergyFactors};
 use crate::model::Model;
-use crate::output::TimeSeriesStore;
+use crate::output::TimeSeriesTable;
 use crate::precompute::PrecomputedModel;
 use crate::results::{Results, RunMetadata, SummaryTables};
 use crate::site::WeatherRecord;
@@ -31,8 +31,8 @@ impl Engine {
         let mut state = SimulationKernel::initialize(model, &pre, &weather_records[0]);
         SimulationKernel::warmup(model, config, &pre, &mut state, &weather_records)?;
 
-        let mut time_series = TimeSeriesStore::default();
-        let mut meters = MeterStore::default();
+        let mut time_series = TimeSeriesTable::default();
+        let mut meters = MeterTable::default();
         let mut zone_temp_history: Vec<f64> = Vec::new();
 
         let run_period = SimulationKernel::run_period(config);

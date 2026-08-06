@@ -14,7 +14,7 @@ use std::collections::HashMap;
 //#region 🔖️Config
 /// 🧮️ `FlowPlayApp::Config` — the pure-trait `DocumentApp::Config` for the flow app. Absorbs everything
 /// that used to live in an app-struct `RefCell` (`FlowPlayRuntime`) AND the locale the flow UI read off
-/// the deleted host-pushed `ViewState` — session-only view/generate-mode state now round-trips through the
+/// the deleted host-pushed `ViewModel` — session-only view/generate-mode state now round-trips through the
 /// config `DocumentStore` exactly like document content, with a real `backwards` per
 /// [`FlowConfigOperation`] instead of never being VCS'd at all.
 ///

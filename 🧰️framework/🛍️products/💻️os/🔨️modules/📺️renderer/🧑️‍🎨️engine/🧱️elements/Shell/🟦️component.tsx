@@ -72,8 +72,8 @@ import { PRESENCE_CLIENT_STORAGE_KEY, EMPTY_APP_LABELS_OVERLAY } from "../ShellH
 /** 🌐️ Locale-resolved mixed-value placeholder for this renderer layer; framework/core/js/index.ts keeps its own non-reactive low-level default. */
 export const UI_INSPECTOR_MIXED_PLACEHOLDER = shellLabel("ui.common.mixedValues");
 
-/** 🎭️ Renderer-side view state passed to program wasm calls — structurally mirrors `@semio-tech/framework-core`'s {@link PluginViewState}, kept as a distinct local alias since `ViewState` is the established name used throughout this file. */
-export type ViewState = PluginViewState;
+/** 🎭️ Renderer-side view state passed to program wasm calls — structurally mirrors `@semio-tech/framework-core`'s {@link PluginViewState}, kept as a distinct local alias since `ViewModel` is the established name used throughout this file. */
+export type ViewModel = PluginViewState;
 
 /** ⚠️ Not folded into `@semio-tech/framework-core`'s `PluginManifest`: this shell-local shape types `apps` richly (`AppDefinition[]`) where core intentionally keeps the wasm-boundary shape loose (`Record<string, unknown>[]`) for other consumers (e.g. compose, coda). Left for a human to decide whether to widen core's `PluginManifest` itself. */
 export type PluginManifest = {
@@ -114,7 +114,7 @@ export type ActiveSession = {
   readonly pluginId: string;
   readonly instanceId: number;
   readonly app: AppDefinition;
-  readonly viewState: ViewState;
+  readonly viewState: ViewModel;
 };
 
 export type SpaceProgramEntry = {

@@ -215,10 +215,16 @@ pub use host::{clipboard_read_text, clipboard_write_text, dispatch_window_event,
 #[cfg(feature = "wgpu-engine")]
 pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};
 #[cfg(feature = "wgpu-engine")]
+
+#[cfg(feature = "wgpu-engine")]
+#[path = "../../../../../../../✏️s/🔨️modules/🧊️3d/🎬️scene/🦀️component.rs"]
+pub mod kernel_3d_scene;
+
+#[cfg(feature = "wgpu-engine")]
 pub use kernel_3d_scene::{
-    aabb_intersects_frustum, axis_rotate_angle, frustum_planes, gumball_axis_drag_plane_normal, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, marquee_is_crossing_from_path, point_in_polygon, project_point, quat_from_basis,
-    ray_aabb_slab, ray_pick_instance, ray_plane_point, ray_segment_distance, rect_contains, rotate_vector, screen_select_instances, transform_aabb, vec3_from_f64, Camera3d, Instance3d, LineDraw3d, LineVertex3d, Mat4, Mesh3d, OrbitController,
-    SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, Vec3,
+    aabb_intersects_frustum, axis_rotate_angle, frustum_planes, grid_placement_anchor, gumball_axis_drag_plane_normal, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
+    marquee_is_crossing_from_path, pick_closest_mesh_url, point_in_polygon, project_point, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rect_contains, rotate_vector, screen_segment_distance, screen_select_components,
+    screen_select_instances, transform_aabb, vec3_from_f64, Camera3d, Instance3d, LineDraw3d, LineVertex3d, Mat4, Mesh3d, OrbitController, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, Vec3,
 };
 #[cfg(feature = "wgpu-engine")]
 pub use layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};

@@ -1,0 +1,641 @@
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:7:1
+  |
+7 | extern crate self as dsl_grammar;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+7 - extern crate self as dsl_grammar;
+  |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1
+   |
+11 | extern crate self as pack;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+11 - extern crate self as pack;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1
+   |
+12 | extern crate self as spr;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+12 - extern crate self as spr;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:13:1
+   |
+13 | extern crate self as vcs;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+13 - extern crate self as vcs;
+   |
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:345:11
+    |
+345 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:351:11
+    |
+351 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `canonicalize` in the value namespace is first re-exported here
+...
+198 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `canonicalize` in the value namespace is also re-exported here
+    |
+    = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `test_support` in the type namespace is first re-exported here
+186 | pub use crate::os_store::*;
+    |         ------------------ but the name `test_support` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `core` in the type namespace is first re-exported here
+...
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `core` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Symbol` in the type namespace is first re-exported here
+...
+198 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `Symbol` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `cli` in the type namespace is first re-exported here
+...
+194 | pub use crate::os_semio::*;
+    |         ------------------ but the name `cli` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `format` in the type namespace is first re-exported here
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `format` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `io` in the type namespace is first re-exported here
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `io` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `testkit` in the type namespace is first re-exported here
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `testkit` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `read_varint_u64` in the value namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `read_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `write_varint_u64` in the value namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `write_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `recover_file` in the value namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `recover_file` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `RecoveryReport` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `RecoveryReport` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `VerificationLevel` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `VerificationLevel` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `WriteOptions` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `WriteOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `DecodeOptions` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `DecodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `EncodeOptions` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `EncodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:198:9
+    |
+186 | pub use crate::os_store::*;
+    |         ------------------ but the name `Alternative` in the type namespace is also re-exported here
+...
+198 | pub use crate::os_dsl::grammar::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^ the name `Alternative` in the type namespace is first re-exported here
+
+warning: unused import: `crate::os_dsl::core::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:199:9
+    |
+199 | pub use crate::os_dsl::core::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `len`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:1083:21
+     |
+1083 |                 let len = end_j - i;
+     |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2125:19
+     |
+2019 | / impl<P, Operation> DocumentStore<P, Operation>
+2020 | | where
+2021 | |     P: Clone + Serialize + DeserializeOwned + DocumentPack,
+2022 | |     Operation: Clone + Serialize + DeserializeOwned + self::Operation<P> + OpBinary + OpText,
+     | |_____________________________________________________________________________________________- method in this implementation
+...
+2125 |       pub(crate) fn set_envelope(&mut self, envelope: DocumentEnvelope<P, Operation>, applied_edit_ids: Vec<String>) {
+     |                     ^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `print_edge_label` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: `semio-framework-os-kernel` (lib) generated 27 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling semio-framework-math v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust)
+   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+   Compiling semio-s-3d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 13.14s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_s_3d-f0368c0fd128de62)
+
+running 385 tests
+test brep::arena::tests::remove_then_get_returns_none ... ok
+test brep::arena::tests::insert_and_get_round_trips ... ok
+test brep::arena::tests::stale_handle_after_reuse_returns_none ... ok
+test brep::arena::tests::len_reflects_only_live_entries ... ok
+test brep::arena::tests::display_uses_readable_tag_index_generation_format ... ok
+test brep::bezier::tests::boxes_overlap_detects_disjoint_and_touching_boxes ... ok
+test brep::arena::tests::iteration_is_index_ordered_and_skips_removed_slots ... ok
+test brep::bezier::tests::eval_at_endpoints_matches_first_and_last_control_point ... ok
+test brep::bezier::tests::control_hull_box_contains_all_sampled_curve_points ... ok
+test brep::bezier::tests::subdivide_of_rational_bezier_preserves_curve_points ... ok
+test brep::bezier::tests::elevate_preserves_the_curve_exactly ... ok
+test brep::bezier::tests::subdivide_matches_original_at_endpoints_and_split_point ... ok
+test brep::bezier::tests::unweighted_bezier_eval_matches_de_casteljau_by_hand ... ok
+test brep::blend::tests::stub_blend_compiles ... ok
+test brep::bezier::tests::subdivide_until_flat_leaves_cover_the_full_parameter_range ... ok
+test brep::boolean::tests::stub_boolean_compiles ... ok
+test brep::bspline::tests::basis_functions_are_nonnegative ... ok
+test brep::bspline::tests::basis_function_derivatives_match_finite_differences ... ok
+test brep::arena::tests::serde_round_trips_an_id ... ok
+test brep::bspline::tests::basis_function_derivatives_order_zero_matches_basis_functions ... ok
+test brep::bspline::tests::basis_functions_sum_to_one_everywhere_in_domain ... ok
+test brep::bspline::tests::find_span_matches_brute_force_scan ... ok
+test brep::bspline::tests::knot_vector_rejects_decreasing_sequence ... ok
+test brep::bspline::tests::knot_vector_rejects_wrong_length ... ok
+test brep::bspline::tests::insert_knot_does_not_change_the_curve ... ok
+test brep::bspline::tests::de_boor_interpolates_endpoints_of_clamped_curve ... ok
+test brep::bspline::tests::elevate_bezier_span_preserves_curve_value ... ok
+test brep::bspline::tests::clamped_uniform_has_correct_domain_and_multiplicity ... ok
+test brep::bvh::tests::stub_bvh_compiles ... ok
+test brep::classify::tests::stub_classify_compiles ... ok
+test brep::curve::tests::circle_curvature_equals_reciprocal_radius ... ok
+test brep::curve::tests::circle_eval_stays_on_circle_and_derivatives_match_finite_differences ... ok
+test brep::curve::tests::circle_to_nurbs_traces_the_circle_exactly_for_full_circle_multi_span ... ok
+test brep::curve::tests::circle_to_nurbs_traces_the_circle_exactly_for_small_arc ... ok
+test brep::arena::tests::quick::random_insert_remove_sequence_never_aliases_a_removed_id ... ok
+test brep::curve::tests::curve2_line_and_circle_eval ... ok
+test brep::curve::tests::ellipse_derivatives_match_finite_differences ... ok
+test brep::curve::tests::line_eval_and_derivatives ... ok
+test brep::curve::tests::ellipse_to_nurbs_traces_the_ellipse_exactly ... ok
+test brep::curve::tests::line_to_nurbs_matches_line_eval ... ok
+test brep::curve_ops::tests::all_extrema_finds_both_near_and_far_points_on_circle ... ok
+test brep::curve_ops::tests::arc_length_of_line_equals_euclidean_distance ... ok
+test brep::curve_ops::tests::arc_length_of_quarter_circle_matches_closed_form ... ok
+test brep::curve_ops::tests::closest_point_on_circle_matches_radial_projection ... ok
+test brep::curve_ops::tests::closest_point_on_line_matches_perpendicular_foot ... ok
+test brep::curve_ops::tests::interpolate_centripetal_passes_through_all_points ... ok
+test brep::curve_ops::tests::param_at_length_round_trips_with_arc_length ... ok
+test brep::curve_ops::tests::reverse_nurbs_reproduces_the_same_curve_reversed ... ok
+test brep::bspline::tests::quick::knot_insertion_is_geometrically_a_no_op_on_random_curves ... ok
+test brep::curve_ops::tests::split_nurbs_pieces_reproduce_the_original_curve ... ok
+test brep::error::tests::boolean_error_wraps_intersect_error ... ok
+test brep::error::tests::kernel_error_displays_readable_message ... ok
+test brep::error::tests::intersect_error_converts_into_kernel_error ... ok
+test brep::error::tests::validation_issue_displays_code_entity_message ... ok
+test brep::euler::tests::split_edge_on_a_free_edge_creates_two_edges_and_a_vertex ... ok
+test brep::euler::tests::split_edge_on_a_self_referential_single_coedge_loop_produces_a_valid_two_coedge_ring ... ok
+test brep::engine::host::tests::host_derive_registers_brep_engine ... ok
+test brep::euler::tests::each_face_loop_is_a_closed_ring_of_three_coedges ... ok
+test brep::euler::tests::split_edge_within_a_loop_ring_preserves_ring_validity ... ok
+test brep::euler::tests::tetrahedron_build_records_every_entity_as_generated ... ok
+test brep::euler::tests::tetrahedron_satisfies_euler_poincare_formula ... ok
+test brep::heal::tests::stub_heal_compiles ... ok
+test brep::engine::host::tests::kernel_lock_runs_box_prim ... ok
+test brep::history::tests::empty_delta_reports_is_empty ... ok
+test brep::history::tests::label_source_never_repeats ... ok
+test brep::history::tests::recorder_deduplicates_repeated_reports ... ok
+test brep::history::tests::op_delta_merge_concatenates_all_three_lists ... ok
+test brep::history::tests::recorder_generated_entity_is_not_also_reported_modified ... ok
+test brep::history::tests::recorder_generated_then_deleted_cancels_out ... ok
+test brep::imprint::tests::stub_imprint_compiles ... ok
+test brep::int_cc::tests::stub_int_cc_compiles ... ok
+test brep::int_cs::tests::stub_int_cs_compiles ... ok
+test brep::int_ss::tests::stub_int_ss_compiles ... ok
+test brep::kernel::tests::arc_curve_domain_point_tangent_and_curvature ... ok
+test brep::kernel::tests::approximate_curve_builds_a_fitted_nurbs_curve ... ok
+test brep::kernel::tests::box_surface_area ... ok
+test brep::kernel::tests::box_edge_curve_queries_use_line_branch ... ok
+test brep::bspline::tests::quick::de_boor_matches_bernstein_sum_oracle_on_random_bezier_span_curves ... ok
+test brep::kernel::tests::box_tessellation_emits_one_face_group_per_topological_face ... ok
+test brep::kernel::tests::convex_hull_rejects_fewer_than_four_points ... ok
+test brep::kernel::tests::coons_patch_rejects_fewer_than_four_curves ... ok
+test brep::kernel::tests::curve_curve_intersect_finds_crossing_point ... FAILED
+test brep::curve::tests::quick::circle_to_nurbs_traces_the_circle_exactly_for_random_arcs ... ok
+test brep::kernel::tests::bounding_box_of_a_compound_covers_every_member_solid ... ok
+test brep::kernel::tests::curve_tessellation_produces_edges ... ok
+test brep::kernel::tests::curve_surface_intersect_pierces_a_flat_nurbs_patch ... ok
+test brep::kernel::tests::box_and_tessellate ... ok
+test brep::kernel::tests::dispose_sync_removes_the_handle_from_the_registry ... ok
+test brep::kernel::tests::distance_closest_point_and_classify_point ... ok
+test brep::kernel::tests::deconstruct_box_returns_topology_counts ... ok
+test brep::kernel::tests::defeature_removes_a_face_and_returns_a_solid ... ok
+test brep::kernel::tests::draft_applies_pull_direction_taper ... ok
+test brep::kernel::tests::ellipse_curve_domain_point_and_curvature ... ok
+test brep::kernel::tests::extrude_rectangle_volume ... ok
+test brep::kernel::tests::extrude_wire_rejects_zero_length_vector ... ok
+test brep::kernel::tests::face_surfaces_of_curved_primitives_evaluate_without_error ... ok
+test brep::kernel::tests::dwg_export_import_round_trips_a_box ... ok
+test brep::kernel::tests::geometry_handles_are_engine_derived_hex ... ok
+test brep::kernel::tests::fillet_edges_and_chamfer_edges_target_a_single_edge ... ok
+test brep::kernel::tests::glb_export_import_round_trips_a_box_through_the_mesh_codec ... ok
+test brep::kernel::tests::glb_tessellation_bridge_produces_reasonable_mesh_data ... ok
+test brep::kernel::tests::interpolate_curve_rejects_fewer_than_two_points ... ok
+test brep::kernel::tests::line_curve_evaluate ... ok
+test brep::kernel::tests::line_curve_rejects_coincident_endpoints ... ok
+test brep::kernel::tests::fillet_and_translate ... ok
+test brep::kernel::tests::linear_circular_and_grid_patterns_build_compounds ... ok
+test brep::kernel::tests::missing_handle_returns_missing_handle_error ... ok
+test brep::kernel::tests::mirror_and_copy_preserve_volume ... ok
+test brep::kernel::tests::nurbs_surface_from_grid_point_and_normal ... ok
+test brep::kernel::tests::offset_solid_produces_a_larger_solid_for_positive_distance ... ok
+test brep::kernel::tests::planar_face_from_points_rejects_fewer_than_three_points ... ok
+test brep::kernel::tests::plane_surface_point_and_normal_match_frame ... ok
+test brep::kernel::tests::polyline_wire_rejects_fewer_than_two_points ... ok
+test brep::kernel::tests::regular_polygon_wire_rejects_fewer_than_three_sides ... ok
+test brep::kernel::tests::compound_cut_removes_multiple_tools_from_a_target ... ok
+test brep::kernel::tests::rotate_rejects_zero_length_axis ... ok
+test brep::kernel::tests::scale_sync_scales_about_a_center ... ok
+test brep::kernel::tests::section_box_returns_faces ... ok
+test brep::kernel::tests::retain_sync_drops_unreferenced_handles ... ok
+test brep::kernel::tests::shell_hollows_out_a_box ... ok
+test brep::kernel::tests::solid_face_loops_returns_a_quad_per_box_face ... ok
+test brep::kernel::tests::solid_exporters_and_importers_round_trip_a_box_per_format ... ok
+test brep::kernel::tests::fillet_variable_and_chamfer_asymmetric_produce_valid_solids ... ok
+test brep::kernel::tests::sphere_solid_tessellation_normals_are_unit_and_not_all_axis_aligned ... ok
+test brep::kernel::tests::split_box_returns_two_solids_that_sum_to_original_volume ... ok
+test brep::kernel::tests::step_export_import_roundtrip_stub ... ok
+test brep::kernel::tests::heal_solid_and_convert_to_nurbs_return_the_same_handle ... ok
+test brep::kernel::tests::sweep_wire_profile_produces_tube_mesh ... ok
+test brep::kernel::tests::tessellate_face_carries_boundary_edge_positions ... ok
+test brep::kernel::tests::tessellate_to_mesh_data_carries_face_ids ... ok
+test brep::kernel::tests::validate_reports_valid_for_a_clean_box ... ok
+test brep::kernel::tests::vertex_and_face_from_wire_register_expected_kinds ... ok
+test brep::kernel::tests::wrong_entity_type_errors_are_invalid_input ... ok
+test brep::mat::tests::frame_from_normal_deterministic_for_axis_aligned_normals ... ok
+test brep::mat::tests::frame_from_normal_is_right_handed ... ok
+test brep::mat::tests::frame_from_normal_round_trips_local_world ... ok
+test brep::mat::tests::mat3_determinant_of_identity_is_one ... ok
+test brep::mat::tests::mat3_from_axis_angle_matches_quat_rotation ... ok
+test brep::mat::tests::quat_conjugate_is_inverse_rotation ... ok
+test brep::mat::tests::quat_from_axis_angle_rotates_correctly ... ok
+test brep::mat::tests::quat_to_mat3_matches_direct_rotation ... ok
+test brep::mat::tests::quick::trsf_inverse_round_trips_random_points ... ok
+test brep::mat::tests::slerp_endpoints_match_inputs ... ok
+test brep::mat::tests::trsf_compose_matches_sequential_application ... ok
+test brep::mat::tests::trsf_inverse_round_trips_a_point ... ok
+test brep::measure::tests::stub_measure_compiles ... ok
+test brep::mesh_io::tests::stub_mesh_io_compiles ... ok
+test brep::offset::tests::stub_offset_compiles ... ok
+test brep::oracle::tests::box_sdf_is_negative_inside_and_positive_outside ... ok
+test brep::oracle::tests::cylinder_sdf_is_correct_on_axis_and_cap ... ok
+test brep::oracle::tests::difference_removes_the_second_operand ... ok
+test brep::oracle::tests::placed_box_sdf_respects_transform ... ok
+test brep::oracle::tests::sphere_sdf_matches_analytic_distance ... ok
+test brep::oracle::tests::union_is_the_min_and_matches_containment_of_either_operand ... ok
+test brep::poly::tests::bernstein_eval_matches_monomial_conversion ... ok
+test brep::poly::tests::bernstein_subdivide_matches_original_at_shared_endpoints_and_split_point ... ok
+test brep::poly::tests::bernstein_to_monomial_round_trips_from_monomial ... ok
+test brep::poly::tests::eval_with_derivative_matches_separate_calls ... ok
+test brep::poly::tests::isolate_roots_finds_no_intervals_for_root_free_polynomial ... ok
+test brep::poly::tests::isolate_roots_finds_single_root_of_linear_bernstein ... ok
+test brep::poly::tests::poly_derivative_matches_power_rule ... ok
+test brep::poly::tests::poly_eval_matches_direct_computation ... ok
+test brep::poly::tests::quick::bernstein_monomial_round_trip_holds_on_random_polynomials ... ok
+test brep::poly::tests::quick::isolate_roots_plus_refine_matches_bisection_oracle_on_random_polynomials ... ok
+test brep::poly::tests::refine_root_converges_to_known_root ... ok
+test brep::poly::tests::sign_variations_certifies_no_root_for_monotone_positive_control_polygon ... ok
+test brep::poly::tests::sign_variations_detects_single_sign_change ... ok
+test brep::poly::tests::solve_cubic_finds_single_real_root ... ok
+test brep::poly::tests::solve_cubic_finds_three_known_real_roots ... ok
+test brep::poly::tests::solve_quadratic_avoids_cancellation_for_large_b ... ok
+test brep::poly::tests::solve_quadratic_finds_known_roots ... ok
+test brep::poly::tests::solve_quadratic_handles_no_real_roots ... ok
+test brep::predicates::tests::in_circle2d_detects_inside_and_outside_unit_circle ... ok
+test brep::predicates::tests::orient2d_detects_counterclockwise_and_clockwise ... ok
+test brep::predicates::tests::orient2d_detects_exact_collinearity ... ok
+test brep::predicates::tests::orient2d_resolves_near_degenerate_case_correctly ... ok
+test brep::predicates::tests::orient3d_detects_exact_coplanarity ... ok
+test brep::predicates::tests::orient3d_detects_right_handed_and_left_handed_tetrahedra ... ok
+test brep::predicates::tests::orient3d_resolves_near_degenerate_case_correctly ... ok
+test brep::curve_ops::tests::quick::closest_point_matches_brute_force_dense_sampling_oracle ... ok
+test brep::kernel::tests::sphere_cut_cylinder_completes ... ok
+test brep::kernel::tests::sphere_cut_disjoint_torus_completes ... ok
+test brep::predicates::tests::sign_of_dot_classifies_acute_right_obtuse ... ok
+test brep::primitives::tests::stub_primitives_compiles ... ok
+test brep::sew::tests::stub_sew_compiles ... ok
+test brep::step::tests::stub_step_compiles ... ok
+test brep::surface::tests::cone_radius_grows_linearly_with_v_and_derivatives_match_finite_differences ... ok
+test brep::surface::tests::cylinder_derivatives_match_finite_differences_and_lie_on_cylinder ... ok
+test brep::surface::tests::cylinder_gaussian_curvature_is_zero_and_mean_curvature_is_half_reciprocal_radius ... ok
+test brep::surface::tests::plane_eval_and_normal ... ok
+test brep::surface::tests::plane_second_derivatives_are_zero_and_gaussian_curvature_is_zero ... ok
+test brep::surface::tests::sphere_eval_stays_on_sphere_and_derivatives_match_finite_differences ... ok
+test brep::surface::tests::sphere_gaussian_curvature_equals_reciprocal_radius_squared ... ok
+test brep::surface::tests::torus_derivatives_match_finite_differences ... ok
+test brep::surface::tests::torus_eval_stays_at_correct_distance_from_main_circle ... ok
+test brep::surface_ops::tests::closest_point_on_cylinder_matches_expected_geometry ... ok
+test brep::surface_ops::tests::closest_point_on_plane_matches_orthogonal_projection ... ok
+test brep::surface_ops::tests::closest_point_on_sphere_matches_radial_projection ... ok
+test brep::surface_ops::tests::coons_patch_of_planar_boundaries_is_the_bilinear_plane ... ok
+test brep::surface_ops::tests::coons_patch_reproduces_boundary_curves_exactly ... ok
+test brep::predicates::tests::quick::orient2d_filtered_agrees_with_exact_on_random_and_near_degenerate_triples ... ok
+test brep::sweep::tests::stub_sweep_compiles ... ok
+test brep::tessellate::tests::stub_tessellate_compiles ... ok
+test brep::tolerance::tests::check_containment_flags_violation ... ok
+test brep::tolerance::tests::interval_add_widens_conservatively ... ok
+test brep::tolerance::tests::interval_mul_contains_true_product_for_mixed_signs ... ok
+test brep::tolerance::tests::interval_sign_certain_when_strictly_positive_or_negative ... ok
+test brep::tolerance::tests::interval_sign_is_none_when_straddling_zero ... ok
+test brep::tolerance::tests::negative_tolerance_clamps_to_zero ... ok
+test brep::tolerance::tests::quick::interval_arithmetic_always_contains_scalar_result ... ok
+test brep::tolerance::tests::tol_contains_checks_absolute_distance ... ok
+test brep::tolerance::tests::tol_tighter_and_looser_pick_correctly ... ok
+test brep::topo::tests::coedge_endpoints_respects_orientation ... ok
+test brep::topo::tests::deep_copy_produces_an_independent_body ... ok
+test brep::topo::tests::face_loops_includes_outer_and_all_inner_loops ... ok
+test brep::topo::tests::loop_coedges_walks_the_full_ring_once ... ok
+test brep::topo::tests::serde_round_trips_a_whole_body ... ok
+test brep::topo::tests::shell_and_solid_traversal_returns_all_members ... ok
+test brep::topo::tests::vertex_edges_and_edge_coedges_find_all_incident_entries ... ok
+test brep::validate::tests::a_broken_ring_pointer_is_detected ... ok
+test brep::validate::tests::a_cleanly_built_tetrahedron_validates_with_no_issues ... ok
+test brep::validate::tests::a_non_manifold_edge_is_flagged ... ok
+test brep::validate::tests::a_vertex_tolerance_exceeding_its_edge_tolerance_is_detected ... ok
+test brep::validate::tests::same_parameter_violation_is_detected_when_pcurve_disagrees_with_3d_curve ... ok
+test brep::vec::tests::angle_diff_wraps_into_minus_pi_pi ... ok
+test brep::vec::tests::any_orthogonal_is_perpendicular_for_all_axis_aligned_inputs ... ok
+test brep::vec::tests::cross_product_is_orthogonal_to_both_operands ... ok
+test brep::vec::tests::lerp_at_endpoints_returns_endpoints ... ok
+test brep::vec::tests::normalize_angle_wraps_into_0_tau ... ok
+test brep::vec::tests::normalized_has_unit_length ... ok
+test brep::vec::tests::normalized_returns_none_for_zero_vector ... ok
+test brep::vec::tests::point_minus_point_is_vector_and_point_plus_vector_is_point ... ok
+test brep::vec::tests::quick::cross_product_antisymmetric_on_random_vectors ... ok
+test brep::vec::tests::vec2_cross_sign_matches_turn_direction ... ok
+test mesh::tests::bevel_edges_rejects_empty_and_runs_on_selection ... ok
+test mesh::tests::box_prim_has_six_faces ... ok
+test mesh::tests::cone_prim_has_expected_topology ... ok
+test mesh::tests::cylinder_prim_has_expected_topology ... ok
+test mesh::tests::decimate_converges_near_target_ratio_without_emptying_mesh ... ok
+test mesh::tests::decimate_no_op_when_ratio_at_max_and_clamps_below_min ... ok
+test mesh::tests::decimate_reduces_vertices ... ok
+test mesh::tests::dissolve_edges_merges_two_triangles_into_a_quad ... ok
+test mesh::tests::dissolve_vertices_rejects_empty_and_removes_incident_faces ... ok
+test mesh::tests::ear_clipping_triangulates_concave_l_polygon ... ok
+test mesh::tests::edge_endpoints_returns_ordered_vertices ... ok
+test mesh::tests::extrude_increases_face_count ... ok
+test mesh::tests::face_vertex_ids_invalid_handle_returns_err ... ok
+test mesh::tests::fill_holes_caps_a_missing_box_face ... ok
+test mesh::tests::fill_holes_disambiguates_two_holes_sharing_one_vertex ... ok
+test mesh::tests::flip_faces_rejects_empty_selection_and_invalid_handle ... ok
+test mesh::tests::flip_faces_reverses_only_requested_normals ... ok
+test mesh::tests::from_face_loops_bridges_hole_and_skips_degenerate_outer ... ok
+test mesh::tests::from_faces_rejects_degenerate_and_out_of_range ... ok
+test mesh::tests::from_indexed_triangles_builds_triangle_faces ... ok
+test mesh::tests::from_indexed_triangles_by_face_id_falls_back_when_empty ... ok
+test mesh::tests::from_indexed_triangles_by_face_id_merges_per_brep_face_without_filling_holes ... ok
+test mesh::tests::from_indexed_triangles_by_face_id_rejects_length_mismatch ... ok
+test mesh::tests::from_indexed_triangles_rejects_malformed_lengths ... ok
+test mesh::tests::from_json_rejects_invalid_input ... ok
+test mesh::tests::ico_sphere_has_faces ... ok
+test mesh::tests::inset_faces_rejects_empty_and_adds_inner_face ... ok
+test mesh::tests::json_roundtrip ... ok
+test mesh::tests::knife_cut_on_quad_face_adds_split_triangles ... ok
+test mesh::tests::knife_cut_rejects_invalid_face_handle ... ok
+test mesh::tests::loop_cut_rejects_zero_cuts_and_adds_rings ... ok
+test mesh::tests::mark_uv_seam_toggles_and_is_uv_seam_reports_state ... ok
+test mesh::tests::merge_and_cleanup_collapses_seam_vertices_of_a_contiguous_strip ... ok
+test mesh::tests::merge_coplanar_faces_reassembles_triangulated_cube_into_quads ... ok
+test mesh::tests::merge_vertices_by_distance_only_merges_within_threshold ... ok
+test mesh::tests::merge_vertices_rejects_too_few_and_merges_first_and_center_modes ... ok
+test mesh::tests::mirror_doubles_geometry_and_welds_seam ... ok
+test mesh::tests::move_vertices_proportional_rejects_empty_and_applies_falloff ... ok
+test mesh::tests::move_vertices_rejects_empty_and_moves_selected ... ok
+test mesh::tests::newell_normal_handles_collinear_first_corner ... ok
+test mesh::tests::obj_export_contains_vertices ... ok
+test mesh::tests::orient_faces_consistently_fixes_same_winding_neighbors ... ok
+test mesh::tests::plane_prim_single_face ... ok
+test mesh::tests::rotate_mesh_rotates_vertices_about_axis ... ok
+test mesh::tests::rotate_vertices_rejects_empty_and_rotates_around_pivot ... ok
+test mesh::tests::scale_mesh_scales_vertices ... ok
+test mesh::tests::scale_vertices_rejects_empty_and_scales_around_pivot ... ok
+test mesh::tests::set_shading_rejects_invalid_handle_and_marks_smooth ... ok
+test mesh::tests::set_vertex_position_updates_and_rejects_invalid_handle ... ok
+test mesh::tests::snap_vertices_to_grid_rejects_non_positive_and_snaps ... ok
+test mesh::tests::subdivide_faces_rejects_empty_and_quadruples_selected_face ... ok
+test mesh::tests::tessellate_concave_face_tags_all_triangles_with_one_face_id ... ok
+test mesh::tests::tessellate_has_positions_and_indices ... ok
+test mesh::tests::to_obj_includes_uv_coordinates_when_present ... ok
+test mesh::tests::translate_moves_vertices ... ok
+test mesh::tests::triangulate_produces_triangles_only ... ok
+test mesh::tests::unwrap_uv_produces_bounded_coordinates ... ok
+test mesh::tests::unwrap_uv_splits_islands_across_seam ... ok
+test mesh::tests::vec3_dot_cross_length_lerp ... ok
+test mesh::tests::vec3_normalize_zero_vector_returns_zero ... ok
+test mesh::tests::vertex_position_invalid_handle_returns_err ... ok
+test mesh::tests::weld_coincident_vertices_unifies_independently_tessellated_seam ... ok
+test scene::tests::aabb_overlaps_marquee_polygon_mode_detects_corner_containment ... ok
+test scene::tests::aabb_overlaps_marquee_rectangle_mode_returns_false_without_bounds ... ok
+test scene::tests::axis_rotate_angle_measures_signed_rotation ... ok
+test scene::tests::concrete_forest_frustum_contains_target_box ... ok
+test scene::tests::concrete_forest_frustum_culls_off_axis_boxes ... ok
+test scene::tests::floating_origin_rebase_subtracts_anchor ... ok
+test scene::tests::frustum_contains_origin_box ... ok
+test scene::tests::frustum_culls_behind_camera_box ... ok
+test scene::tests::grid_placement_anchor_uses_orbit_xy_and_datum_z ... ok
+test scene::tests::gumball_axis_drag_plane_normal_handles_axis_aligned_with_eye ... ok
+test scene::tests::gumball_axis_drag_plane_normal_is_perpendicular_to_axis ... ok
+test scene::tests::gumball_extent_clamps_to_bounds ... ok
+test scene::tests::gumball_eye_points_from_pivot_to_camera ... ok
+test scene::tests::gumball_project_ray_onto_axis_measures_signed_offset ... ok
+test scene::tests::instance_model_from_trs_translates_and_scales_point ... ok
+test scene::tests::interpolate_mesh_uv_blends_triangle_corners ... ok
+test scene::tests::interpolate_mesh_uv_none_when_triangle_out_of_range ... ok
+test scene::tests::interpolate_mesh_uv_none_when_uvs_missing ... ok
+test scene::tests::lod_from_camera_distance_scales ... ok
+test scene::tests::lod_grid_step_world_returns_finest_active_band ... ok
+test scene::tests::lod_progressive_grid_layer_key_stable_within_band ... ok
+test scene::tests::lod_progressive_grid_layers_adds_bands ... ok
+test scene::tests::marquee_contains_point_rectangle_vs_polygon_modes ... ok
+test scene::tests::marquee_is_crossing_follows_drag_direction ... ok
+test scene::tests::marquee_is_crossing_from_path_empty_defaults_to_false ... ok
+test scene::tests::marquee_is_crossing_from_path_lasso_uses_first_horizontal_step ... ok
+test scene::tests::marquee_is_crossing_from_path_window_mode_uses_endpoints ... ok
+test scene::tests::marquee_segment_selected_crossing_mode_detects_rect_edge_crossing ... ok
+test scene::tests::marquee_segment_selected_window_mode_requires_both_endpoints_inside ... ok
+test scene::tests::marquee_triangle_selected_crossing_mode_true_on_partial_overlap ... ok
+test scene::tests::marquee_triangle_selected_window_mode_requires_all_points_inside ... ok
+test scene::tests::mat4_inverse_round_trips_to_identity ... ok
+test scene::tests::mat4_inverse_undoes_view_projection ... ok
+test scene::tests::mesh_has_vertex_colors_requires_matching_length ... ok
+test scene::tests::orbit_controller_orbit_clamps_pitch ... ok
+test scene::tests::orbit_controller_pan_moves_target_away_from_origin ... ok
+test scene::tests::orbit_controller_zoom_clamps_distance_bounds ... ok
+test scene::tests::orbit_round_trip ... ok
+test scene::tests::perspective_maps_depth_to_wgpu_ndc ... ok
+test scene::tests::pick_closest_lod_prefers_more_detailed_on_tie ... ok
+test scene::tests::pick_closest_mesh_url_filters_out_non_finite_and_negative_lods ... ok
+test scene::tests::pick_closest_mesh_url_returns_fallback_when_no_entries ... ok
+test scene::tests::pick_closest_mesh_url_selects_nearest_lod_entry ... ok
+test scene::tests::point_in_square ... ok
+test scene::tests::point_on_segment_checks_bounding_box ... ok
+test scene::tests::project_point_rejects_points_outside_near_far_clip ... ok
+test scene::tests::projected_aabb_skips_far_instance ... ok
+test scene::tests::quat_from_basis_identity_axes_yields_identity_quaternion ... ok
+test scene::tests::quat_from_basis_round_trips_through_mat4_from_quat ... ok
+test scene::tests::ray_aabb_misses_offset_box ... ok
+test scene::tests::ray_aabb_slab_axis_parallel_ray_outside_bounds_misses ... ok
+test scene::tests::ray_aabb_slab_returns_none_when_box_entirely_behind_origin ... ok
+test scene::tests::ray_from_screen_center_points_at_target ... ok
+test scene::tests::ray_hits_box ... ok
+test scene::tests::ray_hits_triangle_direct ... ok
+test scene::tests::ray_pick_mesh_detail_misses_when_aabb_not_hit ... ok
+test scene::tests::ray_pick_mesh_detail_returns_triangle_index_and_barycentrics ... ok
+test scene::tests::ray_plane_point_hits_plane_ahead_and_misses_parallel ... ok
+test scene::tests::ray_plane_point_rejects_intersection_behind_origin ... ok
+test scene::tests::ray_segment_distance_measures_perpendicular_gap ... ok
+test scene::tests::ray_segment_distance_none_for_degenerate_segment ... ok
+test scene::tests::rectangle_marquee_bounds_use_start_and_end_corners ... ok
+test scene::tests::rotate_vector_by_90_degrees_around_z_axis ... ok
+test scene::tests::screen_segment_distance_degenerate_segment_falls_back_to_point_distance ... ok
+test scene::tests::screen_segment_distance_projects_point_onto_segment ... ok
+test scene::tests::screen_select_components_default_granularity_selects_whole_instance ... ok
+test scene::tests::screen_select_components_edge_granularity_selects_ids ... ok
+test scene::tests::screen_select_components_face_granularity_selects_visible_triangle ... ok
+test scene::tests::screen_select_components_filters_by_active_instance_id ... ok
+test scene::tests::screen_select_components_skips_missing_mesh_lookup ... ok
+test scene::tests::screen_select_components_vertex_granularity_selects_ids ... ok
+test scene::tests::screen_select_instances_window_requires_full_vertex_enclosure ... ok
+test scene::tests::segment_intersects_polygon_true_when_endpoint_inside ... ok
+test scene::tests::segment_intersects_rect_detects_boundary_crossing ... ok
+test scene::tests::segments_intersect_detects_collinear_touch ... ok
+test scene::tests::segments_intersect_detects_proper_crossing ... ok
+test scene::tests::vec3_from_f64_converts_components ... ok
+test spatial::tests::aabb_overlap_finds_intersecting_leaves ... ok
+test spatial::tests::empty_bvh_returns_no_matches ... ok
+test spatial::tests::many_leaves_build_and_query_correctly ... ok
+test spatial::tests::nearest_point_finds_closest_leaf ... ok
+test spatial::tests::ray_hits_only_crossed_leaves ... ok
+test brep::predicates::tests::quick::in_circle2d_filtered_agrees_with_exact_on_random_configurations ... ok
+test brep::surface_ops::tests::quick::closest_point_on_cylinder_matches_brute_force_grid_oracle ... ok
+test brep::kernel::tests::surface_surface_intersect_of_two_flat_nurbs_patches_returns_a_curve ... ok
+test brep::kernel::tests::fixture_sphere_cut_torus_volume_is_less_than_sphere ... ok
+test brep::predicates::tests::quick::orient3d_filtered_agrees_with_exact_on_random_and_near_degenerate_quadruples ... ok
+test brep::kernel::tests::fixture_sphere_cut_torus_at_slider_max_completes has been running for over 60 seconds
+test brep::kernel::tests::sphere_cut_intersecting_torus_completes has been running for over 60 seconds

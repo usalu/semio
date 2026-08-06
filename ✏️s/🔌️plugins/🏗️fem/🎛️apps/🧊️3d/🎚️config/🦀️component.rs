@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 /// (`result_display`, `camera`); session-only view state now round-trips through the config
 /// `DocumentStore` exactly like document content, with a real `backwards` per `Fem3dConfigOperation`
 /// instead of never being VCS'd at all. Mirrors `Fem2dConfig`'s identical B1 recipe, minus a `locale`
-/// field (fem3d never carried a `ViewState::locale` the way fem2d did).
+/// field (fem3d never carried a `ViewModel::locale` the way fem2d did).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "fem3dcfg")]

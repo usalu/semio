@@ -144,7 +144,7 @@ mod tests {
         let document = app.projection().expect("projection");
         assert!(document.nodes.iter().any(|node| matches!(node.kind, DagNodeKind::Slider { .. })));
         let added_id = document.nodes.last().expect("added node").id.clone();
-        let node = app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewState::default()).expect("render");
+        let node = app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains(&added_id), "the new node becomes the config selection");
     }
 
@@ -184,7 +184,7 @@ mod tests {
             let (to, _) = engine::split_endpoint(&edge.target);
             from != node_id && to != node_id
         }));
-        let node = app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewState::default()).expect("render");
+        let node = app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewModel::default()).expect("render");
         assert!(!serde_json::to_string(&node).unwrap().contains(&node_id), "the removed node is pruned from the config selection");
     }
 

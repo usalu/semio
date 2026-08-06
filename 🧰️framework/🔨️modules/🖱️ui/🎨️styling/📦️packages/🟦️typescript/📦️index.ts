@@ -17,6 +17,7 @@ export {
   type StylingAppearanceName,
   type StylingTokenKey,
 } from "./🟦️tokens.generated.ts";
+import { ephemeralMap, ephemeralBox, ephemeralSet } from "@semio-tech/framework-core";
 import { STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_SEMIO_THEME, STYLING_TOKENS, type StylingAppearanceName, type StylingTokenKey } from "./🟦️tokens.generated.ts";
 
 //#region 🔖️ThemeModel
@@ -504,8 +505,8 @@ export function tokenHex(key: StylingTokenKey | string): string {
 //#endregion 🔑️TokenRefs
 
 //#region 🎨️Resolve
-const _resolveCache = new Map<string, string>();
-const _readableForegroundCache = new Map<string, string>();
+const _resolveCache = ephemeralMap<string, string>("framework.modules.ui.styling.packages.typescript.index.ts._resolveCache");
+const _readableForegroundCache = ephemeralMap<string, string>("framework.modules.ui.styling.packages.typescript.index.ts._readableForegroundCache");
 
 /** @emoji 🔄️ Clears the color resolve cache (theme switches / tests). */
 export function clearColorResolveCache(): void {
@@ -771,8 +772,8 @@ export function serializeThemeIconOverridesJson(): string | undefined {
 
 /** @emoji 🎨️ Serializes the active theme's board palette paints for DAG/flow canvas WASM (`CanvasPalette` JSON). Falls back to the baked semio palette before a theme is set. */
 export function serializeCanvasThemeJson(appearanceName: StylingAppearanceName = currentStylingAppearanceName()): string {
-  if (_activeUiTheme) {
-    return JSON.stringify(resolveThemeAppearancePalettes(_activeUiTheme, appearanceName).board);
+  if (_activeUiTheme.current) {
+    return JSON.stringify(resolveThemeAppearancePalettes(_activeUiTheme.current, appearanceName).board);
   }
   return JSON.stringify(STYLING_BOARD_PALETTES[appearanceName]);
 }
@@ -902,12 +903,12 @@ export function semioTheme(): UiTheme {
   return STYLING_SEMIO_THEME as unknown as UiTheme;
 }
 
-let _builtinThemesCache: UiTheme[] | undefined;
+const _builtinThemesCache = ephemeralBox<UiTheme[] | undefined>("framework.modules.ui.styling.packages.typescript.index.ts._builtinThemesCache", undefined);
 
 /** @emoji 🎨️ Premade themes bundled with the app: semio plus any `framework/ui/styling/theme/*.theme.json` presets. `import.meta.glob` is a Vite build-time macro — it only exists once actually *called* in the bundled output, so this must call it directly inside a try/catch rather than probe for it first (`import.meta.glob` as a bare property is always `undefined` at runtime, in Vite and everywhere else; a `typeof` guard would never be true). Outside Vite (bun scripts, tests) the call throws and this falls back to semio only. */
 export function builtinUiThemes(): readonly UiTheme[] {
-  if (_builtinThemesCache) {
-    return _builtinThemesCache;
+  if (_builtinThemesCache.current) {
+    return _builtinThemesCache.current;
   }
   const themes: UiTheme[] = [semioTheme()];
   try {
@@ -918,22 +919,22 @@ export function builtinUiThemes(): readonly UiTheme[] {
   } catch {
     /* import.meta.glob unavailable outside Vite */
   }
-  _builtinThemesCache = themes;
+  _builtinThemesCache.current = themes;
   return themes;
 }
 //#endregion 🔑️Premades
 
 //#region 🔑️ActiveTheme
-let _activeUiTheme: UiTheme | undefined;
-const _activeUiThemeSubscribers = new Set<(theme: UiTheme) => void>();
+const _activeUiTheme = ephemeralBox<UiTheme | undefined>("framework.modules.ui.styling.packages.typescript.index.ts._activeUiTheme", undefined);
+const _activeUiThemeSubscribers = ephemeralSet<(theme: UiTheme) => void>("framework.modules.ui.styling.packages.typescript.index.ts._activeUiThemeSubscribers");
 /** 🐚️ Per-root applied CSS var names — lets N co-mounted shells each carry their own theme's tokens
  * without clobbering each other's `<div>` inline overrides (only `document.documentElement` is also
  * "the page", for the single page-owning shell / `setActiveUiTheme` callers). */
-const _appliedThemeCssPropsByRoot = new Map<HTMLElement, Set<string>>();
+const _appliedThemeCssPropsByRoot = ephemeralMap<HTMLElement, Set<string>>("framework.modules.ui.styling.packages.typescript.index.ts._appliedThemeCssPropsByRoot");
 
 /** @emoji 🎨️ The currently active theme (defaults to semio before any theme is set). */
 export function activeUiTheme(): UiTheme {
-  return _activeUiTheme ?? semioTheme();
+  return _activeUiTheme.current ?? semioTheme();
 }
 
 /** @emoji 🎨️ Registers a callback invoked whenever the active theme changes. Returns an unsubscribe function. */
@@ -1019,7 +1020,7 @@ export function applyUiThemeToDocument(theme: UiTheme): void {
  * A co-mounted, non-page-owning shell must call {@link applyUiThemeToRoot} on its own root instead, or it
  * would fight every other mounted shell over the same document-wide tokens. */
 export function setActiveUiTheme(theme: UiTheme): void {
-  _activeUiTheme = theme;
+  _activeUiTheme.current = theme;
   applyUiThemeToDocument(theme);
   for (const subscriber of _activeUiThemeSubscribers) {
     subscriber(theme);
@@ -1032,7 +1033,7 @@ if (import.meta.vitest) {
   const { afterEach, describe, expect, it } = import.meta.vitest;
 
   afterEach(() => {
-    _activeUiTheme = undefined;
+    _activeUiTheme.current = undefined;
     if (typeof document !== "undefined") {
       clearUiThemeFromRoot(document.documentElement);
     }

@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/mit-bestand-demonstrator` task router: `bun ./📜️script.ts <dev|build> [args…]`. */
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCmdStatus, runViteBunxDev, withViteConfigLoader } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 import { buildEngineWasm, buildPlugins, ensurePluginRegistry } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts";
@@ -22,8 +23,16 @@ const demonstratorRoot = import.meta.dir;
 async function buildDemonstratorPlugins(): Promise<void> {
   const primaryVariant = DEMONSTRATOR_PANES[0]?.variant;
   if (primaryVariant) {
-    if (process.env.SKIP_PLUGIN_BUILD === "1") {
+    const stagedCore = join(import.meta.dir, "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/demonstrator/semio_s_plugin_demonstrator_component.core.wasm");
+    const hasStaged = existsSync(stagedCore);
+    if (process.env.SKIP_PLUGIN_BUILD === "1" || (hasStaged && process.env.FORCE_PLUGIN_BUILD !== "1")) {
+      if (hasStaged && process.env.SKIP_PLUGIN_BUILD !== "1") {
+        console.log("[DEBUG] reusing staged demonstrator plugin-modules (set FORCE_PLUGIN_BUILD=1 to rebuild)");
+      }
       await ensurePluginRegistry(primaryVariant);
+      if (process.env.SKIP_ENGINE_BUILD !== "0" && process.env.FORCE_ENGINE_BUILD !== "1") {
+        process.env.SKIP_ENGINE_BUILD = "1";
+      }
     } else {
       await buildPlugins(primaryVariant);
     }

@@ -28,7 +28,7 @@ semio_framework_plugin::app_labels! {
     }
 }
 
-/// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewState`-driven resolver.
+/// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewModel`-driven resolver.
 fn block3d_is_de_locale(cfg: &Block3dConfig) -> bool {
     cfg.locale.starts_with("de")
 }

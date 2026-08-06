@@ -3,6 +3,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { ephemeralBox, ephemeralMap } from "@semio-tech/framework-core";
 import mdx from "@mdx-js/rollup";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
@@ -1143,14 +1144,14 @@ async function fetchOsmTileToCache(cacheRoot: string, z: number, x: number, y: n
   return true;
 }
 
-let openFreeMapTileTemplate: string | null = null;
-let openFreeMapTileTemplateAt = 0;
+const openFreeMapTileTemplate = ephemeralBox<string | null>("framework.modules.ui.styling.packages.rust.vite.elements.assets.ts.openFreeMapTileTemplate", null);
+const openFreeMapTileTemplateAt = ephemeralBox("framework.modules.ui.styling.packages.rust.vite.elements.assets.ts.openFreeMapTileTemplateAt", 0);
 const OPENFREEMAP_TILE_TEMPLATE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 async function resolveOpenFreeMapTileTemplate(): Promise<string> {
   const now = Date.now();
-  if (openFreeMapTileTemplate && now - openFreeMapTileTemplateAt < OPENFREEMAP_TILE_TEMPLATE_TTL_MS) {
-    return openFreeMapTileTemplate;
+  if (openFreeMapTileTemplate.current && now - openFreeMapTileTemplateAt.current < OPENFREEMAP_TILE_TEMPLATE_TTL_MS) {
+    return openFreeMapTileTemplate.current;
   }
   const res = await fetch(GIS_MAP_OPENFREEMAP_TILEJSON, { headers: { "User-Agent": GIS_MAP_TILE_USER_AGENT } });
   if (!res.ok) {
@@ -1161,8 +1162,8 @@ async function resolveOpenFreeMapTileTemplate(): Promise<string> {
   if (typeof template !== "string" || !template.includes("{z}")) {
     throw new Error("OpenFreeMap TileJSON missing tiles URL template");
   }
-  openFreeMapTileTemplate = template;
-  openFreeMapTileTemplateAt = now;
+  openFreeMapTileTemplate.current = template;
+  openFreeMapTileTemplateAt.current = now;
   return template;
 }
 
@@ -1274,7 +1275,7 @@ function contentTypeForTileExt(ext: string): string {
   return "application/octet-stream";
 }
 
-const tileProxyTemplateCache = new Map<string, { readonly template: string; readonly at: number }>();
+const tileProxyTemplateCache = ephemeralMap<string, { readonly template: string; readonly at: number }>("framework.modules.ui.styling.packages.rust.vite.elements.assets.ts.tileProxyTemplateCache");
 const TILE_PROXY_TEMPLATE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** @emoji 🧭️ Resolves a `tile-proxy` spec's `upstream` to a concrete `{z}/{x}/{y}` URL template: used

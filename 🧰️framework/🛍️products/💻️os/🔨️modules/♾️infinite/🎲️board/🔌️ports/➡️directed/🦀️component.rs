@@ -136,10 +136,10 @@ pub mod types {
 
     use std::collections::{BTreeMap, BTreeSet};
 
-    use self::canvas::camera::Camera;
-    use self::canvas::Color;
-    use self::canvas::{Point, Vec2};
-    use self::NodeKindHandleTemplate;
+    use super::canvas::camera::Camera;
+    use super::canvas::Color;
+    use super::canvas::{Point, Vec2};
+    use super::NodeKindHandleTemplate;
 
     // #region 🔖️GraphPortMode
     /// 🔌️ Runtime port-model axis: ported graphs use handles; normal graphs connect node ids directly.
@@ -188,7 +188,7 @@ pub mod types {
         pub text: Option<String>,
         pub icon_kind: Option<String>,
         pub node_kind: String,
-        pub properties: self::PropertyBag,
+        pub properties: math::graph::PropertyBag,
     }
 
     #[derive(Clone, Debug)]
@@ -322,7 +322,7 @@ pub mod types {
         pub edge_kind: String,
         pub source_tip: Option<String>,
         pub target_tip: Option<String>,
-        pub properties: self::PropertyBag,
+        pub properties: math::graph::PropertyBag,
     }
 
     #[derive(Clone, Debug)]
@@ -337,7 +337,7 @@ pub mod types {
         pub locked: bool,
         pub style: Option<String>,
         pub wire_kind: String,
-        pub properties: self::PropertyBag,
+        pub properties: math::graph::PropertyBag,
     }
 
     #[derive(Clone, Debug, PartialEq, Eq)]
@@ -538,7 +538,7 @@ pub mod types {
     use std::hash::{Hash, Hasher};
     use std::sync::Arc;
 
-    use self::canvas::{append_svg_document, Affine, FillRule, RasterImage, Rect, Scene, SvgDocument};
+    use super::canvas::{append_svg_document, Affine, FillRule, RasterImage, Rect, Scene, SvgDocument};
 
     #[derive(Clone)]
     pub enum CachedIconBody {
@@ -740,7 +740,7 @@ pub mod force_graph {
     use serde_json::Value;
     use std::collections::HashMap;
 
-    use self::board_json_visible_or_true;
+    use super::board_json_visible_or_true;
     pub use crate::infinite::board::normal::undirected::ForceGraphLayoutOptions;
 
     fn build_handle_to_node(nodes: &[Value]) -> HashMap<String, String> {
@@ -800,8 +800,8 @@ pub mod hierarchical_tree {
     use serde_json::Value;
     use std::collections::{HashMap, HashSet};
 
-    use self::board_json_visible_or_true;
-    use self::fixture_edge_handle_ids_from_object;
+    use super::board_json_visible_or_true;
+    use super::fixture_edge_handle_ids_from_object;
 
     /// 🌳️ Buchheim tidy-tree knobs: rank gap, sibling breadth, growth-axis string, optional world anchor for the laid subtree.
     #[derive(Clone, Debug, Deserialize)]
@@ -1204,8 +1204,8 @@ pub mod hierarchical_tree {
             let Some((src_h, tgt_h)) = fixture_edge_handle_ids_from_object(eo) else {
                 continue;
             };
-            let source_node_id = self::resolve_endpoint_node_id(src_h, &handle_to_node);
-            let target_node_id = self::resolve_endpoint_node_id(tgt_h, &handle_to_node);
+            let source_node_id = super::resolve_endpoint_node_id(src_h, &handle_to_node);
+            let target_node_id = super::resolve_endpoint_node_id(tgt_h, &handle_to_node);
             if source_node_id == target_node_id {
                 continue;
             }
@@ -1355,16 +1355,16 @@ pub mod hierarchical_tree {
 
 // #region 🔁️RedrawLayout
 pub mod redraw_layout {
-    use self::canvas::Point;
+    use super::canvas::Point;
     use serde::Deserialize;
     use serde_json::Value;
     use std::collections::HashMap;
 
-    use self::board_json_visible_or_true;
-    use self::fixture_edge_handle_ids_from_object;
-    use self::force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions};
-    use self::hierarchical_tree::{apply_hierarchical_tree_layout_to_fixture_v1_value, HierarchicalTreeLayoutOptions};
-    use self::{circle_handle_angle_toward, distance_between, rectangle_handle_angle_toward};
+    use super::board_json_visible_or_true;
+    use super::fixture_edge_handle_ids_from_object;
+    use super::force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions};
+    use super::hierarchical_tree::{apply_hierarchical_tree_layout_to_fixture_v1_value, HierarchicalTreeLayoutOptions};
+    use super::{circle_handle_angle_toward, distance_between, rectangle_handle_angle_toward};
 
     #[derive(Debug, Clone, Copy)]
     enum NodeShapeSnap {
@@ -1579,7 +1579,7 @@ pub use redraw_layout::{apply_edge_handle_snap_to_fixture_v1_json, apply_redraw_
 #[cfg(test)]
 mod quadrant_tests {
     use super::*;
-    use self::canvas::Color;
+    use super::canvas::Color;
 
     #[test]
     fn canvas_theme_default_uses_centralized_board_light_tokens() {

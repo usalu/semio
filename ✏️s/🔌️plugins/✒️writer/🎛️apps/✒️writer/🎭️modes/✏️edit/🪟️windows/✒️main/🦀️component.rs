@@ -138,7 +138,7 @@ mod tests {
     #[test]
     fn scene_emits_placeholders_selectable_spans_and_newline_gates_for_jack() {
         let mut app = new_app();
-        let node = app.render(WRITER_PLAY_BODY_MAIN, Some(&crate::artifacts::writer::engine::jack_example_json()), &semio_framework_plugin::ViewState::default()).expect("render");
+        let node = app.render(WRITER_PLAY_BODY_MAIN, Some(&crate::artifacts::writer::engine::jack_example_json()), &semio_framework_plugin::ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("placeholdersJson"));
         assert!(json.contains("selectableSpansJson"));

@@ -12,7 +12,7 @@ pub mod board_host {
     use serde_json::json;
     use std::collections::{BTreeMap, BTreeSet};
 
-    use self::{
+    use super::{
         board_json_locked_option, board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
         handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero,
         normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_json, rectangle_handle_angle_toward, selection_drag_enclosing, selection_drag_shape, ActiveUtility, BoardElementStyleKind, CachedIconBody, CanvasPalette,
@@ -5104,7 +5104,7 @@ pub mod board_host {
                     edge_kind,
                     source_tip: None,
                     target_tip: None,
-                    properties: self::PropertyBag::new(),
+                    properties: math::graph::PropertyBag::new(),
                 },
             );
             self.push_event("edgeCreate", json!({ "id": id, "source": source_handle_id, "target": target_handle_id }));

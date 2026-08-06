@@ -4,7 +4,7 @@
 //!
 //! B1: absorbs every field that used to live in the old UI crate's `Process3dRuntime` app-struct
 //! `RefCell` (selection, hover, face pick, selection method, engagement input, camera, sun) plus the two
-//! `ViewState` fields process3d actually read (`active_utility_id`/`locale`) — session-only view state
+//! `ViewModel` fields process3d actually read (`active_utility_id`/`locale`) — session-only view state
 //! now round-trips through the config `DocumentStore` exactly like document content, with a real
 //! `backwards` per [`Process3dConfigOperation`], mirroring the `shooting_engine::ShootingConfig` pilot.
 //! The camera (was `Process3dCamera`) and sun (was `WorldSunConfig`) are flattened into scalar fields
@@ -46,9 +46,9 @@ pub struct Process3dConfig {
     pub sun_elevation: f64,
     pub sun_intensity: f64,
     pub sun_color: String,
-    /// 🧰️ Was read off the host-pushed `ViewState::active_utility_id` (deleted for migrated apps).
+    /// 🧰️ Was read off the host-pushed `ViewModel::active_utility_id` (deleted for migrated apps).
     pub active_utility_id: String,
-    /// 🗣️ Was read off `ViewState::locale`.
+    /// 🗣️ Was read off `ViewModel::locale`.
     pub locale: String,
 }
 
@@ -94,7 +94,7 @@ store::impl_whole_record_config!(Process3dConfig);
 /// foreign trait (`dsl::DslField`) for `Box<Process3dConfig>` (a local type inside the foreign,
 /// fundamental `Box` wrapper) is permitted by the orphan rules; this delegates entirely to
 /// `Process3dConfig`'s own derive-generated `DslField` impl (from `DslDocument`), mirroring `cad`'s
-/// identical `Box<CadScene>` binding.
+/// identical `Box<CadProjection>` binding.
 impl dsl::DslField for Box<Process3dConfig> {
     fn shape() -> dsl::Shape {
         <Process3dConfig as dsl::DslField>::shape()

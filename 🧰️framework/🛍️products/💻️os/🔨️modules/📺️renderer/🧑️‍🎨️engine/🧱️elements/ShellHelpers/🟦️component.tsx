@@ -175,7 +175,7 @@ import {
   type SpaceProgramEntry,
   type SpawnedAppEntry,
   type UIHistory,
-  type ViewState,
+  type ViewModel,
 } from "../Shell/🟦️component.tsx";
 import {
   registerPendingWorldProjection,
@@ -974,7 +974,7 @@ function panelJsonFromState(state: SpacePanelState): string {
   return packValueToBase64(state);
 }
 
-function parsePanelState(viewState: ViewState): SpacePanelState | null {
+function parsePanelState(viewState: ViewModel): SpacePanelState | null {
   if (!viewState.panelJson) return null;
   try {
     return packValueFromBase64(viewState.panelJson) as SpacePanelState;
@@ -998,7 +998,7 @@ export function studioPanelFocusingSpawned(panel: SpacePanelState, spawned: Spaw
 }
 
 /** @emoji 🐚️ Commits a studio panel into a view state's `panelJson` for a single host-effect session write. */
-export function viewStateWithSpacePanel(viewState: ViewState, panel: SpacePanelState): ViewState {
+export function viewStateWithSpacePanel(viewState: ViewModel, panel: SpacePanelState): ViewModel {
   return { ...viewState, panelJson: panelJsonFromState(panel) };
 }
 
@@ -1321,7 +1321,7 @@ const PLUGIN_LOAD_TIMEOUT_MS = 30_000;
  * `loadedPluginsRef`, which only updates after the next React commit. */
 type PluginInstallOutcome = "loaded" | "already-loaded" | "in-flight" | "missing-registry" | "failed";
 
-async function loadPluginModuleResilient(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle | null> {
+export async function loadPluginModuleResilient(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle | null> {
   try {
     return await Promise.race([
       loadPluginModule(pluginId, moduleUrl),

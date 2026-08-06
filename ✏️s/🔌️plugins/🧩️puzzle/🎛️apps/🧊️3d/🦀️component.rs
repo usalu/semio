@@ -34,7 +34,7 @@ use store::EngineHandles;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
-use std::sync::{LazyLock, Mutex};
+use std::sync::Mutex;
 
 //#region 🔖️Constants
 pub const PUZZLE3D_PLAY_APP_ID: &str = "puzzle3d-play";
@@ -1737,8 +1737,8 @@ puzzle3d_command_variants! {
     FillBuildTick = "fillBuildTick",
     RegisterBrushMesh = "registerBrushMesh",
     WorldPointerDown = "worldPointerDown",
-    // 🗣️ B1: locale/terminology used to be host-pushed `ViewState` fields with no app-level action of
-    // their own; now that `ViewState` is gone from the app-facing surface, they need a real Command.
+    // 🗣️ B1: locale/terminology used to be host-pushed `ViewModel` fields with no app-level action of
+    // their own; now that `ViewModel` is gone from the app-facing surface, they need a real Command.
     SetLocale = "setLocale",
     SetTerminology = "setTerminology",
 }
@@ -2608,7 +2608,7 @@ pub fn register_puzzle3d_exports() {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::{testkit, ActionMeta, InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{testkit, ActionMeta, InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
 
     pub type Puzzle3dApp = VcsDocumentApp<Puzzle3dPlayApp>;
 
@@ -2640,7 +2640,7 @@ pub(crate) mod testkit {
 
     /// 🖼️ The rendered body, as JSON — every panel/window assertion navigates this value.
     pub fn render_body(app: &mut Puzzle3dApp, body_key: &str) -> Value {
-        serde_json::to_value(app.render(body_key, None, &ViewState::default()).expect("render")).expect("serialize rendered node")
+        serde_json::to_value(app.render(body_key, None, &ViewModel::default()).expect("render")).expect("serialize rendered node")
     }
 
     /// 🪟️ The world composite body for one window INSTANCE — the `<body>:<windowInstanceId>` form is

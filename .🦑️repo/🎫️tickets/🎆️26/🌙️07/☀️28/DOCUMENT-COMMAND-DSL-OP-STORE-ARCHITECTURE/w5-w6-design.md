@@ -377,7 +377,7 @@ main-thread client already exposes it (`framework/renderer/wgpu/js/boot.js:406-4
 Missing piece (the :21928 gap) — `framework/renderer/wgpu/rs/lib.rs` `plugin_bridge` module
 (:7472-7770):
 1. Add `PluginBridgeEntry::handle_command(&self, instance_id: u32, command_json: &str,
-   view_state: &ViewState) -> Result<kernel::InvocationResult, String>` mirroring `handle_action`
+   view_state: &ViewModel) -> Result<kernel::InvocationResult, String>` mirroring `handle_action`
    (:7587-7599): wasm arm → new `handle_command_js` (clone of `handle_action_js` :7697-7744
    calling the JS `handleCommand` property — no silent-empty fallback: missing property is an
    `Err`, greenfield); native arm → `runtime.handle_command(...)`.

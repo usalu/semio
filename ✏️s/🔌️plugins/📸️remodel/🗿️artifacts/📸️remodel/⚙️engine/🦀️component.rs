@@ -1,4 +1,4 @@
-//! ⚙️ Remodel artifact — headless compute. Pure translation between `RemodelScene`'s document types
+//! ⚙️ Remodel artifact — headless compute. Pure translation between `RemodelProjection`'s document types
 //! and the ten sibling photogrammetry topic files (`images`/`video`/`camera`/`feature`/`sfm`/`dense`/
 //! `mesh`/`motion`/`geo`/`reconstruction`), plus the mesh/raster export encoders and this artifact's
 //! host registration.
@@ -8,7 +8,7 @@
 
 use crate::artifacts::remodel::engine::{camera as remodel_camera, geo as remodel_geo, images as remodel_image, mesh as remodel_mesh, reconstruction as remodel_engine, sfm as remodel_sfm, video as remodel_video};
 use crate::artifacts::remodel::{
-    CameraPosePreview, DenseResolution, ImageAsset, QcReportSnapshot, ReconstructionParams, ReconstructionStage, RemodelScene, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot, REMODEL_DOCUMENT_SCHEMA,
+    CameraPosePreview, DenseResolution, ImageAsset, QcReportSnapshot, ReconstructionParams, ReconstructionStage, RemodelProjection, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot, REMODEL_DOCUMENT_SCHEMA,
 };
 use base64::Engine as _;
 use semio_framework_plugin::{MeshData, MeshExporter, OsMediaFormat};
@@ -447,14 +447,14 @@ fn mesh_to_las(mesh: &MeshData) -> Vec<u8> {
 }
 
 pub fn remodel_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
-    let scene: RemodelScene = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
+    let scene: RemodelProjection = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
     Ok(scene.results.mesh.mesh)
 }
 
 /// 🖼️ Exports whichever raster/texture asset is available (DSM, else ortho, else the mesh's baked
 /// texture) verbatim — every such asset is already a base64 PNG, so this is a lookup, not a re-encode.
 pub fn remodel_png_export(doc: &Value) -> Result<semio_framework_os::OsMediaExportResult, String> {
-    let scene: RemodelScene = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
+    let scene: RemodelProjection = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
     let asset_id = scene
         .results
         .geo

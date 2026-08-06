@@ -238,11 +238,25 @@ use chrome::toggle_show_edges;
 /// `LowpolyConfig`, written through `LowpolyConfigOperation`s emitted from `handle`. The one remaining
 /// field is genuine mid-gesture scratch state (`LowpolyScratch`) — the "scratch + commit" pattern the
 /// `DocumentApp` trait itself sanctions for `&self`-only `handle`/`render`.
-#[derive(Default)]
-pub #[derive(Default, Clone, Copy)]
-struct LowpolyPlayApp;
+#[derive(Default, Clone, Copy)]
+pub struct LowpolyPlayApp;
 
-impl DocumentApp for LowpolyPlayApp
+impl DocumentApp for LowpolyPlayApp {
+    type Projection = LowpolyProjection;
+    type Operation = LowpolyOperation;
+    type Config = LowpolyConfig;
+    type ConfigOperation = LowpolyConfigOperation;
+    type Draft = NoDraft;
+    type DraftOperation = NoDraftOperation;
+
+    type Command = LowpolyCommand;
+
+    const APP_ID: &'static str = LOWPOLY_PLAY_APP_ID;
+    const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;
+
+    fn initial_projection() -> LowpolyProjection {
+        crate::artifacts::lowpoly::engine::default_projection()
+    }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(crate::artifacts::lowpoly::engine::lowpoly_io())
@@ -294,7 +308,7 @@ impl DocumentApp for LowpolyPlayApp
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
                 let projection = <LowpolyProjection as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
-                match self.whole_document_operation(projection) {
+                match Self::whole_document_operation(projection) {
                     Some(operation) => Ok(Emit::operations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
                 }
@@ -303,12 +317,12 @@ impl DocumentApp for LowpolyPlayApp
         }
     }
 
-    fn command_id(command: &LowpolyCommand) -> &str {
+    fn command_id(command: &LowpolyCommand) -> &'static str {
         command.command_id()
     }
 
     fn handle(command: &LowpolyCommand, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation, Self::DraftOperation>, Fault> {
-        let mut scratch = ({ let scratch = std::cell::RefCell::new(LowpolyScratch::default()); scratch }).borrow_mut();
+        let mut scratch = LowpolyScratch::default();
         command.dispatch(doc, cfg, &mut scratch)
     }
 
@@ -317,13 +331,14 @@ impl DocumentApp for LowpolyPlayApp
         let config = cfg.projection;
         let labels = crate::apps::lowpoly::terminology::lowpoly_play_labels(config);
         let active_utility = config.active_utility_id.as_str();
-        let scratch_projection = ({ let scratch = std::cell::RefCell::new(LowpolyScratch::default()); scratch }).borrow().transform_projection();
+        let mut scratch = LowpolyScratch::default();
+        let scratch_projection = scratch.transform_projection();
         let render_projection = scratch_projection.as_ref().unwrap_or(projection);
         let view = LowpolyView { projection: render_projection, config };
         if matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV) {
-            ({ let scratch = std::cell::RefCell::new(LowpolyScratch::default()); scratch }).borrow_mut().refresh_texture_cache(projection);
+            scratch.refresh_texture_cache(projection);
         }
-        let texture_cache = ({ let scratch = std::cell::RefCell::new(LowpolyScratch::default()); scratch }).borrow().textures().clone();
+        let texture_cache = scratch.textures().clone();
         let loaded = matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV | LOWPOLY_PLAY_BODY_DOCUMENT).then(|| crate::apps::lowpoly::view::build_doc(projection, config)).flatten();
         match body_key {
             LOWPOLY_PLAY_BODY_MAIN => edit::windows::model::render(view, loaded.as_ref(), active_utility, &texture_cache),
@@ -493,7 +508,7 @@ pub fn create_lowpoly_app() -> App {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsDocumentApp, ViewModel};
 
     pub type LowpolyApp = VcsDocumentApp<LowpolyPlayApp>;
 
@@ -512,7 +527,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut LowpolyApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewState::default()).expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
     pub fn face_selection() -> LowpolyCommand {

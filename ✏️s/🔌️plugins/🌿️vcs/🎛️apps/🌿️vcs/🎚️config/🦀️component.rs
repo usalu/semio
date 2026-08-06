@@ -5,7 +5,7 @@
 //! `DocumentStore` (with a real `backwards`), so selection/locale edits are VCS'd exactly like document
 //! content. Absorbs the old `VcsPlayApp::selected_checkpoint_ids` `RefCell` field (multi-selected
 //! checkpoint ids in the document tree) plus the `locale` field the UI used to read off the deleted
-//! `ViewState` (mirrors `shooting_engine::ShootingConfig`'s identical `locale` field/doc).
+//! `ViewModel` (mirrors `shooting_engine::ShootingConfig`'s identical `locale` field/doc).
 
 use protocol::Operation;
 use serde::{Deserialize, Serialize};
@@ -33,7 +33,7 @@ store::impl_whole_record_config!(VcsDemoConfig);
 
 //#region 🔖️ConfigOperations
 /// 🧮️ [`VcsDemoConfig`]'s operation enum — one variant per settled interaction (mirrors the pre-B1
-/// `VcsPlayApp` field writes/deleted `ViewState.locale`), plus a generic `Snapshot` every variant's
+/// `VcsPlayApp` field writes/deleted `ViewModel.locale`), plus a generic `Snapshot` every variant's
 /// `backwards()` returns (see `shooting_op::ShootingConfigOperation`'s identical doc for why this
 /// whole-config-snapshot-undo shape is correct and sufficient here).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]

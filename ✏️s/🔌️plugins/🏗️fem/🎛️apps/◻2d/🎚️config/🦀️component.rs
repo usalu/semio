@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 // #region 🔖️Config
 /// 🧮️ B1: fem2d's real `DocumentApp::Config` — the pure-trait pilot's config artifact. Absorbs both
 /// former `Fem2dPlayApp` `RefCell` fields (`result_display`, `camera`) plus the locale the deleted
-/// `ViewState` used to carry into label resolution — session-only view state now round-trips through
+/// `ViewModel` used to carry into label resolution — session-only view state now round-trips through
 /// the config `DocumentStore` exactly like document content, with a real `backwards` per
 /// [`Fem2dConfigOperation`] instead of never being VCS'd at all.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
@@ -33,7 +33,7 @@ pub struct Fem2dConfig {
     /// 🎥️ The canvas camera (pan/zoom) — was `Fem2dPlayApp::camera`.
     #[dsl(block)]
     pub camera: FemCamera,
-    /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewState::locale`.
+    /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewModel::locale`.
     pub locale: String,
 }
 
@@ -71,7 +71,7 @@ pub enum Fem2dConfigOperation {
         #[dsl(block)]
         camera: FemCamera,
     },
-    /// 🗣️ Was read off the deleted `ViewState::locale`.
+    /// 🗣️ Was read off the deleted `ViewModel::locale`.
     #[dsl(key = "locale")]
     SetLocale { value: String },
 }

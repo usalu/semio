@@ -77,3 +77,42 @@ See `🧪m3-host-authority-*-check.err` in this ticket folder.
 - `PluginApp` gained `take_last_emit_wire` / `hydrate_*_lane`.
 - Still transitional: guest also applies Emit locally (stores not deleted); host must apply Emit onto session authority next.
 - `cargo check -p semio-framework-plugin --lib` GREEN after wiring.
+
+## Host Emit apply (this pass)
+
+- `DocumentCodec::apply_ops_binary` — type-erased fold: `parse_document_pack` → `DocumentStore::dispatch(Apply)` → `print_document_pack`.
+- `store::lane_schema_from_spr` — schema fallback from `.spr` when session schemas unset.
+- `SessionLanePack::apply_emit_ops` — host `AppFrame::Emit` path calls codec fold (falls back to `pending_binary_ops` when schema/codec/baseline missing).
+- `DocumentSession` carries `document_schema` / `config_schema` / `draft_schema`; `create_app` seeds document schema from manifest `AppIo.document_schema`; `bind_session_schemas` for explicit bind.
+- `post_adopt_frame_packs` Emit arm applies document/config/draft ops and bumps `generation` / `command_log_len`.
+
+### Remaining gaps
+
+1. **Guest duplicate apply** — `VcsDocumentApp::dispatch_emit` still mutates guest stores; host is now authoritative for mirrored packs.
+2. **INSTANCES TLS** — guest `PluginApp` box still required for PureCommand hydrate path.
+3. **Config/draft schema** — manifest `AppIo` often empty; callers should `bind_session_schemas` or rely on spr-derived schema + registered codecs.
+4. **Empty lane baseline** — Emit apply requires pre-adopted pack+spr (PureCommand pre-adopt satisfies this).
+5. **EngineHandles** — not threaded through PureCommand guest handle yet.
+6. **Command log** — host only tracks `command_log_len`; row payloads still guest-owned.
+7. **ProgramBridge** — no PureCommand migration yet.
+
+### Verify (2026-08-06)
+
+| Gate | Result |
+|---|---|
+| `cargo check -p semio-framework-plugin-host --lib` | **GREEN** (`🧪m3-host-authority-host-check2.err`) |
+| `cargo check -p semio-framework-plugin --lib` | **GREEN** (`🧪m3-host-authority-plugin-check3.err`) |
+
+## Emit apply (follow-up)
+
+- `DocumentCodec::apply_ops_binary` folds `encode_ops_vec` ops onto pack+spr via `DocumentStore::dispatch(Apply)`.
+- `SessionLanePack::apply_emit_ops(schema, ops)` uses the codec when schema is bound; otherwise keeps `pending_binary_ops`.
+- `DocumentSession` carries optional `document_schema` / `config_schema` / `draft_schema`.
+- `WasmPluginRuntime::bind_session_schemas` exposes binding for callers.
+- Host Emit arm calls `apply_emit_ops` (not stash-only).
+- `cargo check -p semio-framework-plugin-host --lib` **GREEN** (`🧪m3-emit-apply-check.err`).
+
+### Still open
+- Callers must `bind_session_schemas` after `create_app` or Emit cannot fold.
+- Guest typed stores / INSTANCES TLS / EngineHandles threading.
+- ProgramBridge → PureCommand migration.

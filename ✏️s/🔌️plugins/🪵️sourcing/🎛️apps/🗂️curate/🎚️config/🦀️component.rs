@@ -5,8 +5,8 @@
 //! pointer used to live on `CurateDocument` itself (`Filters`/`CurateRuntime`) but are session-only view
 //! state, not VCS'd content — both moved here so they round-trip through their own real `DocumentStore`
 //! (with a real `backwards`) instead of polluting the VCS'd document. `locale` is the config-derived
-//! counterpart to a host-pushed `ViewState.locale` — `DocumentApp::render`/`handle` no longer receive a
-//! `ViewState` at all, so locale-aware label resolution reads it off here (see
+//! counterpart to a host-pushed `ViewModel.locale` — `DocumentApp::render`/`handle` no longer receive a
+//! `ViewModel` at all, so locale-aware label resolution reads it off here (see
 //! `crate::apps::curate::terminology::sourcing_curate_labels`).
 
 use crate::artifacts::curate::{Filters, TableSort};

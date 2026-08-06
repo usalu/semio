@@ -1,4 +1,4 @@
-//! 📐️ CAD artifact — the `cad.scene` document schema: the `CadScene` projection, its object/
+//! 📐️ CAD artifact — the `cad.scene` document schema: the `CadProjection` projection, its object/
 //! reference/geometry/camera records, and the pane vocabulary every other cad node addresses them by.
 //! The declarative `spatial.interaction` spec types live beside this file in
 //! `🎬️interaction-spec/🦀️component.rs`.
@@ -291,7 +291,7 @@ pub struct CadNode {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
 #[dsl(id = "cad.cad", layout = "lines")]
-pub struct CadScene {
+pub struct CadProjection {
     pub schema: String,
     pub id: String,
     #[serde(default)]
@@ -327,7 +327,7 @@ pub struct CadScene {
     pub active_model_definition_id: String,
 }
 
-pub fn cad_pane_geometry(scene: &CadScene, pane: CadPaneId) -> Option<&CadGeometry> {
+pub fn cad_pane_geometry(scene: &CadProjection, pane: CadPaneId) -> Option<&CadGeometry> {
     match pane {
         CadPaneId::Shape => scene.shape_geometry.as_ref(),
         CadPaneId::Building => scene.building_geometry.as_ref(),
@@ -336,7 +336,7 @@ pub fn cad_pane_geometry(scene: &CadScene, pane: CadPaneId) -> Option<&CadGeomet
     }
 }
 
-pub fn cad_pane_geometry_mut(scene: &mut CadScene, pane: CadPaneId) -> &mut Option<CadGeometry> {
+pub fn cad_pane_geometry_mut(scene: &mut CadProjection, pane: CadPaneId) -> &mut Option<CadGeometry> {
     match pane {
         CadPaneId::Shape => &mut scene.shape_geometry,
         CadPaneId::Building => &mut scene.building_geometry,
@@ -349,8 +349,8 @@ fn default_model_definition_id() -> String {
     "spatial.shape".into()
 }
 
-pub fn empty_cad_projection() -> CadScene {
-    CadScene {
+pub fn empty_cad_projection() -> CadProjection {
+    CadProjection {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
         id: "cad".into(),
         objects: Vec::new(),
@@ -367,7 +367,7 @@ pub fn empty_cad_projection() -> CadScene {
     }
 }
 
-pub fn cad_pane_objects(scene: &CadScene, pane: CadPaneId) -> &[CadObject] {
+pub fn cad_pane_objects(scene: &CadProjection, pane: CadPaneId) -> &[CadObject] {
     match pane {
         CadPaneId::Shape => &scene.objects,
         CadPaneId::Building => &scene.building_objects,
@@ -376,7 +376,7 @@ pub fn cad_pane_objects(scene: &CadScene, pane: CadPaneId) -> &[CadObject] {
     }
 }
 
-pub fn cad_pane_objects_mut(scene: &mut CadScene, pane: CadPaneId) -> &mut Vec<CadObject> {
+pub fn cad_pane_objects_mut(scene: &mut CadProjection, pane: CadPaneId) -> &mut Vec<CadObject> {
     match pane {
         CadPaneId::Shape => &mut scene.objects,
         CadPaneId::Building => &mut scene.building_objects,
@@ -385,11 +385,11 @@ pub fn cad_pane_objects_mut(scene: &mut CadScene, pane: CadPaneId) -> &mut Vec<C
     }
 }
 
-pub fn cad_find_object_pane(scene: &CadScene, object_id: &str) -> Option<CadPaneId> {
+pub fn cad_find_object_pane(scene: &CadProjection, object_id: &str) -> Option<CadPaneId> {
     CadPaneId::all().into_iter().find(|&pane| cad_pane_objects(scene, pane).iter().any(|object| object.id == object_id))
 }
 
-pub fn cad_all_objects(scene: &CadScene) -> impl Iterator<Item = (&CadObject, CadPaneId)> {
+pub fn cad_all_objects(scene: &CadProjection) -> impl Iterator<Item = (&CadObject, CadPaneId)> {
     CadPaneId::all().into_iter().flat_map(|pane| cad_pane_objects(scene, pane).iter().map(move |object| (object, pane)))
 }
 
@@ -397,19 +397,19 @@ pub fn cad_pane_from_model_definition_id(model_definition_id: &str) -> Option<Ca
     CadPaneId::all().into_iter().find(|pane| pane.model_definition_id() == model_definition_id)
 }
 
-/// 🪆️ `Box<CadScene>` needs its own `dsl::DslField` binding for `CadOperation::SetScene` — `Box` is
-/// `#[fundamental]` in `std`, so implementing a foreign trait (`dsl::DslField`) for `Box<CadScene>`
+/// 🪆️ `Box<CadProjection>` needs its own `dsl::DslField` binding for `CadOperation::SetScene` — `Box` is
+/// `#[fundamental]` in `std`, so implementing a foreign trait (`dsl::DslField`) for `Box<CadProjection>`
 /// (a local type inside the foreign, fundamental `Box` wrapper) is permitted by the orphan rules;
-/// this delegates entirely to `CadScene`'s own derive-generated `DslField` impl (from `DslDocument`).
-impl dsl::DslField for Box<CadScene> {
+/// this delegates entirely to `CadProjection`'s own derive-generated `DslField` impl (from `DslDocument`).
+impl dsl::DslField for Box<CadProjection> {
     fn shape() -> dsl::Shape {
-        <CadScene as dsl::DslField>::shape()
+        <CadProjection as dsl::DslField>::shape()
     }
     fn to_value(&self) -> dsl::FieldValue {
-        <CadScene as dsl::DslField>::to_value(self)
+        <CadProjection as dsl::DslField>::to_value(self)
     }
     fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        <CadScene as dsl::DslField>::from_value(value).map(Box::new)
+        <CadProjection as dsl::DslField>::from_value(value).map(Box::new)
     }
 }
 //#endregion 🔖️Domain
@@ -490,11 +490,11 @@ pub(crate) mod testkit {
         }
     }
 
-    pub fn sample_scene() -> CadScene {
+    pub fn sample_scene() -> CadProjection {
         sample_scene_with(sample_geometry())
     }
 
-    pub fn sample_scene_with(geometry: CadGeometry) -> CadScene {
+    pub fn sample_scene_with(geometry: CadGeometry) -> CadProjection {
         let mut scene = empty_cad_projection();
         scene.objects.push(sample_object("object-1"));
         scene.building_objects.push(sample_object("object-2"));

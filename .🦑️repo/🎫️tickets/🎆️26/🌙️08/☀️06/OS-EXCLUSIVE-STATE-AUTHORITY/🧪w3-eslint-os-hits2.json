@@ -1,0 +1,207 @@
+[
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 906,
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 928,
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 929,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 933,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📜️script.ts",
+    "line": 75,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📜️script.ts",
+    "line": 201,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📜️script.ts",
+    "line": 209,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 204,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 1399,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 3438,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 6307,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 8135,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🟦️component.tsx",
+    "line": 30,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🟦️component.tsx",
+    "line": 31,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📁VirtualFileSystem/🧪️story.tsx",
+    "line": 59,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵Tree/🟦️component.tsx",
+    "line": 2582,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵Tree/🟦️component.tsx",
+    "line": 2584,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🌈️Surface/🟦️component.tsx",
+    "line": 133,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx",
+    "line": 130,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📜️script.ts",
+    "line": 515,
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.test.ts",
+    "line": 173,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1619,
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1623,
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1627,
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1678,
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 1682,
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 2413,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 2417,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 2975,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts",
+    "line": 3151,
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 1074,
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 1080,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 1852,
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 2481,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 2483,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 3509,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 4083,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔍️discovery/🟦️component.ts",
+    "line": 127,
+    "msg": "OS-exclusive state authority: no module-level `let` mutable bindings outside the"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔍️discovery/🟦️component.ts",
+    "line": 380,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🔍️discovery/🟦️component.ts",
+    "line": 418,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  },
+  {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/🗂️workspaces/🟦️component.ts",
+    "line": 22,
+    "msg": "OS-exclusive state authority: no module-scope new Map()/Set() outside the OS pro"
+  }
+]

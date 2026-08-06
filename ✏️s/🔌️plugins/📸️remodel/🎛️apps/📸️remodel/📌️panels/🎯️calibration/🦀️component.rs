@@ -2,7 +2,7 @@
 //! control points.
 
 use crate::apps::remodel::terminology::RemodelLabels;
-use crate::artifacts::remodel::RemodelScene;
+use crate::artifacts::remodel::RemodelProjection;
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode};
 
 //#region 🔖️Constants
@@ -23,7 +23,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(scene: &RemodelScene, labels: &RemodelLabels) -> UiNode {
+pub fn render(scene: &RemodelProjection, labels: &RemodelLabels) -> UiNode {
     let mut lines = vec![ui_text(Label::data(format!("{}: {} - {}: {}", labels.cameras_calibrated.as_str(), scene.calibration.cameras.len(), labels.rig_extrinsics.as_str(), scene.calibration.rig.len())))];
     for camera in &scene.calibration.cameras {
         lines.push(ui_text(Label::data(format!("{} ({}): fx {:.1} fy {:.1}", camera.label, camera.model, camera.fx, camera.fy))));

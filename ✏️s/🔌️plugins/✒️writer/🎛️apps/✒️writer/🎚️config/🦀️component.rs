@@ -41,7 +41,7 @@ impl Default for WriterEditorSettings {
 /// 🧮️ B1: writer's real `DocumentApp::Config` — absorbs every former `WriterPlayRuntime` app-struct
 /// field (selection, editor selection, format/lint signals, revision, editor settings, AST hover,
 /// engagement draft, and the session-only viewport camera — see `WriterCamera`'s doc comment) plus
-/// `locale`, the one `ViewState` field the writer UI actually reads (`resolve_labels`/`is_de_locale`
+/// `locale`, the one `ViewModel` field the writer UI actually reads (`resolve_labels`/`is_de_locale`
 /// — see `crate::apps::writer::WriterPlayApp::render`), mirroring `shooting_engine::ShootingConfig`'s
 /// B1 shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]

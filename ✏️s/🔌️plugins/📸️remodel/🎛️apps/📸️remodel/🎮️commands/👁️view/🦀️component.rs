@@ -3,7 +3,7 @@
 
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigOperation, RemodelWorldCamera};
 use crate::artifacts::remodel::op::RemodelOperation;
-use crate::artifacts::remodel::RemodelScene;
+use crate::artifacts::remodel::RemodelProjection;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -18,7 +18,7 @@ pub mod set_selection {
         pub ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(payload: &SetSelection, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
         Ok(Emit::config(vec![RemodelConfigOperation::SetSelection { mode: payload.mode.clone(), ids: payload.ids.clone() }]))
     }
 }
@@ -35,7 +35,7 @@ pub mod set_camera {
         pub camera: RemodelWorldCamera,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(payload: &SetCamera, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
         Ok(Emit::config(vec![RemodelConfigOperation::SetCamera { camera: payload.camera.clone() }]))
     }
 }
@@ -52,7 +52,7 @@ pub mod set_layer_visibility {
         pub visible: bool,
     }
 
-    pub fn handle(payload: &SetLayerVisibility, _doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(payload: &SetLayerVisibility, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
         Ok(Emit::config(vec![RemodelConfigOperation::SetLayerVisibility { layer: payload.layer.clone(), visible: payload.visible }]))
     }
 }
@@ -70,7 +70,7 @@ pub mod set_frame_cursor {
         pub frame_index: u32,
     }
 
-    pub fn handle(payload: &SetFrameCursor, _doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(payload: &SetFrameCursor, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
         Ok(Emit::config(vec![RemodelConfigOperation::SetFrameCursor { stream_id: payload.stream_id.clone(), frame_index: payload.frame_index }]))
     }
 }
@@ -86,7 +86,7 @@ pub mod set_report_table {
         pub table: String,
     }
 
-    pub fn handle(payload: &SetReportTable, _doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(payload: &SetReportTable, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
         Ok(Emit::config(vec![RemodelConfigOperation::SetReportTable { table: payload.table.clone() }]))
     }
 }
@@ -104,7 +104,7 @@ pub mod set_active_utility {
         pub utility_id: String,
     }
 
-    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(payload: &SetActiveUtility, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
         Ok(Emit::config(vec![RemodelConfigOperation::SetActiveUtility { utility_id: payload.utility_id.clone() }]))
     }
 }
@@ -120,7 +120,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &DocumentView<'_, RemodelProjection>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
         Ok(Emit::config(vec![RemodelConfigOperation::SetLocale { value: payload.value.clone() }]))
     }
 }

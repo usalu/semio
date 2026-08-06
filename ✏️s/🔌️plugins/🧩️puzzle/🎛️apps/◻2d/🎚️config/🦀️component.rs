@@ -96,7 +96,7 @@ pub struct Puzzle2dPlayRuntime {
     #[serde(default)]
     pub active_utility_by_window_id: BTreeMap<String, String>,
     /// 🗣️ B1: BCP-47 locale tag — was host-pushed `view_state.locale` (read via the deleted
-    /// `semio_framework_plugin::is_de_locale(&ViewState)`; see `🦀️terminology.rs`'s `is_de_locale`).
+    /// `semio_framework_plugin::is_de_locale(&ViewModel)`; see `🦀️terminology.rs`'s `is_de_locale`).
     #[serde(default = "default_locale")]
     pub locale: String,
     /// 🗣️ B1: terminology id ("native" default, or "reuse") — was host-pushed `view_state.terminology`.

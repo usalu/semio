@@ -63,8 +63,8 @@ TEMPLATE §13.4.
 
 * `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/⚡️implementations/🦀️rust/Cargo.toml`
   — `remodel` repointed from `semio-s-app-remodel` to the new `semio-s-plugin-remodel` crate.
-* the same crate's `📦️lib.rs` — `use remodel::RemodelScene` → `use remodel::artifacts::remodel::RemodelScene`.
-  (`RemodelScene` is genuinely plugin-owned: `pub struct RemodelScene` was defined in remodel's own app
+* the same crate's `📦️lib.rs` — `use remodel::RemodelProjection` → `use remodel::artifacts::remodel::RemodelProjection`.
+  (`RemodelProjection` is genuinely plugin-owned: `pub struct RemodelProjection` was defined in remodel's own app
   facade crate, not in any kernel crate — grep-verified, per the master doc's `DagDocument` lesson.)
 
 That is the **only** cross-cutting dependent. Nothing else in the repo — no other plugin, no framework

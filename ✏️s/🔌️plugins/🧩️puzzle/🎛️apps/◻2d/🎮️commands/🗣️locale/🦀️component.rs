@@ -1,5 +1,5 @@
 //! 🗣️ Puzzle 2d play app commands — locale and terminology. B1: both used to be host-pushed
-//! `ViewState` fields with no app-level action of their own; now that `ViewState` is gone from the
+//! `ViewModel` fields with no app-level action of their own; now that `ViewModel` is gone from the
 //! app-facing surface they are real config edits.
 
 use crate::apps::puzzle2d::Puzzle2dActionCtx;

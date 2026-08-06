@@ -48,7 +48,7 @@ pub enum AppCommand {
     Command {
         seq: u64,
         command: Vec<u8>,
-        /// 🗣️ Packed `ViewState` (see `crate::os_store::pack_rt`) the client wants this command evaluated against.
+        /// 🗣️ Packed `ViewModel` (see `crate::os_store::pack_rt`) the client wants this command evaluated against.
         view_state: Vec<u8>,
     },
     CommandText {
@@ -58,8 +58,8 @@ pub enum AppCommand {
     RefreshUi {
         seq: u64,
         sections: Vec<SectionProbe>,
-        /// 🗣️ Packed `ViewState` for this refresh — locale/terminology/active-utility must arrive before any
-        /// Command, otherwise first-paint `app_labels` resolve against `ViewState::default()`.
+        /// 🗣️ Packed `ViewModel` for this refresh — locale/terminology/active-utility must arrive before any
+        /// Command, otherwise first-paint `app_labels` resolve against `ViewModel::default()`.
         view_state: Vec<u8>,
     },
     ContextMenu {
@@ -1009,7 +1009,6 @@ mod tests {
     fn app_command_fixture_corpus_matches_golden_hex_and_round_trips() {
         for (label, value) in channel_command_fixture_corpus() {
             let actual = hex_encode(&encode_app_command(&value));
-            println!("[DEBUG] AppCommand::{label} = {actual}");
             assert_eq!(actual, channel_command_fixture_hex(label), "{label}'s encoding drifted from its committed golden hex");
             let decoded = decode_app_command(&encode_app_command(&value)).unwrap();
             assert_eq!(decoded, value, "{label} must round-trip");
@@ -1020,7 +1019,6 @@ mod tests {
     fn app_frame_fixture_corpus_matches_golden_hex_and_round_trips() {
         for (label, value) in channel_frame_fixture_corpus() {
             let actual = hex_encode(&encode_app_frame(&value));
-            println!("[DEBUG] AppFrame::{label} = {actual}");
             assert_eq!(actual, channel_frame_fixture_hex(label), "{label}'s encoding drifted from its committed golden hex");
             let decoded = decode_app_frame(&encode_app_frame(&value)).unwrap();
             assert_eq!(decoded, value, "{label} must round-trip");

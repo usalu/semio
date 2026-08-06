@@ -1542,7 +1542,7 @@ export function decodePackValue(bytes: Uint8Array): unknown {
 
 const PACK_B64_PREFIX = "pk:";
 
-/** @emoji 📦️ Lossless pack snapshot as a `pk:`-prefixed base64 string for `sessionStorage`/`ViewState` string slots. */
+/** @emoji 📦️ Lossless pack snapshot as a `pk:`-prefixed base64 string for `sessionStorage`/`ViewModel` string slots. */
 export function packValueToBase64(value: unknown): string {
   const bytes = encodePackValue(value);
   let binary = "";

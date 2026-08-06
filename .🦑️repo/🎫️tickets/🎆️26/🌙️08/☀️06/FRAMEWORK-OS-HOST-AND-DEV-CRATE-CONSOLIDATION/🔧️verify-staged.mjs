@@ -1,0 +1,11 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+const dem = "/Users/ueli/Documents/semio/♻️mit-bestand/🧺️demonstrator";
+const script = readFileSync(join(dem, "📜️script.ts"), "utf8");
+const m = script.match(/join\(import\.meta\.dir, ['"]([^'"]+)['"]\)/);
+if (!m) throw new Error("no join");
+const p = join(dem, m[1]);
+console.log(m[1]);
+console.log(p);
+console.log("exists", existsSync(p));

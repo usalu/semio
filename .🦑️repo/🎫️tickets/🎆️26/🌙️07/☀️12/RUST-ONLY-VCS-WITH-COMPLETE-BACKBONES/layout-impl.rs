@@ -25,7 +25,7 @@ impl DocumentApp for LayoutPlayApp {
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, LayoutDocument>,
-        view_state: &ViewState,
+        view_state: &ViewModel,
     ) -> ActionEmit<LayoutOp> {
         let document = doc.projection;
         match action {
@@ -438,7 +438,7 @@ impl DocumentApp for LayoutPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, LayoutDocument>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, LayoutDocument>, view_state: &ViewModel) -> UiNode {
         let document = doc.projection;
         let labels = layout_labels(view_state);
         match body_key {
@@ -452,18 +452,18 @@ impl DocumentApp for LayoutPlayApp {
         }
     }
 
-    fn tools(&self, _doc: &DocumentView<'_, LayoutDocument>, view_state: &ViewState) -> Vec<ToolNode> {
+    fn tools(&self, _doc: &DocumentView<'_, LayoutDocument>, view_state: &ViewModel) -> Vec<ToolNode> {
         layout_toolbar_tools(layout_labels(view_state))
     }
 
-    fn window_engagements(&self, _doc: &DocumentView<'_, LayoutDocument>, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(&self, _doc: &DocumentView<'_, LayoutDocument>, _view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
         HashMap::from([
             (LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(&self.runtime, "blueprint")),
             (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), layout_window_engagement(&self.runtime, "preview")),
         ])
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+    fn app_labels(&self, view_state: &ViewModel) -> semio_framework_plugin::AppLabelsOverlay {
         let labels = layout_labels(view_state);
         semio_framework_plugin::AppLabelsOverlay {
             app_label: None,

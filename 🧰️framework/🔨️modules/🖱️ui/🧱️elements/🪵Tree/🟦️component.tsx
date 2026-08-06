@@ -6,6 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { ephemeralBox } from "@semio-tech/framework-core";
 import * as React from "react";
 import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -872,11 +873,11 @@ export const Catalogue: React.FC<CatalogueProps> = ({ title, items, mime = CATAL
   return <Tree className={className} sections={sections} dragAndDropController={dragController ?? catalogueTreeDragController(mime)} />;
 };
 
-let activeCatalogueDragPayload: string | null = null;
+const activeCatalogueDragPayload = ephemeralBox<string | null>("framework.modules.ui.elements.Tree.component.tsx.activeCatalogueDragPayload", null);
 
 /** @emoji 🖱️ Payload of the catalogue drag currently in flight — native HTML5 `dragover` can't read `dataTransfer` until drop, so drop targets (e.g. a canvas host previewing a fixture drop) read this instead. */
 export function getActiveCatalogueDragPayload(): string | null {
-  return activeCatalogueDragPayload;
+  return activeCatalogueDragPayload.current;
 }
 
 /** @emoji 🖱️ {@link TreeDragAndDropController} for catalogue rows carrying encoded payloads. */
@@ -897,11 +898,11 @@ export function catalogueTreeDragController(mime: string = CATALOGUE_DRAG_MIME):
       },
     },
     onDragStart: ({ sourceItem }) => {
-      activeCatalogueDragPayload = readEncoded(sourceItem.dragData) ?? null;
+      activeCatalogueDragPayload.current = readEncoded(sourceItem.dragData) ?? null;
     },
     onDragEnd: () => {
       pointerRef.active = false;
-      activeCatalogueDragPayload = null;
+      activeCatalogueDragPayload.current = null;
     },
     handleDrop: ({ data, target, targetKind, dropPosition }) => {
       const encoded = readEncoded(data);

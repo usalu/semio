@@ -46,7 +46,7 @@ const PUZZLE3D_PRECOMPUTE_STEP_BUDGET_MS: f64 = 12.0;
 //#endregion 🔖️Clock
 
 //#region 🔖️Engine
-pub(crate) struct Puzzle3dEngine {
+pub(crate) struct Puzzle3dCollision {
     pub(crate) scene: Option<SceneConfig>,
     /// 🧊️ Raw JSON of the last `set_scene` call, so a resync with byte-identical config (every action
     /// re-syncs the session, see the app's `sync_precompute_session`) can skip `rebuild_queue` instead
@@ -60,7 +60,7 @@ pub(crate) struct Puzzle3dEngine {
     pub(crate) fill: Option<FillBuilder>,
 }
 
-impl Puzzle3dEngine {
+impl Puzzle3dCollision {
     pub(crate) fn new() -> Self {
         Self { scene: None, scene_json: None, meshes: HashMap::new(), mesh_is_fallback: HashMap::new(), brush_cache: HashMap::new(), brush_queue: VecDeque::new(), fill_steps_remaining: 0, fill: None }
     }
@@ -655,7 +655,7 @@ pub enum Puzzle3dEngineOutcome {
 
 //#region 🔖️Session
 pub struct Puzzle3dPrecomputeSession {
-    engine: Puzzle3dEngine,
+    engine: Puzzle3dCollision,
 }
 
 impl Default for Puzzle3dPrecomputeSession {
@@ -666,7 +666,7 @@ impl Default for Puzzle3dPrecomputeSession {
 
 impl Puzzle3dPrecomputeSession {
     pub fn new() -> Self {
-        Self { engine: Puzzle3dEngine::new() }
+        Self { engine: Puzzle3dCollision::new() }
     }
 
     pub fn set_scene(&mut self, json: &str) -> Result<(), Puzzle3dError> {
@@ -745,7 +745,7 @@ impl Puzzle3dPrecomputeSession {
     /// 🎯️ Single typed entry point for every mutating (or JSON-carrying-before-this-fix) engine
     /// action — the headless replacement for the old per-action `apply_brush_placement_json`/
     /// `apply_fill_count`/`compose_fill_display`/`update_kind_weights`/`brush_preview_json`
-    /// wasm-bindgen methods. Each arm calls the SAME underlying typed `Puzzle3dEngine` method those
+    /// wasm-bindgen methods. Each arm calls the SAME underlying typed `Puzzle3dCollision` method those
     /// JSON wrappers always delegated to — no reimplementation.
     pub fn dispatch(&mut self, command: Puzzle3dEngineCommand) -> Result<Puzzle3dEngineOutcome, Puzzle3dError> {
         match command {
@@ -785,7 +785,7 @@ mod tests {
 
     #[test]
     fn brush_candidates_allow_separated_boxes() {
-        let mut engine = Puzzle3dEngine::new();
+        let mut engine = Puzzle3dCollision::new();
         let positions: Vec<f32> = vec![-4.0, -4.0, -4.0, 4.0, -4.0, -4.0, 4.0, 4.0, -4.0, -4.0, 4.0, -4.0, -4.0, -4.0, 4.0, 4.0, -4.0, 4.0, 4.0, 4.0, 4.0, -4.0, 4.0, 4.0, 4.0];
         let indices: Vec<u32> = vec![0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2];
         engine.register_mesh("/test/obstacle.glb".to_string(), &positions, &indices);
@@ -854,7 +854,7 @@ mod tests {
         fill.appended_attractions = (0..5).map(fill_plan_attraction).collect();
         fill.fixture.objects.extend(fill.appended_objects.iter().cloned());
         fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
-        let mut engine = Puzzle3dEngine::new();
+        let mut engine = Puzzle3dCollision::new();
         engine.fill = Some(fill);
 
         let display = engine.compose_fill_display(4).expect("semio_compose_rs display");
@@ -878,7 +878,7 @@ mod tests {
         fill.fixture.objects.extend(fill.appended_objects.iter().cloned());
         fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
 
-        let mut engine = Puzzle3dEngine::new();
+        let mut engine = Puzzle3dCollision::new();
         let base_scene = SceneConfig { fixture: base, kind_catalogs: Some(catalogs), kind_compatibility: vec![], overlap_budget: 0.0, seed: 7, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
         engine.set_scene(&serde_json::to_string(&base_scene).unwrap()).expect("seed");
         engine.fill = Some(fill);
@@ -927,7 +927,7 @@ mod tests {
             .map(|object| PlacedCollisionEntry { object_id: object.id.clone(), mesh_url: "/test/placed.glb".into(), world: pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale) })
             .collect();
 
-        let mut engine = Puzzle3dEngine::new();
+        let mut engine = Puzzle3dCollision::new();
         let base_scene = SceneConfig { fixture: base.clone(), kind_catalogs: Some(catalogs), kind_compatibility: vec![], overlap_budget: 0.0, seed: 7, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
         engine.set_scene(&serde_json::to_string(&base_scene).unwrap()).expect("seed");
         engine.fill = Some(fill);
@@ -952,7 +952,7 @@ mod tests {
 
     #[test]
     fn update_kind_weights_soft_replans_tail_without_rebuilding_queue() {
-        let mut engine = Puzzle3dEngine::new();
+        let mut engine = Puzzle3dCollision::new();
         let json = single_object_scene_json();
         engine.set_scene(&json).expect("seed scene");
         let queue_len_after_seed = engine.work_pending_for_test();
@@ -976,7 +976,7 @@ mod tests {
 
     #[test]
     fn set_scene_with_identical_json_preserves_precompute_progress() {
-        let mut engine = Puzzle3dEngine::new();
+        let mut engine = Puzzle3dCollision::new();
         let json = single_object_scene_json();
         engine.set_scene(&json).expect("first set_scene should succeed");
         let queue_len_before = engine.work_pending_for_test();
@@ -1012,7 +1012,7 @@ mod tests {
         fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
         fill.stalled = true;
         let rng_state = fill.rng_state;
-        let mut engine = Puzzle3dEngine::new();
+        let mut engine = Puzzle3dCollision::new();
         engine.fill = Some(fill);
 
         let fixture = engine.apply_fill_count(1).expect("fill session");
@@ -1043,7 +1043,7 @@ mod tests {
         fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
         fill.stalled = true;
 
-        let mut engine = Puzzle3dEngine::new();
+        let mut engine = Puzzle3dCollision::new();
         let base_scene = SceneConfig { fixture: base, kind_catalogs: Some(catalogs), kind_compatibility: vec![], overlap_budget: 0.0, seed: 7, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
         let base_json = serde_json::to_string(&base_scene).unwrap();
         engine.set_scene(&base_json).expect("seed base scene");
@@ -1075,7 +1075,7 @@ mod tests {
     /// fallback body, and the app's `sync_precompute_session` already guards that with `has_mesh`).
     #[test]
     fn register_mesh_invalidates_cached_precompute_state() {
-        let mut engine = Puzzle3dEngine::new();
+        let mut engine = Puzzle3dCollision::new();
         engine.set_scene(&single_object_scene_json()).expect("set_scene should succeed");
         let applied_before = engine.fill.as_ref().map_or(0, |fill| fill.applied_count);
         let positions: Vec<f32> = vec![-1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0];
@@ -1087,14 +1087,14 @@ mod tests {
 
     #[test]
     fn engine_precompute_step_and_fill_step_false_with_no_scene() {
-        let mut engine = Puzzle3dEngine::new();
+        let mut engine = Puzzle3dCollision::new();
         assert!(!engine.precompute_step(10));
         assert!(!engine.fill_step_one());
     }
 
     #[test]
     fn engine_apply_brush_placement_none_without_scene_or_catalogs() {
-        let mut engine = Puzzle3dEngine::new();
+        let mut engine = Puzzle3dCollision::new();
         let payload = BrushPlacePayload { target_vortex_full_id: "host:v0".into(), object_kind_id: "Kind".into(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
         assert!(engine.apply_brush_placement(&payload).is_none(), "no scene means no placement");
 
@@ -1107,7 +1107,7 @@ mod tests {
 
     #[test]
     fn engine_has_mesh_invalidate_and_refresh_brush_candidates() {
-        let mut engine = Puzzle3dEngine::new();
+        let mut engine = Puzzle3dCollision::new();
         engine.set_scene(&single_object_scene_json()).expect("seed");
         assert!(!engine.has_mesh("/test/host.glb"));
         let (positions, indices) = unit_cube_mesh_buffers();
@@ -1170,7 +1170,7 @@ mod tests {
 
     #[test]
     fn fill_lane_advances_while_brush_targets_remain_queued() {
-        let mut engine = Puzzle3dEngine::new();
+        let mut engine = Puzzle3dCollision::new();
         engine.set_scene(&single_object_scene_json()).expect("seed");
         assert!(engine.fill_steps_pending_for_test() > 0, "seed scene must schedule fill steps");
         assert!(!engine.brush_queue.is_empty(), "seed scene must schedule brush targets");
@@ -1196,7 +1196,7 @@ mod tests {
     /// front-of-queue jump) — appending an already-queued id must be a no-operation.
     #[test]
     fn enqueue_brush_target_appends_once() {
-        let mut engine = Puzzle3dEngine::new();
+        let mut engine = Puzzle3dCollision::new();
         engine.enqueue_brush_target("host:v0");
         engine.enqueue_brush_target("host:v0");
         assert_eq!(engine.brush_queue.len(), 1);

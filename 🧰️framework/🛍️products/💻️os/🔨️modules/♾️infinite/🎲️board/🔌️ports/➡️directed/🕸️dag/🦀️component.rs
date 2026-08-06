@@ -1897,7 +1897,7 @@ impl Default for DagFixture {
     fn default() -> Self {
         // 📜️ the demo board is handcrafted `.dag` DSL text (see `//#region 🔖️Dsl`), not JSON — it is
         // compiled into the binary, so a parse failure here is a bug in the bundled fixture itself.
-        let document = <DagDocument as crate::os_store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.dag.dag.dsl.semio")).expect("bundled example/🕸️demo.dag is valid DagDocument DSL text");
+        let document = <DagDocument as crate::os_store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.dag.dag.dsl.semio")).expect("bundled example/🕸️demo.dag is valid DagDocument DSL text");
         Self { schema: document.schema, camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: document.nodes, edges: document.edges }
     }
 }
@@ -1915,7 +1915,7 @@ fn dag_visual_kind(node: &DagNodeSpec) -> String {
 
 /// 📝️ Render a DAG fixture as wire-literal compiled text.
 pub fn dag_fixture_to_wire_literal(fixture: &DagFixture) -> String {
-    use math::graph::crate::os_dsl::{wire_literal_from_dag, WireEdge, WireNode};
+    use math::graph::dsl::{wire_literal_from_dag, WireEdge, WireNode};
     let nodes = fixture.nodes.iter().map(|node| WireNode { id: node.id.clone(), kind: dag_visual_kind(node), port: None, properties: node.properties.clone() }).collect::<Vec<_>>();
     let edges = fixture
         .edges
@@ -1930,8 +1930,8 @@ pub fn dag_fixture_to_wire_literal(fixture: &DagFixture) -> String {
 }
 
 /// 🧵️ Build execution wire rows from an enriched DAG fixture.
-pub fn dag_fixture_execution_rows(fixture: &DagFixture) -> (Vec<math::graph::crate::os_dsl::WireNode>, Vec<math::graph::crate::os_dsl::WireEdge>) {
-    use math::graph::crate::os_dsl::{WireEdge, WireNode};
+pub fn dag_fixture_execution_rows(fixture: &DagFixture) -> (Vec<math::graph::dsl::WireNode>, Vec<math::graph::dsl::WireEdge>) {
+    use math::graph::dsl::{WireEdge, WireNode};
     use std::collections::HashSet;
     let executable: HashSet<String> = fixture.nodes.iter().filter_map(|node| node.operator_kind.as_ref().map(|_| node.id.clone())).collect();
     let nodes = fixture
@@ -7839,11 +7839,11 @@ fn dag_operation_from_dsl(mirror: DagOperationDsl) -> DagOperation {
             DagOperation::Nodes(CollectionOperation::Add { index: index, item })
         }
         DagOperationDsl::NodesRemove { id } => DagOperation::Nodes(CollectionOperation::Remove { id }),
-        DagOperationDsl::NodesMove { id, to_index } => DagOperation::Nodes(CollectionOperation::Move { id, to: to_index }),
+        DagOperationDsl::NodesMove { id, to_index } => DagOperation::Nodes(CollectionOperation::Move { id, to_index }),
         DagOperationDsl::NodesPatch { id, patch } => DagOperation::Nodes(CollectionOperation::Patch { id, patch: dag_node_patch_from_dsl(patch) }),
         DagOperationDsl::EdgesAdd { index, item } => DagOperation::Edges(CollectionOperation::Add { index: index, item }),
         DagOperationDsl::EdgesRemove { id } => DagOperation::Edges(CollectionOperation::Remove { id }),
-        DagOperationDsl::EdgesMove { id, to_index } => DagOperation::Edges(CollectionOperation::Move { id, to: to_index }),
+        DagOperationDsl::EdgesMove { id, to_index } => DagOperation::Edges(CollectionOperation::Move { id, to_index }),
         DagOperationDsl::EdgesPatch { id, patch } => DagOperation::Edges(CollectionOperation::Patch { id, patch }),
         DagOperationDsl::SetNodes { nodes } => DagOperation::SetNodes { nodes: nodes.into_iter().map(dag_node_spec_from_dsl).collect() },
         DagOperationDsl::SetEdges { edges } => DagOperation::SetEdges { edges },

@@ -1,6 +1,6 @@
 //! 🔺️ `trinity.rewrite.rule` artifact — diff structs + `OperationDiff` impl (constitutional: diff).
 
-use crate::artifacts::rewrite::RewriteRuleState;
+use crate::artifacts::rewrite::RewriteRuleModel;
 use protocol::OperationDiff;
 use serde::{Deserialize, Serialize};
 
@@ -8,11 +8,11 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RewriteRuleDiff {
-    pub next: Option<RewriteRuleState>,
+    pub next: Option<RewriteRuleModel>,
 }
 
-impl OperationDiff<RewriteRuleState> for RewriteRuleDiff {
-    fn apply(&self, projection: &RewriteRuleState) -> RewriteRuleState {
+impl OperationDiff<RewriteRuleModel> for RewriteRuleDiff {
+    fn apply(&self, projection: &RewriteRuleModel) -> RewriteRuleModel {
         self.next.clone().unwrap_or_else(|| projection.clone())
     }
 

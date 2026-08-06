@@ -3,7 +3,7 @@
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.dag` document. It absorbs everything that used to live in the old
 //! ui crate's `DagPlayRuntime` (an app-struct `RefCell`) AND the two fields the dag UI actually read off
-//! the deleted host-pushed `ViewState` (`locale`, via `dag_play_labels`/`app_labels`/`context_menu`): the
+//! the deleted host-pushed `ViewModel` (`locale`, via `dag_play_labels`/`app_labels`/`context_menu`): the
 //! selected node ids, the free/live node-graph viewport camera, and the BCP-47 locale tag — session-only
 //! view state round-trips through the config `DocumentStore` exactly like document content, with a real
 //! `backwards` per `DagConfigOperation` instead of never being VCS'd at all.

@@ -1,0 +1,62 @@
+[
+  {
+    "file": "✏️s/🔌️plugins/📐️cad/🔨️modules/🫀️core/🟦️component.ts",
+    "line": 1055,
+    "msg": "OS-exclusive state authority: no module-scope empty new Map()/Set() outside the OS product — use ephemeralMap/ephemeralSet from framework-core.",
+    "src": "const COMPILED_INITIAL_CONTEXTS = new WeakMap<InteractionSpec, Record<string, unknown>>();"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 929,
+    "msg": "OS-exclusive state authority: no module-scope empty new Map()/Set() outside the OS product — use ephemeralMap/ephemeralSet from framework-core.",
+    "src": "const _activeUiThemeSubscribers = new Set<(theme: UiTheme) => void>();"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts",
+    "line": 933,
+    "msg": "OS-exclusive state authority: no module-scope empty new Map()/Set() outside the OS product — use ephemeralMap/ephemeralSet from framework-core.",
+    "src": "const _appliedThemeCssPropsByRoot = new Map<HTMLElement, Set<string>>();"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 202,
+    "msg": "OS-exclusive state authority: no module-scope empty new Map()/Set() outside the OS product — use ephemeralMap/ephemeralSet from framework-core.",
+    "src": "const ICON_RENDER_GLB_CACHE = new Map<string, Promise<THREE.Group>>();"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 1398,
+    "msg": "OS-exclusive state authority: no module-scope empty new Map()/Set() outside the OS product — use ephemeralMap/ephemeralSet from framework-core.",
+    "src": "const chromeRevealBindingsByRoot = new Map<HTMLElement, ReturnType<typeof createDOMEventBinding>>();"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 3437,
+    "msg": "OS-exclusive state authority: no module-scope empty new Map()/Set() outside the OS product — use ephemeralMap/ephemeralSet from framework-core.",
+    "src": "const uiTerminologyChangeListeners = new Set<() => void>();"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 6306,
+    "msg": "OS-exclusive state authority: no module-scope empty new Map()/Set() outside the OS product — use ephemeralMap/ephemeralSet from framework-core.",
+    "src": "const panelTreeUnitDragListeners = new Set<() => void>();"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "line": 8134,
+    "msg": "OS-exclusive state authority: no module-scope empty new Map()/Set() outside the OS product — use ephemeralMap/ephemeralSet from framework-core.",
+    "src": "const shellNavbarTrailingEndWidthListenersByRoot = new Map<HTMLElement, Set<() => void>>();"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🌈️Surface/🟦️component.tsx",
+    "line": 133,
+    "msg": "OS-exclusive state authority: no module-scope empty new Map()/Set() outside the OS product — use ephemeralMap/ephemeralSet from framework-core.",
+    "src": "const surfaceActiveSubscribers = new Set<() => void>();"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx",
+    "line": 130,
+    "msg": "OS-exclusive state authority: no module-scope empty new Map()/Set() outside the OS product — use ephemeralMap/ephemeralSet from framework-core.",
+    "src": "const shellActivitySubscribers = new Set<() => void>();"
+  }
+]

@@ -6,6 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { ephemeralBox } from "@semio-tech/framework-core";
 import * as React from "react";
 import * as THREE from "three";
 import { ThreeEvent, useFrame, useThree } from "@react-three/fiber";
@@ -55,9 +56,9 @@ const readSceneGridColors = (): { sectionColor: string; cellColor: string } => (
 });
 
 /**
- * selectableCursorUsageCount holds the data fields for a selectableCursorUsageCount record.
+ * selectableCursorUsageCount.current holds the data fields for a selectableCursorUsageCount.current record.
  **/
-let selectableCursorUsageCount = 0;
+const selectableCursorUsageCount = ephemeralBox("framework.modules.ui.elements.Scene.component.tsx.selectableCursorUsageCount", 0);
 
 /**
  * Interface for a geometry entry in a 3D scene.
@@ -208,11 +209,11 @@ export const Geometry: React.FC<GeometryProps> = ({ children, selected = false, 
 
   reactHostPort.useEffect(() => {
     if (!isInteractive || !isPointerOver) return;
-    selectableCursorUsageCount += 1;
+    selectableCursorUsageCount.current += 1;
     document.body.classList.add("cursor-selectable");
     return () => {
-      selectableCursorUsageCount = Math.max(0, selectableCursorUsageCount - 1);
-      if (selectableCursorUsageCount === 0) {
+      selectableCursorUsageCount.current = Math.max(0, selectableCursorUsageCount.current - 1);
+      if (selectableCursorUsageCount.current === 0) {
         document.body.classList.remove("cursor-selectable");
       }
     };

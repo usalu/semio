@@ -6,7 +6,7 @@ todos:
     content: Reopen FIX-PUZZLE-3D-FILL-OPTIONS-LAG for fill amount viewport live update
     status: completed
   - id: compose-api
-    content: Add Puzzle3dEngine::compose_fill_display + session wrapper
+    content: Add Puzzle3dCollision::compose_fill_display + session wrapper
     status: completed
   - id: render-path
     content: Composite render uses fill plan prefix by runtime.fill_count
@@ -48,7 +48,7 @@ Drive the world composite render from the fill session plan + `runtime.fill_coun
 
 In `[puzzle/3d/rs/lib.rs](puzzle/3d/rs/lib.rs)`:
 
-- Add `compose_fill_display(&self, count: usize) -> Option<Fixture>` on `Puzzle3dEngine`:
+- Add `compose_fill_display(&self, count: usize) -> Option<Fixture>` on `Puzzle3dCollision`:
   - `visible = count.min(sequence.len())`
   - `base + appended_objects[0..visible]` (+ matching attractions)
   - Does not mutate `applied_count` / queue (pure read for rendering)

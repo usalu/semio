@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Config
 /// 🧮️ B1: draw's real `DocumentApp::Config` — absorbs every former `DrawInteractionState`
 /// (`ui`-crate `RefCell`) field (selection, hover, in-progress engagement-input text, the
-/// session-only free viewport camera) plus the two former `ViewState`-driven fields the draw UI
+/// session-only free viewport camera) plus the two former `ViewModel`-driven fields the draw UI
 /// actually reads (`active_utility_id`/`locale` — mirrors `shooting_engine::ShootingConfig`'s
 /// identical B1 migration) — session view state now round-trips through the config `DocumentStore`
 /// exactly like document content, with a real `backwards` per `DrawConfigOperation` instead of
@@ -29,7 +29,7 @@ pub struct DrawConfig {
     #[dsl(block)]
     pub camera: DrawCamera,
     /// 🧰️ The active canvas utility — was read off `view_state.active_utility_id` (host-pushed
-    /// `ViewState`, deleted by B1). Default mirrors the pre-migration `DRAW_DEFAULT_UTILITY`
+    /// `ViewModel`, deleted by B1). Default mirrors the pre-migration `DRAW_DEFAULT_UTILITY`
     /// (`"selectDirect"`).
     pub active_utility_id: String,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.

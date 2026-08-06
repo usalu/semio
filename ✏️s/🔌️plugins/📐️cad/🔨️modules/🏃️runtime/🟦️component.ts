@@ -2,6 +2,7 @@
 /** @emoji 🚀️ `@semio-tech/cad-js/runtime` — CAD composition root: assets glob + module registration. */
 // #endregion 🧭️Header
 
+import { ephemeralBox } from "@semio-tech/framework-core";
 import { registerModelDefinitionAssets, type ModelDefinitionAssetModules } from "../🫀️core/🟦️component.ts";
 import * as spatialShape from "@semio-tech/cad-js-module-spatial-shape";
 import * as aecBuilding from "@semio-tech/cad-js-module-aec-building";
@@ -22,19 +23,19 @@ const emptyModelDefinitionAssets = (): ModelDefinitionAssetModules => ({
   transformations: {},
 });
 
-let shippedModelDefinitionAssetsCache: ModelDefinitionAssetModules | null = null;
+const shippedModelDefinitionAssetsCache = ephemeralBox<ModelDefinitionAssetModules | null>("s.plugins.cad.modules.runtime.component.ts.shippedModelDefinitionAssetsCache", null);
 
 function shippedModelDefinitionAssets(): ModelDefinitionAssetModules {
-  if (shippedModelDefinitionAssetsCache) return shippedModelDefinitionAssetsCache;
+  if (shippedModelDefinitionAssetsCache.current) return shippedModelDefinitionAssetsCache.current;
   if (typeof import.meta.glob !== "function") {
-    shippedModelDefinitionAssetsCache = emptyModelDefinitionAssets();
-    return shippedModelDefinitionAssetsCache;
+    shippedModelDefinitionAssetsCache.current = emptyModelDefinitionAssets();
+    return shippedModelDefinitionAssetsCache.current;
   }
   // 🩹 Base was stale `./asset/modelDefinition` (ASCII, singular — pre-dates the emoji/plural asset-tree rename;
   // never matched anything, and being relative-without-`./` even threw a vite:import-glob parse error). Real tree:
   // `🖼️assets/🏗️modelDefinitions/<modelDefinition>/{🎬️actions,🎬️interactions,🗂️typologies/*/🔣️typology.json,
   // 🏷️attributeDefinitions,🔧️propertyDefinitions,🏷️propertyKinds,📊️statDefinitions,🔀️transformations,🔣️modelDefinition.json}`.
-  shippedModelDefinitionAssetsCache = {
+  shippedModelDefinitionAssetsCache.current = {
     typologies: import.meta.glob(["../../🖼️assets/🏗️modelDefinitions/**/🗂️typologies/**/🔣️typology.json"], {
       eager: true,
       import: "default",
@@ -49,21 +50,21 @@ function shippedModelDefinitionAssets(): ModelDefinitionAssetModules {
     statDefinitions: import.meta.glob("../../🖼️assets/🏗️modelDefinitions/**/📊️statDefinitions/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
     transformations: import.meta.glob("../../🖼️assets/🏗️modelDefinitions/**/🔀️transformations/**/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
   };
-  return shippedModelDefinitionAssetsCache;
+  return shippedModelDefinitionAssetsCache.current;
 }
 // #endregion 📥️ModelDefinitionAssets
 
-let cadModulesBootstrapped = false;
+const cadModulesBootstrapped = ephemeralBox("s.plugins.cad.modules.runtime.component.ts.cadModulesBootstrapped", false);
 
 /** @emoji 🚀️ Loads model-definition assets and registers all CAD modules once. */
 export function bootstrapCadModules(): void {
-  if (cadModulesBootstrapped) return;
+  if (cadModulesBootstrapped.current) return;
   registerModelDefinitionAssets(shippedModelDefinitionAssets());
   spatialShape.register();
   aecBuilding.register();
   aecBuildingEnergy.register();
   aecBuildingStructure.register();
-  cadModulesBootstrapped = true;
+  cadModulesBootstrapped.current = true;
 }
 
 export { spatialShape, aecBuilding, aecBuildingEnergy, aecBuildingStructure };
