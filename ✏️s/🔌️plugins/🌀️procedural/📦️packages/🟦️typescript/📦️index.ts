@@ -1,2 +1,11 @@
-/** procedural facet WASM facades — re-export artifact 🟦️component.ts leaves. */
-export {};
+/** procedural facet WASM facades */
+export * as procedural2d_diff from "../../🗿️artifacts/🌀️procedural2d/🔺️diff/🟦️component.ts";
+export * as procedural2d_dsl from "../../🗿️artifacts/🌀️procedural2d/🗣️dsl/🟦️component.ts";
+export * as procedural2d_pack from "../../🗿️artifacts/🌀️procedural2d/🎒️pack/🟦️component.ts";
+export * as procedural2d_op from "../../🗿️artifacts/🌀️procedural2d/🔧️op/🟦️component.ts";
+export * as procedural2d_spr from "../../🗿️artifacts/🌀️procedural2d/📡️spr/🟦️component.ts";
+export * as procedural3d_diff from "../../🗿️artifacts/🧊️procedural3d/🔺️diff/🟦️component.ts";
+export * as procedural3d_dsl from "../../🗿️artifacts/🧊️procedural3d/🗣️dsl/🟦️component.ts";
+export * as procedural3d_pack from "../../🗿️artifacts/🧊️procedural3d/🎒️pack/🟦️component.ts";
+export * as procedural3d_op from "../../🗿️artifacts/🧊️procedural3d/🔧️op/🟦️component.ts";
+export * as procedural3d_spr from "../../🗿️artifacts/🧊️procedural3d/📡️spr/🟦️component.ts";

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀️ `@semio-tech/framework-core` task router: `bun ./📜️script.ts test|generate|check|lint`. */
-import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, runCmdStatus, runVitest, resolveTestLevel } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, runCmdStatus, runVitest, resolveTestLevel } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -30,7 +30,7 @@ function bindingsDir(root: string): string {
 
 /** 🎯️ Shape V2 target: the mirror lives at `<owner>/🤖️generated/🟦️manifest.ts`, a sibling of `📦️packages`, never inside it (data relocates to the owner root — see `🔣️taxonomy.json`'s `rootDataDirNames`). */
 function generatedManifestPath(root: string): string {
-  return join(root, "..", "..", "🤖️generated", "🟦️manifest.ts");
+  return join(root, "..", "..", "🔨️modules", "🧩core", "🤖️generated", "🟦️manifest.ts");
 }
 
 /** 🧬️ Runs the ts-rs export test with the `typegen` feature enabled, populating `bindings/*.ts`. */
@@ -90,7 +90,7 @@ class GenerateScript extends BundleScript {
   run(_segments: string[]): void {
     const manifest = buildManifest(this.root);
     const outPath = generatedManifestPath(this.root);
-    mkdirSync(join(this.root, "..", "..", "🤖️generated"), { recursive: true });
+    mkdirSync(join(this.root, "..", "..", "🔨️modules", "🧩core", "🤖️generated"), { recursive: true });
     writeFileSync(outPath, manifest);
     console.log(`framework-core typescript mirror refreshed -> ${outPath}`);
   }

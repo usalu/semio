@@ -1,5 +1,10 @@
 dialect protocol
-protocol rewrite
+protocol rewrite.spr
 version 1
+schema rewrite.operation
 start record
-record = varint*
+framing record
+field format u8
+field ordinal varint
+field body bytes
+chain hash u64

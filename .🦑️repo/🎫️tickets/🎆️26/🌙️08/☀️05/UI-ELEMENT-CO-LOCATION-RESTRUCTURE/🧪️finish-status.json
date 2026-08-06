@@ -1,0 +1,70 @@
+{
+  "ticket": "26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE",
+  "goal": "🎯aioptimizedrepo",
+  "ownership": "🧰️framework/🔨️modules/🖱️ui/**",
+  "slice": "rust-element-co-location-emoji-paths",
+  "status": "slice_complete_master_remains_open",
+  "per_target_cargo_toml": "absent",
+  "path_resolution": {
+    "element_and_asset_path_attrs": 23,
+    "missing": 0,
+    "stale_non_emoji_rust_paths": 0
+  },
+  "tests": {
+    "cargo check -p semio-framework-ui --features wgpu": {
+      "result": "pass",
+      "when": "2026-08-06T12:08Z",
+      "note": "Finished dev profile; exit 0 before workspace CLI break"
+    },
+    "cargo check -p semio-framework-ui --features tui": {
+      "result": "pass",
+      "when": "2026-08-06T12:08Z",
+      "note": "Finished in 3.24s; exit 0 before workspace CLI break"
+    },
+    "cargo check -p semio-framework-ui --features wgpu,wgpu-engine": {
+      "result": "blocked",
+      "reason": "root Cargo.toml member path for repo CLI Shape-V1 missing"
+    },
+    "cargo check reconfirm wgpu/tui": {
+      "result": "blocked",
+      "reason": "same root workspace member breakage"
+    }
+  },
+  "remaining_blockers": [
+    {
+      "id": "root-cargo-repo-cli-member",
+      "severity": "blocks_all_cargo",
+      "owner": "registrar",
+      "detail": "Replace workspace member …/⌨️cli/⚡️implementations/🦀️rust with …/⌨️cli/📦️packages/🦀️rust",
+      "handoff": "📋️registrar-handoff.md"
+    },
+    {
+      "id": "w3-interim-ui-react-barrel",
+      "severity": "w6_gate",
+      "owner": "ui/** core-extract slices",
+      "detail": "W3-interim still present in 📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx"
+    },
+    {
+      "id": "w4-interim-renderer",
+      "severity": "w6_gate",
+      "owner": "outside ui/**",
+      "detail": "W4-interim under renderer engine; not this ownership"
+    },
+    {
+      "id": "w6-w7-remainder",
+      "severity": "master_open",
+      "owner": "ui/** + cross-cutting",
+      "detail": "taxonomy areas flip, barrel validations, export-snapshot, launch.json no-op, residual W7 stories"
+    }
+  ],
+  "files_touched_this_pass": [
+    ".🦑️repo/🎫️tickets/…/UI-ELEMENT-CO-LOCATION-RESTRUCTURE/📌️important.md",
+    ".🦑️repo/🎫️tickets/…/UI-ELEMENT-CO-LOCATION-RESTRUCTURE/📋️master.md",
+    ".🦑️repo/🎫️tickets/…/UI-ELEMENT-CO-LOCATION-RESTRUCTURE/📋️registrar-handoff.md",
+    ".🦑️repo/🎫️tickets/…/UI-ELEMENT-CO-LOCATION-RESTRUCTURE/scratch-finish-audit.mjs",
+    ".🦑️repo/🎫️tickets/…/UI-ELEMENT-CO-LOCATION-RESTRUCTURE/scratch-finish-audit-out.txt",
+    ".🦑️repo/🎫️tickets/…/UI-ELEMENT-CO-LOCATION-RESTRUCTURE/scratch-cargo-check-*.txt",
+    ".🦑️repo/🎫️tickets/…/UI-ELEMENT-CO-LOCATION-RESTRUCTURE/🧪️finish-status.json"
+  ],
+  "code_edits_under_ui": []
+}

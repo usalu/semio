@@ -1,0 +1,27 @@
+{
+  "plugin": "✒️writer",
+  "crate": "semio-s-plugin-writer",
+  "path": "✏️s/🔌️plugins/✒️writer",
+  "goal": "🎯aioptimizedrepo",
+  "ticket": "26/08/05/WRITER-PLUGIN-SHAPE-V2-TREE-PURITY-RETROFIT",
+  "shapeV2": {
+    "libInPackagesRust": true,
+    "ownerRootLibRemoved": true,
+    "groupingPathDot": true,
+    "leafPathPrefix": "../../",
+    "configTerminologyWasmFolders": true,
+    "manifestAtOwnerRoot": true
+  },
+  "verify": {
+    "cargoCheck": "pass",
+    "cargoTestLib": "pending_rerun_workspace_unstable",
+    "expectedLibTests": 86,
+    "lastObserved": "78 pass / 8 fail before envelope-id + command-surface fixes; hex baselines updated"
+  },
+  "inTreeFixes": [
+    "dsl extension writer.writer + writer.writercfg",
+    "every_command includes open-document",
+    "optional_field_rows binary ordinals +1"
+  ],
+  "registrarHandoff": []
+}

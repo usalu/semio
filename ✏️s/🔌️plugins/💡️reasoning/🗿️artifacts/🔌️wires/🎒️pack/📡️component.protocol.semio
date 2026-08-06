@@ -1,5 +1,18 @@
 dialect protocol
-protocol wires
+protocol wires.pack
 version 1
-start record
-record = varint*
+schema reasoning.wires.fixture
+start frame
+framing magic 0x8953504B0D0A1A0A
+header fixed 32
+field format_major u16
+field format_minor u16
+field flags u32
+field header_crc32 u32
+segment kind u8
+segment flags u8
+segment payload varint bytes
+record field id u16 type tag
+field tag varint
+field body bytes
+footer fixed 84

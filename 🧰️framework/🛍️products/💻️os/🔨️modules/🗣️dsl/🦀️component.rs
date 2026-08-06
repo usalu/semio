@@ -10,7 +10,6 @@
 // resolve to this crate even when the derive is exercised in-crate, as the `🧪️Tests` region below does.
 // Only needed for the in-crate tests, so it's cfg-gated to avoid an "unused extern crate" warning
 // in ordinary (non-test) builds, where every real consumer already has `dsl` as a true dependency.
-#[cfg(test)]
 // extern crate self removed after merge
 
 use std::collections::HashMap;

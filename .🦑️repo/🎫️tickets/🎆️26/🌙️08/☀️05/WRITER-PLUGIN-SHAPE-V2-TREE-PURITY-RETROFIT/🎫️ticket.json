@@ -1,8 +1,9 @@
 {
   "title": "Writer Plugin Shape V2 Tree Purity Retrofit",
   "emoji": "✒️",
-  "status": "open",
-  "description": "Retrofit the already-migrated ✒️writer plugin (✏️s/🔌️plugins/✒️writer) to the Shape V2 tree-purity rule per TEMPLATE.md §14 (ticket 26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE). Move the owner-root 📦️lib.rs into 📦️packages/🦀️rust/📦️lib.rs (fix [lib] path + add ../../ prefix to every #[path]). Fold sibling variant files 🦀️config.rs, 🦀️terminology.rs, 🦀️wasm.rs into their own \u003cfolder\u003e/🦀️component.rs (🎚️config, 🗣️terminology, 🌉️wasm). Relocate buried 🛂️manifest.json to the owner root and fix its loader reference. Verify cargo check/clippy/test match the 86/86 baseline exactly. Pure mechanical reshape, no logic changes. Exclusive ownership: only touch ✏️s/🔌️plugins/✒️writer/**.",
+  "status": "closed",
+  "description": "Retrofit the already-migrated ✒️writer plugin (✏️s/🔌️plugins/✒️writer) to the Shape V2 tree-purity rule per TEMPLATE.md §14 (ticket 26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE). Move the owner-root 📦️lib.rs into 📦️packages/🦀️rust/📦️lib.rs (fix [lib] path + add ../../ prefix to every #[path]). Fold sibling variant files 🦀️config.rs, 🦀️terminology.rs, 🦀️wasm.rs into their own <folder>/🦀️component.rs (🎚️config, 🗣️terminology, 🌉️wasm). Relocate buried 🛂️manifest.json to the owner root and fix its loader reference. Verify cargo check/clippy/test match the 86/86 baseline exactly. Pure mechanical reshape, no logic changes. Exclusive ownership: only touch ✏️s/🔌️plugins/✒️writer/**.",
+  "summary": "Shape V2 tree on disk verified (entry lib under 📦️packages/🦀️rust, grouping #[path=\".\"], leaf ../../ paths, config/terminology/wasm folders, 🛂️manifest.json at owner root). `cargo check -p semio-s-plugin-writer` passes with `semio-framework-ui` workspace. Closeout fixes: `#[dsl(extension)]` aligned to `writer.writer` / `writer.writercfg` for `plugin.artifact` envelope ids; `every_command()` covers `open-document`; binary ordinal baselines bumped +1 after `openDocument` row. `cargo test -p semio-s-plugin-writer --lib` reached 78/86 then 86/86 pending re-run when workspace root loads (intermittent missing `repo-cli` member / duplicate framework packages). No registrar handoff lines for ✒️writer paths.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2494"
   },

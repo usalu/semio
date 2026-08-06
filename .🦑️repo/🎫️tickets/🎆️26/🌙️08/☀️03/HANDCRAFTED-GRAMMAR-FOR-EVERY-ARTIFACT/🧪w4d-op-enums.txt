@@ -1,0 +1,297 @@
+===== ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔧️op/🦀️component.rs =====
+pub enum Process3dOperation {
+    Steps {
+        collection: CollectionOperation<String, ProcessStep, ProcessStepPatch>,
+    },
+    Machines {
+        collection: CollectionOperation<String, WorkshopMachine, WorkshopMachinePatch>,
+    },
+    SetStock {
+        stock: Stock,
+    },
+    SetCursor {
+        resolved_up_to: Option<usize>,
+    },
+    /// 🔁️ Wholesale document swap (loading a different example fixture) — a true inverse restores the
+    /// exact prior document, mirroring `ShootingOperation::SetFixture`.
+    SetDocument {
+        document: Process3dDocument,
+    },
+}
+
+===== ✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🔧️op/🦀️component.rs =====
+pub enum SHomeOperation {
+    /// 🫙️ The identity operation — an `OperationDiff` needs `Default`; never emitted by `handle`.
+    #[default]
+    NoOperation,
+    SetCatalogGeneration {
+        value: u64,
+    },
+}
+
+===== ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🔧️op/🦀️component.rs =====
+pub enum GisMapOperation {
+    Positions(CollectionOperation<String, MapFeature, MapFeaturePatch>),
+    Routes(CollectionOperation<String, MapFeature, MapFeaturePatch>),
+    Regions(CollectionOperation<String, MapFeature, MapFeaturePatch>),
+    SetDocument { document: GisMapDocument },
+}
+
+===== ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🔧️op/🦀️component.rs =====
+pub enum Gis3dTerrainOperation {
+    SetExaggeration {
+        exaggeration: f64,
+    },
+    SetImportedFeatures {
+        #[dsl(key = "features-json")]
+        features_json: String,
+    },
+    SetDocument {
+        #[dsl(block)]
+        document: Gis3dTerrainDocument,
+    },
+}
+
+===== ✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🔧️op/🦀️component.rs =====
+(none)
+
+===== ✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🔧️op/🦀️component.rs =====
+pub enum SourcingOperation {
+    SetDocument {
+        #[dsl(block)]
+        document: CurateDocument,
+    },
+}
+
+===== ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🔧️op/🦀️component.rs =====
+(none)
+
+===== ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🔧️op/🦀️component.rs =====
+pub enum ProgramOperation {
+    Stakeholders(CollectionOperation<EntityId, Stakeholder, StakeholderPatch>),
+    Users(CollectionOperation<EntityId, UserProfile, UserProfilePatch>),
+    Activities(CollectionOperation<EntityId, Activity, ActivityPatch>),
+    Functions(CollectionOperation<EntityId, Function, FunctionPatch>),
+    Elements(CollectionOperation<EntityId, ProgramElement, ProgramElementPatch>),
+    Quantities(CollectionOperation<EntityId, QuantityRequirement, QuantityRequirementPatch>),
+    Relationships(CollectionOperation<EntityId, Relationship, RelationshipPatch>),
+    Adjacencies(CollectionOperation<EntityId, Adjacency, AdjacencyPatch>),
+    Processes(CollectionOperation<EntityId, Process, ProcessPatch>),
+    Flows(CollectionOperation<EntityId, FlowRequirement, FlowRequirementPatch>),
+    AccessRules(CollectionOperation<EntityId, AccessRule, AccessRulePatch>),
+    Operations(CollectionOperation<EntityId, OperationalRequirement, OperationalRequirementPatch>),
+    Equipment(CollectionOperation<EntityId, Equipment, EquipmentPatch>),
+    Resources(CollectionOperation<EntityId, Resource, ResourcePatch>),
+    Storage(CollectionOperation<EntityId, StorageRequirement, StorageRequirementPatch>),
+    Environmental(CollectionOperation<EntityId, EnvironmentalRequirement, EnvironmentalRequirementPatch>),
+    HumanFactors(CollectionOperation<EntityId, HumanFactorRequirement, HumanFactorRequirementPatch>),
+    Accessibility(CollectionOperation<EntityId, AccessibilityRequirement, AccessibilityRequirementPatch>),
+    Privacy(CollectionOperation<EntityId, PrivacyRequirement, PrivacyRequirementPatch>),
+    Safety(CollectionOperation<EntityId, SafetyRequirement, SafetyRequirementPatch>),
+    Security(CollectionOperation<EntityId, SecurityRequirement, SecurityRequirementPatch>),
+    Regulatory(CollectionOperation<EntityId, RegulatoryRequirement, RegulatoryRequirementPatch>),
+    SiteContext(CollectionOperation<EntityId, SiteContext, SiteContextPatch>),
+    Organizational(CollectionOperation<EntityId, OrganizationalRequirement, OrganizationalRequirementPatch>),
+    Services(CollectionOperation<EntityId, ServiceRequirement, ServiceRequirementPatch>),
+    Infrastructure(CollectionOperation<EntityId, InfrastructureRequirement, InfrastructureRequirementPatch>),
+    Information(CollectionOperation<EntityId, InformationRequirement, InformationRequirementPatch>),
+    Communication(CollectionOperation<EntityId, CommunicationRequirement, CommunicationRequirementPatch>),
+    Wayfinding(CollectionOperation<EntityId, WayfindingRequirement, WayfindingRequirementPatch>),
+    Schedules(CollectionOperation<EntityId, ScheduleRequirement, ScheduleRequirementPatch>),
+    Flexibility(CollectionOperation<EntityId, FlexibilityRequirement, FlexibilityRequirementPatch>),
+    Growth(CollectionOperation<EntityId, GrowthPlan, GrowthPlanPatch>),
+    Sustainability(CollectionOperation<EntityId, SustainabilityRequirement, SustainabilityRequirementPatch>),
+    Resilience(CollectionOperation<EntityId, ResilienceRequirement, ResilienceRequirementPatch>),
+    Costs(CollectionOperation<EntityId, CostRequirement, CostRequirementPatch>),
+    Delivery(CollectionOperation<EntityId, DeliveryConstraint, DeliveryConstraintPatch>),
+    Risks(CollectionOperation<EntityId, Risk, RiskPatch>),
+    Conflicts(CollectionOperation<EntityId, Conflict, ConflictPatch>),
+    Requirements(CollectionOperation<EntityId, Requirement, RequirementPatch>),
+    Priorities(CollectionOperation<EntityId, PriorityRecord, PriorityRecordPatch>),
+    Scenarios(CollectionOperation<EntityId, Scenario, ScenarioPatch>),
+    Options(CollectionOperation<EntityId, OptionEvaluation, OptionEvaluationPatch>),
+    Decisions(CollectionOperation<EntityId, Decision, DecisionPatch>),
+    Validations(CollectionOperation<EntityId, ValidationRecord, ValidationRecordPatch>),
+    Performance(CollectionOperation<EntityId, PerformanceCriterion, PerformanceCriterionPatch>),
+    Quality(CollectionOperation<EntityId, QualityRecord, QualityRecordPatch>),
+    Documents(CollectionOperation<EntityId, DocumentRecord, DocumentRecordPatch>),
+    Changes(CollectionOperation<EntityId, ChangeRecord, ChangeRecordPatch>),
+    Collaboration(CollectionOperation<EntityId, CollaborationRecord, CollaborationRecordPatch>),
+    Analyses(CollectionOperation<EntityId, AnalysisRecord, AnalysisRecordPatch>),
+    Reports(CollectionOperation<EntityId, ReportRecord, ReportRecordPatch>),
+    SearchFilters(CollectionOperation<EntityId, SearchFilter, SearchFilterPatch>),
+    StatusRecords(CollectionOperation<EntityId, StatusRecord, StatusRecordPatch>),
+    Workshops(CollectionOperation<EntityId, Workshop, WorkshopPatch>),
+    Surveys(CollectionOperation<EntityId, Survey, SurveyPatch>),
+    Issues(CollectionOperation<EntityId, Issue, IssuePatch>),
+    AuditEvents(CollectionOperation<EntityId, AuditEvent, AuditEventPatch>),
+    Templates(CollectionOperation<EntityId, TemplateRecord, TemplateRecordPatch>),
+    Knowledge(CollectionOperation<EntityId, KnowledgeRecord, KnowledgeRecordPatch>),
+    Benchmarks(CollectionOperation<EntityId, BenchmarkRecord, BenchmarkRecordPatch>),
+    Assumptions(CollectionOperation<EntityId, Assumption, AssumptionPatch>),
+    Constraints(CollectionOperation<EntityId, ConstraintRecord, ConstraintRecordPatch>),
+    ComplianceRecords(CollectionOperation<EntityId, ComplianceRecord, ComplianceRecordPatch>),
+    Approvals(CollectionOperation<EntityId, ApprovalRecord, ApprovalRecordPatch>),
+    Meetings(CollectionOperation<EntityId, MeetingRecord, MeetingRecordPatch>),
+    Traces(CollectionOperation<EntityId, TraceLink, TraceLinkPatch>),
+    UpdateMeta { patch: ProgramMetaPatch },
+    UpdateProject { patch: ProjectDefinitionPatch },
+    UpdateGovernance { patch: GovernancePatch },
+    SetAdjacency { adjacency: Adjacency },
+    ClearAdjacency { id: EntityId },
+    SetProgram { program: Box<Program> },
+}
+
+===== ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs =====
+pub enum Fem3dOperation {
+    SetNode {
+        index: usize,
+        node: FemNode,
+    },
+    RemoveNode {
+        id: String,
+    },
+    // `FemElement` is a `DslEnum` (tagged, data-carrying variants), not a `DslRecord`, so it has no
+    // `DslField` impl of its own — a bare scalar field can't bind it directly. `#[dsl(statements)]`
+    // on a `Box<T>` is the engine's "exactly one required tagged value" shape for that case.
+    SetElement {
+        index: usize,
+        #[dsl(statements)]
+        element: Box<FemElement>,
+    },
+    RemoveElement {
+        id: String,
+    },
+    SetMaterial {
+        index: usize,
+        material: FemMaterial,
+    },
+    RemoveMaterial {
+        id: String,
+    },
+    SetSection {
+        index: usize,
+        section: FemSection,
+    },
+    RemoveSection {
+        id: String,
+    },
+    SetSolid {
+        index: usize,
+        solid: FemSolid,
+    },
+    RemoveSolid {
+        id: String,
+    },
+    SetSupport {
+        index: usize,
+        support: FemSupport,
+    },
+    RemoveSupport {
+        id: String,
+    },
+    SetLoadCase {
+        index: usize,
+        load_case: FemLoadCase,
+    },
+    RemoveLoadCase {
+        id: String,
+    },
+    SetCombination {
+        index: usize,
+        combination: FemCombination,
+    },
+    RemoveCombination {
+        id: String,
+    },
+    SetAnalysisSettings {
+        #[dsl(block)]
+        settings: FemAnalysisSettings,
+    },
+    /// 🌍️ Replaces the whole document (example import / reset).
+    SetDocument {
+        #[dsl(block)]
+        document: Fem3dDocument,
+    },
+}
+
+===== ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🔧️op/🦀️component.rs =====
+pub enum Fem2dOperation {
+    SetNode {
+        index: usize,
+        #[dsl(block)]
+        node: FemNode,
+    },
+    RemoveNode {
+        id: String,
+    },
+    SetElement {
+        index: usize,
+        #[dsl(statements)]
+        element: Box<FemElement>,
+    },
+    RemoveElement {
+        id: String,
+    },
+    SetMaterial {
+        index: usize,
+        #[dsl(block)]
+        material: FemMaterial,
+    },
+    RemoveMaterial {
+        id: String,
+    },
+    SetSection {
+        index: usize,
+        #[dsl(block)]
+        section: FemSection,
+    },
+    RemoveSection {
+        id: String,
+    },
+    SetSupport {
+        index: usize,
+        #[dsl(block)]
+        support: FemSupport,
+    },
+    RemoveSupport {
+        id: String,
+    },
+    SetLoadCase {
+        index: usize,
+        #[dsl(block)]
+        load_case: FemLoadCase,
+    },
+    RemoveLoadCase {
+        id: String,
+    },
+    SetRegion {
+        index: usize,
+        #[dsl(block)]
+        region: FemRegion,
+    },
+    RemoveRegion {
+        id: String,
+    },
+    SetCombination {
+        index: usize,
+        #[dsl(block)]
+        combination: FemCombination,
+    },
+    RemoveCombination {
+        id: String,
+    },
+    SetAnalysisSettings {
+        #[dsl(block)]
+        settings: FemAnalysisSettings,
+    },
+    /// 🌍️ Replaces the whole document (example import / reset).
+    SetDocument {
+        #[dsl(block)]
+        document: Fem2dDocument,
+    },
+}
+
+===== ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🔧️op/🦀️component.rs =====
+(none)
+

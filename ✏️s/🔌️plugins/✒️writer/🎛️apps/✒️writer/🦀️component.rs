@@ -448,6 +448,7 @@ mod tests {
             ("text-edit", WriterCommand::TextEdit(text_edit::TextEdit { text: "x".into() })),
             ("set-text", WriterCommand::SetText(set_text::SetText { text: "x".into() })),
             ("document", WriterCommand::SetDocument(set_document::SetDocument { document: jack_projection() })),
+            ("open-document", WriterCommand::OpenDocument(open_document::OpenDocument { uri: "writer://jack".into(), text: "x".into() })),
             ("document-json", WriterCommand::SetDocumentJson(set_document_json::SetDocumentJson { json: "{}".into() })),
             ("fixture-json", WriterCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "{}".into() })),
             ("active-example", WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() })),
@@ -487,6 +488,7 @@ mod tests {
             WriterCommand::TextEdit(text_edit::TextEdit { text: "hello".into() }),
             WriterCommand::SetText(set_text::SetText { text: "MATCH (a) RETURN a".into() }),
             WriterCommand::SetDocument(set_document::SetDocument { document: jack_projection() }),
+            WriterCommand::OpenDocument(open_document::OpenDocument { uri: "writer://jack".into(), text: String::new() }),
             WriterCommand::SetDocumentJson(set_document_json::SetDocumentJson { json: "{}".into() }),
             WriterCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "{}".into() }),
             WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() }),
@@ -518,9 +520,9 @@ mod tests {
     #[test]
     fn optional_field_rows_keep_their_pre_migration_bytes() {
         let cases: [(WriterCommand, &str, &str); 3] = [
-            (WriterCommand::SetAstHover(set_ast_hover::SetAstHover { id: Some("jack-ast-1".into()) }), "ast-hover id=jack-ast-1", "010f010a6a61636b2d6173742d3101000600"),
-            (WriterCommand::TextHover(text_hover::TextHover { start: Some(3), end: None }), "text-hover start=3", "01100001000403"),
-            (WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }), "engagement-submit", "01160000"),
+            (WriterCommand::SetAstHover(set_ast_hover::SetAstHover { id: Some("jack-ast-1".into()) }), "ast-hover id=jack-ast-1", "0110010a6a61636b2d6173742d3101000600"),
+            (WriterCommand::TextHover(text_hover::TextHover { start: Some(3), end: None }), "text-hover start=3", "01110001000403"),
+            (WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }), "engagement-submit", "01170000"),
         ];
         for (command, text, hex) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text);

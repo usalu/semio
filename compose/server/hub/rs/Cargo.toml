@@ -20,7 +20,7 @@ path = "bin.rs"
 # 🗄️ db + protocol facades (CW6b: compose-hub rebuilt as a thin server on `db::Database`, wired
 # over `protocol_wire` — see contract.md "Hub rebuild surface"). `compose`/sqlx-postgres/dashmap
 # (bespoke Postgres session-actor storage) are retired; db owns document persistence now.
-db = { path = "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚡️implementations/🦀️rust" }
+db = { path = "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust" }
 protocol = { path = "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

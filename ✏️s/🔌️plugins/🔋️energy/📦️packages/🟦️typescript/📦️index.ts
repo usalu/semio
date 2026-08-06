@@ -1,2 +1,2 @@
-/** energy facet WASM facades — re-export artifact 🟦️component.ts leaves. */
-export {};
+/** energy facet WASM facades */
+

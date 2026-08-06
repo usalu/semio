@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀️ `@semio-tech/flow-core` router: `bun ./📜️script.ts wasm`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 
 class WasmScript extends BundleScript {
   run(): void {

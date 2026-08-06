@@ -1,6 +1,32 @@
 dialect grammar
-grammar shooting
+grammar shooting.document
 extension shooting
 use family-scene
 start document
-document = TEXT*
+
+document = schema-line scene-block assets-table shots-table saved-cameras-table?
+schema-line = "schema" "=" IDENT {"active-shot-id" "=" IDENT}? {"active-asset-id" "=" IDENT}?
+scene-block = "scene" "{" background? sun-block? ambient-block? shadow-block? material-block? "}"
+background = "background" "=" TEXT
+sun-block = "sun" "{" {"enabled" "=" BOOL}? {"azimuth" "=" FLOAT}? {"elevation" "=" FLOAT}? {"intensity" "=" FLOAT}? {"color" "=" TEXT}? "}"
+ambient-block = "ambient" "{" {"intensity" "=" FLOAT}? {"color" "=" TEXT}? "}"
+shadow-block = "shadow" "{" {"enabled" "=" BOOL}? {"opacity" "=" FLOAT}? {"softness" "=" FLOAT}? "}"
+material-block = "material" "{" {"color" "=" TEXT}? {"metalness" "=" FLOAT}? {"roughness" "=" FLOAT}? {"emissive" "=" TEXT}? {"emissive-intensity" "=" FLOAT}? "}"
+assets-table = "assets" table-header "{" asset-row* "}"
+shots-table = "shots" table-header "{" shot-row* "}"
+saved-cameras-table = "saved-cameras" table-header "{" saved-camera* "}"
+table-header = "[" IDENT ":" IDENT {IDENT ":" IDENT}* "]"
+asset-row = IDENT TEXT TEXT IDENT coord? orientation? scale?
+shot-row = IDENT TEXT INT INT IDENT IDENT TEXT camera-ref?
+saved-camera = "saved-camera" {"id" "=" IDENT} {"label" "=" TEXT}? camera-block?
+camera-block = "camera" "{" prop* "}"
+camera-ref = IDENT | "_"
+coord = "@" FLOAT "," FLOAT "," FLOAT | "_"
+orientation = tuple | "_"
+scale = tuple | "_"
+tuple = FLOAT "," FLOAT "," FLOAT | "_"
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" prop* "}"
+value = TEXT | FLOAT | INT | BOOL | list | map

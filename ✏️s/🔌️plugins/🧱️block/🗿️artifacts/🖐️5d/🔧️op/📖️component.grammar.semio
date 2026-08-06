@@ -1,6 +1,23 @@
 dialect grammar
-grammar 5d
-extension 5d
-use family-document
-start document
-document = TEXT*
+grammar block.block5d.op
+extension block5d
+start operation
+
+operation = op-stmt*
+op-stmt = IDENT assign* block?
+node = IDENT {":" IDENT}? {"@" IDENT}?
+edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
+edge-label = IDENT {":" IDENT}?
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
+assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" assign* "}"
+value = TEXT | INT | FLOAT | BOOL | list | map
+table-schema = "[" col {"," col}* "]"
+col = IDENT ":" IDENT
+table = table-schema "{" row* "}"
+row = field+
+field = IDENT "=" value
+block = "{" record* "}"
+record = IDENT assign* block?

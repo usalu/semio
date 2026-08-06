@@ -1,6 +1,11 @@
 dialect grammar
-grammar rewrite
+grammar rewrite.document
 extension rewrite
-use family-graph
+use family-embed
 start document
-document = TEXT*
+
+document = field*
+field = "before-fixture-json" "=" TEXT | "lhs-json" "=" TEXT | "rhs-json" "=" fence | "parameter-bindings" map | "rule-layout" map
+fence = "```" "json" TEXT "```"
+map = "{" map-entry* "}"
+map-entry = IDENT "=" (TEXT | INT | FLOAT | BOOL)

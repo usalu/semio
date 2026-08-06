@@ -1,6 +1,17 @@
 dialect grammar
-grammar en1994
+grammar en1994.diff
 extension en1994
 use family-sheet
-start document
-document = TEXT*
+start diff
+
+diff = (header | clause | table | assign)*
+header = IDENT TEXT*
+clause = IDENT "=" expr
+assign = IDENT "=" (FLOAT | INT | TEXT | BOOL)
+expr = term {("+" | "-") term}*
+term = factor {("*" | "/") factor}*
+factor = FLOAT | INT | IDENT | call | "-" factor
+call = IDENT "(" expr {"," expr}* ")"
+table = "[" column* "]" row*
+column = IDENT ":" IDENT
+row = (FLOAT | INT | TEXT | BOOL)*

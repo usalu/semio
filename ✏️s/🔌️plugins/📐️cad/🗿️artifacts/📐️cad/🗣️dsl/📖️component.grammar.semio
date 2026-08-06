@@ -1,6 +1,28 @@
 dialect grammar
-grammar cad
+grammar cad.document
 extension cad
 use family-scene
 start document
-document = TEXT*
+
+document = header-field* geometry-block* object-table* nodes-table
+header-field = IDENT "=" value
+geometry-block = IDENT "-geometry" block
+object-table = IDENT table
+nodes-table = "nodes" table
+layer = IDENT "@" FLOAT FLOAT FLOAT? props?
+node = IDENT {":" IDENT}? {"@" IDENT}?
+edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
+edge-label = IDENT {":" IDENT}?
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
+assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" assign* "}"
+value = TEXT | INT | FLOAT | BOOL | list | map
+table-schema = "[" col {"," col}* "]"
+col = IDENT ":" IDENT
+table = table-schema "{" row* "}"
+row = field+
+field = IDENT "=" value
+block = "{" record* "}"
+record = IDENT assign* block?

@@ -1,6 +1,14 @@
 dialect grammar
-grammar shooting
+grammar shooting.diff
 extension shooting
 use family-scene
-start document
-document = TEXT*
+start diff
+
+diff = {"scene" "=" scene-patch}? {"assets" "=" collection-diff}? {"shots" "=" collection-diff}? {"saved-cameras" "=" collection-diff}? {"active-shot-id" "=" IDENT}? {"active-asset-id" "=" IDENT}?
+scene-patch = "{" prop* "}"
+collection-diff = "{" {"added" "=" list}? {"removed" "=" list}? {"moved" "=" list}? {"modified" "=" list}? "}"
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" prop* "}"
+value = TEXT | FLOAT | INT | BOOL | list | map

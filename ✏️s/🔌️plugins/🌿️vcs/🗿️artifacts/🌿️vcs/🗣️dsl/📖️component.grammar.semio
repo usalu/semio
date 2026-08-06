@@ -1,6 +1,13 @@
 dialect grammar
-grammar vcs
-extension vcs
-use family-geo
+grammar vcs.document
+extension vcsdemo
 start document
-document = TEXT*
+
+document = schema-field title-field counter-field notes-field status-field tags-field
+schema-field = "schema" "=" TEXT
+title-field = "title" "=" TEXT
+counter-field = "counter" "=" INT
+notes-field = "notes" "=" TEXT
+status-field = "status" "=" TEXT
+tags-field = "tags" "=" list
+list = "[" TEXT* "]"

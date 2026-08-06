@@ -1,6 +1,21 @@
 dialect grammar
-grammar imperative
+grammar imperative.imperative.diff
 extension imperative
-use family-graph
-start document
-document = TEXT*
+start diff
+
+diff = op-line*
+op-line = ("steps-add" | "steps-remove" | "steps-move" | "steps-patch" | "steps-set" | "path-ref") assign* block?
+assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
+list = "[" value* "]"
+map = "{" assign* "}"
+value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
+qty = (FLOAT | INT) IDENT?
+block = "{" record* "}"
+record = IDENT assign* block?
+table = IDENT table-schema "{" row* "}"
+table-schema = "[" col {"," col}* "]"
+col = IDENT ":" IDENT
+row = field+
+field = IDENT "=" value | value
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)

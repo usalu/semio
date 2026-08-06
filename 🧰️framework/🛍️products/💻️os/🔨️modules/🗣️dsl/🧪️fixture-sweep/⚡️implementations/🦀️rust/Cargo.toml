@@ -112,6 +112,6 @@ note_app = { path = "../../../../../../../../✏️s/🔌️plugins/🗒️note/
 puzzle = { path = "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle" }
 block = { path = "../../../../../../../../✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust", package = "semio-s-plugin-block" }
 home = { path = "../../../../../../../../✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust", package = "semio-s-plugin-space" }
-semio_framework_os = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
+semio_framework_os = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 sourcing = { path = "../../../../../../../../✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust", package = "semio-s-plugin-sourcing" }
 space = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-space" }

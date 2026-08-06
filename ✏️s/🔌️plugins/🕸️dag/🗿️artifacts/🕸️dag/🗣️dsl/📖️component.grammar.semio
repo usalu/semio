@@ -1,13 +1,30 @@
 dialect grammar
-grammar dag
+grammar dag.document
 extension dag
 use family-graph
 start document
 
-document = {node | edge}*
-node = IDENT {":" IDENT}? {"@" IDENT}?
-edge = node edge-arrow node props?
-edge-arrow = ARROW | DASHARROW | EDGEARROW | "-" edge-label ARROW | "-" edge-label "-"
+document = TEXT schema-line node-body edges-table
+schema-line = "schema=" IDENT
+node-body = node-entry*
+node-entry = "id=" IDENT field* node-kind
+node-kind = "slider" field* | "select" field* | "computation" comp-meta io-table io-table | "screen" field* | "note" field* | "image" field* | "preview" field* | "action" field* | "export" field* | "cluster" comp-meta io-table io-table | "app-instance" field* io-table io-table
+comp-meta = "variadic-inputs=" BOOL "variadic-outputs=" BOOL
+io-table = "inputs" table | "outputs" table
+edges-table = "edges" table
+
+wire-endpoint = IDENT {":" IDENT}? {"@" IDENT}?
+edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
 edge-label = IDENT {":" IDENT}?
+wire = wire-endpoint edge-arrow wire-endpoint props?
+chain = wire-endpoint {ARROW wire-endpoint}+ | wire-endpoint {DASHARROW wire-endpoint}+
 props = "{" prop* "}"
-prop = IDENT "=" TEXT
+prop = IDENT "=" (TEXT | INT | FLOAT | BOOL)
+table = IDENT columns "{" row* "}"
+columns = "[" column+ "]"
+column = IDENT ":" IDENT
+row = cell+
+cell = TEXT | INT | FLOAT | BOOL | IDENT | wire | MAP | BLOCK
+block = "{" field* "}"
+field = IDENT "=" value
+value = TEXT | INT | FLOAT | BOOL | wire | MAP | block | table

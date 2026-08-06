@@ -1,6 +1,23 @@
 dialect grammar
-grammar raster
+grammar raster.op
 extension raster
 use family-scene
-start document
-document = TEXT*
+start operation
+
+operation = add-layer | remove-layer | patch-layer | move-layer | replace-document
+add-layer = "add-layer" {"parent" "=" IDENT}? {"index" "=" INT}? layer
+remove-layer = "remove-layer" "id" "=" IDENT
+patch-layer = "patch-layer" "id" "=" IDENT patch-block
+move-layer = "move-layer" "id" "=" IDENT {"parent" "=" IDENT}? {"index" "=" INT}?
+replace-document = "replace-document" document-block
+patch-block = "patch" "{" prop* "}"
+document-block = "document" "{" prop* "}"
+layer = pixel-layer | group-layer | adjustment-layer
+pixel-layer = "pixel" prop*
+group-layer = "group" prop*
+adjustment-layer = "adjustment" prop*
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" prop* "}"
+value = TEXT | FLOAT | INT | BOOL | list | map

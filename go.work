@@ -1,9 +1,9 @@
 go 1.25.5
 
 use (
-	./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/⚡️implementations/🐹️go
-	./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/⚡️implementations/🐹️go
-	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🐹️go
-	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator
 	./compose/client/lib/go
 )

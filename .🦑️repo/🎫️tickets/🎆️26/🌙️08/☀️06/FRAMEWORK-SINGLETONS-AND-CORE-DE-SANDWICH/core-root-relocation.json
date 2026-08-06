@@ -1,0 +1,13 @@
+{
+  "at": "2026-08-06T12:01:59.845Z",
+  "movedInto": "🔨️modules/🧩core",
+  "moved": [
+    "🎯️action-bus",
+    "🔺️mesh",
+    "🖥️platform",
+    "🧩️ui",
+    "🤖️generated"
+  ],
+  "packagesRemainsGlueAt": "�framework/📦️packages/🦀️rust",
+  "crateName": "semio-framework-core"
+}

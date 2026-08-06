@@ -1,6 +1,18 @@
 dialect grammar
-grammar present
+grammar present.document
 extension present
 use family-scene
 start document
-document = TEXT*
+
+document = schema-line source-block tiles-table
+schema-line = "schema" "=" IDENT
+source-block = "source" "{" source-prop* frame-block? "}"
+source-prop = {"src" "=" TEXT} | {"kind" "=" IDENT} | {"source-aspect" "=" FLOAT} | {"pdf-page" "=" INT} | prop
+frame-block = "frame" "{" {"x" "=" FLOAT}? {"y" "=" FLOAT}? {"width" "=" FLOAT}? {"height" "=" FLOAT}? "}"
+tiles-table = "tiles" "[" "id" ":" "TEXT" "name" ":" "TEXT" "crop" ":" "BLOCK" "]" "{" tile* "}"
+tile = IDENT TEXT "{" {"x" "=" FLOAT}? {"y" "=" FLOAT}? {"width" "=" FLOAT}? {"height" "=" FLOAT}? "}"
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" prop* "}"
+value = TEXT | FLOAT | INT | BOOL | list | map

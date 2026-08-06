@@ -2,7 +2,7 @@
 /** 🪐️ `@semio-tech/space-rs` router: `bun ./📜️script.ts test`. Pure rlib — no wasm target (space/
  * collection are headless document technologies consumed by `os-core`/the space app, same shape as
  * `@semio-tech/vcs-rs`). */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, resolveTestLevel } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, resolveTestLevel } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {

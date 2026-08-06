@@ -322,17 +322,17 @@ pub fn decode_fault_bytes(bytes: &[u8]) -> Fault {
 #[macro_export]
 macro_rules! fault_from_thiserror {
     ($ty:ty, $origin:expr, $prefix:literal) => {
-        impl $self::FaultFrom for $ty {
-            fn fault_origin(&self) -> $self::FaultOrigin {
+        impl $crate::FaultFrom for $ty {
+            fn fault_origin(&self) -> $crate::FaultOrigin {
                 $origin
             }
 
-            fn fault_code(&self) -> $self::FaultCode {
-                $self::FaultCode::new($prefix)
+            fn fault_code(&self) -> $crate::FaultCode {
+                $crate::FaultCode::new($prefix)
             }
 
-            fn fault_severity(&self) -> $self::Severity {
-                $self::Severity::Error
+            fn fault_severity(&self) -> $crate::Severity {
+                $crate::Severity::Error
             }
 
             fn fault_message(&self) -> String {

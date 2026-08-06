@@ -1,6 +1,15 @@
 dialect grammar
-grammar present
+grammar present.diff
 extension present
 use family-scene
-start document
-document = TEXT*
+start diff
+
+diff = {"source" "=" source-block}? {"tiles" "=" collection-diff}?
+source-block = "source" "{" prop* frame-block? "}"
+frame-block = "frame" "{" prop* "}"
+collection-diff = "{" {"added" "=" list}? {"removed" "=" list}? {"moved" "=" list}? {"modified" "=" list}? "}"
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" prop* "}"
+value = TEXT | FLOAT | INT | BOOL | list | map

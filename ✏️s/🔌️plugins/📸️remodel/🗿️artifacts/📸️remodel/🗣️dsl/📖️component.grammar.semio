@@ -1,6 +1,44 @@
 dialect grammar
-grammar remodel
+grammar remodel.document
 extension remodel
 use family-scene
 start document
-document = TEXT*
+
+document = schema-line streams-table? assets-map? calibration-block? params-block? gcps-table? job-block? results-block?
+schema-line = "schema" "=" IDENT {"id" "=" IDENT}? {"title" "=" TEXT}?
+streams-table = "streams" table-header "{" stream-row* "}"
+assets-map = "assets" "=" "{" asset* "}"
+calibration-block = "calibration" "{" cameras-table? rig-table? "}"
+params-block = "params" "{" ingest-block? feature-block? match-block? sfm-block? dense-block? mesh-block? motion-block? geo-block? "}"
+gcps-table = "gcps" table-header "{" gcp-row* "}"
+job-block = "job" "{" prop* "}"
+results-block = "results" "{" sparse-block? dense-block-result? mesh-block-result? trajectory-block? tracks-table? geo-products-block? qc-block? "}"
+table-header = "[" IDENT ":" IDENT {IDENT ":" IDENT}* "]"
+stream-row = IDENT prop*
+asset = IDENT "=" {"mime" "=" TEXT}? {"data" "=" TEXT}? {"width" "=" INT}? {"height" "=" INT}?
+cameras-table = "cameras" "{" camera* "}"
+camera = "{" {"id" "=" IDENT} prop* "}"
+rig-table = "rig" "{" rig-extrinsic* "}"
+rig-extrinsic = "{" {"camera-id" "=" IDENT} prop* "}"
+gcp-row = IDENT TEXT tuple prop*
+ingest-block = "ingest" "{" prop* "}"
+feature-block = "feature" "{" prop* "}"
+match-block = "match" "{" prop* "}"
+sfm-block = "sfm" "{" prop* "}"
+dense-block = "dense" "{" prop* "}"
+mesh-block = "mesh" "{" prop* "}"
+motion-block = "motion" "{" prop* "}"
+geo-block = "geo" "{" prop* "}"
+sparse-block = "sparse" "{" prop* "}"
+dense-block-result = "dense" "{" prop* "}"
+mesh-block-result = "mesh" "{" prop* "}"
+trajectory-block = "trajectory" "{" prop* "}"
+tracks-table = "tracks" "{" prop* "}"
+geo-products-block = "geo-products" "{" prop* "}"
+qc-block = "qc" "{" prop* "}"
+tuple = FLOAT "," FLOAT "," FLOAT
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" prop* "}"
+value = TEXT | FLOAT | INT | BOOL | list | map

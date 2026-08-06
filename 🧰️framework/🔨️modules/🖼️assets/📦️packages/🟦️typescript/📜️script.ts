@@ -12,7 +12,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { JSDOM } from "jsdom";
-import { BundleScript, ScriptRouter, runBundleScriptMain, exportAnimatedSvgToMp4 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, exportAnimatedSvgToMp4 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 
 /** @emoji 🌳️ Owner-root directory (`🖼️assets/`), two levels above this packaging entry point. */
 const assetsRoot = (): string => join(import.meta.dir, "..", "..");

@@ -2,7 +2,7 @@
 /** 📜️ `@semio-tech/framework-math` — the one semio math crate: manifest codegen, cargo test and clippy gates. */
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
-import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, resolveTestLevel } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, resolveTestLevel } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 
 //#region 🔖️ManifestSource
 type ManifestAxes = { portModel?: string; directedness?: string };

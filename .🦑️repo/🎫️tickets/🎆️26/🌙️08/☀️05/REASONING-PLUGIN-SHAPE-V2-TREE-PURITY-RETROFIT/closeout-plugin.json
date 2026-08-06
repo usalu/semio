@@ -1,0 +1,33 @@
+{
+  "plugin": "💡️reasoning",
+  "crate": "semio-s-plugin-reasoning-mindmap",
+  "path": "✏️s/🔌️plugins/💡️reasoning",
+  "goal": "🎯aioptimizedrepo",
+  "ticket": "26/08/05/REASONING-PLUGIN-SHAPE-V2-TREE-PURITY-RETROFIT",
+  "shapeV2": {
+    "libInPackagesRust": true,
+    "ownerRootLibRemoved": true,
+    "groupingPathDot": true,
+    "leafPathPrefix": "../../",
+    "configTerminologyFolders": true,
+    "manifestAtOwnerRoot": true,
+    "examplesAtOwnerRoot": true
+  },
+  "verify": {
+    "cargoCheck": "pass",
+    "cargoTestLib": "partial",
+    "expectedLibTests": 65,
+    "lastObserved": "58 pass / 7 fail; envelope-id fix applied; re-run when workspace stable"
+  },
+  "inTreeFixes": [
+    "dsl extension reasoning.wires + reasoning.wirescfg"
+  ],
+  "registrarHandoff": [
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs",
+      "symbol": "testkit::assert_taxonomy_components",
+      "line": 1619,
+      "reason": "Shape V2 owner-root 📚️examples conflicts with 'plugin-root examples forbidden' assertion"
+    }
+  ]
+}

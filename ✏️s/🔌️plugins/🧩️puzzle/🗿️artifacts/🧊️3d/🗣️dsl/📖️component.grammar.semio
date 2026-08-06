@@ -1,6 +1,27 @@
 dialect grammar
-grammar 3d
-extension 3d
-use family-document
+grammar puzzle.puzzle3d
+extension puzzle3d
 start document
-document = TEXT*
+
+document = schema-field header-field* camera-block? meta-block? table-section*
+schema-field = "schema" "=" TEXT
+header-field = IDENT "=" value
+camera-block = "camera" block
+meta-block = "meta" block
+table-section = IDENT table
+node = IDENT {":" IDENT}? {"@" IDENT}?
+edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
+edge-label = IDENT {":" IDENT}?
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
+assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" assign* "}"
+value = TEXT | INT | FLOAT | BOOL | list | map
+table-schema = "[" col {"," col}* "]"
+col = IDENT ":" IDENT
+table = table-schema "{" row* "}"
+row = field+
+field = IDENT "=" value
+block = "{" record* "}"
+record = IDENT assign* block?

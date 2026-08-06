@@ -35,7 +35,7 @@ pub enum ProtocolError {
     Io(String),
 }
 
-crate::os_dsl::core::fault_from_thiserror!(ProtocolError, crate::os_dsl::core::FaultOrigin::Module, "module.protocol");
+crate::fault_from_thiserror!(ProtocolError, crate::os_dsl::core::FaultOrigin::Module, "module.protocol");
 
 //#endregion 🔖️Errors
 

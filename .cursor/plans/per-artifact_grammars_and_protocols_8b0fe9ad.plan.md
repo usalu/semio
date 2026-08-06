@@ -31,7 +31,7 @@ todos:
     status: completed
   - id: p2-writer
     content: "P2/M6: refactor the writer onto LanguageSession, delete the Jack forks and regex tokenizers, add OpenDocument with registry-based extension resolution"
-    status: completed
+    status: in_progress
   - id: m7-policy
     content: "M7: repurpose policyGrammarFileBreaches for handcrafted specs, seed POLICY_GRAMMAR_FILE_ALLOWLIST with all missing spec files, add the protocol and TS-facade allowlists"
     status: completed
@@ -40,10 +40,10 @@ todos:
     status: completed
   - id: w4-fanout
     content: "W4a-e: fan out across all remaining artifacts in five waves with disjoint per-plugin ownership, hot plugins last"
-    status: completed
+    status: in_progress
   - id: p5-flagday
     content: "P5: complete the coverage matrix, delete dsl_derive's DocumentDsl and OpText emission and the dsl::__rt text path, empty all three allowlists"
-    status: completed
+    status: in_progress
   - id: p6-p7-verify
     content: "P6/P7: full conformance sweep in every mode, test exhaustive at 95% LCOV, OS boot smoke, writer opens 6+ document kinds live with evidence, close the ticket"
     status: completed

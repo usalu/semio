@@ -1,0 +1,972 @@
+########## ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📚️examples/♻️reuse/🔧️ops/♻️reuse/🧬️component.process.process3d.op.semio (3 lines) ##########
+semio process.process3d.op v1
+edit reuse started="0" actor=example
+
+
+########## ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.process.process3d.timber-beam-joinery-process3d.dsl.semio (71 lines) ##########
+semio process.process3d.dsl v1
+workshop {
+  machines=[ id=saw label="Generic Saw" icon-id=scissors capabilities=[ id=cut label=Cut icon-id=scissors parameters=[ id=kerf label=Kerf value=0.05m id=length label=Length value=0.5m id=depth label=Depth value=0.5m ]
+  rules {
+  }
+  blade-cut kerf=kerf length=length depth=depth ] id=drill label="Generic Drill" icon-id=circle-dot capabilities=[ id=drill label=Drill icon-id=circle-dot parameters=[ id=radius label=Radius value=0.05m id=depth label=Depth value=0.3m ]
+  rules {
+  }
+  bore-drill radius=radius depth=depth ] id=attacher label="Generic Attacher" icon-id=plus capabilities=[ id=attach label=Attach icon-id=plus parameters=[ id=radius label=Radius value=0.03m id=length label=Length value=0.2m ]
+  rules {
+  }
+  cylinder-attach radius=radius length=length ] id=circularSaw label="Circular Saw" icon-id=scissors catalog-id=wood capabilities=[ id=crosscut label=Crosscut icon-id=scissors parameters=[ id=bladeDiameter label="Blade Diameter" value=0.184m id=kerf label=Kerf value=0.002m id=maxCutDepth label="Max Cut Depth" value=0.065m ]
+  rules {
+    max quantity=height parameter=maxCutDepth margin=0m
+  }
+  disc-cut diameter=bladeDiameter kerf=kerf ] id=tableSaw label="Table Saw" icon-id=scissors catalog-id=wood capabilities=[ id=rip label=Rip icon-id=scissors parameters=[ id=bladeDiameter label="Blade Diameter" value=0.315m id=kerf label=Kerf value=0.0032m id=maxCutDepth label="Max Cut Depth" value=0.102m id=fenceWidth label="Fence Width" value=0.8m ]
+  rules {
+    max quantity=height parameter=maxCutDepth margin=0m
+    max quantity=width parameter=fenceWidth margin=0m
+  }
+  disc-cut diameter=bladeDiameter kerf=kerf ] id=drillPress label="Drill Press" icon-id=circle-dot catalog-id=wood capabilities=[ id=bore label=Bore icon-id=circle-dot parameters=[ id=bitRadius label="Bit Radius" value=0.005m id=strokeDepth label="Stroke Depth" value=0.1m id=throatDepth label="Throat Depth" value=0.16m ]
+  rules {
+    max quantity=height parameter=strokeDepth margin=0m
+  }
+  bore-drill radius=bitRadius depth=strokeDepth ] id=dowelJig label="Doweling Jig" icon-id=plus catalog-id=wood capabilities=[ id=dowel label=Dowel icon-id=plus parameters=[ id=dowelRadius label="Dowel Radius" value=0.004m id=dowelLength label="Dowel Length" value=0.04m id=minStockThickness label="Min Stock Thickness" value=0.018m ]
+  rules {
+    min quantity=height parameter=minStockThickness margin=0m
+  }
+  cylinder-attach radius=dowelRadius length=dowelLength ] ]
+}
+stock {
+  id=beam label="Timber Beam"
+  pose {
+    position=@0,0,0.12 axis=^0,0,1 angle=0rad
+  }
+  box width=2.4m depth=0.12m height=0.24m
+}
+steps=[ id=miter-left label="Miter Cut Left" enabled=true
+origin {
+  machine-id=circularSaw capability-id=crosscut
+}
+cut
+pose {
+  position=@-1.05,0,0.12 axis=^0,1,0 angle=0.5235987755982988rad
+}
+box width=0.02m depth=0.3m height=0.5m id=miter-right label="Miter Cut Right" enabled=true
+origin {
+  machine-id=circularSaw capability-id=crosscut
+}
+cut
+pose {
+  position=@1.05,0,0.12 axis=^0,1,0 angle=-0.5235987755982988rad
+}
+box width=0.02m depth=0.3m height=0.5m id=dowel-hole label="Dowel Hole" enabled=true
+origin {
+  machine-id=drillPress capability-id=bore
+}
+drill radius=0.015m depth=0.3m
+pose {
+  position=@0,0,0.12 axis=^1,0,0 angle=1.5707963267948966rad
+}
+id=dowel label=Dowel enabled=true
+origin {
+  machine-id=dowelJig capability-id=dowel
+}
+attach
+pose {
+  position=@0,0,0.12 axis=^1,0,0 angle=1.5707963267948966rad
+}
+cylinder radius=0.014m height=0.28m ]
+
+
+########## ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.process.process3d.dsl.semio (51 lines) ##########
+semio process.process3d.dsl v1
+resolved-up-to=2
+workshop {
+  machines=[ id=saw label="Generic Saw" icon-id=scissors capabilities=[ id=cut label=Cut icon-id=scissors parameters=[ id=kerf label=Kerf value=0.05m id=length label=Length value=0.5m id=depth label=Depth value=0.5m ]
+  rules {
+  }
+  blade-cut kerf=kerf length=length depth=depth ] id=drill label="Generic Drill" icon-id=circle-dot capabilities=[ id=drill label=Drill icon-id=circle-dot parameters=[ id=radius label=Radius value=0.05m id=depth label=Depth value=0.3m ]
+  rules {
+  }
+  bore-drill radius=radius depth=depth ] id=attacher label="Generic Attacher" icon-id=plus capabilities=[ id=attach label=Attach icon-id=plus parameters=[ id=radius label=Radius value=0.03m id=length label=Length value=0.2m ]
+  rules {
+  }
+  cylinder-attach radius=radius length=length ] id=pillarDrill label="Pillar Drill" icon-id=circle-dot catalog-id=metal capabilities=[ id=bore label=Bore icon-id=circle-dot parameters=[ id=bitRadius label="Bit Radius" value=0.008m id=strokeDepth label="Stroke Depth" value=0.08m ]
+  rules {
+    max quantity=height parameter=strokeDepth margin=0m
+  }
+  bore-drill radius=bitRadius depth=strokeDepth ] ]
+}
+stock {
+  id=plate label="Steel Plate"
+  pose {
+    position=@0,0,0.01 axis=^0,0,1 angle=0rad
+  }
+  box width=1m depth=0.6m height=0.02m
+}
+steps=[ id=hole-1 label="Hole 1" enabled=true
+origin {
+  machine-id=pillarDrill capability-id=bore
+}
+drill radius=0.03m depth=0.05m
+pose {
+  position=@-0.35,0,0.01 axis=^0,0,1 angle=0rad
+}
+id=hole-2 label="Hole 2" enabled=true
+origin {
+  machine-id=pillarDrill capability-id=bore
+}
+drill radius=0.03m depth=0.05m
+pose {
+  position=@0,0,0.01 axis=^0,0,1 angle=0rad
+}
+id=hole-3 label="Hole 3" enabled=true
+origin {
+  machine-id=pillarDrill capability-id=bore
+}
+drill radius=0.03m depth=0.05m
+pose {
+  position=@0.35,0,0.01 axis=^0,0,1 angle=0rad
+}
+]
+
+
+########## ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.process.process3d.drilled-plate-process3d.dsl.semio (50 lines) ##########
+semio process.process3d.dsl v1
+resolved-up-to=2
+workshop {
+  machines=[ id=saw label="Generic Saw" icon-id=scissors capabilities=[ id=cut label=Cut icon-id=scissors parameters=[ id=kerf label=Kerf value=0.05m id=length label=Length value=0.5m id=depth label=Depth value=0.5m ]
+  rules {
+  }
+  blade-cut kerf=kerf length=length depth=depth ] id=drill label="Generic Drill" icon-id=circle-dot capabilities=[ id=drill label=Drill icon-id=circle-dot parameters=[ id=radius label=Radius value=0.05m id=depth label=Depth value=0.3m ]
+  rules {
+  }
+  bore-drill radius=radius depth=depth ] id=attacher label="Generic Attacher" icon-id=plus capabilities=[ id=attach label=Attach icon-id=plus parameters=[ id=radius label=Radius value=0.03m id=length label=Length value=0.2m ]
+  rules {
+  }
+  cylinder-attach radius=radius length=length ] id=pillarDrill label="Pillar Drill" icon-id=circle-dot catalog-id=metal capabilities=[ id=bore label=Bore icon-id=circle-dot parameters=[ id=bitRadius label="Bit Radius" value=0.008m id=strokeDepth label="Stroke Depth" value=0.08m ]
+  rules {
+    max quantity=height parameter=strokeDepth margin=0m
+  }
+  bore-drill radius=bitRadius depth=strokeDepth ] ]
+}
+stock {
+  id=plate label="Steel Plate"
+  pose {
+    position=@0,0,0.01 axis=^0,0,1 angle=0rad
+  }
+  box width=1m depth=0.6m height=0.02m
+}
+steps=[ id=hole-1 label="Hole 1" enabled=true
+origin {
+  machine-id=pillarDrill capability-id=bore
+}
+drill radius=0.03m depth=0.05m
+pose {
+  position=@-0.35,0,0.01 axis=^0,0,1 angle=0rad
+}
+id=hole-2 label="Hole 2" enabled=true
+origin {
+  machine-id=pillarDrill capability-id=bore
+}
+drill radius=0.03m depth=0.05m
+pose {
+  position=@0,0,0.01 axis=^0,0,1 angle=0rad
+}
+id=hole-3 label="Hole 3" enabled=true
+origin {
+  machine-id=pillarDrill capability-id=bore
+}
+drill radius=0.03m depth=0.05m
+pose {
+  position=@0.35,0,0.01 axis=^0,0,1 angle=0rad
+}
+]
+
+########## ✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📚️examples/♻️reuse/🔧️ops/♻️reuse/🧬️component.space.shome.op.semio (3 lines) ##########
+semio space.shome.op v1
+edit reuse started="0" actor=example
+
+
+########## ✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.space.shome.dsl.semio (3 lines) ##########
+semio space.shome.dsl v1
+schema=s.home gen=3
+
+
+########## ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📚️examples/♻️reuse/🔧️ops/♻️reuse/🧬️component.gis.gismap.op.semio (3 lines) ##########
+semio gis.gismap.op v1
+edit reuse started="0" actor=example
+
+
+########## ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.gis.gismap.dsl.semio (910 lines) ##########
+semio gis.gismap.dsl v1
+positions [id:TEXT data:VAL] {
+  p_institut_de_botanique_ulg_liege {
+    icon="landmark" id="p_institut_de_botanique_ulg_liege" kind="receiver" label="Institut de Botanique…" lat=50.603 lon=5.5818 name="Institut de Botanique…" sourceUrl="https://opalis.eu/fr/projets/institut-de-botanique-ulg-liege"
+  }
+  bw_institut_botanique_ulg {
+    icon="box" id="bw_institut_botanique_ulg" kind="donor" label="Institut de Botanique…" lat=50.5783177 lon=5.5755821 name="Institut de Botanique…" sourceUrl="https://opalis.eu/fr/projets/institut-de-botanique-ulg-liege"
+  }
+  p_lycee_michel_lucius_conversion_luxembourg {
+    icon="landmark" id="p_lycee_michel_lucius_conversion_luxembourg" kind="receiver" label="Lycée Michel Lucius…" lat=49.6094 lon=6.1267 name="Lycée Michel Lucius…" sourceUrl="https://opalis.eu/fr/projets/lycee-michel-lucius"
+  }
+  bw_lycee_block_3000 {
+    icon="box" id="bw_lycee_block_3000" kind="donor" label="Lycée Lucius B3000" lat=49.6249025 lon=6.1136808 name="Lycée Lucius B3000" sourceUrl="https://opalis.eu/fr/projets/lycee-michel-lucius"
+  }
+  p_plattenpalast_berlin {
+    icon="landmark" id="p_plattenpalast_berlin" kind="receiver" label="Plattenpalast Berlin" lat=52.5390524 lon=13.4018775 name="Plattenpalast Berlin"
+  }
+  bw_unbekannte_wbs70_plattenbauten {
+    icon="box" id="bw_unbekannte_wbs70_plattenbauten" kind="donor" label="rückgebaute WBS70-Platte…" lat=52.5173885 lon=13.3951309 name="rückgebaute WBS70-Platte…"
+  }
+  bw_peter_behrens_halle_berlin {
+    icon="box" id="bw_peter_behrens_halle_berlin" kind="donor" label="Peter-Behrens-Halle…" lat=52.5419669 lon=13.3834015 name="Peter-Behrens-Halle…" sourceUrl="https://www.plattenvereinigung.de/project/orte/"
+  }
+  p_maison_vignette_auderghem {
+    icon="landmark" id="p_maison_vignette_auderghem" kind="receiver" label="Maison Vignette" lat=50.815 lon=4.4214 name="Maison Vignette" sourceUrl="https://guidebatimentdurable.brussels/construction-dune-maison-unifamiliale-paille-projet-vignette"
+  }
+  p_circular_pavilion_paris {
+    icon="landmark" id="p_circular_pavilion_paris" kind="receiver" label="Circular Pavilion Paris" lat=48.8565 lon=2.3522 name="Circular Pavilion Paris" sourceUrl="https://www.batiactu.com/edito/un-pavillon-circulaire-illustrer-reemploi-materiaux-42547.php"
+  }
+  p_house_of_fraser_318_oxford_street_tbc_london_reuse_chain {
+    icon="landmark" id="p_house_of_fraser_318_oxford_street_tbc_london_reuse_chain" kind="receiver" label="House of Fraser" lat=51.5142 lon=-0.1427 name="House of Fraser" sourceUrl="https://www.stiffandtrevillion.com/projects/tower-bridge-road"
+  }
+  bw_318_oxford_street_house_of_fraser {
+    icon="box" id="bw_318_oxford_street_house_of_fraser" kind="donor" label="318 Oxford Street" lat=51.5152626 lon=-0.1463435 name="318 Oxford Street" sourceUrl="https://www.stiffandtrevillion.com/projects/tower-bridge-road"
+  }
+  p_juch_areal_recyclingzentrum_zuerich {
+    icon="landmark" id="p_juch_areal_recyclingzentrum_zuerich" kind="receiver" label="Juch-Areal Recyclingzent…" lat=47.393 lon=8.4885 name="Juch-Areal Recyclingzent…" sourceUrl="https://www.stadt-zuerich.ch/de/aktuell/medienmitteilungen/2025/07/neubau-recyclingzentrum-juch-areal.html"
+  }
+  bw_hagenholz_recyclinghalle {
+    icon="box" id="bw_hagenholz_recyclinghalle" kind="donor" label="Ehemalige Recyclinghalle…" lat=47.415759 lon=8.5636654 name="Ehemalige Recyclinghalle…"
+  }
+  p_elys_kultur_gewerbehaus_basel {
+    icon="landmark" id="p_elys_kultur_gewerbehaus_basel" kind="receiver" label="ELYS Kultur- und…" lat=47.5489 lon=7.6012 name="ELYS Kultur- und…"
+  }
+  p_mehrow_pilot_house {
+    icon="landmark" id="p_mehrow_pilot_house" kind="receiver" label="Mehrow Pilot House" lat=52.5724 lon=13.6177 name="Mehrow Pilot House" sourceUrl="https://www.tagesspiegel.de/potsdam/brandenburg/plattenbau-wird-familienhaus-8009110.html"
+  }
+  bw_marzahn_wbs70_eleven_storey_donor {
+    icon="box" id="bw_marzahn_wbs70_eleven_storey_donor" kind="donor" label="Abgerissener Marzahner…" lat=52.5511184 lon=13.676873 name="Abgerissener Marzahner…"
+  }
+  p_recrete_footbridge_reused_concrete_blocks {
+    icon="landmark" id="p_recrete_footbridge_reused_concrete_blocks" kind="receiver" label="Re:Crete footbridge" lat=46.2264 lon=7.3074 name="Re:Crete footbridge" sourceUrl="https://www.construction21.org/articles/h/recrete-footbridge.html"
+  }
+  p_lokomotion_technology_centre_mini_pilot_tampere {
+    icon="landmark" id="p_lokomotion_technology_centre_mini_pilot_tampere" kind="receiver" label="Lokomotion Technology…" lat=61.4588 lon=23.6324 name="Lokomotion Technology…" sourceUrl="https://www.lokomotion.fi/"
+  }
+  bw_tampere_1980s_office_donor {
+    icon="box" id="bw_tampere_1980s_office_donor" kind="donor" label="1980er Bürogebäude im…" lat=61.4977929 lon=23.7616372 name="1980er Bürogebäude im…"
+  }
+  p_europa_building_brussels {
+    icon="landmark" id="p_europa_building_brussels" kind="receiver" label="Europa Building Brussels" lat=50.8436 lon=4.3819 name="Europa Building Brussels"
+  }
+  p_melkinlaituri_primary_school_daycare_centre_helsinki {
+    icon="landmark" id="p_melkinlaituri_primary_school_daycare_centre_helsinki" kind="receiver" label="Melkinlaituri Primary…" lat=60.1559 lon=24.9195 name="Melkinlaituri Primary…" sourceUrl="https://verstasarkkitehdit.fi/projects/melkinlaituri-school-and-daycare-centre/"
+  }
+  bw_suutarila_community_centre_donor {
+    icon="box" id="bw_suutarila_community_centre_donor" kind="donor" label="Suutarila community…" lat=60.283019 lon=25.0064817 name="Suutarila community…"
+  }
+  p_boulder_fire_station_3 {
+    icon="landmark" id="p_boulder_fire_station_3" kind="receiver" label="Boulder FS-3" lat=40.0149856 lon=-105.270545 name="Boulder FS-3"
+  }
+  bw_boulder_community_hospital {
+    icon="box" id="bw_boulder_community_hospital" kind="donor" label="Boulder Community…" lat=40.0149856 lon=-105.270545 name="Boulder Community…"
+  }
+  p_biopartner_5_leiden_oegstgeest {
+    icon="landmark" id="p_biopartner_5_leiden_oegstgeest" kind="receiver" label="BioPartner 5" lat=52.1710283 lon=4.4502649 name="BioPartner 5"
+  }
+  bw_gorlaeus_hochhaus {
+    icon="box" id="bw_gorlaeus_hochhaus" kind="donor" label="Gorlaeus Hochhaus" lat=52.1677621 lon=4.4609833 name="Gorlaeus Hochhaus" sourceUrl="https://www.student.universiteitleiden.nl/en/locations/gorlaeus-building"
+  }
+  p_recyclinghaus_hannover {
+    icon="landmark" id="p_recyclinghaus_hannover" kind="receiver" label="Recyclinghaus Hannover" lat=52.3589 lon=9.8342 name="Recyclinghaus Hannover" sourceUrl="https://www.gundlach-bau.de/projekte/recyclinghaus-hannover"
+  }
+  p_kindergarten_moeoeslistrasse_manegg_zuerich {
+    icon="landmark" id="p_kindergarten_moeoeslistrasse_manegg_zuerich" kind="receiver" label="Kindergarten Mööslistras…" lat=47.3406 lon=8.5154 name="Kindergarten Mööslistras…" sourceUrl="https://www.stadt-zuerich.ch/"
+  }
+  p_kamikatsu_zero_waste_center_hotel_why {
+    icon="landmark" id="p_kamikatsu_zero_waste_center_hotel_why" kind="receiver" label="Kamikatsu Zero Waste…" lat=33.896 lon=134.2885 name="Kamikatsu Zero Waste…" sourceUrl="https://why-kamikatsu.jp/"
+  }
+  bw_kamikatsu_local_houses {
+    icon="box" id="bw_kamikatsu_local_houses" kind="donor" label="Lokale Häuser und…" lat=33.8889228 lon=134.4018864 name="Lokale Häuser und…" sourceUrl="https://why-kamikatsu.jp/"
+  }
+  bw_kamikatsu_old_town_hall {
+    icon="box" id="bw_kamikatsu_old_town_hall" kind="donor" label="Altes Rathaus Kamikatsu" lat=33.8889228 lon=134.4018864 name="Altes Rathaus Kamikatsu" sourceUrl="https://why-kamikatsu.jp/"
+  }
+  p_trae_high_rise_aarhus {
+    icon="landmark" id="p_trae_high_rise_aarhus" kind="receiver" label="TRÆ High-Rise" lat=56.1539 lon=10.2048 name="TRÆ High-Rise" sourceUrl="https://www.lendager.com/projects/trae"
+  }
+  bw_herlev_dach_industrie_und_farmdaecher_als_aluminium_donor {
+    icon="box" id="bw_herlev_dach_industrie_und_farmdaecher_als_aluminium_donor" kind="donor" label="Herlev Dach" lat=55.7337528 lon=12.4294486 name="Herlev Dach"
+  }
+  p_woongroep_boschgaard_den_bosch {
+    icon="landmark" id="p_woongroep_boschgaard_den_bosch" kind="receiver" label="Woongroep Boschgaard…" lat=51.6947 lon=5.3082 name="Woongroep Boschgaard…" sourceUrl="https://www.boschgaard.nl/"
+  }
+  bw_stadskantoor_roosendaal {
+    icon="box" id="bw_stadskantoor_roosendaal" kind="donor" label="Stadskantoor Roosendaal" lat=51.5331484 lon=4.4561276 name="Stadskantoor Roosendaal"
+  }
+  bw_elys_former_coop_distribution_center {
+    icon="box" id="bw_elys_former_coop_distribution_center" kind="donor" label="Ehemaliges Coop-Verteilz…" lat=47.573746 lon=7.5734396 name="Ehemaliges Coop-Verteilz…"
+  }
+  bw_ehemaliges_haus_der_jugend_hannover {
+    icon="box" id="bw_ehemaliges_haus_der_jugend_hannover" kind="donor" label="ehemaliges Haus der…" lat=52.3744779 lon=9.7385532 name="ehemaliges Haus der…"
+  }
+  p_jeugdkliniek_ithaka_emergis_kloetinge {
+    icon="landmark" id="p_jeugdkliniek_ithaka_emergis_kloetinge" kind="receiver" label="Jeugdkliniek Ithaka" lat=51.4479 lon=3.6645 name="Jeugdkliniek Ithaka" sourceUrl="https://www.emergis.nl/"
+  }
+  bw_rws_districtskantoor_terneuzen {
+    icon="box" id="bw_rws_districtskantoor_terneuzen" kind="donor" label="Ehemaliges Rijkswatersta…" lat=51.298843 lon=3.8422044 name="Ehemaliges Rijkswatersta…"
+  }
+  p_grande_halle_de_colombelles {
+    icon="landmark" id="p_grande_halle_de_colombelles" kind="receiver" label="Grande Halle de Colombel…" lat=49.1916221 lon=-0.3061681 name="Grande Halle de Colombel…"
+  }
+  bw_colombelles_regional_donor_sources {
+    icon="box" id="bw_colombelles_regional_donor_sources" kind="donor" label="Regionale Rückbau- und…" lat=49.1916221 lon=-0.3061681 name="Regionale Rückbau- und…" sourceUrl="https://opalis.eu/fr/projets/grande-halle-de-colombelles"
+  }
+  p_grubenstrasse_29_werkhof_29_zuerich {
+    icon="landmark" id="p_grubenstrasse_29_werkhof_29_zuerich" kind="receiver" label="Grubenstrasse 29" lat=47.3612682 lon=8.5142622 name="Grubenstrasse 29"
+  }
+  p_chiro_d_itterbeek_dilbeek {
+    icon="landmark" id="p_chiro_d_itterbeek_dilbeek" kind="receiver" label="Chiro d’Itterbeek" lat=50.8318626 lon=4.234055 name="Chiro d’Itterbeek"
+  }
+  p_resilience_la_ferme_des_possibles_stains {
+    icon="landmark" id="p_resilience_la_ferme_des_possibles_stains" kind="receiver" label="Résilience" lat=48.9500637 lon=2.3701218 name="Résilience"
+  }
+  p_bluecity_offices_rotterdam {
+    icon="landmark" id="p_bluecity_offices_rotterdam" kind="receiver" label="BlueCity Offices…" lat=51.9436 lon=4.5112 name="BlueCity Offices…" sourceUrl="https://www.bluecity.nl/"
+  }
+  p_villa_welpeloo_enschede {
+    icon="landmark" id="p_villa_welpeloo_enschede" kind="receiver" label="Villa Welpeloo Enschede" lat=52.2283 lon=6.8814 name="Villa Welpeloo Enschede" sourceUrl="https://www.superuse-studios.com/"
+  }
+  p_roots_in_the_sky_blackfriars_crown_court {
+    icon="landmark" id="p_roots_in_the_sky_blackfriars_crown_court" kind="receiver" label="Roots in the Sky" lat=51.5025 lon=-0.0999 name="Roots in the Sky" sourceUrl="https://en.wikipedia.org/wiki/Blackfriars_Crown_Court"
+  }
+  bw_blackfriars_crown_court_bestand {
+    icon="box" id="bw_blackfriars_crown_court_bestand" kind="donor" label="Blackfriars Crown Court…" lat=51.5024846 lon=-0.0999825 name="Blackfriars Crown Court…" sourceUrl="https://en.wikipedia.org/wiki/Blackfriars_Crown_Court"
+  }
+  p_svanen_kindergarten_gladsaxe {
+    icon="landmark" id="p_svanen_kindergarten_gladsaxe" kind="receiver" label="Svanen" lat=55.7346 lon=12.4033 name="Svanen" sourceUrl="https://www.gladsaxe.dk/"
+  }
+  bw_ehemalige_gladsaxe_school {
+    icon="box" id="bw_ehemalige_gladsaxe_school" kind="donor" label="Ehemalige Gladsaxe School" lat=55.74061 lon=12.481879 name="Ehemalige Gladsaxe School"
+  }
+  bw_schellinghalle_ruemlang {
+    icon="box" id="bw_schellinghalle_ruemlang" kind="donor" label="Schellinghalle Rümlang" lat=47.4507163 lon=8.5299122 name="Schellinghalle Rümlang"
+  }
+  p_brighton_waste_house_brighton {
+    icon="landmark" id="p_brighton_waste_house_brighton" kind="receiver" label="Brighton Waste House" lat=50.8247 lon=-0.1366 name="Brighton Waste House" sourceUrl="https://www.construction21.org/articles/h/the-brighton-waste-house.html"
+  }
+  bw_bluecity_tropicana_rotterdam {
+    icon="box" id="bw_bluecity_tropicana_rotterdam" kind="donor" label="Tropicana Rotterdam" lat=51.9196447 lon=4.5007164 name="Tropicana Rotterdam" sourceUrl="https://www.bluecity.nl/"
+
+########## ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📚️examples/♻️reuse/🔧️ops/♻️reuse/🧬️component.gis.gisterrain.op.semio (3 lines) ##########
+semio gis.gisterrain.op v1
+edit reuse started="0" actor=example
+
+
+########## ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.gis.gisterrain.dsl.semio (5 lines) ##########
+semio gis.gisterrain.dsl v1
+gisterrain exaggeration=1.5 imported-features-json=""
+origin lon=5.5818 lat=50.603
+position id=p_institut_de_botanique_ulg_liege lon=5.5818 lat=50.603 label="Institut de Botanique" icon=landmark
+position id=bw_institut_botanique_ulg lon=5.5755821 lat=50.5783177 label="Institut de Botanique (donor)" icon=box
+
+########## ✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/📚️examples/♻️reuse/🔧️ops/♻️reuse/🧬️component.imperative.imperative.op.semio (3 lines) ##########
+semio imperative.imperative.op v1
+edit reuse started="0" actor=example
+
+
+########## ✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.imperative.imperative.dsl.semio (15 lines) ##########
+semio imperative.imperative.dsl v1
+schema="imperative.document"
+steps {
+  step "step-1" kind=state.set params= {
+    key=text="counter" value=decimal=0
+  }
+  bodies= {
+  }
+  step "step-2" kind=log.print params= {
+    message=text="hello imperative"
+  }
+  bodies= {
+  }
+}
+
+
+########## ✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/📚️examples/♻️reuse/🔧️ops/♻️reuse/🧬️component.sourcing.curate.op.semio (3 lines) ##########
+semio sourcing.curate.op v1
+edit reuse started="0" actor=example
+
+
+########## ✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.sourcing.curate.empty-curation-curate.dsl.semio (5 lines) ##########
+semio sourcing.curate.dsl v1
+stock=[ ]
+curated [object-id:REF count:UINT] {
+}
+
+
+########## ✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.sourcing.curate.dsl.semio (17 lines) ##########
+semio sourcing.curate.dsl v1
+stock=[ id=beam-glulam-gl24h name="Glulam GL24h 200×400" module-id=beams availability=24 typology-path=[ beams solid-timber glulam ]
+box width=0.2m height=0.4m depth=6m id=beam-kvh-c24 name="KVH C24 100×200" module-id=beams availability=60 typology-path=[ beams solid-timber kvh ]
+box width=0.1m height=0.2m depth=4m id=beam-steel-ipe200 name="Steel IPE 200" module-id=beams availability=12 typology-path=[ beams steel ipe ]
+box width=0.1m height=0.2m depth=5m id=beam-steel-hea160 name="Steel HEA 160" module-id=beams availability=8 typology-path=[ beams steel hea ]
+box width=0.16m height=0.152m depth=5m id=window-casement-100x120 name="Casement Window 100×120" module-id=windows availability=18 typology-path=[ windows casement ]
+frame width=1m height=1.2m depth=0.08m profile=0.08m id=window-fixed-150x150 name="Fixed Window 150×150" module-id=windows availability=10 typology-path=[ windows fixed ]
+frame width=1.5m height=1.5m depth=0.06m profile=0.06m id=window-tilt-turn-120x140 name="Tilt & Turn Window 120×140" module-id=windows availability=14 typology-path=[ windows tilt-turn ]
+frame width=1.2m height=1.4m depth=0.09m profile=0.09m id=slab-concrete-240 name="Concrete Slab 240mm" module-id=slabs availability=30 typology-path=[ slabs concrete ]
+slab width=2.4m depth=1.2m thickness=0.24m id=slab-clt-160 name="CLT Slab 160mm" module-id=slabs availability=20 typology-path=[ slabs clt ]
+slab width=2.95m depth=1.25m thickness=0.16m id=slab-hollow-core-265 name="Hollow Core Slab 265mm" module-id=slabs availability=16 typology-path=[ slabs hollow-core ]
+slab width=1.2m depth=6m thickness=0.265m ]
+curated [object-id:REF count:UINT] {
+  beam-glulam-gl24h 3
+  window-casement-100x120 2
+}
+
+
+########## ✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.sourcing.curate.demo-stock-curate.dsl.semio (16 lines) ##########
+semio sourcing.curate.dsl v1
+stock=[ id=beam-glulam-gl24h name="Glulam GL24h 200×400" module-id=beams availability=24 typology-path=[ beams solid-timber glulam ]
+box width=0.2m height=0.4m depth=6m id=beam-kvh-c24 name="KVH C24 100×200" module-id=beams availability=60 typology-path=[ beams solid-timber kvh ]
+box width=0.1m height=0.2m depth=4m id=beam-steel-ipe200 name="Steel IPE 200" module-id=beams availability=12 typology-path=[ beams steel ipe ]
+box width=0.1m height=0.2m depth=5m id=beam-steel-hea160 name="Steel HEA 160" module-id=beams availability=8 typology-path=[ beams steel hea ]
+box width=0.16m height=0.152m depth=5m id=window-casement-100x120 name="Casement Window 100×120" module-id=windows availability=18 typology-path=[ windows casement ]
+frame width=1m height=1.2m depth=0.08m profile=0.08m id=window-fixed-150x150 name="Fixed Window 150×150" module-id=windows availability=10 typology-path=[ windows fixed ]
+frame width=1.5m height=1.5m depth=0.06m profile=0.06m id=window-tilt-turn-120x140 name="Tilt & Turn Window 120×140" module-id=windows availability=14 typology-path=[ windows tilt-turn ]
+frame width=1.2m height=1.4m depth=0.09m profile=0.09m id=slab-concrete-240 name="Concrete Slab 240mm" module-id=slabs availability=30 typology-path=[ slabs concrete ]
+slab width=2.4m depth=1.2m thickness=0.24m id=slab-clt-160 name="CLT Slab 160mm" module-id=slabs availability=20 typology-path=[ slabs clt ]
+slab width=2.95m depth=1.25m thickness=0.16m id=slab-hollow-core-265 name="Hollow Core Slab 265mm" module-id=slabs availability=16 typology-path=[ slabs hollow-core ]
+slab width=1.2m depth=6m thickness=0.265m ]
+curated [object-id:REF count:UINT] {
+  beam-glulam-gl24h 3
+  window-casement-100x120 2
+}
+
+########## ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📚️examples/♻️reuse/🔧️ops/♻️reuse/🧬️component.forms.forms.op.semio (3 lines) ##########
+semio forms.forms.op v1
+edit reuse started="0" actor=example
+
+
+########## ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.forms.forms.building-component-forms.dsl.semio (47 lines) ##########
+semio forms.forms.dsl v1
+schema=forms.form id=building-component version="1" title="Building Component" steps=[ id=identity title=Identity description="Basic component metadata and material selection." blocks=[ id=name label="Component Name" kind=text required=true placeholder="Column A" default="Column A"
+condition {
+}
+id=description label=Description kind=longText placeholder="Describe the component role" default="Primary structural column"
+condition {
+}
+id=material label=Material kind=single required=true default="concrete" options=[ value=concrete label=Concrete value=steel label=Steel value=timber label=Timber ]
+condition {
+}
+id=tags label=Tags kind=multi default=[ "structural" ] options=[ value=structural label=Structural value=facade label=Facade value=prefab label=Prefab ]
+condition {
+}
+id=prefab label=Prefab kind=boolean default=true
+condition {
+}
+id=install-date label="Install Date" kind=date default="2026-06-30"
+condition {
+}
+id=accent-color label="Accent Color" kind=color default="#336699"
+condition {
+}
+] id=geometry title=Geometry description="Parametric geometry and dimensional controls." blocks=[ id=info-note label=Note kind=note text="Adjust the procedural column parameters below. Values persist in the form spec and seed Try mode."
+condition {
+}
+id=count label="Instance Count" kind=number min=1 max=20 step=1 default=4
+condition {
+}
+id=height-factor label="Height Factor" kind=slider min=0 max=10 step=0.5 unit=m default=6
+condition {
+}
+id=offset label=Offset kind=vector step=0.1 schema=vec3 fields=[ key=x label=X value=0 key=y label=Y value=0 key=z label=Z value=0 ]
+condition {
+}
+id=geometry label="Hexagonal Column" kind=buildingComponent description="Parametric column geometry from procedural flow." required=true fixture-slug=hexagonal-mushroom-column params={
+  height=6 radius=0.5 sides=6
+}
+condition {
+}
+id=reference-image label=Reference kind=image src=""
+condition {
+}
+id=spec-file label="Spec Sheet" kind=file accept=".pdf,.dwg"
+condition {
+}
+] ]
+
+
+########## ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.forms.forms.onboarding-forms.dsl.semio (59 lines) ##########
+semio forms.forms.dsl v1
+schema=forms.form id=onboarding version="1" title="Product Onboarding" steps=[ id=profile title=Profile description="Tell us about yourself." blocks=[ id=full-name label="Full name" kind=text required=true default="Alex Example"
+condition {
+}
+id=bio label=Bio kind=longText placeholder="Short introduction"
+condition {
+}
+id=age label=Age kind=number min=13 max=120 default=28
+condition {
+}
+id=avatar label=Avatar kind=image src=""
+condition {
+}
+id=resume label=Resume kind=file accept=".pdf,.doc,.docx"
+condition {
+}
+] id=preferences title=Preferences description="Customize your experience." blocks=[ id=theme-color label="Accent color" kind=color default="#336699"
+condition {
+}
+id=start-date label="Start date" kind=date default="2026-07-01"
+condition {
+}
+id=notifications label="Enable notifications" kind=boolean default=true
+condition {
+}
+id=volume label="Notification volume" kind=slider min=0 max=100 step=5 unit="%" default=60
+condition {
+}
+id=plan label=Plan kind=single required=true default="pro" options=[ value=free label=Free value=pro label=Pro value=team label=Team ]
+condition {
+}
+id=features label=Features kind=multi default=[ "analytics" ] options=[ value=analytics label=Analytics value=automation label=Automation value=collab label=Collaboration ]
+condition {
+}
+id=offset label="Workspace offset" kind=vector step=0.5 schema=vec3 fields=[ key=x label=X value=0 key=y label=Y value=0 key=z label=Z value=0 ]
+condition {
+}
+id=welcome-note label=Welcome kind=note text="Thanks for trying every question kind in one fixture."
+condition {
+}
+] id=advanced title=Advanced blocks=[ id=show-team-size label="Specify team size" kind=boolean default=false
+condition {
+}
+id=team-size label="Team size" kind=slider min=1 max=50 step=1 default=5
+condition {
+  truthy
+  expr {
+    var name=show-team-size
+  }
+}
+id=team-role label="Primary role" kind=single options=[ value=design label=Design value=engineering label=Engineering value=product label=Product ]
+condition {
+  truthy
+  expr {
+    var name=show-team-size
+  }
+}
+] ]
+
+
+########## ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.forms.forms.dsl.semio (12 lines) ##########
+semio forms.forms.dsl v1
+schema=forms.form id=default version="1" title=Contact steps=[ id=contact title=Contact blocks=[ id=name label=Name kind=text required=true placeholder="Your name"
+condition {
+}
+id=email label=Email kind=text required=true placeholder="you@example.com"
+condition {
+}
+id=message label=Message kind=longText placeholder="How can we help?"
+condition {
+}
+] ]
+
+
+########## ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📚️examples/♻️reuse/🔧️ops/♻️reuse/🧬️component.architect.program.op.semio (3 lines) ##########
+semio architect.program.op v1
+edit reuse started="0" actor=example
+
+
+########## ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📚️examples/♻️reuse/🔧️ops/♻️reuse/🧬️component.architect.architect.op.semio (3 lines) ##########
+semio architect.architect.op v1
+edit reuse started="0" actor=example
+
+
+########## ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.architect.architect.dsl.semio (139 lines) ##########
+semio architect.architect.dsl v1
+schema=architect.program meta=schema=architect.program document-id=document-3 title="Sample Clinic" industry-sector=healthcare project-type="" locale=en revision="0" purpose=text="" terminology=[ ] classification=[ ] author-ids=[ ] timestamps=created="1970-01-01T00:00:00Z" updated="1970-01-01T00:00:00Z" project=id=project-1 code=CLN-001 client-name="Sample Health" owner-organization="" funding-model="" brief-summary=text="" problem-statement=text="" vision=text="" mission=text="" objectives=[ ] success-criteria=[ ] project-priorities=[ ] completion-criteria=[ ] decision-criteria=[ ] scope-inclusions=[ ] scope-exclusions=[ ] assumptions=[ ] constraints-summary=[ ] dependencies=[ ] deliverables=[ ] phases=[ ] geographic-context=text="" development-context=text="" operational-context=text="" regulatory-context=[ ] ownership=consultant-ids=[ ] participant-ids=[ ] timestamps=created="1970-01-01T00:00:00Z" updated="1970-01-01T00:00:00Z" governance=id=governance-2 framework="" roles=[ ] responsibilities=[ ] approval-matrix=[ ] escalation-paths=[ ] meeting-cadence=[ ] decision-rights=[ ] change-control-process=[ ] quality-policy=text="" compliance-obligations=[ ] document-control=[ ] stakeholder-engagement-plan=[ ] ethics-policy=[ ] data-governance=[ ] review-hierarchy=[ ] accountability-rules=[ ] exception-management=[ ] governance-performance=[ ]
+stakeholders [header:REC role:TEXT organization:TEXT department:TEXT contact-email:TEXT contact-phone:TEXT influence:ENUM interest:ENUM engagement:ENUM expectations:LIST concerns:LIST requirement-ids:LIST decision-authority:BOOL communication-preferences:LIST reporting-frequency:TEXT involvement-phases:LIST availability:TEXT representative-of:TEXT delegated-to:TEXT relationship-to-client:TEXT power-interest-notes:LIST stakeholder-type:TEXT influence-strategy:TEXT communication-channels:LIST success-metrics:LIST] {
+  {id=stakeholder-6 name="Facilities Director" status=draft priority=preferred ownership=consultant-ids=[ ] participant-ids=[ ] tags=[ ] notes=[ ] timestamps=created="1970-01-01T00:00:00Z" updated="1970-01-01T00:00:00Z"} Owner "Sample Health" _ _ _ high high leading [ "On-time delivery" ] [ ] [ ] true [ ] _ [ ] _ _ _ _ [ ] Internal _ [ ] [ ]
+}
+users [header:REC category:ENUM demographic:TEXT age-range:TEXT abilities:LIST disabilities:LIST occupation:TEXT role-title:TEXT department:TEXT mobility-profile:LIST sensory-profile:LIST cognitive-profile:LIST behavioral-patterns:LIST usage-frequency:TEXT usage-duration:TEXT peak-usage-times:LIST technology-proficiency:TEXT preferences:LIST pain-points:LIST goals:LIST activity-ids:LIST research-method:TEXT persona-archetype:TEXT validated:BOOL stakeholder-ids:LIST] {
+}
+activities [header:REC code:TEXT category:TEXT frequency:TEXT duration:TEXT intensity:TEXT participants:REC equipment-ids:LIST space-requirements:LIST environmental-needs:LIST privacy-needs:LIST accessibility-needs:LIST adjacent-activities:LIST sequencing:LIST peak-periods:LIST workflow-steps:LIST inputs:LIST outputs:LIST user-profile-ids:LIST function-ids:LIST performance-indicators:LIST activity-type:TEXT location-context:TEXT temporal-pattern:TEXT supervision-level:TEXT] {
+}
+functions [header:REC code:TEXT kind:ENUM purpose:REC criticality:ENUM performance-targets:LIST service-level:TEXT operating-hours:TEXT staffing:REC equipment-ids:LIST resource-ids:LIST activity-ids:LIST element-ids:LIST dependencies:LIST interfaces:LIST constraints:LIST quality-criteria:LIST regulatory-refs:LIST future-changes:LIST owner-stakeholder-id:TEXT success-metrics:LIST hierarchy-parent-id:TEXT conflict-ids:LIST] {
+}
+elements [header:REC code:TEXT kind:ENUM parent-id:TEXT level:TEXT area:REC volume:REC height:REC occupancy:REC function-ids:LIST activity-ids:LIST user-profile-ids:LIST adjacency-ids:LIST quantity-ids:LIST requirement-ids:LIST location-hint:TEXT orientation:TEXT daylight-requirement:TEXT acoustic-class:TEXT security-zone:TEXT flexibility-notes:LIST growth-allocation:TEXT circulation-role:TEXT visibility-level:TEXT adjacency-preferences:LIST environmental-zone:TEXT] {
+  {id=element-4 name=Reception status=draft priority=preferred ownership=consultant-ids=[ ] participant-ids=[ ] tags=[ ] notes=[ ] timestamps=created="1970-01-01T00:00:00Z" updated="1970-01-01T00:00:00Z"} REC room _ L1 {target=25 unit=m2} {unit=""} {unit=""} {target=4 unit=persons} [ ] [ ] [ ] [ ] [ ] [ ] _ _ _ _ _ [ ] _ _ _ [ ] _
+  {id=element-5 name=Waiting status=draft priority=preferred ownership=consultant-ids=[ ] participant-ids=[ ] tags=[ ] notes=[ ] timestamps=created="1970-01-01T00:00:00Z" updated="1970-01-01T00:00:00Z"} WAI room _ L1 {target=40 unit=m2} {unit=""} {unit=""} {target=12 unit=persons} [ ] [ ] [ ] [ ] [ ] [ ] _ _ _ _ _ [ ] _ _ _ [ ] _
+}
+quantities [header:REC target-element-id:TEXT metric:TEXT quantity:REC basis:TEXT calculation-method:TEXT source:TEXT benchmark-ref:TEXT tolerance-percent:QTY peak-factor:NUM growth-factor:NUM unit-cost:NUM currency:TEXT verification-method:TEXT related-requirement-ids:LIST assumptions:LIST constraints:LIST schedule-phase:TEXT responsible-party:TEXT last-verified:TEXT variance-notes:LIST] {
+}
+relationships [header:REC source-id:TEXT target-id:TEXT kind:ENUM strength:NUM directional:BOOL rationale:REC constraints:LIST conditions:LIST relationship-priority:ENUM valid-from:TEXT valid-until:TEXT evidence:LIST conflict-ids:LIST trace-links:LIST bidirectional:BOOL distance-constraint-m:QTY capacity-constraint:TEXT regulatory-basis:LIST review-cycle:TEXT owner-id:TEXT proximity-requirement:REC compatibility-requirement:REC incompatibility-requirement:REC separation-requirements:LIST] {
+}
+adjacencies [header:REC element-a-id:TEXT element-b-id:TEXT kind:ENUM connection:ENUM separations:LIST weight:NUM rationale:REC distance-max-m:QTY distance-min-m:QTY level-constraint:TEXT access-path:TEXT shared-wall:BOOL shared-entry:BOOL traffic-isolation:BOOL circulation-overlap:BOOL conflict-ids:LIST normalized:BOOL verification-status:ENUM source-relationship-id:TEXT internal-external-access:TEXT] {
+  {id=adjacency-7 name="Reception ↔ Waiting" status=draft priority=preferred ownership=consultant-ids=[ ] participant-ids=[ ] tags=[ ] notes=[ ] timestamps=created="1970-01-01T00:00:00Z" updated="1970-01-01T00:00:00Z"} element-4 element-5 required direct [ ] 1 _ _ _ _ _ true false false true [ ] true pending _ _
+}
+processes [header:REC code:TEXT category:TEXT trigger:TEXT inputs:LIST outputs:LIST steps:LIST actors:LIST equipment-ids:LIST element-ids:LIST duration:TEXT frequency:TEXT critical-path:BOOL bottlenecks:LIST dependencies:LIST kpis:LIST automation-level:TEXT failure-modes:LIST improvement-opportunities:LIST regulatory-refs:LIST owner-id:TEXT workflow-type:TEXT handoff-points:LIST quality-gates:LIST] {
+}
+flows [header:REC from-element-id:TEXT to-element-id:TEXT kind:ENUM flow-type:TEXT direction:ENUM volume:REC peak-rate:NUM clear-width-m:QTY clear-height-m:QTY separation-requirements:LIST access-level:ENUM time-windows:LIST equipment-clearance:TEXT signage-required:BOOL escort-required:BOOL emergency-route:BOOL barrier-free:BOOL monitoring-required:BOOL process-id:TEXT conflict-ids:LIST verification-method:TEXT] {
+}
+access-rules [header:REC subject-ids:LIST resource-ids:LIST access-level:ENUM access-mode:ENUM authentication:LIST authorization:LIST time-restrictions:LIST escort-policy:TEXT visitor-policy:TEXT emergency-override:BOOL audit-required:BOOL badge-required:BOOL biometric-required:BOOL zone-ids:LIST exceptions:LIST regulatory-basis:LIST enforcement-method:TEXT revocation-policy:TEXT training-required:BOOL owner-id:TEXT] {
+}
+operations [header:REC operation:TEXT service-level:TEXT operating-hours:TEXT staffing:REC maintenance-interval:TEXT cleaning-regime:TEXT turnaround-time:TEXT redundancy:TEXT uptime-target:NUM response-time:TEXT equipment-ids:LIST element-ids:LIST process-ids:LIST utilities:LIST waste-streams:LIST contingency-plan:LIST training-requirements:LIST sop-references:LIST kpi-targets:LIST owner-id:TEXT service-category:TEXT shift-pattern:TEXT sla-target:TEXT escalation-contact-id:TEXT] {
+}
+equipment [header:REC code:TEXT category:TEXT manufacturer:TEXT model:TEXT quantity:REC dimensions:TEXT weight-kg:QTY power-kw:QTY utility-connections:LIST ventilation:TEXT noise-level-db:NUM clearance:TEXT mounting:TEXT element-ids:LIST activity-ids:LIST maintenance-access:LIST lifecycle-years:UINT replacement-cost:NUM standards:LIST supplier:TEXT activity-link-ids:LIST installation-requirements:LIST commissioning-notes:LIST spare-parts:LIST] {
+}
+resources [header:REC code:TEXT category:TEXT resource-type:TEXT quantity:REC mobility:TEXT sharing-model:TEXT allocation:TEXT element-ids:LIST activity-ids:LIST user-profile-ids:LIST storage-requirement-id:TEXT durability:TEXT cleaning-requirements:LIST replacement-cycle:TEXT cost-per-unit:NUM supplier:TEXT standards:LIST ergonomic-notes:LIST customization:LIST disposal-notes:LIST furniture-class:TEXT ergonomics-rating:TEXT sharing-ratio:NUM] {
+}
+storage [header:REC stored-item:TEXT storage-class:ENUM quantity:REC volume-m3:QTY weight-kg:QTY temperature-range:TEXT humidity-range:TEXT security-level:ENUM hazard-class:TEXT retention-period:TEXT access-frequency:TEXT element-ids:LIST equipment-ids:LIST handling-equipment:LIST fire-protection:LIST ventilation:TEXT organization-system:TEXT growth-allowance:NUM regulatory-refs:LIST owner-id:TEXT] {
+}
+environmental [header:REC parameter-kind:ENUM parameter:TEXT target-value:NUM unit:TEXT min-value:NUM max-value:NUM comfort-band:TEXT measurement-method:TEXT monitoring-frequency:TEXT element-ids:LIST occupancy-basis:TEXT seasonal-variation:LIST energy-implications:LIST standards:LIST certification-targets:LIST outdoor-conditions:LIST ventilation-strategy:TEXT daylight-target:TEXT acoustic-target:TEXT iaq-target:TEXT verification-plan:TEXT] {
+}
+human-factors [header:REC aspect:ENUM factor:TEXT user-profile-ids:LIST activity-ids:LIST ergonomic-criteria:LIST cognitive-load:TEXT visual-demands:LIST auditory-demands:LIST posture-requirements:LIST reach-envelope:TEXT lighting-for-tasks:LIST thermal-comfort:LIST privacy-needs:LIST social-interaction:LIST stress-factors:LIST mitigation-measures:LIST training-needs:LIST standards:LIST research-basis:LIST element-ids:LIST verification-method:TEXT] {
+}
+accessibility [header:REC standard:TEXT level:TEXT user-profile-ids:LIST element-ids:LIST route-ids:LIST clear-width-m:QTY clear-height-m:QTY turning-circle-m:QTY ramp-slope:NUM lift-required:BOOL tactile-guidance:BOOL hearing-loop:BOOL visual-contrast:BOOL signage-requirements:LIST controls-height:TEXT emergency-evacuation:LIST service-animal-policy:TEXT companion-seating:BOOL verification-plan:TEXT exceptions:LIST wcag-conformance:TEXT universal-design-principles:LIST] {
+}
+privacy [header:REC privacy-kind:ENUM privacy-type:TEXT level:TEXT subject-ids:LIST element-ids:LIST visual-privacy:LIST acoustic-privacy:LIST data-privacy:LIST screening-required:BOOL enclosure-required:BOOL access-restrictions:LIST observation-risk:TEXT regulatory-basis:LIST cultural-considerations:LIST technology-controls:LIST signage:LIST monitoring-restrictions:LIST retention-policy:TEXT breach-response:LIST owner-id:TEXT] {
+}
+safety [header:REC safety-domain:ENUM hazard:TEXT risk-level:ENUM affected-element-ids:LIST affected-user-ids:LIST mitigation-measures:LIST ppe-requirements:LIST emergency-procedures:LIST evacuation-requirements:LIST fire-protection:LIST structural-safety:LIST slip-trip-fall:LIST chemical-safety:LIST electrical-safety:LIST machinery-safety:LIST standards:LIST inspection-frequency:TEXT training-requirements:LIST incident-reporting:LIST residual-risk:TEXT] {
+}
+security [header:REC control-kind:ENUM threat:TEXT risk-level:ENUM asset-ids:LIST zone-ids:LIST access-level:ENUM perimeter-controls:LIST surveillance:LIST intrusion-detection:LIST cybersecurity:LIST screening:LIST visitor-management:LIST key-management:LIST standards:LIST response-procedures:LIST drill-frequency:TEXT liaison-contacts:LIST classified-level:TEXT redundancy:LIST audit-requirements:LIST] {
+}
+regulatory [header:REC jurisdiction:TEXT code:TEXT clause:TEXT title:TEXT requirement-text:REC applicability:LIST element-ids:LIST compliance-method:TEXT evidence-required:LIST authority:TEXT effective-date:TEXT expiry-date:TEXT penalties:LIST exemptions:LIST related-requirement-ids:LIST interpretation-notes:LIST verification-status:ENUM consultant-refs:LIST update-source:TEXT] {
+}
+site-context [header:REC site-name:TEXT address:TEXT latitude:NUM longitude:NUM elevation-m:QTY climate-zone:TEXT seismic-zone:TEXT flood-risk:TEXT soil-conditions:LIST utilities-available:LIST access-roads:LIST public-transit:LIST neighbors:LIST views:LIST noise-sources:LIST environmental-constraints:LIST heritage-constraints:LIST zoning:TEXT max-height-m:QTY max-coverage:NUM] {
+}
+organizational [header:REC department:TEXT reporting-line:TEXT headcount:REC growth-plan-id:TEXT work-patterns:LIST collaboration-model:TEXT hierarchy-levels:LIST decision-making:LIST culture-notes:LIST change-readiness:TEXT union-considerations:LIST training-needs:LIST element-ids:LIST stakeholder-ids:LIST service-requirement-ids:LIST branding-requirements:LIST wellness-plugins:LIST diversity-goals:LIST owner-id:TEXT] {
+}
+services [header:REC service-name:TEXT service-type:TEXT provider:TEXT service-level:TEXT operating-hours:TEXT capacity:REC response-time:TEXT queue-management:LIST customer-profiles:LIST element-ids:LIST equipment-ids:LIST staffing:REC quality-metrics:LIST cost-model:TEXT contract-refs:LIST dependencies:LIST failure-impact:TEXT backup-service:LIST feedback-channels:LIST] {
+}
+infrastructure [header:REC system:TEXT category:TEXT capacity:REC redundancy:TEXT distribution:LIST entry-points:LIST utility-source:TEXT standby-power:BOOL monitoring:LIST maintenance-access:LIST standards:LIST element-ids:LIST peak-demand:NUM diversity-factor:NUM future-expansion:LIST interface-requirements:LIST commissioning:LIST lifecycle-cost:NUM owner-id:TEXT] {
+}
+information [header:REC information-type:TEXT format:TEXT source-system:TEXT destination-systems:LIST update-frequency:TEXT retention-period:TEXT access-controls:LIST classification:TEXT quality-criteria:LIST metadata-requirements:LIST integration-points:LIST backup-requirements:LIST disaster-recovery:LIST privacy-controls:LIST audit-trail:BOOL element-ids:LIST stakeholder-ids:LIST standards:LIST owner-id:TEXT] {
+}
+communication [header:REC channel:TEXT audience-ids:LIST message-types:LIST frequency:TEXT medium:LIST language:LIST accessibility:LIST emergency-use:BOOL two-way:BOOL recording-policy:TEXT signage-locations:LIST technology:LIST escalation-path:LIST feedback-loop:BOOL privacy-controls:LIST element-ids:LIST standards:LIST owner-id:TEXT templates:LIST] {
+}
+wayfinding [header:REC user-profile-ids:LIST element-ids:LIST destination-types:LIST signage-types:LIST languages:LIST tactile-required:BOOL audio-required:BOOL digital-wayfinding:BOOL landmark-strategy:LIST color-coding:LIST symbol-standards:LIST decision-points:LIST maximum-signage-distance-m:QTY lighting-requirements:LIST maintenance-plan:TEXT emergency-egress:LIST visitor-journey:LIST staff-journey:LIST brand-integration:LIST] {
+}
+schedules [header:REC milestone:TEXT phase:ENUM start-date:TEXT end-date:TEXT duration:TEXT dependencies:LIST predecessors:LIST successors:LIST critical:BOOL float-days:UINT resource-requirements:LIST occupancy-impact:LIST phasing-strategy:TEXT decant-requirements:LIST commissioning-window:TEXT stakeholder-ids:LIST risk-ids:LIST contingency-days:UINT reporting-cadence:TEXT owner-id:TEXT] {
+}
+flexibility [header:REC flexibility-type:TEXT element-ids:LIST adaptation-scenarios:LIST modularity-level:TEXT reconfiguration-time:TEXT cost-of-change:NUM technology-readiness:TEXT future-function-ids:LIST demountable-partitions:BOOL raised-floor:BOOL overhead-services:BOOL expansion-direction:LIST contraction-scenario:LIST multi-use-potential:LIST furniture-strategy:LIST infrastructure-spare-capacity:LIST lease-implications:LIST owner-id:TEXT] {
+}
+growth [header:REC horizon-years:UINT growth-rate:NUM headcount-growth:REC area-growth:REC phases:LIST trigger-events:LIST expansion-element-ids:LIST reserve-areas:LIST infrastructure-headroom:LIST budget-envelope:NUM funding-sources:LIST risk-factors:LIST decision-points:LIST scenario-ids:LIST decommission-plan:LIST relocation-strategy:LIST stakeholder-impact:LIST regulatory-considerations:LIST owner-id:TEXT] {
+}
+sustainability [header:REC topic:TEXT target:TEXT metric:TEXT baseline:NUM target-value:NUM unit:TEXT certification:LIST standards:LIST element-ids:LIST strategies:LIST materials-preferences:LIST energy-strategy:LIST water-strategy:LIST waste-strategy:LIST biodiversity:LIST embodied-carbon:NUM operational-carbon:NUM reporting-requirements:LIST verification-plan:TEXT owner-id:TEXT] {
+}
+resilience [header:REC hazard:TEXT risk-level:ENUM scenario:TEXT recovery-time:TEXT recovery-point:TEXT redundancy:LIST hardening-measures:LIST backup-systems:LIST alternate-sites:LIST supply-chain:LIST communication-plan:LIST drill-requirements:LIST element-ids:LIST infrastructure-ids:LIST standards:LIST insurance-implications:LIST climate-adaptation:LIST owner-id:TEXT verification-plan:TEXT] {
+}
+costs [header:REC cost-item:TEXT basis:ENUM amount:NUM currency:TEXT quantity-basis:TEXT unit-cost:NUM contingency-percent:QTY escalation-rate:NUM funding-source:TEXT element-ids:LIST requirement-ids:LIST phase:ENUM cash-flow-profile:LIST value-engineering-notes:LIST benchmark-ref:TEXT approval-status:ENUM owner-id:TEXT assumptions:LIST sensitivity-factors:LIST] {
+}
+delivery [header:REC constraint-type:TEXT constraint-details:REC phase:ENUM hard-deadline:TEXT soft-deadline:TEXT impacted-element-ids:LIST impacted-requirement-ids:LIST work-hours:TEXT noise-restrictions:LIST access-restrictions:LIST site-logistics:LIST procurement-lead-time:TEXT approval-gates:LIST occupancy-constraints:LIST weather-windows:LIST penalty-clauses:LIST mitigation-options:LIST owner-id:TEXT risk-ids:LIST constraint-status:ENUM] {
+}
+risks [header:REC risk-statement:REC category:TEXT probability:ENUM impact:ENUM risk-score:NUM causes:LIST effects:LIST affected-element-ids:LIST affected-requirement-ids:LIST mitigation:LIST contingency:LIST owner-id:TEXT review-date:TEXT trigger-indicators:LIST residual-probability:ENUM residual-impact:ENUM related-conflict-ids:LIST escalation-path:LIST monitoring-plan:TEXT] {
+}
+conflicts [header:REC kind:ENUM summary:REC entity-a-id:TEXT entity-b-id:TEXT severity:ENUM detected-by:TEXT detection-date:TEXT trade-off-options:LIST recommended-resolution:REC decision-id:TEXT stakeholder-ids:LIST requirement-ids:LIST cost-impact:NUM schedule-impact:TEXT quality-impact:LIST resolution-status:ENUM owner-id:TEXT escalation-level:TEXT related-risk-ids:LIST] {
+}
+requirements [header:REC code:TEXT kind:ENUM statement:REC rationale:REC source:TEXT stakeholder-ids:LIST element-ids:LIST function-ids:LIST parent-requirement-id:TEXT child-requirement-ids:LIST acceptance-criteria:LIST verification-method:TEXT validation-status:ENUM conflict-ids:LIST risk-ids:LIST cost-estimate:NUM schedule-constraint:TEXT regulatory-refs:LIST trace-links:LIST superseded-by:TEXT] {
+}
+priorities [header:REC subject-id:TEXT subject-kind:TEXT ranked-priority:ENUM rank:UINT weight:NUM rationale:REC decision-id:TEXT stakeholder-ids:LIST effective-from:TEXT effective-until:TEXT review-cycle:TEXT dependencies:LIST conflicts:LIST scoring-method:TEXT score:NUM criteria:LIST approved-by:TEXT approval-date:TEXT ranking-notes:LIST] {
+}
+scenarios [header:REC code:TEXT hypothesis:REC assumptions:LIST variables:LIST element-ids:LIST requirement-ids:LIST growth-plan-id:TEXT probability:NUM impact-summary:REC cost-delta:NUM area-delta:NUM headcount-delta:NUM schedule-delta:TEXT risk-ids:LIST option-ids:LIST baseline:BOOL preferred:BOOL analysis-ids:LIST owner-id:TEXT] {
+}
+options [header:REC option-name:TEXT option-description:REC scenario-id:TEXT criteria-ids:LIST scores:LIST weighted-score:NUM cost-estimate:NUM schedule-estimate:TEXT risk-summary:LIST benefits:LIST drawbacks:LIST assumptions:LIST dependencies:LIST stakeholder-feedback:LIST recommendation:TEXT decision-id:TEXT evaluation-status:ENUM evaluator-ids:LIST evaluation-date:TEXT] {
+}
+decisions [header:REC decision-statement:REC context:REC options-considered:LIST selected-option-id:TEXT rationale:REC decision-maker-ids:LIST consulted-ids:LIST informed-ids:LIST decision-date:TEXT effective-date:TEXT reversal-conditions:LIST impacted-requirement-ids:LIST impacted-element-ids:LIST cost-impact:NUM schedule-impact:TEXT risk-impact:LIST approval-status:ENUM meeting-ref:TEXT document-refs:LIST] {
+}
+validations [header:REC subject-id:TEXT subject-kind:TEXT validation-type:TEXT method:TEXT criteria:LIST result:ENUM evidence:LIST validator-ids:LIST validation-date:TEXT next-review-date:TEXT findings:LIST non-conformities:LIST corrective-actions:LIST waivers:LIST standards:LIST trace-links:LIST report-id:TEXT confidence-level:TEXT validation-notes:LIST] {
+}
+performance [header:REC criterion:TEXT metric:TEXT target:NUM unit:TEXT minimum:NUM maximum:NUM measurement-method:TEXT frequency:TEXT requirement-ids:LIST element-ids:LIST baseline:NUM benchmark-ref:TEXT weight:NUM data-source:TEXT reporting-cadence:TEXT owner-id:TEXT verification-plan:TEXT penalty-threshold:NUM incentive-threshold:NUM] {
+}
+quality [header:REC quality-topic:TEXT standard:TEXT target-level:TEXT inspection-points:LIST acceptance-criteria:LIST testing-requirements:LIST sample-rate:TEXT defect-categories:LIST corrective-action-process:LIST element-ids:LIST requirement-ids:LIST supplier-requirements:LIST documentation-requirements:LIST training-requirements:LIST audit-schedule:TEXT kpis:LIST owner-id:TEXT certification-targets:LIST continuous-improvement:LIST] {
+}
+documents [header:REC document-type:TEXT title:TEXT version:TEXT file-ref:TEXT format:TEXT author-ids:LIST reviewer-ids:LIST approver-ids:LIST issue-date:TEXT revision-date:TEXT distribution-list:LIST related-entity-ids:LIST classification:TEXT retention-period:TEXT access-controls:LIST supersedes:TEXT document-status:ENUM checksum:TEXT source-system:TEXT] {
+}
+assumptions [header:REC statement:REC basis:REC confidence-level:TEXT impact-if-false:REC related-entity-ids:LIST validation-status:ENUM validated-by:TEXT validation-date:TEXT owner-id:TEXT review-cycle:TEXT source:TEXT category:TEXT dependencies:LIST mitigation:LIST linked-requirement-ids:LIST linked-risk-ids:LIST expiration-date:TEXT status-notes:LIST document-refs:LIST] {
+}
+constraints [header:REC constraint-type:TEXT summary:REC severity:ENUM affected-entity-ids:LIST source:TEXT regulatory-basis:LIST mitigation-options:LIST owner-id:TEXT effective-date:TEXT expiry-date:TEXT waiver-status:TEXT waiver-approver:TEXT impact-assessment:REC resolution-plan:LIST related-requirement-ids:LIST related-decision-ids:LIST monitoring-frequency:TEXT compliance-status:ENUM exceptions:LIST trace-links:LIST escalation-contact-id:TEXT] {
+}
+compliance-records [header:REC standard-ref:TEXT obligation:REC compliance-status:ENUM evidence-refs:LIST auditor-id:TEXT audit-date:TEXT next-review:TEXT affected-entity-ids:LIST gap-analysis:LIST remediation-plan:LIST owner-id:TEXT severity:ENUM regulatory-body:TEXT certification-target:TEXT waiver-status:TEXT related-requirement-ids:LIST monitoring-method:TEXT reporting-frequency:TEXT penalties:LIST corrective-actions:LIST document-refs:LIST] {
+}
+approvals [header:REC approval-type:TEXT subject-id:TEXT approver-ids:LIST approval-date:TEXT conditions:LIST approval-status:ENUM expiry-date:TEXT delegation-chain:LIST evidence-refs:LIST related-decision-id:TEXT related-change-id:TEXT authority-basis:LIST signature-method:TEXT rejection-reason:REC resubmission-date:TEXT notification-list:LIST workflow-step:TEXT version:TEXT audit-trail-ref:TEXT] {
+}
+meetings [header:REC meeting-type:TEXT scheduled-date:TEXT duration:TEXT location:TEXT chair-id:TEXT attendee-ids:LIST agenda-items:LIST minutes:REC action-items:LIST decisions-made:LIST document-refs:LIST follow-up-date:TEXT recording-ref:TEXT quorum-met:BOOL meeting-status:ENUM workshop-id:TEXT stakeholder-ids:LIST requirement-ids:LIST issue-ids:LIST approval-ids:LIST] {
+}
+changes [header:REC change-type:TEXT summary:REC reason:REC requested-by:TEXT approved-by:TEXT change-date:TEXT effective-date:TEXT impacted-entity-ids:LIST before-snapshot:TEXT after-snapshot:TEXT cost-impact:NUM schedule-impact:TEXT risk-impact:LIST approval-status:ENUM rollback-plan:LIST communication-plan:LIST version-from:TEXT version-to:TEXT audit-event-ids:LIST] {
+}
+collaboration [header:REC session-type:TEXT title:TEXT participants:LIST facilitator-id:TEXT start-time:TEXT end-time:TEXT location:TEXT agenda:LIST outcomes:LIST action-items:LIST decision-ids:LIST issue-ids:LIST document-ids:LIST recording-ref:TEXT feedback:LIST follow-up-date:TEXT workshop-id:TEXT survey-id:TEXT] {
+}
+analyses [header:REC kind:ENUM title:TEXT parameters:LIST input-entity-ids:LIST output-summary:REC findings:LIST metrics:LIST charts:LIST run-by:TEXT run-at:TEXT duration-ms:UINT tool-version:TEXT scenario-id:TEXT report-id:TEXT confidence:TEXT limitations:LIST recommendations:LIST raw-result-ref:TEXT] {
+}
+reports [header:REC kind:ENUM title:TEXT audience:LIST sections:LIST generated-at:TEXT generated-by:TEXT analysis-ids:LIST format:TEXT file-ref:TEXT distribution-list:LIST approval-status:ENUM approver-id:TEXT version:TEXT template-id:TEXT parameters:LIST confidentiality:TEXT expiry-date:TEXT related-decision-ids:LIST] {
+}
+search-filters [header:REC filter-name:TEXT filter-description:REC keywords:LIST categories:LIST owner-ids:LIST statuses:LIST priorities:LIST sources:LIST date-from:TEXT date-to:TEXT entity-kinds:LIST tag-filters:LIST sort-field:TEXT sort-direction:TEXT is-public:BOOL created-by:TEXT last-used:TEXT use-count:UINT pinned:BOOL] {
+}
+status-records [header:REC subject-id:TEXT subject-kind:TEXT record-status:ENUM previous-status:ENUM changed-by:TEXT changed-at:TEXT reason:REC blockers:LIST next-actions:LIST due-date:TEXT progress-percent:QTY health:TEXT escalation-level:TEXT related-issue-ids:LIST related-risk-ids:LIST milestone-id:TEXT reporting-period:TEXT status-notes:LIST] {
+}
+workshops [header:REC workshop-type:TEXT objectives:LIST agenda:LIST facilitator-id:TEXT participants:LIST scheduled-start:TEXT scheduled-end:TEXT location:TEXT materials:LIST methods:LIST outputs:LIST decisions:LIST issues:LIST follow-up-actions:LIST feedback:LIST recording-ref:TEXT budget:NUM workshop-status:ENUM survey-ids:LIST] {
+}
+surveys [header:REC survey-type:TEXT title:TEXT objectives:LIST questions:LIST target-audience:LIST distribution-channels:LIST launch-date:TEXT close-date:TEXT response-count:UINT response-rate:NUM findings:LIST themes:LIST recommendations:LIST confidentiality:TEXT consent-process:LIST analysis-id:TEXT workshop-id:TEXT owner-id:TEXT survey-status:ENUM] {
+}
+issues [header:REC issue-type:TEXT summary:REC issue-description:REC severity:ENUM issue-priority:ENUM reporter-id:TEXT assignee-id:TEXT affected-entity-ids:LIST root-cause:REC resolution:REC workaround:REC due-date:TEXT resolved-date:TEXT related-conflict-ids:LIST related-risk-ids:LIST decision-id:TEXT comments:LIST attachments:LIST escalation-level:TEXT] {
+}
+audit-events [header:REC action:ENUM actor-id:TEXT subject-id:TEXT subject-kind:TEXT timestamp:TEXT details:REC before-state:TEXT after-state:TEXT ip-address:TEXT client:TEXT session-id:TEXT change-record-id:TEXT trace-link:REC success:BOOL error-message:TEXT correlation-id:TEXT compliance-tags:LIST retention-until:TEXT] {
+}
+templates [header:REC template-type:TEXT sector:TEXT project-type:TEXT version:TEXT content-ref:TEXT entity-kinds:LIST default-fields:LIST checklists:LIST standards:LIST applicability:LIST author-id:TEXT approval-status:ENUM usage-count:UINT last-applied:TEXT customization-notes:LIST related-knowledge-ids:LIST benchmark-ids:LIST license:TEXT source-organization:TEXT] {
+}
+knowledge [header:REC topic:TEXT category:TEXT summary:REC content:REC sources:LIST references:LIST lessons-learned:LIST best-practices:LIST applicable-sectors:LIST related-entity-kinds:LIST author-ids:LIST expertise-level:TEXT validation-status:ENUM last-reviewed:TEXT keywords:LIST attachments:LIST citations:LIST usage-count:UINT] {
+}
+benchmarks [header:REC benchmark-name:TEXT sector:TEXT metric:TEXT value:NUM unit:TEXT sample-size:UINT source:TEXT collection-year:UINT geography:TEXT building-type:TEXT confidence:TEXT methodology:TEXT applicable-element-kinds:LIST related-requirement-ids:LIST comparison-notes:LIST limitations:LIST license:TEXT knowledge-id:TEXT last-verified:TEXT] {
+}
+traces [id:TEXT from-id:TEXT to-id:TEXT kind:ENUM label:TEXT] {
+}
+
+
+########## ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.architect.program.dsl.semio (2 lines) ##########
+semio architect.program.dsl v1
+
+
+########## ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📚️examples/♻️reuse/🔧️ops/♻️reuse/🧬️component.fem.fem3d.op.semio (3 lines) ##########
+semio fem.fem3d.op v1
+edit reuse started="0" actor=example
+
+
+########## ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.fem.fem3d.dsl.semio (77 lines) ##########
+semio fem.fem3d.dsl v1
+elements {
+  frame id=e1 start=n00_g end=n00_l1 material-id=steel section-id=hea200 roll=0
+  frame id=col_00_u start=n00_l1 end=n00_l2 material-id=steel section-id=hea200 roll=0
+  frame id=col_20_l start=n20_g end=n20_l1 material-id=steel section-id=hea200 roll=0
+  frame id=col_20_u start=n20_l1 end=n20_l2 material-id=steel section-id=hea200 roll=0
+  frame id=col_02_l start=n02_g end=n02_l1 material-id=steel section-id=hea200 roll=0
+  frame id=col_02_u start=n02_l1 end=n02_l2 material-id=steel section-id=hea200 roll=0
+  frame id=col_22_l start=n22_g end=n22_l1 material-id=steel section-id=hea200 roll=0
+  frame id=col_22_u start=n22_l1 end=n22_l2 material-id=steel section-id=hea200 roll=0
+  frame id=fb1_0 start=n00_l1 end=n20_l1 material-id=steel section-id=hea200 roll=0
+  frame id=fb2_0 start=n00_l2 end=n20_l2 material-id=steel section-id=hea200 roll=0
+  frame id=fb1_2 start=n02_l1 end=n22_l1 material-id=steel section-id=hea200 roll=0
+  frame id=fb2_2 start=n02_l2 end=n22_l2 material-id=steel section-id=hea200 roll=0
+  frame id=fb1_3 start=n00_l1 end=n02_l1 material-id=steel section-id=hea200 roll=0
+  frame id=fb2_3 start=n00_l2 end=n02_l2 material-id=steel section-id=hea200 roll=0
+  frame id=fb1_1 start=n20_l1 end=n22_l1 material-id=steel section-id=hea200 roll=0
+  frame id=fb2_1 start=n20_l2 end=n22_l2 material-id=steel section-id=hea200 roll=0
+}
+analysis {
+  modal-count=3 buckling-count=3 deformation-scale=300
+}
+nodes [id:TEXT x:NUM y:NUM z:NUM] {
+  n00_g 0 0 0
+  n00_l1 0 0 2.8
+  n00_l2 0 0 5.6
+  n20_g 8 0 0
+  n20_l1 8 0 2.8
+  n20_l2 8 0 5.6
+  n02_g 0 10 0
+  n02_l1 0 10 2.8
+  n02_l2 0 10 5.6
+  n22_g 8 10 0
+  n22_l1 8 10 2.8
+  n22_l2 8 10 5.6
+  sc0 10 0 0
+  sc1 12 0 0
+  sc2 12 2 0
+  sc3 10 2 0
+}
+materials [id:TEXT name:TEXT e:NUM g:NUM nu:NUM rho:NUM] {
+  steel "Steel S235" 210000000000 80770000000 0.3 7850
+  concrete "C30/37 Concrete" 33000000000 13750000000 0.2 2400
+}
+sections [id:TEXT name:TEXT area:NUM iy:NUM iz:NUM j:NUM] {
+  hea200 "HEA 200" 0.00538 0.0000369 0.0000133 0.0000006
+}
+solids [id:TEXT name:TEXT outline:LIST holes:LIST base-z:NUM height:NUM layers:UINT mesh-size:NUM material-id:TEXT] {
+  sol1 "First Floor Slab" [ 10,0 12,0 12,2 10,2 ] [ ] 0 0.5 1 1 concrete
+}
+supports [id:TEXT node-id:TEXT fixed:LIST] {
+  s_00 n00_g [ Tx Ty Tz Rx Ry Rz ]
+  s_20 n20_g [ Tx Ty Tz Rx Ry Rz ]
+  s_02 n02_g [ Tx Ty Tz Rx Ry Rz ]
+  s_22 n22_g [ Tx Ty Tz Rx Ry Rz ]
+  ss_0 sc0 [ Tx Ty Tz ]
+  ss_1 sc1 [ Tx Ty Tz ]
+  ss_2 sc2 [ Tx Ty Tz ]
+  ss_3 sc3 [ Tx Ty Tz ]
+}
+load-cases [id:TEXT name:TEXT loads:BLOCK self-weight:BOOL] {
+  dead "Dead Load" {
+    area id=l1 solid-id=sol1 pressure=800
+  }
+  true
+  live "Live Load" {
+    nodal id=l2 node-id=n20_l1 dof=Tz value=-5000
+    area id=l3 solid-id=sol1 pressure=1500
+  }
+  false
+}
+combinations [id:TEXT name:TEXT terms:MAP] {
+  uls ULS {
+    dead=1.35 live=1.5
+  }
+}
+
+
+########## ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/📚️examples/♻️reuse/🔧️ops/♻️reuse/🧬️component.fem.fem2d.op.semio (3 lines) ##########
+semio fem.fem2d.op v1
+edit reuse started="0" actor=example
+
+
+########## ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.fem.fem2d.dsl.semio (65 lines) ##########
+semio fem.fem2d.dsl v1
+elements {
+  beam id=e3 start=n1 end=n2 material-id=steel section-id=chs76
+  beam id=e4 start=n2 end=p0_l1 material-id=timber section-id=post140
+  beam id=e5 start=p0_l1 end=p0_l2 material-id=timber section-id=post140
+  beam id=e6 start=p8 end=p8_l1 material-id=timber section-id=post140
+  beam id=e7 start=p8_l1 end=p8_l2 material-id=timber section-id=post140
+  beam id=e8 start=p0_l1 end=p8_l1 material-id=timber section-id=floorbeam
+  beam id=e9 start=p0_l2 end=p8_l2 material-id=timber section-id=floorbeam
+  beam id=e10 start=p0_l2 end=ridge material-id=timber section-id=rafter
+  beam id=e11 start=ridge end=p8_l2 material-id=timber section-id=rafter
+}
+analysis {
+  modal-count=3 buckling-count=3 deformation-scale=300
+}
+nodes [id:TEXT x:QTY y:QTY] {
+  n1 0m -4m
+  n2 0m 0m
+  p8 8m 0m
+  p0_l1 0m 2.8m
+  p8_l1 8m 2.8m
+  p0_l2 0m 5.6m
+  p8_l2 8m 5.6m
+  ridge 4m 7.6m
+  rc0 10m 2.75m
+  rc1 12m 2.75m
+  rc2 12m 2.85m
+  rc3 10m 2.85m
+}
+regions [id:TEXT name:TEXT outline:LIST holes:LIST thickness:NUM material-id:TEXT mesh-size:NUM] {
+  r1 "First Floor Slab" [ 10,2.75 12,2.75 12,2.85 10,2.85 ] [ ] 0.2 concrete 1
+}
+materials [id:TEXT name:TEXT e:QTY nu:NUM rho:QTY] {
+  steel "Steel S235" 210000000000Pa 0.3 7850kg/m3
+  timber "C24 Timber" 11000000000Pa 0.3 450kg/m3
+  concrete "C30/37 Concrete" 33000000000Pa 0.2 2400kg/m3
+}
+sections [id:TEXT name:TEXT area:QTY iy:QTY] {
+  chs76 "CHS 76 Foundation Column" 0.001m2 0.000001m4
+  post140 "Timber Post 140x140" 0.0196m2 0.000032m4
+  floorbeam "Timber Floor Beam 80x220" 0.0176m2 0.000071m4
+  rafter "Timber Rafter 80x180" 0.0144m2 0.000039m4
+}
+supports [id:TEXT node-id:TEXT fixed:LIST] {
+  s1 n1 [ Tx Ty ]
+  s2 p8 [ Ty ]
+  s3 rc0 [ Tx Ty ]
+  s4 rc1 [ Tx Ty ]
+}
+load-cases [id:TEXT name:TEXT loads:BLOCK self-weight:BOOL] {
+  dead "Dead Load" {
+    area id=l5 region-id=r1 pressure=800
+  }
+  true
+  live "Live Load" {
+    nodal id=l6 node-id=p8_l1 dof=Ty value=-12000
+    area id=l7 region-id=r1 pressure=1500
+  }
+  false
+}
+combinations [id:TEXT name:TEXT terms:LIST] {
+  uls ULS [ case-id=dead factor=1.35 case-id=live factor=1.5 ]
+}
+
+
+
+########## ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📚️examples/♻️reuse/🔧️ops/♻️reuse/🧬️component.playbook.playbook.op.semio (3 lines) ##########
+semio playbook.playbook.op v1
+edit reuse started="0" actor=example
+
+
+########## ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.playbook.playbook.dsl.semio (82 lines) ##########
+semio playbook.playbook.dsl v1
+schema=playbook.program id=facade-generator version="1" title="Facade Panel Generator" steps=[ id=basics title="Project Basics" blocks=[ id=project-name label="Project Name" kind=text required=true placeholder="e.g. Riverside Tower"
+condition {
+}
+id=project-description label=Description kind=longText description="Shown on the cover page." required=false placeholder="One paragraph project summary" default="A mixed-use tower with a responsive facade."
+condition {
+}
+id=panel-count label="Panel Count" kind=number required=true min=4 max=64 step=1 unit=panels default=12
+condition {
+}
+id=panel-width label="Panel Width" kind=slider min=0.4 max=2.4 step=0.1 unit=m default=1.2
+condition {
+}
+id=mirror-layout label="Mirror Layout" kind=boolean default=false
+condition {
+}
+id=material label=Material kind=single required=true default="aluminum" options=[ value=aluminum label=Aluminum value=timber label=Timber value=terracotta label=Terracotta ]
+condition {
+}
+id=finishes label=Finishes kind=multi default=[ "anodized" ] options=[ value=anodized label=Anodized value=powder-coated label="Powder Coated" value=raw label=Raw ]
+condition {
+}
+] id=schedule title="Schedule & Look" description="Timing and finish details reviewers check before sign-off." blocks=[ id=install-date label="Install Date" kind=date default="2027-03-01"
+condition {
+}
+id=accent-color label="Accent Color" kind=color default="#2f6fed"
+condition {
+}
+id=panel-offset label="Panel Offset" kind=vector unit=m fields=[ key=x label=X value=0 key=y label=Y value=0.15 key=z label=Z value=0 ]
+condition {
+}
+id=notes-intro label="Reviewer Notes" kind=note text="Confirm structural clearances before approving the pattern below."
+condition {
+}
+id=reference-photo label="Reference Photo" kind=image src="https://example.test/facade-reference.jpg" accept="image/*"
+condition {
+}
+id=cad-upload label="CAD Reference" kind=file schema=cad.reference.v1 accept=".dwg,.ifc"
+condition {
+}
+] id=pattern title="Pattern Logic" blocks=[ id=pattern-rule label="Pattern Rule" kind=generative.pattern description="Contributed by the procedural extension module." fixture-slug=voronoi-facade params={
+  algorithm="voronoi" density=0.6 seed=7
+}
+condition {
+  and
+  items {
+    eq
+    left {
+      var name=material
+    }
+    right {
+      const value="aluminum"
+    }
+    truthy
+    expr {
+      var name=mirror-layout
+    }
+  }
+}
+id=fallback-material label="Fallback Material" kind=single options=[ value=aluminum label="Aluminum (fallback)" ]
+condition {
+  or
+  items {
+    eq
+    left {
+      var name=material
+    }
+    right {
+      const value="timber"
+    }
+    eq
+    left {
+      var name=material
+    }
+    right {
+      const value="terracotta"
+    }
+  }
+}
+] ]
+
+
+

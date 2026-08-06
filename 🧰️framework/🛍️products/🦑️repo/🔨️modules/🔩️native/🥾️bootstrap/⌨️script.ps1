@@ -242,7 +242,7 @@ function Install-EditorExtensions {
 
     $extensionsPath = Join-Path $RepoRoot ".vscode\extensions.json"
     $recommendations = (Get-Content $extensionsPath -Raw | ConvertFrom-Json).recommendations
-    $vsixPath = Join-Path $RepoRoot "🧰️framework\🛍️products\🦑️repo\🔨️modules\💻️client\🧩️vscode\⚡️implementations\🟦️typescript\🧩️repo.vsix"
+    $vsixPath = Join-Path $RepoRoot "🧰️framework\🛍️products\🦑️repo\🔨️modules\💻️client\🧩️vscode\📦️packages\🟦️typescript\🧩️repo.vsix"
 
     $bunPathLocal = Get-CommandPathOrThrow -Label "bun" -Candidates @("bun.exe", "bun")
     Invoke-RepoCommand -FilePath $bunPathLocal -ArgumentList @("nx", "run", "repo:build") -WorkingDirectory $RepoRoot
@@ -864,7 +864,7 @@ if (-not $SkipRepoBootstrap) {
     Stop-RepoPythonProcesses -RepoRoot $repoRoot
     $goPath = Get-CommandPathOrThrow -Label "go" -Candidates @("go.exe", "go")
     Write-Step "Building repo client binary…"
-    Invoke-RepoCommand -FilePath $goPath -ArgumentList @("build", "-o", (Join-Path $repoRoot "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client.exe"), "./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/⚡️implementations/🐹️go") -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $goPath -ArgumentList @("build", "-o", (Join-Path $repoRoot "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client.exe"), "./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp") -WorkingDirectory $repoRoot
     Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("install") -WorkingDirectory $repoRoot
     Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("nx", "run", "workspace:setup") -WorkingDirectory $repoRoot
     Configure-GitKrakenWorkspace -RepoRoot $repoRoot

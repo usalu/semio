@@ -1,2 +1,2 @@
-/** demonstrator facet WASM facades — re-export artifact 🟦️component.ts leaves. */
-export {};
+/** demonstrator facet WASM facades */
+

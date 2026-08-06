@@ -1,0 +1,60 @@
+{
+  "name": "@semio-tech/framework-os-host-rs",
+  "root": "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🖥️host",
+  "projectType": "library",
+  "tags": ["lang:rust", "role:product", "family:os-host"],
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🖥️host/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/⚡️implementations/**/*.rs",
+      "{projectRoot}/**/*"
+    ]
+  },
+  "targets": {
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts check",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts wasm",
+        "cwd": "{projectRoot}"
+      },
+      "outputs": ["{projectRoot}/pkg"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts test",
+        "cwd": "{projectRoot}"
+      },
+      "dependsOn": ["wasm"]
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts test quick",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts test long",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts test exhaustive",
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}

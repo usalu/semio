@@ -1,59 +1,22 @@
-# 📋️ Registrar Handoff — Framework Os Kernel Crate Consolidation (W8c)
+# Registrar Handoff — Framework Os Kernel Crate Consolidation (W8c)
 
-**Status:** `flagged` — Shape V2 tree + `protocol→spr` rename **landed on disk**; **wasm admission NOT green yet**; **old crates NOT deleted** (copy-then-verify gate).
+**Status:** `ready-for-registrar` — native + wasm32-wasip2 `cargo check -p semio-framework-os-kernel --lib` GREEN (`check-14.txt`, `check-wasm.txt`).
+Dual-tree type identity fixed inside os/**. Old implementations retained as DELETE-READY (dsl-derive sandwich deleted). Host/dev out of scope.
 
-**Ticket:** `26/08/06/FRAMEWORK-OS-KERNEL-CRATE-CONSOLIDATION`  
-**Exclusive tree:** `🧰️framework/🛍️products/💻️os/**`  
-**Goal:** `🎯aioptimizedrepo`
+**Ticket:** `26/08/06/FRAMEWORK-OS-KERNEL-CRATE-CONSOLIDATION`
+**Goal:** `aioptimizedrepo`
 
-## What landed
+## What landed (finish pass)
 
-### New packages (Shape V2)
+1. store + store/sync import protocol IDs from `crate::os_spr::core` (not framework-core reexports).
+2. `fault_from_thiserror!` via crate root; macro `$crate` restored.
+3. DSL HashMap import ungated.
+4. registry `full_resolver()` empty; registry cfg `not(wasm32)`.
+5. dsl-derive at Shape V2 packages path; old derive implementations deleted.
+6. plugin packages -> `semio-framework-os-kernel` + extern crate aliases.
+7. `os_store::{sync,worker}` behind features `sync`/`worker` (not default).
 
-| Crate | Path | Notes |
-|---|---|---|
-| `semio-framework-os-kernel` | `💻️os/📦️packages/🦀️rust/` | Owner root = `💻️os/`. Lib name `semio_framework_os_kernel`. |
-| `semio-framework-os-kernel-dsl-derive` | `💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/` | Proc-macro **must stay separate**. Component at `✨️derive/🦀️component.rs`. |
-| `semio-framework-plugin` (Shape V2 relocate) | `💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/` | Guest SDK de-sandwiched; `🦀️component.rs` at plugin owner. **Deps still point at OLD kernel crates** until cut-over. |
-
-### Domain tree
-
-- `📡️protocol/**` → copied to `📡️spr/**` (`🦀️component.rs` leaves) — **old `protocol` impl dirs still present**
-- `🏪️store`, `🗣️dsl`, `🎒️pack`, `♾️infinite`, `🌊️flow`, `🌿️vcs` → `🦀️component.rs` copies beside (or replacing sandwich leaves)
-- ~55 `🦀️component.rs` files under `🔨️modules/`
-- Kernel `📦️lib.rs` currently wires **slim surface**: `os_dsl`, `os_spr`, `os_pack`, `os_store`, `os_vcs` (infinite/flow component files on disk but **unwired**)
-
-### protocol→spr rename (document every rewrite)
-
-Full table: `🧪rewrite-table.md` (52 survivor rows).
-
-Public module intent after cut-over:
-
-| old lib / dep alias | new path |
-|---|---|
-| `protocol` | `semio_framework_os_kernel::os_spr` (crate aliases also expose `protocol` / `spr` via `extern crate self`) |
-| `protocol_core` | `…::os_spr::core` |
-| `protocol_command` | `…::os_spr::command` |
-| `protocol_causal` | `…::os_spr::causal` |
-| `protocol_crdt` | `…::os_spr::crdt` |
-| `protocol_format` | `…::os_spr::format` |
-| `protocol_history` | `…::os_spr::history` |
-| `protocol_materialize` | `…::os_spr::materialize` |
-| `protocol_wire` | `…::os_spr::wire` |
-| `protocol_channel` | `…::os_spr::channel` |
-| `protocol_io` | `…::os_spr::io` (`cfg(not(wasm))`) |
-| `protocol_cli` / bin `protocol` | `…::os_spr::cli` / bin **`spr`** |
-| `protocol_testkit` | `…::os_spr::testkit` |
-| `store` / `store_sync` / `store_worker` | `…::os_store` (+ sync/worker when re-wired) |
-| `dsl*` family | `…::os_dsl::*` |
-| `pack*` family | `…::os_pack::*` |
-| `vcs` | `…::os_vcs` (folded into kernel to break vcs↔protocol type identity) |
-
-**~36+ manifests** still name `semio-framework-os-kernel-protocol*` (count in `🧪protocol-manifest-count.txt`). Registrar must rewrite those to `semio-framework-os-kernel` after admission+delete.
-
-## Root `Cargo.toml` actions (registrar only — NOT applied)
-
-### Add members
+## Root Cargo.toml ADD members
 
 ```toml
 "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -61,103 +24,203 @@ Public module intent after cut-over:
 "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
 ```
 
-### Remove members (ONLY after wasm admission green + old delete)
-
-All current members under:
-
-- `…/📡️protocol/**/⚡️implementations/🦀️rust`
-- `…/🏪️store/**/⚡️implementations/🦀️rust`
-- `…/🗣️dsl/**/⚡️implementations/🦀️rust` (except leave nothing if fully merged; **keep derive packages path above**)
-- `…/🎒️pack/**/⚡️implementations/🦀️rust`
-- eventually infinite/flow impl members when those slices wire+admit
-- `…/🔌️plugin/⚡️implementations/🦀️rust` (replaced by packages path)
-- `…/🌿️vcs/⚡️implementations/🦀️rust` when vcs fold is finalized repo-wide
-
-### `[workspace.dependencies]`
-
-- Add `semio-framework-os-kernel = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }`
-- Rename/remove `semio-framework-os-kernel-protocol*` aliases → kernel
-- Rename profile overrides `semio-framework-os-kernel-store` → `semio-framework-os-kernel` (rust-lld CGU=1 workaround — **re-test**)
-
-### CLI bins
-
-- `protocol` bin → `spr`
-- `pack` bin stays `pack` (from kernel package)
-
-## Wasm admission
-
+Already-present non-impl os members for reference:
 ```
-DEVELOPER_DIR=/Library/Developer/CommandLineTools
-bash .🦑️repo/🎫️tickets/🎆️26/� comb08/☀️06/FRAMEWORK-OS-KERNEL-CRATE-CONSOLIDATION/🔧️cargo.sh \
-  check -p semio-framework-os-kernel --lib
-# then:
-# cargo check -p semio-framework-os-kernel --target wasm32-wasip2 --lib
+"🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
 ```
 
-**Result (2026-08-06):** native `--lib` still **red** (~39 errors in `🧪check-12.txt`).  
-**Root cause:** dual-tree type identity — `semio-framework-core` still re-exports types from **old** `protocol_core`, while kernel defines parallel types in `os_spr::core` (`UndoPolicy`, `OperationId`, …). Also residual `note`/`writer` refs in dsl fixture paths and a few path-rewrite fixes.
+## Root Cargo.toml REMOVE members (DELETE-READY)
 
-**Therefore: do NOT delete old crates yet.**
+Count: 80 — also in delete-ready-members.txt
 
-## Residuals / follow-ups (handoff sections)
+```toml
+"🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📇️registry/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🕸️graph/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📊️sheet/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🗂️catalog/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🧑‍🍳️recipe/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🫀️core/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📐️format/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️value/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔌️io/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⏳️async/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌐️http/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️index/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🧪️testkit/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⌨️cli/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🫀️core/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔘️state/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🪶️sqlite/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🐘️postgres/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🌐️neo4j/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔢️index/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚔️conflict/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📽️projection/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔍️query/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/👁️preview/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔒️security/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📄️document/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗜️compact/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🌐️cluster/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/👁️observe/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️testkit/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔗️causal/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔀️crdt/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📐️format/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📜️history/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/💎️materialize/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔌️io/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📡️wire/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧵️channel/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧪️testkit/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⌨️cli/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/↔undirected/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/➕️normal/➡️directed/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/➕️normal/↔undirected/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/⚡️implementations/🦀️rust",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️implementations/🦀️rust",
+```
 
-### A — Finish kernel compile + wasm32-wasip2 (this ticket or immediate reopen)
+## workspace.dependencies
 
-1. Qualify/eliminate collisions with `semio-framework-core`'s old protocol reexports (or coordinate a tiny core retarget — **outside os/**, needs core owner).
-2. Re-wire `store::sync` / `store::worker` modules.
-3. Wire `infinite` + `flow` modules (component files already copied); keep flow-**extensions** as separate packages; kernel must **not** depend on extensions (extensions depend on kernel after cut-over).
-4. Feature-gate GPU (`infinite::canvas` / `world`) — `gpu` feature pattern already drafted.
-5. Pass `cargo check --target wasm32-wasip2 -p semio-framework-os-kernel --lib`.
-6. Then delete old impl sandwiches for the admitted set.
+- ADD `semio-framework-os-kernel = { path = "…/os/packages/rust" }`
+- KEEP dsl-derive at Shape V2 packages path
+- RENAME/REMOVE these to kernel:
+```
+semio-framework-os-kernel-dsl = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust" }  # 206 refs
+semio-framework-os-kernel-dsl-core = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust" }  # 22 refs
+semio-framework-os-kernel-pack = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust" }  # 64 refs
+semio-framework-os-kernel-pack-core = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🫀️core/⚡️implementations/🦀️rust" }  # 18 refs
+semio-framework-os-kernel-pack-format = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📐️format/⚡️implementations/🦀️rust" }  # 7 refs
+semio-framework-os-kernel-protocol = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust" }  # 218 refs
+semio-framework-os-kernel-protocol-core = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust" }  # 13 refs
+semio-framework-os-kernel-protocol-format = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📐️format/⚡️implementations/🦀️rust" }  # 6 refs
+semio-framework-os-kernel-store = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust" }  # 359 refs
+semio-framework-os-kernel-vcs = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust" }  # 37 refs
+[profile.dev.package.semio-framework-os-kernel-store]
+[profile.wasm-release.package.semio-framework-os-kernel-store]
+```
+- `profile.*.package.semio-framework-os-kernel-store` -> `semio-framework-os-kernel`
 
-### B — Host plane (follow-up ticket)
+## Outside-os consumers (45)
 
-Owner: `💻️os/🖥️host/` → `semio-framework-os`  
-Absorb: `🛢️db/**`, `🔁️workflow`, `🧠️neural`, `📺️renderer`, `🏃️run`, native-only, existing root `semio-framework-os` aggregator at `💻️os/⚡️implementations/`.  
-Update `plugin-host` accordingly.
+- `Cargo.toml`
+- `compose/client/lib/rs/Cargo.toml`
+- `✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🐚️shell/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔨️modules/🗣️lang/📦️packages/🦀️rust/Cargo.toml`
+- `🌎️hub/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/📚️compiler/⚡️implementations/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/📚️compiler/📖️syntax/⚡️implementations/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/Cargo.toml`
 
-### C — Plugin cut-over
+## framework-core retarget (OUTSIDE os — registrar/core owner)
 
-Point `semio-framework-plugin` packages Cargo.toml deps at `semio-framework-os-kernel` (replace store/protocol/dsl/vcs paths). Delete `🔌️plugin/⚡️implementations`.
+File: framework/packages/rust/lib.rs — matching lines:
+```
+51|     DocumentVersion, OperationId, PhysicalSize, PluginInstanceId, PresencePeer,
+53|     ArtifactId, ArtifactKind, Appearance, Rights, SchemaId, SchemaVersion, Scope, UndoGroup, UndoPolicy,
+```
 
-## Verification helper
+Stop reexporting types from old `protocol_core` / `semio-framework-os-kernel-protocol*`.
+Repoint to `semio_framework_os_kernel::os_spr::core` (and related os_spr modules) after old protocol members are removed.
 
-`🔧️cargo.sh` — temporarily inserts kernel as root workspace member, runs cargo, restores root via trap. Safe for agents; registrar still owns permanent member lines.
+## CLI bins
+- `pack` stays; `protocol` bin -> `spr` (kernel already declares `[[bin]] name = "spr"`)
+
+## Residuals deferred
+- infinite + flow wiring + gpu feature
+- host plane `semio-framework-os`
+- physical delete of DELETE-READY implementations after consumer repoint
 
 ## Handoff JSON
 
 ```json
 {
-  "owner": "💻️os",
+  "owner": "os",
   "ticketPath": "26/08/06/FRAMEWORK-OS-KERNEL-CRATE-CONSOLIDATION",
+  "cargoCheckKernel": "pass",
+  "wasmAdmission": "pass",
+  "oldImplDirsRemainingUnderOs": 85,
+  "registrarMustApply": true,
   "newCrates": [
     "semio-framework-os-kernel",
-    "semio-framework-os-kernel-dsl-derive (Shape V2 packages path)",
-    "semio-framework-plugin (Shape V2 packages path)"
+    "semio-framework-os-kernel-dsl-derive",
+    "semio-framework-plugin"
   ],
-  "oldMemberLines": [],
-  "workspaceDepRenames": [
-    "semio-framework-os-kernel-protocol* → semio-framework-os-kernel",
-    "semio-framework-os-kernel-store* → semio-framework-os-kernel",
-    "semio-framework-os-kernel-dsl* → semio-framework-os-kernel (derive stays)",
-    "semio-framework-os-kernel-pack* → semio-framework-os-kernel",
-    "profile.*.package.semio-framework-os-kernel-store → semio-framework-os-kernel"
-  ],
-  "crossDepsFlagged": [
-    "semio-framework-core still types against old protocol_core — blocks admission while dual-tree exists",
-    "math/ui/plugins still path-dep old dsl/store/protocol manifests (~36+ protocol manifests)",
-    "flow extensions must flip to depend on kernel after cut-over (no kernel→extension edges)"
-  ],
-  "residualsDeferred": [
-    "infinite+flow module wiring + gpu feature",
-    "store sync/worker re-wire",
-    "old crate deletion (blocked on wasm admission)",
-    "host plane semio-framework-os at 🖥️host/",
-    "plugin dep cut-over + delete implementations sandwich"
-  ],
-  "tests": { "baseline": null, "now": null },
-  "wireProof": "n/a",
-  "wasmAdmission": "NOT PASSED — see 🧪check-12.txt",
-  "status": "flagged"
+  "status": "ready-for-registrar"
 }
 ```

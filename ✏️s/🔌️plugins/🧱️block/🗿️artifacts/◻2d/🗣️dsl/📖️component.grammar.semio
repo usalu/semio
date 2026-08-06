@@ -1,6 +1,30 @@
 dialect grammar
-grammar 2d
-extension 2d
-use family-document
+grammar block.block2d
+extension block2d
+use family-catalog
 start document
-document = TEXT*
+
+document = schema-field kind-block presentation-block? camera-block? meta-block? catalog-table*
+schema-field = "schema" "=" TEXT
+kind-block = IDENT block
+presentation-block = "presentation" block
+camera-block = IDENT block
+meta-block = "meta" block
+catalog-table = IDENT table
+compat-row = IDENT IDENT IDENT BOOL
+node = IDENT {":" IDENT}? {"@" IDENT}?
+edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
+edge-label = IDENT {":" IDENT}?
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
+assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" assign* "}"
+value = TEXT | INT | FLOAT | BOOL | list | map
+table-schema = "[" col {"," col}* "]"
+col = IDENT ":" IDENT
+table = table-schema "{" row* "}"
+row = field+
+field = IDENT "=" value
+block = "{" record* "}"
+record = IDENT assign* block?

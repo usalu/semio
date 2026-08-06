@@ -97,7 +97,7 @@ pub enum PackError {
     Io(String),
 }
 
-crate::os_dsl::core::fault_from_thiserror!(PackError, crate::os_dsl::core::FaultOrigin::Module, "module.pack");
+crate::fault_from_thiserror!(PackError, crate::os_dsl::core::FaultOrigin::Module, "module.pack");
 
 //#endregion 🔖️Errors
 

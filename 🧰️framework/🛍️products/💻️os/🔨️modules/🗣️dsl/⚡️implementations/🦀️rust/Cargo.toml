@@ -15,7 +15,7 @@ path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️m
 [dependencies]
 dsl_core = { path = "../../🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-core" }
 dsl_schema = { path = "../../🧬️schema/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-schema" }
-dsl_derive = { path = "../../✨️derive/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
+dsl_derive = { path = "../../✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
 pack = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-pack" }
 protocol = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 semio_format = { path = "../../../🧬️semio/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-semio" }

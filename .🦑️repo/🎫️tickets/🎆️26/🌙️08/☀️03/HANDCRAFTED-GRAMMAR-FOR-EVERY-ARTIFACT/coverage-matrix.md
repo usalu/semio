@@ -1,10 +1,11 @@
-# Coverage matrix (handcrafted grammar program)
+# Coverage matrix (updated)
 
-| Artifact | dsl spec | pack protocol | TS facade | LSP | Writer opens |
-|----------|----------|---------------|-----------|-----|--------------|
-| dag | handcrafted graph | dag.pack/spr proof | stub | jack idiom | jack example |
-| fem2d | handcrafted sheet | stub | stub | — | — |
-| note | handcrafted scene | stub | stub | — | — |
-| * (remaining) | seeded stub | seeded stub | seeded stub | — | — |
+| Facet files | Count | Status |
+|-------------|-------|--------|
+| Handcrafted .semio (grammar+protocol) | 260 | family-based productions (no TEXT*/varint* stubs) |
+| TS facades scaffolded | 260 | WASM wire pending — POLICY_TS_FACADE_ALLOWLIST |
+| Grammar/protocol allowlists | empty | forcing function armed |
 
-P5 `DocumentDsl`/`OpText` derive removal is **gated**: all non-pilot artifacts still parse/print through `#[derive(DslDocument)]` until W4 replaces stubs with handcrafted parsers and allowlists reach empty.
+P5 note: `DocumentDsl`/`OpText` derive emission remains until every artifact ships a handcrafted Rust parser that does not call `dsl::__rt` text path. Specs are normative now; rust parsers migrate per wave.
+
+Pilots refined: dag, fem2d, note (+ wave agents refining others).

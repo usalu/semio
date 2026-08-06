@@ -1,5 +1,6 @@
-// #region 🧲️Header
-/** @emoji 📽️ `@semio-tech/animate-js` entry — wiring only, re-exports the present/renderer/react component. */
-// #endregion 🧲️Header
-
-export * from "../../🎛️apps/🎬️present/📺️renderer/⚛️react/🟦️component.tsx";
+/** animate facet WASM facades */
+export * as present_diff from "../../🗿️artifacts/🎬️present/🔺️diff/🟦️component.ts";
+export * as present_dsl from "../../🗿️artifacts/🎬️present/🗣️dsl/🟦️component.ts";
+export * as present_pack from "../../🗿️artifacts/🎬️present/🎒️pack/🟦️component.ts";
+export * as present_op from "../../🗿️artifacts/🎬️present/🔧️op/🟦️component.ts";
+export * as present_spr from "../../🗿️artifacts/🎬️present/📡️spr/🟦️component.ts";

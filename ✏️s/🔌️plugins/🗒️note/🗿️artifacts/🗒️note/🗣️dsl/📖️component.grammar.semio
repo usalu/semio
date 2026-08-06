@@ -1,10 +1,31 @@
 dialect grammar
-grammar note
+grammar note.document
 extension note
-use family-scene
+use family-embed
 start document
 
-document = block*
-block = IDENT "@" FLOAT FLOAT layer-body?
-layer-body = "{" line* "}"
-line = TEXT
+document = schema-line blocks-block? settings* assets-map?
+schema-line = "schema" "=" IDENT {"id" "=" IDENT}? {"title" "=" TEXT}?
+blocks-block = "blocks" "{" block* "}"
+block = text-block | image-block | table-block | math-block | stroke-block | group-block
+text-block = "text" block-props paragraphs?
+image-block = "image" block-props {"image-key" "=" IDENT}?
+table-block = "table" block-props {"columns" "=" list}? {"rows" "=" list}?
+math-block = "math" block-props tex-field {"display-mode" "=" BOOL}?
+stroke-block = "stroke" block-props {"points" "=" list}? {"stroke-width" "=" FLOAT}? {"color" "=" list}?
+group-block = "group" block-props children-block?
+block-props = {"id" "=" IDENT} {"name" "=" TEXT}? {"x" "=" FLOAT}? {"y" "=" FLOAT}? {"width" "=" FLOAT}? {"height" "=" FLOAT}? {"rotation" "=" FLOAT}? {"visible" "=" BOOL}? {"locked" "=" BOOL}? {"font-size" "=" FLOAT}? {"font-weight" "=" TEXT}? {"align" "=" IDENT}?
+paragraphs = "paragraphs" "{" paragraph* "}"
+paragraph = "p" "{" run* "}"
+run = "r" TEXT {"bold" "=" BOOL}? {"italic" "=" BOOL}? {"underline" "=" BOOL}? {"link" "=" TEXT}?
+tex-field = "tex" "=" (TEXT | fence)
+fence = "```" IDENT TEXT "```"
+children-block = "children" "{" block* "}"
+settings = {"grid-visible" "=" BOOL} | {"grid-spacing" "=" FLOAT} | {"grid-subdivisions" "=" FLOAT} | {"grid-opacity" "=" FLOAT} | {"snap-enabled" "=" BOOL} | {"snap-grid-spacing" "=" FLOAT} | {"pencil-width" "=" FLOAT} | {"eraser-radius" "=" FLOAT}
+assets-map = "assets" "=" "{" asset* "}"
+asset = IDENT "=" {"mime" "=" TEXT}? {"data" "=" TEXT}? {"width" "=" FLOAT}? {"height" "=" FLOAT}?
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" prop* "}"
+value = TEXT | FLOAT | INT | BOOL | list | map

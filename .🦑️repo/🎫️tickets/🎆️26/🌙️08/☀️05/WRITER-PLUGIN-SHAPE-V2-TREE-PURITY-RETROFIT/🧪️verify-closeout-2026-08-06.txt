@@ -1,0 +1,16 @@
+Shape V2 checklist (✒️writer) — 2026-08-06
+- Entry lib: ✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/📦️lib.rs; Cargo [lib] path = "📦️lib.rs"
+- No owner-root 📦️lib.rs
+- Grouping #[path = "."]; leaf paths ../../…
+- config/terminology/wasm: 🎚️config/🦀️component.rs, 🗣️terminology/🦀️component.rs, 🌉️wasm/🦀️component.rs (no sibling 🦀️config.rs)
+- 🛂️manifest.json at owner root
+
+cargo check -p semio-s-plugin-writer: PASS (2026-08-06, DEVELOPER_DIR=/Library/Developer/CommandLineTools)
+cargo test -p semio-s-plugin-writer --lib: last full run 78 passed / 8 failed before envelope-id + every_command fixes; workspace later blocked by missing repo-cli member (root Cargo.toml)
+
+In-tree fixes this session:
+- #[dsl(extension)] → plugin.artifact: writer.writer, writer.writercfg
+- every_command() + wire expectations include open-document row
+- optional_field_rows binary ordinals +1 after openDocument insert
+
+Registrar handoff: none (no stale paths under ✒️writer)

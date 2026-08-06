@@ -1,6 +1,27 @@
 dialect grammar
-grammar lowpoly
+grammar lowpoly.op
 extension lowpoly
 use family-scene
-start document
-document = TEXT*
+start operation
+
+operation = objects-add | objects-remove | objects-move | objects-patch | add-paint-layer | remove-paint-layer | patch-paint-layer | paint-stroke | set-projection
+objects-add = "objects-add" {"index" "=" INT}? object-block
+objects-remove = "objects-remove" "id" "=" IDENT
+objects-move = "objects-move" "id" "=" IDENT "to" "=" INT
+objects-patch = "objects-patch" "id" "=" IDENT patch-block
+add-paint-layer = "add-paint-layer" "object-id" "=" IDENT {"index" "=" INT}? paint-layer-block
+remove-paint-layer = "remove-paint-layer" "object-id" "=" IDENT "index" "=" INT
+patch-paint-layer = "patch-paint-layer" "object-id" "=" IDENT "index" "=" INT patch-block
+paint-stroke = "paint-stroke" "object-id" "=" IDENT "layer-index" "=" INT runs-table
+set-projection = "set-projection" projection-block
+object-block = "object" "{" prop* "}"
+paint-layer-block = "paint-layer" "{" prop* "}"
+patch-block = "patch" "{" prop* "}"
+projection-block = "projection" "{" prop* "}"
+runs-table = "runs" "{" run* "}"
+run = "run" "offset" "=" INT "bytes" "=" TEXT
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" prop* "}"
+value = TEXT | FLOAT | INT | BOOL | list | map

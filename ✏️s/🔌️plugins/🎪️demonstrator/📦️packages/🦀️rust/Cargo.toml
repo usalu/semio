@@ -108,7 +108,7 @@ path = "📦️lib.rs"
 
 [dependencies]
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
-semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
+semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 semio-s-3d = { path = "../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 serde_json.workspace = true
 

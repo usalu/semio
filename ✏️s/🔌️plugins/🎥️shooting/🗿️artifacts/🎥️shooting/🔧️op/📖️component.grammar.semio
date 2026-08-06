@@ -1,6 +1,40 @@
 dialect grammar
-grammar shooting
+grammar shooting.op
 extension shooting
 use family-scene
-start document
-document = TEXT*
+start operation
+
+operation = set-active-shot | set-active-asset | set-shot-camera | patch-scene | translate-assets | rotate-assets | scale-assets | set-fixture | assets-add | assets-remove | assets-move | assets-patch | shots-add | shots-remove | shots-move | shots-patch | saved-cameras-add | saved-cameras-remove | saved-cameras-move | saved-cameras-patch
+set-active-shot = "active-shot" "=" IDENT | "set-active-shot" "id" "=" IDENT
+set-active-asset = "active-asset" "=" IDENT | "set-active-asset" "id" "=" IDENT
+set-shot-camera = "set-shot-camera" "shot-id" "=" IDENT camera-block
+patch-scene = "patch-scene" scene-patch
+translate-assets = "translate-assets" "ids" "=" list "delta" "=" tuple
+rotate-assets = "rotate-assets" "ids" "=" list "delta" "=" tuple
+scale-assets = "scale-assets" "ids" "=" list "factor" "=" tuple
+set-fixture = "set-fixture" fixture-block
+assets-add = "assets-add" {"index" "=" INT}? asset-block
+assets-remove = "assets-remove" "id" "=" IDENT
+assets-move = "assets-move" "id" "=" IDENT "to" "=" INT
+assets-patch = "assets-patch" "id" "=" IDENT patch-block
+shots-add = "shots-add" {"index" "=" INT}? shot-block
+shots-remove = "shots-remove" "id" "=" IDENT
+shots-move = "shots-move" "id" "=" IDENT "to" "=" INT
+shots-patch = "shots-patch" "id" "=" IDENT patch-block
+saved-cameras-add = "saved-cameras-add" {"index" "=" INT}? saved-camera-block
+saved-cameras-remove = "saved-cameras-remove" "id" "=" IDENT
+saved-cameras-move = "saved-cameras-move" "id" "=" IDENT "to" "=" INT
+saved-cameras-patch = "saved-cameras-patch" "id" "=" IDENT patch-block
+scene-patch = "scene" "{" prop* "}"
+camera-block = "camera" "{" prop* "}"
+fixture-block = "fixture" "{" prop* "}"
+asset-block = "asset" "{" prop* "}"
+shot-block = "shot" "{" prop* "}"
+saved-camera-block = "saved-camera" "{" prop* "}"
+patch-block = "patch" "{" prop* "}"
+tuple = FLOAT "," FLOAT "," FLOAT
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" prop* "}"
+value = TEXT | FLOAT | INT | BOOL | list | map

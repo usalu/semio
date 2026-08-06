@@ -12,8 +12,8 @@
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
-import type { AreaState, DiscoveredPackage, PackageRole } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
-import { areaOf, BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, loadTaxonomy, discoverPackages, discoverPackageProblems } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import type { AreaState, DiscoveredPackage, PackageRole } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
+import { areaOf, BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, loadTaxonomy, discoverPackages, discoverPackageProblems } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 import { generateLaunchJson, LAUNCH_OUTPUT_REL_PATH } from "./🖥️launch.ts";
 
 //#region 🔖️PluginRegistryEntry

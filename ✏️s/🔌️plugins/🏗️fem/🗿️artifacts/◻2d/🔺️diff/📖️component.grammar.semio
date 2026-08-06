@@ -1,6 +1,22 @@
 dialect grammar
-grammar 2d
-extension 2d
-use family-document
-start document
-document = TEXT*
+grammar fem.fem2d.diff
+extension fem2d
+use family-sheet
+start diff
+
+diff = op-line*
+op-line = ("set-node" | "remove-node" | "set-element" | "remove-element" | "set-material" | "remove-material" | "set-section" | "remove-section" | "set-support" | "remove-support" | "set-load-case" | "remove-load-case" | "set-region" | "remove-region" | "set-combination" | "remove-combination" | "set-analysis-settings" | "set-document") assign* block?
+assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
+list = "[" value* "]"
+map = "{" assign* "}"
+value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
+qty = (FLOAT | INT) IDENT?
+block = "{" record* "}"
+record = IDENT assign* block?
+table = IDENT table-schema "{" row* "}"
+table-schema = "[" col {"," col}* "]"
+col = IDENT ":" IDENT
+row = field+
+field = IDENT "=" value | value
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)

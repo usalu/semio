@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/framework-os-core` task router. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, runWasmPackWebBuild, resolveTestLevel } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, runWasmPackWebBuild, resolveTestLevel } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 
 /** ⏱️Level-budgeted; unmarked `import.meta.vitest` cases are `fundamental`. */
 class TestScript extends BundleScript {

@@ -3,7 +3,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 // 🌳️ Shape V2: data (`🔣️entity-kinds.json`/`🤖️generated/`/`🤖️generated.rs`) lives at the owner

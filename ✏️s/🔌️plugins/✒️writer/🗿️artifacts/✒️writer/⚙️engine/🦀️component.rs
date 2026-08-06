@@ -12,6 +12,7 @@
 use super::{WriterProjection, WRITER_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use trinity::core::{example_graph, lint, Diagnostic};
 
 //#region 🔖️GrammarToken
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -181,6 +182,11 @@ pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
 
 /// @emoji 📡️ Semantic token payload for the text editor scene (LSP `data` array or grammar tokens).
 pub fn language_tokens_json(document: &WriterProjection) -> Option<String> {
+    eprintln!(
+        "[DEBUG] writer.engine language_tokens_json language_id={} text_len={}",
+        document.language_id,
+        document.text.len()
+    );
     if let Some(spec) = dsl::language(&document.language_id) {
         let session = dsl_lsp::LanguageSession::open(spec, document.text.clone());
         return serde_json::to_string(&session.semantic_tokens_lsp()).ok();
@@ -731,12 +737,55 @@ pub fn apply_jack_rename(text: &str, occurrences: &[(usize, usize)], new_name: &
     out
 }
 
-pub fn jack_completions_json(text: &str, cursor: usize) -> Option<String> {
-    if let Some(hooks) = dsl::idiom("jack") {
+pub fn language_completions_json(text: &str, language_id: &str, cursor: usize) -> Option<String> {
+    if let Some(spec) = dsl::language(language_id) {
+        let session = dsl_lsp::LanguageSession::open(spec, text.to_string());
+        let items: Vec<Value> = session
+            .completions_at(cursor)
+            .into_iter()
+            .map(|item| json!({ "label": item.label, "detail": item.detail }))
+            .collect();
+        return serde_json::to_string(&items).ok();
+    }
+    if let Some(hooks) = dsl::idiom(language_id) {
         let items: Vec<Value> = (hooks.complete)(text, cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
         return serde_json::to_string(&items).ok();
     }
     None
+}
+
+pub fn language_diagnostics_json(document: &WriterProjection, lint_signal: u32) -> Option<String> {
+    if document.language_id == "jack" {
+        let graph = example_graph();
+        let diagnostics: Vec<Value> = lint(&graph, &document.text)
+            .into_iter()
+            .map(|diag: Diagnostic| json!({ "start": diag.start, "end": diag.end, "severity": diag.severity, "message": diag.message }))
+            .collect();
+        return serde_json::to_string(&diagnostics).ok();
+    }
+    if let Some(hooks) = dsl::idiom(&document.language_id) {
+        if let Err(err) = (hooks.canonicalize)(&document.text) {
+            let end = document.text.len().max(1);
+            return serde_json::to_string(&[json!({ "start": 0, "end": end, "severity": "error", "message": err.message })]).ok();
+        }
+    } else if let Some(spec) = dsl::language(&document.language_id) {
+        let session = dsl_lsp::LanguageSession::open(spec, document.text.clone());
+        if let Err(err) = session.canonicalize() {
+            let end = document.text.len().max(1);
+            return serde_json::to_string(&[json!({ "start": 0, "end": end, "severity": "error", "message": err.message })]).ok();
+        }
+    }
+    if lint_signal > 0 {
+        return Some(
+            json!([{ "start": 0, "end": document.text.len().max(1), "severity": "info", "message": format!("Lint pass #{lint_signal}") }])
+                .to_string(),
+        );
+    }
+    None
+}
+
+pub fn jack_completions_json(text: &str, cursor: usize) -> Option<String> {
+    language_completions_json(text, "jack", cursor)
 }
 
 /// 🪞️ Canonical jack format when possible, else a whitespace-only normalization for other languages.

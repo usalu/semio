@@ -1,0 +1,14 @@
+{
+  "name": "@semio-tech/puzzle-js",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

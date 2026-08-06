@@ -563,7 +563,7 @@ repo_bootstrap() {
   ensure_bun
   if command -v go >/dev/null 2>&1; then
     log "Building repo client binary…"
-    (cd "$REPO_ROOT" && go build -o '🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client' './🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/⚡️implementations/🐹️go') || log "repo client build failed."
+    (cd "$REPO_ROOT" && go build -o '🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client' './🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp') || log "repo client build failed."
   fi
   log "bun install…"
   bun install

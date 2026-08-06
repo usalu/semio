@@ -35,7 +35,7 @@ infinite_board_port_directed_dag = { path = "../../../../../🧰️framework/�
 # overlay below), and the overlay's own minimal `[workspace.dependencies]` can't carry the framework
 # crates' full dependency graphs. `workspace = true` for these three is safe to adopt in the SAME
 # registrar pass that adds this crate as a real root-workspace member (see registrar handoff).
-semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
+semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-core = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core" }
 serde = { workspace = true }

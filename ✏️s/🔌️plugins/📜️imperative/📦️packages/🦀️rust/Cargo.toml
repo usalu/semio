@@ -32,7 +32,7 @@ path = "📦️lib.rs"
 dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
 protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
-neural_engine = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+neural_engine = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 imperative_engine = { path = "../../../../../✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust", package = "semio-s-imperative" }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 semio-framework-core.workspace = true

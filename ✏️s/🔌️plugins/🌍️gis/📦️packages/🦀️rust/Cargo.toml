@@ -66,7 +66,7 @@ protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/�
 store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
 framework_surface_tiled_map = { path = "../../../../../🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface", default-features = false }
 framework_surface_terrain = { path = "../../../../../🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface" }
-semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
+semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 # 🔌️ `PortMultiplicity` isn't re-exported by `semio-framework-plugin` (WORKFLOWS-END-TO-END-TYPED-PORTS
 # port recipe) — a direct dependency on the core crate is the minimal fix, mirroring `shooting`.

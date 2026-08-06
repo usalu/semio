@@ -47,7 +47,7 @@ protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/�
 store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
 ui_wgpu = {path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
 ui_styling = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
+semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 semio-framework-core = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 serde.workspace = true

@@ -1,0 +1,40 @@
+[package]
+name = "semio-framework-os-run"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Headless runner: computes an OS studio's workflow without a UI"
+
+[package.metadata.semio]
+role = "product"
+id = "os-run"
+
+[lints]
+workspace = true
+
+[lib]
+path = "📦️lib.rs"
+
+[[bin]]
+name = "semio-framework-os-run"
+path = "../../⚡️implementations/🦀️rust/📦️bin.rs"
+
+[dependencies]
+semio-framework-core = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-core" }
+semio-framework-os = { path = "../../../../🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
+workflow = { path = "../../../🔁️workflow/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-workflow" }
+semio-framework-plugin = { path = "../../../🔌️plugin/⚡️implementations/🦀️rust", package = "semio-framework-plugin" }
+framework_hash = { path = "../../../../../../🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+store = { path = "../../../🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"
+dsl_core = { path = "../../../🗣️dsl/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-core" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+semio-framework-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
+
+[dev-dependencies]
+pretty_assertions = "1.4.1"

@@ -38,14 +38,31 @@
   "verification": {
     "cargo_metadata": "blocked_by_concurrent_framework_ui_wgpu_missing_manifest",
     "cargo_check_four_crates": "blocked_same_reason",
-    "note": "Earlier this session metadata was green with all four members; later concurrent FRAMEWORK-UI work removed semio-framework-ui-wgpu manifest. Outside exclusive scope."
+    "note": "Earlier this session metadata was green with all four members; later concurrent FRAMEWORK-UI work removed semio-framework-ui-wgpu manifest. Outside exclusive scope.",
+    "second_resume_2026_08_06_1400": {
+      "cargo_test_semio_s_3d_lib": "ok. 363 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 2.57s",
+      "skipped_tests": [
+        "fixture_sphere_cut_torus_at_slider_max_completes",
+        "brep::kernel::tests::sphere_cut_intersecting_torus_completes"
+      ],
+      "skipped_reason": "pre-existing extremely slow (10+ min) third-party brepkit CSG torus-intersection fixtures; code relocated verbatim, not a regression",
+      "cargo_check_semio_s_3d": "ok, standalone Finished with no errors",
+      "cycle_resolved": "framework-core <-> ui_wgpu <-> semio-s-3d cycle resolved by concurrent ticket removing semio-s-3d from semio-framework-ui wgpu-engine feature",
+      "math_consolidation_applied": "semio-s-3d now depends on semio-framework-math (workspace) instead of mathematical_algebra/mathematical_number/mathematical_random",
+      "ambiguous_glob_reexports_fixed": "removed `pub use mesh::*` / `pub use scene::*` from semio-s-3d lib.rs; downstream consumers updated to qualified paths"
+    }
   },
   "orchestrator_remaining": [
     "Repoint ~32 plugin package.json deps @semio-tech/kernel-3d-js → @semio-tech/s-3d-js (outside exclusive ✏️s/🔨️modules)",
     "Apply Rust consumer use-path rewrites from 🧭️orchestrator-dependent-map.md (many already path-repointed to semio-s-3d)",
-    "Avoid cycle: scene-only consumers of semio-s-3d must use default-features=false; brep feature pulls semio-framework-core which depends on ui_wgpu",
     "Optional registrar: add workspace.dependencies aliases for the four crates"
   ],
   "root_cargo_edits_this_session": [],
+  "external_blocker_discovered_not_fixed": {
+    "file": "Cargo.toml",
+    "line": 151,
+    "issue": "invalid TOML: semio-framework-os alias has a dangling second path string with no key, breaks all workspace-wide cargo invocations",
+    "owner": "unrelated concurrent ticket touching semio-framework-os / semio-framework-os-host / plugin split; not this ticket's exclusive scope"
+  },
   "exclusive_scope": "✏️s/🔨️modules/**"
 }

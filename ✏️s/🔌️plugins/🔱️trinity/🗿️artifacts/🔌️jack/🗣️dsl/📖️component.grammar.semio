@@ -1,6 +1,31 @@
 dialect grammar
-grammar jack
-extension jack
+grammar jack.document
+extension trinity
 use family-graph
 start document
-document = TEXT*
+
+document = keyword-stmt | TEXT header camera-block nodes-table edges-table
+header = field*
+camera-block = "camera" block
+nodes-table = "nodes" table
+edges-table = "edges" table
+
+wire-endpoint = IDENT {":" IDENT}? {"@" IDENT}?
+edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
+edge-label = IDENT {":" IDENT}?
+wire = wire-endpoint edge-arrow wire-endpoint props?
+chain = wire-endpoint {ARROW wire-endpoint}+ | wire-endpoint {DASHARROW wire-endpoint}+
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | INT | FLOAT | BOOL)
+table = IDENT columns "{" row* "}"
+columns = "[" column+ "]"
+column = IDENT ":" IDENT
+row = cell+
+cell = TEXT | INT | FLOAT | BOOL | IDENT | wire | MAP | BLOCK
+block = "{" field* "}"
+field = IDENT "=" value
+value = TEXT | INT | FLOAT | BOOL | wire | MAP | block | table
+
+// artifact-keywords: trinity
+keyword-stmt = ("trinity") field*
+field = IDENT "=" (TEXT | INT | FLOAT | BOOL)

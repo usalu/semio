@@ -12,7 +12,7 @@ name = "db_testkit"
 path = "../../../🧪️testkit/⚡️implementations/🦀️rust/📦️lib.rs"
 
 [dependencies]
-db = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db" }
+db = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
 pack_testkit = { path = "../../../../🎒️pack/🧪️testkit/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-pack-testkit" }
 # 🎯️ Genuinely missing additions (not in the stub's dependency list), noted per this wave's
 # instructions: the `db` facade (above) is still an unimplemented stub as of this wave — every law/

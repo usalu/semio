@@ -1,6 +1,22 @@
 dialect grammar
-grammar gismap
+grammar gis.gismap.diff
 extension gismap
 use family-geo
-start document
-document = TEXT*
+start diff
+
+diff = op-line*
+op-line = ("positions-add" | "positions-remove" | "positions-move" | "positions-patch" | "positions-set" | "routes-add" | "routes-remove" | "routes-move" | "routes-patch" | "routes-set" | "regions-add" | "regions-remove" | "regions-move" | "regions-patch" | "regions-set" | "set-document") assign* block?
+assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
+list = "[" value* "]"
+map = "{" assign* "}"
+value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
+qty = (FLOAT | INT) IDENT?
+block = "{" record* "}"
+record = IDENT assign* block?
+table = IDENT table-schema "{" row* "}"
+table-schema = "[" col {"," col}* "]"
+col = IDENT ":" IDENT
+row = field+
+field = IDENT "=" value | value
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)

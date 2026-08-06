@@ -21,7 +21,7 @@ import {
   spawnDaemon,
   frameworkOsPlaygroundDefaultPort,
   loadFrameworkOsPlaygroundCatalog,
-} from "../../../../../../../../🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+} from "../../../../../../../../🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 import { startAssetServer } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts";
 import type { PlaygroundAssetSpec } from "../../../../../../🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
 import { writePlaygroundSession } from "../../../../../../🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/📜️script.ts";

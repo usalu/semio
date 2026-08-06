@@ -1,6 +1,26 @@
 dialect grammar
-grammar program
-extension program
-use family-document
+grammar architect.program
+extension architect
+use family-catalog
 start document
-document = TEXT*
+
+document = schema-field meta-block? project-block? governance-block? catalog-table*
+schema-field = "schema" "=" (TEXT | IDENT)
+meta-block = "meta" "="? record*
+project-block = "project" "="? record*
+governance-block = "governance" "="? record*
+catalog-table = ("stakeholders" | "users" | "activities" | "functions" | "elements" | "quantities" | "relationships" | "adjacencies" | "processes" | "flows" | "access-rules" | "operations" | "equipment" | "resources" | "storage" | "environmental" | "human-factors" | "accessibility" | "privacy" | "safety" | "security" | "regulatory" | "site-context" | "organizational" | "services" | "infrastructure" | "information" | "communication" | "wayfinding" | "schedules" | "flexibility" | "growth" | "sustainability" | "resilience" | "costs" | "delivery" | "risks" | "conflicts" | "requirements" | "priorities" | "scenarios" | "options" | "decisions" | "validations" | "performance" | "quality" | "documents" | "changes" | "collaboration" | "analyses" | "reports" | "search-filters" | "status-records" | "workshops" | "surveys" | "issues" | "audit-events" | "templates" | "knowledge" | "benchmarks" | "assumptions" | "constraints" | "compliance-records" | "approvals" | "meetings" | "traces") table-schema "{" row* "}"
+assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
+list = "[" value* "]"
+map = "{" assign* "}"
+value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
+qty = (FLOAT | INT) IDENT?
+block = "{" record* "}"
+record = IDENT assign* block?
+table = IDENT table-schema "{" row* "}"
+table-schema = "[" col {"," col}* "]"
+col = IDENT ":" IDENT
+row = field+
+field = IDENT "=" value | value
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)

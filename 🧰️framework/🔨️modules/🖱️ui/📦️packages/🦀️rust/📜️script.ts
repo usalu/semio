@@ -6,7 +6,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BundleScript, ScriptRouter, buildBudgetMs, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 const wgpuTargetRoot = join(packageRoot, "🎯️targets", "🧊️wgpu");

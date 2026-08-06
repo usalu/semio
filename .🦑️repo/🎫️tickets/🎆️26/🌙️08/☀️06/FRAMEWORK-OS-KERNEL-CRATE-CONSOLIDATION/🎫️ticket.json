@@ -2,7 +2,7 @@
   "title": "Framework Os Kernel Crate Consolidation",
   "emoji": "💻️",
   "status": "open",
-  "summary": "W8c OS-kernel: Shape V2 tree + protocol→spr component copies landed under 💻️os/. Slim lib wires os_store/os_spr/os_dsl/os_pack/os_vcs. Wasm admission NOT green (dual-tree type identity vs framework-core old protocol reexports; see 🧪check-12.txt). Old crates retained. Host plane deferred. Handoff: 📋️registrar-handoff.md.",
+  "summary": "W8c OS-kernel FINISH: cargo check -p semio-framework-os-kernel GREEN native+wasm32-wasip2. Dual-tree fixed via os_spr::core. dsl-derive Shape V2; plugin deps->kernel; sync/worker feature-gated. Old impls DELETE-READY (85) except derive deleted. Registrar: see registrar-handoff.md.",
   "description": "W8c (OS serial) slice 1 — kernel/data plane from spicy-umbrella plan Key merges → OS split. Three-crate guest/host boundary: semio-framework-plugin (guest SDK), semio-framework-os-kernel (wasm-safe), semio-framework-os (host, deferred). Exclusive ownership: 🧰️framework/🛍️products/💻️os/**.",
   "goal": "🎯aioptimizedrepo",
   "sessions": []

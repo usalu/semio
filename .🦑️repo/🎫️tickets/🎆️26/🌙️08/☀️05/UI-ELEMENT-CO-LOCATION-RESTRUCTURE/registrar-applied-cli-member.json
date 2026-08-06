@@ -1,0 +1,5 @@
+{
+  "at": "2026-08-06T12:15:10.199Z",
+  "action": "repointed 🦑️repo/…/⌨️cli member ⚡️implementations → 📦️packages",
+  "also": "patched os-kernel Cargo.toml sync feature optional deps so workspace metadata loads"
+}

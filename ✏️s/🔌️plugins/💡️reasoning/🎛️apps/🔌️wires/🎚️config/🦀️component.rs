@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// 🧮️ `ReasoningWiresPlayApp::Config` — the pure-trait `DocumentApp::Config` for the wires app.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
-#[dsl(extension = "wirescfg")]
+#[dsl(extension = "reasoning.wirescfg")]
 #[dsl(layout = "lines")]
 pub struct WiresConfig {
     /// 👁️ Selected node/edge ids — was `WiresPlayRuntime::selected_ids`.

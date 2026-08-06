@@ -17,7 +17,7 @@ wasm-opt = false
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust/📦️lib.rs"
+path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📦️lib.rs"
 
 [dependencies]
 semio-framework-core = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core" }

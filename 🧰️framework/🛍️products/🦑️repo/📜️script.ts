@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 /** 🧭️ `@repo` technology policy router: `bun ./📜️script.ts policy`. */
-import type { TechnologyLinter } from "../../🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/⚡️implementations/🟦️typescript/🟦️typescript/📦️index.ts";
-import { runPolicyOnlyMain } from "../../🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/⚡️implementations/🟦️typescript/🟦️typescript/📦️index.ts";
-import { defineLint } from "../../🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/⚡️implementations/🟦️typescript/🟦️typescript/📦️index.ts";
+import type { TechnologyLinter } from "../../🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/📦️packages/🟦️typescript/🟦️typescript/📦️index.ts";
+import { runPolicyOnlyMain } from "../../🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/📦️packages/🟦️typescript/🟦️typescript/📦️index.ts";
+import { defineLint } from "../../🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/📦️packages/🟦️typescript/🟦️typescript/📦️index.ts";
 
 export const policy = defineLint("repo-technology", (l: TechnologyLinter) => {
   if (l.bundles().length > 0) return [];

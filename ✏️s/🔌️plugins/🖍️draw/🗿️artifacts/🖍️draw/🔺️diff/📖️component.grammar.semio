@@ -1,6 +1,16 @@
 dialect grammar
-grammar draw
+grammar draw.diff
 extension draw
 use family-scene
-start document
-document = TEXT*
+start diff
+
+diff = layer-patch*
+layer-patch = "layer-patch" "layer-id" "=" IDENT base-patch? tree-patch?
+base-patch = "base" "{" {"name" "=" TEXT}? {"visible" "=" BOOL}? {"locked" "=" BOOL}? {"opacity" "=" FLOAT}? {"blend-mode" "=" IDENT}? prop* "}"
+tree-patch = "tree" "{" {"add" "=" layer}? {"remove" "=" IDENT}? {"reorder" "=" INT}? "}"
+layer = "shape" prop* | "path" prop* | "text" prop* | "image" prop* | "group" prop* | "boolean" prop* | "trace" prop*
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" prop* "}"
+value = TEXT | FLOAT | INT | BOOL | list | map

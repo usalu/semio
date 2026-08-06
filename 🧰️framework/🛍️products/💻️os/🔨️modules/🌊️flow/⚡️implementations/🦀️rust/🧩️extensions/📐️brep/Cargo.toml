@@ -16,7 +16,7 @@ standalone-wasm = ["dep:wasm-bindgen"]
 [dependencies]
 flow_extension_sdk = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/🕸️wasm", package = "semio-s-kernel-flow-extension-wasm" }
 semio-s-3d = { path = "../../../../../../../../../✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
-neural_engine = { path = "../../../../../🧠️neural/⚙️engine/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+neural_engine = { path = "../../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 semio-framework-core = { path = "../../../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core" }
 base64 = "0.22"
 serde = { version = "1.0.219", features = ["derive"] }

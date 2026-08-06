@@ -17,7 +17,7 @@
 import type { Plugin } from "vite";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { discoverPackages, loadTaxonomy, readSemioMarkerSubTable } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { discoverPackages, loadTaxonomy, readSemioMarkerSubTable } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 import type { PlaygroundAssetSpec } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
 
 export type { PlaygroundAssetSpec };

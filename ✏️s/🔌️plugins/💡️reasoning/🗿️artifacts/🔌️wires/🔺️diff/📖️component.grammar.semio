@@ -1,6 +1,24 @@
 dialect grammar
-grammar wires
+grammar wires.diff
 extension wires
 use family-graph
-start document
-document = TEXT*
+start diff
+
+diff = diff-line*
+diff-line = "wires" block | "board" block
+
+wire-endpoint = IDENT {":" IDENT}? {"@" IDENT}?
+edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
+edge-label = IDENT {":" IDENT}?
+wire = wire-endpoint edge-arrow wire-endpoint props?
+chain = wire-endpoint {ARROW wire-endpoint}+ | wire-endpoint {DASHARROW wire-endpoint}+
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | INT | FLOAT | BOOL)
+table = IDENT columns "{" row* "}"
+columns = "[" column+ "]"
+column = IDENT ":" IDENT
+row = cell+
+cell = TEXT | INT | FLOAT | BOOL | IDENT | wire | MAP | BLOCK
+block = "{" field* "}"
+field = IDENT "=" value
+value = TEXT | INT | FLOAT | BOOL | wire | MAP | block | table

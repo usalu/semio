@@ -1,4 +1,4 @@
-/** WASM facade — parse/print delegates to the plugin Rust crate. */
+/** jack dsl — thin WASM parse/print facade. */
 export function parseDsl(text: string): unknown {
   throw new Error("wire to plugin WASM");
 }

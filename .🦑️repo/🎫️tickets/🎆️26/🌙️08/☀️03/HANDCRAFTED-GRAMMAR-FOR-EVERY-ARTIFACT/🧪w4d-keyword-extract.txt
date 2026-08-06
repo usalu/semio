@@ -1,0 +1,1282 @@
+===== ◻2d/🎒️pack/🦀️component.rs =====
+"ULS"
+"c0"
+"c1"
+"c2"
+"c3"
+"dead"
+"e1"
+"e2"
+"ipe300"
+"l1"
+"l2"
+"live"
+"n1"
+"n2"
+"n3"
+"r1"
+"rod"
+"s1"
+"s2"
+"self"
+"slab"
+"steel"
+"uls"
+--- enums/variants ---
+7:pub fn encode(document: &Fem2dDocument) -> Vec<u8> {
+12:pub fn decode(bytes: &[u8]) -> Result<Fem2dDocument, PackError> {
+23:    fn simply_supported_beam_doc() -> Fem2dDocument {
+37:    fn truss_doc() -> Fem2dDocument {
+59:    fn rectangle_region_doc() -> Fem2dDocument {
+73:    fn rectangle_with_hole_region_doc() -> Fem2dDocument {
+81:    fn fem2d_pack_agrees_with_dsl_for_bundled_default_example() {
+87:    fn fem2d_pack_agrees_with_dsl_for_fixture_documents() {
+
+===== ◻2d/📡️spr/🦀️component.rs =====
+"apply"
+"dead"
+"decode"
+"e1"
+"encode"
+"fem2d"
+"ipe300"
+"l1"
+"n1"
+"n2"
+"s1"
+"s2"
+"steel"
+--- enums/variants ---
+11:pub fn encode_op(operation: &Fem2dOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+16:pub fn decode_op(bytes: &[u8]) -> Result<Fem2dOperation, protocol::ProtocolError> {
+27:    fn simply_supported_beam_doc() -> crate::artifacts::fem2d::Fem2dDocument {
+42:    fn op_binary_round_trips_and_agrees_with_text() {
+55:    fn operation_bytes_match_the_pre_migration_baseline() {
+62:    fn fem2d_document_text_round_trips_through_the_store() {
+
+===== ◻2d/🔧️op/🦀️component.rs =====
+"Slab"
+"ULS"
+"c0"
+"c1"
+"c2"
+"c3"
+"camelCase"
+"dead"
+"e1"
+"ipe300"
+"l1"
+"l2"
+"l3"
+"live"
+"n1"
+"n2"
+"operation"
+"r1"
+"rod"
+"s1"
+"s2"
+"self"
+"slab"
+"steel"
+"uls"
+--- enums/variants ---
+14:pub enum Fem2dOperation {
+93:    fn diff(&self, _projection: &Fem2dDocument) -> Fem2dDiff {
+118:    fn backwards(&self, projection: &Fem2dDocument) -> Vec<Self> {
+176:    fn simply_supported_beam_doc() -> Fem2dDocument {
+190:    fn rectangle_region_doc() -> Fem2dDocument {
+206:    fn round_trip(projection: &Fem2dDocument, operation: &Fem2dOperation) -> Fem2dDocument {
+217:    fn node_op_round_trips() {
+225:    fn element_op_round_trips() {
+233:    fn material_op_round_trips() {
+240:    fn section_op_round_trips() {
+247:    fn support_op_round_trips() {
+254:    fn load_case_op_round_trips() {
+261:    fn region_op_round_trips() {
+270:    fn combination_op_round_trips() {
+280:    fn analysis_settings_op_round_trips() {
+287:    fn document_op_round_trips() {
+297:    fn fem2d_op_text_round_trips_every_variant() {
+
+===== ◻2d/🔺️diff/🦀️component.rs =====
+"c0"
+"c1"
+"c2"
+"c3"
+"camelCase"
+"dead"
+"e1"
+"ipe300"
+"l1"
+"missing"
+"n1"
+"n2"
+"r1"
+"s1"
+"s2"
+"self"
+"slab"
+"steel"
+--- enums/variants ---
+12:    fn id(&self) -> &str;
+16:    fn id(&self) -> &str {
+21:    fn id(&self) -> &str {
+26:    fn id(&self) -> &str {
+31:    fn id(&self) -> &str {
+36:    fn id(&self) -> &str {
+41:    fn id(&self) -> &str {
+46:    fn id(&self) -> &str {
+51:    fn id(&self) -> &str {
+60:pub struct NodesDiff {
+67:pub struct ElementsDiff {
+74:pub struct MaterialsDiff {
+81:pub struct SectionsDiff {
+88:pub struct SupportsDiff {
+95:pub struct LoadCasesDiff {
+102:pub struct RegionsDiff {
+109:pub struct CombinationsDiff {
+116:fn apply_collection_diff<T: HasId + Clone>(items: &mut Vec<T>, removed: &[String], set: &[(usize, T)]) {
+141:pub struct Fem2dDiff {
+156:    fn apply(&self, projection: &Fem2dDocument) -> Fem2dDocument {
+175:    fn absorb(&mut self, other: Self) {
+209:    fn simply_supported_beam_doc() -> Fem2dDocument {
+225:    fn rectangle_region_doc() -> Fem2dDocument {
+241:    fn document_diff_absorb_wins_over_granular_changes() {
+250:    fn granular_diff_applies_sets_and_removals() {
+261:    fn index_of_locates_the_pre_operation_position() {
+
+===== ◻2d/🗣️dsl/🦀️component.rs =====
+"ULS"
+"c0"
+"c1"
+"c2"
+"c3"
+"dead"
+"default"
+"e1"
+"e2"
+"ipe300"
+"l1"
+"l2"
+"live"
+"n1"
+"n2"
+"n3"
+"r1"
+"rod"
+"s1"
+"s2"
+"self"
+"slab"
+"steel"
+"uls"
+--- enums/variants ---
+8:pub const FEM2D_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.fem.fem2d.dsl.semio");
+11:pub fn parse_dsl(text: &str) -> Result<Fem2dDocument, store::TextError> {
+16:pub fn print_dsl(document: &Fem2dDocument) -> String {
+27:    fn simply_supported_beam_doc() -> Fem2dDocument {
+41:    fn truss_doc() -> Fem2dDocument {
+63:    fn rectangle_region_doc() -> Fem2dDocument {
+77:    fn rectangle_with_hole_region_doc() -> Fem2dDocument {
+85:    fn fem2d_dsl_round_trips_bundled_default_example() {
+92:    fn fem2d_dsl_round_trips_fixture_documents() {
+
+===== 🧊️3d/🎒️pack/🦀️component.rs =====
+"Concrete"
+"Drop"
+"HEA200"
+"Rod"
+"Slab"
+"Steel"
+"ULS"
+"b1"
+"b2"
+"b3"
+"concrete"
+"drop"
+"e1"
+"hea200"
+"l1"
+"n1"
+"n2"
+"n3"
+"n4"
+"point"
+"rod"
+"s1"
+"s2"
+"s3"
+"s4"
+"sc0"
+"sc1"
+"sc2"
+"sc3"
+"self"
+"sol1"
+"steel"
+"uls"
+--- enums/variants ---
+7:pub fn encode(document: &Fem3dDocument) -> Vec<u8> {
+12:pub fn decode(bytes: &[u8]) -> Result<Fem3dDocument, PackError> {
+24:    fn cantilever_fixture() -> Fem3dDocument {
+38:    fn truss_fixture() -> Fem3dDocument {
+60:    fn solid_slab_doc() -> Fem3dDocument {
+81:    fn fem3d_pack_agrees_with_dsl_for_bundled_default_example() {
+87:    fn fem3d_pack_agrees_with_dsl_for_fixture_documents() {
+
+===== 🧊️3d/📡️spr/🦀️component.rs =====
+"HEA200"
+"Steel"
+"apply"
+"decode"
+"e1"
+"encode"
+"fem3d"
+"hea200"
+"l1"
+"n1"
+"n2"
+"point"
+"s1"
+"steel"
+--- enums/variants ---
+9:pub fn encode_op(operation: &Fem3dOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+14:pub fn decode_op(bytes: &[u8]) -> Result<Fem3dOperation, protocol::ProtocolError> {
+26:    fn cantilever_fixture() -> crate::artifacts::fem3d::Fem3dDocument {
+41:    fn op_binary_round_trips_and_agrees_with_text() {
+54:    fn operation_bytes_match_the_pre_migration_baseline() {
+61:    fn fem3d_document_text_round_trips_through_the_store() {
+
+===== 🧊️3d/🔧️op/🦀️component.rs =====
+"Concrete"
+"HEA200"
+"Slab"
+"Steel"
+"ULS"
+"camelCase"
+"concrete"
+"e1"
+"hea200"
+"l1"
+"l2"
+"l3"
+"live"
+"n1"
+"n2"
+"operation"
+"point"
+"rod"
+"s1"
+"s2"
+"s3"
+"s4"
+"sc0"
+"sc1"
+"sc2"
+"sc3"
+"self"
+"sol1"
+"steel"
+"uls"
+--- enums/variants ---
+14:pub enum Fem3dOperation {
+89:    fn diff(&self, _projection: &Fem3dDocument) -> Fem3dDiff {
+114:    fn backwards(&self, projection: &Fem3dDocument) -> Vec<Self> {
+175:    fn cantilever_fixture() -> (Fem3dDocument, f64, f64, f64, f64, f64) {
+201:    fn solid_slab_doc() -> Fem3dDocument {
+222:    fn round_trip(projection: &Fem3dDocument, operation: &Fem3dOperation) -> Fem3dDocument {
+233:    fn node_set_and_remove_round_trip() {
+242:    fn element_set_and_remove_round_trip() {
+250:    fn material_set_and_remove_round_trip() {
+258:    fn section_set_and_remove_round_trip() {
+266:    fn support_set_and_remove_round_trip() {
+274:    fn load_case_set_and_remove_round_trip() {
+282:    fn combination_set_and_remove_round_trip() {
+290:    fn analysis_settings_set_round_trips() {
+297:    fn document_op_round_trips() {
+305:    fn document_diff_absorb_wins_over_granular_changes() {
+314:    fn solid_op_round_trips() {
+325:    fn fem3d_op_text_round_trips_every_variant() {
+
+===== 🧊️3d/🔺️diff/🦀️component.rs =====
+"camelCase"
+"n1"
+"n2"
+"removed"
+"set"
+--- enums/variants ---
+17:    fn id(&self) -> &str;
+21:    fn id(&self) -> &str {
+27:    fn id(&self) -> &str {
+33:    fn id(&self) -> &str {
+39:    fn id(&self) -> &str {
+45:    fn id(&self) -> &str {
+51:    fn id(&self) -> &str {
+57:    fn id(&self) -> &str {
+63:    fn id(&self) -> &str {
+69:pub fn index_of<T: HasId>(items: &[T], id: &str) -> Option<usize> {
+80:pub struct CollectionDiff<T> {
+89:    fn default() -> Self {
+97:    fn absorb(&mut self, other: CollectionDiff<T>) {
+115:pub fn apply_collection_diff<T: HasId + Clone>(items: &mut Vec<T>, diff: &CollectionDiff<T>) {
+133:pub struct Fem3dDiff {
+148:    fn apply(&self, projection: &Fem3dDocument) -> Fem3dDocument {
+167:    fn absorb(&mut self, other: Self) {
+193:    fn apply_collection_diff_inserts_and_replaces_by_id() {
+204:    fn apply_collection_diff_removes_by_id() {
+212:    fn document_diff_wins_over_granular_changes_on_absorb() {
+
+===== 🧊️3d/🗣️dsl/🦀️component.rs =====
+"Concrete"
+"Drop"
+"HEA200"
+"Rod"
+"Slab"
+"Steel"
+"ULS"
+"b1"
+"b2"
+"b3"
+"concrete"
+"default"
+"drop"
+"e1"
+"hea200"
+"l1"
+"n1"
+"n2"
+"n3"
+"n4"
+"point"
+"rod"
+"s1"
+"s2"
+"s3"
+"s4"
+"sc0"
+"sc1"
+"sc2"
+"sc3"
+"self"
+"sol1"
+"steel"
+"uls"
+--- enums/variants ---
+8:pub const FEM3D_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.fem.fem3d.dsl.semio");
+11:pub fn parse_dsl(text: &str) -> Result<Fem3dDocument, store::TextError> {
+16:pub fn print_dsl(document: &Fem3dDocument) -> String {
+28:    fn cantilever_fixture() -> Fem3dDocument {
+42:    fn truss_fixture() -> Fem3dDocument {
+64:    fn solid_slab_doc() -> Fem3dDocument {
+85:    fn fem3d_dsl_round_trips_bundled_default_example() {
+91:    fn fem3d_dsl_round_trips_fixture_documents() {
+
+===== 🏛️program/🎒️pack/🦀️component.rs =====
+"decode"
+--- enums/variants ---
+7:pub fn encode(document: &Program) -> Vec<u8> {
+12:pub fn decode(bytes: &[u8]) -> Result<Program, PackError> {
+23:    fn pack_round_trips_the_empty_program() {
+29:    fn pack_round_trips_the_sample_program() {
+
+===== 🏛️program/📡️spr/🦀️component.rs =====
+"adjacency-1"
+"decode"
+"element-1"
+"encode"
+--- enums/variants ---
+8:pub fn encode_op(operation: &ProgramOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+13:pub fn decode_op(bytes: &[u8]) -> Result<ProgramOperation, protocol::ProtocolError> {
+25:    fn clear_adjacency_round_trips_through_the_binary_codec() {
+31:    fn a_collection_operation_round_trips_through_the_binary_codec() {
+40:    fn operation_rows_keep_their_pre_migration_bytes() {
+
+===== 🏛️program/🔧️op/🦀️component.rs =====
+"CLN-002"
+"Clinic"
+"Clinical"
+"Internal"
+"RACI"
+"accessibilityrequirement1"
+"accessrule0"
+"activity2"
+"adjacency"
+"adjacency3"
+"analysisrecord4"
+"approvalrecord5"
+"assumption6"
+"auditevent7"
+"base13"
+"base23"
+"base3"
+"base36"
+"base40"
+"base42"
+"base5"
+"base56"
+"base62"
+"base7"
+"benchmarkrecord8"
+"camelCase"
+"changerecord9"
+"collaborationrecord10"
+"communicationrequirement11"
+"compliancerecord12"
+"conflict13"
+"constraintrecord14"
+"costrequirement15"
+"decision16"
+"deliveryconstraint17"
+"documentrecord18"
+"element"
+"environmentalrequirement20"
+"equipment21"
+"flexibilityrequirement22"
+"flowrequirement23"
+"function24"
+"growthplan25"
+"humanfactorrequirement26"
+"informationrequirement27"
+"infrastructurerequirement28"
+"issue29"
+"knowledgerecord30"
+"meetingrecord31"
+"operation"
+"operationalrequirement32"
+"optionevaluation33"
+"organizationalrequirement34"
+"parse_op"
+"performancecriterion35"
+"priorityrecord36"
+"privacyrequirement37"
+"process38"
+"programelement19"
+"qualityrecord39"
+"quantityrequirement40"
+"regulatoryrequirement41"
+"relationship42"
+"reportrecord43"
+"requirement44"
+"resiliencerequirement45"
+"resource46"
+"risk47"
+"safetyrequirement48"
+"scenario49"
+"schedulerequirement50"
+"searchfilter51"
+"securityrequirement52"
+"servicerequirement53"
+"sitecontext54"
+"stakeholder"
+"stakeholder55"
+"statusrecord56"
+"storagerequirement57"
+"survey58"
+--- enums/variants ---
+23:pub enum ProgramOperation {
+112:    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+116:    fn print_op(&self) -> String {
+125:    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+129:    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+138:pub struct TraceLinkPatch {
+146:    fn apply_patch(&mut self, patch: &TraceLinkPatch) {
+161:    fn diff_patch(&self, other: &Self) -> Option<TraceLinkPatch> {
+169:pub fn apply_plugin_operation(program: &mut Program, operation: &ProgramOperation) {
+255:pub fn invert_plugin_operation(program: &Program, operation: &ProgramOperation) -> ProgramOperation {
+364:    fn diff(&self, _projection: &Program) -> ProgramDiff {
+368:    fn backwards(&self, projection: &Program) -> Vec<Self> {
+382:    fn update_meta_round_trips_undo() {
+393:    fn add_stakeholder_via_collection_operation() {
+433:    fn set_plugin_bulk_replace() {
+441:    fn update_project_round_trips_undo() {
+452:    fn update_governance_round_trips_undo() {
+463:    fn set_and_clear_adjacency_round_trips_undo() {
+491:    fn dispatches_traces_add_and_invert() {
+503:    fn dispatches_access_rules_add_and_invert() {
+537:    fn dispatches_accessibility_add_and_invert() {
+573:    fn dispatches_activities_add_and_invert() {
+611:    fn dispatches_adjacencies_add_and_invert() {
+645:    fn dispatches_analyses_add_and_invert() {
+677:    fn dispatches_approvals_add_and_invert() {
+710:    fn dispatches_assumptions_add_and_invert() {
+743:    fn dispatches_audit_events_add_and_invert() {
+775:    fn dispatches_benchmarks_add_and_invert() {
+808:    fn dispatches_changes_add_and_invert() {
+841:    fn dispatches_collaboration_add_and_invert() {
+873:    fn dispatches_communication_add_and_invert() {
+906:    fn dispatches_compliance_records_add_and_invert() {
+941:    fn dispatches_conflicts_add_and_invert() {
+974:    fn dispatches_constraints_add_and_invert() {
+1009:    fn dispatches_costs_add_and_invert() {
+1042:    fn dispatches_decisions_add_and_invert() {
+1075:    fn dispatches_delivery_add_and_invert() {
+1109:    fn dispatches_documents_add_and_invert() {
+1142:    fn dispatches_elements_add_and_invert() {
+1181:    fn dispatches_environmental_add_and_invert() {
+1216:    fn dispatches_equipment_add_and_invert() {
+1254:    fn dispatches_flexibility_add_and_invert() {
+1286:    fn dispatches_flows_add_and_invert() {
+1321:    fn dispatches_functions_add_and_invert() {
+1357:    fn dispatches_growth_add_and_invert() {
+1390:    fn dispatches_human_factors_add_and_invert() {
+1425:    fn dispatches_information_add_and_invert() {
+1458:    fn dispatches_infrastructure_add_and_invert() {
+1491:    fn dispatches_issues_add_and_invert() {
+1524:    fn dispatches_knowledge_add_and_invert() {
+1556:    fn dispatches_meetings_add_and_invert() {
+1590:    fn dispatches_operations_add_and_invert() {
+1628:    fn dispatches_options_add_and_invert() {
+1661:    fn dispatches_organizational_add_and_invert() {
+1694:    fn dispatches_performance_add_and_invert() {
+1727:    fn dispatches_priorities_add_and_invert() {
+1760:    fn dispatches_privacy_add_and_invert() {
+1794:    fn dispatches_processes_add_and_invert() {
+1831:    fn dispatches_quality_add_and_invert() {
+1864:    fn dispatches_quantities_add_and_invert() {
+
+===== 🏛️program/🔺️diff/🦀️component.rs =====
+"camelCase"
+--- enums/variants ---
+11:pub struct ProgramDiff {
+16:    fn apply(&self, projection: &Program) -> Program {
+24:    fn absorb(&mut self, other: Self) {
+38:    fn a_diff_applies_its_operations_in_order() {
+47:    fn absorb_concatenates_operation_lists() {
+
+===== 🏛️program/🗣️dsl/🦀️component.rs =====
+"parse"
+"sample"
+--- enums/variants ---
+15:pub const ARCHITECT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.architect.program.dsl.semio");
+18:pub fn parse(text: &str) -> Result<Program, store::TextError> {
+23:pub fn print(document: &Program) -> String {
+34:    fn parse_and_print_round_trip_the_sample_program() {
+40:    fn the_bundled_example_text_parses() {
+46:    fn an_empty_program_prints_and_reparses() {
+
+===== 🧊️process3d/🎒️pack/🦀️component.rs =====
+"Attach"
+"Crosscut"
+"Cut"
+"Drill"
+"Kerf"
+"attach-1"
+"beam"
+"bladeDiameter"
+"circularSaw"
+"crosscut"
+"cut-1"
+"decode"
+"drill-1"
+"imported-tool"
+"kerf"
+"scissors"
+"solid-7"
+"stock"
+"wood"
+--- enums/variants ---
+7:pub fn encode(document: &Process3dDocument) -> Vec<u8> {
+12:pub fn decode(bytes: &[u8]) -> Result<Process3dDocument, PackError> {
+23:    fn cut_step(id: &str) -> ProcessStep {
+27:    fn drill_step(id: &str) -> ProcessStep {
+37:    fn attach_step(id: &str) -> ProcessStep {
+47:    fn imported_mesh_stock() -> Stock {
+51:    fn circular_saw_machine() -> WorkshopMachine {
+70:    fn sample_document() -> Process3dDocument {
+80:    fn process3d_pack_round_trips() {
+88:    fn process3d_pack_round_trips_imported_solid_shapes() {
+102:    fn process3d_pack_round_trips_with_no_resolved_cursor() {
+109:    fn timber_example_fixture_pack_round_trips() {
+115:    fn drilled_plate_example_fixture_pack_round_trips() {
+
+===== 🧊️process3d/📡️spr/🦀️component.rs =====
+--- enums/variants ---
+8:pub fn encode_op(operation: &Process3dOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+13:pub fn decode_op(bytes: &[u8]) -> Result<Process3dOperation, protocol::ProtocolError> {
+
+===== 🧊️process3d/🔧️op/🦀️component.rs =====
+"Attach"
+"Crosscut"
+"Cut"
+"Drill"
+"Kerf"
+"Renamed"
+"attach-1"
+"beam"
+"bladeDiameter"
+"camelCase"
+"circularSaw"
+"crosscut"
+"cursor"
+"cut-1"
+"document"
+"drill-1"
+"kerf"
+"kind"
+"scissors"
+"stock"
+"tableSaw"
+"to"
+"untouched"
+"wood"
+--- enums/variants ---
+13:pub enum Process3dOperation {
+36:    fn diff(&self, _projection: &Process3dDocument) -> Self::Diff {
+46:    fn backwards(&self, projection: &Process3dDocument) -> Vec<Self> {
+69:enum StepOriginPatch {
+83:struct ProcessStepPatchDsl {
+92:fn process_step_patch_to_dsl(patch: &ProcessStepPatch) -> ProcessStepPatchDsl {
+105:fn process_step_patch_from_dsl(patch: ProcessStepPatchDsl) -> ProcessStepPatch {
+126:enum Process3dOperationDsl {
+179:fn process3d_operation_to_dsl(operation: &Process3dOperation) -> Process3dOperationDsl {
+195:fn process3d_operation_from_dsl(operation: Process3dOperationDsl) -> Process3dOperation {
+212:    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+216:    fn print_op(&self) -> String {
+224:    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+228:    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+240:    fn cut_step(id: &str) -> ProcessStep {
+244:    fn imported_mesh_stock() -> Stock {
+248:    fn drill_step(id: &str) -> ProcessStep {
+258:    fn attach_step(id: &str) -> ProcessStep {
+268:    fn circular_saw_machine() -> WorkshopMachine {
+289:    fn sample_document() -> Process3dDocument {
+299:    fn backwards_of_add_is_remove() {
+312:    fn process3d_op_text_round_trips_steps_add() {
+317:    fn process3d_op_text_round_trips_steps_remove() {
+322:    fn process3d_op_text_round_trips_steps_move() {
+327:    fn process3d_op_text_round_trips_steps_patch_full() {
+338:    fn process3d_op_text_round_trips_steps_patch_clearing_origin() {
+344:    fn process3d_op_text_round_trips_steps_patch_empty() {
+350:    fn process3d_op_text_round_trips_set_stock() {
+355:    fn process3d_op_text_round_trips_set_cursor_some() {
+360:    fn process3d_op_text_round_trips_set_cursor_none() {
+365:    fn process3d_op_text_round_trips_set_document() {
+370:    fn process3d_op_text_round_trips_machines_add() {
+375:    fn process3d_op_text_round_trips_machines_remove() {
+380:    fn process3d_op_text_round_trips_machines_move() {
+385:    fn process3d_op_text_round_trips_machines_patch_full() {
+391:    fn process3d_op_text_round_trips_machines_patch_empty() {
+396:    fn backwards_of_machines_add_is_remove() {
+
+===== 🧊️process3d/🔺️diff/🦀️component.rs =====
+"camelCase"
+--- enums/variants ---
+11:pub struct Process3dDiff {
+25:    fn apply(&self, projection: &Process3dDocument) -> Process3dDocument {
+48:    fn absorb(&mut self, other: Self) {
+
+===== 🧊️process3d/🗣️dsl/🦀️component.rs =====
+"Attach"
+"Crosscut"
+"Cut"
+"Drill"
+"Kerf"
+"attach-1"
+"beam"
+"bladeDiameter"
+"circularSaw"
+"crosscut"
+"cut-1"
+"drill-1"
+"imported-tool"
+"kerf"
+"scissors"
+"solid-7"
+"stock"
+"wood"
+--- enums/variants ---
+6:pub const PROCESS_3D_TIMBER_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.process.process3d.timber-beam-joinery-process3d.dsl.semio");
+9:pub const PROCESS_3D_PLATE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.process.process3d.drilled-plate-process3d.dsl.semio");
+12:pub fn parse_dsl(text: &str) -> Result<Process3dDocument, store::TextError> {
+17:pub fn print_dsl(document: &Process3dDocument) -> String {
+27:    fn cut_step(id: &str) -> ProcessStep {
+31:    fn drill_step(id: &str) -> ProcessStep {
+41:    fn attach_step(id: &str) -> ProcessStep {
+51:    fn imported_mesh_stock() -> Stock {
+55:    fn circular_saw_machine() -> WorkshopMachine {
+74:    fn sample_document() -> Process3dDocument {
+84:    fn process3d_dsl_round_trips() {
+90:    fn process3d_dsl_round_trips_imported_solid_shapes() {
+104:    fn process3d_dsl_round_trips_with_no_resolved_cursor() {
+111:    fn timber_example_fixture_parses_and_round_trips() {
+119:    fn drilled_plate_example_fixture_parses_and_round_trips() {
+
+===== 📖️playbook/🎒️pack/🦀️component.rs =====
+"Recipe"
+"apply"
+"decode"
+"playbook-demo"
+--- enums/variants ---
+11:pub fn encode(document: &PlaybookSpec) -> Vec<u8> {
+16:pub fn decode(bytes: &[u8]) -> Result<PlaybookSpec, PackError> {
+28:    fn pack_round_trips_the_empty_projection() {
+35:    fn facade_generator_example_pack_round_trips() {
+42:    fn facade_generator_example_pack_agrees_with_dsl() {
+53:    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+
+===== 📖️playbook/📡️spr/🦀️component.rs =====
+"Renamed"
+"decode"
+"encode"
+--- enums/variants ---
+15:pub fn encode_op(operation: &PlaybookOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+20:pub fn decode_op(bytes: &[u8]) -> Result<PlaybookOperation, protocol::ProtocolError> {
+30:    fn op_binary_round_trips_and_agrees_with_text() {
+
+===== 📖️playbook/🔧️op/🦀️component.rs =====
+"Renamed"
+"Review"
+"step-test"
+--- enums/variants ---
+19:    fn update_playbook_op_sets_title() {
+27:    fn apply_playbook_edit_op_roundtrip() {
+
+===== 📖️playbook/🔺️diff/🦀️component.rs =====
+"Basics"
+"playbook"
+--- enums/variants ---
+22:    fn add_step_diff_applies_onto_the_base_projection() {
+
+===== 📖️playbook/🗣️dsl/🦀️component.rs =====
+"Aluminum"
+"Anodized"
+"Description"
+"Finishes"
+"Material"
+"Raw"
+"Terracotta"
+"Timber"
+"accent-color"
+"algorithm"
+"aluminum"
+"anodized"
+"basics"
+"boolean"
+"cad-upload"
+"color"
+"date"
+"density"
+"facade-generator"
+"fallback-material"
+"file"
+"finishes"
+"image"
+"install-date"
+"longText"
+"material"
+"mirror-layout"
+"multi"
+"note"
+"notes-intro"
+"number"
+"panel-count"
+"panel-offset"
+"panel-width"
+"panels"
+"parse"
+"pattern"
+"pattern-rule"
+"powder-coated"
+"project-description"
+"project-name"
+"raw"
+"reference-photo"
+"schedule"
+"seed"
+"single"
+"slider"
+"terracotta"
+"text"
+"timber"
+"vector"
+"voronoi"
+"voronoi-facade"
+--- enums/variants ---
+14:pub const FACADE_GENERATOR_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.playbook.playbook.dsl.semio");
+17:pub fn parse_dsl(text: &str) -> Result<PlaybookSpec, store::TextError> {
+22:pub fn print_dsl(document: &PlaybookSpec) -> String {
+34:    fn dsl_round_trips_the_empty_projection() {
+41:    fn facade_generator_example_dsl_round_trips() {
+47:    fn facade_generator_example_matches_the_handcrafted_spec() {
+
+===== 🏔️gisterrain/🎒️pack/🦀️component.rs =====
+"decode"
+"id"
+"lat"
+"lon"
+"p1"
+"positions"
+"regions"
+"routes"
+--- enums/variants ---
+7:pub fn encode(document: &Gis3dTerrainDocument) -> Vec<u8> {
+12:pub fn decode(bytes: &[u8]) -> Result<Gis3dTerrainDocument, PackError> {
+23:    fn gis3d_terrain_document_pack_agrees_with_dsl_for_bundled_reuse_example() {
+30:    fn gis3d_terrain_document_pack_agrees_with_dsl_for_arbitrary_exaggeration() {
+35:    fn gis3d_terrain_document_pack_agrees_with_dsl_for_imported_features_json() {
+
+===== 🏔️gisterrain/📡️spr/🦀️component.rs =====
+"apply"
+"decode"
+"encode"
+"gis3d-demo"
+"null"
+"positions"
+--- enums/variants ---
+12:pub fn encode_op(operation: &Gis3dTerrainOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+17:pub fn decode_op(bytes: &[u8]) -> Result<Gis3dTerrainOperation, protocol::ProtocolError> {
+29:    fn op_binary_round_trips_and_agrees_with_text() {
+37:    fn gis3d_terrain_set_exaggeration_op_line_round_trips() {
+42:    fn gis3d_terrain_set_imported_features_op_line_round_trips() {
+47:    fn gis3d_terrain_set_document_op_line_round_trips() {
+55:    fn operation_rows_keep_their_pre_migration_bytes() {
+63:    fn gis3d_terrain_document_text_round_trips_through_store() {
+
+===== 🏔️gisterrain/🔧️op/🦀️component.rs =====
+"camelCase"
+"features-json"
+"null"
+"operation"
+"positions"
+--- enums/variants ---
+19:pub enum Gis3dTerrainOperation {
+36:    fn diff(&self, _projection: &Gis3dTerrainDocument) -> Gis3dTerrainDiff {
+44:    fn backwards(&self, projection: &Gis3dTerrainDocument) -> Vec<Self> {
+64:    fn gis3d_terrain_set_document_backwards_restores_the_exact_prior_projection() {
+75:    fn set_exaggeration_and_set_imported_features_invert_to_the_prior_field_value() {
+
+===== 🏔️gisterrain/🔺️diff/🦀️component.rs =====
+"camelCase"
+"null"
+--- enums/variants ---
+11:pub struct Gis3dTerrainDiff {
+18:    fn apply(&self, projection: &Gis3dTerrainDocument) -> Gis3dTerrainDocument {
+32:    fn absorb(&mut self, other: Self) {
+53:    fn field_diffs_absorb_last_writer_wins_and_apply_onto_the_projection() {
+63:    fn a_whole_document_diff_wins_over_every_field_diff() {
+
+===== 🏔️gisterrain/🗣️dsl/🦀️component.rs =====
+"id"
+"lat"
+"lon"
+"p1"
+"positions"
+"regions"
+"reparse"
+"routes"
+--- enums/variants ---
+6:pub const REUSE_TERRAIN_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.gis.gisterrain.dsl.semio");
+9:pub fn parse_dsl(text: &str) -> Result<Gis3dTerrainDocument, store::TextError> {
+14:pub fn print_dsl(document: &Gis3dTerrainDocument) -> String {
+24:    fn gis3d_terrain_document_dsl_round_trips_bundled_reuse_example() {
+30:    fn gis3d_terrain_document_dsl_round_trips_arbitrary_exaggeration() {
+35:    fn gis3d_terrain_document_dsl_round_trips_imported_features_json() {
+40:    fn print_dsl_reparses_to_the_same_document() {
+
+===== 🗺️gismap/🎒️pack/🦀️component.rs =====
+"decode"
+"depth"
+"flag"
+"g1"
+"id"
+"lat"
+"lon"
+"meta"
+"missing"
+"nested"
+"p1"
+"points"
+"r1"
+"ring"
+"tags"
+--- enums/variants ---
+7:pub fn encode(document: &GisMapDocument) -> Vec<u8> {
+12:pub fn decode(bytes: &[u8]) -> Result<GisMapDocument, PackError> {
+25:    fn gis_map_document_pack_agrees_with_dsl_for_bundled_reuse_example() {
+32:    fn gis_map_document_pack_agrees_with_dsl_for_empty_document() {
+39:    fn gis_map_document_pack_agrees_with_dsl_for_synthetic_value_shapes() {
+
+===== 🗺️gismap/📡️spr/🦀️component.rs =====
+"Home"
+"apply"
+"boundary"
+"decode"
+"encode"
+"gis2d-demo"
+"id"
+"kind"
+"label"
+"lat"
+"lon"
+"p1"
+"reuse"
+"to"
+--- enums/variants ---
+17:enum GisMapOperationDsl {
+78:fn gis_map_operation_to_dsl(operation: &GisMapOperation) -> GisMapOperationDsl {
+96:fn gis_map_operation_from_dsl(operation: GisMapOperationDsl) -> GisMapOperation {
+115:    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+119:    fn print_op(&self) -> String {
+127:    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+131:    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+139:pub fn encode_op(operation: &GisMapOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+144:pub fn decode_op(bytes: &[u8]) -> Result<GisMapOperation, protocol::ProtocolError> {
+157:    fn dsl_of(value: &serde_json::Value) -> dsl::DslValue {
+161:    fn sample_patch_feature() -> MapFeature {
+166:    fn op_binary_round_trips_and_agrees_with_text() {
+174:    fn gis_map_positions_op_lines_round_trip() {
+183:    fn gis_map_routes_op_lines_round_trip() {
+191:    fn gis_map_regions_op_lines_round_trip() {
+199:    fn gis_map_set_document_op_line_round_trips() {
+208:    fn operation_rows_keep_their_pre_migration_bytes() {
+217:    fn gis_map_document_text_round_trips_through_store() {
+
+===== 🗺️gismap/🔧️op/🦀️component.rs =====
+"Home"
+"apply"
+"camelCase"
+"gis"
+"id"
+"label"
+"lat"
+"lon"
+"operation"
+"p1"
+"points"
+"positions"
+"projection"
+"regions"
+"routes"
+--- enums/variants ---
+15:pub enum GisMapOperation {
+25:    fn diff(&self, projection: &GisMapDocument) -> GisMapDiff {
+34:    fn backwards(&self, projection: &GisMapDocument) -> Vec<Self> {
+57:    fn round_trip(document: &GisMapDocument, operation: &GisMapOperation) -> GisMapDocument {
+70:    fn dsl_of(value: &serde_json::Value) -> dsl::DslValue {
+74:    fn feature(id: &str) -> MapFeature {
+79:    fn positions_add_patch_remove_round_trip() {
+90:    fn descriptor_round_trips_through_document() {
+100:    fn gis_map_document_vcs_replays_operations() {
+
+===== 🗺️gismap/🔺️diff/🦀️component.rs =====
+"camelCase"
+"p1"
+"p2"
+"r1"
+--- enums/variants ---
+9:fn apply_map_collection_diff(items: &mut Vec<MapFeature>, diff: &CollectionDiff<String, MapFeaturePatch, MapFeature>) {
+23:fn absorb_map_collection_diff(target: &mut Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>, incoming: Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>) {
+40:pub struct GisMapDiff {
+48:    fn apply(&self, projection: &GisMapDocument) -> GisMapDocument {
+65:    fn absorb(&mut self, other: Self) {
+82:    fn feature(id: &str) -> MapFeature {
+87:    fn a_whole_document_diff_wins_over_every_collection_diff() {
+96:    fn collection_diffs_absorb_and_apply_add_remove_patch() {
+
+===== 🗺️gismap/🗣️dsl/🦀️component.rs =====
+"depth"
+"flag"
+"g1"
+"id"
+"lat"
+"lon"
+"meta"
+"missing"
+"nested"
+"p1"
+"points"
+"r1"
+"reparse"
+"ring"
+"tags"
+--- enums/variants ---
+6:pub const REUSE_MAP_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.gis.gismap.dsl.semio");
+9:pub fn parse_dsl(text: &str) -> Result<GisMapDocument, store::TextError> {
+14:pub fn print_dsl(document: &GisMapDocument) -> String {
+26:    fn gis_map_document_dsl_round_trips_bundled_reuse_example() {
+32:    fn gis_map_document_dsl_round_trips_empty_document() {
+37:    fn print_dsl_reproduces_the_bundled_example_text_verbatim() {
+50:    fn gis_map_document_dsl_round_trips_synthetic_value_shapes() {
+
+===== 📋️forms/🎒️pack/🦀️component.rs =====
+"Inputs"
+"Review"
+"apply"
+"decode"
+"forms"
+"forms-demo"
+"step-2"
+--- enums/variants ---
+11:pub fn encode(document: &FormSpec) -> Vec<u8> {
+16:pub fn decode(bytes: &[u8]) -> Result<FormSpec, PackError> {
+27:    fn building_component_fixture_pack_agrees_with_dsl() {
+35:    fn default_fixture_pack_agrees_with_dsl() {
+43:    fn onboarding_fixture_pack_agrees_with_dsl() {
+56:    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+
+===== 📋️forms/📡️spr/🦀️component.rs =====
+"Renamed"
+"decode"
+"encode"
+--- enums/variants ---
+15:pub fn encode_op(operation: &FormOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+20:pub fn decode_op(bytes: &[u8]) -> Result<FormOperation, protocol::ProtocolError> {
+30:    fn op_binary_round_trips_and_agrees_with_text() {
+
+===== 📋️forms/🔧️op/🦀️component.rs =====
+"Renamed"
+"Review"
+"step-test"
+--- enums/variants ---
+19:    fn update_form_op_sets_title() {
+27:    fn apply_form_edit_op_roundtrip() {
+
+===== 📋️forms/🔺️diff/🦀️component.rs =====
+"Inputs"
+"forms"
+--- enums/variants ---
+22:    fn add_step_diff_applies_onto_the_base_projection() {
+
+===== 📋️forms/🗣️dsl/🦀️component.rs =====
+"building-component"
+"default"
+"onboarding"
+--- enums/variants ---
+10:pub const BUILDING_COMPONENT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.forms.forms.building-component-forms.dsl.semio");
+13:pub const DEFAULT_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.forms.forms.dsl.semio");
+17:pub const ONBOARDING_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.forms.forms.onboarding-forms.dsl.semio");
+20:pub fn parse_dsl(text: &str) -> Result<FormSpec, store::TextError> {
+25:pub fn print_dsl(document: &FormSpec) -> String {
+36:    fn building_component_fixture_dsl_round_trips() {
+44:    fn default_fixture_dsl_round_trips() {
+52:    fn onboarding_fixture_dsl_round_trips() {
+
+===== 📜️imperative/🎒️pack/🦀️component.rs =====
+"decode"
+"step-if"
+"step-inner"
+"then"
+--- enums/variants ---
+15:    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+20:    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, PackError> {
+29:pub fn encode(document: &ImperativeDocument) -> Vec<u8> {
+34:pub fn decode(bytes: &[u8]) -> Result<ImperativeDocument, PackError> {
+45:    fn pack_round_trips_and_agrees_with_dsl() {
+53:    fn pack_round_trips_representative_document_with_nested_control_body() {
+
+===== 📜️imperative/📡️spr/🦀️component.rs =====
+"apply"
+"decode"
+"encode"
+"step-1"
+"step-if"
+"step-nested"
+"step-x"
+"test"
+"then"
+"to"
+--- enums/variants ---
+25:enum ImperativeOperationDsl {
+53:fn imperative_operation_to_dsl(operation: &ImperativeOperation) -> ImperativeOperationDsl {
+66:fn imperative_operation_from_dsl(dsl_op: ImperativeOperationDsl) -> ImperativeOperation {
+80:    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+84:    fn print_op(&self) -> String {
+92:    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+96:    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+104:pub fn encode_op(operation: &ImperativeOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+109:pub fn decode_op(bytes: &[u8]) -> Result<ImperativeOperation, protocol::ProtocolError> {
+121:    fn op_binary_round_trips_and_agrees_with_text() {
+129:    fn document_text_round_trip_with_applied_operation() {
+144:    fn op_text_rejects_unknown_operation_keyword() {
+150:    fn op_text_round_trips_add_with_owner_and_slot() {
+
+===== 📜️imperative/🔧️op/🦀️component.rs =====
+"camelCase"
+"key"
+"missing"
+"renamed"
+"step-1"
+"step-if"
+"step-nested"
+"step-x"
+"then"
+--- enums/variants ---
+9:pub struct ImperativeOperation {
+17:    fn diff(&self, _projection: &ImperativeDocument) -> Self::Diff {
+21:    fn backwards(&self, projection: &ImperativeDocument) -> Vec<Self> {
+47:    fn step(id: &str, kind: &str) -> Step {
+52:    fn add_step_op_round_trips() {
+61:    fn remove_step_op_round_trips() {
+70:    fn move_step_op_round_trips() {
+79:    fn patch_step_params_op_round_trips() {
+89:    fn add_step_into_nested_control_body_round_trips() {
+103:    fn resolve_steps_root_returns_document_steps() {
+110:    fn resolve_steps_unknown_owner_is_none() {
+117:    fn resolve_steps_missing_owner_or_slot_is_none() {
+124:    fn resolve_steps_unmaterialized_slot_reads_empty() {
+132:    fn operation_backwards_on_unresolvable_path_ref_is_empty() {
+
+===== 📜️imperative/🔺️diff/🦀️component.rs =====
+"missing"
+"owner"
+"step-1"
+"step-2"
+"step-if"
+"step-nested"
+"then"
+--- enums/variants ---
+8:pub struct ImperativeDiff(pub Option<ImperativeOperation>);
+11:    fn apply(&self, projection: &ImperativeDocument) -> ImperativeDocument {
+22:    fn absorb(&mut self, other: Self) {
+29:fn resolve_steps_mut<'a>(document: &'a mut ImperativeDocument, path_ref: &PathRef) -> Option<&'a mut Vec<crate::artifacts::imperative::Step>> {
+41:fn prune_empty_slot(document: &mut ImperativeDocument, path_ref: &PathRef) {
+60:    fn step(id: &str, kind: &str) -> Step {
+65:    fn resolve_steps_mut_unknown_owner_is_none() {
+72:    fn prune_empty_slot_removes_emptied_bodies_entry() {
+86:    fn prune_empty_slot_noop_without_owner_or_slot() {
+92:    fn imperative_diff_absorb_keeps_latest_some_and_ignores_none() {
+
+===== 📜️imperative/🗣️dsl/🦀️component.rs =====
+"bool"
+"counter"
+"dict"
+"imperative"
+"int"
+"label"
+"lines"
+"step-if"
+"step-inner"
+"then"
+"unterminated"
+--- enums/variants ---
+27:pub struct ValueDsl {
+40:pub fn value_to_value_dsl(value: &Value) -> ValueDsl {
+53:pub fn value_dsl_to_value(dsl_value: &ValueDsl) -> Value {
+75:pub fn dictionary_to_value_dsl_map(dict: &Dictionary) -> BTreeMap<String, ValueDsl> {
+79:pub fn value_dsl_map_to_dictionary(entries: &BTreeMap<String, ValueDsl>) -> Dictionary {
+84:pub fn dictionary_to_option_dsl_map(dict: &Dictionary) -> Option<BTreeMap<String, ValueDsl>> {
+88:pub fn option_dsl_map_to_dictionary(entries: Option<BTreeMap<String, ValueDsl>>) -> Dictionary {
+100:pub enum StepNodeDsl {
+111:pub struct PathDsl {
+116:pub fn step_to_step_node_dsl(step: &Step) -> StepNodeDsl {
+120:pub fn step_node_dsl_to_step(node: StepNodeDsl) -> Step {
+125:pub fn path_to_path_dsl(path: &Path) -> PathDsl {
+129:pub fn path_dsl_to_path(path_dsl: PathDsl) -> Path {
+141:pub struct ImperativeDocumentDsl {
+148:pub fn document_to_document_dsl(document: &ImperativeDocument) -> ImperativeDocumentDsl {
+152:pub fn document_dsl_to_document(mirror: ImperativeDocumentDsl) -> ImperativeDocument {
+157:    const EXTENSION: &'static str = "imperative";
+159:    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+164:    fn print_dsl(&self) -> String {
+172:pub const IMPERATIVE_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.imperative.imperative.dsl.semio");
+175:pub fn parse_dsl(text: &str) -> Result<ImperativeDocument, store::TextError> {
+180:pub fn print_dsl(document: &ImperativeDocument) -> String {
+192:    fn step(id: &str, kind: &str) -> DocStep {
+197:    fn default_document_dsl_round_trips() {
+204:    fn dsl_parses_seed_and_nested_control_bodies() {
+220:    fn dsl_parses_dictionary_and_atom_variants() {
+241:    fn dsl_rejects_unterminated_string() {
+247:    fn dsl_rejects_wrong_leading_keyword() {
+253:    fn dsl_rejects_invalid_number_literal() {
+
+===== 🏠️home/🎒️pack/🦀️component.rs =====
+"decode"
+--- enums/variants ---
+7:pub fn encode(document: &SHomeDocument) -> Vec<u8> {
+12:pub fn decode(bytes: &[u8]) -> Result<SHomeDocument, PackError> {
+23:    fn home_pack_round_trips_default_and_populated_documents() {
+29:    fn pack_round_trips_populated_document() {
+37:    fn home_config_dsl_pack_equivalence() {
+
+===== 🏠️home/📡️spr/🦀️component.rs =====
+"apply"
+"decode"
+"encode"
+"home"
+--- enums/variants ---
+7:pub fn encode_op(operation: &SHomeOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+12:pub fn decode_op(bytes: &[u8]) -> Result<SHomeOperation, protocol::ProtocolError> {
+22:    fn op_binary_round_trips_and_agrees_with_text() {
+30:    fn home_document_text_round_trips_through_the_store() {
+
+===== 🏠️home/🔧️op/🦀️component.rs =====
+"camelCase"
+"operation"
+--- enums/variants ---
+12:pub enum SHomeOperation {
+24:    fn diff(&self, _projection: &SHomeDocument) -> SHomeOperation {
+28:    fn backwards(&self, projection: &SHomeDocument) -> Vec<Self> {
+40:    fn home_op_text_round_trips_every_variant() {
+
+===== 🏠️home/🔺️diff/🦀️component.rs =====
+--- enums/variants ---
+8:    fn apply(&self, projection: &SHomeDocument) -> SHomeDocument {
+15:    fn absorb(&mut self, other: Self) {
+
+===== 🏠️home/🗣️dsl/🦀️component.rs =====
+"default"
+--- enums/variants ---
+8:pub const HOME_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.space.shome.dsl.semio");
+11:pub fn parse_dsl(text: &str) -> Result<SHomeDocument, store::TextError> {
+16:pub fn print_dsl(document: &SHomeDocument) -> String {
+26:    fn home_dsl_round_trips_default_and_populated_documents() {
+32:    fn home_dsl_round_trips_bundled_default_example() {
+
+===== 🗂️curate/🎒️pack/🦀️component.rs =====
+"beam-mesh-custom"
+"beams"
+"decode"
+"steel"
+--- enums/variants ---
+7:pub fn encode(document: &CurateDocument) -> Vec<u8> {
+12:pub fn decode(bytes: &[u8]) -> Result<CurateDocument, PackError> {
+23:    fn pack_round_trips_and_agrees_with_dsl() {
+31:    fn pack_round_trips_a_mesh_kind_and_a_curated_selection() {
+
+===== 🗂️curate/📡️spr/🦀️component.rs =====
+"apply"
+"beam-glulam-gl24h"
+"decode"
+"encode"
+"projection"
+"sourcing-curate-test"
+--- enums/variants ---
+12:pub fn encode_op(operation: &SourcingOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
+17:pub fn decode_op(bytes: &[u8]) -> Result<SourcingOperation, protocol::ProtocolError> {
+28:    fn op_binary_round_trips_and_agrees_with_text() {
+36:    fn curate_document_text_round_trips_through_a_vcs_store() {
+
+===== 🗂️curate/🔧️op/🦀️component.rs =====
+"camelCase"
+"kind"
+--- enums/variants ---
+13:pub enum SourcingOperation {
+23:    fn diff(&self, _projection: &CurateDocument) -> Self::Diff {
+29:    fn backwards(&self, projection: &CurateDocument) -> Vec<Self> {
+43:    fn sample_document() -> CurateDocument {
+48:    fn set_document_op_text_round_trips() {
+55:    fn set_document_backwards_restores_the_base_projection() {
+
+===== 🗂️curate/🔺️diff/🦀️component.rs =====
+"camelCase"
+--- enums/variants ---
+12:pub struct SourcingDiff {
+18:    fn apply(&self, projection: &CurateDocument) -> CurateDocument {
+22:    fn absorb(&mut self, other: Self) {
+38:    fn set_document_diff_carries_the_new_document_and_applies_it_verbatim() {
+48:    fn absorb_keeps_the_later_document_when_both_diffs_carry_one() {
+
+===== 🗂️curate/🗣️dsl/🦀️component.rs =====
+"beam-mesh-custom"
+"beams"
+"steel"
+--- enums/variants ---
+6:pub const DEMO_STOCK_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.sourcing.curate.demo-stock-curate.dsl.semio");
+9:pub const EMPTY_CURATION_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.sourcing.curate.empty-curation-curate.dsl.semio");
+12:pub fn parse_dsl(text: &str) -> Result<CurateDocument, store::TextError> {
+17:pub fn print_dsl(document: &CurateDocument) -> String {
+27:    fn demo_stock_example_dsl_round_trips() {
+33:    fn empty_curation_example_dsl_round_trips() {
+39:    fn curate_document_dsl_round_trips_a_mesh_kind_and_a_curated_selection() {
+

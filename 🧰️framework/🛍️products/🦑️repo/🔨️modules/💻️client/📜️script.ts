@@ -2,10 +2,10 @@
 /** 🧭️ `@semio-tech/repo-client` bundle policy router: `bun ./📜️script.ts policy`. */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import type { BundleLinter } from "../../../../🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/⚡️implementations/🟦️typescript/🟦️typescript/📦️index.ts";
-import { getWorkspaceRoot } from "../../../../🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/⚡️implementations/🟦️typescript/🟦️typescript/📦️index.ts";
-import { runPolicyOnlyMain } from "../../../../🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/⚡️implementations/🟦️typescript/🟦️typescript/📦️index.ts";
-import { defineLint } from "../../../../🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/⚡️implementations/🟦️typescript/🟦️typescript/📦️index.ts";
+import type { BundleLinter } from "../../../../🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/📦️packages/🟦️typescript/🟦️typescript/📦️index.ts";
+import { getWorkspaceRoot } from "../../../../🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/📦️packages/🟦️typescript/🟦️typescript/📦️index.ts";
+import { runPolicyOnlyMain } from "../../../../🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/📦️packages/🟦️typescript/🟦️typescript/📦️index.ts";
+import { defineLint } from "../../../../🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/📦️packages/🟦️typescript/🟦️typescript/📦️index.ts";
 
 export const policy = defineLint("repo-client-bundle", (l: BundleLinter) => {
   const root = getWorkspaceRoot();

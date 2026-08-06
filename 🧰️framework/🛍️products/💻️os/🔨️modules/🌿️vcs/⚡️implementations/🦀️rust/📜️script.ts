@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🗄️ `@semio-tech/vcs-rs` router: `bun ./📜️script.ts test`. Pure rlib — no wasm target (the
  * serialization/wasm seam moved to `store/rs`; see `26/07/28/EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY`). */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, resolveTestLevel } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, resolveTestLevel } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {

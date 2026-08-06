@@ -60,6 +60,7 @@ pub mod os_dsl {
   #[path = "../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs"]
   pub mod notation;
 
+  #[cfg(not(target_arch = "wasm32"))]
   #[path = "../../🔨️modules/🗣️dsl/📇️registry/🦀️component.rs"]
   pub mod registry;
 
@@ -154,8 +155,20 @@ pub mod os_spr {
 #[path = "../../🔨️modules/🌿️vcs/🦀️component.rs"]
 pub mod os_vcs;
 
-#[path = "../../🔨️modules/🏪️store/🦀️component.rs"]
-pub mod os_store;
+#[path = "."]
+pub mod os_store {
+  #[path = "../../🔨️modules/🏪️store/🦀️component.rs"]
+  mod component;
+  pub use component::*;
+
+  #[cfg(feature = "sync")]
+  #[path = "../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs"]
+  pub mod sync;
+
+  #[cfg(all(feature = "worker", target_arch = "wasm32"))]
+  #[path = "../../🔨️modules/🏪️store/👷️worker/🦀️component.rs"]
+  pub mod worker;
+}
 
 
 pub use crate::os_dsl::*;

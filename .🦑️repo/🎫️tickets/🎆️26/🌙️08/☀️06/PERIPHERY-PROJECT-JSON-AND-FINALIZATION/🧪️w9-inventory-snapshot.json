@@ -1,0 +1,88 @@
+{
+  "generatedAt": "2026-08-06T12:16:02.713Z",
+  "ticket": "26/08/06/PERIPHERY-PROJECT-JSON-AND-FINALIZATION",
+  "goal": "🎯aioptimizedrepo",
+  "implementations": {
+    "total": 99,
+    "singularImplementationDirs": 1,
+    "byTopArea": {
+      "🧰️framework": 99
+    },
+    "frameworkBuckets": {
+      "products/💻️os": 1,
+      "os/📖️playbook": 1,
+      "os/🔁️workflow": 1,
+      "os/🧠️neural": 2,
+      "os/🗣️dsl": 16,
+      "os/♾️infinite": 12,
+      "os/🧬️semio": 1,
+      "os/🏪️store": 3,
+      "os/🌿️vcs": 1,
+      "os/🪐️space": 1,
+      "os/📡️protocol": 13,
+      "os/🧑️‍💻️dev": 1,
+      "os/🛢️db": 24,
+      "os/🎒️pack": 10,
+      "os/🔌️plugin": 2,
+      "os/🌊️flow": 3,
+      "os/🏃️run": 1,
+      "modules/📚️compiler": 6
+    }
+  },
+  "projectJson": {
+    "totalReferencingImpl": 91,
+    "underImplPath": 89,
+    "staleCwdOrInputUnderPackages": 2,
+    "stalePackages": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📋️project.json",
+        "kind": "stale-input"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📋️project.json",
+        "kind": "stale-cwd"
+      }
+    ],
+    "sampleUnderImpl": [
+      "♻️mit-bestand/🧺️demonstrator/dist/asset/📋️project.json",
+      "♻️mit-bestand/🧺️demonstrator/dist/asset/🪧️logo/📋️project.json",
+      "♻️mit-bestand/🧺️demonstrator/dist/asset/🔣️icon/📋️project.json",
+      "♻️mit-bestand/🧺️demonstrator/dist/asset/🪧️logos/📋️project.json",
+      "♻️mit-bestand/🧺️demonstrator/dist/asset/🏛️compose/🔣️icons/📋️project.json",
+      "♻️mit-bestand/🧺️demonstrator/dist/asset/🏛️compose/🔣️icon/📋️project.json",
+      "🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust/📋️project.json",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/⚡️implementations/🦀️rust/📋️project.json",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🌍️geo/⚡️implementations/🦀️rust/📋️project.json",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📎️embed/⚡️implementations/🦀️rust/📋️project.json",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🕸️graph/⚡️implementations/🦀️rust/📋️project.json",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🗂️catalog/⚡️implementations/🦀️rust/📋️project.json",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🧑‍🍳️recipe/⚡️implementations/🦀️rust/📋️project.json",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🎬️scene/⚡️implementations/🦀️rust/📋️project.json",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📊️sheet/⚡️implementations/🦀️rust/📋️project.json"
+    ]
+  },
+  "staleConfig": {
+    "goWorkImplLines": [
+      "\t./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/⚡️implementations/🐹️go",
+      "\t./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/⚡️implementations/🐹️go",
+      "\t./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🐹️go",
+      "\t./🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go"
+    ],
+    "devcontainerPostCreateImpl": [
+      "go build -o '🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client' './🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/⚡️implementations/🐹️go'"
+    ],
+    "vitestKnownBrokenPaths": [
+      "🧰️framework/🛍️products/💻️os/⚡️implementations/🟦️typescript/🧪️vitest.config.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/🧪️vitest.config.ts"
+    ],
+    "taxonomyJsonOldPathExists": false,
+    "taxonomyJsonNewPathExists": true,
+    "rootScriptRepoLibImportExists": false,
+    "dependencyCruiserTaxonomyLoadOk": false
+  },
+  "markdownWithImplLinks": {
+    ".cursor": 36,
+    "other": 0
+  },
+  "outsideFrameworkImplDirs": []
+}

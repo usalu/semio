@@ -1,0 +1,12 @@
+import fs from "fs";
+import path from "path";
+const OS = fs.readFileSync("/tmp/os-path.txt", "utf8").trim();
+const modules = path.join(OS, fs.readdirSync(OS).find((x) => x.includes("modules")));
+const storeDir = path.join(modules, fs.readdirSync(modules).find((x) => x.includes("store")));
+const store = path.join(storeDir, fs.readdirSync(storeDir).find((x) => x.includes("component")));
+const st = fs.readFileSync(store, "utf8");
+const refs = [...st.matchAll(/semio_framework_core::[A-Za-z0-9_]+/g)].map((m) => m[0]);
+const counts = {};
+for (const r of refs) counts[r] = (counts[r] || 0) + 1;
+console.log(counts);
+console.log("\nimport line:", st.split("\n").find((l) => l.includes("use semio_framework_core::{ActorId")));

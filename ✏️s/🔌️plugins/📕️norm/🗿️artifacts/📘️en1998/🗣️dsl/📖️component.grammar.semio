@@ -1,6 +1,17 @@
 dialect grammar
-grammar en1998
+grammar en1998.document
 extension en1998
 use family-sheet
 start document
-document = TEXT*
+
+document = (header | clause | table | assign)*
+header = IDENT TEXT*
+clause = IDENT "=" expr
+assign = IDENT "=" (FLOAT | INT | TEXT | BOOL)
+expr = term {("+" | "-") term}*
+term = factor {("*" | "/") factor}*
+factor = FLOAT | INT | IDENT | call | "-" factor
+call = IDENT "(" expr {"," expr}* ")"
+table = "[" column* "]" row*
+column = IDENT ":" IDENT
+row = (FLOAT | INT | TEXT | BOOL)*

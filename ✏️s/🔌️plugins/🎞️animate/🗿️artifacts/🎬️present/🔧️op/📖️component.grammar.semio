@@ -1,6 +1,25 @@
 dialect grammar
-grammar present
+grammar present.op
 extension present
 use family-scene
-start document
-document = TEXT*
+start operation
+
+operation = tiles-add | tiles-remove | tiles-move | tiles-patch | set-source | set-tiles | set-deck
+tiles-add = "tiles-add" {"index" "=" INT}? tile-block
+tiles-remove = "tiles-remove" "id" "=" IDENT
+tiles-move = "tiles-move" "id" "=" IDENT "to" "=" INT
+tiles-patch = "tiles-patch" "id" "=" IDENT patch-block
+set-source = "set-source" source-block
+set-tiles = "set-tiles" tiles-table
+set-deck = "set-deck" deck-block
+tile-block = "tile" "{" prop* frame-block? "}"
+source-block = "source" "{" prop* frame-block? "}"
+frame-block = "frame" "{" prop* "}"
+patch-block = "patch" "{" prop* frame-block? "}"
+deck-block = "deck" "{" prop* "}"
+tiles-table = "tiles" "{" tile-block* "}"
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" prop* "}"
+value = TEXT | FLOAT | INT | BOOL | list | map

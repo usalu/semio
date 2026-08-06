@@ -1,6 +1,8 @@
 dialect grammar
-grammar vcs
-extension vcs
-use family-geo
-start document
-document = TEXT*
+grammar vcs.op
+extension vcsdemo
+start operation
+
+op = vcs-edit*
+vcs-edit = "set-counter" assign | "set-title" assign | "set-notes" assign | "set-status" assign | "add-tag" assign | "remove-tag" assign
+assign = IDENT "=" (TEXT | INT)

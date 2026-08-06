@@ -9,7 +9,7 @@ description = "Db facade — re-exports the full db_* family, Database::open_at 
 workspace = true
 [lib]
 name = "db"
-path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚡️implementations/🦀️rust/📦️lib.rs"
+path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/📦️lib.rs"
 
 [dependencies]
 db_core = { path = "../../🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-core" }

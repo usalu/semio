@@ -1,6 +1,14 @@
 dialect grammar
-grammar lowpoly
+grammar lowpoly.diff
 extension lowpoly
 use family-scene
-start document
-document = TEXT*
+start diff
+
+diff = {"objects" "=" collection-diff}? {"projection" "=" projection-block}?
+collection-diff = "{" {"added" "=" list}? {"removed" "=" list}? {"moved" "=" list}? {"modified" "=" list}? "}"
+projection-block = "projection" "{" prop* "}"
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" prop* "}"
+value = TEXT | FLOAT | INT | BOOL | list | map

@@ -1,2 +1,11 @@
-/** fem facet WASM facades — re-export artifact 🟦️component.ts leaves. */
-export {};
+/** fem facet WASM facades */
+export * as 3d_diff from "../../🗿️artifacts/🧊️3d/🔺️diff/🟦️component.ts";
+export * as 3d_dsl from "../../🗿️artifacts/🧊️3d/🗣️dsl/🟦️component.ts";
+export * as 3d_pack from "../../🗿️artifacts/🧊️3d/🎒️pack/🟦️component.ts";
+export * as 3d_op from "../../🗿️artifacts/🧊️3d/🔧️op/🟦️component.ts";
+export * as 3d_spr from "../../🗿️artifacts/🧊️3d/📡️spr/🟦️component.ts";
+export * as 2d_diff from "../../🗿️artifacts/◻2d/🔺️diff/🟦️component.ts";
+export * as 2d_dsl from "../../🗿️artifacts/◻2d/🗣️dsl/🟦️component.ts";
+export * as 2d_pack from "../../🗿️artifacts/◻2d/🎒️pack/🟦️component.ts";
+export * as 2d_op from "../../🗿️artifacts/◻2d/🔧️op/🟦️component.ts";
+export * as 2d_spr from "../../🗿️artifacts/◻2d/📡️spr/🟦️component.ts";

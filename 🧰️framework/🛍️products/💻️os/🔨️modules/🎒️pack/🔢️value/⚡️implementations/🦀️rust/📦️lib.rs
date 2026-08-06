@@ -1211,7 +1211,7 @@ fn shape_tag(shape: &Shape) -> u8 {
         Shape::Range => 23,
         Shape::Count => 24,
         Shape::Expr => 25,
-        Shape::Embed(_) => 26,
+        Shape::Embed(_) | Shape::EmbedFrom(_) => 26,
     }
 }
 

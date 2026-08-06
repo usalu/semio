@@ -1,6 +1,22 @@
 dialect grammar
-grammar home
-extension home
-use family-recipe
+grammar space.shome
+extension shome
 start document
-document = TEXT*
+
+document = schema-field gen-field?
+schema-field = "schema" "=" (TEXT | IDENT)
+gen-field = "gen" "=" INT
+assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
+list = "[" value* "]"
+map = "{" assign* "}"
+value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
+qty = (FLOAT | INT) IDENT?
+block = "{" record* "}"
+record = IDENT assign* block?
+table = IDENT table-schema "{" row* "}"
+table-schema = "[" col {"," col}* "]"
+col = IDENT ":" IDENT
+row = field+
+field = IDENT "=" value | value
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)

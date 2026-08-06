@@ -88,7 +88,7 @@ serde_json.workspace = true
 thiserror.workspace = true
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
-semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
+semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen.workspace = true

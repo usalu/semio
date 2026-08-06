@@ -1,6 +1,9 @@
 dialect grammar
-grammar writer
+grammar writer.op
 extension writer
 use family-embed
-start document
-document = TEXT*
+start operation
+
+operation = field*
+field = IDENT "=" (TEXT | fence | INT | FLOAT | BOOL)
+fence = "```" IDENT TEXT "```"

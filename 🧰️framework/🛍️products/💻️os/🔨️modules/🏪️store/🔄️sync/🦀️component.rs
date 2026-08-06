@@ -14,7 +14,8 @@
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
 
 use crate::os_spr::{decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, OperationEnvelope, ServerFrame};
-use semio_framework_core::{ActorId, OperationId, PresencePeer};
+use crate::os_spr::core::{ActorId, OperationId};
+use semio_framework_core::PresencePeer;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use crate::os_store::{reconcile_alternative, BackboneMessage, ChannelBackbone, ChannelBackboneRemote, DocumentPackFiles, DocumentStore, DocumentTextFiles, SpaceConflict};

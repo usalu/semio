@@ -3,30 +3,11 @@ cargo-features = ["trim-paths"]
 [workspace]
 members = [
     "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
     "✏️s/🔨️modules/💭️mindmap/📦️packages/🦀️rust",
     "✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️fixture-sweep/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📇️registry/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🕸️graph/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📊️sheet/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🗂️catalog/⚡️implementations/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🧑‍🍳️recipe/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🫀️core/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📐️format/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️value/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔌️io/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⏳️async/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌐️http/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️index/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🧪️testkit/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⌨️cli/⚡️implementations/🦀️rust",
     "🧰️framework/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/📚️compiler/⚡️implementations/🦀️rust",
@@ -35,13 +16,8 @@ members = [
     "🧰️framework/🔨️modules/📚️compiler/🔤️text/⚡️implementations/🦀️rust",
     "🧰️framework/🔨️modules/📚️compiler/🧮️math/⚡️implementations/🦀️rust",
     "🧰️framework/🔨️modules/📚️compiler/📤️svg/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/⚡️implementations/🦀️rust",
     "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🫀️core/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔘️state/⚡️implementations/🦀️rust",
@@ -63,22 +39,8 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🌐️cluster/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/👁️observe/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️testkit/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔗️causal/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔀️crdt/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📐️format/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📜️history/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/💎️materialize/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔌️io/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📡️wire/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧵️channel/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧪️testkit/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⌨️cli/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/⚡️implementations/🦀️rust",
@@ -93,10 +55,9 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust",
     "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/⚡️implementations/🦀️rust",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
     "✏️s/🔨️modules/◻2d/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust",
@@ -120,9 +81,6 @@ members = [
     "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🐚️shell/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/⚡️implementations/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
     "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust",
@@ -190,27 +148,28 @@ ts-rs = "10"
 # consumer. `# N refs` is the survey count. Grouped: os-kernel/core, math, ui, plugin-internal.
 # ---- core (24) ----
 semio-framework-core = { path = "🧰️framework/📦️packages/🦀️rust" }  # 58 refs
-semio-framework-os = { path = "🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust" }  # 35 refs
+semio-framework-os = { path = "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }  # 35 refs
 semio-framework-os-kernel-db-core = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🫀️core/⚡️implementations/🦀️rust" }  # 22 refs
 semio-framework-os-kernel-db-state = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔘️state/⚡️implementations/🦀️rust" }  # 9 refs
 semio-framework-os-kernel-db-storage = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/⚡️implementations/🦀️rust" }  # 14 refs
 semio-framework-os-kernel-db-wal = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/⚡️implementations/🦀️rust" }  # 6 refs
-semio-framework-os-kernel-dsl = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust" }  # 206 refs
-semio-framework-os-kernel-semio = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/⚡️implementations/🦀️rust" }
-semio-framework-os-kernel-dsl-core = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust" }  # 22 refs
+semio-framework-os-kernel-dsl = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel-semio = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel-dsl-core = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-os-kernel-flow-core = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust" }  # 21 refs
 semio-framework-os-kernel-infinite-board-port-directed-dag = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust" }  # 11 refs
 semio-framework-os-kernel-infinite-canvas = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust" }  # 27 refs
-semio-framework-os-kernel-neural-engine = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust" }  # 29 refs
-semio-framework-os-kernel-pack = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust" }  # 64 refs
-semio-framework-os-kernel-pack-core = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🫀️core/⚡️implementations/🦀️rust" }  # 18 refs
-semio-framework-os-kernel-pack-format = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📐️format/⚡️implementations/🦀️rust" }  # 7 refs
+semio-framework-os-kernel-pack = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel-pack-core = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel-pack-format = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-os-kernel-playbook = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/⚡️implementations/🦀️rust" }  # 24 refs
-semio-framework-os-kernel-protocol = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust" }  # 218 refs
-semio-framework-os-kernel-protocol-core = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust" }  # 13 refs
-semio-framework-os-kernel-protocol-format = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📐️format/⚡️implementations/🦀️rust" }  # 6 refs
-semio-framework-os-kernel-store = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust" }  # 359 refs
-semio-framework-os-kernel-vcs = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust" }  # 37 refs
+semio-framework-os-kernel-protocol = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel-protocol-core = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel-protocol-format = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel-store = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-kernel-vcs = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+# 🧭️ Keep alias on OLD impl until W8c plugin cut-over deletes the sandwich (packages path already exists on disk).
 semio-framework-plugin = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust" }  # 104 refs
 semio-s-kernel-flow-extension-wasm = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/🕸️wasm" }  # 10 refs
 
@@ -257,7 +216,7 @@ opt-level = 3
 # unrelated to any code-correctness issue — `[profile.wasm-release.package...store]` below
 # already carries the same `codegen-units = 1` fix for the release path). Mirroring it here
 # for `dev` so plugin dev-loop builds (`SEMIO_PLUGIN_PROFILE` unset) don't hit the same crash.
-[profile.dev.package.semio-framework-os-kernel-store]
+[profile.dev.package.semio-framework-os-kernel]
 codegen-units = 1
 
 # 🚀️ Ship profile for native binaries (`cargo build --release`, compose hub/gql, os-run in CI).
@@ -300,7 +259,7 @@ trim-paths = "object"
 
 # Explicit: profile inheritance does NOT inherit package-specific overrides from the parent
 # profile, so without this `store` would fall back to workspace defaults under `wasm-release`.
-[profile.wasm-release.package.semio-framework-os-kernel-store]
+[profile.wasm-release.package.semio-framework-os-kernel]
 codegen-units = 1
 
 # 🧹️ RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN baseline. Kept at "warn" (never "deny") in

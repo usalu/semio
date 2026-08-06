@@ -1,6 +1,17 @@
 dialect grammar
-grammar cad
+grammar cad.op
 extension cad
 use family-scene
-start document
-document = TEXT*
+start operation
+
+op = cad-edit*
+cad-edit = IDENT assign* block?
+layer = IDENT "@" FLOAT FLOAT FLOAT? props?
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | FLOAT | INT | BOOL)
+assign = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" assign* "}"
+value = TEXT | FLOAT | INT | BOOL | list | map
+block = "{" record* "}"
+record = IDENT assign* block?

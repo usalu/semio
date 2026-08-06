@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🏗️ `@semio-tech/flow-extension-bim-rust` router: `bun ./📜️script.ts <test|wasm>`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 
 class TestScript extends BundleScript {
   run(_segments: string[]): void {

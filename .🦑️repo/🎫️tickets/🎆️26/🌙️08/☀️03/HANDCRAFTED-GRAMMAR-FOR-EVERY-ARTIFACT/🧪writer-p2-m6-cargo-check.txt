@@ -1,0 +1,8 @@
+2026-08-06 writer P2/M6 verify attempt
+
+cargo check -p semio-s-plugin-writer --lib
+cargo check -p semio-framework-os-kernel-dsl-schema
+
+Result: BLOCKED — root Cargo.toml parse error at line 152 (invalid literal string in workspace members). Pre-existing workspace manifest issue; could not compile-verify in this session.
+
+Conceptual: lang_from → Shape::EmbedFrom(kebab sibling key) + parse_field_shape + print_record_fields EmbedFrom branch should compile once workspace Cargo.toml is fixed.

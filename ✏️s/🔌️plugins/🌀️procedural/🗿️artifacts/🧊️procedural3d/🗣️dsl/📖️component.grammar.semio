@@ -1,6 +1,37 @@
 dialect grammar
-grammar procedural3d
+grammar procedural.procedural3d.document
 extension procedural3d
 use family-graph
 start document
-document = TEXT*
+
+document = keyword-stmt | schema-field camera-block widgets-block layout-field synapses-table generation-fields
+schema-field = "schema" "=" TEXT
+camera-block = "camera" block
+widgets-block = "widgets" block
+layout-field = "layout" "=" map
+synapses-table = "synapses" table
+synapse-row = IDENT wire props?
+generation-fields = gen-field*
+gen-field = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | table)
+generations-table = "generations" table
+node = IDENT {":" IDENT}? {"@" IDENT}?
+edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
+edge-label = IDENT {":" IDENT}?
+wire = node edge-arrow node
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
+assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" assign* "}"
+value = TEXT | INT | FLOAT | BOOL | list | map
+table-schema = "[" col {"," col}* "]"
+col = IDENT ":" IDENT
+table = table-schema "{" row* "}"
+row = field+
+field = IDENT "=" value
+block = "{" record* "}"
+record = IDENT assign* block?
+
+// artifact-keywords: value, dict-entry, camera-json, widget-layout, synapse-spec, form-generation
+keyword-stmt = ("value" | "dict-entry" | "camera-json" | "widget-layout" | "synapse-spec" | "form-generation") field*
+field = IDENT "=" (TEXT | INT | FLOAT | BOOL)

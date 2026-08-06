@@ -1,0 +1,13 @@
+Shape V2 checklist (💡️reasoning) — 2026-08-06
+- Entry lib: ✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/📦️lib.rs; Cargo [lib] path = "📦️lib.rs"
+- No owner-root 📦️lib.rs
+- Grouping #[path = "."]; leaf paths ../../…
+- config/terminology: 🎚️config/🦀️component.rs, 🗣️terminology/🦀️component.rs
+- 🛂️manifest.json at owner root; 📚️examples at owner root (♻️reuse)
+
+cargo check -p semio-s-plugin-reasoning-mindmap: PASS (2026-08-06)
+cargo test -p semio-s-plugin-reasoning-mindmap --lib: last run 58 passed / 7 failed; envelope-id fix applied (reasoning.wires, reasoning.wirescfg)
+
+Registrar / external blockers:
+- semio_framework_plugin::testkit::assert_taxonomy_components (📦️lib.rs ~1619): plugin-root 📚️examples forbidden — conflicts with Shape V2 owner-root examples relocate for this plugin
+- Workspace intermittently fails loading members (repo-cli path, duplicate semio-framework-plugin packages) — re-run tests from stable workspace root

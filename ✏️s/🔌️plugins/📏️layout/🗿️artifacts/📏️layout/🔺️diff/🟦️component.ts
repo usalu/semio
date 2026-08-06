@@ -1,7 +1,7 @@
-/** WASM facade — parse/print delegates to the plugin Rust crate. */
+/** 🧩 layout 🔺️diff WASM facade — parse/print delegates to the plugin Rust crate. */
 export function parseDsl(text: string): unknown {
-  throw new Error("wire to plugin WASM");
+  throw new Error("wire layout 🔺️diff parseDsl to plugin WASM");
 }
 export function printDsl(value: unknown): string {
-  throw new Error("wire to plugin WASM");
+  throw new Error("wire layout 🔺️diff printDsl to plugin WASM");
 }

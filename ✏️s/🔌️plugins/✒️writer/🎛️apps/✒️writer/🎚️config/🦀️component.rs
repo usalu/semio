@@ -46,7 +46,7 @@ impl Default for WriterEditorSettings {
 /// B1 shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
-#[dsl(extension = "writercfg")]
+#[dsl(extension = "writer.writercfg")]
 #[dsl(layout = "lines")]
 pub struct WriterConfig {
     /// 👁️ Selected AST node ids — was `WriterPlayRuntime::selected_ast_ids`.

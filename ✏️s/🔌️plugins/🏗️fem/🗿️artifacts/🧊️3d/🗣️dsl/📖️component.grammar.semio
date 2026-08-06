@@ -1,6 +1,33 @@
 dialect grammar
-grammar 3d
-extension 3d
-use family-document
+grammar fem.fem3d
+extension fem3d
+use family-sheet
 start document
-document = TEXT*
+
+document = elements-block? analysis-block? nodes-table? materials-table? sections-table? solids-table? supports-table? load-cases-table? combinations-table?
+elements-block = "elements" block
+analysis-block = "analysis" block
+nodes-table = "nodes" table-schema "{" row* "}"
+materials-table = "materials" table-schema "{" row* "}"
+sections-table = "sections" table-schema "{" row* "}"
+solids-table = "solids" table-schema "{" row* "}"
+supports-table = "supports" table-schema "{" row* "}"
+load-cases-table = "load-cases" table-schema "{" row* "}"
+combinations-table = "combinations" table-schema "{" row* "}"
+element-stmt = ("beam" | "bar" | "frame" | "rod") assign*
+load-stmt = ("nodal" | "udl" | "area") assign*
+solid-stmt = "solid" assign*
+assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
+list = "[" value* "]"
+map = "{" assign* "}"
+value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
+qty = (FLOAT | INT) IDENT?
+block = "{" record* "}"
+record = IDENT assign* block?
+table = IDENT table-schema "{" row* "}"
+table-schema = "[" col {"," col}* "]"
+col = IDENT ":" IDENT
+row = field+
+field = IDENT "=" value | value
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)

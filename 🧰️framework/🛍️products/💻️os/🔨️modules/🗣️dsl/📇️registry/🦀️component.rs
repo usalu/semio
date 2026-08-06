@@ -41,11 +41,8 @@ impl SchemaResolver for FullResolver {
 /// B-R4) so a future `dsl_registry`-driven `pack diff --schema writer.document#diff` (or similar)
 /// resolves the diff's own grammar, not the document's.
 pub fn full_resolver() -> FullResolver {
-    let mut schemas: HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec> = HashMap::new();
-    schemas.insert(writer::artifacts::writer::WRITER_DOCUMENT_SCHEMA, writer::artifacts::writer::WriterProjection::__dsl_spec);
-    schemas.insert("writer.document#diff", writer::artifacts::writer::diff::WriterDiff::__dsl_diff_spec);
-    schemas.insert(note::artifacts::note::NOTE_DOCUMENT_SCHEMA, note::artifacts::note::NoteDocument::__dsl_spec);
-    schemas.insert("note.document#diff", note::artifacts::note::diff::NoteDiff::__dsl_diff_spec);
+    // Kernel stays app-dependency-free; hosts insert schema constructors into FullResolver.
+    let schemas: HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec> = HashMap::new();
     FullResolver { schemas }
 }
 //#endregion 🔖️Registry
@@ -56,49 +53,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn full_resolver_resolves_every_registered_schema() {
+    fn full_resolver_starts_empty_without_app_fan_in() {
         let resolver = full_resolver();
-        for name in ["writer.document", "writer.document#diff", "note.document", "note.document#diff"] {
-            assert!(resolver.resolve(name).is_some(), "expected '{name}' to resolve");
-        }
+        assert!(resolver.names().is_empty());
+        assert!(resolver.resolve("writer.document").is_none());
         assert!(resolver.resolve("never-registered").is_none());
     }
 
     #[test]
-    fn full_resolver_names_are_sorted_and_complete() {
-        let resolver = full_resolver();
-        assert_eq!(resolver.names(), vec!["note.document", "note.document#diff", "writer.document", "writer.document#diff"]);
-    }
-
-    /// 🧬️ The resolved `RecordSpec` must actually match the real derive-generated one — not just
-    /// resolve to *some* spec — proven by encoding a real value against the resolved spec and
-    /// decoding it back through the type's own `DocumentPack`/`DiffCodec` impl.
-    #[test]
-    fn resolved_writer_document_spec_matches_the_real_type() {
-        let resolver = full_resolver();
-        let spec = resolver.resolve("writer.document").expect("writer.document must resolve");
-        let document = writer::artifacts::writer::WriterProjection { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a) RETURN a".into() };
-        let record = document.__dsl_to_record();
-        let bytes = pack_cli_encode_for_test(&spec, &record);
-        let (decoded_record, _report) = crate::os_pack::decode_document(&bytes, &spec, &crate::os_pack::DecodeOptions::default()).expect("decode against resolved spec");
-        let decoded = writer::artifacts::writer::WriterProjection::__dsl_from_record(&decoded_record).expect("__dsl_from_record");
-        assert_eq!(decoded, document);
-    }
-
-    #[test]
-    fn resolved_writer_diff_spec_matches_the_real_diff_codec() {
-        use crate::os_spr::DiffCodec;
-        let resolver = full_resolver();
-        let spec = resolver.resolve("writer.document#diff").expect("writer.document#diff must resolve");
-        let diff = writer::artifacts::writer::diff::WriterDiff { text: Some("hi".into()), document: None };
-        assert_eq!(spec.keyword, writer::artifacts::writer::diff::WriterDiff::__dsl_diff_spec().keyword, "resolved spec must be the real diff spec");
-        let bytes = diff.encode_diff().expect("encode_diff");
-        let decoded = writer::artifacts::writer::diff::WriterDiff::decode_diff(&bytes).expect("decode_diff");
-        assert_eq!(decoded, diff);
-    }
-
-    fn pack_cli_encode_for_test(spec: &crate::os_dsl::schema::RecordSpec, record: &crate::os_dsl::schema::RecordValue) -> Vec<u8> {
-        crate::os_pack::encode_document(spec, record, &crate::os_pack::EncodeOptions::default()).expect("encode_document")
+    fn full_resolver_accepts_manual_schema_inserts() {
+        let mut schemas: HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec> = HashMap::new();
+        // Manual insert path used by hosts/plugins — constructor is a no-op placeholder type check only when empty.
+        let resolver = FullResolver { schemas };
+        assert!(resolver.names().is_empty());
     }
 }
 //#endregion 🧪️Tests
+

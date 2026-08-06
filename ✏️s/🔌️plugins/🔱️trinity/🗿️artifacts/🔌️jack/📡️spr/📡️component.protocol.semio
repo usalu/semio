@@ -1,5 +1,10 @@
 dialect protocol
-protocol jack
+protocol jack.spr
 version 1
+schema jack.operation
 start record
-record = varint*
+framing record
+field format u8
+field ordinal varint
+field body bytes
+chain hash u64

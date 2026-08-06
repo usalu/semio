@@ -1,6 +1,19 @@
 dialect grammar
-grammar layout
+grammar layout.op
 extension layout
 use family-scene
-start document
-document = TEXT*
+start operation
+
+operation = add-frame | remove-frame | patch-frame | set-data-fields
+add-frame = "add-frame" "page-id" "=" IDENT {"index" "=" INT}? frame-block
+remove-frame = "remove-frame" "page-id" "=" IDENT "frame-id" "=" IDENT
+patch-frame = "patch-frame" "page-id" "=" IDENT "frame-id" "=" IDENT patch-block
+set-data-fields = "set-data-fields" {"json" "=" TEXT}?
+frame-block = "frame" "{" prop* bounds-block? "}"
+bounds-block = "bounds" "{" prop* "}"
+patch-block = "patch" "{" {"wrap-mode" "=" IDENT}? {"columns" "=" INT}? prop* "}"
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" prop* "}"
+value = TEXT | FLOAT | INT | BOOL | list | map

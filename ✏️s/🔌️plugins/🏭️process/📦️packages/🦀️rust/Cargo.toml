@@ -36,7 +36,7 @@ store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨
 pack = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-pack" }
 semio-s-3d = { path = "../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
-semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
+semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 semio-framework-core = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json.workspace = true

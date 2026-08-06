@@ -9,14 +9,14 @@ description = "Headless runner: computes an OS studio's workflow without a UI"
 [lints]
 workspace = true
 [lib]
-path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/⚡️implementations/🦀️rust/📦️lib.rs"
+path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust/📦️lib.rs"
 [[bin]]
 name = "semio-framework-os-run"
-path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/⚡️implementations/🦀️rust/📦️bin.rs"
+path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust/📦️bin.rs"
 
 [dependencies]
 semio-framework-core = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core" }
-semio-framework-os = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
+semio-framework-os = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 workflow = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-workflow" }
 semio-framework-plugin = { path = "../../../🔌️plugin/⚡️implementations/🦀️rust", package = "semio-framework-plugin" }
 framework_hash = { path = "../../../../../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
@@ -29,7 +29,7 @@ thiserror = "2.0.12"
 dsl_core = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-core" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-semio-framework-plugin-host = { path = "../../../🔌️plugin/🖥️host/⚡️implementations/🦀️rust", package = "semio-framework-plugin-host" }
+semio-framework-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"

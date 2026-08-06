@@ -52,7 +52,7 @@ path = "📦️bin.rs"
 required-features = ["native-bin"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-semio-framework-plugin-host = { path = "../../../../../../🔌️plugin/🖥️host/⚡️implementations/🦀️rust", package = "semio-framework-plugin-host" }
+semio-framework-plugin-host = { path = "../../../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
 store_sync = { path = "../../../../../../🏪️store/🔄️sync/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store-sync" }
 vcs = { path = "../../../../../../🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
 store = { path = "../../../../../../🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }

@@ -1,6 +1,36 @@
 dialect grammar
-grammar draw
+grammar draw.document
 extension draw
 use family-scene
 start document
-document = TEXT*
+
+document = schema-line layers-block assets-map?
+schema-line = "schema" "=" IDENT {"id" "=" IDENT}? {"title" "=" TEXT}?
+layers-block = "layers" "{" layer* "}"
+layer = shape-layer | path-layer | text-layer | image-layer | group-layer | boolean-layer | trace-layer
+shape-layer = "shape" base-block geometry-block*
+path-layer = "path" base-block segments-block?
+text-layer = "text" base-block {"x" "=" FLOAT}? {"y" "=" FLOAT}? {"content" "=" TEXT}? {"size" "=" FLOAT}?
+image-layer = "image" base-block {"image-key" "=" IDENT}? {"width" "=" FLOAT}? {"height" "=" FLOAT}?
+group-layer = "group" base-block children-block?
+boolean-layer = "boolean" base-block {"operation" "=" IDENT}? {"children" "=" list}?
+trace-layer = "trace" base-block {"source-key" "=" IDENT}? params-block?
+base-block = "base" "{" base-prop* transform-block? attributes-block? "}"
+base-prop = {"id" "=" IDENT} | {"name" "=" TEXT} | {"visible" "=" BOOL} | {"locked" "=" BOOL} | {"opacity" "=" FLOAT} | {"blend-mode" "=" IDENT} | prop
+transform-block = "transform" "{" prop* "}"
+attributes-block = "attributes" "{" fill-block? stroke-block? "}"
+fill-block = "fill" "{" fill-body* "}"
+fill-body = "solid" prop* | "linear" prop* | "radial" prop* | prop
+stroke-block = "stroke" "{" prop* "}"
+geometry-block = "rect" "{" prop* "}" | "ellipse" "{" prop* "}" | "circle" "{" prop* "}" | "line" "{" prop* "}" | "polygon" "{" prop* "}" | {"shape-kind" "=" IDENT}
+segments-block = "segments" "{" segment* "}"
+segment = "M" FLOAT "," FLOAT | "L" FLOAT "," FLOAT | "Q" FLOAT "," FLOAT FLOAT "," FLOAT | "C" FLOAT "," FLOAT FLOAT "," FLOAT FLOAT "," FLOAT | "A" FLOAT "," FLOAT FLOAT BOOL BOOL FLOAT "," FLOAT | "Z"
+children-block = "children" "{" layer* "}"
+params-block = "params" "{" prop* "}"
+assets-map = "assets" "=" "{" asset* "}"
+asset = IDENT "=" {"mime" "=" TEXT}? {"data" "=" TEXT}?
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" prop* "}"
+value = TEXT | FLOAT | INT | BOOL | list | map

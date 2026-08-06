@@ -22,7 +22,7 @@ path = "📦️lib.rs"
 dsl = { path = "../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 dsl_core = { path = "../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-core" }
 dsl_schema = { path = "../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-schema" }
-neural_engine = { path = "../../../../🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+neural_engine = { path = "../../../../🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 kurbo = "0.13.1"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

@@ -80,6 +80,12 @@ pub mod open_document {
             .or_else(|| ext.and_then(|e| dsl::language_for_extension(e)))
             .map(|spec| spec.id.to_string())
             .unwrap_or_else(|| "plaintext".to_string());
+        eprintln!(
+            "[DEBUG] writer.open_document uri={} language_id={} text_len={}",
+            payload.uri,
+            language_id,
+            payload.text.len()
+        );
         let document = WriterProjection { schema: crate::artifacts::writer::WRITER_DOCUMENT_SCHEMA.into(), id: id.clone(), language_id, uri: payload.uri.clone(), text: payload.text.clone() };
         Ok(Emit::operations(vec![WriterOperation::SetDocument { document }]))
     }

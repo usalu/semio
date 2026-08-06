@@ -1,6 +1,8 @@
 dialect protocol
 protocol dag.spr
 version 1
+schema dag.operation
+start record
 framing record
 field format u8
 field ordinal varint

@@ -5,7 +5,7 @@
 //! grammar renders both as multi-line canonical `Document` text and as one space-joined `Inline`
 //! line, and both re-parse to the same value.
 
-use crate::os_dsl::core::{format_f64, lex, parse_f64, Limits, SpannedToken, TextError, TextSpan, TokenClass, TokenKind};
+use dsl_core::{format_f64, lex, parse_f64, Limits, SpannedToken, TextError, TextSpan, TokenClass, TokenKind};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Shape
@@ -76,11 +76,11 @@ pub enum Shape {
     /// is stored in `unit`'s declared unit; a compatible alien suffix on parse (`210000MPa`)
     /// converts into it, an incompatible one (wrong dimension) is a parse error. No suffix at all
     /// means the bare number is already in the declared unit.
-    Quantity(&'static crate::os_dsl::core::UnitSpec),
+    Quantity(&'static dsl_core::UnitSpec),
     /// A `Shape::Quantity` restricted to angle units (`deg`/`rad`/`turn`) — kept as its own variant
     /// (rather than reusing `Quantity` with an angle unit) so `shape_type_name`/table headers can
     /// tell a length from a rotation at a glance (`NUM` vs `QTY` vs `ANG`).
-    Angle(&'static crate::os_dsl::core::UnitSpec),
+    Angle(&'static dsl_core::UnitSpec),
     /// A `Shape::Text` refinement: a checked reference to an entity of the named kind (e.g.
     /// `"material"`). Prints/parses identically to `Text` (bare-preferred) — the only difference
     /// is semantic (a paired `FieldSpec.defines` anchor lets `LanguageService::validate` flag a
@@ -112,6 +112,8 @@ pub enum Shape {
     /// DECLARED embedded language (e.g. `"jack"`); an authored fence's own lang tag must be empty
     /// or match it.
     Embed(&'static str),
+    /// Fence language taken from a sibling Text field named by this key (see `#[dsl(lang_from)]`).
+    EmbedFrom(&'static str),
 }
 
 #[derive(Clone, Debug)]
@@ -395,7 +397,7 @@ impl Cursor {
     // `SourceMode` no longer participates in parsing (its only consumer, `RawLines`, is gone —
     // `Shape::Text` now accepts `Ident|Text` identically regardless of Document/Inline); it stays
     // a `ParseOptions`/`parse` public-API distinction only, still meaningful to callers choosing
-    // between `crate::os_dsl::__rt::parse_document_record`/`parse_inline_record`.
+    // between `dsl::__rt::parse_document_record`/`parse_inline_record`.
     fn new(tokens: Vec<SpannedToken>, limits: Limits) -> Self {
         let tokens: Vec<SpannedToken> = tokens.into_iter().filter(|t| !t.kind.is_trivia()).collect();
         Self { tokens, pos: 0, limits }
@@ -520,6 +522,7 @@ fn parse_scalar(cursor: &mut Cursor, shape: &Shape) -> Result<FieldValue, TextEr
         Shape::Quantity(declared) | Shape::Angle(declared) => parse_quantity(cursor, declared),
         Shape::Ref(_) => parse_scalar_text(cursor),
         Shape::Embed(declared_lang) => parse_embed(cursor, declared_lang),
+        Shape::EmbedFrom(_) => Err(TextError::new("EmbedFrom field must be parsed in record context", cursor.span())),
         Shape::Count => {
             if cursor.peek().kind != TokenKind::Ident {
                 return Err(TextError::new(format!("expected a count literal like 'x24', found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()), cursor.span()));
@@ -681,7 +684,7 @@ fn parse_scalar_text(cursor: &mut Cursor) -> Result<FieldValue, TextError> {
     match cursor.peek().kind {
         TokenKind::Text => {
             let token = cursor.advance();
-            let text = crate::os_dsl::core::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(e, token.span))?;
+            let text = dsl_core::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(e, token.span))?;
             Ok(FieldValue::Text(text))
         }
         TokenKind::Ident => {
@@ -696,12 +699,12 @@ fn parse_scalar_text(cursor: &mut Cursor) -> Result<FieldValue, TextError> {
 /// the `lang\u{0}content` encoding) with an empty or matching lang tag, OR anything
 /// `parse_scalar_text` already accepts (Inline mode's escaped-quoted fallback) — both converge on
 /// the same `FieldValue::Text`, which is what makes Document/Inline renders agree.
-fn parse_embed(cursor: &mut Cursor, declared_lang: &'static str) -> Result<FieldValue, TextError> {
+fn parse_embed(cursor: &mut Cursor, declared_lang: &str) -> Result<FieldValue, TextError> {
     if cursor.peek().kind == TokenKind::Fence {
         let token = cursor.advance();
         let raw = token.text.as_str();
         let (lang, content) = raw.split_once('\u{0}').ok_or_else(|| TextError::new("malformed fence token (missing separator)", token.span))?;
-        if !lang.is_empty() && lang != declared_lang {
+        if !lang.is_empty() && !declared_lang.is_empty() && lang != declared_lang {
             return Err(TextError::new(format!("fence declares lang '{lang}', field expects '{declared_lang}'"), token.span));
         }
         return Ok(FieldValue::Text(content.to_string()));
@@ -709,11 +712,27 @@ fn parse_embed(cursor: &mut Cursor, declared_lang: &'static str) -> Result<Field
     parse_scalar_text(cursor)
 }
 
+fn sibling_text_field<'a>(record: &'a RecordValue, spec: &RecordSpec, lang_key: &str) -> Option<&'a str> {
+    let field = spec.fields.iter().find(|f| f.key == lang_key)?;
+    match record.get(field.id)? {
+        FieldValue::Text(text) => Some(text.as_str()),
+        _ => None,
+    }
+}
+
+fn parse_field_shape(cursor: &mut Cursor, field: &FieldSpec, spec: &RecordSpec, record: &RecordValue, depth: usize) -> Result<FieldValue, TextError> {
+    if let Shape::EmbedFrom(lang_key) = &field.shape {
+        let declared = sibling_text_field(record, spec, lang_key).unwrap_or("");
+        return parse_embed(cursor, declared);
+    }
+    parse_shape(cursor, &field.shape, depth)
+}
+
 /// @emoji 📐️ Shared parse for `Shape::Quantity`/`Shape::Angle`: a number, optionally followed by a
 /// GLUED (no whitespace between — the lexer already ends a numeric token exactly where the next
 /// `Ident` token begins for input like `210GPa`) unit-symbol ident. No suffix means the number is
 /// already expressed in `declared`'s unit; a suffix converts, erroring if the dimensions differ.
-fn parse_quantity(cursor: &mut Cursor, declared: &'static crate::os_dsl::core::UnitSpec) -> Result<FieldValue, TextError> {
+fn parse_quantity(cursor: &mut Cursor, declared: &'static dsl_core::UnitSpec) -> Result<FieldValue, TextError> {
     let is_number_token = matches!(cursor.peek().kind, TokenKind::Float | TokenKind::Int) || (cursor.peek().kind == TokenKind::Ident && matches!(cursor.peek().text.as_str().as_ref(), "nan" | "inf" | "-inf"));
     if !is_number_token {
         return Err(TextError::new(format!("expected a quantity, found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()), cursor.span()));
@@ -724,8 +743,8 @@ fn parse_quantity(cursor: &mut Cursor, declared: &'static crate::os_dsl::core::U
     if suffix.kind == TokenKind::Ident && suffix.byte_range.0 == number_token.byte_range.1 {
         let suffix_token = cursor.advance();
         let symbol = suffix_token.text.as_str().to_string();
-        let suffix_unit = crate::os_dsl::core::unit_by_symbol(&symbol).ok_or_else(|| TextError::new(format!("unknown unit '{symbol}'"), suffix_token.span))?;
-        let converted = crate::os_dsl::core::convert(value, suffix_unit, declared).ok_or_else(|| TextError::new(format!("unit '{symbol}' is not compatible with expected unit '{}'", declared.symbol), suffix_token.span))?;
+        let suffix_unit = dsl_core::unit_by_symbol(&symbol).ok_or_else(|| TextError::new(format!("unknown unit '{symbol}'"), suffix_token.span))?;
+        let converted = dsl_core::convert(value, suffix_unit, declared).ok_or_else(|| TextError::new(format!("unit '{symbol}' is not compatible with expected unit '{}'", declared.symbol), suffix_token.span))?;
         Ok(FieldValue::Float(converted))
     } else {
         Ok(FieldValue::Float(value))
@@ -794,6 +813,7 @@ fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<Field
     cursor.limits.check_depth(depth, cursor.span())?;
     match shape {
         Shape::Bool | Shape::Int | Shape::UInt | Shape::Float | Shape::Text | Shape::Bytes64 | Shape::Enum(_) | Shape::Quantity(_) | Shape::Angle(_) | Shape::Ref(_) | Shape::Count | Shape::Embed(_) => parse_scalar(cursor, shape),
+        Shape::EmbedFrom(_) => Err(TextError::new("EmbedFrom field must be parsed in record context", cursor.span())),
         Shape::Coord(dims) => {
             cursor.expect(TokenKind::At)?;
             parse_fixed_number_tuple(cursor, *dims as usize, "coordinate")
@@ -949,7 +969,7 @@ fn parse_dsl_value(cursor: &mut Cursor, depth: usize) -> Result<DslValue, TextEr
         }
         TokenKind::Text => {
             let token = cursor.advance();
-            let text = crate::os_dsl::core::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(e, token.span))?;
+            let text = dsl_core::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(e, token.span))?;
             Ok(DslValue::String(text))
         }
         TokenKind::Int | TokenKind::Float => {
@@ -1039,7 +1059,7 @@ fn parse_wire(cursor: &mut Cursor) -> Result<WireValue, TextError> {
         }
         TokenKind::EdgeArrow => {
             let token = cursor.advance();
-            let (directed, label) = crate::os_dsl::notation::decode_fused_edge_arrow(&token.text.as_str())?;
+            let (directed, label) = dsl_notation::decode_fused_edge_arrow(&token.text.as_str())?;
             edge_label = WireEdgeLabel { id: label.id, kind: label.kind };
             let to = parse_wire_node(cursor)?;
             Some((directed, to))
@@ -1153,7 +1173,7 @@ fn parse_record_fields(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> 
                 continue;
             }
         }
-        let value = parse_shape(cursor, &field.shape, depth + 1)?;
+        let value = parse_field_shape(cursor, field, spec, &record, depth + 1)?;
         record.fields.insert(field.id, value);
     }
 
@@ -1171,7 +1191,7 @@ fn parse_record_fields(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> 
             let field = keyed.remove(index);
             cursor.advance();
             cursor.expect(TokenKind::Equals)?;
-            let value = parse_shape(cursor, &field.shape, depth + 1)?;
+            let value = parse_field_shape(cursor, field, spec, &record, depth + 1)?;
             record.fields.insert(field.id, value);
             continue;
         }
@@ -1189,7 +1209,7 @@ fn parse_record_fields(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> 
         let Some(index) = keyed.iter().position(|f| matches!(f.shape, Shape::Block(_)) && cursor.at_keyword(&f.key)) else { break };
         let field = keyed.remove(index);
         cursor.advance();
-        let value = parse_shape(cursor, &field.shape, depth + 1)?;
+        let value = parse_field_shape(cursor, field, spec, &record, depth + 1)?;
         record.fields.insert(field.id, value);
     }
     for field in keyed {
@@ -1197,7 +1217,7 @@ fn parse_record_fields(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> 
     }
 
     if let Some(field) = statements_field {
-        let value = parse_shape(cursor, &field.shape, depth + 1)?;
+        let value = parse_field_shape(cursor, field, spec, &record, depth + 1)?;
         record.fields.insert(field.id, value);
     }
 
@@ -1214,7 +1234,7 @@ fn can_start_positional(cursor: &Cursor, shape: &Shape) -> bool {
         Shape::Coord(_) => cursor.peek().kind == TokenKind::At,
         Shape::Dir => cursor.peek().kind == TokenKind::Caret,
         Shape::Range | Shape::Expr => cursor.peek().kind == TokenKind::LParen,
-        Shape::Embed(_) => matches!(cursor.peek().kind, TokenKind::Fence | TokenKind::Text | TokenKind::Placeholder),
+        Shape::Embed(_) | Shape::EmbedFrom(_) => matches!(cursor.peek().kind, TokenKind::Fence | TokenKind::Text | TokenKind::Placeholder),
         // Only `Text|Placeholder` — NOT bare `Ident` — may start an optional positional `Text`
         // field: an unquoted bare-ident value here would be indistinguishable from the next
         // statement's leading keyword, so this deliberately narrower check (versus `Shape::Text`
@@ -1279,7 +1299,7 @@ pub fn shape_type_name(shape: &Shape) -> &'static str {
         Shape::Range => "RNG",
         Shape::Count => "CNT",
         Shape::Expr => "EXPR",
-        Shape::Embed(_) => "EMBED",
+        Shape::Embed(_) | Shape::EmbedFrom(_) => "EMBED",
     }
 }
 
@@ -1546,7 +1566,7 @@ impl Writer {
                         Chunk::OpenBlock => push("{".to_string(), &mut glued),
                         Chunk::CloseBlock => push("}".to_string(), &mut glued),
                         Chunk::NewRecord => {}
-                        Chunk::Verbatim { content, .. } => push(format!("\"{}\"", crate::os_dsl::core::escape_text(content)), &mut glued),
+                        Chunk::Verbatim { content, .. } => push(format!("\"{}\"", dsl_core::escape_text(content)), &mut glued),
                     }
                 }
                 parts.join(" ")
@@ -1659,7 +1679,7 @@ fn keyed_field_rank(shape: &Shape) -> u8 {
         Shape::Statements(_) => 3,
         // Ranks LAST of all: a multi-line fence dwarfs everything else in a record, so it should
         // print after every scalar/composite/table field, not interleaved among them.
-        Shape::Embed(_) => 4,
+        Shape::Embed(_) | Shape::EmbedFrom(_) => 4,
     }
 }
 
@@ -1726,6 +1746,24 @@ fn print_record_fields(value: &RecordValue, spec: &RecordSpec, writer: &mut Writ
         match value.get(field.id) {
             Some(FieldValue::Absent) | None => continue,
             Some(fv) => match &field.shape {
+                Shape::EmbedFrom(lang_key) => {
+                    writer.new_record();
+                    writer.atom(format!("{}=", field.key));
+                    writer.glue();
+                    let lang = spec
+                        .fields
+                        .iter()
+                        .find(|f| f.key == *lang_key)
+                        .and_then(|f| value.get(f.id))
+                        .and_then(|v| match v {
+                            FieldValue::Text(t) => Some(t.as_str()),
+                            _ => None,
+                        })
+                        .unwrap_or("plaintext");
+                    if let FieldValue::Text(content) = fv {
+                        writer.verbatim(lang, content);
+                    }
+                }
                 // `Statements` items each carry their own leading keyword — no field-level key at
                 // all is ever printed for this shape.
                 Shape::Statements(_) => print_shape(fv, &field.shape, writer),
@@ -1787,10 +1825,10 @@ fn scalar_to_text(value: &FieldValue) -> String {
         // idents (`_`/`true`/`false`/`null`/`nan`/`inf`) and number-shaped text, which always fall
         // through to the quoted+escaped form instead.
         FieldValue::Text(s) => {
-            if crate::os_dsl::core::is_bare_ident(s) {
+            if dsl_core::is_bare_ident(s) {
                 s.clone()
             } else {
-                format!("\"{}\"", crate::os_dsl::core::escape_text(s))
+                format!("\"{}\"", dsl_core::escape_text(s))
             }
         }
         FieldValue::Bytes64(bytes) => format!("\"{}\"", base64_encode(bytes)),
@@ -1845,6 +1883,11 @@ pub fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
         }
         (FieldValue::Text(content), Shape::Embed(lang)) => {
             writer.verbatim(lang, content);
+        }
+        (FieldValue::Text(content), Shape::EmbedFrom(lang_key)) => {
+            // Fallback when print_shape is called without sibling resolution — prefer plaintext fence.
+            let _ = lang_key;
+            writer.verbatim("plaintext", content);
         }
         (FieldValue::Bool(_) | FieldValue::Int(_) | FieldValue::UInt(_) | FieldValue::Float(_) | FieldValue::Text(_) | FieldValue::Bytes64(_), _) => {
             writer.atom(scalar_to_text(value));
@@ -1962,7 +2005,7 @@ fn print_dsl_value(value: &DslValue, writer: &mut Writer) {
         DslValue::Null => writer.atom("null"),
         DslValue::Bool(b) => writer.atom(b.to_string()),
         DslValue::Number(n) => writer.atom(format_f64(*n)),
-        DslValue::String(s) => writer.atom(format!("\"{}\"", crate::os_dsl::core::escape_text(s))),
+        DslValue::String(s) => writer.atom(format!("\"{}\"", dsl_core::escape_text(s))),
         DslValue::Array(items) => {
             writer.atom("[");
             for item in items {
@@ -1985,20 +2028,20 @@ fn print_dsl_value(value: &DslValue, writer: &mut Writer) {
 }
 
 fn print_wire(wire: &WireValue, writer: &mut Writer) {
-    let map_node = |node: &WireNode| crate::os_dsl::notation::EdgeNode {
+    let map_node = |node: &WireNode| dsl_notation::EdgeNode {
         id: node.id.clone(),
         kind: node.kind.clone(),
         port: node.port.clone(),
     };
-    let edge = crate::os_dsl::notation::EdgeValue {
+    let edge = dsl_notation::EdgeValue {
         from: map_node(&wire.from),
-        link: wire.edge.as_ref().map(|(directed, to)| crate::os_dsl::notation::EdgeLink {
+        link: wire.edge.as_ref().map(|(directed, to)| dsl_notation::EdgeLink {
             directed: *directed,
-            label: crate::os_dsl::notation::EdgeLabel { id: wire.edge_label.id.clone(), kind: wire.edge_label.kind.clone() },
+            label: dsl_notation::EdgeLabel { id: wire.edge_label.id.clone(), kind: wire.edge_label.kind.clone() },
             to: map_node(to),
         }),
     };
-    writer.atom(crate::os_dsl::notation::print_edge(&edge));
+    writer.atom(dsl_notation::print_edge(&edge));
     if !matches!(&wire.properties, DslValue::Object(entries) if entries.is_empty()) {
         print_dsl_value(&wire.properties, writer);
     }
@@ -2065,7 +2108,7 @@ impl<'g> LanguageService<'g> {
         let tokens = lex(text, &limits, true).unwrap_or_default();
         let keywords = self.keywords();
         let keyword_refs: Vec<&str> = keywords.iter().map(String::as_str).collect();
-        crate::os_dsl::core::token_classes(&tokens, &keyword_refs)
+        dsl_core::token_classes(&tokens, &keyword_refs)
     }
 
     pub fn diagnostics(&self, text: &str) -> Vec<TextError> {
@@ -2274,9 +2317,9 @@ mod tests {
             Some("material"),
             RecordLayout::Inline,
             vec![
-                FieldSpec::new(0, "e", Shape::Quantity(crate::os_dsl::core::unit_by_symbol("GPa").unwrap())),
-                FieldSpec::new(1, "rho", Shape::Quantity(crate::os_dsl::core::unit_by_symbol("kg/m3").unwrap())),
-                FieldSpec::new(2, "rotation", Shape::Angle(crate::os_dsl::core::unit_by_symbol("deg").unwrap())),
+                FieldSpec::new(0, "e", Shape::Quantity(dsl_core::unit_by_symbol("GPa").unwrap())),
+                FieldSpec::new(1, "rho", Shape::Quantity(dsl_core::unit_by_symbol("kg/m3").unwrap())),
+                FieldSpec::new(2, "rotation", Shape::Angle(dsl_core::unit_by_symbol("deg").unwrap())),
             ],
         )
     }

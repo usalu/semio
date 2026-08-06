@@ -16,7 +16,7 @@
 
 use crate::os_dsl::{from_dsl_value, to_dsl_value, DslOps, DslRecord, DslValue};
 use crate::os_spr::{Edit, OpBinary, OpText, Operation, OperationDiff, OperationMeta, ReconcileReport};
-use semio_framework_core::{ActorId, DocumentId, HybridLogicalTimestamp, OperationId, SchemaId, UndoPolicy};
+use crate::os_spr::core::{ActorId, DocumentId, HybridLogicalTimestamp, OperationId, SchemaId, UndoPolicy};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};

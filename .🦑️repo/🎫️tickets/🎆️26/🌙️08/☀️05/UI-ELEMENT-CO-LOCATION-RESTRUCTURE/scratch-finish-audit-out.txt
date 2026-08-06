@@ -1,0 +1,39 @@
+=== Cargo.toml under targets (must be none) ===
+NONE
+
+=== Rust element files ===
+elementsRoot /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements
+  🧱️elements/☑️Select/⌨️component.rs
+  🧱️elements/☑️Select/🧊️component.rs
+  🧱️elements/✏️Input/⌨️component.rs
+  🧱️elements/✏️Input/🧊️component.rs
+  🧱️elements/➖Divider/⌨️component.rs
+  🧱️elements/⭕Ring/🧊️component.rs
+  🧱️elements/🎚️Slider/🧊️component.rs
+  🧱️elements/🎚️Toggle/🧊️component.rs
+  🧱️elements/🏷️Chip/⌨️component.rs
+  🧱️elements/📃List/⌨️component.rs
+  🧱️elements/📊Table/⌨️component.rs
+  🧱️elements/📑Tabs/⌨️component.rs
+  🧱️elements/🔑KeyValue/🧊️component.rs
+  🧱️elements/🔘Button/🧊️component.rs
+  🧱️elements/🔚Footer/⌨️component.rs
+  🧱️elements/🔝Navbar/⌨️component.rs
+  🧱️elements/🔣IconSelector/🧊️component.rs
+  🧱️elements/🪜Stepper/🧊️component.rs
+  🧱️elements/🪟Window/⌨️component.rs
+  🧱️elements/🪵Log/⌨️component.rs
+  🧱️elements/🪵Tree/🧊️component.rs
+  🧱️elements/🫀️core/🏷️Label/⌨️component.rs
+
+=== Broken #[path] element/asset refs ===
+missing_count 0
+
+=== Stale non-emoji element path strings in rust ===
+
+=== TS imports to elements without emoji dirs ===
+stale_emoji_import_count 0
+
+=== W3-interim count under ui ===
+W3 📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+w3_files 1

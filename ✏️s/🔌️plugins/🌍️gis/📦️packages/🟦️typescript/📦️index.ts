@@ -1,2 +1,11 @@
-/** gis facet WASM facades — re-export artifact 🟦️component.ts leaves. */
-export {};
+/** gis facet WASM facades */
+export * as gismap_diff from "../../🗿️artifacts/🗺️gismap/🔺️diff/🟦️component.ts";
+export * as gismap_dsl from "../../🗿️artifacts/🗺️gismap/🗣️dsl/🟦️component.ts";
+export * as gismap_pack from "../../🗿️artifacts/🗺️gismap/🎒️pack/🟦️component.ts";
+export * as gismap_op from "../../🗿️artifacts/🗺️gismap/🔧️op/🟦️component.ts";
+export * as gismap_spr from "../../🗿️artifacts/🗺️gismap/📡️spr/🟦️component.ts";
+export * as gisterrain_diff from "../../🗿️artifacts/🏔️gisterrain/🔺️diff/🟦️component.ts";
+export * as gisterrain_dsl from "../../🗿️artifacts/🏔️gisterrain/🗣️dsl/🟦️component.ts";
+export * as gisterrain_pack from "../../🗿️artifacts/🏔️gisterrain/🎒️pack/🟦️component.ts";
+export * as gisterrain_op from "../../🗿️artifacts/🏔️gisterrain/🔧️op/🟦️component.ts";
+export * as gisterrain_spr from "../../🗿️artifacts/🏔️gisterrain/📡️spr/🟦️component.ts";

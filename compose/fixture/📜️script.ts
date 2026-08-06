@@ -2,11 +2,11 @@
 /** @emoji 🧪️ `@semio-tech/compose-fixture` router: `bun ./📜️script.ts regenerate-metabolism-light`. */
 import fs from "node:fs";
 import path from "node:path";
-import { BundleScript, ScriptRouter, fixtureItemsOf, runBundleScriptMain } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, fixtureItemsOf, runBundleScriptMain } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 
 //#region 🔖️AssembleSplitInitialKit
 /** @emoji 📎️ Reads `{ hash, items }` collection blocks from kit snapshot JSON. */
-export { fixtureItemsOf } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+export { fixtureItemsOf } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 
 /** @emoji 🧩️ Merges `types/*.type.compose.json` and `designs/*.design.compose.json` into a split `kit.compose.json` shell. */
 export function assembleSplitInitialKitFromDirectory(initialKitDir: string): Record<string, unknown> {

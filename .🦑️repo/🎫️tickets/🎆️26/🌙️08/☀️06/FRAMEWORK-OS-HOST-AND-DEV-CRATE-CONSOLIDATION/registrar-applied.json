@@ -1,0 +1,32 @@
+{
+  "at": "2026-08-06T12:21:14.018Z",
+  "cargo_metadata_members": 164,
+  "repo": {
+    "agent": "8ae31c07-7d6a-45cd-adfa-31fa710ca7d5",
+    "cargo_cli_member": "packages",
+    "package_json_workspaces": "swapped",
+    "go_work": "owner roots",
+    "repo_lib_import_repoints": 171
+  },
+  "host": {
+    "agent": "3287a389-f675-43e6-8861-115c569a8f1e",
+    "members_added": [
+      "host",
+      "db facade",
+      "plugin-host",
+      "run",
+      "neural-engine"
+    ],
+    "workspace_deps_repointed": [
+      "semio-framework-os",
+      "semio-framework-os-kernel-db",
+      "semio-framework-os-kernel-neural-engine"
+    ],
+    "fixed": [
+      "db facade relative paths",
+      "run dep paths",
+      "neural dag→packages",
+      "removed duplicate os/neural members"
+    ]
+  }
+}

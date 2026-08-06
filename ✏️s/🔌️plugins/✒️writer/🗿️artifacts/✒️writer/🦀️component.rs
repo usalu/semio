@@ -43,7 +43,7 @@ pub fn default_camera() -> WriterCamera {
 /// camera is session-only view state (never a document field) — see `WriterCamera`'s doc comment.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "writer", layout = "lines")]
+#[dsl(extension = "writer.writer", layout = "lines")]
 pub struct WriterProjection {
     pub schema: String,
     pub id: String,
@@ -51,7 +51,7 @@ pub struct WriterProjection {
     #[serde(default = "default_uri")]
     pub uri: String,
     #[serde(default)]
-    #[dsl(lang = "jack")]
+    #[dsl(lang_from = "language_id")]
     pub text: String,
 }
 //#endregion 🔖️Types

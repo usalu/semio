@@ -34,7 +34,7 @@ import {
   cargoProfileDir,
   semioBuildMode,
   semioShipEnv,
-} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri, decodeDocumentPackBytes, encodeDocumentPackBytes } from "@semio-tech/framework-os-core";
 import type { PluginSourceEvent } from "@semio-tech/framework-core";
 import { generatePluginRegistry, isStudioPluginFilter, writePlaygroundSession, type PluginRegistryEntry } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/📜️script.ts";

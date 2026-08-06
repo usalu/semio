@@ -1,2 +1,11 @@
-/** trinity facet WASM facades — re-export artifact 🟦️component.ts leaves. */
-export {};
+/** trinity facet WASM facades */
+export * as jack_diff from "../../🗿️artifacts/🔌️jack/🔺️diff/🟦️component.ts";
+export * as jack_dsl from "../../🗿️artifacts/🔌️jack/🗣️dsl/🟦️component.ts";
+export * as jack_pack from "../../🗿️artifacts/🔌️jack/🎒️pack/🟦️component.ts";
+export * as jack_op from "../../🗿️artifacts/🔌️jack/🔧️op/🟦️component.ts";
+export * as jack_spr from "../../🗿️artifacts/🔌️jack/📡️spr/🟦️component.ts";
+export * as rewrite_diff from "../../🗿️artifacts/♻️rewrite/🔺️diff/🟦️component.ts";
+export * as rewrite_dsl from "../../🗿️artifacts/♻️rewrite/🗣️dsl/🟦️component.ts";
+export * as rewrite_pack from "../../🗿️artifacts/♻️rewrite/🎒️pack/🟦️component.ts";
+export * as rewrite_op from "../../🗿️artifacts/♻️rewrite/🔧️op/🟦️component.ts";
+export * as rewrite_spr from "../../🗿️artifacts/♻️rewrite/📡️spr/🟦️component.ts";

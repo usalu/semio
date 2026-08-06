@@ -1,0 +1,85 @@
+{
+  "owner": "💻️os/🖥️host+🧑‍💻dev",
+  "ticketPath": "26/08/06/FRAMEWORK-OS-HOST-AND-DEV-CRATE-CONSOLIDATION",
+  "goal": "🎯aioptimizedrepo",
+  "threeCrateBoundary": {
+    "guest": "semio-framework-plugin @ 💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
+    "wasmKernel": "semio-framework-os-kernel @ 💻️os/📦️packages/🦀️rust",
+    "nativeHost": "semio-framework-os @ 💻️os/🖥️host/📦️packages/🦀️rust"
+  },
+  "newCrates": [
+    "semio-framework-os",
+    "semio-framework-os-kernel-db",
+    "semio-framework-plugin-host",
+    "semio-framework-os-run",
+    "semio-framework-os-kernel-neural-engine",
+    "@semio-tech/framework-os-dev (TS)"
+  ],
+  "addMemberLines": [
+    "\"🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust\",",
+    "\"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust\",",
+    "\"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust\",",
+    "\"🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust\",",
+    "\"🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust\""
+  ],
+  "removeMemberLines": [
+    "\"🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust\",",
+    "\"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚡️implementations/🦀️rust\",",
+    "\"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️implementations/🦀️rust\",",
+    "\"🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/⚡️implementations/🦀️rust\",",
+    "\"🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust\""
+  ],
+  "workspaceDepRenames": [
+    {
+      "from": "semio-framework-os = { path = \"🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust\" }",
+      "to": "semio-framework-os = { path = \"🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust\" }"
+    },
+    {
+      "from": "semio-framework-os-kernel-db = { path = \"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚡️implementations/🦀️rust\" }",
+      "to": "semio-framework-os-kernel-db = { path = \"🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust\" }"
+    },
+    {
+      "from": "semio-framework-os-kernel-neural-engine = { path = \"🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust\" }",
+      "to": "semio-framework-os-kernel-neural-engine = { path = \"🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust\" }"
+    }
+  ],
+  "crossDepsFlagged": [
+    "Host crates still path-dep legacy kernel sandwiches (store/protocol/dsl/vcs) until FRAMEWORK-OS-KERNEL-CRATE-CONSOLIDATION registrar cut-over",
+    "semio-framework-os-run bin include! still under legacy plugin registry generated path",
+    "35+ plugin crates path-dep semio-framework-os at old ⚡️implementations location — bulk repoint on registrar pass",
+    "Root workspace broken: missing semio-framework repo cli member (blocks all cargo check)"
+  ],
+  "kernelCoordination": {
+    "doNotDelete": [
+      "🏪️store/**/⚡️implementations",
+      "📡️protocol/**/⚡️implementations",
+      "🗣️dsl/**/⚡️implementations (except derive packages path)",
+      "🎒️pack/**/⚡️implementations",
+      "🌿️vcs/⚡️implementations"
+    ],
+    "siblingTicket": "26/08/06/FRAMEWORK-OS-KERNEL-CRATE-CONSOLIDATION",
+    "wasmAdmission": "NOT PASSED per sibling handoff"
+  },
+  "inventory": {
+    "hostScopeImplDirs": {
+      "db": 24,
+      "neural": 2,
+      "run": 1,
+      "pluginHost": 1,
+      "osRoot": 1,
+      "workflow": 1,
+      "space": 1,
+      "devTs": 1
+    },
+    "deferredModules": ["workflow", "space", "renderer", "db leaf sandwiches"]
+  },
+  "verification": {
+    "cargoCheckSemioFrameworkOs": "blocked-root-workspace",
+    "logFiles": [
+      "🧪host-inventory.txt",
+      "🧪cargo-check-baseline.txt",
+      "🧪cargo-metadata-host-new.txt"
+    ]
+  },
+  "status": "flagged"
+}

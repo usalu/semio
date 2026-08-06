@@ -43,7 +43,7 @@ flow_extension_math = { path = "../../../../../../../../🧰️framework/🛍️
 flow_extension_text = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/📝️text", default-features = false, package = "semio-s-kernel-flow-extension-text" }
 flow_extension_sdk = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/🕸️wasm", package = "semio-s-kernel-flow-extension-wasm" }
 semio-framework-core = { path = "../../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core" }
-neural_engine = { path = "../../../../🧠️neural/⚙️engine/⚡️implementations/🦀️rust", features = ["parallel"], package = "semio-framework-os-kernel-neural-engine" }
+neural_engine = { path = "../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", features = ["parallel"], package = "semio-framework-os-kernel-neural-engine" }
 neural_dag = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚡️implementations/🦀️rust/🕸️dag", package = "semio-framework-kernel-neural-dag" }
 infinite_board_port_directed_dag = { path = "../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-dag" }
 infinite_canvas = { path = "../../../../♾️infinite/🖼️canvas/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }

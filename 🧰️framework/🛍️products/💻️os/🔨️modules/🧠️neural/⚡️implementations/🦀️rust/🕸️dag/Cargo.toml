@@ -11,6 +11,6 @@ path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨�
 
 [dependencies]
 math = { path = "../../../../../../../🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
-neural_engine = { path = "../../../⚙️engine/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+neural_engine = { path = "../../../⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 serde_json = "1.0.140"
 thiserror = "2.0.12"

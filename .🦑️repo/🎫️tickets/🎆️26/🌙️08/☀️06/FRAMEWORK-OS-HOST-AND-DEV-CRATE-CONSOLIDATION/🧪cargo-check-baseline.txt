@@ -1,0 +1,9 @@
+DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo check -p semio-framework-os 2>&1 | tail -20
+error: failed to load manifest for workspace member `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust`
+referenced by workspace at `/Users/ueli/Documents/semio/Cargo.toml`
+
+Caused by:
+  failed to parse manifest at `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml`
+
+Caused by:
+  feature `sync` includes `dep:tokio-tungstenite`, but `tokio-tungstenite` is not listed as a dependency

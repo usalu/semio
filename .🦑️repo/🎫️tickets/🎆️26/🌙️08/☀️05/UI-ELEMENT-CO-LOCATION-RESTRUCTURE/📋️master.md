@@ -39,3 +39,25 @@ Goal: `🎯aioptimizedrepo` · Ticket: `2026/08/05/UI-ELEMENT-CO-LOCATION-RESTRU
 - ui-wgpu engine split: lib.rs 17881 → 232 wiring; 24× 🦀️<name>.rs. cargo check --features wgpu green; full engine check pending external workspace churn.
 - StyleClasses extraction attempted then REVERTED (see 🧪️w6-core-styleclasses.txt).
 - Icons/Button/ContextMenu: inventory done; extraction resumed with barrel lock.
+
+## Rust element co-location finish pass (2026-08-06)
+
+**Status: COMPLETE for tui/wgpu element `#[path]` co-location** (this ownership slice).
+
+### Verified
+- Single crate `semio-framework-ui` at `🖱️ui/📦️packages/🦀️rust` — **no** `🎯️targets/*/Cargo.toml` (confirmed absent).
+- 22 co-located Rust element leaves under `🖱️ui/🧱️elements/**/{⌨️,🧊️}component.rs` (+ core Label).
+- All 23 `#[path]` refs to `elements`/`assets` from tui+wgpu targets resolve on disk (emoji-prefixed dirs).
+- Zero stale non-emoji `elements/PascalCase/` path strings under the Rust package.
+- `DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo check -p semio-framework-ui --features wgpu` → **Finished** (earlier this session, exit 0).
+- Same for `--features tui` → **Finished** (exit 0).
+- Widget paint/`*_on_key` impls fully extracted from tui `widget`/`chrome` (0 leftover impls; tests remain in lib).
+
+### Re-check blocked (outside `🖱️ui/**`)
+- Root workspace member `…/🦑️repo/…/⌨️cli/⚡️implementations/🦀️rust` missing; live path is `…/📦️packages/🦀️rust`. See `📋️registrar-handoff.md`.
+
+### Still open on this master ticket (not this finish-pass)
+- W6: react barrel still has `W3-interim` (ui-react `📦️index.tsx`); core extracts under concurrent claims.
+- W6 gates: taxonomy `areas` flip, barrel/leaf hard validations, export-snapshot, launch.json no-op.
+- W4-interim under renderer engine (outside `🖱️ui/**`).
+- W7: remainder stories needing element homes / out-of-scope.

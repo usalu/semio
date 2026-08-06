@@ -1,0 +1,70 @@
+[package]
+name = "semio-framework-os-kernel-db"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db facade — re-exports the full db_* family, Database::open_at zero-touch convenience"
+
+[package.metadata.semio]
+role = "product"
+id = "os-db"
+
+[lints]
+workspace = true
+
+[lib]
+name = "db"
+path = "📦️lib.rs"
+
+[dependencies]
+db_core = { path = "../../🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-core" }
+db_actor = { path = "../../🎭️actor/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-actor" }
+db_state = { path = "../../🔘️state/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-state" }
+db_storage = { path = "../../🗄️storage/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-storage" }
+db_wal = { path = "../../📝️wal/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-wal" }
+db_snapshot = { path = "../../📸️snapshot/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-snapshot" }
+db_index = { path = "../../🔢️index/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-index" }
+db_conflict = { path = "../../⚔️conflict/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-conflict" }
+db_projection = { path = "../../📽️projection/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-projection" }
+db_query = { path = "../../🔍️query/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-query" }
+db_preview = { path = "../../👁️preview/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-preview" }
+db_security = { path = "../../🔒️security/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-security" }
+db_document = { path = "../../📄️document/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-document" }
+db_compact = { path = "../../🗜️compact/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-compact" }
+db_sync = { path = "../../🔄️sync/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-sync" }
+db_cluster = { path = "../../🌐️cluster/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-cluster" }
+db_observe = { path = "../../👁️observe/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-observe" }
+db_engine = { path = "../../⚙️engine/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-db-engine" }
+pack = { path = "../../../🎒️pack/⚡️implementations/🦀️rust", default-features = false, package = "semio-framework-os-kernel-pack" }
+
+[features]
+default = ["fs", "thread", "deflate", "vcs"]
+fs = ["db_storage/fs"]
+thread = ["db_actor/thread"]
+deflate = ["pack/deflate"]
+vcs = ["db_engine/vcs"]
+tokio = ["db_engine/tokio"]
+cluster = []
+otel = ["db_observe/otel"]
+sqlite = ["dep:db_storage_sqlite"]
+postgres = ["dep:db_storage_postgres"]
+neo4j = ["dep:db_storage_neo4j"]
+
+[dependencies.db_storage_sqlite]
+path = "../../🗄️storage/🪶️sqlite/⚡️implementations/🦀️rust"
+package = "semio-framework-os-kernel-db-storage-sqlite"
+optional = true
+
+[dependencies.db_storage_postgres]
+path = "../../🗄️storage/🐘️postgres/⚡️implementations/🦀️rust"
+package = "semio-framework-os-kernel-db-storage-postgres"
+optional = true
+
+[dependencies.db_storage_neo4j]
+path = "../../🗄️storage/🌐️neo4j/⚡️implementations/🦀️rust"
+package = "semio-framework-os-kernel-db-storage-neo4j"
+optional = true
+
+[dev-dependencies]
+protocol = { path = "../../../📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+serde_json = "1"

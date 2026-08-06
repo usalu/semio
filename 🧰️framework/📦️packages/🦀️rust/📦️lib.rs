@@ -3,16 +3,16 @@
 pub use ui_wgpu::wgpu::IconName;
 pub use ui_wgpu::wgpu::{Locale, Terminology};
 
-#[path = "../../🎯️action-bus/🦀️component.rs"]
+#[path = "../../🔨️modules/🧩core/🎯️action-bus/🦀️component.rs"]
 pub mod action_bus;
 
-#[path = "../../🔺️mesh/🦀️component.rs"]
+#[path = "../../🔨️modules/🧩core/🔺️mesh/🦀️component.rs"]
 pub mod mesh;
 
-#[path = "../../🖥️platform/🦀️component.rs"]
+#[path = "../../🔨️modules/🧩core/🖥️platform/🦀️component.rs"]
 pub mod platform;
 
-#[path = "../../🧩️ui/🦀️component.rs"]
+#[path = "../../🔨️modules/🧩core/🧩️ui/🦀️component.rs"]
 pub mod ui;
 
 

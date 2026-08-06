@@ -1,6 +1,26 @@
 dialect grammar
-grammar forms
+grammar forms.forms
 extension forms
-use family-catalog
+use family-recipe
 start document
-document = TEXT*
+
+document = header-fields steps-field
+header-fields = ("schema" | "id" | "version" | "title") "=" (TEXT | IDENT | INT)
+steps-field = "steps" "=" list
+step-stmt = IDENT assign* block?
+block-stmt = IDENT assign* ("condition" block)?
+condition-stmt = ("and" | "or" | "eq" | "truthy" | "var" | "const") assign* block?
+assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
+list = "[" value* "]"
+map = "{" assign* "}"
+value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
+qty = (FLOAT | INT) IDENT?
+block = "{" record* "}"
+record = IDENT assign* block?
+table = IDENT table-schema "{" row* "}"
+table-schema = "[" col {"," col}* "]"
+col = IDENT ":" IDENT
+row = field+
+field = IDENT "=" value | value
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)

@@ -15,7 +15,7 @@ crate-type = ["rlib"]
 path = "📦️lib.rs"
 
 [dependencies]
-neural_engine = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+neural_engine = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 serde.workspace = true
 serde_json.workspace = true
 vcs = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }

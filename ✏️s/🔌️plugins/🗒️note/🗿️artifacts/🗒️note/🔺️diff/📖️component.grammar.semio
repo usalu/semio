@@ -1,6 +1,28 @@
 dialect grammar
-grammar note
+grammar note.diff
 extension note
-use family-scene
-start document
-document = TEXT*
+use family-embed
+start diff
+
+diff = {"operation" "=" operation}?
+operation = set-grid-visible | set-grid-spacing | set-grid-subdivisions | set-grid-opacity | set-snap-enabled | set-snap-grid-spacing | set-pencil-width | set-eraser-radius | set-blocks | put-asset | remove-asset | set-document
+set-grid-visible = "set-grid-visible" "visible" "=" BOOL
+set-grid-spacing = "set-grid-spacing" "spacing" "=" FLOAT
+set-grid-subdivisions = "set-grid-subdivisions" "subdivisions" "=" FLOAT
+set-grid-opacity = "set-grid-opacity" "opacity" "=" FLOAT
+set-snap-enabled = "set-snap-enabled" "enabled" "=" BOOL
+set-snap-grid-spacing = "set-snap-grid-spacing" "spacing" "=" FLOAT
+set-pencil-width = "set-pencil-width" "width" "=" FLOAT
+set-eraser-radius = "set-eraser-radius" "radius" "=" FLOAT
+set-blocks = "set-blocks" "{" block* "}"
+put-asset = "put-asset" "id" "=" IDENT asset-block
+remove-asset = "remove-asset" "id" "=" IDENT
+set-document = "set-document" document-block
+block = "text" prop* | "image" prop* | "table" prop* | "math" prop* | "stroke" prop* | "group" prop*
+asset-block = "asset" "{" prop* "}"
+document-block = "document" "{" prop* "}"
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" prop* "}"
+value = TEXT | FLOAT | INT | BOOL | list | map

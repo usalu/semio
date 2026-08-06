@@ -1,0 +1,12 @@
+semio-framework-os-kernel-dsl = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust" }  # 206 refs
+semio-framework-os-kernel-dsl-core = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust" }  # 22 refs
+semio-framework-os-kernel-pack = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust" }  # 64 refs
+semio-framework-os-kernel-pack-core = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🫀️core/⚡️implementations/🦀️rust" }  # 18 refs
+semio-framework-os-kernel-pack-format = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📐️format/⚡️implementations/🦀️rust" }  # 7 refs
+semio-framework-os-kernel-protocol = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust" }  # 218 refs
+semio-framework-os-kernel-protocol-core = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust" }  # 13 refs
+semio-framework-os-kernel-protocol-format = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📐️format/⚡️implementations/🦀️rust" }  # 6 refs
+semio-framework-os-kernel-store = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust" }  # 359 refs
+semio-framework-os-kernel-vcs = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust" }  # 37 refs
+[profile.dev.package.semio-framework-os-kernel-store]
+[profile.wasm-release.package.semio-framework-os-kernel-store]

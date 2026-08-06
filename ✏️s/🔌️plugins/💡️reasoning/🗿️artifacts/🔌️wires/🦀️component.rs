@@ -260,7 +260,7 @@ pub struct WiresFixtureDsl {
 /// the real struct keeps opaque `Value` fields while this twin (used only at the `parse_dsl`/
 /// `print_dsl`/pack boundary) is fully typed.
 #[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
-#[dsl(extension = "wires", layout = "lines")]
+#[dsl(extension = "reasoning.wires", layout = "lines")]
 struct MindmapWiresDocumentDsl {
     #[dsl(key = "wires", block)]
     wires_fixture: WiresFixtureDsl,

@@ -1,4 +1,4 @@
-/** WASM facade — encode/decode delegates to the plugin Rust crate. */
+/** rewrite pack — thin WASM encode/decode facade. */
 export function encode(value: unknown): Uint8Array {
   throw new Error("wire to plugin WASM");
 }

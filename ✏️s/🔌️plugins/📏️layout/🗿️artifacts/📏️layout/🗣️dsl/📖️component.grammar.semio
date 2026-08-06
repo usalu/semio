@@ -1,6 +1,45 @@
 dialect grammar
-grammar layout
+grammar layout.document
 extension layout
 use family-scene
 start document
-document = TEXT*
+
+document = schema-line grid-block? character-styles? paragraph-styles? stories? links? parent-pages? spreads? pages? print-target?
+schema-line = "schema" "=" IDENT {"name" "=" TEXT}? {"print-target" "=" IDENT}?
+grid-block = "grid" "{" {"baseline-grid" "=" FLOAT}? {"baseline-offset" "=" FLOAT}? {"snap-to-baseline" "=" BOOL}? "}"
+character-styles = "character-styles" "=" list | "character-styles" table-header "{" style-row* "}"
+paragraph-styles = "paragraph-styles" table-header "{" style-row* "}"
+stories = "stories" table-header "{" story-row* "}"
+links = "links" "=" list | "links" table-header "{" link-row* "}"
+parent-pages = "parent-pages" "=" "[" parent-page* "]"
+spreads = "spreads" "=" list | "spreads" table-header "{" spread-row* "}"
+pages = "pages" "=" "[" page* "]"
+page = page-props margins-block? columns-block? layer-ids? frames-block? guides-table? layers-table? overrides-table?
+page-props = {"id" "=" IDENT} {"name" "=" TEXT}? {"spread-id" "=" IDENT}? {"parent-page-id" "=" IDENT}? {"width" "=" FLOAT}? {"height" "=" FLOAT}?
+parent-page = page-props frames-block? layers-table?
+margins-block = "margins" "{" {"top" "=" FLOAT}? {"right" "=" FLOAT}? {"bottom" "=" FLOAT}? {"left" "=" FLOAT}? "}"
+columns-block = "columns" "{" {"count" "=" INT}? {"gutter" "=" FLOAT}? "}"
+layer-ids = "layer-ids" "=" list
+frames-block = "frames" "{" frame* "}"
+frame = frame-kind frame-props bounds-block? inset-block?
+frame-kind = "rect" | "text" | "image"
+frame-props = {"id" "=" IDENT} {"layer-id" "=" IDENT}? {"story-id" "=" IDENT}? {"thread-next" "=" IDENT}? {"link-id" "=" IDENT}? {"columns" "=" INT}? {"wrap-mode" "=" IDENT}? {"fill" "=" list}?
+bounds-block = "bounds" "{" {"x" "=" FLOAT}? {"y" "=" FLOAT}? {"width" "=" FLOAT}? {"height" "=" FLOAT}? {"rotation" "=" FLOAT}? "}"
+inset-block = "inset" "{" prop* "}"
+guides-table = "guides" table-header "{" guide-row* "}"
+layers-table = "layers" table-header "{" layer-row* "}"
+overrides-table = "overrides" table-header "{" override-row* "}"
+table-header = "[" IDENT ":" IDENT {IDENT ":" IDENT}* "]"
+style-row = IDENT prop*
+story-row = IDENT TEXT prop*
+link-row = IDENT prop*
+spread-row = IDENT prop*
+guide-row = prop*
+layer-row = IDENT TEXT BOOL BOOL list
+override-row = prop*
+print-target = "print-target" "=" IDENT | "print-target" "=" TEXT
+props = "{" prop* "}"
+prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
+list = "[" value* "]"
+map = "{" prop* "}"
+value = TEXT | FLOAT | INT | BOOL | list | map
