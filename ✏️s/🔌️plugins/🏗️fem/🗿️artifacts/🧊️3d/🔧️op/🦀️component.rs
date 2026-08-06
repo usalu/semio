@@ -168,6 +168,7 @@ pub type Fem3dStore = DocumentStore<Fem3dDocument, Fem3dOperation>;
 mod tests {
     use super::*;
     use crate::artifacts::fem3d::FemDof;
+    use protocol::OperationDiff;
     use std::collections::BTreeMap;
 
     // #region 🔖️Fixtures

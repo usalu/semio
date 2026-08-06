@@ -231,9 +231,9 @@ pub mod text {
 
 // #region 🔖️Cell
 pub mod cell {
-    use crate::geometry::{Pos, Rect, Size};
-    use crate::text::char_cells;
-    use crate::theme::Rgb;
+    use crate::tui::geometry::{Pos, Rect, Size};
+    use crate::tui::text::char_cells;
+    use crate::tui::theme::Rgb;
 
     /// 🎛️ Bitflags for cell text attributes.
     pub mod attr {
@@ -401,8 +401,8 @@ pub mod cell {
 
 // #region 🔖️Ansi
 pub mod ansi {
-    use crate::cell::{Cell, CellBuffer, DiffRun};
-    use crate::theme::Rgb;
+    use crate::tui::cell::{Cell, CellBuffer, DiffRun};
+    use crate::tui::theme::Rgb;
 
     //#region 🔖️Emit
     /// 📦️ A batch of raw ANSI bytes ready to write to a terminal (or feed to xterm.js).
@@ -421,19 +421,19 @@ pub mod ansi {
             return;
         }
         out.push_str("\x1b[0");
-        if cell.attrs & crate::cell::attr::BOLD != 0 {
+        if cell.attrs & crate::tui::cell::attr::BOLD != 0 {
             out.push_str(";1");
         }
-        if cell.attrs & crate::cell::attr::DIM != 0 {
+        if cell.attrs & crate::tui::cell::attr::DIM != 0 {
             out.push_str(";2");
         }
-        if cell.attrs & crate::cell::attr::ITALIC != 0 {
+        if cell.attrs & crate::tui::cell::attr::ITALIC != 0 {
             out.push_str(";3");
         }
-        if cell.attrs & crate::cell::attr::UNDERLINE != 0 {
+        if cell.attrs & crate::tui::cell::attr::UNDERLINE != 0 {
             out.push_str(";4");
         }
-        if cell.attrs & crate::cell::attr::REVERSE != 0 {
+        if cell.attrs & crate::tui::cell::attr::REVERSE != 0 {
             out.push_str(";7");
         }
         out.push_str(&format!(";38;2;{};{};{}", cell.fg[0], cell.fg[1], cell.fg[2]));
@@ -473,8 +473,8 @@ pub mod ansi {
     //#endregion 🔖️Emit
 
     //#region 🔖️Parse
-    use crate::event::{mods, Event, Key, KeyEvent, MouseEvent, MouseKind};
-    use crate::geometry::Pos;
+    use crate::tui::event::{mods, Event, Key, KeyEvent, MouseEvent, MouseKind};
+    use crate::tui::geometry::Pos;
 
     #[derive(Clone, Copy, PartialEq)]
     enum ParserState {
@@ -772,7 +772,7 @@ pub mod ansi {
 
 // #region 🔖️Event
 pub mod event {
-    use crate::geometry::{Pos, Size};
+    use crate::tui::geometry::{Pos, Size};
 
     /// ⌨️ A decoded terminal key.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -841,11 +841,11 @@ pub mod event {
 
 // #region 🔖️Scene
 pub mod scene {
-    use crate::chrome::ChromeState;
-    use crate::geometry::{Pos, Rect};
-    use crate::layout::Constraint;
-    use crate::theme::{Role, Surface};
-    use crate::widget::WidgetState;
+    use crate::tui::chrome::ChromeState;
+    use crate::tui::geometry::{Pos, Rect};
+    use crate::tui::layout::Constraint;
+    use crate::tui::theme::{Role, Surface};
+    use crate::tui::widget::WidgetState;
 
     const LAYOUT_DIRTY: u8 = 1;
     const PAINT_DIRTY: u8 = 2;
@@ -1070,8 +1070,8 @@ pub mod scene {
 
 // #region 🔖️Layout
 pub mod layout {
-    use crate::geometry::Rect;
-    use crate::scene::{NodeContent, NodeId, Scene};
+    use crate::tui::geometry::Rect;
+    use crate::tui::scene::{NodeContent, NodeId, Scene};
 
     /// 📐️ How one axis of a node's size is determined.
     #[derive(Clone, Copy, Debug, PartialEq)]
@@ -1108,7 +1108,7 @@ pub mod layout {
 
     fn measure(scene: &Scene, id: NodeId) -> (u16, u16) {
         match &scene.node(id).content {
-            NodeContent::Text(s) => (crate::text::display_width(s), 1),
+            NodeContent::Text(s) => (crate::tui::text::display_width(s), 1),
             NodeContent::Widget(w) => {
                 let size = w.preferred_size();
                 (size.width, size.height)
@@ -1348,20 +1348,20 @@ mod divider;
 mod chip;
 
 pub mod widget {
-    use crate::cell::CellBuffer;
-    use crate::chip::paint_chip;
-    use crate::divider::paint_divider;
-    use crate::event::KeyEvent;
-    use crate::geometry::{Rect, Size};
-    use crate::input::{input_on_key, paint_input};
-    use crate::label::paint_label;
-    use crate::list::{list_on_key, paint_list};
-    use crate::log::{log_on_key, paint_log};
-    use crate::select::{paint_select, select_on_key};
-    use crate::table::{paint_table, table_on_key};
-    use crate::tabs::{paint_tabs, tabs_on_key};
-    use crate::text::display_width;
-    use crate::theme::{Role, Theme};
+    use crate::tui::cell::CellBuffer;
+    use crate::tui::chip::paint_chip;
+    use crate::tui::divider::paint_divider;
+    use crate::tui::event::KeyEvent;
+    use crate::tui::geometry::{Rect, Size};
+    use crate::tui::input::{input_on_key, paint_input};
+    use crate::tui::label::paint_label;
+    use crate::tui::list::{list_on_key, paint_list};
+    use crate::tui::log::{log_on_key, paint_log};
+    use crate::tui::select::{paint_select, select_on_key};
+    use crate::tui::table::{paint_table, table_on_key};
+    use crate::tui::tabs::{paint_tabs, tabs_on_key};
+    use crate::tui::text::display_width;
+    use crate::tui::theme::{Role, Theme};
     use std::collections::VecDeque;
 
     /// 📣️ A widget- or window-chrome-level result of handling input, surfaced to the app.
@@ -1613,15 +1613,15 @@ mod footer;
 mod window;
 
 pub mod chrome {
-    use crate::cell::{Cell, CellBuffer};
-    use crate::footer::paint_footer;
-    use crate::geometry::{Pos, Rect};
-    use crate::layout::{solve_window_layout, WindowLayout};
-    use crate::navbar::paint_navbar;
-    use crate::scene::{Node, NodeContent, NodeId, Scene};
-    use crate::text::{display_width, truncate_to};
-    use crate::theme::{Role, Surface, Theme};
-    use crate::window::paint_window;
+    use crate::tui::cell::{Cell, CellBuffer};
+    use crate::tui::footer::paint_footer;
+    use crate::tui::geometry::{Pos, Rect};
+    use crate::tui::layout::{solve_window_layout, WindowLayout};
+    use crate::tui::navbar::paint_navbar;
+    use crate::tui::scene::{Node, NodeContent, NodeId, Scene};
+    use crate::tui::text::{display_width, truncate_to};
+    use crate::tui::theme::{Role, Surface, Theme};
+    use crate::tui::window::paint_window;
 
     #[derive(Clone)]
     pub struct NavItem {
@@ -1683,7 +1683,7 @@ pub mod chrome {
         }
 
         /// 🖱️ Resolves a click on a window's close/maximize tab, if any (tab text-row hit only).
-        pub fn window_control_at(&self, rect: Rect, pos: Pos) -> Option<crate::widget::WidgetSignal> {
+        pub fn window_control_at(&self, rect: Rect, pos: Pos) -> Option<crate::tui::widget::WidgetSignal> {
             let ChromeState::Window(w) = self else { return None };
             let layout = window_chip_layout(w, rect);
             if !layout.has_tabs || pos.y != rect.y + 1 {
@@ -1693,9 +1693,9 @@ pub mod chrome {
             let maximize_x = controls.x + 1 + WINDOW_CONTROLS_MAXIMIZE_OFFSET;
             let close_x = controls.x + 1 + WINDOW_CONTROLS_CLOSE_OFFSET;
             if pos.x == close_x && w.closable {
-                Some(crate::widget::WidgetSignal::WindowClose)
+                Some(crate::tui::widget::WidgetSignal::WindowClose)
             } else if pos.x == maximize_x && w.maximizable {
-                Some(crate::widget::WidgetSignal::WindowMaximize)
+                Some(crate::tui::widget::WidgetSignal::WindowMaximize)
             } else {
                 None
             }
@@ -1709,14 +1709,14 @@ pub mod chrome {
 
     /// 🪟️ One 2-row tab recessed into a top corner of the window: `x` is its own left-wall column,
     /// `interior` is the padded text between its walls (the tab is `interior_width + 2` cells wide).
-    /// `pub(crate)` (struct and fields): shared with `crate::window`'s `paint_window`/`paint_corner_tab`.
+    /// `pub(crate)` (struct and fields): shared with `crate::tui::window`'s `paint_window`/`paint_corner_tab`.
     pub(crate) struct WindowTab {
         pub(crate) x: u16,
         pub(crate) interior: String,
         pub(crate) interior_width: u16,
     }
 
-    /// 🪟️ `pub(crate)` (struct and fields): shared with `crate::window`'s `paint_window`.
+    /// 🪟️ `pub(crate)` (struct and fields): shared with `crate::tui::window`'s `paint_window`.
     pub(crate) struct WindowChipLayout {
         pub(crate) has_tabs: bool,
         pub(crate) title: WindowTab,
@@ -1726,7 +1726,7 @@ pub mod chrome {
     /// 📐️ Shared by paint and click hit-testing so the two can never drift apart. The title tab's own
     /// left wall is the window's left wall; the controls tab's own right wall is the window's right
     /// wall — both 2 rows tall, each bending down into the main body's top edge one row below.
-    /// `pub(crate)`: called from `crate::window`'s `paint_window` (extracted to its own element file;
+    /// `pub(crate)`: called from `crate::tui::window`'s `paint_window` (extracted to its own element file;
     /// this fn stays here because `ChromeState::window_control_at`, also in this mod, needs it too).
     pub(crate) fn window_chip_layout(w: &WindowState, rect: Rect) -> WindowChipLayout {
         let controls_interior_width = display_width(WINDOW_CONTROLS_INTERIOR);
@@ -1759,11 +1759,11 @@ pub mod chrome {
         let footer_id = scene.add(root, Node::new(NodeContent::Chrome(ChromeState::Footer(footer))));
         {
             let mut root_mut = scene.node_mut(root);
-            root_mut.set_constraint(crate::layout::Constraint { direction: crate::layout::Direction::Column, ..Default::default() });
+            root_mut.set_constraint(crate::tui::layout::Constraint { direction: crate::tui::layout::Direction::Column, ..Default::default() });
         }
-        scene.node_mut(navbar_id).set_constraint(crate::layout::Constraint { height: crate::layout::Dimension::Cells(2), ..Default::default() });
-        scene.node_mut(canvas_id).set_constraint(crate::layout::Constraint { height: crate::layout::Dimension::Weight(1), direction: crate::layout::Direction::Stack, ..Default::default() });
-        scene.node_mut(footer_id).set_constraint(crate::layout::Constraint { height: crate::layout::Dimension::Cells(2), ..Default::default() });
+        scene.node_mut(navbar_id).set_constraint(crate::tui::layout::Constraint { height: crate::tui::layout::Dimension::Cells(2), ..Default::default() });
+        scene.node_mut(canvas_id).set_constraint(crate::tui::layout::Constraint { height: crate::tui::layout::Dimension::Weight(1), direction: crate::tui::layout::Direction::Stack, ..Default::default() });
+        scene.node_mut(footer_id).set_constraint(crate::tui::layout::Constraint { height: crate::tui::layout::Dimension::Cells(2), ..Default::default() });
         let mut windows = Vec::new();
         for measure in solve_window_layout(layout, Rect::default()) {
             let id = scene.add(canvas_id, Node::new(NodeContent::Chrome(ChromeState::Window(WindowState::new(measure.window_kind_id.clone())))));
@@ -1779,7 +1779,7 @@ pub mod chrome {
             let measures = solve_window_layout(layout, area);
             for (kind_id, id) in &self.windows {
                 if let Some(m) = measures.iter().find(|m| &m.window_kind_id == kind_id) {
-                    scene.node_mut(*id).set_constraint(crate::layout::Constraint { width: crate::layout::Dimension::Cells(m.rect.width), height: crate::layout::Dimension::Cells(m.rect.height), ..Default::default() });
+                    scene.node_mut(*id).set_constraint(crate::tui::layout::Constraint { width: crate::tui::layout::Dimension::Cells(m.rect.width), height: crate::tui::layout::Dimension::Cells(m.rect.height), ..Default::default() });
                 }
             }
         }
@@ -1789,13 +1789,13 @@ pub mod chrome {
 
 // #region 🔖️Engine
 pub mod engine {
-    use crate::ansi::{emit_runs, AnsiPatch};
-    use crate::cell::{diff, Cell, CellBuffer};
-    use crate::event::{Event, Key, KeyEvent};
-    use crate::geometry::Size;
-    use crate::scene::{NodeContent, NodeId, Scene};
-    use crate::theme::Theme;
-    use crate::widget::WidgetSignal;
+    use crate::tui::ansi::{emit_runs, AnsiPatch};
+    use crate::tui::cell::{diff, Cell, CellBuffer};
+    use crate::tui::event::{Event, Key, KeyEvent};
+    use crate::tui::geometry::Size;
+    use crate::tui::scene::{NodeContent, NodeId, Scene};
+    use crate::tui::theme::Theme;
+    use crate::tui::widget::WidgetSignal;
     use ui_styling::appearance::AppearanceName;
 
     fn focusable(scene: &Scene, id: NodeId) -> bool {
@@ -1899,7 +1899,7 @@ pub mod engine {
                 Event::Mouse(m) => {
                     if let Some(id) = self.scene.hit(m.pos) {
                         self.focus = Some(id);
-                        if matches!(m.kind, crate::event::MouseKind::Down(_)) {
+                        if matches!(m.kind, crate::tui::event::MouseKind::Down(_)) {
                             let rect = self.scene.node(id).rect;
                             if let NodeContent::Chrome(chrome) = &self.scene.node(id).content {
                                 if let Some(signal) = chrome.window_control_at(rect, m.pos) {
@@ -1925,8 +1925,8 @@ pub mod engine {
                     NodeContent::Chrome(c) => c.paint(theme, rect, buf),
                     NodeContent::Widget(w) => w.paint(theme, rect, buf, Some(id) == focus),
                     NodeContent::Text(s) => {
-                        let bg = buf.get(rect.x, rect.y).map(|c| c.bg).unwrap_or(theme.surface(crate::theme::Surface::Base));
-                        buf.put_str(crate::geometry::Pos { x: rect.x, y: rect.y }, s, theme.role(crate::theme::Role::Foreground), bg, 0, rect);
+                        let bg = buf.get(rect.x, rect.y).map(|c| c.bg).unwrap_or(theme.surface(crate::tui::theme::Surface::Base));
+                        buf.put_str(crate::tui::geometry::Pos { x: rect.x, y: rect.y }, s, theme.role(crate::tui::theme::Role::Foreground), bg, 0, rect);
                     }
                     NodeContent::Box => {}
                 }
@@ -1943,11 +1943,11 @@ pub mod engine {
             if !root_dirty && !self.full_redraw {
                 return AnsiPatch::default();
             }
-            crate::layout::solve(&mut self.scene, crate::geometry::Rect::new(0, 0, self.size.width, self.size.height));
+            crate::tui::layout::solve(&mut self.scene, crate::tui::geometry::Rect::new(0, 0, self.size.width, self.size.height));
             self.paint();
             let mut patch = AnsiPatch::default();
             if self.full_redraw {
-                let full = vec![crate::cell::DiffRun { y: 0, x: 0, len: self.size.width }; usize::from(self.size.height)]
+                let full = vec![crate::tui::cell::DiffRun { y: 0, x: 0, len: self.size.width }; usize::from(self.size.height)]
                     .into_iter()
                     .enumerate()
                     .map(|(y, mut r)| {
@@ -1976,9 +1976,9 @@ pub mod engine {
 
 // #region 🔖️Backend
 pub mod backend {
-    use crate::ansi::AnsiPatch;
-    use crate::event::Event;
-    use crate::geometry::Size;
+    use crate::tui::ansi::AnsiPatch;
+    use crate::tui::event::Event;
+    use crate::tui::geometry::Size;
     use std::time::Duration;
 
     #[derive(Debug)]
@@ -2001,10 +2001,10 @@ pub mod backend {
         fn poll(&mut self, timeout: Duration) -> Result<Vec<Event>, BackendError>;
     }
 
-    #[cfg(all(feature = "terminal", unix, not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "tui-terminal", unix, not(target_arch = "wasm32")))]
     mod native_unix {
         use super::*;
-        use crate::ansi::{setup_sequence, teardown_sequence, AnsiParser};
+        use crate::tui::ansi::{setup_sequence, teardown_sequence, AnsiParser};
         use std::io::Write;
         use std::os::unix::io::RawFd;
 
@@ -2103,13 +2103,13 @@ pub mod backend {
             }
         }
     }
-    #[cfg(all(feature = "terminal", unix, not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "tui-terminal", unix, not(target_arch = "wasm32")))]
     pub use native_unix::NativeTerminal;
 
-    #[cfg(all(feature = "terminal", windows))]
+    #[cfg(all(feature = "tui-terminal", windows))]
     mod native_windows {
         use super::*;
-        use crate::ansi::{setup_sequence, teardown_sequence, AnsiParser};
+        use crate::tui::ansi::{setup_sequence, teardown_sequence, AnsiParser};
         use windows_sys::Win32::Foundation::HANDLE;
         use windows_sys::Win32::Storage::FileSystem::{ReadFile, WriteFile};
         use windows_sys::Win32::System::Console::{
@@ -2225,18 +2225,18 @@ pub mod backend {
             }
         }
     }
-    #[cfg(all(feature = "terminal", windows))]
+    #[cfg(all(feature = "tui-terminal", windows))]
     pub use native_windows::NativeTerminal;
 }
 // #endregion 🔖️Backend
 
 // #region 🔖️WasmHost
 pub mod host {
-    use crate::ansi::{setup_sequence, teardown_sequence, AnsiParser};
-    use crate::engine::Tui;
-    use crate::event::Event;
-    use crate::geometry::Size;
-    use crate::theme::Theme;
+    use crate::tui::ansi::{setup_sequence, teardown_sequence, AnsiParser};
+    use crate::tui::engine::Tui;
+    use crate::tui::event::Event;
+    use crate::tui::geometry::Size;
+    use crate::tui::theme::Theme;
     use ui_styling::appearance::AppearanceName;
 
     /// 🌐️ A pure bytes-in/string-out host: feed terminal input, get an ANSI patch back.
@@ -2277,7 +2277,7 @@ pub mod host {
         }
     }
 
-    #[cfg(all(target_arch = "wasm32", feature = "bindgen"))]
+    #[cfg(all(target_arch = "wasm32", feature = "tui-bindgen"))]
     mod bindgen_host {
         use super::WasmHost;
         use wasm_bindgen::prelude::*;
@@ -2314,7 +2314,7 @@ pub mod host {
             }
         }
     }
-    #[cfg(all(target_arch = "wasm32", feature = "bindgen"))]
+    #[cfg(all(target_arch = "wasm32", feature = "tui-bindgen"))]
     pub use bindgen_host::TuiHost;
 }
 // #endregion 🔖️WasmHost
@@ -2322,16 +2322,16 @@ pub mod host {
 // #region 🔖️Tests
 #[cfg(test)]
 mod tests {
-    use crate::ansi::{emit_runs, setup_sequence, teardown_sequence, AnsiParser, AnsiPatch};
-    use crate::cell::{attr, diff, Cell, CellBuffer, DiffRun};
-    use crate::chrome::{shell, ChromeState, FooterState, KeyHint, NavItem, NavbarState, WindowState};
-    use crate::event::{Event, Key, KeyEvent, MouseEvent, MouseKind};
-    use crate::geometry::{Pos, Rect, Size};
-    use crate::layout::{create_default_layout, even_window_layout, solve, solve_window_layout, Constraint, Dimension, Direction, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
-    use crate::scene::{Node, NodeContent, Scene};
-    use crate::text::{display_width, truncate_to};
-    use crate::theme::{Role, Surface, Theme};
-    use crate::widget::{Align, ChipState, DividerState, InputState, LabelState, ListState, LogScroll, LogState, SelectState, TableAlign, TableColumn, TableRow, TableState, TabsState, WidgetSignal, WidgetState};
+    use crate::tui::ansi::{emit_runs, setup_sequence, teardown_sequence, AnsiParser, AnsiPatch};
+    use crate::tui::cell::{attr, diff, Cell, CellBuffer, DiffRun};
+    use crate::tui::chrome::{shell, ChromeState, FooterState, KeyHint, NavItem, NavbarState, WindowState};
+    use crate::tui::event::{Event, Key, KeyEvent, MouseEvent, MouseKind};
+    use crate::tui::geometry::{Pos, Rect, Size};
+    use crate::tui::layout::{create_default_layout, even_window_layout, solve, solve_window_layout, Constraint, Dimension, Direction, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+    use crate::tui::scene::{Node, NodeContent, Scene};
+    use crate::tui::text::{display_width, truncate_to};
+    use crate::tui::theme::{Role, Surface, Theme};
+    use crate::tui::widget::{Align, ChipState, DividerState, InputState, LabelState, ListState, LogScroll, LogState, SelectState, TableAlign, TableColumn, TableRow, TableState, TabsState, WidgetSignal, WidgetState};
     use ui_styling::appearance::AppearanceName;
 
     fn row_text(buf: &CellBuffer, y: u16) -> String {
@@ -2475,7 +2475,7 @@ mod tests {
 
     #[test]
     fn tui_dispatch_emits_window_close_signal_on_click() {
-        let mut tui = crate::engine::Tui::new(Size { width: 40, height: 12 }, Theme::new(AppearanceName::Dark));
+        let mut tui = crate::tui::engine::Tui::new(Size { width: 40, height: 12 }, Theme::new(AppearanceName::Dark));
         let navbar = NavbarState { left: vec![], center: vec![], right: vec![] };
         let footer = FooterState { hints: vec![], status: String::new() };
         let layout = even_window_layout(&["plugins".to_string()]);
@@ -2592,7 +2592,7 @@ mod tests {
         next.put(3, 0, Cell { ch: 'x', ..blank });
         let runs = diff(&prev, &next);
         assert_eq!(runs.len(), 1);
-        assert_eq!(runs[0], crate::cell::DiffRun { y: 0, x: 3, len: 1 });
+        assert_eq!(runs[0], crate::tui::cell::DiffRun { y: 0, x: 3, len: 1 });
     }
 
     #[test]
@@ -2616,7 +2616,7 @@ mod tests {
         match &events[0] {
             Event::Key(k) => {
                 assert_eq!(k.key, Key::Right);
-                assert_eq!(k.mods, crate::event::mods::CTRL);
+                assert_eq!(k.mods, crate::tui::event::mods::CTRL);
             }
             _ => panic!("expected key event"),
         }
@@ -2652,7 +2652,7 @@ mod tests {
         parser.feed(b"\x1b", &mut events);
         assert!(events.is_empty());
         parser.flush_escape(&mut events);
-        assert_eq!(events, vec![Event::Key(crate::event::KeyEvent { key: Key::Esc, mods: 0 })]);
+        assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Esc, mods: 0 })]);
     }
 
     #[test]
@@ -2663,7 +2663,7 @@ mod tests {
         parser.feed(&bytes[..1], &mut events);
         assert!(events.is_empty());
         parser.feed(&bytes[1..], &mut events);
-        assert_eq!(events, vec![Event::Key(crate::event::KeyEvent { key: Key::Char('ü'), mods: 0 })]);
+        assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Char('ü'), mods: 0 })]);
     }
 
     #[test]
@@ -2676,7 +2676,7 @@ mod tests {
 
     #[test]
     fn theme_light_and_dark_differ() {
-        use crate::theme::{Role, Surface};
+        use crate::tui::theme::{Role, Surface};
         let light = Theme::new(AppearanceName::Light);
         let dark = Theme::new(AppearanceName::Dark);
         assert_ne!(light.surface(Surface::Base), dark.surface(Surface::Base));
@@ -2690,7 +2690,7 @@ mod tests {
 
     #[test]
     fn wasm_host_feed_and_render_smoke() {
-        let mut host = crate::host::WasmHost::new(40, 10, true);
+        let mut host = crate::tui::host::WasmHost::new(40, 10, true);
         host.feed(b"\r");
         let patch = host.render();
         assert!(!patch.is_empty());
@@ -2742,9 +2742,9 @@ mod tests {
     //#region 🔖️Text
     #[test]
     fn text_char_cells_zero_and_wide() {
-        assert_eq!(crate::text::char_cells('a'), 1);
-        assert_eq!(crate::text::char_cells('世'), 2);
-        assert_eq!(crate::text::char_cells('\u{200b}'), 0, "a zero-width space occupies no cells");
+        assert_eq!(crate::tui::text::char_cells('a'), 1);
+        assert_eq!(crate::tui::text::char_cells('世'), 2);
+        assert_eq!(crate::tui::text::char_cells('\u{200b}'), 0, "a zero-width space occupies no cells");
     }
 
     #[test]
@@ -2870,7 +2870,7 @@ mod tests {
         let mut parser = AnsiParser::new();
         let mut events = Vec::new();
         parser.feed(&[0x01, 0x03], &mut events);
-        assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Char('a'), mods: crate::event::mods::CTRL }), Event::Key(KeyEvent { key: Key::Char('c'), mods: crate::event::mods::CTRL })]);
+        assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Char('a'), mods: crate::tui::event::mods::CTRL }), Event::Key(KeyEvent { key: Key::Char('c'), mods: crate::tui::event::mods::CTRL })]);
     }
 
     #[test]
@@ -2878,7 +2878,7 @@ mod tests {
         let mut parser = AnsiParser::new();
         let mut events = Vec::new();
         parser.feed(b"\x1bj", &mut events);
-        assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Char('j'), mods: crate::event::mods::ALT })]);
+        assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Char('j'), mods: crate::tui::event::mods::ALT })]);
     }
 
     #[test]
@@ -3344,7 +3344,7 @@ mod tests {
     //#region 🔖️Engine
     #[test]
     fn tui_focus_next_and_prev_cycle_through_focusables() {
-        let mut tui = crate::engine::Tui::new(Size { width: 20, height: 5 }, Theme::new(AppearanceName::Dark));
+        let mut tui = crate::tui::engine::Tui::new(Size { width: 20, height: 5 }, Theme::new(AppearanceName::Dark));
         let root = tui.scene.root();
         let a = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::Label(LabelState { text: "a".to_string(), align: Align::Left, role: Role::Foreground }))));
         let b = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::Label(LabelState { text: "b".to_string(), align: Align::Left, role: Role::Foreground }))));
@@ -3361,7 +3361,7 @@ mod tests {
 
     #[test]
     fn tui_dispatch_tab_and_backtab_move_focus() {
-        let mut tui = crate::engine::Tui::new(Size { width: 20, height: 5 }, Theme::new(AppearanceName::Dark));
+        let mut tui = crate::tui::engine::Tui::new(Size { width: 20, height: 5 }, Theme::new(AppearanceName::Dark));
         let root = tui.scene.root();
         let a = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::Label(LabelState { text: "a".to_string(), align: Align::Left, role: Role::Foreground }))));
         let b = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::Label(LabelState { text: "b".to_string(), align: Align::Left, role: Role::Foreground }))));
@@ -3375,7 +3375,7 @@ mod tests {
 
     #[test]
     fn tui_render_skips_repaint_when_nothing_dirty() {
-        let mut tui = crate::engine::Tui::new(Size { width: 10, height: 3 }, Theme::new(AppearanceName::Dark));
+        let mut tui = crate::tui::engine::Tui::new(Size { width: 10, height: 3 }, Theme::new(AppearanceName::Dark));
         let first = tui.render_full();
         assert!(!first.0.is_empty());
         let second = tui.render();
@@ -3384,7 +3384,7 @@ mod tests {
 
     #[test]
     fn tui_set_appearance_and_resize_force_full_redraw() {
-        let mut tui = crate::engine::Tui::new(Size { width: 10, height: 3 }, Theme::new(AppearanceName::Dark));
+        let mut tui = crate::tui::engine::Tui::new(Size { width: 10, height: 3 }, Theme::new(AppearanceName::Dark));
         tui.render_full();
         tui.set_appearance(AppearanceName::Light);
         let patch = tui.render();
@@ -3399,14 +3399,14 @@ mod tests {
     //#region 🔖️WasmHost
     #[test]
     fn wasm_host_setup_and_teardown_match_ansi_sequences() {
-        let host = crate::host::WasmHost::new(10, 5, true);
+        let host = crate::tui::host::WasmHost::new(10, 5, true);
         assert_eq!(host.setup(), setup_sequence());
         assert_eq!(host.teardown(), teardown_sequence());
     }
 
     #[test]
     fn wasm_host_resize_updates_engine_size() {
-        let mut host = crate::host::WasmHost::new(10, 5, true);
+        let mut host = crate::tui::host::WasmHost::new(10, 5, true);
         host.render();
         host.resize(20, 8);
         let patch = host.render();

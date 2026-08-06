@@ -5,9 +5,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-// 🚧️W3-interim: reactHostPort still lives in the ui-react barrel (🔌️Adapters region) — rewire once
-// that region gets its own 🧱️elements/🫀️core/Adapters/ file.
-import { reactHostPort } from "../../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { reactHostPort } from "../Ports/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🆔️ElementId

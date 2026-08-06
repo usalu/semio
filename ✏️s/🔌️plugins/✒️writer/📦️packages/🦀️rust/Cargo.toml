@@ -26,6 +26,7 @@ path = "📦️lib.rs"
 
 [dependencies]
 dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+dsl_lsp = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧠️lsp/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-lsp" }
 store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
 protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 framework_editor = { path = "../../../../../🧰️framework/🔨️modules/✍️editor/⚡️implementations/🦀️rust", package = "semio-framework-editor" }
@@ -33,7 +34,6 @@ trinity = { path = "../../../../../✏️s/🔌️plugins/🔱️trinity/📦️
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 serde.workspace = true
 serde_json.workspace = true
-regex = "1.11.1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen.workspace = true

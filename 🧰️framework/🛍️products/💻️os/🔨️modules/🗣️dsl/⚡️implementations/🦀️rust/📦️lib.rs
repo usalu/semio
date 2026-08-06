@@ -492,6 +492,13 @@ pub fn language(id: &str) -> Option<LanguageSpec> {
     registry.get(id).copied()
 }
 
+/// @emoji 🔍️ Looks up a registered grammar by legacy file-extension suffix (e.g. `"note"`, `"jack"`).
+pub fn language_for_extension(extension: &str) -> Option<LanguageSpec> {
+    let suffix = extension.strip_prefix('.').unwrap_or(extension);
+    let registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
+    registry.values().find(|spec| spec.extension == Some(suffix)).copied()
+}
+
 /// @emoji 🔍️ Resolves a registered DSL grammar from `.semio` file bytes (content-derived envelope).
 pub fn language_for_semio_content(bytes: &[u8]) -> Option<LanguageSpec> {
     let envelope = semio_format::sniff(bytes).ok()?;

@@ -1,0 +1,263 @@
+   Compiling memchr v2.8.3
+   Compiling itoa v1.0.18
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling cfg-if v1.0.4
+   Compiling arrayvec v0.7.8
+   Compiling arrayref v0.3.9
+   Compiling constant_time_eq v0.4.2
+   Compiling thiserror v2.0.19
+   Compiling adler2 v2.0.1
+   Compiling pin-project-lite v0.2.17
+   Compiling futures-core v0.3.33
+   Compiling fastrand v2.5.0
+   Compiling miniz_oxide v0.8.9
+   Compiling futures-io v0.3.33
+   Compiling parking v2.2.1
+   Compiling blake3 v1.8.6
+   Compiling byteorder v1.5.0
+   Compiling lazy_static v1.5.0
+   Compiling semio-framework-os-kernel-semio v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/⚡️implementations/🦀️rust)
+   Compiling semio-framework-ui-styling v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust)
+   Compiling bitflags v2.13.1
+   Compiling futures-lite v2.6.1
+   Compiling equivalent v1.0.2
+   Compiling semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/⚡️implementations/🦀️rust)
+   Compiling allocator-api2 v0.2.21
+   Compiling foldhash v0.2.0
+   Compiling base64 v0.22.1
+   Compiling wit-bindgen-rt v0.36.0
+   Compiling num-traits v0.2.19
+   Compiling robust v1.2.0
+   Compiling smallvec v1.15.2
+   Compiling wit-bindgen v0.36.0
+   Compiling hashbrown v0.16.1
+   Compiling semio-framework-os-kernel-math-number v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/🔢️number/⚡️implementations/🦀️rust)
+   Compiling spade v2.15.1
+   Compiling semio-framework-os-kernel-math-algebra v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/➕️algebra/⚡️implementations/🦀️rust)
+   Compiling serde_json v1.0.151
+   Compiling serde v1.0.229
+   Compiling semio-framework-os-kernel-dsl-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust)
+   Compiling gltf-json v1.4.1
+warning: unused variable: `len`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:1083:21
+     |
+1083 |                 let len = end_j - i;
+     |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling semio-framework-os-kernel-pack-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🫀️core/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-dsl-notation v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust)
+warning: function `print_edge_label` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust/../../../🖋️notation/⚡️implementations/🦀️rust/📦️lib.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling semio-framework-os-kernel-pack-format v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📐️format/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-dsl-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-pack-io v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔌️io/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-pack-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⏳️async/⚡️implementations/🦀️rust)
+warning: `semio-framework-os-kernel-dsl-notation` (lib) generated 1 warning
+warning: `semio-framework-os-kernel-dsl-core` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os-kernel-dsl-core` to apply 1 suggestion)
+   Compiling semio-framework-os-kernel-protocol-command v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-format v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📐️format/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-pack-http v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌐️http/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-history v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📜️history/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-pack-value v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️value/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-causal v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔗️causal/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-crdt v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔀️crdt/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-io v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔌️io/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-materialize v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/💎️materialize/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-channel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧵️channel/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-wire v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/📡️wire/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-pack-index v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔢️index/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-vcs v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust)
+   Compiling semio-framework-ui-wgpu v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu)
+   Compiling gltf v1.4.1
+   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/⚡️implementations/🦀️rust)
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust)
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs:3296:68
+     |
+3296 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3296 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+3296 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+   Compiling semio-s-plugin-fem v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust)
+warning: unused import: `FemSection`
+  --> ../.././././🗿️artifacts/◻2d/⚙️engine/🦀️mesh_preview.rs:66:119
+   |
+66 |     use crate::artifacts::fem2d::{FemAnalysisSettings, FemDof, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, Fe...
+   |                                                                                                                       ^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `FemSection`
+  --> ../.././././🗿️artifacts/🧊️3d/⚙️engine/🦀️mesh_preview.rs:70:99
+   |
+70 |     use crate::artifacts::fem3d::{FemAnalysisSettings, FemDof, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+   |                                                                                                   ^^^^^^^^^^
+
+warning: unused imports: `Fem2dApp` and `dispatch`
+   --> ../../././🎛️apps/◻2d/🦀️component.rs:389:39
+    |
+389 |     use crate::apps::fem2d::testkit::{dispatch, fem2d_app, Fem2dApp};
+    |                                       ^^^^^^^^             ^^^^^^^^
+
+warning: unnecessary qualification
+   --> ../../././🎛️apps/◻2d/🦀️component.rs:514:17
+    |
+514 |         assert!(crate::apps::fem2d::testkit::render(&mut app, "fem2d.play.nope").contains("Unknown body"));
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+514 -         assert!(crate::apps::fem2d::testkit::render(&mut app, "fem2d.play.nope").contains("Unknown body"));
+514 +         assert!(testkit::render(&mut app, "fem2d.play.nope").contains("Unknown body"));
+    |
+
+warning: unnecessary qualification
+   --> ../.././././././🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs:304:22
+    |
+304 |         let camera = crate::artifacts::fem2d::FemCamera::default();
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+304 -         let camera = crate::artifacts::fem2d::FemCamera::default();
+304 +         let camera = FemCamera::default();
+    |
+
+warning: unused import: `semio_framework_plugin::PluginApp`
+   --> ../.././././🎛️apps/🧊️3d/🎮️commands/🧱️model/🦀️component.rs:195:9
+    |
+195 |     use semio_framework_plugin::PluginApp;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::PluginApp`
+   --> ../.././././🎛️apps/🧊️3d/🎮️commands/🏋️loads/🦀️component.rs:174:9
+    |
+174 |     use semio_framework_plugin::PluginApp;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+   --> ../.././././🎛️apps/🧊️3d/🎮️commands/🏋️loads/🦀️component.rs:184:26
+    |
+184 |         let projection = crate::artifacts::fem3d::Fem3dDocument::default();
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+184 -         let projection = crate::artifacts::fem3d::Fem3dDocument::default();
+184 +         let projection = Fem3dDocument::default();
+    |
+
+warning: unused import: `semio_framework_plugin::PluginApp`
+  --> ../.././././🎛️apps/🧊️3d/🎮️commands/🧮️analysis/🦀️component.rs:42:9
+   |
+42 |     use semio_framework_plugin::PluginApp;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::PluginApp`
+  --> ../.././././🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs:60:9
+   |
+60 |     use semio_framework_plugin::PluginApp;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `PluginApp`
+  --> ../.././././🎛️apps/🧊️3d/🎮️commands/📚️example/🦀️component.rs:41:46
+   |
+41 |     use semio_framework_plugin::{ActionKind, PluginApp};
+   |                                              ^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::PluginApp`
+  --> ../.././././././🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️component.rs:33:9
+   |
+33 |     use semio_framework_plugin::PluginApp;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::PluginApp`
+   --> ../.././././././🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs:172:9
+    |
+172 |     use semio_framework_plugin::PluginApp;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0599]: no method named `absorb` found for struct `artifacts::fem3d::diff::Fem3dDiff` in the current scope
+   --> ../../././🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs:308:14
+    |
+308 |         diff.absorb(Fem3dOperation::SetDocument { document: replacement.clone() }.diff(&base));
+    |              ^^^^^^ method not found in `artifacts::fem3d::diff::Fem3dDiff`
+    |
+   ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:17:8
+    |
+ 17 |     fn absorb(&mut self, other: Self);
+    |        ------ the method is available for `artifacts::fem3d::diff::Fem3dDiff` here
+    |
+   ::: ../../././🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:133:1
+    |
+133 | pub struct Fem3dDiff {
+    | -------------------- method `absorb` not found for this struct
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `OperationDiff` which provides `absorb` is implemented but not in scope; perhaps you want to import it
+    |
+169 +     use protocol::OperationDiff;
+    |
+
+error[E0599]: no method named `apply` found for struct `artifacts::fem3d::diff::Fem3dDiff` in the current scope
+   --> ../../././🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs:309:25
+    |
+309 |         assert_eq!(diff.apply(&base), replacement);
+    |                         ^^^^^ method not found in `artifacts::fem3d::diff::Fem3dDiff`
+    |
+   ::: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/../../../🎮️command/⚡️implementations/🦀️rust/📦️lib.rs:16:8
+    |
+ 16 |     fn apply(&self, base: &P) -> P;
+    |        ----- the method is available for `artifacts::fem3d::diff::Fem3dDiff` here
+    |
+   ::: ../../././🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs:133:1
+    |
+133 | pub struct Fem3dDiff {
+    | -------------------- method `apply` not found for this struct
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `OperationDiff` which provides `apply` is implemented but not in scope; perhaps you want to import it
+    |
+169 +     use protocol::OperationDiff;
+    |
+
+warning: unused import: `semio_framework_plugin::PluginApp`
+   --> ../../././🎛️apps/🧊️3d/🦀️component.rs:377:9
+    |
+377 |     use semio_framework_plugin::PluginApp;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0502]: cannot borrow `app` as immutable because it is also borrowed as mutable
+   --> ../.././././🎛️apps/🧊️3d/🎮️commands/🏋️loads/🦀️component.rs:203:180
+    |
+203 | ...   dispatch(&mut app, Fem3dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n2".into(), dof: crate::artifacts::fem3d::FemDof::Tz, value: -5000.0, case_id: Some(app.pr...
+    |       -------- -------- mutable borrow occurs here                                                                                                                               ^^^ immutable borrow occurs here
+    |       |
+    |       mutable borrow later used by call
+
+Some errors have detailed explanations: E0502, E0599.
+For more information about an error, try `rustc --explain E0502`.
+warning: `semio-s-plugin-fem` (lib test) generated 14 warnings
+error: could not compile `semio-s-plugin-fem` (lib test) due to 3 previous errors; 14 warnings emitted

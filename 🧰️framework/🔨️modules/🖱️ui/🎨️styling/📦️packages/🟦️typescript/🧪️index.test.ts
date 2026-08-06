@@ -140,10 +140,10 @@ describe("puzzle3d mesh-collection asset spec", () => {
     kind: "mesh-collection",
     route: "/mesh",
     roots: [
-      "./🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🌱️metabolism/🎨️representation",
+      "./🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation",
       "./♻️mit-bestand/🖼️asset/🏚️abbau-aufbau",
     ],
-    placeholder: "./🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🥽️mesh/🧊️placeholder.glb",
+    placeholder: "./🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧊️placeholder.glb",
     filterFromExamples: true,
   };
 

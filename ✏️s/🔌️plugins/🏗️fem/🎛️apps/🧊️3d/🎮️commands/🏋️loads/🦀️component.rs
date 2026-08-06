@@ -171,7 +171,6 @@ mod tests {
     use super::*;
     use crate::apps::fem3d::testkit::{dispatch, fem3d_app, Fem3dApp};
     use crate::apps::fem3d::Fem3dCommand;
-    use semio_framework_plugin::PluginApp;
 
     fn app_with_load_case() -> Fem3dApp {
         let mut app = fem3d_app();
@@ -181,7 +180,7 @@ mod tests {
 
     #[test]
     fn resolve_load_case_synthesizes_case_when_none_exist() {
-        let projection = crate::artifacts::fem3d::Fem3dDocument::default();
+        let projection = Fem3dDocument::default();
         let (index, load_case) = resolve_load_case(&projection, None);
         assert_eq!(index, 0);
         assert_eq!(load_case.id, "case-1");
@@ -200,7 +199,8 @@ mod tests {
     fn add_nodal_load_targets_named_case() {
         let mut app = app_with_load_case();
         dispatch(&mut app, Fem3dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false }));
-        dispatch(&mut app, Fem3dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n2".into(), dof: crate::artifacts::fem3d::FemDof::Tz, value: -5000.0, case_id: Some(app.projection().expect("projection").load_cases[1].id.clone()) }));
+        let live_case_id = app.projection().expect("projection").load_cases[1].id.clone();
+        dispatch(&mut app, Fem3dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n2".into(), dof: crate::artifacts::fem3d::FemDof::Tz, value: -5000.0, case_id: Some(live_case_id) }));
         let projection = app.projection().expect("projection");
         assert!(projection.load_cases[1].loads.iter().any(|l| matches!(l, crate::artifacts::fem3d::FemLoad::Nodal { .. })));
         assert!(projection.load_cases[0].loads.is_empty(), "the untargeted case must stay untouched");

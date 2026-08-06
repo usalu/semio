@@ -1,12 +1,12 @@
 //! 🗂️ tui key-handling and paint functions for the Tabs element — extracted from `widget` mod's
 //! inline body (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a crate-root sibling
-//! module of `crate::widget` (see that mod's `use crate::tabs::{tabs_on_key, paint_tabs};`).
+//! module of `crate::tui::widget` (see that mod's `use crate::tui::tabs::{tabs_on_key, paint_tabs};`).
 
-use crate::cell::{attr, Cell, CellBuffer};
-use crate::event::{Key, KeyEvent};
-use crate::geometry::{Pos, Rect};
-use crate::theme::{Role, Surface, Theme};
-use crate::widget::{TabsState, WidgetSignal};
+use crate::tui::cell::{attr, Cell, CellBuffer};
+use crate::tui::event::{Key, KeyEvent};
+use crate::tui::geometry::{Pos, Rect};
+use crate::tui::theme::{Role, Surface, Theme};
+use crate::tui::widget::{TabsState, WidgetSignal};
 
 pub(crate) fn tabs_on_key(t: &mut TabsState, ev: &KeyEvent) -> Option<WidgetSignal> {
     if t.tabs.is_empty() {

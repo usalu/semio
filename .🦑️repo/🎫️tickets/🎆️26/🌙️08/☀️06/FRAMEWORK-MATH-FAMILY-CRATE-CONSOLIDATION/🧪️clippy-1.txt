@@ -1,0 +1,488 @@
+warning: unused variable: `len`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:1083:21
+     |
+1083 |                 let len = end_j - i;
+     |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-dsl-core` (lib) generated 1 warning (run `cargo clippy --fix --lib -p semio-framework-os-kernel-dsl-core -- ` to apply 1 suggestion)
+warning: function `print_edge_label` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust/../../../🖋️notation/⚡️implementations/🦀️rust/📦️lib.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling semio-framework-math v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust)
+warning: `semio-framework-os-kernel-dsl-notation` (lib) generated 1 warning
+warning: digits grouped inconsistently by underscores
+   --> ../../🎲️entropy/🦀️component.rs:298:59
+    |
+298 | ...   [0.999_999_999_999_809_9, 676.520_368_121_885_1, -1259.139_216_722_402_8, 771.323_428_777_653_1, -176.615_029_162_140_6, 12.5...
+    |                                                         ^^^^^^^^^^^^^^^^^^^^^^ help: consider: `1_259.139_216_722_402_8`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#inconsistent_digit_grouping
+    = note: `-W clippy::inconsistent-digit-grouping` implied by `-W clippy::all`
+    = help: to override `-W clippy::all` add `#[allow(clippy::inconsistent_digit_grouping)]`
+
+warning: redundant clone
+    --> ../../🧮️cas/🦀️component.rs:1009:72
+     |
+1009 |                 let combined_exp = make_mul(vec![inner_exp.clone(), exp.clone()]);
+     |                                                                        ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🧮️cas/🦀️component.rs:1009:69
+     |
+1009 |                 let combined_exp = make_mul(vec![inner_exp.clone(), exp.clone()]);
+     |                                                                     ^^^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+     = note: requested on the command line with `-W clippy::redundant-clone`
+
+warning: this argument is passed by value, but not consumed in the function body
+    --> ../../🧮️cas/🦀️component.rs:1048:27
+     |
+1048 |     fn fold_radical(base: Integer, exp: Rational) -> Option<Expr> {
+     |                           ^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+     = note: requested on the command line with `-W clippy::needless-pass-by-value`
+help: consider taking a reference instead
+     |
+1048 |     fn fold_radical(base: &Integer, exp: Rational) -> Option<Expr> {
+     |                           +
+
+warning: manual implementation of `.is_multiple_of()`
+    --> ../../🧮️cas/🦀️component.rs:1055:12
+     |
+1055 |         if q % 2 == 0 && is_neg {
+     |            ^^^^^^^^^^ help: replace with: `q.is_multiple_of(2)`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_is_multiple_of
+     = note: `-W clippy::manual-is-multiple-of` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::manual_is_multiple_of)]`
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+    --> ../../🧮️cas/🦀️component.rs:2431:15
+     |
+2431 |         cond: Option<Rc<dyn Fn(&Bindings) -> bool>>,
+     |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#type_complexity
+     = note: `-W clippy::type-complexity` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::type_complexity)]`
+
+warning: the loop variable `row` is used to index `rows`
+    --> ../../🧮️cas/🦀️component.rs:3270:24
+     |
+3270 |             for row in 0..deg_den {
+     |                        ^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_range_loop
+     = note: `-W clippy::needless-range-loop` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::needless_range_loop)]`
+help: consider using an iterator and enumerate()
+     |
+3270 -             for row in 0..deg_den {
+3270 +             for (row, <item>) in rows.iter_mut().enumerate().take(deg_den) {
+     |
+
+warning: called `map(<f>).unwrap_or_else(<g>)` on an `Option` value
+    --> ../../🧮️cas/🦀️component.rs:4616:21
+     |
+4616 |             let b = p.terms().iter().find(|(m, _)| m.exps()[0] == 0).map(|(_, c)| c.clone()).unwrap_or_else(Rational::zero);
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `p.terms().iter().find(|(m, _)| m.exps()[0] == 0).map_or_else(Rational::zero, |(_, c)| c.clone())`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#map_unwrap_or
+     = note: requested on the command line with `-W clippy::map-unwrap-or`
+
+warning: this argument is passed by value, but not consumed in the function body
+    --> ../../🧮️cas/🦀️component.rs:4669:61
+     |
+4669 |     fn cramer_solutions(a: &[Vec<Expr>], b: &[Expr], det_a: Expr) -> Vec<Expr> {
+     |                                                             ^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+help: consider taking a reference instead
+     |
+4669 |     fn cramer_solutions(a: &[Vec<Expr>], b: &[Expr], det_a: &Expr) -> Vec<Expr> {
+     |                                                             +
+
+warning: manual implementation of `.is_multiple_of()`
+    --> ../../🧮️cas/🦀️component.rs:5018:27
+     |
+5018 |             let sign = if (skip_row + skip_col) % 2 == 0 { Expr::integer(1) } else { Expr::integer(-1) };
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: replace with: `(skip_row + skip_col).is_multiple_of(2)`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_is_multiple_of
+
+warning: manual implementation of `.is_multiple_of()`
+   --> ../../📈️polynomial/🦀️component.rs:269:16
+    |
+269 |             if (n * (n - 1) / 2) % 2 == 0 {
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^ help: replace with: `(n * (n - 1) / 2).is_multiple_of(2)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_is_multiple_of
+
+warning: manual implementation of `.is_multiple_of()`
+    --> ../../📈️polynomial/🦀️component.rs:1107:16
+     |
+1107 |             if n % p == 0 {
+     |                ^^^^^^^^^^ help: replace with: `n.is_multiple_of(p)`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_is_multiple_of
+
+warning: manual implementation of `.is_multiple_of()`
+    --> ../../📈️polynomial/🦀️component.rs:1109:23
+     |
+1109 |                 while n % p == 0 {
+     |                       ^^^^^^^^^^ help: replace with: `n.is_multiple_of(p)`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_is_multiple_of
+
+warning: using `clone` on type `ModInt` which implements the `Copy` trait
+    --> ../../📈️polynomial/🦀️component.rs:1228:18
+     |
+1228 |         let lc = f.leading_coeff().expect("factor_mod_p: f must be nonzero").clone();
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try dereferencing it: `*f.leading_coeff().expect("factor_mod_p: f must be nonzero")`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#clone_on_copy
+     = note: `-W clippy::clone-on-copy` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::clone_on_copy)]`
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+    --> ../../📈️polynomial/🦀️component.rs:1504:23
+     |
+1504 |         let mut best: Option<(u64, Vec<(PolyU<ModInt>, u32)>)> = None;
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#type_complexity
+
+warning: manual implementation of `.is_multiple_of()`
+    --> ../../📈️polynomial/🦀️component.rs:2028:16
+     |
+2028 |             if n % 2 == 0 && r.numer().is_negative() {
+     |                ^^^^^^^^^^ help: replace with: `n.is_multiple_of(2)`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_is_multiple_of
+
+warning: manual implementation of `.is_multiple_of()`
+    --> ../../📈️polynomial/🦀️component.rs:2037:28
+     |
+2037 |             let index = if n % 2 == 0 { intervals.len() - 1 } else { 0 };
+     |                            ^^^^^^^^^^ help: replace with: `n.is_multiple_of(2)`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_is_multiple_of
+
+warning: this argument is passed by value, but not consumed in the function body
+    --> ../../📈️polynomial/🦀️component.rs:2204:51
+     |
+2204 |         fn combine(a: &Self, b: &Self, operation: Combine) -> Self {
+     |                                                   ^^^^^^^
+     |
+help: or consider marking this type as `Copy`
+    --> ../../📈️polynomial/🦀️component.rs:2276:5
+     |
+2276 |     enum Combine {
+     |     ^^^^^^^^^^^^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+help: consider taking a reference instead
+     |
+2204 |         fn combine(a: &Self, b: &Self, operation: &Combine) -> Self {
+     |                                                   +
+
+warning: called `map(<f>).unwrap_or(<a>)` on an `Option` value
+    --> ./../../🕸️graph/🗣️dsl/🦀️component.rs:1654:18
+     |
+1654 |     let length = text.get(start..end).map(|s| s.chars().count()).unwrap_or(0) as u32;
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#map_unwrap_or
+help: use `map_or(<a>, <f>)` instead
+     |
+1654 -     let length = text.get(start..end).map(|s| s.chars().count()).unwrap_or(0) as u32;
+1654 +     let length = text.get(start..end).map_or(0, |s| s.chars().count()) as u32;
+     |
+
+warning: redundant clone
+    --> ../../🧮️cas/🦀️component.rs:1190:52
+     |
+1190 |             assert_eq!(make_pow(Expr::integer(1), x.clone()), Expr::integer(1));
+     |                                                    ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🧮️cas/🦀️component.rs:1190:51
+     |
+1190 |             assert_eq!(make_pow(Expr::integer(1), x.clone()), Expr::integer(1));
+     |                                                   ^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: redundant clone
+    --> ../../🧮️cas/🦀️component.rs:1239:34
+     |
+1239 |             assert_eq!(make_pow(i.clone(), Expr::integer(4)), Expr::integer(1));
+     |                                  ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🧮️cas/🦀️component.rs:1239:33
+     |
+1239 |             assert_eq!(make_pow(i.clone(), Expr::integer(4)), Expr::integer(1));
+     |                                 ^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: redundant clone
+    --> ../../🧮️cas/🦀️component.rs:1255:43
+     |
+1255 |                 make_mul(vec![x.clone(), y.clone(), Expr::integer(2)]),
+     |                                           ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🧮️cas/🦀️component.rs:1255:42
+     |
+1255 |                 make_mul(vec![x.clone(), y.clone(), Expr::integer(2)]),
+     |                                          ^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: redundant clone
+    --> ../../🧮️cas/🦀️component.rs:1762:48
+     |
+1762 |             let e = Expr::add(vec![x.clone(), x.clone(), y.clone()]);
+     |                                                ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🧮️cas/🦀️component.rs:1762:47
+     |
+1762 |             let e = Expr::add(vec![x.clone(), x.clone(), y.clone()]);
+     |                                               ^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: redundant clone
+    --> ../../🧮️cas/🦀️component.rs:1762:59
+     |
+1762 |             let e = Expr::add(vec![x.clone(), x.clone(), y.clone()]);
+     |                                                           ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🧮️cas/🦀️component.rs:1762:58
+     |
+1762 |             let e = Expr::add(vec![x.clone(), x.clone(), y.clone()]);
+     |                                                          ^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: redundant clone
+    --> ../../🧮️cas/🦀️component.rs:2138:47
+     |
+2138 |             let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(2)), Expr::integer(1)]);
+     |                                               ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🧮️cas/🦀️component.rs:2138:46
+     |
+2138 |             let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(2)), Expr::integer(1)]);
+     |                                              ^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: redundant clone
+    --> ../../🧮️cas/🦀️component.rs:2145:22
+     |
+2145 |             let e = x.clone() - Expr::integer(1);
+     |                      ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🧮️cas/🦀️component.rs:2145:21
+     |
+2145 |             let e = x.clone() - Expr::integer(1);
+     |                     ^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: redundant clone
+    --> ../../🧮️cas/🦀️component.rs:2152:22
+     |
+2152 |             let e = x.clone() / Expr::integer(2);
+     |                      ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🧮️cas/🦀️component.rs:2152:21
+     |
+2152 |             let e = x.clone() / Expr::integer(2);
+     |                     ^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: redundant clone
+    --> ../../🧮️cas/🦀️component.rs:2941:110
+     |
+2941 | ...r::integer(2)), Expr::mul(vec![Expr::integer(3), x.clone()]), Expr::integer(1)]);
+     |                                                      ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🧮️cas/🦀️component.rs:2941:109
+     |
+2941 | ...   let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(2)), Expr::mul(vec![Expr::integer(3), x.clone()]), Expr::integer(1...
+     |                                                                                                       ^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: unnecessary use of `clone` to create a slice from a reference
+    --> ../../🧮️cas/🦀️component.rs:2989:43
+     |
+2989 |             let (num, _map) = as_poly(&x, &[x.clone()]).unwrap();
+     |                                           ^^^^^^^^^^^^ help: try: `std::slice::from_ref(&x)`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#cloned_ref_to_slice_refs
+     = note: `-W clippy::cloned-ref-to-slice-refs` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::cloned_ref_to_slice_refs)]`
+
+warning: redundant clone
+    --> ../../🧮️cas/🦀️component.rs:3409:86
+     |
+3409 |             let e = Expr::func(crate::cas::fnkind::FnKind::Sin, vec![Expr::add(vec![x.clone(), Expr::integer(1)])]);
+     |                                                                                      ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🧮️cas/🦀️component.rs:3409:85
+     |
+3409 |             let e = Expr::func(crate::cas::fnkind::FnKind::Sin, vec![Expr::add(vec![x.clone(), Expr::integer(1)])]);
+     |                                                                                     ^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: redundant clone
+    --> ../../🧮️cas/🦀️component.rs:3426:47
+     |
+3426 |             let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(-1)), Expr::integer(1)]);
+     |                                               ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🧮️cas/🦀️component.rs:3426:46
+     |
+3426 |             let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(-1)), Expr::integer(1)]);
+     |                                              ^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: redundant clone
+    --> ../../🧮️cas/🦀️component.rs:3447:47
+     |
+3447 |             let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(2)), Expr::integer(-1)]);
+     |                                               ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🧮️cas/🦀️component.rs:3447:46
+     |
+3447 |             let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(2)), Expr::integer(-1)]);
+     |                                              ^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: redundant clone
+    --> ../../🧮️cas/🦀️component.rs:4047:120
+     |
+4047 | ...e()), Expr::add(vec![Expr::func(FnKind::Ln, vec![x.clone()]), Expr::integer(1)])]);
+     |                                                      ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🧮️cas/🦀️component.rs:4047:119
+     |
+4047 | ...   let expected = Expr::mul(vec![Expr::pow(x.clone(), x.clone()), Expr::add(vec![Expr::func(FnKind::Ln, vec![x.clone()]), Expr:...
+     |                                                                                                                 ^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: redundant clone
+    --> ../../🧮️cas/🦀️component.rs:4062:55
+     |
+4062 |             let e = Expr::func(FnKind::BesselJ, vec![n.clone(), x.clone()]);
+     |                                                       ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🧮️cas/🦀️component.rs:4062:54
+     |
+4062 |             let e = Expr::func(FnKind::BesselJ, vec![n.clone(), x.clone()]);
+     |                                                      ^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: `semio-framework-math` (lib) generated 18 warnings (run `cargo clippy --fix --lib -p semio-framework-math -- ` to apply 11 suggestions)
+warning: redundant clone
+    --> ../../🧮️cas/🦀️component.rs:5619:99
+     |
+5619 |             let e = Expr::mul(vec![Expr::integer(2), x.clone(), Expr::func(FnKind::Cos, vec![inner.clone()])]);
+     |                                                                                                   ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🧮️cas/🦀️component.rs:5619:94
+     |
+5619 |             let e = Expr::mul(vec![Expr::integer(2), x.clone(), Expr::func(FnKind::Cos, vec![inner.clone()])]);
+     |                                                                                              ^^^^^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: redundant clone
+    --> ../../🧮️cas/🦀️component.rs:5774:73
+     |
+5774 | ...   let expected = crate::cas::simplify::expand(&(n.clone() * (n.clone() + Expr::integer(1)) * Expr::from(Rational::from_i64(1, ...
+     |                                                                   ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🧮️cas/🦀️component.rs:5774:72
+     |
+5774 | ...   let expected = crate::cas::simplify::expand(&(n.clone() * (n.clone() + Expr::integer(1)) * Expr::from(Rational::from_i64(1, ...
+     |                                                                  ^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: redundant clone
+    --> ../../🌫️fuzzy/🦀️component.rs:2195:38
+     |
+2195 |         let mut empty_system = system.clone();
+     |                                      ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🌫️fuzzy/🦀️component.rs:2195:32
+     |
+2195 |         let mut empty_system = system.clone();
+     |                                ^^^^^^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: redundant clone
+    --> ../../🌫️fuzzy/🦀️component.rs:2231:37
+     |
+2231 |         let mut soft_system = system.clone();
+     |                                     ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> ../../🌫️fuzzy/🦀️component.rs:2231:31
+     |
+2231 |         let mut soft_system = system.clone();
+     |                               ^^^^^^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: this assertion has a constant value
+    --> ./../../🕸️graph/🦀️component.rs:2796:9
+     |
+2796 |         assert!(TOL_STRICT < TOL_LOOSE);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: consider moving this into a const block: `const { assert!(..) }`
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#assertions_on_constants
+     = note: `-W clippy::assertions-on-constants` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::assertions_on_constants)]`
+
+warning: equality checks against false can be replaced by a negation
+   --> ./../../🕸️graph/🔧️operators/🦀️component.rs:762:17
+    |
+762 |         assert!(dropped.contains_node(1) == false);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `!dropped.contains_node(1)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#bool_comparison
+    = note: `-W clippy::bool-comparison` implied by `-W clippy::all`
+    = help: to override `-W clippy::all` add `#[allow(clippy::bool_comparison)]`
+
+warning: unnecessary use of `get(&b).is_none()`
+   --> ././../../🕸️graph/➕️normal/➡️directed/🦀️component.rs:730:48
+    |
+730 |         assert!(g.get_node_attributes("color").get(&b).is_none());
+    |                 -------------------------------^^^^^^^^^^^^^^^^^
+    |                 |
+    |                 help: replace it with: `!g.get_node_attributes("color").contains_key(&b)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#unnecessary_get_then_check
+    = note: `-W clippy::unnecessary-get-then-check` implied by `-W clippy::all`
+    = help: to override `-W clippy::all` add `#[allow(clippy::unnecessary_get_then_check)]`
+
+warning: `semio-framework-math` (lib test) generated 40 warnings (18 duplicates) (run `cargo clippy --fix --lib -p semio-framework-math --tests -- ` to apply 20 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 14.01s

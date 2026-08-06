@@ -1,13 +1,13 @@
 //! 🔎️ tui paint function for the Navbar element — extracted from `chrome` mod's inline body
 //! (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a crate-root sibling module of
-//! `crate::chrome` (see that mod's `use crate::navbar::paint_navbar;`). `paint_items` is a private
+//! `crate::tui::chrome` (see that mod's `use crate::tui::navbar::paint_navbar;`). `paint_items` is a private
 //! per-side helper used only by `paint_navbar` and stays module-private here.
 
-use crate::cell::{Cell, CellBuffer};
-use crate::chrome::{NavItem, NavbarState};
-use crate::geometry::{Pos, Rect};
-use crate::text::display_width;
-use crate::theme::{Role, Surface, Theme};
+use crate::tui::cell::{Cell, CellBuffer};
+use crate::tui::chrome::{NavItem, NavbarState};
+use crate::tui::geometry::{Pos, Rect};
+use crate::tui::text::display_width;
+use crate::tui::theme::{Role, Surface, Theme};
 
 fn paint_items(items: &[NavItem], theme: &Theme, mut x: u16, y: u16, bg: [u8; 3], rect: Rect, buf: &mut CellBuffer) -> u16 {
     for item in items {

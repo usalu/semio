@@ -58,21 +58,14 @@ import {
 import { type DocumentSyncStatus } from "@semio-tech/framework-os-core";
 // 🧱️core: shellLabel imported directly from ShellHelpers (its real implementation, not via the barrel) —
 // this module calls shellLabel(...) at module top level (UI_INSPECTOR_MIXED_PLACEHOLDER), which requires
-// a non-circular import; routing through the 🚧️W4-interim barrel indirection hit the same
+// a non-circular import; routing through the barrel indirection (cleared) hit the same
 // module-top-level circular-import initialization-order bug documented in ui-react's
 // 🧱️elements/🫀️core/Ports/🟦️component.tsx header comment (see 📋️w0-status.md's "W3 follow-up" section).
 import { shellLabel } from "../ShellHelpers/🟦️component.tsx";
-// 🚧️W4-interim: these still live in the framework-renderer-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ dir) — a later wave rewires this import per-symbol as each dependency's own
-// element file lands. Do not import the barrel from any OTHER new leaf file without the same marker;
-// grep for `🚧️W4-interim` must be empty before this wave's closing batch.
-import {
-  PRESENCE_CLIENT_STORAGE_KEY,
-  EMPTY_APP_LABELS_OVERLAY,
-  DEFAULT_PANEL_WIDTH_PX,
-  FrameworkOsShell,
-  type PluginWasmHandle,
-} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { DEFAULT_PANEL_WIDTH_PX } from "../ShellHelpers/🟦️component.tsx";
+import { FrameworkOsShell } from "../ShellHost/🟦️component.tsx";
+import { type PluginWasmHandle } from "../PluginRuntime/🟦️component.tsx";
+import { PRESENCE_CLIENT_STORAGE_KEY, EMPTY_APP_LABELS_OVERLAY } from "../ShellHelpers/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️types

@@ -1,13 +1,13 @@
 //! 🏷️ tui paint function for the Label element (foundational static/dynamic single-line text
 //! primitive, mirroring the other `🫀️core/` concepts already extracted in ui-react) — extracted
 //! from `widget` mod's inline body (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as
-//! a crate-root sibling module of `crate::widget` (see that mod's `use crate::label::paint_label;`).
+//! a crate-root sibling module of `crate::tui::widget` (see that mod's `use crate::tui::label::paint_label;`).
 
-use crate::cell::CellBuffer;
-use crate::geometry::{Pos, Rect};
-use crate::text::truncate_to;
-use crate::theme::{Surface, Theme};
-use crate::widget::{Align, LabelState};
+use crate::tui::cell::CellBuffer;
+use crate::tui::geometry::{Pos, Rect};
+use crate::tui::text::truncate_to;
+use crate::tui::theme::{Surface, Theme};
+use crate::tui::widget::{Align, LabelState};
 
 pub(crate) fn paint_label(l: &LabelState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     let bg = buf.get(rect.x, rect.y).map(|c| c.bg).unwrap_or(theme.surface(Surface::Base));

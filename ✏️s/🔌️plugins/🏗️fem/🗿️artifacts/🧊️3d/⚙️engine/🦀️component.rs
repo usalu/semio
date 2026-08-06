@@ -5,25 +5,28 @@
 //! more window consumers belongs in the artifact's `⚙️engine`, not duplicated or hung off one window's
 //! file, UNLESS it takes an app-only view-state type (`Fem3dConfig`) as a parameter (none of these do —
 //! they take `FemCamera`, a document-owned type, plus plain geometry/displacement values). Solid meshing
-//! lives in `🦀️meshing.rs`, modal/buckling in `🦀️modal_buckling.rs`, mesh preview + nodal stress in
-//! `🦀️mesh_preview.rs`.
+//! lives in `🕸️meshing`, modal/buckling in `🎵️modal-buckling`, mesh preview + nodal stress in
+//! `🗺️mesh-preview`.
 
 use crate::artifacts::fem3d::{Fem3dDocument, FemCamera};
 use crate::core::{analyses, Dof};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
-// 📍️ Explicit `#[path]` on each sibling-file submodule, even though these three are plain top-level
-// `mod` declarations inside this node's own `component.rs` (not a cross-taxonomy-node reference) — per
-// the migration recipe's `#[path]` mechanics (§2), relying on Rust's default same-named-subdirectory
-// module resolution here would look for `⚙️engine/engine/{meshing,mesh_preview,modal_buckling}.rs`
-// instead of the sibling files that actually exist at `⚙️engine/🦀️{meshing,mesh_preview,modal_buckling}.rs`.
-#[path = "🦀️meshing.rs"]
-pub mod meshing;
-#[path = "🦀️mesh_preview.rs"]
-pub mod mesh_preview;
-#[path = "🦀️modal_buckling.rs"]
-pub mod modal_buckling;
+// 📍️ The engine's `🕸️meshing`/`🗺️mesh-preview`/`🎵️modal-buckling` components are declared ONCE, by the
+// plugin root's wiring (`📦️lib.rs`'s `artifacts::fem3d::engine` block) — declaring them here too would
+// compile each file a second time as `engine::component::<m>`, giving every type in them a silent twin.
+use crate::artifacts::fem3d::engine::{mesh_preview, meshing};
+
+// #region 🔖️Register
+/// 🗂️ Registers `Fem3dDocument`'s pack↔dsl codec under `FEM_3D_SCHEMA` so `framework/sync`'s
+/// `FolderEndpoint` (and any other schema-string-keyed caller) can print/parse fem3d documents without
+/// depending on its concrete `Projection`/`Operation` types. Reached from the plugin root's
+/// `semio_plugin!{ setup: … }` via `crate::core::register_all_engines`.
+pub fn register() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::fem3d::Fem3dPlayApp>(crate::artifacts::fem3d::FEM_3D_SCHEMA);
+}
+// #endregion 🔖️Register
 
 pub fn empty_fem3d_projection() -> Fem3dDocument {
     Fem3dDocument::default()
@@ -333,6 +336,7 @@ pub fn fem3d_camera_json(camera: &FemCamera) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::fem3d::engine::modal_buckling;
     use crate::artifacts::fem3d::{FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
     use crate::core::ElementResult;
     use std::collections::BTreeMap;

@@ -12,7 +12,7 @@ use fem2d_protocol::Fem2dCommand;
 use fem_core::{Dof, ElementResult};
 use fem_shared::{hex_to_rgb01, next_id, normalize_mode_shape, result_display_action_args, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO, VON_MISES_BANDS};
 use semio_framework_plugin::{
-    build_canvas_2d_scene, create_default_layout, ui_text, ActionArgDef, ActionArgOption, App, AppIo, ArtifactKindSpec, Canvas2dScene, ConfigSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, LocalizedLabel, Media, MediaClass, MediaError,
+    build_canvas_2d_scene, create_default_layout, ui_text, ActionArgDef, ActionArgOption, App, AppIo, ArtifactKindSpec, Canvas2dScene, ConfigSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError,
     MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, UiNode,
 };
 use serde_json::{json, Value};
@@ -649,75 +649,75 @@ impl DocumentApp for Fem2dPlayApp {
             Fem2dCommand::AddNode { x, y } => {
                 let id = next_id(projection.nodes.iter().map(|n| n.id.clone()), "n");
                 let index = projection.nodes.len();
-                Ok(Emit::operations(vec![Fem2dOperation::SetNode { index, node: fem2d::FemNode { id, x: *x, y: *y } }])
+                Ok(Emit::operations(vec![Fem2dOperation::SetNode { index, node: fem2d::FemNode { id, x: *x, y: *y } }]))
             }
             Fem2dCommand::AddBar { start, end, material_id, section_id } => {
                 let id = next_id(projection.elements.iter().map(|e| fem2d::element_id(e).to_string()), "e");
                 let index = projection.elements.len();
                 let element = fem2d::FemElement::Bar { id, start: start.clone(), end: end.clone(), material_id: material_id.clone(), section_id: section_id.clone() };
-                Ok(Emit::operations(vec![Fem2dOperation::SetElement { index, element: Box::new(element) }])
+                Ok(Emit::operations(vec![Fem2dOperation::SetElement { index, element: Box::new(element) }]))
             }
             Fem2dCommand::AddBeam { start, end, material_id, section_id } => {
                 let id = next_id(projection.elements.iter().map(|e| fem2d::element_id(e).to_string()), "e");
                 let index = projection.elements.len();
                 let element = fem2d::FemElement::Beam { id, start: start.clone(), end: end.clone(), material_id: material_id.clone(), section_id: section_id.clone() };
-                Ok(Emit::operations(vec![Fem2dOperation::SetElement { index, element: Box::new(element) }])
+                Ok(Emit::operations(vec![Fem2dOperation::SetElement { index, element: Box::new(element) }]))
             }
             Fem2dCommand::AddMaterial { name, e } => {
                 let id = next_id(projection.materials.iter().map(|m| m.id.clone()), "m");
                 let index = projection.materials.len();
-                Ok(Emit::operations(vec![Fem2dOperation::SetMaterial { index, material: fem2d::FemMaterial { id, name: name.clone(), e: *e, nu: 0.3, rho: 7850.0 } }])
+                Ok(Emit::operations(vec![Fem2dOperation::SetMaterial { index, material: fem2d::FemMaterial { id, name: name.clone(), e: *e, nu: 0.3, rho: 7850.0 } }]))
             }
             Fem2dCommand::AddSection { name, area, iy } => {
                 let id = next_id(projection.sections.iter().map(|s| s.id.clone()), "s");
                 let index = projection.sections.len();
-                Ok(Emit::operations(vec![Fem2dOperation::SetSection { index, section: fem2d::FemSection { id, name: name.clone(), area: *area, iy: *iy } }])
+                Ok(Emit::operations(vec![Fem2dOperation::SetSection { index, section: fem2d::FemSection { id, name: name.clone(), area: *area, iy: *iy } }]))
             }
             Fem2dCommand::AddSupport { node_id, fixed } => {
                 let id = next_id(projection.supports.iter().map(|s| s.id.clone()), "sup");
                 let index = projection.supports.len();
-                Ok(Emit::operations(vec![Fem2dOperation::SetSupport { index, support: fem2d::FemSupport { id, node_id: node_id.clone(), fixed: fixed.clone() } }])
+                Ok(Emit::operations(vec![Fem2dOperation::SetSupport { index, support: fem2d::FemSupport { id, node_id: node_id.clone(), fixed: fixed.clone() } }]))
             }
             Fem2dCommand::AddNodalLoad { node_id, dof, value, case_id } => {
                 let (index, mut load_case) = fem2d_resolve_load_case(projection, case_id.as_deref());
                 let load_id = next_id(load_case.loads.iter().map(|l| fem2d::load_id(l).to_string()), "l");
                 load_case.loads.push(fem2d::FemLoad::Nodal { id: load_id, node_id: node_id.clone(), dof: *dof, value: *value });
-                Ok(Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case }])
+                Ok(Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case }]))
             }
             Fem2dCommand::AddMemberUdl { element_id, wx, wy, case_id } => {
                 let (index, mut load_case) = fem2d_resolve_load_case(projection, case_id.as_deref());
                 let load_id = next_id(load_case.loads.iter().map(|l| fem2d::load_id(l).to_string()), "l");
                 load_case.loads.push(fem2d::FemLoad::MemberUdl { id: load_id, element_id: element_id.clone(), wx: *wx, wy: *wy });
-                Ok(Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case }])
+                Ok(Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case }]))
             }
             Fem2dCommand::AddAreaLoad { region_id, pressure, case_id } => {
                 let (index, mut load_case) = fem2d_resolve_load_case(projection, case_id.as_deref());
                 let load_id = next_id(load_case.loads.iter().map(|l| fem2d::load_id(l).to_string()), "l");
                 load_case.loads.push(fem2d::FemLoad::Area { id: load_id, region_id: region_id.clone(), pressure: *pressure });
-                Ok(Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case }])
+                Ok(Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case }]))
             }
             Fem2dCommand::AddRegion { x, y, width, height, material_id, thickness, mesh_size } => {
                 let id = next_id(projection.regions.iter().map(|r| r.id.clone()), "r");
                 let index = projection.regions.len();
                 let outline = vec![[*x, *y], [x + width, *y], [x + width, y + height], [*x, y + height]];
                 let region = fem2d::FemRegion { id, name: "Region".into(), outline, holes: Vec::new(), thickness: thickness.unwrap_or(0.02), material_id: material_id.clone(), mesh_size: mesh_size.unwrap_or(0.25) };
-                Ok(Emit::operations(vec![Fem2dOperation::SetRegion { index, region }])
+                Ok(Emit::operations(vec![Fem2dOperation::SetRegion { index, region }]))
             }
             Fem2dCommand::AddLoadCase { name, self_weight } => {
                 let id = next_id(projection.load_cases.iter().map(|lc| lc.id.clone()), "case-");
                 let index = projection.load_cases.len();
-                Ok(Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case: fem2d::FemLoadCase { id, name: name.clone(), loads: Vec::new(), self_weight: *self_weight } }])
+                Ok(Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case: fem2d::FemLoadCase { id, name: name.clone(), loads: Vec::new(), self_weight: *self_weight } }]))
             }
             Fem2dCommand::AddCombination { name, terms } => {
                 let id = next_id(projection.combinations.iter().map(|c| c.id.clone()), "c");
                 let index = projection.combinations.len();
-                Ok(Emit::operations(vec![Fem2dOperation::SetCombination { index, combination: fem2d::FemCombination { id, name: name.clone(), terms: terms.clone() } }])
+                Ok(Emit::operations(vec![Fem2dOperation::SetCombination { index, combination: fem2d::FemCombination { id, name: name.clone(), terms: terms.clone() } }]))
             }
             Fem2dCommand::SetSelfWeight { case_id, enabled } => match projection.load_cases.iter().position(|lc| &lc.id == case_id) {
                 Some(index) => {
                     let mut load_case = projection.load_cases[index].clone();
                     load_case.self_weight = *enabled;
-                    Ok(Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case }])
+                    Ok(Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case }]))
                 }
                 None => Ok(Emit::default()),
             },
@@ -728,7 +728,7 @@ impl DocumentApp for Fem2dPlayApp {
                     buckling_count: buckling_count.map(|value| value as usize).unwrap_or(current.buckling_count),
                     deformation_scale: deformation_scale.unwrap_or(current.deformation_scale),
                 };
-                Ok(Emit::operations(vec![Fem2dOperation::SetAnalysisSettings { settings }])
+                Ok(Emit::operations(vec![Fem2dOperation::SetAnalysisSettings { settings }]))
             }
             Fem2dCommand::RemoveSelection { ids } => {
                 let mut operations = Vec::new();
@@ -752,14 +752,14 @@ impl DocumentApp for Fem2dPlayApp {
                     }
                 }
                 if operations.is_empty() {
-                    Ok(Emit::default()
+                    Ok(Emit::default())
                 } else {
-                    Ok(Emit::operations(operations)
+                    Ok(Emit::operations(operations))
                 }
             }
             Fem2dCommand::SetActiveExample { example_id } => {
                 let document = if example_id == "default" { Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap_or_else(|_| fem2d_engine::empty_fem2d_projection()) } else { fem2d_engine::empty_fem2d_projection() };
-                Emit { document_operations: vec![Fem2dOperation::SetDocument { document }], config_operations: vec![Fem2dConfigOperation::Snapshot { config: Fem2dConfig::default() }], ..Default::default() }
+                Ok(Emit { document_operations: vec![Fem2dOperation::SetDocument { document }], config_operations: vec![Fem2dConfigOperation::Snapshot { config: Fem2dConfig::default() }], ..Default::default() })
             }
             // 🎥️ Config-only: the canvas camera never touches the document.
             Fem2dCommand::SetCamera { x, y, zoom } => Ok(Emit::config(vec![Fem2dConfigOperation::SetCamera { camera: FemCamera { x: *x, y: *y, zoom: *zoom } }])),

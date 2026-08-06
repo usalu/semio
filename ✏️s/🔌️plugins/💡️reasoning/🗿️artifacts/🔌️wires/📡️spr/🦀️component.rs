@@ -24,7 +24,7 @@ mod tests {
     use serde_json::json;
 
     /// 🗄️ Local envelope/store alias for the whole-store tests below — mirrors the `pub type
-    /// MindmapWiresEnvelope`/`MindmapWiresStore` the pre-split `reasoning_mindmap` crate exported,
+    /// MindmapWiresEnvelope`/`MindmapWiresStore` the pre-split `semio_s_mindmap` crate exported,
     /// scoped here since this is the only sub-region that still needs it after the taxonomy split.
     type MindmapWiresStore = store::DocumentStore<MindmapWiresDocument, MindmapWiresOperation>;
 

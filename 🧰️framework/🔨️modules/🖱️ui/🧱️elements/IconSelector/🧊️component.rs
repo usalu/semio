@@ -1,18 +1,18 @@
 //! 🔎️ wgpu render function for the IconSelector element — extracted from `widgets` mod's inline
 //! body (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a CRATE-ROOT sibling module
-//! of `crate::widgets` (declared `#[cfg(feature = "engine")] #[path = "..."] mod icon_selector;`
+//! of `crate::wgpu::widgets` (declared `#[cfg(feature = "wgpu-engine")] #[path = "..."] mod icon_selector;`
 //! right before `pub mod widgets` in lib.rs — deliberately NOT nested inside `widgets { }`, since
 //! rustc resolves a nested inline-module's `#[path]` as if the parent had its own on-disk directory,
 //! which fails for a genuinely inline `mod widgets { }` block). `widgets` mod pulls this back in via
-//! `use crate::icon_selector::render_icon_select;` so its own unqualified call sites keep working.
-//! `crate::widgets::{...}` reaches the sibling item this needs (`WidgetContext`, `draw_text`);
-//! `crate::chrome`/`crate::geometry`/`crate::input` are the other top-level engine mods `widgets`
+//! `use crate::wgpu::icon_selector::render_icon_select;` so its own unqualified call sites keep working.
+//! `crate::wgpu::widgets::{...}` reaches the sibling item this needs (`WidgetContext`, `draw_text`);
+//! `crate::wgpu::chrome`/`crate::wgpu::geometry`/`crate::wgpu::input` are the other top-level engine mods `widgets`
 //! itself also depends on.
 
-use crate::widgets::{draw_text, WidgetContext};
-use crate::chrome::{chrome_item_bg, push_control_border, push_icon, ICON_TINY};
-use crate::geometry::Rect;
-use crate::input::{HitKind, HitTarget};
+use crate::wgpu::widgets::{draw_text, WidgetContext};
+use crate::wgpu::chrome::{chrome_item_bg, push_control_border, push_icon, ICON_TINY};
+use crate::wgpu::geometry::Rect;
+use crate::wgpu::input::{HitKind, HitTarget};
 
 pub(crate) fn render_icon_select<E: Clone>(id: &str, value: &str, _uniform: bool, _classifier_kind: &str, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, chrome_item_bg(ctx.theme, false, ctx.input.hovered_id.as_deref() == Some(id)));

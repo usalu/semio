@@ -12,56 +12,14 @@ import { panelTabFirstDraggableElementId } from "@semio-tech/framework-core";
 // reactHostPort.useRef/.useMemo at module top level, which requires a non-circular import (see
 // 🧱️elements/🫀️core/Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../🫀️core/Ports/🟦️component.tsx";
-// 🚧️W3-interim: these still live in the ui-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ or 🧱️elements/🫀️core/ dirs) — W3 rewires this import per-symbol as each
-// dependency's own element/core file lands. Do not import the barrel from any OTHER new leaf file
-// without the same marker; grep for `🚧️W3-interim` must be empty before W6 closes.
-import {
-  type Anchor,
-  CloseIcon,
-  DragHandle,
-  FlowProvider,
-  Icon,
-  LevelProvider,
-  PANEL_TREE_UNIT_MIME,
-  PanelGhostRoot,
-  PanelTabBar,
-  type PanelTabNode,
-  type PanelTreeUnit,
-  Scrollable,
-  Tree,
-  type TreeDataItem,
-  type TreeDataSection,
-  type TreeDragAndDropController,
-  type TreeSelectionMode,
-  WindowChrome,
-  anchorHorizontal,
-  anchorPositionStyle,
-  beginPanelTreeUnitDrag,
-  borderNormalClass,
-  chromeHostedOpenPanelPositionStyle,
-  cn,
-  dropZoneReadyFillClass,
-  endPanelTreeUnitDrag,
-  findPanelTabNode,
-  flowFromAnchor,
-  getLevelZClass,
-  progressPanelTabSelection,
-  readActivePanelTreeUnitDrag,
-  shellNavbarTrailingEndReserveStyle,
-  useFirstDraggableElementAlias,
-  useFlow,
-  useLabel,
-  useNativeDragArm,
-  usePanelDockContext,
-  usePanelTabSelection,
-  usePanelTreeUnitDragActive,
-  useShellNavbarTrailingEndWidthPx,
-  useShellScopeOptional,
-  useSurfaceActive,
-  useUiDriverDragSurface,
-  type UiStatus,
-} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { Scrollable } from "../Scrollable/🟦️component.tsx";
+import { Tree, type TreeDataItem, type TreeDataSection, type TreeDragAndDropController, type TreeSelectionMode } from "../Tree/🟦️component.tsx";
+import { cn } from "../🫀️core/ClassNames/🟦️component.tsx";
+import { useFirstDraggableElementAlias } from "../🫀️core/ElementId/🟦️component.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { borderNormalClass, dropZoneReadyFillClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { type Anchor, CloseIcon, DragHandle, FlowProvider, Icon, LevelProvider, PANEL_TREE_UNIT_MIME, PanelGhostRoot, PanelTabBar, type PanelTabNode, type PanelTreeUnit, WindowChrome, anchorHorizontal, anchorPositionStyle, beginPanelTreeUnitDrag, chromeHostedOpenPanelPositionStyle, endPanelTreeUnitDrag, findPanelTabNode, flowFromAnchor, getLevelZClass, progressPanelTabSelection, readActivePanelTreeUnitDrag, shellNavbarTrailingEndReserveStyle, useFlow, useLabel, useNativeDragArm, usePanelDockContext, usePanelTabSelection, usePanelTreeUnitDragActive, useShellNavbarTrailingEndWidthPx, useShellScopeOptional, useSurfaceActive, useUiDriverDragSurface, type UiStatus } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🧭️Panel

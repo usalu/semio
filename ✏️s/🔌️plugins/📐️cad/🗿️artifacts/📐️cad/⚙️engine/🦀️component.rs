@@ -12,8 +12,8 @@
 use base64::Engine as _;
 use crate::artifacts::cad::{cad_all_objects, cad_pane_from_model_definition_id, cad_pane_geometry, CadCamera, CadGeometry, CadNode, CadObject, CadPaneId, CadPrimitiveSlot, CadProjectionDsl, CadReference, CadScene, CAD_PLAY_DOCUMENT_SCHEMA};
 use crate::artifacts::cad::engine::geometry_import::{cad_object_from_mesh, cad_object_from_solid_handle, centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture};
-use kernel_3d_brepkit::{mesh_data_from_mesh_transfer, BrepkitKernel};
-use kernel_3d_engine::{block_on, BrepKernel, GeometryHandle, MeshTransfer};
+use semio_s_3d::brep::kernel::{mesh_data_from_mesh_transfer, BrepkitKernel};
+use semio_s_3d::brep::engine::{block_on, BrepKernel, GeometryHandle, MeshTransfer};
 use semio_framework_core::MeshImporter;
 use semio_framework_plugin::{mesh_from_kind, MeshData, OsMediaFormat, WorldProjectionConfig};
 use serde_json::Value;
@@ -632,12 +632,12 @@ pub fn cad_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
 pub fn register() {
     // 📦️ pack binary codec for `CadScene` (`CadPlayApp::document_schema()` == `CAD_DOCUMENT_SCHEMA`).
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::cad::CadPlayApp>(crate::artifacts::cad::CAD_DOCUMENT_SCHEMA);
-    semio_framework_os::register_solid_exporter("3d.cad", Box::new(kernel_3d_brepkit::ObjSolidExporter));
-    semio_framework_os::register_solid_exporter("3d.cad", Box::new(kernel_3d_brepkit::StlSolidExporter));
-    semio_framework_os::register_solid_exporter("3d.cad", Box::new(kernel_3d_brepkit::StepSolidExporter));
-    semio_framework_os::register_solid_importer("3d.cad", Box::new(kernel_3d_brepkit::ObjSolidImporter));
-    semio_framework_os::register_solid_importer("3d.cad", Box::new(kernel_3d_brepkit::StlSolidImporter));
-    semio_framework_os::register_solid_importer("3d.cad", Box::new(kernel_3d_brepkit::StepSolidImporter));
+    semio_framework_os::register_solid_exporter("3d.cad", Box::new(semio_s_3d::brep::kernel::ObjSolidExporter));
+    semio_framework_os::register_solid_exporter("3d.cad", Box::new(semio_s_3d::brep::kernel::StlSolidExporter));
+    semio_framework_os::register_solid_exporter("3d.cad", Box::new(semio_s_3d::brep::kernel::StepSolidExporter));
+    semio_framework_os::register_solid_importer("3d.cad", Box::new(semio_s_3d::brep::kernel::ObjSolidImporter));
+    semio_framework_os::register_solid_importer("3d.cad", Box::new(semio_s_3d::brep::kernel::StlSolidImporter));
+    semio_framework_os::register_solid_importer("3d.cad", Box::new(semio_s_3d::brep::kernel::StepSolidImporter));
     semio_framework_os::register_mesh_exporter("3d.cad", "cad", cad_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
     semio_framework_os::register_mesh_importer("3d.cad", cad_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
     semio_framework_os::register_mesh_dwg_export_handler("3d.cad", "cad", cad_mesh_from_document);

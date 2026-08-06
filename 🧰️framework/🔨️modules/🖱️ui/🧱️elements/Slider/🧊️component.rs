@@ -1,20 +1,20 @@
 //! 🔎️ wgpu render function for the Slider element — extracted from `widgets` mod's inline body
 //! (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a CRATE-ROOT sibling module of
-//! `crate::widgets` (declared `#[cfg(feature = "engine")] #[path = "..."] mod slider;` right before
+//! `crate::wgpu::widgets` (declared `#[cfg(feature = "wgpu-engine")] #[path = "..."] mod slider;` right before
 //! `pub mod widgets` in lib.rs — deliberately NOT nested inside `widgets { }`, since rustc resolves a
 //! nested inline-module's `#[path]` as if the parent had its own on-disk directory, which fails for a
 //! genuinely inline `mod widgets { }` block). `widgets` mod pulls this back in via
-//! `use crate::slider::render_slider;` so its own unqualified call sites keep working.
-//! `crate::widgets::{...}` reaches the sibling items this needs (`WidgetContext`, `SliderMeta`);
-//! `crate::geometry`/`crate::input`/`crate::theme` are the other top-level engine mods `widgets`
+//! `use crate::wgpu::slider::render_slider;` so its own unqualified call sites keep working.
+//! `crate::wgpu::widgets::{...}` reaches the sibling items this needs (`WidgetContext`, `SliderMeta`);
+//! `crate::wgpu::geometry`/`crate::wgpu::input`/`crate::wgpu::theme` are the other top-level engine mods `widgets`
 //! itself also depends on. `quantize_step` moved alongside `render_slider` as a private helper since
 //! it has no other caller anywhere in the crate.
 //! Not to be confused with the `Ring` element (a circular value control) — `Slider` is a linear track.
 
-use crate::widgets::{SliderMeta, WidgetContext};
-use crate::geometry::Rect;
-use crate::input::{DragAxis, HitKind, HitTarget};
-use crate::theme::Rgba;
+use crate::wgpu::widgets::{SliderMeta, WidgetContext};
+use crate::wgpu::geometry::Rect;
+use crate::wgpu::input::{DragAxis, HitKind, HitTarget};
+use crate::wgpu::theme::Rgba;
 
 fn quantize_step(value: f64, step: f64, min: f64) -> f64 {
     if step <= 0.0 {

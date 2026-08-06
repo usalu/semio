@@ -15,25 +15,37 @@ role = "s-module"
 path = "📦️lib.rs"
 
 [features]
-default = ["parallel"]
+default = ["parallel", "brep"]
 parallel = ["dep:rayon", "dep:futures"]
+brep = [
+    "dep:semio-framework-core",
+    "dep:async-trait",
+    "dep:base64",
+    "dep:pollster",
+    "dep:brepkit-check",
+    "dep:brepkit-geometry",
+    "dep:brepkit-io",
+    "dep:brepkit-math",
+    "dep:brepkit-operations",
+    "dep:brepkit-topology",
+]
 
 [dependencies]
-async-trait = "0.1.88"
-base64 = "0.22"
+async-trait = { version = "0.1.88", optional = true }
+base64 = { version = "0.22", optional = true }
 futures = { version = "0.3.31", optional = true }
-pollster = "0.4.0"
+pollster = { version = "0.4.0", optional = true }
 rayon = { version = "1.10.0", optional = true }
-semio-framework-core = { workspace = true }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
-brepkit-check = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" }
-brepkit-geometry = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" }
-brepkit-io = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" }
-brepkit-math = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" }
-brepkit-operations = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" }
-brepkit-topology = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" }
+semio-framework-core = { workspace = true, optional = true }
+brepkit-check = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
+brepkit-geometry = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
+brepkit-io = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
+brepkit-math = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
+brepkit-operations = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
+brepkit-topology = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" , optional = true }
 mathematical_algebra = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/➕️algebra/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-algebra" }
 mathematical_number = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/🔢️number/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-number" }
 

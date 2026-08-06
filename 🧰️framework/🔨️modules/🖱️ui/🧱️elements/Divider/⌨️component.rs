@@ -1,12 +1,12 @@
 //! 🔎️ tui paint function for the Divider element — extracted from `widget` mod's inline body
 //! (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a crate-root sibling module of
-//! `crate::widget` (see that mod's `use crate::divider::paint_divider;`).
+//! `crate::tui::widget` (see that mod's `use crate::tui::divider::paint_divider;`).
 
-use crate::cell::CellBuffer;
-use crate::geometry::{Pos, Rect};
-use crate::text::display_width;
-use crate::theme::{Role, Surface, Theme};
-use crate::widget::DividerState;
+use crate::tui::cell::CellBuffer;
+use crate::tui::geometry::{Pos, Rect};
+use crate::tui::text::display_width;
+use crate::tui::theme::{Role, Surface, Theme};
+use crate::tui::widget::DividerState;
 
 pub(crate) fn paint_divider(d: &DividerState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     let bg = buf.get(rect.x, rect.y).map(|c| c.bg).unwrap_or(theme.surface(Surface::Base));

@@ -8,11 +8,13 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../🧱️elements/Select/🟦️component.tsx";
-// 🚧️W3-interim: these still live in the ui-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ or 🧱️elements/🫀️core/ dirs) — W3 rewires this import per-symbol as each
-// dependency's own element/core file lands. Do not import the barrel from any OTHER new leaf file
-// without the same marker; grep for `🚧️W3-interim` must be empty before W6 closes.
-import { cn, reactHostPort, useSurface, shellFloorPaints, shellFloorFillClass, SurfaceScope, NavbarTrailingFullscreenSlot, Label, Icon, useLabel, type IconName, type UiLabel } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { cn } from "../🫀️core/ClassNames/🟦️component.tsx";
+import { reactHostPort } from "../🫀️core/Ports/🟦️component.tsx";
+import { type UiLabel } from "../🫀️core/UiLabel/🟦️component.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { shellFloorPaints, shellFloorFillClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { useSurface, SurfaceScope, NavbarTrailingFullscreenSlot, Label, Icon, useLabel, type IconName } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🩺️Navbar

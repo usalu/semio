@@ -2732,14 +2732,14 @@ pub mod media_export_raster {
     }
 
     //#region SolidMediaExport
-    type SolidExporterRegistry = HashMap<String, Box<dyn kernel_3d_brepkit::SolidExporter>>;
+    type SolidExporterRegistry = HashMap<String, Box<dyn semio_s_3d::brep::kernel::SolidExporter>>;
 
     fn solid_exporters() -> &'static Mutex<SolidExporterRegistry> {
         static HANDLERS: OnceLock<Mutex<SolidExporterRegistry>> = OnceLock::new();
         HANDLERS.get_or_init(|| Mutex::new(HashMap::new()))
     }
 
-    type SolidImporterRegistry = HashMap<String, Box<dyn kernel_3d_brepkit::SolidImporter>>;
+    type SolidImporterRegistry = HashMap<String, Box<dyn semio_s_3d::brep::kernel::SolidImporter>>;
 
     fn solid_importers() -> &'static Mutex<SolidImporterRegistry> {
         static HANDLERS: OnceLock<Mutex<SolidImporterRegistry>> = OnceLock::new();
@@ -2750,14 +2750,14 @@ pub mod media_export_raster {
         format!("{}:{}", artifact_kind, format.as_str())
     }
 
-    /// @emoji 🧊️ Registers a B-Rep solid exporter (STEP/STL/OBJ/GLB, operating on `GeometryHandle` via `kernel_3d_brepkit::BrepkitKernel` rather than a tessellated `MeshData`) for a resource kind; call once per format.
-    pub fn register_solid_exporter(artifact_kind: &str, exporter: Box<dyn kernel_3d_brepkit::SolidExporter>) {
+    /// @emoji 🧊️ Registers a B-Rep solid exporter (STEP/STL/OBJ/GLB, operating on `GeometryHandle` via `semio_s_3d::brep::kernel::BrepkitKernel` rather than a tessellated `MeshData`) for a resource kind; call once per format.
+    pub fn register_solid_exporter(artifact_kind: &str, exporter: Box<dyn semio_s_3d::brep::kernel::SolidExporter>) {
         let key = solid_registry_key(artifact_kind, &exporter.format());
         solid_exporters().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(key, exporter);
     }
 
     /// @emoji 🧊️ Registers a B-Rep solid importer for a resource kind; see `register_solid_exporter`.
-    pub fn register_solid_importer(artifact_kind: &str, importer: Box<dyn kernel_3d_brepkit::SolidImporter>) {
+    pub fn register_solid_importer(artifact_kind: &str, importer: Box<dyn semio_s_3d::brep::kernel::SolidImporter>) {
         let key = solid_registry_key(artifact_kind, &importer.format());
         solid_importers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(key, importer);
     }
@@ -2768,7 +2768,7 @@ pub mod media_export_raster {
     }
 
     /// @emoji 🧊️ Exports `shapes` from `kernel` through the solid exporter registered for `artifact_kind` + `format`.
-    pub fn export_registered_solid(artifact_kind: &str, format: &OsMediaFormat, kernel: &kernel_3d_brepkit::BrepkitKernel, shapes: &[kernel_3d_engine::GeometryHandle], deflection: f64) -> Result<Vec<u8>, String> {
+    pub fn export_registered_solid(artifact_kind: &str, format: &OsMediaFormat, kernel: &semio_s_3d::brep::kernel::BrepkitKernel, shapes: &[semio_s_3d::brep::engine::GeometryHandle], deflection: f64) -> Result<Vec<u8>, String> {
         let key = solid_registry_key(artifact_kind, format);
         let handlers = solid_exporters().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let exporter = handlers.get(&key).ok_or_else(|| format!("no solid export handler for {key}"))?;
@@ -2776,7 +2776,7 @@ pub mod media_export_raster {
     }
 
     /// @emoji 🧊️ Imports bytes into `kernel` through the solid importer registered for `artifact_kind` + `format`.
-    pub fn import_registered_solid(artifact_kind: &str, format: &OsMediaFormat, kernel: &mut kernel_3d_brepkit::BrepkitKernel, data: &[u8], tolerance: f64) -> Result<Vec<kernel_3d_engine::GeometryHandle>, String> {
+    pub fn import_registered_solid(artifact_kind: &str, format: &OsMediaFormat, kernel: &mut semio_s_3d::brep::kernel::BrepkitKernel, data: &[u8], tolerance: f64) -> Result<Vec<semio_s_3d::brep::engine::GeometryHandle>, String> {
         let key = solid_registry_key(artifact_kind, format);
         let handlers = solid_importers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let importer = handlers.get(&key).ok_or_else(|| format!("no solid import handler for {key}"))?;
@@ -3444,10 +3444,10 @@ pub mod workflow {
 
         #[test]
         fn solid_exporter_and_importer_registrars_round_trip_a_box_through_step() {
-            let mut kernel = kernel_3d_brepkit::BrepkitKernel::new();
+            let mut kernel = semio_s_3d::brep::kernel::BrepkitKernel::new();
             let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).expect("box");
-            crate::media_export_raster::register_solid_exporter("3d.__solid_test", Box::new(kernel_3d_brepkit::StepSolidExporter));
-            crate::media_export_raster::register_solid_importer("3d.__solid_test", Box::new(kernel_3d_brepkit::StepSolidImporter));
+            crate::media_export_raster::register_solid_exporter("3d.__solid_test", Box::new(semio_s_3d::brep::kernel::StepSolidExporter));
+            crate::media_export_raster::register_solid_importer("3d.__solid_test", Box::new(semio_s_3d::brep::kernel::StepSolidImporter));
             assert!(crate::media_export_raster::solid_exporter_for("3d.__solid_test", &OsMediaFormat::Step));
             let bytes = crate::media_export_raster::export_registered_solid("3d.__solid_test", &OsMediaFormat::Step, &kernel, &[solid], 0.1).expect("export step");
             assert!(!bytes.is_empty());

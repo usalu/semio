@@ -6164,7 +6164,7 @@ fn tutorial_bar_height(theme: &Theme) -> f32 {
 /// `World3dScene.camera_json`'s own wire format (`infinite_world`'s `WorldCameraRecord.fov` — see that
 /// crate's `camera.fov.unwrap_or(45.0) as f32 * PI / 180.0` conversion the other way), not
 /// `OrbitController.fov_y`'s radians.
-fn orbit_to_tutorial_camera(orbit: &kernel_3d_scene::OrbitController) -> semio_framework_core::TutorialCameraState {
+fn orbit_to_tutorial_camera(orbit: &semio_s_3d::OrbitController) -> semio_framework_core::TutorialCameraState {
     let camera = orbit.to_camera();
     semio_framework_core::TutorialCameraState::Orbit {
         position: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64],
@@ -6176,12 +6176,12 @@ fn orbit_to_tutorial_camera(orbit: &kernel_3d_scene::OrbitController) -> semio_f
 
 /// 🎥️ `TutorialCameraState` → `OrbitController`. `Canvas` (the 2D infinite-canvas camera kind) has no
 /// orbit-controller equivalent — `None` (see the ticket's own scope note on 2D camera tracks).
-fn tutorial_camera_to_orbit(state: &semio_framework_core::TutorialCameraState) -> Option<kernel_3d_scene::OrbitController> {
+fn tutorial_camera_to_orbit(state: &semio_framework_core::TutorialCameraState) -> Option<semio_s_3d::OrbitController> {
     match state {
-        semio_framework_core::TutorialCameraState::Orbit { position, target, up, fov } => Some(kernel_3d_scene::OrbitController::from_camera(&kernel_3d_scene::Camera3d {
-            position: kernel_3d_scene::Vec3::new(position[0] as f32, position[1] as f32, position[2] as f32),
-            target: kernel_3d_scene::Vec3::new(target[0] as f32, target[1] as f32, target[2] as f32),
-            up: kernel_3d_scene::Vec3::new(up[0] as f32, up[1] as f32, up[2] as f32),
+        semio_framework_core::TutorialCameraState::Orbit { position, target, up, fov } => Some(semio_s_3d::OrbitController::from_camera(&semio_s_3d::Camera3d {
+            position: semio_s_3d::Vec3::new(position[0] as f32, position[1] as f32, position[2] as f32),
+            target: semio_s_3d::Vec3::new(target[0] as f32, target[1] as f32, target[2] as f32),
+            up: semio_s_3d::Vec3::new(up[0] as f32, up[1] as f32, up[2] as f32),
             fov_y: (fov.unwrap_or(45.0) as f32).to_radians(),
             near: 0.1,
             far: 1000.0,
@@ -6970,7 +6970,7 @@ mod tutorial_tests {
     //#region CameraConversionTests
     #[test]
     fn orbit_camera_round_trips_through_tutorial_camera_state() {
-        let orbit = kernel_3d_scene::OrbitController { target: kernel_3d_scene::Vec3::new(1.0, 2.0, 3.0), distance: 10.0, yaw: 0.4, pitch: 0.2, fov_y: 45.0_f32.to_radians() };
+        let orbit = semio_s_3d::OrbitController { target: semio_s_3d::Vec3::new(1.0, 2.0, 3.0), distance: 10.0, yaw: 0.4, pitch: 0.2, fov_y: 45.0_f32.to_radians() };
         let tutorial_camera = orbit_to_tutorial_camera(&orbit);
         let round_tripped = tutorial_camera_to_orbit(&tutorial_camera).expect("orbit camera state converts back");
         let original_pose = orbit.to_camera();

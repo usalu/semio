@@ -39,7 +39,6 @@ mod tests {
     use super::*;
     use crate::apps::fem3d::testkit::{dispatch, fem3d_app};
     use crate::apps::fem3d::Fem3dCommand;
-    use semio_framework_plugin::PluginApp;
 
     #[test]
     fn set_analysis_settings_partially_updates_and_keeps_the_rest() {

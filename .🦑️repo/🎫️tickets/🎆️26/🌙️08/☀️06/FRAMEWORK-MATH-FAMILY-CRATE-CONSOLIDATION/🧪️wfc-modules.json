@@ -1,0 +1,242 @@
+[
+  {
+    "file": "beam",
+    "vis": "pub(crate)",
+    "name": "beam",
+    "folder": "🔦️beam"
+  },
+  {
+    "file": "bitset",
+    "vis": "pub",
+    "name": "bitset",
+    "folder": "🎛️bitset"
+  },
+  {
+    "file": "chunk",
+    "vis": "pub(crate)",
+    "name": "chunk",
+    "folder": "🍰️chunk"
+  },
+  {
+    "file": "constraint",
+    "vis": "pub",
+    "name": "constraint",
+    "folder": "⛓️constraint"
+  },
+  {
+    "file": "constraints_card",
+    "vis": "pub",
+    "name": "constraints_card",
+    "folder": "🔢️constraints-card"
+  },
+  {
+    "file": "constraints_conn",
+    "vis": "pub",
+    "name": "constraints_conn",
+    "folder": "🔗️constraints-conn"
+  },
+  {
+    "file": "diag",
+    "vis": "pub",
+    "name": "diag",
+    "folder": "🩺️diag"
+  },
+  {
+    "file": "domain",
+    "vis": "pub",
+    "name": "domain",
+    "folder": "🌐️domain"
+  },
+  {
+    "file": "error",
+    "vis": "pub",
+    "name": "error",
+    "folder": "⚠️error"
+  },
+  {
+    "file": "evolve",
+    "vis": "pub",
+    "name": "evolve",
+    "folder": "🧬️evolve"
+  },
+  {
+    "file": "extract",
+    "vis": "pub",
+    "name": "extract",
+    "folder": "⛏️extract"
+  },
+  {
+    "file": "flow",
+    "vis": "pub",
+    "name": "flow",
+    "folder": "🌊️flow"
+  },
+  {
+    "file": "grid2d",
+    "vis": "pub",
+    "name": "grid2d",
+    "folder": "🔲️grid-2d"
+  },
+  {
+    "file": "grid3d",
+    "vis": "pub",
+    "name": "grid3d",
+    "folder": "🧊️grid-3d"
+  },
+  {
+    "file": "heuristics",
+    "vis": "pub",
+    "name": "heuristics",
+    "folder": "🧭️heuristics"
+  },
+  {
+    "file": "hierarchy",
+    "vis": "pub(crate)",
+    "name": "hierarchy",
+    "folder": "🪜️hierarchy"
+  },
+  {
+    "file": "ids",
+    "vis": "pub",
+    "name": "ids",
+    "folder": "🆔️ids"
+  },
+  {
+    "file": "model",
+    "vis": "pub",
+    "name": "model",
+    "folder": "🏗️model"
+  },
+  {
+    "file": "motif",
+    "vis": "pub(crate)",
+    "name": "motif",
+    "folder": "🎼️motif"
+  },
+  {
+    "file": "nogood",
+    "vis": "pub(crate)",
+    "name": "nogood",
+    "folder": "🚫️nogood"
+  },
+  {
+    "file": "oracle",
+    "vis": "pub",
+    "name": "oracle",
+    "folder": "🔮️oracle"
+  },
+  {
+    "file": "outcome",
+    "vis": "pub",
+    "name": "outcome",
+    "folder": "🏁️outcome"
+  },
+  {
+    "file": "parallel",
+    "vis": "pub(crate)",
+    "name": "parallel",
+    "folder": "🧵️parallel"
+  },
+  {
+    "file": "prop_ac3",
+    "vis": "pub(crate)",
+    "name": "prop_ac3",
+    "folder": "🔁️prop-ac3"
+  },
+  {
+    "file": "prop_ac4",
+    "vis": "pub(crate)",
+    "name": "prop_ac4",
+    "folder": "🔄️prop-ac4"
+  },
+  {
+    "file": "propagate",
+    "vis": "pub(crate)",
+    "name": "propagate",
+    "folder": "📣️propagate"
+  },
+  {
+    "file": "repair",
+    "vis": "pub(crate)",
+    "name": "repair",
+    "folder": "🔧️repair"
+  },
+  {
+    "file": "sample",
+    "vis": "pub",
+    "name": "sample",
+    "folder": "🎲️sample"
+  },
+  {
+    "file": "search",
+    "vis": "pub",
+    "name": "search",
+    "folder": "🔍️search"
+  },
+  {
+    "file": "serial",
+    "vis": "pub",
+    "name": "serial",
+    "folder": "💾️serial"
+  },
+  {
+    "file": "soft",
+    "vis": "pub",
+    "name": "soft",
+    "folder": "🪶️soft"
+  },
+  {
+    "file": "solver_graph",
+    "vis": "pub",
+    "name": "solver_graph",
+    "folder": "🕸️solver-graph"
+  },
+  {
+    "file": "solver_grid2d",
+    "vis": "pub",
+    "name": "solver_grid2d",
+    "folder": "🔳️solver-grid-2d"
+  },
+  {
+    "file": "solver_grid3d",
+    "vis": "pub",
+    "name": "solver_grid3d",
+    "folder": "🧱️solver-grid-3d"
+  },
+  {
+    "file": "sparse3d",
+    "vis": "pub",
+    "name": "sparse3d",
+    "folder": "🕳️sparse-3d"
+  },
+  {
+    "file": "symmetry",
+    "vis": "pub",
+    "name": "symmetry",
+    "folder": "🪞️symmetry"
+  },
+  {
+    "file": "tiled",
+    "vis": "pub",
+    "name": "tiled",
+    "folder": "🀄️tiled"
+  },
+  {
+    "file": "topology",
+    "vis": "pub(crate)",
+    "name": "topology",
+    "folder": "🗺️topology"
+  },
+  {
+    "file": "trail",
+    "vis": "pub(crate)",
+    "name": "trail",
+    "folder": "🐾️trail"
+  },
+  {
+    "file": "weights",
+    "vis": "pub",
+    "name": "weights",
+    "folder": "⚖️weights"
+  }
+]

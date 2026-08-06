@@ -393,7 +393,7 @@ mod tests {
 
     //#region 🔖️OpText
     fn tiny_mesh_json() -> String {
-        kernel_3d_mesh::HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("mesh json")
+        semio_s_3d::HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("mesh json")
     }
 
     fn tiny_object(id: &str, name: &str) -> LowpolyObject {

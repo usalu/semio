@@ -13,86 +13,20 @@ import { type IconName } from "@semio-tech/assets";
 // reactHostPort.createContext/.forwardRef at module top level, which requires a non-circular import (see
 // 🧱️elements/🫀️core/Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../🫀️core/Ports/🟦️component.tsx";
-// 🚧️W3-interim: these still live in the ui-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ or 🧱️elements/🫀️core/ dirs) — W3 rewires this import per-symbol as each
-// dependency's own element/core file lands. Do not import the barrel from any OTHER new leaf file
-// without the same marker; grep for `🚧️W3-interim` must be empty before W6 closes.
-import {
-  cn,
-  useLabel,
-  useShellKeydown,
-  useShellScopeOptional,
-  interactiveHoverClass,
-  interactiveActiveFillClass,
-  glassClass,
-  surfaceClass,
-  isSurfaceActiveBackgroundPointer,
-  chromeStatusBorderClass,
-  createEvenWindowLayout,
-  focusActiveSearchInput,
-  modeDockChromeGridPlacement,
-  resolveTranslationLabel,
-  routeWindowSearchEscape,
-  routeWindowSearchKeydown,
-  routeWindowSearchSpace,
-  setSurfaceActiveRoot,
-  shellFloorFillClass,
-  useSurface,
-  useSurfaceActive,
-  useUiTranslation,
-  CanvasSkeleton,
-  ButtonGroup,
-  ButtonGroupItem,
-  LevelProvider,
-  NULL_SHELL_ROOT_REF,
-  WindowChromeSilhouetteBorder,
-  CloseIcon,
-  Maximize2Icon,
-  Minimize2Icon,
-  Icon,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  SurfaceScope,
-  DragHandle,
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-  Navbar,
-  Window,
-  dropZoneReadyClass,
-  modeDockTabLabelClassName,
-  modeDockTabClassName,
-  modeDockActiveTabClass,
-  modeDockActiveTabFillClass,
-  modeDockInactiveTabBeforeGapClass,
-  modeDockInactiveTabClass,
-  windowBodyFrameActiveClass,
-  windowBodyFrameClass,
-  windowCapFrameActiveClass,
-  windowCapFrameClass,
-  windowControlsCapActiveClass,
-  windowControlsCapActiveSplitClass,
-  windowControlsCapClass,
-  windowGapFrameActiveClass,
-  windowGapFrameClass,
-  type ModeDockChromeGrid,
-  type TreeDragAndDropController,
-  type WindowLayoutAxisNode,
-  type WindowLayoutNode,
-  type WindowLayoutStackNode,
-  type UiLabel,
-  type UiStatus,
-  type ResizableJoinCornerResizeHandler,
-  type ResizableJoinCornerSpec,
-  type ResizableJoinEdgeSide,
-  type NavbarItem,
-  type WindowConfig,
-  type PanelGhostValue,
-  type ControlIcon,
-} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { cn } from "../🫀️core/ClassNames/🟦️component.tsx";
+import { CanvasSkeleton } from "../Skeletons/🟦️component.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../Select/🟦️component.tsx";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup, type ResizableJoinCornerResizeHandler, type ResizableJoinCornerSpec, type ResizableJoinEdgeSide } from "../Resizable/🟦️component.tsx";
+import { Navbar, type NavbarItem } from "../Navbar/🟦️component.tsx";
+import { Window, type WindowConfig } from "../Window/🟦️component.tsx";
+import { type TreeDragAndDropController } from "../Tree/🟦️component.tsx";
+import { type UiLabel } from "../🫀️core/UiLabel/🟦️component.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { interactiveHoverClass, interactiveActiveFillClass, glassClass, surfaceClass, chromeStatusBorderClass, shellFloorFillClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { modeDockTabClassName } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { useLabel, useShellKeydown, useShellScopeOptional, isSurfaceActiveBackgroundPointer, createEvenWindowLayout, focusActiveSearchInput, modeDockChromeGridPlacement, resolveTranslationLabel, routeWindowSearchEscape, routeWindowSearchKeydown, routeWindowSearchSpace, setSurfaceActiveRoot, useSurface, useSurfaceActive, useUiTranslation, ButtonGroup, ButtonGroupItem, LevelProvider, NULL_SHELL_ROOT_REF, WindowChromeSilhouetteBorder, CloseIcon, Maximize2Icon, Minimize2Icon, Icon, SurfaceScope, DragHandle, dropZoneReadyClass, modeDockTabLabelClassName, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockInactiveTabBeforeGapClass, modeDockInactiveTabClass, windowBodyFrameActiveClass, windowBodyFrameClass, windowCapFrameActiveClass, windowCapFrameClass, windowControlsCapActiveClass, windowControlsCapActiveSplitClass, windowControlsCapClass, windowGapFrameActiveClass, windowGapFrameClass, type ModeDockChromeGrid, type WindowLayoutAxisNode, type WindowLayoutNode, type WindowLayoutStackNode, type UiStatus, type PanelGhostValue, type ControlIcon } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 // #region ⚙️Canvas
 

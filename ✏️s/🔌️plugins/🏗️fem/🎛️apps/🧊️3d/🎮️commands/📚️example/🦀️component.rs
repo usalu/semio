@@ -38,7 +38,7 @@ mod tests {
     use super::*;
     use crate::apps::fem3d::testkit::{dispatch, fem3d_app, fem3d_app_with_registry};
     use crate::apps::fem3d::Fem3dCommand;
-    use semio_framework_plugin::{ActionKind, PluginApp};
+    use semio_framework_plugin::ActionKind;
 
     #[test]
     fn set_active_example_loads_default_fixture_3d() {

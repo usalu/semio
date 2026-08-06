@@ -67,29 +67,22 @@ import {
   type UiTreeSectionNode,
 } from "@semio-tech/framework-core";
 import { decodeScenePackField } from "@semio-tech/framework-os-core";
-// 🚧️W4-interim: these still live in the framework-renderer-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ dir) — a later wave rewires this import per-symbol as each dependency's own
-// element file lands. Do not import the barrel from any OTHER new leaf file without the same marker;
-// grep for `🚧️W4-interim` must be empty before this wave's closing batch.
-import {
-  shellLabel,
-  useMapContextMenuSpecs,
-  ShellFaultBoundary,
-  WindowInstanceIdContext,
-  World3dHost,
-  NodeGraphHost,
-  TextEditorHost,
-  TableHost,
-  Paint2dHost,
-  TiledMapHost,
-  Board2dHost,
-  IconRenderHost,
-  InkCanvasHost,
-  GraphTimelineHost,
-  BlockListHost,
-  DiffViewHost,
-  EventFeedHost,
-} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { shellLabel } from "../ShellHelpers/🟦️component.tsx";
+import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
+import { ShellFaultBoundary } from "../Shell/🟦️component.tsx";
+import { WindowInstanceIdContext, World3dHost } from "../World3dHost/🟦️component.tsx";
+import { NodeGraphHost } from "../NodeGraph/🟦️component.tsx";
+import { TextEditorHost } from "../TextEditor/🟦️component.tsx";
+import { TableHost } from "../Table/🟦️component.tsx";
+import { Paint2dHost } from "../Paint2dHost/🟦️component.tsx";
+import { TiledMapHost } from "../TiledMapHost/🟦️component.tsx";
+import { Board2dHost } from "../Board2dHost/🟦️component.tsx";
+import { IconRenderHost } from "../IconRenderHost/🟦️component.tsx";
+import { InkCanvasHost } from "../InkCanvasHost/🟦️component.tsx";
+import { GraphTimelineHost } from "../GraphTimelineHost/🟦️component.tsx";
+import { BlockListHost } from "../BlockListHost/🟦️component.tsx";
+import { DiffViewHost } from "../DiffViewHost/🟦️component.tsx";
+import { EventFeedHost } from "../EventFeedHost/🟦️component.tsx";
 // 🐢️ Direct element-to-element import — `Interpreter` and `Canvas2dHost` landed in the same batch.
 import { Canvas2dHost } from "../Canvas2dHost/🟦️component.tsx";
 // #endregion 🔌️Adapters

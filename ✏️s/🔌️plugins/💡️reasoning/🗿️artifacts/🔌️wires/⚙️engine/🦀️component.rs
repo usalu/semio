@@ -132,7 +132,7 @@ pub fn metabolism_wires_example_document() -> MindmapWiresDocument {
 //#region 🔖️WiresExtension
 pub use infinite_board_normal_undirected as graph;
 pub use infinite_canvas as canvas;
-pub use reasoning_mindmap as mindmap;
+pub use semio_s_mindmap as mindmap;
 
 //#region ⚠️ Errors
 /// 🧯️ WIRES extension errors — fixture (de)serialization and fixed-identity-set validation failures.

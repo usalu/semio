@@ -1,8 +1,8 @@
 //! 🔷️ Flow brep module: brepkit-backed geometry operators.
 
 use base64::Engine;
-use kernel_3d_brepkit::BrepkitKernel;
-use kernel_3d_engine::{block_on, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
+use semio_s_3d::brep::kernel::BrepkitKernel;
+use semio_s_3d::brep::engine::{block_on, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
 use neural_engine::{channel_output, Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock, RwLock};
@@ -212,7 +212,7 @@ fn encode_base64(data: &[u8]) -> String {
     base64::engine::general_purpose::STANDARD.encode(data)
 }
 
-fn map_kernel_error(error: kernel_3d_engine::BrepError) -> EvalError {
+fn map_kernel_error(error: semio_s_3d::brep::engine::BrepError) -> EvalError {
     EvalError::InvalidInput(error.to_string())
 }
 
@@ -2218,7 +2218,7 @@ pub fn tessellate_geometry(handle: &str, tolerance: f64) -> Result<semio_framewo
         let geometry = GeometryHandle(handle.to_string());
         block_on(guard.tessellate(&geometry, tolerance)).map_err(|error| error.to_string())?
     };
-    let data = kernel_3d_brepkit::mesh_data_from_mesh_transfer(&mesh);
+    let data = semio_s_3d::brep::kernel::mesh_data_from_mesh_transfer(&mesh);
     if let Ok(mut cache) = mesh_cache().lock() {
         cache.insert(key, data.clone());
     }
@@ -2248,7 +2248,7 @@ enum BrepModuleError {
     #[error("brep kernel lock poisoned")]
     LockPoisoned,
     #[error(transparent)]
-    Kernel(#[from] kernel_3d_engine::BrepError),
+    Kernel(#[from] semio_s_3d::brep::engine::BrepError),
     #[error(transparent)]
     Codec(#[from] neural_engine::EvalError),
     #[error("{0}")]
@@ -2286,7 +2286,7 @@ fn export_glb_via_tessellation(kernel: &dyn BrepKernel, shapes: &[GeometryHandle
     let mut merged = semio_framework_core::MeshData::default();
     for shape in shapes {
         let transfer = block_on(kernel.tessellate(shape, deflection))?;
-        let mesh = kernel_3d_brepkit::mesh_data_from_mesh_transfer(&transfer);
+        let mesh = semio_s_3d::brep::kernel::mesh_data_from_mesh_transfer(&transfer);
         let offset = (merged.positions.len() / 3) as u32;
         merged.positions.extend(mesh.positions);
         merged.normals.extend(mesh.normals);

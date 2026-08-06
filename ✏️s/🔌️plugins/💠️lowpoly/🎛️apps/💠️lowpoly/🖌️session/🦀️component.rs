@@ -11,7 +11,7 @@ use crate::artifacts::lowpoly::engine::{composite_layer_pixels, flood_fill, pixe
 use crate::artifacts::lowpoly::op::{LowpolyOperation, PixelRun};
 use crate::artifacts::lowpoly::{empty_paint_pixels, LowpolyObject, LowpolyObjectPatch, LowpolyProjection, LOWPOLY_PAINT_TEXTURE_SIZE};
 use base64::Engine;
-use kernel_3d_mesh::Vec3;
+use semio_s_3d::Vec3;
 use semio_framework_plugin::Emit;
 use std::collections::HashMap;
 
@@ -57,7 +57,7 @@ pub enum Transform {
 /// purpose: every call site uses it directly as a `.map_err(map_kernel_err)` callback, and `map_err`'s
 /// closure signature is `FnOnce(E) -> F`, which always hands the error by value.
 #[allow(clippy::needless_pass_by_value)]
-pub fn map_kernel_err(error: kernel_3d_mesh::MeshKernelError) -> String {
+pub fn map_kernel_err(error: semio_s_3d::MeshKernelError) -> String {
     format!("{error:?}")
 }
 

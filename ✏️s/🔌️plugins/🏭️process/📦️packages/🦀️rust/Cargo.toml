@@ -34,8 +34,7 @@ dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨�
 protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
 pack = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-pack" }
-kernel_3d_brepkit = { path = "../../../../../✏️s/🔨️modules/🧊️3d/📐️brep/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-brep" }
-kernel_3d_engine = { path = "../../../../../✏️s/🔨️modules/🧊️3d/📐️brep/⚙️engine/⚡️implementations/🦀️rust", features = ["parallel"], package = "semio-framework-os-kernel-3d-brep-engine" }
+semio-s-3d = { path = "../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
 semio-framework-core = { path = "../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }

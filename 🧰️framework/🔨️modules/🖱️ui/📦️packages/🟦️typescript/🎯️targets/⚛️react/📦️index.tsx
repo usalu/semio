@@ -810,11 +810,164 @@ export type { ThreeEvent };
 // Generic utility and type definitions that make @semio-tech/ui-react self-contained.
 // These MUST NOT depend on any external compose package.
 
+/** @emoji 🌀️ Dashed, slow-spinning + gently pulsing waiting ring in the element's normal border color. */
+export const waitingBorderClass = "border-waiting";
+
+/** @emoji 🌀️ Waiting ring recolored to the active stroke; pair with selected/active elements. */
+export const waitingBorderActiveClass = cn(waitingBorderClass, "border-waiting-active");
+
+/** @emoji 🌀️ Loading ring recolored to the active stroke; pair with selected/active elements. */
+export const loadingBorderActiveClass = cn(loadingBorderClass, "border-loading-active");
+
+/** @emoji 🌀️ Clockwise spinning + pulsing loading ring in the element's normal border color. */
+export const loadingBorderClass = "border-loading";
+
+/** @emoji 🎨️ Active/on: primary fill + active border + emphasized content (never the transient hover fill). */
+export const interactiveOnClass = cn(
+  "data-[state=on]:bg-active-base",
+  "data-[state=on]:border-active-base",
+  "data-[state=on]:text-emphasized",
+  "data-[state=on]:hover:bg-active-base/90",
+  "data-[state=on]:hover:border-active-base",
+  "data-[state=on]:hover:text-emphasized",
+);
+
+/** @emoji 🚫️ React props that disable native browser affordances on editable UI controls. */
+export const uiFormControlBrowserDefaultProps = {
+  autoComplete: "off",
+  autoCorrect: "off",
+  autoCapitalize: "off",
+  spellCheck: false,
+  "data-1p-ignore": true,
+  "data-lpignore": "true",
+} as const satisfies Pick<React.InputHTMLAttributes<HTMLInputElement>, "autoComplete" | "autoCorrect" | "autoCapitalize" | "spellCheck"> & { readonly "data-1p-ignore": boolean; readonly "data-lpignore": string };
+
+/** @emoji 🎨️ Active tab: primary fill + active border + emphasized content. */
+export const interactiveTabActiveClass = cn(
+  "data-[state=active]:bg-active-base",
+  "data-[state=active]:border-active-base",
+  "data-[state=active]:text-emphasized",
+  "data-[state=active]:hover:bg-active-base/90",
+  "data-[state=active]:hover:border-active-base",
+  "data-[state=active]:hover:text-emphasized",
+);
+
+export const groupHoverExcludingHandleBgFillClass = "group-hover/tree-row:not-group-data-[handle-hovered=true]/tree-row:bg-hover-interactive-fill";
+
+export const hoverExcludingHandleTextEmphasizedClass = "hover:not-data-[handle-hovered=true]:text-emphasized";
+
+/** @emoji 🪟️ Pane chrome toggle — same layout as {@link panelAnchorTabButtonClass}: leading semantic icon, label, trailing {@link DragHandle}. */
+export const windowPaneChromeToggleClass = cn(
+  modeDockTabClassName,
+  "relative z-30 box-border min-h-medium shrink-0 border-0 bg-transparent",
+  "outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-active-base",
+  "disabled:pointer-events-none disabled:opacity-50",
+);
+
+/** @emoji 🪟️ Default mode-dock tab label — element gray; emphasize on hover/active only. */
+export const modeDockTabClassName = cn(chromeControlTabItemClass, "group max-w-[12rem] shrink-0 cursor-pointer items-center px-single select-none transition-colors");
+
+/** @emoji 🎯️ Focus/open on form controls: accent border color only, never extra ring width. */
+export const formControlFocusBorderClass = cn("outline-none", interactiveControlTransitionClass, "focus-visible:border-accent data-[state=open]:border-accent aria-invalid:border-destructive focus-visible:ring-0 shadow-none");
+
+/** @emoji 🎨️ Shared transition for interactive chrome (hover, focus, active backgrounds). */
+export const interactiveControlTransitionClass = "transition-[color,border-color,background-color]";
+
+/** @emoji 🌳️ Typography for measure tree leaf labels. */
+export const windowMeasureTreeLeafLabelClass = "text-tiny font-normal text-element group-hover:text-emphasized transition-colors";
+
+/** @emoji 🌳️ Typography for measure tree group headers. */
+export const windowMeasureTreeGroupLabelClass = "text-tiny font-semibold uppercase tracking-wide text-element group-hover:text-emphasized";
+
+/** @emoji 📑️ Panel tab label beside the icon. */
+export const panelTabLabelClass = "min-w-0 truncate text-xs leading-none";
+
+/** @emoji 📑️ Panel tab icon slot — defers dimensions to the tab icon (12px). */
+export const panelTabIconSlotClass = "inline-flex shrink-0 items-center justify-center leading-none";
+
+/** @emoji 🎯️ Label/icon emphasis paired with {@link dropZoneReadyFillClass} so text stays legible on the fill. */
+export const dropZoneReadyTextClass = "text-emphasized";
+
+/** @emoji 🎯️ Passive drop-zone fill — secondary accent, kept visually distinct from the stronger primary-accent indicator on the actively hovered target. */
+export const dropZoneReadyFillClass = "bg-[var(--accent-secondary)]";
+
+/** @emoji 🌀️ Maps shell chrome {@link UiStatus} to the shared border ring utilities. */
+export function chromeStatusBorderClass(status: UiStatus | undefined, active = false): string {
+  if (status === "loading") return loadingBorderStateClass(true, active);
+  if (status === "waiting") return waitingBorderStateClass(true, active);
+  return "";
+}
+
+/** @emoji 🎨️ Active/on: primary fill + active border + emphasized content (never the transient hover fill). */
+
+/** @emoji 🌀️ Waiting ring matching the element's current state color; empty when not waiting. */
+export function waitingBorderStateClass(waiting: boolean, active = false): string {
+  return waiting ? (active ? waitingBorderActiveClass : waitingBorderClass) : "";
+}
+
+/** @emoji 🌀️ Maps shell chrome {@link UiStatus} to the shared border ring utilities. */
+
+/** @emoji 🌀️ Loading ring matching the element's current state color; empty when not loading. */
+export function loadingBorderStateClass(loading: boolean, active = false): string {
+  return loading ? (active ? loadingBorderActiveClass : loadingBorderClass) : "";
+}
+
+/** @emoji 🌀️ Dashed, slow-spinning + gently pulsing waiting ring in the element's normal border color. */
+
+export function shellFloorPaints(parent: SurfaceScopeValue | null): boolean {
+  return !(parent?.level === "base" && parent.fill !== "none");
+}
+
+/** @emoji 🎨️ Fill class for base-floor chrome — {@link surfaceClass} when standalone, transparent on Layout's painted base. */
+
+/** @emoji 🎨️ Opaque per-level fill — background-color only, no blur (see `[data-level]` cascade in 🎨️ui.css). */
+export const surfaceClass = "ui-surface";
+
+/** @emoji 🎨️ Fill class for base-floor chrome — {@link surfaceClass} when standalone, transparent on Layout's painted base. */
+export function shellFloorFillClass(parent: SurfaceScopeValue | null): string {
+  return shellFloorPaints(parent) ? surfaceClass : "bg-transparent";
+}
+
+/** @emoji 🎨️ Per-level glass fill (blur + alpha) — used identically by a level's body AND its
+ * attached chrome (title caps, ribbons, tab bars, rails); there is deliberately no separate
+
+/** @emoji 📋️ Hover row styling for menus, selects, comboboxes, and context menus. */
+export const menuListItemClassName = cn(
+  "text-element",
+  interactiveHoverClass,
+  "focus:bg-hover-interactive-fill focus:text-emphasized",
+  "data-[active=true]:bg-hover-interactive-fill data-[active=true]:text-emphasized",
+  "data-[selected=true]:bg-active-base data-[selected=true]:border-active-base data-[selected=true]:text-emphasized",
+);
+
+/** @emoji 🎨️ Interactive hover: normal-border fill + emphasized content. */
+export const interactiveHoverClass = cn(interactiveHoverFillClass, "hover:text-emphasized");
+
+/** @emoji 📏️ Normal bottom edge utility for in-chrome dividers (not shell navbar — navbar uses a CSS `::after` stroke). */
+export const borderNormalBottomClass = `border-b ${borderNormalClass}`;
+
+/** @emoji 📏️ Subtle normal stroke for controls, windows, dividers, and in-chrome separators. */
+export const borderNormalClass = "!border-normal";
+
+/** @emoji 📏️ Implicit element border color (controls, dropdowns, dividers). */
+export const borderElementClass = "border-element";
+
+/** @emoji 🎨️ Shared active fill for pressed tabs, toggles, and nav selection. */
+export const interactiveActiveFillClass = cn("bg-active-base", interactiveActiveBorderClass, "text-emphasized", hoverExcludingHandleActiveBgClass, hoverExcludingHandleActiveBorderClass, hoverExcludingHandleTextEmphasizedClass);
+
+/** @emoji 📏️ Active stroke paired with {@link interactiveActiveFillClass}. */
+export const interactiveActiveBorderClass = "border-active-base";
+
+/** @emoji 🎨️ Fullscreen scrim; host element must carry `data-level="dialog"` for correct tint. */
+export const veilClass = "ui-veil";
+
+export const glassClass = "ui-glass";
+
 // 🧱️core: cn/twMergeUi extracted to 🧱️elements/🫀️core/ClassNames/🟦️component.tsx — ActionGroup/Toggle call
-// cn(...) at module top level, which requires a non-circular import (see that file's header comment for
-// why the barrel definition caused a real bug).
 import { cn } from "../../../../🧱️elements/🫀️core/ClassNames/🟦️component.tsx";
 export { cn };
+// cn(...) at module top level, which requires a non-circular import (see that file's header comment for
+// why the barrel definition caused a real bug).
 
 // #region 🔖️SelectionMarquee
 /** @emoji ⬚️ Canonical area-select overlay coverage (drag right-to-left = partial). */
@@ -1788,7 +1941,6 @@ export const WorkbenchIcon = createIconComponent("workbench");
 // #region 🖱️ContextMenu
 
 /** @emoji 🎨️ Shared transition for interactive chrome (hover, focus, active backgrounds). */
-export const interactiveControlTransitionClass = "transition-[color,border-color,background-color]";
 
 /** @emoji 🫳️ `data-hover-scope` marks the element {@link DragHandle} should toggle `data-handle-hovered` on — the nearest ancestor styled by the `hoverExcludingHandle*`/`groupHoverExcludingHandle*` classes below. */
 const HANDLE_HOVER_SCOPE_ATTR = "data-hover-scope";
@@ -1807,92 +1959,35 @@ const HANDLE_HOVER_SCOPE_ATTR = "data-hover-scope";
  * at all (this broke hover entirely here once already).
  */
 const hoverExcludingHandleBgFillClass = "hover:not-data-[handle-hovered=true]:bg-hover-interactive-fill";
-export const hoverExcludingHandleTextEmphasizedClass = "hover:not-data-[handle-hovered=true]:text-emphasized";
 const hoverExcludingHandleActiveBgClass = "hover:not-data-[handle-hovered=true]:bg-active-base/90";
 const hoverExcludingHandleActiveBorderClass = "hover:not-data-[handle-hovered=true]:border-active-base";
-export const groupHoverExcludingHandleBgFillClass = "group-hover/tree-row:not-group-data-[handle-hovered=true]/tree-row:bg-hover-interactive-fill";
 
+/** @emoji 🎨️ Normal-border gray fill for interactive hover states. */
 /** @emoji 🎨️ Normal-border gray fill for interactive hover states. */
 export const interactiveHoverFillClass = "hover:bg-hover-interactive-fill";
 
+
 /** @emoji 🎨️ Interactive hover: normal-border fill + emphasized content. */
-export const interactiveHoverClass = cn(interactiveHoverFillClass, "hover:text-emphasized");
 
 /** @emoji 📏️ Active stroke paired with {@link interactiveActiveFillClass}. */
-export const interactiveActiveBorderClass = "border-active-base";
 
 /** @emoji 🌀️ Clockwise spinning + pulsing loading ring in the element's normal border color. */
-export const loadingBorderClass = "border-loading";
 
 /** @emoji 🌀️ Loading ring recolored to the active stroke; pair with selected/active elements. */
-export const loadingBorderActiveClass = cn(loadingBorderClass, "border-loading-active");
 
 /** @emoji 🌀️ Loading ring in the level-aware element border color. */
 export const loadingBorderElementClass = cn(loadingBorderClass, "border-loading-element");
 
 /** @emoji 🌀️ Loading ring matching the element's current state color; empty when not loading. */
-export function loadingBorderStateClass(loading: boolean, active = false): string {
-  return loading ? (active ? loadingBorderActiveClass : loadingBorderClass) : "";
-}
-
-/** @emoji 🌀️ Dashed, slow-spinning + gently pulsing waiting ring in the element's normal border color. */
-export const waitingBorderClass = "border-waiting";
 
 /** @emoji 🌀️ Waiting ring recolored to the active stroke; pair with selected/active elements. */
-export const waitingBorderActiveClass = cn(waitingBorderClass, "border-waiting-active");
 
 /** @emoji 🌀️ Waiting ring in the level-aware element border color. */
 export const waitingBorderElementClass = cn(waitingBorderClass, "border-waiting-element");
 
 /** @emoji 🌀️ Waiting ring matching the element's current state color; empty when not waiting. */
-export function waitingBorderStateClass(waiting: boolean, active = false): string {
-  return waiting ? (active ? waitingBorderActiveClass : waitingBorderClass) : "";
-}
-
-/** @emoji 🌀️ Maps shell chrome {@link UiStatus} to the shared border ring utilities. */
-export function chromeStatusBorderClass(status: UiStatus | undefined, active = false): string {
-  if (status === "loading") return loadingBorderStateClass(true, active);
-  if (status === "waiting") return waitingBorderStateClass(true, active);
-  return "";
-}
-
-/** @emoji 🎨️ Active/on: primary fill + active border + emphasized content (never the transient hover fill). */
-export const interactiveOnClass = cn(
-  "data-[state=on]:bg-active-base",
-  "data-[state=on]:border-active-base",
-  "data-[state=on]:text-emphasized",
-  "data-[state=on]:hover:bg-active-base/90",
-  "data-[state=on]:hover:border-active-base",
-  "data-[state=on]:hover:text-emphasized",
-);
-
-/** @emoji 🎨️ Shared active fill for pressed tabs, toggles, and nav selection. */
-export const interactiveActiveFillClass = cn("bg-active-base", interactiveActiveBorderClass, "text-emphasized", hoverExcludingHandleActiveBgClass, hoverExcludingHandleActiveBorderClass, hoverExcludingHandleTextEmphasizedClass);
-
-/** @emoji 🎨️ Table rows: element gray at rest, hover fill + emphasized content. */
-export const tableRowInteractiveClass = cn("text-element", interactiveControlTransitionClass, interactiveHoverClass);
-
-/** @emoji 🎨️ Selected table row: primary fill + emphasized content. */
-export const tableRowSelectedClass = interactiveActiveFillClass;
-
-/** @emoji 🎨️ Active tab: primary fill + active border + emphasized content. */
-export const interactiveTabActiveClass = cn(
-  "data-[state=active]:bg-active-base",
-  "data-[state=active]:border-active-base",
-  "data-[state=active]:text-emphasized",
-  "data-[state=active]:hover:bg-active-base/90",
-  "data-[state=active]:hover:border-active-base",
-  "data-[state=active]:hover:text-emphasized",
-);
 
 /** @emoji 📋️ Hover row styling for menus, selects, comboboxes, and context menus. */
-export const menuListItemClassName = cn(
-  "text-element",
-  interactiveHoverClass,
-  "focus:bg-hover-interactive-fill focus:text-emphasized",
-  "data-[active=true]:bg-hover-interactive-fill data-[active=true]:text-emphasized",
-  "data-[selected=true]:bg-active-base data-[selected=true]:border-active-base data-[selected=true]:text-emphasized",
-);
 
 const contextMenuShortcutClassName = "ms-auto text-xs text-muted-foreground ps-tiny";
 const contextMenuOrdinalClassName = "w-small shrink-0 text-center text-xs text-muted-foreground tabular-nums";
@@ -8581,27 +8676,11 @@ export function getLevelZClass(level: Level): string {
 }
 
 /** @emoji 🎨️ Opaque per-level fill — background-color only, no blur (see `[data-level]` cascade in 🎨️ui.css). */
-export const surfaceClass = "ui-surface";
 
 /** @emoji 🎨️ Whether a base-floor chrome row (navbar/footer/canvas/mode-body) must paint its own
  * {@link surfaceClass}, or stay transparent so Layout's one continuous base surface shows through.
  * Nested same-level paints are the "navbar ≠ canvas ≠ footer" bug class — one base floor, one fill. */
-export function shellFloorPaints(parent: SurfaceScopeValue | null): boolean {
-  return !(parent?.level === "base" && parent.fill !== "none");
-}
-
-/** @emoji 🎨️ Fill class for base-floor chrome — {@link surfaceClass} when standalone, transparent on Layout's painted base. */
-export function shellFloorFillClass(parent: SurfaceScopeValue | null): string {
-  return shellFloorPaints(parent) ? surfaceClass : "bg-transparent";
-}
-
-/** @emoji 🎨️ Per-level glass fill (blur + alpha) — used identically by a level's body AND its
- * attached chrome (title caps, ribbons, tab bars, rails); there is deliberately no separate
- * "chrome" variant, since one level must always render as one single appearance. */
-export const glassClass = "ui-glass";
-
 /** @emoji 🎨️ Fullscreen scrim; host element must carry `data-level="dialog"` for correct tint. */
-export const veilClass = "ui-veil";
 
 /** @emoji 🪟️ Which fill a painted surface uses — maps 1:1 to {@link surfaceClass}/{@link glassClass}/{@link veilClass}. */
 export type SurfaceFill = "surface" | "glass" | "veil";
@@ -8688,22 +8767,18 @@ export const borderEmphasizedBottomClass = `border-b ${borderEmphasizedClass}`;
 export const borderEmphasizedTopClass = `border-t ${borderEmphasizedClass}`;
 
 /** @emoji 📏️ Subtle normal stroke for controls, windows, dividers, and in-chrome separators. */
-export const borderNormalClass = "!border-normal";
 
 /** @emoji 📏️ Normal chrome frame (`border` + {@link borderNormalClass}); panel/pane hosts prefer {@link shellChromeFrameLayerClass} + CSS parent-hover. */
 export const borderNormalFrameClass = `box-border border border-solid ${borderNormalClass}`;
 
 /** @emoji 📏️ Normal bottom edge utility for in-chrome dividers (not shell navbar — navbar uses a CSS `::after` stroke). */
-export const borderNormalBottomClass = `border-b ${borderNormalClass}`;
 
 /** @emoji 📏️ Normal top edge utility for in-chrome dividers (not shell footer — footer uses a CSS `::before` stroke). */
 export const borderNormalTopClass = `border-t ${borderNormalClass}`;
 
 /** @emoji 📏️ Implicit element border color (controls, dropdowns, dividers). */
-export const borderElementClass = "border-element";
 
 /** @emoji 🎯️ Focus/open on form controls: accent border color only, never extra ring width. */
-export const formControlFocusBorderClass = cn("outline-none", interactiveControlTransitionClass, "focus-visible:border-accent data-[state=open]:border-accent aria-invalid:border-destructive focus-visible:ring-0 shadow-none");
 
 /** @emoji 🎛️ Shared outer chrome shell for chips, buttons, and toggles — glass group with hairline dividers. */
 export const chromeControlGroupShellClass = cn("flex items-center border divide-x overflow-hidden w-fit shrink-0", borderNormalClass, "divide-normal", glassClass);
@@ -8711,6 +8786,7 @@ export const chromeControlGroupShellClass = cn("flex items-center border divide-
 /** @emoji 🎛️ Standard {@link chromeControlGroupShellClass} height for chips, buttons, and toggles. */
 export const chromeControlGroupClass = cn(chromeControlGroupShellClass, "h-medium");
 
+/** @emoji 🎛️ Shared control cell base — transparent on the group glass. */
 /** @emoji 🎛️ Shared control cell base — transparent on the group glass. */
 export const chromeControlItemBaseClass = cn(
   "text-element inline-flex items-center justify-center gap-single text-xs font-medium bg-transparent",
@@ -8720,11 +8796,14 @@ export const chromeControlItemBaseClass = cn(
   "whitespace-nowrap h-medium p-single overflow-hidden leading-none",
 );
 
+
 /** @emoji 🎛️ Navbar/button/toggle cell hover — matches {@link ShellParentHover} group items. */
 export const chromeControlItemClass = cn(chromeControlItemBaseClass, interactiveHoverClass);
 
 /** @emoji 🎛️ Tab/chip cell hover — preserves drag-handle exclusion beside labels. */
+/** @emoji 🎛️ Tab/chip cell hover — preserves drag-handle exclusion beside labels. */
 export const chromeControlTabItemClass = cn(chromeControlItemBaseClass, hoverExcludingHandleBgFillClass, hoverExcludingHandleTextEmphasizedClass);
+
 
 /** @emoji 🎛️ Pressed/on via `data-state="on"` — toggles and toggle-group items. */
 export const chromeControlItemOnClass = interactiveOnClass;
@@ -8806,14 +8885,15 @@ const panelTabBarBaseClass = cn(panelTabBarScrollClass, "w-full");
 export const panelTabBarClass = cn(panelTabBarBaseClass, borderNormalBottomClass);
 
 /** @emoji 📑️ Panel tab icon slot — defers dimensions to the tab icon (12px). */
-export const panelTabIconSlotClass = "inline-flex shrink-0 items-center justify-center leading-none";
 
 /** @emoji 📑️ Panel tab label beside the icon. */
-export const panelTabLabelClass = "min-w-0 truncate text-xs leading-none";
 
+/** @emoji 📏️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome silhouette. */
 /** @emoji 📏️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome silhouette. */
 export const panelTabButtonDividerClass = "border-e border-solid !border-normal last:border-e-0";
 
+
+/** @emoji 📑️ Panel tab button with icon, mandatory name, and a normal divider between sibling toggles. */
 /** @emoji 📑️ Panel tab button with icon, mandatory name, and a normal divider between sibling toggles. */
 export const panelTabButtonClass = cn(
   "inline-flex min-h-0 shrink-0 items-center gap-tiny bg-transparent p-0",
@@ -8825,13 +8905,16 @@ export const panelTabButtonClass = cn(
   hoverExcludingHandleTextEmphasizedClass,
 );
 
+
 /** @emoji 📑️ Floating panel tab strip inside {@link WindowChrome} — collapsed tabs defer every outer edge to the silhouette; expanded tabs restore the normal content-facing edge that separates their toggles from the panel body. */
 export function panelAnchorTabBarClass(direction: "up" | "down", expanded = false): string {
   return cn(panelTabBarScrollClass, "h-medium", expanded && (direction === "up" ? borderNormalTopClass : borderNormalBottomClass));
 }
 
 /** @emoji 📑️ Panel tab button padding. */
+/** @emoji 📑️ Panel tab button padding. */
 export const panelAnchorTabButtonClass = cn(panelTabButtonClass, "px-tiny");
+
 
 //#region 🫳️DragAffordance
 
@@ -8878,10 +8961,8 @@ export const DragHandle: React.FC<{
 );
 
 /** @emoji 🎯️ Passive drop-zone fill — secondary accent, kept visually distinct from the stronger primary-accent indicator on the actively hovered target. */
-export const dropZoneReadyFillClass = "bg-[var(--accent-secondary)]";
 
 /** @emoji 🎯️ Label/icon emphasis paired with {@link dropZoneReadyFillClass} so text stays legible on the fill. */
-export const dropZoneReadyTextClass = "text-emphasized";
 
 /** @emoji 🎯️ Combined passive drop-zone treatment for single-container elements (fill + emphasized text/icons) while a compatible drag is in flight — the hovered zone keeps its stronger accent indicator on top of this. Rows that split shell (text) from content (fill) — e.g. {@link TreeItem}, {@link SortableTreeItem}, {@link TreeSection} — apply {@link dropZoneReadyTextClass} and {@link dropZoneReadyFillClass} separately instead, so the fill never bleeds into the guide gutter. */
 export const dropZoneReadyClass = cn(dropZoneReadyFillClass, dropZoneReadyTextClass);
@@ -10463,7 +10544,6 @@ export const panelWindowInactiveTabClass = "relative z-30 box-border min-h-mediu
 export const modeDockTabLabelClassName = "flex min-w-0 flex-1 items-center gap-single overflow-hidden";
 
 /** @emoji 🪟️ Default mode-dock tab label — element gray; emphasize on hover/active only. */
-export const modeDockTabClassName = cn(chromeControlTabItemClass, "group max-w-[12rem] shrink-0 cursor-pointer items-center px-single select-none transition-colors");
 
 /** @emoji 🪧️ Static shell title (navbar app label, pane headings) — element gray at rest. */
 export const shellChromeTitleClassName = "truncate text-sm font-medium text-element";
@@ -11075,12 +11155,6 @@ ChromeAwareWindowScrollSurface.displayName = "ChromeAwareWindowScrollSurface";
 export const windowRailChromeLabelActionClass = cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent text-element px-single gap-single", interactiveHoverClass);
 
 /** @emoji 🪟️ Pane chrome toggle — same layout as {@link panelAnchorTabButtonClass}: leading semantic icon, label, trailing {@link DragHandle}. */
-export const windowPaneChromeToggleClass = cn(
-  modeDockTabClassName,
-  "relative z-30 box-border min-h-medium shrink-0 border-0 bg-transparent",
-  "outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-active-base",
-  "disabled:pointer-events-none disabled:opacity-50",
-);
 
 /** @emoji 🪟️ Built-in window pane icons — fixed semantic affordances (never fold-direction chevrons). */
 export const WINDOW_PANE_MEASURES_ICON = "settings-2" as const satisfies IconName;
@@ -11124,10 +11198,8 @@ export const windowMeasureToggleCompactClass =
   "[&_[data-slot=toggle-group]]:h-small [&_[data-slot=toggle-group-item]]:min-h-0 [&_[data-slot=toggle-group-item]]:py-tiny [&_[data-slot=toggle-group-item]]:px-single [&_[data-slot=inline-label]]:!text-tiny";
 
 /** @emoji 🌳️ Typography for measure tree group headers. */
-export const windowMeasureTreeGroupLabelClass = "text-tiny font-semibold uppercase tracking-wide text-element group-hover:text-emphasized";
 
 /** @emoji 🌳️ Typography for measure tree leaf labels. */
-export const windowMeasureTreeLeafLabelClass = "text-tiny font-normal text-element group-hover:text-emphasized transition-colors";
 
 // #endregion 🎈️Level Context
 
@@ -13216,14 +13288,6 @@ export function searchHighlightedLabel(label: string, query: string, detail?: st
 }
 
 /** @emoji 🚫️ React props that disable native browser affordances on editable UI controls. */
-export const uiFormControlBrowserDefaultProps = {
-  autoComplete: "off",
-  autoCorrect: "off",
-  autoCapitalize: "off",
-  spellCheck: false,
-  "data-1p-ignore": true,
-  "data-lpignore": "true",
-} as const satisfies Pick<React.InputHTMLAttributes<HTMLInputElement>, "autoComplete" | "autoCorrect" | "autoCapitalize" | "spellCheck"> & { readonly "data-1p-ignore": boolean; readonly "data-lpignore": string };
 
 /** @emoji 🚫️ Applies {@link uiFormControlBrowserDefaultProps} to a live form control (idempotent). */
 export function applyUiFormControlBrowserDefaults(element: HTMLInputElement | HTMLTextAreaElement): void {

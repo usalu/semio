@@ -293,31 +293,13 @@ import {
 } from "../ShellHelpers/🟦️component.tsx";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🟦️brand.ts";
-// 🚧️W4-interim: these still live in the framework-renderer-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ dir) — a later wave rewires this import per-symbol as each dependency's own
-// element file lands. Do not import the barrel from any OTHER new leaf file without the same marker;
-// grep for `🚧️W4-interim` must be empty before this wave's closing batch.
-import {
-  coerceWireBytes,
-  createFrameworkDisplayPanelTabs,
-  createFrameworkPluginsPanelTabs,
-  createFrameworkSettingsPanelTabs,
-  type DisplayHostApi,
-  PluginRecoveryPanel,
-  type PluginsHostApi,
-  type PluginsPanelEntry,
-  type PluginWasmHandle,
-  type SettingsHostApi,
-  ShellRouteNotFoundPage,
-  synthesizeLocalizedLabel,
-  SyncAttachCard,
-  UIFind,
-  UIFindProvider,
-  UISearch,
-  type UISearchItem,
-  useNamedLayoutHost,
-  UTILITY_CATEGORY_ICON_ID,
-} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { createFrameworkDisplayPanelTabs, createFrameworkPluginsPanelTabs, createFrameworkSettingsPanelTabs, type DisplayHostApi, PluginRecoveryPanel, type PluginsHostApi, type PluginsPanelEntry, type SettingsHostApi, ShellRouteNotFoundPage, useNamedLayoutHost } from "../ChromePanels/🟦️component.tsx";
+import { type PluginWasmHandle } from "../PluginRuntime/🟦️component.tsx";
+import { synthesizeLocalizedLabel } from "../ShellHelpers/🟦️component.tsx";
+import { SyncAttachCard } from "../ShellSync/🟦️component.tsx";
+import { UIFind, UIFindProvider, UISearch, type UISearchItem } from "../ShellSearch/🟦️component.tsx";
+import { UTILITY_CATEGORY_ICON_ID } from "../UtilityTree/🟦️component.tsx";
+import { coerceWireBytes } from "../PluginRuntime/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 //#region FrameworkOsShell

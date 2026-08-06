@@ -28,14 +28,14 @@ ports = { react = 6087, wgpu = 6187 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "../../📦️lib.rs"
+path = "📦️lib.rs"
 
 [dependencies]
 dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
 pack = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-pack" }
 protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
-mathematical_algebra = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/➕️algebra/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-algebra" }
+math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-core = { path = "../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
 spade = "2.15.1"

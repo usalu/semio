@@ -122,7 +122,7 @@ type WireCommandEnvelope = { readonly kind: "action" | "command"; readonly name:
 /** 🎯️ DslValue serde encodes Rust enums as `{ kind, value }` (struct) / plain string (unit). Shell
  * `HostEffect` consumers expect serde externally-tagged JSON (`{ navigate: { uri } }` / `"requestSync"`). */
 /** 🎯️ DslValue may ship `Vec<u8>` as a number array, a Uint8Array, or a `{ kind:"bytes", value }` object. */
-function coerceWireBytes(raw: unknown): Uint8Array {
+export function coerceWireBytes(raw: unknown): Uint8Array {
   if (raw instanceof Uint8Array) return raw;
   if (Array.isArray(raw)) return Uint8Array.from(raw as number[]);
   if (raw && typeof raw === "object") {

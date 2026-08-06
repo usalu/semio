@@ -169,7 +169,6 @@ mod tests {
     use super::*;
     use crate::apps::fem3d::testkit::{dispatch, fem3d_app, render as render_body, Fem3dApp};
     use crate::apps::fem3d::Fem3dCommand;
-    use semio_framework_plugin::PluginApp;
 
     fn app_with_example() -> Fem3dApp {
         let mut app = fem3d_app();

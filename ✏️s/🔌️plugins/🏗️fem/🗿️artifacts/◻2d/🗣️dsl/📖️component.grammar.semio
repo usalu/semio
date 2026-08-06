@@ -1,6 +1,12 @@
 dialect grammar
-grammar 2d
-extension 2d
-use family-document
+grammar fem2d
+extension fem2d
+use family-sheet
 start document
-document = TEXT*
+
+document = trace*
+trace = IDENT "=" expr ARROW FLOAT
+expr = term {("+" | "-") term}*
+term = factor {("*" | "/") factor}*
+factor = FLOAT | IDENT | call | "-" factor
+call = IDENT "(" expr {"," expr}* ")"

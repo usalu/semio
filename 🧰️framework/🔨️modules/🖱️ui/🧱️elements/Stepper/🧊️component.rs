@@ -1,21 +1,21 @@
 //! 🔎️ wgpu render function for the Stepper element — extracted from `widgets` mod's inline body
 //! (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a CRATE-ROOT sibling module of
-//! `crate::widgets` (declared `#[cfg(feature = "engine")] #[path = "..."] mod stepper;` right before
+//! `crate::wgpu::widgets` (declared `#[cfg(feature = "wgpu-engine")] #[path = "..."] mod stepper;` right before
 //! `pub mod widgets` in lib.rs — deliberately NOT nested inside `widgets { }`, since rustc resolves a
 //! nested inline-module's `#[path]` as if the parent had its own on-disk directory, which fails for a
 //! genuinely inline `mod widgets { }` block). `widgets` mod pulls this back in via
-//! `use crate::stepper::render_number_stepper;` so its own unqualified call sites keep working.
-//! `crate::widgets::{...}` reaches the sibling items this needs (`WidgetContext`, `StepperMeta`,
-//! `draw_text`, `register_input_meta`); `crate::input_element` supplies `render_input` (the Input
-//! element, used as the stepper's center text box); `crate::chrome`/`crate::input` are the other
+//! `use crate::wgpu::stepper::render_number_stepper;` so its own unqualified call sites keep working.
+//! `crate::wgpu::widgets::{...}` reaches the sibling items this needs (`WidgetContext`, `StepperMeta`,
+//! `draw_text`, `register_input_meta`); `crate::wgpu::input_element` supplies `render_input` (the Input
+//! element, used as the stepper's center text box); `crate::wgpu::chrome`/`crate::wgpu::input` are the other
 //! top-level engine mods `widgets` itself also depends on.
 //! Not to be confused with the `Steps` element (a progress-indicator, unrelated concept).
 
-use crate::widgets::{draw_text, register_input_meta, StepperMeta, WidgetContext};
-use crate::chrome::push_control_border;
-use crate::geometry::Rect;
-use crate::input::{HitKind, HitTarget};
-use crate::input_element::render_input;
+use crate::wgpu::widgets::{draw_text, register_input_meta, StepperMeta, WidgetContext};
+use crate::wgpu::chrome::push_control_border;
+use crate::wgpu::geometry::Rect;
+use crate::wgpu::input::{HitKind, HitTarget};
+use crate::wgpu::input_element::render_input;
 
 #[allow(clippy::too_many_arguments, reason = "one arg per widget/render-context field; grouping into a struct is a T2 restructure, out of scope")]
 pub(crate) fn render_number_stepper<E: Clone>(id: &str, value: f64, step: f64, _uniform: bool, on_absolute: Option<E>, on_delta: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {

@@ -1,15 +1,15 @@
 //! 🗂️ tui key-handling and paint functions for the Table element — extracted from `widget` mod's
 //! inline body (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a crate-root sibling
-//! module of `crate::widget` (see that mod's `use crate::table::{table_on_key, paint_table,
+//! module of `crate::tui::widget` (see that mod's `use crate::tui::table::{table_on_key, paint_table,
 //! paint_table_cell};`). `table_column_widths` is a Table-only layout helper (used solely by
 //! `paint_table`) and moves along with it rather than staying behind in `widget`.
 
-use crate::cell::{attr, Cell, CellBuffer};
-use crate::event::{Key, KeyEvent};
-use crate::geometry::{Pos, Rect};
-use crate::text::truncate_to;
-use crate::theme::{Role, Surface, Theme};
-use crate::widget::{TableAlign, TableColumn, TableState, WidgetSignal};
+use crate::tui::cell::{attr, Cell, CellBuffer};
+use crate::tui::event::{Key, KeyEvent};
+use crate::tui::geometry::{Pos, Rect};
+use crate::tui::text::truncate_to;
+use crate::tui::theme::{Role, Surface, Theme};
+use crate::tui::widget::{TableAlign, TableColumn, TableState, WidgetSignal};
 
 pub(crate) fn table_on_key(t: &mut TableState, ev: &KeyEvent) -> Option<WidgetSignal> {
     let visible = t.visible_indices();

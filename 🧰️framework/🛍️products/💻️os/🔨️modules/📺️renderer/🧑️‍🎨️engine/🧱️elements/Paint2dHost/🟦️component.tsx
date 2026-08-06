@@ -28,11 +28,8 @@ import {
 } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { type ComponentSceneHostProps, type Paint2dScene, type ActionDescriptor, type UiComponentSceneNode, type PluginContextMenuRequest, type ContextMenuItemSpec } from "@semio-tech/framework-core";
-// 🚧️W4-interim: these still live in the framework-renderer-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ dir) — a later wave rewires this import per-symbol as each dependency's own
-// element file lands. Do not import the barrel from any OTHER new leaf file without the same marker;
-// grep for `🚧️W4-interim` must be empty before this wave's closing batch.
-import { type RasterWasmSession, createRasterSession, useMapContextMenuSpecs } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { type RasterWasmSession, createRasterSession } from "../WasmSessionLoader/🟦️component.tsx";
+import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 // 🐢️ Direct element-to-element imports — `Canvas2dHost`/`Interpreter` already landed in a prior batch.
 import { type CanvasCamera, worldToScreenLogical, wheelCameraAtScreen } from "../Canvas2dHost/🟦️component.tsx";
 import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";

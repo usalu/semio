@@ -1,0 +1,269 @@
+{
+  "allOk": true,
+  "results": [
+    {
+      "file": "🦀️shell.rs",
+      "name": "shell",
+      "lines": 271,
+      "braces": {
+        "open": 61,
+        "close": 61,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️chrome.rs",
+      "name": "chrome",
+      "lines": 94,
+      "braces": {
+        "open": 27,
+        "close": 27,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️cursor.rs",
+      "name": "cursor",
+      "lines": 330,
+      "braces": {
+        "open": 65,
+        "close": 65,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️paint.rs",
+      "name": "paint",
+      "lines": 1574,
+      "braces": {
+        "open": 307,
+        "close": 307,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️tree.rs",
+      "name": "tree",
+      "lines": 373,
+      "braces": {
+        "open": 66,
+        "close": 66,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️shaders.rs",
+      "name": "shaders",
+      "lines": 476,
+      "braces": {
+        "open": 54,
+        "close": 54,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️engine.rs",
+      "name": "engine",
+      "lines": 1382,
+      "braces": {
+        "open": 282,
+        "close": 282,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️widgets.rs",
+      "name": "widgets",
+      "lines": 737,
+      "braces": {
+        "open": 243,
+        "close": 243,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️minimap.rs",
+      "name": "minimap",
+      "lines": 82,
+      "braces": {
+        "open": 7,
+        "close": 7,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️scene_slots.rs",
+      "name": "scene_slots",
+      "lines": 225,
+      "braces": {
+        "open": 35,
+        "close": 35,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️theme.rs",
+      "name": "theme",
+      "lines": 248,
+      "braces": {
+        "open": 30,
+        "close": 30,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️host.rs",
+      "name": "host",
+      "lines": 150,
+      "braces": {
+        "open": 34,
+        "close": 34,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️component.rs",
+      "name": "component",
+      "lines": 4709,
+      "braces": {
+        "open": 914,
+        "close": 914,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️text.rs",
+      "name": "text",
+      "lines": 605,
+      "braces": {
+        "open": 85,
+        "close": 85,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️layout.rs",
+      "name": "layout",
+      "lines": 79,
+      "braces": {
+        "open": 15,
+        "close": 15,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️events.rs",
+      "name": "events",
+      "lines": 2178,
+      "braces": {
+        "open": 501,
+        "close": 501,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️gpu.rs",
+      "name": "gpu",
+      "lines": 224,
+      "braces": {
+        "open": 43,
+        "close": 43,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️reconcile.rs",
+      "name": "reconcile",
+      "lines": 560,
+      "braces": {
+        "open": 97,
+        "close": 97,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️arena.rs",
+      "name": "arena",
+      "lines": 145,
+      "braces": {
+        "open": 46,
+        "close": 46,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️draw.rs",
+      "name": "draw",
+      "lines": 2360,
+      "braces": {
+        "open": 647,
+        "close": 647,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️label.rs",
+      "name": "label",
+      "lines": 154,
+      "braces": {
+        "open": 38,
+        "close": 38,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️flex.rs",
+      "name": "flex",
+      "lines": 432,
+      "braces": {
+        "open": 95,
+        "close": 95,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️input.rs",
+      "name": "input",
+      "lines": 268,
+      "braces": {
+        "open": 42,
+        "close": 42,
+        "ok": true
+      },
+      "wired": true
+    },
+    {
+      "file": "🦀️geometry.rs",
+      "name": "geometry",
+      "lines": 26,
+      "braces": {
+        "open": 7,
+        "close": 7,
+        "ok": true
+      },
+      "wired": true
+    }
+  ]
+}

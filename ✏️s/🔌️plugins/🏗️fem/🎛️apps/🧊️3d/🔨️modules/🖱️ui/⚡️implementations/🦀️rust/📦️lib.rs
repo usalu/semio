@@ -24,7 +24,7 @@ use fem_core::{Dof, ElementResult};
 use fem_shared::{hex_to_rgb01, next_id, normalize_mode_shape, result_display_action_args, von_mises_color, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO};
 use semio_framework_plugin::{
     build_world_3d_scene, create_default_layout, ui_stack_vertical, ui_text, world3d_default_camera, world3d_default_selection_json, world3d_meshes_json_from_kinds, world3d_scene, ActionArgDef, ActionArgOption, App, AppIo, ArtifactKindSpec,
-    ConfigSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, UiNode, WorldSunConfig,
+    ConfigSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, UiNode, WorldSunConfig,
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -564,52 +564,52 @@ impl DocumentApp for Fem3dPlayApp {
             Fem3dCommand::AddNode { x, y, z } => {
                 let id = next_id(projection.nodes.iter().map(|n| n.id.clone()), "n");
                 let index = projection.nodes.len();
-                Ok(Emit::operations(vec![Fem3dOperation::SetNode { index, node: fem3d::FemNode { id, x: *x, y: *y, z: *z } }])
+                Ok(Emit::operations(vec![Fem3dOperation::SetNode { index, node: fem3d::FemNode { id, x: *x, y: *y, z: *z } }]))
             }
             Fem3dCommand::AddBar { start, end, material_id, section_id } => {
                 let id = next_id(projection.elements.iter().map(|e| fem3d_element_id(e).to_string()), "e");
                 let index = projection.elements.len();
                 let element = fem3d::FemElement::Bar { id, start: start.clone(), end: end.clone(), material_id: material_id.clone(), section_id: section_id.clone() };
-                Ok(Emit::operations(vec![Fem3dOperation::SetElement { index, element: Box::new(element) }])
+                Ok(Emit::operations(vec![Fem3dOperation::SetElement { index, element: Box::new(element) }]))
             }
             Fem3dCommand::AddFrame { start, end, material_id, section_id, roll } => {
                 let id = next_id(projection.elements.iter().map(|e| fem3d_element_id(e).to_string()), "e");
                 let index = projection.elements.len();
                 let element = fem3d::FemElement::Frame { id, start: start.clone(), end: end.clone(), material_id: material_id.clone(), section_id: section_id.clone(), roll: *roll };
-                Ok(Emit::operations(vec![Fem3dOperation::SetElement { index, element: Box::new(element) }])
+                Ok(Emit::operations(vec![Fem3dOperation::SetElement { index, element: Box::new(element) }]))
             }
             Fem3dCommand::AddMaterial { name, e, g } => {
                 let id = next_id(projection.materials.iter().map(|m| m.id.clone()), "m");
                 let index = projection.materials.len();
-                Ok(Emit::operations(vec![Fem3dOperation::SetMaterial { index, material: fem3d::FemMaterial { id, name: name.clone(), e: *e, g: *g, nu: 0.3, rho: 7850.0 } }])
+                Ok(Emit::operations(vec![Fem3dOperation::SetMaterial { index, material: fem3d::FemMaterial { id, name: name.clone(), e: *e, g: *g, nu: 0.3, rho: 7850.0 } }]))
             }
             Fem3dCommand::AddSection { name, area, iy, iz, j } => {
                 let id = next_id(projection.sections.iter().map(|s| s.id.clone()), "s");
                 let index = projection.sections.len();
-                Ok(Emit::operations(vec![Fem3dOperation::SetSection { index, section: fem3d::FemSection { id, name: name.clone(), area: *area, iy: *iy, iz: *iz, j: *j } }])
+                Ok(Emit::operations(vec![Fem3dOperation::SetSection { index, section: fem3d::FemSection { id, name: name.clone(), area: *area, iy: *iy, iz: *iz, j: *j } }]))
             }
             Fem3dCommand::AddSupport { node_id, fixed } => {
                 let id = next_id(projection.supports.iter().map(|s| s.id.clone()), "sup");
                 let index = projection.supports.len();
-                Ok(Emit::operations(vec![Fem3dOperation::SetSupport { index, support: fem3d::FemSupport { id, node_id: node_id.clone(), fixed: fixed.clone() } }])
+                Ok(Emit::operations(vec![Fem3dOperation::SetSupport { index, support: fem3d::FemSupport { id, node_id: node_id.clone(), fixed: fixed.clone() } }]))
             }
             Fem3dCommand::AddNodalLoad { node_id, dof, value, case_id } => {
                 let (index, mut load_case) = fem3d_resolve_load_case(projection, case_id.as_deref());
                 let load_id = next_id(load_case.loads.iter().map(|l| fem3d::load_id(l).to_string()), "l");
                 load_case.loads.push(fem3d::FemLoad::Nodal { id: load_id, node_id: node_id.clone(), dof: *dof, value: *value });
-                Ok(Emit::operations(vec![Fem3dOperation::SetLoadCase { index, load_case }])
+                Ok(Emit::operations(vec![Fem3dOperation::SetLoadCase { index, load_case }]))
             }
             Fem3dCommand::AddMemberUdl { element_id, wx, wy, wz, case_id } => {
                 let (index, mut load_case) = fem3d_resolve_load_case(projection, case_id.as_deref());
                 let load_id = next_id(load_case.loads.iter().map(|l| fem3d::load_id(l).to_string()), "l");
                 load_case.loads.push(fem3d::FemLoad::MemberUdl { id: load_id, element_id: element_id.clone(), wx: *wx, wy: *wy, wz: *wz });
-                Ok(Emit::operations(vec![Fem3dOperation::SetLoadCase { index, load_case }])
+                Ok(Emit::operations(vec![Fem3dOperation::SetLoadCase { index, load_case }]))
             }
             Fem3dCommand::AddAreaLoad { solid_id, pressure, case_id } => {
                 let (index, mut load_case) = fem3d_resolve_load_case(projection, case_id.as_deref());
                 let load_id = next_id(load_case.loads.iter().map(|l| fem3d::load_id(l).to_string()), "l");
                 load_case.loads.push(fem3d::FemLoad::Area { id: load_id, solid_id: solid_id.clone(), pressure: *pressure });
-                Ok(Emit::operations(vec![Fem3dOperation::SetLoadCase { index, load_case }])
+                Ok(Emit::operations(vec![Fem3dOperation::SetLoadCase { index, load_case }]))
             }
             Fem3dCommand::AddSolid { x, y, width, depth, height, material_id, base_z, layers, mesh_size } => {
                 let id = next_id(projection.solids.iter().map(|s| s.id.clone()), "sol");
@@ -626,19 +626,19 @@ impl DocumentApp for Fem3dPlayApp {
                     mesh_size: mesh_size.unwrap_or(0.5),
                     material_id: material_id.clone(),
                 };
-                Ok(Emit::operations(vec![Fem3dOperation::SetSolid { index, solid }])
+                Ok(Emit::operations(vec![Fem3dOperation::SetSolid { index, solid }]))
             }
             Fem3dCommand::AddLoadCase { name, self_weight } => {
                 let id = next_id(projection.load_cases.iter().map(|lc| lc.id.clone()), "case-");
                 let index = projection.load_cases.len();
-                Ok(Emit::operations(vec![Fem3dOperation::SetLoadCase { index, load_case: fem3d::FemLoadCase { id, name: name.clone(), loads: Vec::new(), self_weight: *self_weight } }])
+                Ok(Emit::operations(vec![Fem3dOperation::SetLoadCase { index, load_case: fem3d::FemLoadCase { id, name: name.clone(), loads: Vec::new(), self_weight: *self_weight } }]))
             }
             Fem3dCommand::AddCombination { name, terms } => match serde_json::from_str::<Vec<(String, f64)>>(terms) {
                 Ok(parsed) => {
                     let terms: std::collections::BTreeMap<String, f64> = parsed.into_iter().collect();
                     let id = next_id(projection.combinations.iter().map(|c| c.id.clone()), "c");
                     let index = projection.combinations.len();
-                    Ok(Emit::operations(vec![Fem3dOperation::SetCombination { index, combination: fem3d::FemCombination { id, name: name.clone(), terms } }])
+                    Ok(Emit::operations(vec![Fem3dOperation::SetCombination { index, combination: fem3d::FemCombination { id, name: name.clone(), terms } }]))
                 }
                 Err(_) => Ok(Emit::default()),
             },
@@ -646,7 +646,7 @@ impl DocumentApp for Fem3dPlayApp {
                 Some(index) => {
                     let mut load_case = projection.load_cases[index].clone();
                     load_case.self_weight = *enabled;
-                    Ok(Emit::operations(vec![Fem3dOperation::SetLoadCase { index, load_case }])
+                    Ok(Emit::operations(vec![Fem3dOperation::SetLoadCase { index, load_case }]))
                 }
                 None => Ok(Emit::default()),
             },
@@ -657,7 +657,7 @@ impl DocumentApp for Fem3dPlayApp {
                     buckling_count: buckling_count.map(|value| value as usize).unwrap_or(current.buckling_count),
                     deformation_scale: deformation_scale.unwrap_or(current.deformation_scale),
                 };
-                Ok(Emit::operations(vec![Fem3dOperation::SetAnalysisSettings { settings }])
+                Ok(Emit::operations(vec![Fem3dOperation::SetAnalysisSettings { settings }]))
             }
             Fem3dCommand::RemoveSelection { ids } => {
                 let mut operations = Vec::new();
@@ -681,14 +681,14 @@ impl DocumentApp for Fem3dPlayApp {
                     }
                 }
                 if operations.is_empty() {
-                    Ok(Emit::default()
+                    Ok(Emit::default())
                 } else {
-                    Ok(Emit::operations(operations)
+                    Ok(Emit::operations(operations))
                 }
             }
             Fem3dCommand::SetActiveExample { example_id } => {
                 let document = if example_id == "default" { Fem3dDocument::parse_dsl(FEM3D_EXAMPLE_DSL).unwrap_or_else(|_| fem3d_engine::empty_fem3d_projection()) } else { fem3d_engine::empty_fem3d_projection() };
-                Emit { document_operations: vec![Fem3dOperation::SetDocument { document }], config_operations: vec![Fem3dConfigOperation::Snapshot { config: Fem3dConfig::default() }], ..Default::default() }
+                Ok(Emit { document_operations: vec![Fem3dOperation::SetDocument { document }], config_operations: vec![Fem3dConfigOperation::Snapshot { config: Fem3dConfig::default() }], ..Default::default() })
             }
             // 🎥️ Config-only: the world-3d camera never touches the document.
             Fem3dCommand::SetCamera { json } => Ok(Emit::config(vec![Fem3dConfigOperation::SetCamera { camera: FemCamera { json: json.clone() } }])),

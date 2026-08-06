@@ -6,11 +6,7 @@
 // #region 🔌️Adapters
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BufferAttribute, BufferGeometry, CanvasTexture, ClampToEdgeWrapping, DoubleSide, MeshStandardMaterial } from "three";
-// 🚧️W4-interim: these still live in the framework-renderer-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ dir) — a later wave rewires this import per-symbol as each dependency's own
-// element file lands. Do not import the barrel from any OTHER new leaf file without the same marker;
-// grep for `🚧️W4-interim` must be empty before this wave's closing batch.
-import { createTerrainSession, type TerrainWasmSession } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { createTerrainSession, type TerrainWasmSession } from "../WasmSessionLoader/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️WorldTerrainLayerHost

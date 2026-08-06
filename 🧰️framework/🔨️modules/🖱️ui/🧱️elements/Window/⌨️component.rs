@@ -1,15 +1,15 @@
 //! 🔎️ tui paint function for the Window element — extracted from `chrome` mod's inline body
 //! (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a crate-root sibling module of
-//! `crate::chrome` (see that mod's `use crate::window::paint_window;`). `paint_corner_tab` is a
+//! `crate::tui::chrome` (see that mod's `use crate::tui::window::paint_window;`). `paint_corner_tab` is a
 //! private helper used only by `paint_window` and stays module-private here. `window_chip_layout`,
 //! `WindowTab` and `WindowChipLayout`'s fields stay in `chrome` mod (shared with
 //! `ChromeState::window_control_at`) and were promoted to `pub(crate)` there so this sibling module
 //! can reach them.
 
-use crate::cell::{Cell, CellBuffer};
-use crate::chrome::{window_chip_layout, WindowState, WindowTab};
-use crate::geometry::{Pos, Rect};
-use crate::theme::{Role, Surface, Theme};
+use crate::tui::cell::{Cell, CellBuffer};
+use crate::tui::chrome::{window_chip_layout, WindowState, WindowTab};
+use crate::tui::geometry::{Pos, Rect};
+use crate::tui::theme::{Role, Surface, Theme};
 
 /// 🪟️ Paints one 2-row corner tab: a normal `┌️─️┐️ / │️text│️` box, then bends its *short* wall (the
 /// one that is not also the window's own permanent side wall) down one row into the main body's

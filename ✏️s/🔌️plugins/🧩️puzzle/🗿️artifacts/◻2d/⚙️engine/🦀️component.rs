@@ -21,7 +21,7 @@ pub use graph::{
     apply_redraw_layout_to_fixture_v1_json as apply_ported_redraw_layout_to_fixture_v1_json, apply_undirected_force_graph_layout_to_fixture_v1_json, apply_undirected_force_graph_layout_to_fixture_v1_value, GraphExtension,
 };
 pub use infinite_board_port_directed_normal::{self as graph, *};
-pub use reasoning_mindmap as mindmap;
+pub use semio_s_mindmap as mindmap;
 
 //#region 🔖️Puzzle2dExtension
 /// 🧩️ Puzzle 2d domain extension over the property graph canvas.

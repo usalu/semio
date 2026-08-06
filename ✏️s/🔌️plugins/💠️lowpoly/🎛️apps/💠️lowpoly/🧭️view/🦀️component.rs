@@ -174,11 +174,11 @@ pub fn primitive_kind(kind: &str) -> &str {
     }
 }
 
-pub fn mirror_axis_from_param(params: &Value) -> kernel_3d_mesh::MirrorAxis {
+pub fn mirror_axis_from_param(params: &Value) -> semio_s_3d::MirrorAxis {
     match utility_param_u32(params, "mirrorAxis", 0) {
-        1 => kernel_3d_mesh::MirrorAxis::Y,
-        2 => kernel_3d_mesh::MirrorAxis::Z,
-        _ => kernel_3d_mesh::MirrorAxis::X,
+        1 => semio_s_3d::MirrorAxis::Y,
+        2 => semio_s_3d::MirrorAxis::Z,
+        _ => semio_s_3d::MirrorAxis::X,
     }
 }
 

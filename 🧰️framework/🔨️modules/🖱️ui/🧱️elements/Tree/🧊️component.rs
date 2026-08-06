@@ -1,29 +1,29 @@
 //! 🔎️ wgpu render/measure functions for the Tree element — extracted from `widgets` mod's inline
 //! body (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a CRATE-ROOT sibling module
-//! of `crate::widgets` (declared `#[cfg(feature = "engine")] #[path = "..."] mod tree_element;`
+//! of `crate::wgpu::widgets` (declared `#[cfg(feature = "wgpu-engine")] #[path = "..."] mod tree_element;`
 //! right before `pub mod widgets` in lib.rs — deliberately NOT nested inside `widgets { }`, since
 //! rustc resolves a nested inline-module's `#[path]` as if the parent had its own on-disk directory,
 //! which fails for a genuinely inline `mod widgets { }` block). Named `tree_element` rather than the
 //! naive `tree` because a crate-root `pub mod tree` already exists (the retained scene-graph
-//! arena/`UiTree`, unrelated) — same disambiguation `input_element` used against `crate::input`.
-//! `widgets` mod pulls the render/measure entry points back in via one `use crate::tree_element::{...};`
+//! arena/`UiTree`, unrelated) — same disambiguation `input_element` used against `crate::wgpu::input`.
+//! `widgets` mod pulls the render/measure entry points back in via one `use crate::wgpu::tree_element::{...};`
 //! so its own unqualified call sites (including `WidgetNode::Tree`'s dispatch arm) keep working.
-//! `crate::widgets::{...}` reaches the sibling items this needs (`WidgetContext`, `TreeSection`,
+//! `crate::wgpu::widgets::{...}` reaches the sibling items this needs (`WidgetContext`, `TreeSection`,
 //! `TreeItem`, the `TREE_*` layout constants, the small `tree_gutter_width`/`tree_icon_id`/
 //! `tree_row_collapsed`/`tree_draw_chevron`/`tree_draw_guides` helpers, `draw_icon`, `draw_text`,
 //! `measure_text_width`, `render_widget` — all promoted to `pub(crate)` in this same pass since they
-//! were previously `widgets`-module-private); `crate::geometry`/`crate::input`/`crate::text`/
-//! `crate::theme` are the other top-level engine mods `widgets` itself also depends on.
+//! were previously `widgets`-module-private); `crate::wgpu::geometry`/`crate::wgpu::input`/`crate::wgpu::text`/
+//! `crate::wgpu::theme` are the other top-level engine mods `widgets` itself also depends on.
 
-use crate::widgets::{
+use crate::wgpu::widgets::{
     draw_icon, draw_text, measure_text_width, render_widget, tree_draw_chevron, tree_draw_guides, tree_gutter_width, tree_icon_id, tree_row_collapsed, TreeItem, TreeSection, WidgetContext, TREE_ICON_SIZE, TREE_INDENT_PER_LEVEL, TREE_ROW_HEIGHT,
     TREE_SECTION_GAP, TREE_TOGGLE_WIDTH,
 };
-use crate::geometry::Rect;
-use crate::input::{DragAxis, HitKind, HitTarget};
-use crate::text::FontAtlas;
-use crate::theme::Theme;
-use crate::UiTreeActionPlacement;
+use crate::wgpu::geometry::Rect;
+use crate::wgpu::input::{DragAxis, HitKind, HitTarget};
+use crate::wgpu::text::FontAtlas;
+use crate::wgpu::theme::Theme;
+use crate::wgpu::UiTreeActionPlacement;
 use std::collections::HashMap;
 
 pub(crate) fn measure_tree_sections_width<E>(sections: &[TreeSection<E>], atlas: &mut FontAtlas, theme: &Theme) -> f32 {

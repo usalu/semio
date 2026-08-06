@@ -1,0 +1,12 @@
+ABORT — parent claimed StyleClasses
+
+This subagent was extracting high-fanout STYLE/CLASSNAME symbols (surfaceClass,
+glassClass, interactiveHoverClass, borderNormalClass, …) from the ui-react barrel
+into 🎱️elements/🟡️core/.
+
+Stopped before any 📦️index.tsx edits. Parent owns StyleClasses extraction;
+do not compete on the barrel lock.
+
+No files created/updated under 🎱️elements/ for this wave by this session.
+Symbol count moved: 0
+Typecheck delta: not run

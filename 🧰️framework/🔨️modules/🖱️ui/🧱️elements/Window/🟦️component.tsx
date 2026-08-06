@@ -7,60 +7,14 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-// 🚧️W3-interim: these still live in the ui-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ or 🧱️elements/🫀️core/ dirs) — W3 rewires this import per-symbol as each
-// dependency's own element/core file lands. Do not import the barrel from any OTHER new leaf file
-// without the same marker; grep for `🚧️W3-interim` must be empty before W6 closes.
-import {
-  type UiStatus,
-  type EngagementSpec,
-  type SearchSpec,
-  useLabel,
-  cn,
-  surfaceClass,
-  UI_WINDOW_SEARCH,
-  useUiMobile,
-  useShellScopeOptional,
-  reactHostPort,
-  NULL_SHELL_ROOT_REF,
-  useShellKeydown,
-  routeWindowSearchEscape,
-  shouldRouteKeysToWindowSearch,
-  measureWindowChromeScrollClearancePx,
-  windowChromeScrollClearanceVar,
-  windowContentDeadLineVar,
-  windowMeasuresDefaultWidthPx,
-  windowMeasuresMinWidthPx,
-  windowMeasuresMaxWidthPx,
-  uiSpacingPx,
-  childElementId,
-  ActionGroup,
-  ActionGroupItem,
-  ExternalLinkIcon,
-  Minimize2Icon,
-  Maximize2Icon,
-  CloseIcon,
-  SurfaceScope,
-  GhostRegionShell,
-  isSurfaceActiveBackgroundPointer,
-  getLevelZClass,
-  loadingBorderStateClass,
-  waitingBorderStateClass,
-  PaneHost,
-  Pane,
-  WINDOW_PANE_MEASURES_ICON,
-  WINDOW_PANE_ACTIONS_ICON,
-  WINDOW_PANE_SEARCH_ICON,
-  WINDOW_PANE_UTILITIES_ICON,
-  Engagement,
-  Search,
-  panelResizeEdgeAccentClass,
-  windowMeasuresBodyClass,
-  windowEngagementBodyClass,
-  windowSearchBodyClass,
-  utilityBarBodyClass,
-  focusActiveSearchInput,
-} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { cn } from "../🫀️core/ClassNames/🟦️component.tsx";
+import { reactHostPort } from "../🫀️core/Ports/🟦️component.tsx";
+import { childElementId } from "../🫀️core/ElementId/🟦️component.tsx";
+import { ActionGroup, ActionGroupItem } from "../ActionGroup/🟦️component.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { surfaceClass, loadingBorderStateClass, waitingBorderStateClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { type UiStatus, type EngagementSpec, type SearchSpec, useLabel, UI_WINDOW_SEARCH, useUiMobile, useShellScopeOptional, NULL_SHELL_ROOT_REF, useShellKeydown, routeWindowSearchEscape, shouldRouteKeysToWindowSearch, measureWindowChromeScrollClearancePx, windowChromeScrollClearanceVar, windowContentDeadLineVar, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresMaxWidthPx, uiSpacingPx, ExternalLinkIcon, Minimize2Icon, Maximize2Icon, CloseIcon, SurfaceScope, GhostRegionShell, isSurfaceActiveBackgroundPointer, getLevelZClass, PaneHost, Pane, WINDOW_PANE_MEASURES_ICON, WINDOW_PANE_ACTIONS_ICON, WINDOW_PANE_SEARCH_ICON, WINDOW_PANE_UTILITIES_ICON, Engagement, Search, panelResizeEdgeAccentClass, windowMeasuresBodyClass, windowEngagementBodyClass, windowSearchBodyClass, utilityBarBodyClass, focusActiveSearchInput } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🌊️Window

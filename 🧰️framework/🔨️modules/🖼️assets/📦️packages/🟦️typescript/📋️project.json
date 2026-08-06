@@ -1,0 +1,33 @@
+{
+  "name": "@semio-tech/assets",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/**/*"]
+  },
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "logo": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts generate-logo && bun ./📜️script.ts export-logo",
+        "forwardAllArgs": true
+      }
+    },
+    "logo-dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
+        "command": "bun --watch ./📜️script.ts generate-logo",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

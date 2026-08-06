@@ -1,0 +1,58 @@
+{
+  "name": "@semio-tech/ui-rs",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/**/*"]
+  },
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test"
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test quick"
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test long"
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test exhaustive"
+      }
+    },
+    "check-wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check-wasm"
+      }
+    },
+    "generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts generate"
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check"
+      }
+    }
+  }
+}

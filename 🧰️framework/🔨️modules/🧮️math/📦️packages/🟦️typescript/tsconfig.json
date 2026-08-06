@@ -1,0 +1,10 @@
+{
+  "extends": "../../../../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": ".",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true
+  },
+  "include": ["📦️index.ts", "../../🕸️graph/🗣️dsl/🟦️component.ts", "../../🕸️graph/🛂️manifest/🟦️component.ts"]
+}

@@ -1,0 +1,303 @@
+=== semio-s-plugin-imperative-control : cargo check ===
+    Updating crates.io index
+     Locking 11 packages to latest compatible versions
+   Compiling zmij v1.0.23
+   Compiling serde_core v1.0.229
+   Compiling serde_json v1.0.151
+    Checking memchr v2.8.3
+    Checking itoa v1.0.18
+    Checking semio-s-plugin-imperative-control v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 5.53s
+exit=0
+=== semio-s-plugin-imperative-text : cargo check ===
+    Updating crates.io index
+    Blocking waiting for file lock on package cache
+     Locking 20 packages to latest compatible versions
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.47
+   Compiling crossbeam-utils v0.8.22
+   Compiling crossbeam-epoch v0.9.20
+   Compiling serde_core v1.0.229
+   Compiling crossbeam-deque v0.8.7
+   Compiling zmij v1.0.23
+   Compiling rayon-core v1.13.0
+   Compiling serde_json v1.0.151
+   Compiling serde v1.0.229
+   Compiling thiserror v2.0.19
+    Checking memchr v2.8.3
+    Checking either v1.17.0
+    Checking itoa v1.0.18
+   Compiling syn v3.0.3
+    Checking rayon v1.12.0
+   Compiling thiserror-impl v2.0.19
+   Compiling serde_derive v1.0.229
+    Checking semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust)
+    Checking semio-s-plugin-imperative-text v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 29.54s
+exit=0
+=== semio-s-plugin-imperative-logic : cargo check ===
+    Updating crates.io index
+     Locking 20 packages to latest compatible versions
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.24
+   Compiling crossbeam-utils v0.8.22
+   Compiling crossbeam-epoch v0.9.20
+   Compiling crossbeam-deque v0.8.7
+   Compiling serde_core v1.0.229
+   Compiling rayon-core v1.13.0
+   Compiling zmij v1.0.23
+   Compiling serde v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling thiserror v2.0.19
+    Checking either v1.17.0
+    Checking itoa v1.0.18
+    Checking memchr v2.8.3
+    Checking rayon v1.12.0
+   Compiling syn v3.0.3
+   Compiling serde_derive v1.0.229
+   Compiling thiserror-impl v2.0.19
+    Checking semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust)
+    Checking semio-s-plugin-imperative-logic v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 9.41s
+exit=0
+=== semio-s-plugin-imperative-math : cargo check ===
+    Updating crates.io index
+     Locking 20 packages to latest compatible versions
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.47
+   Compiling crossbeam-utils v0.8.22
+   Compiling crossbeam-epoch v0.9.20
+   Compiling crossbeam-deque v0.8.7
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling rayon-core v1.13.0
+   Compiling thiserror v2.0.19
+   Compiling serde_json v1.0.151
+   Compiling serde v1.0.229
+    Checking either v1.17.0
+    Checking memchr v2.8.3
+    Checking itoa v1.0.18
+   Compiling syn v3.0.3
+    Checking rayon v1.12.0
+   Compiling thiserror-impl v2.0.19
+   Compiling serde_derive v1.0.229
+    Checking semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust)
+    Checking semio-s-plugin-imperative-math v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 8.68s
+exit=0
+=== semio-s-plugin-imperative-core : cargo check ===
+    Updating crates.io index
+     Locking 20 packages to latest compatible versions
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.24
+   Compiling crossbeam-utils v0.8.22
+   Compiling crossbeam-epoch v0.9.20
+   Compiling serde_core v1.0.229
+   Compiling crossbeam-deque v0.8.7
+   Compiling zmij v1.0.23
+   Compiling rayon-core v1.13.0
+   Compiling serde v1.0.229
+   Compiling thiserror v2.0.19
+   Compiling serde_json v1.0.151
+    Checking memchr v2.8.3
+    Checking either v1.17.0
+    Checking itoa v1.0.18
+   Compiling syn v3.0.3
+   Compiling serde_derive v1.0.229
+   Compiling thiserror-impl v2.0.19
+    Checking rayon v1.12.0
+    Checking semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust)
+    Checking semio-s-plugin-imperative-core v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 7.00s
+exit=0
+=== semio-s-plugin-playbook-procedural : cargo check ===
+    Updating crates.io index
+error: failed to get `semio-framework-os-kernel-math-graph-manifest` as a dependency of package `semio-framework-os-kernel-flow-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust)`
+    ... which satisfies path dependency `flow_core` of package `semio-s-plugin-playbook-procedural v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust)`
+
+Caused by:
+  failed to load source for dependency `semio-framework-os-kernel-math-graph-manifest`
+
+Caused by:
+  unable to update /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust
+
+Caused by:
+  failed to read `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)
+exit=101
+=== semio-s-plugin-imperative-control : cargo clippy ===
+    Checking semio-s-plugin-imperative-control v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.47s
+exit=0
+=== semio-s-plugin-imperative-control : cargo test ===
+   Compiling memchr v2.8.3
+   Compiling itoa v1.0.18
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling serde_json v1.0.151
+   Compiling semio-s-plugin-imperative-control v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.34s
+     Running unittests 📦️lib.rs (✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust/target/debug/deps/semio_s_plugin_imperative_control-a52240f441cf0ac1)
+
+running 1 test
+test tests::catalogue_includes_control_kinds ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests semio_s_plugin_imperative_control
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+exit=0
+=== semio-s-plugin-imperative-text : cargo clippy ===
+    Checking semio-s-plugin-imperative-text v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.28s
+exit=0
+=== semio-s-plugin-imperative-text : cargo test ===
+   Compiling crossbeam-utils v0.8.22
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling itoa v1.0.18
+   Compiling memchr v2.8.3
+   Compiling either v1.17.0
+   Compiling thiserror v2.0.19
+   Compiling crossbeam-epoch v0.9.20
+   Compiling serde_json v1.0.151
+   Compiling serde v1.0.229
+   Compiling crossbeam-deque v0.8.7
+   Compiling rayon-core v1.13.0
+   Compiling rayon v1.12.0
+   Compiling semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust)
+   Compiling semio-s-plugin-imperative-text v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.96s
+     Running unittests 📦️lib.rs (✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/target/debug/deps/semio_s_plugin_imperative_text-b7a5ca7cddca4e91)
+
+running 4 tests
+test tests::text_uppercase_writes_into_scope ... ok
+test tests::text_concat_writes_into_scope ... ok
+test tests::text_length_writes_into_scope ... ok
+test tests::catalogue_json_lists_text_operators ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests semio_s_plugin_imperative_text
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+exit=0
+=== semio-s-plugin-imperative-logic : cargo clippy ===
+    Checking semio-s-plugin-imperative-logic v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.36s
+exit=0
+=== semio-s-plugin-imperative-logic : cargo test ===
+   Compiling crossbeam-utils v0.8.22
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling itoa v1.0.18
+   Compiling either v1.17.0
+   Compiling memchr v2.8.3
+   Compiling thiserror v2.0.19
+   Compiling crossbeam-epoch v0.9.20
+   Compiling serde v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling crossbeam-deque v0.8.7
+   Compiling rayon-core v1.13.0
+   Compiling rayon v1.12.0
+   Compiling semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust)
+   Compiling semio-s-plugin-imperative-logic v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.00s
+     Running unittests 📦️lib.rs (✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/target/debug/deps/semio_s_plugin_imperative_logic-985059021c69618c)
+
+running 1 test
+test tests::logic_compare_gt ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests semio_s_plugin_imperative_logic
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+exit=0
+=== semio-s-plugin-imperative-math : cargo clippy ===
+    Checking semio-s-plugin-imperative-math v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.29s
+exit=0
+=== semio-s-plugin-imperative-math : cargo test ===
+   Compiling crossbeam-utils v0.8.22
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling itoa v1.0.18
+   Compiling memchr v2.8.3
+   Compiling either v1.17.0
+   Compiling thiserror v2.0.19
+   Compiling crossbeam-epoch v0.9.20
+   Compiling serde v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling crossbeam-deque v0.8.7
+   Compiling rayon-core v1.13.0
+   Compiling rayon v1.12.0
+   Compiling semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust)
+   Compiling semio-s-plugin-imperative-math v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.70s
+     Running unittests 📦️lib.rs (✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/target/debug/deps/semio_s_plugin_imperative_math-a6b8b070de178956)
+
+running 1 test
+test tests::math_add_writes_into_scope ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests semio_s_plugin_imperative_math
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+exit=0
+=== semio-s-plugin-imperative-core : cargo clippy ===
+    Checking semio-s-plugin-imperative-core v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.22s
+exit=0
+=== semio-s-plugin-imperative-core : cargo test ===
+   Compiling crossbeam-utils v0.8.22
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling either v1.17.0
+   Compiling memchr v2.8.3
+   Compiling itoa v1.0.18
+   Compiling thiserror v2.0.19
+   Compiling crossbeam-epoch v0.9.20
+   Compiling serde_json v1.0.151
+   Compiling serde v1.0.229
+   Compiling crossbeam-deque v0.8.7
+   Compiling rayon-core v1.13.0
+   Compiling rayon v1.12.0
+   Compiling semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust)
+   Compiling semio-s-plugin-imperative-core v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.59s
+     Running unittests 📦️lib.rs (✏️s/🔌️plugins/📜️imperative/🧩️extensions/🫀️core/📦️packages/🦀️rust/target/debug/deps/semio_s_plugin_imperative_core-3162c802eb9dec8d)
+
+running 2 tests
+test tests::state_increment_updates_counter ... ok
+test tests::catalogue_json_includes_input_channels ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests semio_s_plugin_imperative_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+exit=0

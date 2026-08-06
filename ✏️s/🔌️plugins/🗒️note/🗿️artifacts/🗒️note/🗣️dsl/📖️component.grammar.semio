@@ -3,4 +3,8 @@ grammar note
 extension note
 use family-scene
 start document
-document = TEXT*
+
+document = block*
+block = IDENT "@" FLOAT FLOAT layer-body?
+layer-body = "{" line* "}"
+line = TEXT

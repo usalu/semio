@@ -17,76 +17,21 @@ import { type IconName } from "@semio-tech/assets";
 // reactHostPort.createContext/.useState at module top level, which requires a non-circular import (see
 // 🧱️elements/🫀️core/Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../🫀️core/Ports/🟦️component.tsx";
-// 🚧️W3-interim: these still live in the ui-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ or 🧱️elements/🫀️core/ dirs) — W3 rewires this import per-symbol as each
-// dependency's own element/core file lands. Do not import the barrel from any OTHER new leaf file
-// without the same marker; grep for `🚧️W3-interim` must be empty before W6 closes.
-import {
-  useLabel,
-  Icon,
-  cn,
-  Label,
-  useFlow,
-  FlowProvider,
-  type FlowBlock,
-  type FlowInline,
-  ContextMenu,
-  type ContextMenuItem,
-  type ElementProps,
-  DragHandle,
-  type UiLabel,
-  uiDataLabel,
-  resolveTranslationLabel,
-  useIdLabel,
-  useUiTranslation,
-  useShellScopeOptional,
-  usePanelGhost,
-  useUiDriverDragSurface,
-  useControlAccessibleLabel,
-  useControlInlineText,
-  renderControlIcon,
-  type ControlIcon,
-  TREE_SECTION_REORDER_MIME,
-  borderNormalClass,
-  dropZoneReadyFillClass,
-  dropZoneReadyTextClass,
-  interactiveActiveFillClass,
-  interactiveControlTransitionClass,
-  loadingBorderStateClass,
-  waitingBorderStateClass,
-  panelTabIconSlotClass,
-  panelTabLabelClass,
-  surfaceClass,
-  windowMeasureTreeGroupLabelClass,
-  windowMeasureTreeLeafLabelClass,
-  windowPaneChromeToggleClass,
-  CheckIcon,
-  ChevronDownIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronUpIcon,
-  CloseIcon,
-  DocumentIcon,
-  FolderIcon,
-  Action,
-  Button,
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Slider,
-  Stepper,
-  Textarea,
-  Toggle,
-  childElementId,
-  hoverExcludingHandleTextEmphasizedClass,
-  groupHoverExcludingHandleBgFillClass,
-} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { cn } from "../🫀️core/ClassNames/🟦️component.tsx";
+import { type UiLabel, uiDataLabel } from "../🫀️core/UiLabel/🟦️component.tsx";
+import { Action } from "../ActionGroup/🟦️component.tsx";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../Collapsible/🟦️component.tsx";
+import { Input } from "../Input/🟦️component.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../Select/🟦️component.tsx";
+import { Slider } from "../Slider/🟦️component.tsx";
+import { Stepper } from "../Stepper/🟦️component.tsx";
+import { Textarea } from "../Textarea/🟦️component.tsx";
+import { Toggle } from "../ToggleGroup/🟦️component.tsx";
+import { childElementId } from "../🫀️core/ElementId/🟦️component.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { borderNormalClass, dropZoneReadyFillClass, dropZoneReadyTextClass, interactiveActiveFillClass, interactiveControlTransitionClass, loadingBorderStateClass, waitingBorderStateClass, panelTabIconSlotClass, panelTabLabelClass, surfaceClass, windowMeasureTreeGroupLabelClass, windowMeasureTreeLeafLabelClass, windowPaneChromeToggleClass, hoverExcludingHandleTextEmphasizedClass, groupHoverExcludingHandleBgFillClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { useLabel, Icon, Label, useFlow, FlowProvider, type FlowBlock, type FlowInline, ContextMenu, type ContextMenuItem, type ElementProps, DragHandle, resolveTranslationLabel, useIdLabel, useUiTranslation, useShellScopeOptional, usePanelGhost, useUiDriverDragSurface, useControlAccessibleLabel, useControlInlineText, renderControlIcon, type ControlIcon, TREE_SECTION_REORDER_MIME, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, CloseIcon, DocumentIcon, FolderIcon, Button } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
 // #region 📜️Tree

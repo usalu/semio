@@ -26,7 +26,7 @@ infinite_world = { path = "../../../../../../♾️infinite/⚡️implementation
 # 🎬️ Direct dependency (rather than reaching through `infinite_world`, which imports these privately)
 # so the Tutorial track's camera keyframes can convert to/from `OrbitController`/`Camera3d` — see
 # `//#region 🎬️Tutorial` in lib.rs.
-kernel_3d_scene = { path = "../../../../../../../../../../✏️s/🔨️modules/🧊️3d/🎬️scene/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-scene" }
+semio-s-3d = { path = "../../../../../../../../../../✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 framework_surface_tiled_map = { path = "../../../../../../../../../🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-surface-tiled-map" }
 puzzle = { path = "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle" }
 flow_core = { path = "../../../../../../🌊️flow/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-flow-core" }

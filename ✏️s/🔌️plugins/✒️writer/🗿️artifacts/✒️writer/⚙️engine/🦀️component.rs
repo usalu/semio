@@ -9,87 +9,189 @@
 //! more than one consumer across the taxonomy tree lives here; one with exactly one consumer lives in
 //! that consumer's own component file.
 
-mod grammar {
-    //#region 🔖️Grammar
-    //! 🎨️ Lightweight grammar tokenization for writer program scenes.
-
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct GrammarToken {
-        pub class: String,
-        pub start: usize,
-        pub end: usize,
-    }
-
-    #[derive(Clone, Debug)]
-    struct GrammarRule {
-        pattern: regex::Regex,
-        class: &'static str,
-    }
-
-    fn jack_rules() -> Vec<GrammarRule> {
-        vec![
-            GrammarRule { pattern: regex::Regex::new(r"(?i)\b(MATCH|WHERE|RETURN|CREATE|DELETE|SET|MERGE|AND|OR)\b").expect("jack keyword"), class: "keyword" },
-            GrammarRule { pattern: regex::Regex::new(r#"'[^']*'|"[^"]*""#).expect("jack string"), class: "string" },
-            GrammarRule { pattern: regex::Regex::new(r"\b\d+(?:\.\d+)?\b").expect("jack number"), class: "number" },
-            GrammarRule { pattern: regex::Regex::new(r"->|!=|[:=.,\[\]()-]").expect("jack operator"), class: "operator" },
-            GrammarRule { pattern: regex::Regex::new(r"\b[A-Za-z_][A-Za-z0-9_]*\b").expect("jack ident"), class: "ident" },
-        ]
-    }
-
-    fn wire_rules() -> Vec<GrammarRule> {
-        vec![
-            GrammarRule { pattern: regex::Regex::new(r"->").expect("wire keyword"), class: "keyword" },
-            GrammarRule { pattern: regex::Regex::new(r#"'[^']*'|"[^"]*""#).expect("wire string"), class: "string" },
-            GrammarRule { pattern: regex::Regex::new(r"\b\d+(?:\.\d+)?\b").expect("wire number"), class: "number" },
-            GrammarRule { pattern: regex::Regex::new(r"[:@{}.,\[\]-]").expect("wire operator"), class: "operator" },
-            GrammarRule { pattern: regex::Regex::new(r"\b[A-Za-z_][A-Za-z0-9_.-]*\b").expect("wire ident"), class: "ident" },
-        ]
-    }
-
-    /** @emoji 🎨️ Tokenizes source text for a supported writer language id. */
-    pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
-        let rules = match language_id {
-            "jack" => jack_rules(),
-            "wire" => wire_rules(),
-            _ => return Vec::new(),
-        };
-        let mut occupied = vec![false; text.len()];
-        let mut tokens = Vec::new();
-        for rule in rules {
-            for capture in rule.pattern.find_iter(text) {
-                let start = capture.start();
-                let end = capture.end();
-                if occupied[start..end].iter().any(|filled| *filled) {
-                    continue;
-                }
-                for slot in &mut occupied[start..end] {
-                    *slot = true;
-                }
-                tokens.push(GrammarToken { class: rule.class.into(), start, end });
-            }
-        }
-        tokens.sort_by_key(|token| (token.start, std::cmp::Reverse(token.end)));
-        tokens
-    }
-    //#endregion 🔖️Grammar
-}
-
-pub use grammar::{tokenize_language, GrammarToken};
-
-use crate::artifacts::writer::{WriterProjection, WRITER_DOCUMENT_SCHEMA};
+use super::{WriterProjection, WRITER_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+
+//#region 🔖️GrammarToken
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GrammarToken {
+    pub class: String,
+    pub start: usize,
+    pub end: usize,
+}
+//#endregion 🔖️GrammarToken
 
 //#region 🔖️Register
 /// 🗂️ Registers `WriterProjection`'s pack↔dsl codec under `WRITER_DOCUMENT_SCHEMA` so `framework/sync`'s
 /// folder endpoints and any other schema-string-keyed caller can print/parse writer documents. Called
 /// from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    register_writer_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::writer::WriterPlayApp>(WRITER_DOCUMENT_SCHEMA);
 }
+
+//#region 🔖️Languages
+fn byte_span_to_text_span(text: &str, start: usize, end: usize) -> dsl::TextSpan {
+    let safe_end = end.min(text.len());
+    let safe_start = start.min(safe_end);
+    let prefix = &text[..safe_start];
+    let line = prefix.chars().filter(|&c| c == '\n').count() as u32 + 1;
+    let column = prefix.rfind('\n').map(|i| safe_start - i).unwrap_or(safe_start) as u32;
+    let length = (safe_end - safe_start) as u32;
+    dsl::TextSpan::with_length(line, column, length.max(1))
+}
+
+fn token_class_from_name(name: &str) -> dsl::TokenClass {
+    match name {
+        "keyword" => dsl::TokenClass::Keyword,
+        "string" => dsl::TokenClass::String,
+        "number" => dsl::TokenClass::Number,
+        "operator" => dsl::TokenClass::Operator,
+        "comment" => dsl::TokenClass::Comment,
+        "error" => dsl::TokenClass::Error,
+        _ => dsl::TokenClass::Ident,
+    }
+}
+
+struct JackWriterIdiom;
+
+impl dsl::DslIdiom for JackWriterIdiom {
+    const LANG: &'static str = "jack";
+    type Ast = String;
+
+    fn parse(text: &str) -> Result<Self::Ast, dsl::TextError> {
+        trinity::core::format(text).map_err(|e| dsl::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+    }
+
+    fn print(ast: &Self::Ast) -> String {
+        ast.clone()
+    }
+
+    fn classify(text: &str) -> Vec<(dsl::TokenClass, dsl::TextSpan)> {
+        trinity::core::semantic_tokens(text)
+            .into_iter()
+            .map(|t| (token_class_from_name(&t.class), byte_span_to_text_span(text, t.start, t.end)))
+            .collect()
+    }
+
+    fn complete(text: &str, offset: usize) -> Vec<dsl::CompletionItem> {
+        let graph = trinity::core::example_graph();
+        trinity::core::complete(&graph, text, offset)
+            .into_iter()
+            .map(|item| dsl::CompletionItem { label: item.label, detail: item.detail })
+            .collect()
+    }
+}
+
+struct WireWriterIdiom;
+
+impl dsl::DslIdiom for WireWriterIdiom {
+    const LANG: &'static str = "wire";
+    type Ast = String;
+
+    fn parse(text: &str) -> Result<Self::Ast, dsl::TextError> {
+        dsl::parse_wire_text(text.trim())?;
+        Ok(text.to_string())
+    }
+
+    fn print(ast: &Self::Ast) -> String {
+        ast.clone()
+    }
+
+    fn classify(text: &str) -> Vec<(dsl::TokenClass, dsl::TextSpan)> {
+        let limits = dsl::Limits::default();
+        let Ok(tokens) = dsl::lex(text, &limits, false) else {
+            return Vec::new();
+        };
+        tokens
+            .into_iter()
+            .filter(|t| !t.kind.is_trivia() && t.kind != dsl::TokenKind::Eof)
+            .map(|t| {
+                let class = match t.kind {
+                    dsl::TokenKind::Arrow | dsl::TokenKind::DashArrow | dsl::TokenKind::EdgeArrow | dsl::TokenKind::BackArrow => dsl::TokenClass::Operator,
+                    dsl::TokenKind::Float | dsl::TokenKind::Int => dsl::TokenClass::Number,
+                    dsl::TokenKind::Text => dsl::TokenClass::String,
+                    dsl::TokenKind::Ident => dsl::TokenClass::Ident,
+                    _ => dsl::TokenClass::Punctuation,
+                };
+                let start = t.byte_range.0 as usize;
+                let end = t.byte_range.1 as usize;
+                (class, byte_span_to_text_span(text, start, end))
+            })
+            .collect()
+    }
+}
+
+fn register_writer_languages() {
+    dsl::register_idiom(dsl::hooks_for::<JackWriterIdiom>());
+    dsl::register_idiom(dsl::hooks_for::<WireWriterIdiom>());
+    let jack_hooks = dsl::hooks_for::<JackWriterIdiom>();
+    dsl::register_language(dsl::LanguageSpec {
+        id: "jack",
+        extension: None,
+        role: dsl::LanguageRole::Embedded,
+        grammar: None,
+        grammar_path: None,
+        hooks: jack_hooks,
+    });
+}
+
+/// @emoji 🎨️ Classifies `text` through the language registry (`idiom` / `LanguageSpec` hooks).
+pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
+    if language_id == "jack" {
+        return trinity::core::semantic_tokens(text)
+            .into_iter()
+            .map(|t| GrammarToken { class: t.class, start: t.start, end: t.end })
+            .collect();
+    }
+    if language_id == "wire" {
+        let limits = dsl::Limits::default();
+        if let Ok(tokens) = dsl::lex(text, &limits, false) {
+            return tokens
+                .into_iter()
+                .filter(|t| !t.kind.is_trivia() && t.kind != dsl::TokenKind::Eof)
+                .map(|t| {
+                    let class = match t.kind {
+                        dsl::TokenKind::Arrow | dsl::TokenKind::DashArrow | dsl::TokenKind::EdgeArrow | dsl::TokenKind::BackArrow => "operator",
+                        dsl::TokenKind::Float | dsl::TokenKind::Int => "number",
+                        dsl::TokenKind::Text => "string",
+                        dsl::TokenKind::Ident => "ident",
+                        _ => "punctuation",
+                    };
+                    GrammarToken { class: class.into(), start: t.byte_range.0 as usize, end: t.byte_range.1 as usize }
+                })
+                .collect();
+        }
+    }
+    if let Some(hooks) = dsl::idiom(language_id) {
+        return (hooks.classify)(text)
+            .into_iter()
+            .enumerate()
+            .map(|(i, (class, _span))| GrammarToken {
+                class: format!("{class:?}").trim_start_matches("TokenClass::").to_ascii_lowercase(),
+                start: i,
+                end: i.saturating_add(1).min(text.len()),
+            })
+            .collect();
+    }
+    Vec::new()
+}
+
+/// @emoji 📡️ Semantic token payload for the text editor scene (LSP `data` array or grammar tokens).
+pub fn language_tokens_json(document: &WriterProjection) -> Option<String> {
+    if let Some(spec) = dsl::language(&document.language_id) {
+        let session = dsl_lsp::LanguageSession::open(spec, document.text.clone());
+        return serde_json::to_string(&session.semantic_tokens_lsp()).ok();
+    }
+    if dsl::idiom(&document.language_id).is_some() {
+        let tokens = tokenize_language(&document.text, &document.language_id);
+        return serde_json::to_string(&tokens).ok();
+    }
+    None
+}
+//#endregion 🔖️Languages
 //#endregion 🔖️Register
 
 //#region 🔖️Io
@@ -630,9 +732,11 @@ pub fn apply_jack_rename(text: &str, occurrences: &[(usize, usize)], new_name: &
 }
 
 pub fn jack_completions_json(text: &str, cursor: usize) -> Option<String> {
-    let graph = trinity::core::example_graph();
-    let items: Vec<Value> = trinity::core::complete(&graph, text, cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
-    serde_json::to_string(&items).ok()
+    if let Some(hooks) = dsl::idiom("jack") {
+        let items: Vec<Value> = (hooks.complete)(text, cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
+        return serde_json::to_string(&items).ok();
+    }
+    None
 }
 
 /// 🪞️ Canonical jack format when possible, else a whitespace-only normalization for other languages.

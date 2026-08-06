@@ -3,4 +3,11 @@ grammar dag
 extension dag
 use family-graph
 start document
-document = TEXT*
+
+document = {node | edge}*
+node = IDENT {":" IDENT}? {"@" IDENT}?
+edge = node edge-arrow node props?
+edge-arrow = ARROW | DASHARROW | EDGEARROW | "-" edge-label ARROW | "-" edge-label "-"
+edge-label = IDENT {":" IDENT}?
+props = "{" prop* "}"
+prop = IDENT "=" TEXT

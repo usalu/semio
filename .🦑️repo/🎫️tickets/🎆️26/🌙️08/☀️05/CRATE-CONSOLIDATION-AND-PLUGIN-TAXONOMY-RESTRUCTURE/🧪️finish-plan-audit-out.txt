@@ -1,0 +1,81 @@
+=== WAVE CHECKBOXES ===
+## Wave status
+- [x] W0 — mechanism preparation (7 parallel agents, all closed their own tickets: REGISTRY-DISCOVERY-CONTRACT-TOLERANCE-AND-RUST-TWIN-COLLAPSE, ROOT-SCRIPT-POLICY-REVIVAL-AND-TAXONOMY-LINT-PREP, LAUNCH-JSON-GENERATOR-FROM-PLAYGROUND-REGIST
+- [x] W1 — pilot: 🌊️flow. Ticket `26/08/05/FLOW-PLUGIN-PILOT-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION` (closed). 8 old crates -> `semio-s-plugin-flow` at `✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust`. 83/83 tests pass (baseline 44 pres
+- [x] W2 batch 1 (8 plugins): 🌀️procedural, 📐️cad(opus), 🪵️sourcing, 🎞️animate, 🎥️shooting, 🎬️sequence, 🌿️vcs, ✒️writer — all migrated, tickets closed, registrar step done (root Cargo.toml member+workspace.dependencies swap for all 8
+- [x] 🗒️note — closed, registrar-processed (spicy-umbrella session). 63/63 tests, wire byte-identical (41-variant `NoteCommand` baseline), clippy clean, wasm32-wasip2 clean. **Note on process**: this ticket briefly collided with an agent f
+- [x] 🕸️dag — closed on disk (old crates deleted, new crate `semio-s-plugin-dag` complete), registrar-processed by the spicy-umbrella session; **ticket_close notification hadn't landed yet when the registrar pass ran** — if you see this pl
+- [x] ➗️mathematical — closed on disk (old 8 crates deleted, `semio-s-plugin-mathematical` complete), registrar-processed by the spicy-umbrella session (member swap 8→1, `[workspace.dependencies]` alias removed). Its own temporary `[workspa
+- [x] 📖️playbook — closed, registrar-processed (spicy-umbrella session). 50/50 tests, wire byte-identical, clippy clean, wasm32-wasip2 clean. Old bundle used a manual `PluginBundle` builder (not `semio_plugin!`) — migrated to the macro, pr
+- [x] 🧱️block — closed, registrar-processed (spicy-umbrella session). 3-app plugin (◻2d/🧊️3d/🖐️5d), each with its OWN artifact (verified by reading code, not guessed — 3 genuinely separate document schemas) plus a non-constitutional `🫀️
+- [x] 🖨️raster — closed, registrar-processed (spicy-umbrella session). The migrating agent hit the Xcode-license blocker mid-verification and correctly left old crates in place rather than fabricate a pass. Once the `DEVELOPER_DIR` workaro
+- [x] 🪐️space — **DONE, registrar-processed (originating session, 2026-08-05, ~23:45)**, now that the flow_dag bug is fixed. Re-ran the full verification for real: 85/85 tests pass, native check clean, wasm32-wasip2 clean, clippy clean. Ol
+- [x] ~~🪐️space — real bugs (79 errors) found and fixed by a dispatched fix-forward agent (root cause: missing `#[dsl(keyword=...)]` on command payloads, private label structs, missing trait imports — see prior note, superseded here). Agen
+- [x] 🔋️energy — closed, registrar-processed (spicy-umbrella session). Not a play-app: pure headless BEM compute library, no document/projection/Command/DSL/pack/protocol/UI — `semio_plugin!` doesn't apply. Old crate `semio-s-plugin-energy
+- [x] **ALL plugins done, including 🎪️demonstrator (2026-08-06 ~03:00)** — every plugin in `✏️s/🔌️plugins/` (38 crates per the registry catalog) is now one crate in the new taxonomy: 📕️norm, 📸️remodel, 🏛️architect, 🔱️trinity, 🧱️block
+- [ ] W4 (spicy-umbrella numbering) — mechanism wave M1–M12: shared taxonomy vocabulary + discovery contract, nx plugin v2, registry/root-policy refactors extended beyond plugins, generated bun workspaces/storybook/launch freshness, dep-cru
+- [ ] W6 — residual mop-up for already-migrated plugins' leftover `🔨️modules` TS packages + `🧩️extensions` (writer, vcs, shooting, sequence, animate, cad, sourcing, flow, procedural all have some).
+- [ ] W7 — ✏️s/🔨️modules kernels 9→4 (semio-s-2d/3d/mindmap/imperative).
+- [ ] W8 — framework/os/hub/repo-product(Go split)/print/mit-bestand consolidation (~61 rust crates, ~26 npm packages end state).
+- [ ] W9–W11 — periphery sweeps, finalization flip (delete legacy code paths, promote warn→error, zero-⚡️implementations tripwire), full verification matrix.
+
+=== IMPLEMENTATIONS REMAINING ===
+ 91 product:💻️os/🔨️modules
+ 52 fw-mod:🧮️math
+ 17 plugin:🏗️fem
+  8 product:🦑️repo/🔨️modules
+  6 fw-mod:📚️compiler
+  5 fw-mod:🗺️surface
+  5 s-module:🧊️3d
+  5 plugin:📜️imperative
+  1 fw-mod:🖼️assets
+  1 fw-mod:#⃣hash
+  1 fw-mod:🧬️schema
+  1 fw-mod:✍️editor
+  1 other:🧰️framework/⚡️implementations
+  1 product:💻️os/⚡️implementations
+  1 product:📓️print/⚡️implementations
+  1 s-module:💭️mindmap
+  1 plugin:🏭️process
+  1 plugin:📖️playbook
+  1 mit:📋️bericht/⚡️implementation
+  1 mit:🎤️präsentation/📅️33.projektetage
+TOTAL 201
+
+=== KEY FILES ===
+taxonomy.json [ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🔣️taxonomy.json" ]
+discovery.ts [ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🟦️discovery.ts" ]
+TEMPLATE.md []
+TEMPLATE-GO.md []
+TEMPLATE-TS.md []
+TEMPLATE-FAMILY.md []
+TEMPLATE-EXT.md []
+
+=== OPEN RELATED TICKETS ===
+OPEN ☀️05/COMPILER-MODULE-CALL-SITE-SWAP-AND-TYPST-EVICTION
+OPEN ☀️05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE
+OPEN ☀️05/REASONING-PLUGIN-SHAPE-V2-TREE-PURITY-RETROFIT
+OPEN ☀️05/SPACE-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION
+OPEN ☀️05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION
+OPEN ☀️05/WRITER-PLUGIN-SHAPE-V2-TREE-PURITY-RETROFIT
+OPEN ☀️05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE
+OPEN ☀️05/RASTER-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION
+OPEN ☀️05/CONVERGING-FLOW-EVALUATION-AND-EXPLICIT-NODE-STATUS
+OPEN ☀️04/FIX-STALE-DELETE-SELECTION-ACTION-ASSERTION-IN-TRINITY-JACK-TEST
+OPEN ☀️04/UNIFY-SPACE-COLLECTION-ARTIFACT-WORKFLOW-ARCHITECTURE
+74 | console.log("\n=== OPEN RELATED TICKETS ===");
+75 | for (const m of readdirSync(base)) {
+76 |   if (!m.includes("08")) continue;
+77 |   for (const d of readdirSync(join(base, m))) {
+78 |     for (const t of readdirSync(join(base, m, d))) {
+79 |       const j = JSON.parse(readFileSync(join(base, m, d, t, "🎫️ticket.json"), "utf8"));
+                                ^
+ENOENT: no such file or directory, open '.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️04/COMPILER-MODULE-SNIPPET-PIPELINE-FONTS-TEXT-MATH-LAYOUT-SVG/🎫️ticket.json'
+    path: ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️04/COMPILER-MODULE-SNIPPET-PIPELINE-FONTS-TEXT-MATH-LAYOUT-SVG/🎫️ticket.json",
+ syscall: "open",
+   errno: -2,
+    code: "ENOENT"
+
+      at /Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE/🔍️finish-plan-audit.mjs:79:28
+
+Bun v1.3.14 (macOS arm64)

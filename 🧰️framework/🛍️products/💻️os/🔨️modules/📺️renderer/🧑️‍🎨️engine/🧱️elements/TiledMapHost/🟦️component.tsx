@@ -28,11 +28,8 @@ import {
   type IconName,
 } from "@semio-tech/ui-react";
 import { type ComponentSceneHostProps } from "@semio-tech/framework-core";
-// 🚧️W4-interim: these still live in the framework-renderer-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ dir) — a later wave rewires this import per-symbol as each dependency's own
-// element file lands. Do not import the barrel from any OTHER new leaf file without the same marker;
-// grep for `🚧️W4-interim` must be empty before this wave's closing batch.
-import { type MapWasmSession, createMapSession, createDemandFrameScheduler, useMapContextMenuSpecs } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { type MapWasmSession, createMapSession, createDemandFrameScheduler } from "../WasmSessionLoader/🟦️component.tsx";
+import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 // 🐢️ Direct element-to-element imports — `World3dHost`/`Interpreter` already landed in a prior batch.
 import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
 import { useShellContextMenuFallback, openSurfaceContextMenu } from "../Interpreter/🟦️component.tsx";

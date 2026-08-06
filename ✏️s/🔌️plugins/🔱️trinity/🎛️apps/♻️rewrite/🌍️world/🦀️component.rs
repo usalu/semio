@@ -753,7 +753,7 @@ mod wasm_session {
     impl TrinitySession {
         #[wasm_bindgen(constructor)]
         pub fn new() -> Self {
-            let dsl = include_str!("../../🗿️artifacts/🔌️jack/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.trinity.jack.dsl.semio");
+            let dsl = include_str!("../../../🗿️artifacts/🔌️jack/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.trinity.jack.dsl.semio");
             let host = GraphFixture::parse_dsl(dsl).ok().and_then(|fixture| Graph::from_fixture(fixture).ok()).map(|g| TrinityHost::from_graph(&g)).unwrap_or_else(|| {
                 let empty =
                     GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "empty".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None };
@@ -963,7 +963,7 @@ mod tests {
     use store::DocumentDsl;
 
     fn nakagin_graph() -> Graph {
-        let dsl = include_str!("../../🗿️artifacts/🔌️jack/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.trinity.jack.dsl.semio");
+        let dsl = include_str!("../../../🗿️artifacts/🔌️jack/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.trinity.jack.dsl.semio");
         let mut g = Graph::from_fixture(GraphFixture::parse_dsl(dsl).unwrap()).unwrap();
         g.recompute_derived();
         g

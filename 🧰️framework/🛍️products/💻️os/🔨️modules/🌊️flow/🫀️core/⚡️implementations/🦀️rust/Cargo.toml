@@ -41,7 +41,6 @@ flow_extension_logic = { path = "../../../../../../../../🧰️framework/🛍�
 flow_extension_math = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/🧮️math", default-features = false, package = "semio-s-kernel-flow-extension-math" }
 flow_extension_text = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/📝️text", default-features = false, package = "semio-s-kernel-flow-extension-text" }
 flow_extension_sdk = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/🕸️wasm", package = "semio-s-kernel-flow-extension-wasm" }
-kernel_3d_engine = { path = "../../../../../../../../✏️s/🔨️modules/🧊️3d/📐️brep/⚙️engine/⚡️implementations/🦀️rust", features = ["parallel"], package = "semio-framework-os-kernel-3d-brep-engine" }
 semio-framework-core = { path = "../../../../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
 neural_engine = { path = "../../../../🧠️neural/⚙️engine/⚡️implementations/🦀️rust", features = ["parallel"], package = "semio-framework-os-kernel-neural-engine" }
 neural_dag = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚡️implementations/🦀️rust/🕸️dag", package = "semio-framework-kernel-neural-dag" }

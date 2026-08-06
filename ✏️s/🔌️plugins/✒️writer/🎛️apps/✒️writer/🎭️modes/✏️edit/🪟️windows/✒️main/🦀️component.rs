@@ -4,11 +4,11 @@ use crate::apps::writer::config::WriterConfig;
 use crate::apps::writer::modes::edit::windows::main::options;
 use crate::apps::writer::terminology::WriterPlayLabels;
 use crate::apps::writer::editor_hover_context;
-use crate::artifacts::writer::engine::{jack_completions_json, jack_editor_placeholders, jack_newline_gate_offsets, jack_symbol_at_offset, selectable_spans_for_jack, tokenize_language, JackSymbolKind};
+use crate::artifacts::writer::engine::{jack_completions_json, jack_editor_placeholders, jack_newline_gate_offsets, jack_symbol_at_offset, language_tokens_json, selectable_spans_for_jack, tokenize_language, JackSymbolKind};
 use crate::artifacts::writer::WriterProjection;
 use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 use serde_json::{json, Value};
-use trinity::core::{example_graph, lint, semantic_tokens, Diagnostic};
+use trinity::core::{example_graph, lint, Diagnostic};
 
 //#region 🔖️Constants
 pub const WRITER_PLAY_WINDOW_KIND: &str = "writer-main";
@@ -52,7 +52,8 @@ pub fn render(document: &WriterProjection, config: &WriterConfig) -> UiNode {
     let selection_json = Some(json!({ "start": selection.start, "end": selection.end }).to_string());
 
     let grammar_tokens = tokenize_language(&document.text, &document.language_id);
-    let tokens_json = if is_jack { serde_json::to_string(&semantic_tokens(&document.text)).ok() } else { serde_json::to_string(&grammar_tokens).ok() };
+    let tokens_json = language_tokens_json(document).or_else(|| serde_json::to_string(&grammar_tokens).ok());
+    eprintln!("[DEBUG] writer.main tokens_json={}", tokens_json.as_deref().unwrap_or("none"));
 
     let diagnostics_json = if is_jack {
         let graph = example_graph();

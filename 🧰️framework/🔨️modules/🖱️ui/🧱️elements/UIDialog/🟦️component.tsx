@@ -8,11 +8,12 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { effectiveActionArgs, missingRequiredArgs, type ActionArgDef, type DialogDefinition } from "@semio-tech/framework-core";
-// 🚧️W3-interim: these still live in the ui-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ or 🧱️elements/🫀️core/ dirs) — W3 rewires this import per-symbol as each
-// dependency's own element/core file lands. Do not import the barrel from any OTHER new leaf file
-// without the same marker; grep for `🚧️W3-interim` must be empty before W6 closes.
-import { cn, reactHostPort, useControlKeybinding, useLabel, veilClass, GLASS_OVERLAY_BOX_CLASS, Surface, Button } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { cn } from "../🫀️core/ClassNames/🟦️component.tsx";
+import { reactHostPort } from "../🫀️core/Ports/🟦️component.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { veilClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { useControlKeybinding, useLabel, GLASS_OVERLAY_BOX_CLASS, Surface, Button } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🗨️Dialog

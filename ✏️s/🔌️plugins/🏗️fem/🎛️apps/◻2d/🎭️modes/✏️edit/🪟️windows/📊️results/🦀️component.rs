@@ -6,7 +6,7 @@ use crate::apps::fem2d::modes::edit::windows::model::{
 };
 use crate::artifacts::fem2d::{element_id, Fem2dDocument, FemCamera};
 use crate::core::shared::{hex_to_rgb01, normalize_mode_shape, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO, VON_MISES_BANDS};
-use crate::core::{Dof, ElementResult};
+use crate::core::ElementResult;
 use semio_framework_plugin::{build_canvas_2d_scene, ui_text, Canvas2dScene, Label, UiNode};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -301,7 +301,7 @@ mod tests {
     fn results_window_buckling_with_no_load_case_shows_placeholder_2d() {
         let doc = crate::artifacts::fem2d::engine::empty_fem2d_projection();
         let display = ResultDisplay { source_id: None, mode: DisplayMode::Buckling(0) };
-        let camera = crate::artifacts::fem2d::FemCamera::default();
+        let camera = FemCamera::default();
         let json = serde_json::to_string(&render(&doc, &display, &camera)).unwrap();
         assert!(json.contains("No load case defined"), "{json}");
     }

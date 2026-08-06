@@ -181,17 +181,8 @@ import {
   registerPendingWorldProjection,
   type WorldInstanceRecord,
 } from "../World3dHost/🟦️component.tsx";
-// 🚧️W4-interim: these still live in the framework-renderer-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ dir) — a later wave rewires this import per-symbol as each dependency's own
-// element file lands. Do not import the barrel from any OTHER new leaf file without the same marker;
-// grep for `🚧️W4-interim` must be empty before this wave's closing batch.
-import {
-  groupUtilityNodesByCategory,
-  loadPluginModule,
-  type PluginWasmHandle,
-  UTILITY_CATEGORIES,
-  UtilityTree,
-} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { groupUtilityNodesByCategory, UTILITY_CATEGORIES, UtilityTree } from "../UtilityTree/🟦️component.tsx";
+import { loadPluginModule, type PluginWasmHandle } from "../PluginRuntime/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 //#region ShellHelpers
@@ -273,7 +264,7 @@ export function buildNoteShellCommandAction(controllerId: string, commandId: str
  * dispatched. Exported so it's independently testable. */
 export const TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS: ReadonlySet<string> = new Set([NOTE_WORLD_NAVIGATION_ACTION_ID, NOTE_SHELL_COMMAND_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, RECORD_TUTORIAL_ACTION_ID]);
 
-const PRESENCE_CLIENT_STORAGE_KEY = "semio.presence.client";
+export const PRESENCE_CLIENT_STORAGE_KEY = "semio.presence.client";
 const PRESENCE_HEARTBEAT_INTERVAL_MS = 5000;
 
 function presenceIdentityPackBase64(identity: { readonly clientId: string; readonly name: string }): string {
@@ -1745,7 +1736,7 @@ function resolvePanelTabLabel(overlay: PluginAppLabelsOverlay, tabId: string, fa
 }
 
 /** @emoji 🗣️ Stable empty overlay reference so components depending on it don't re-render before the first `appLabels` fetch resolves. */
-const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = {
+export const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = {
   windowKindLabels: {},
   panelTabLabels: {},
   modeLabels: {},

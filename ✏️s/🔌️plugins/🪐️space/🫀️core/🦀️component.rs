@@ -11,7 +11,7 @@ pub const DEMO_STUDIO_NAME: &str = "Demo Studio";
 /// 📜️ the demo studio is handcrafted `.s` DSL text (a `WorkflowDocument`, see `🔖️DocumentHelpers` —
 /// the dissolved `OsProjection`'s successor), not JSON — it is compiled into the binary, so a parse
 /// failure here is a bug in the bundled fixture.
-pub const DEMO_STUDIO_DSL: &str = include_str!("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.space.studio.dsl.semio");
+pub const DEMO_STUDIO_DSL: &str = include_str!("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.space.studio.dsl.semio");
 //#endregion 🔖️Constants
 
 //#region 🔖️DocumentHelpers

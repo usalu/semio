@@ -10,11 +10,7 @@ import { type ComponentSceneHostProps } from "@semio-tech/framework-core";
 import { cn, ContextMenuController, useLabel, type ContextMenuItem } from "@semio-tech/ui-react";
 import { openSurfaceContextMenu, useShellContextMenuFallback } from "../Interpreter/🟦️component.tsx";
 import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
-// 🚧️W4-interim: these still live in the framework-renderer-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ dir) — a later wave rewires this import per-symbol as each dependency's own
-// element file lands. Do not import the barrel from any OTHER new leaf file without the same marker;
-// grep for `🚧️W4-interim` must be empty before this wave's closing batch.
-import { useMapContextMenuSpecs } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️DiffViewHost

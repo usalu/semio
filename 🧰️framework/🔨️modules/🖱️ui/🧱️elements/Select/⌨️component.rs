@@ -1,13 +1,13 @@
 //! 🔎️ tui key-handling and paint functions for the Select element — extracted from `widget` mod's
 //! inline body (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a crate-root sibling
-//! module of `crate::widget` (see that mod's `use crate::select::{select_on_key, paint_select};`).
+//! module of `crate::tui::widget` (see that mod's `use crate::tui::select::{select_on_key, paint_select};`).
 
-use crate::cell::CellBuffer;
-use crate::event::{Key, KeyEvent};
-use crate::geometry::{Pos, Rect};
-use crate::text::truncate_to;
-use crate::theme::{Role, Surface, Theme};
-use crate::widget::{SelectState, WidgetSignal};
+use crate::tui::cell::CellBuffer;
+use crate::tui::event::{Key, KeyEvent};
+use crate::tui::geometry::{Pos, Rect};
+use crate::tui::text::truncate_to;
+use crate::tui::theme::{Role, Surface, Theme};
+use crate::tui::widget::{SelectState, WidgetSignal};
 
 pub(crate) fn select_on_key(s: &mut SelectState, ev: &KeyEvent) -> Option<WidgetSignal> {
     if s.options.is_empty() {

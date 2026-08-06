@@ -34,10 +34,10 @@ mod tests {
     #[test]
     fn set_locale_action_writes_config_not_document_operations() {
         let mut app = fem2d_app();
-        let before = app.projection().expect("projection").clone();
+        let before = app.projection().expect("projection");
         let result = dispatch(&mut app, Fem2dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));
         assert!(result.operations.is_empty());
-        assert_eq!(app.projection().expect("projection"), &before);
+        assert_eq!(app.projection().expect("projection"), before);
     }
 }
 //#endregion 🧪️Tests

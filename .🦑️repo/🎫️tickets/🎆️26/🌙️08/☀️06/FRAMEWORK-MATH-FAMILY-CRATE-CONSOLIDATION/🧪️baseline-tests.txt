@@ -1,0 +1,2229 @@
+warning: unused variable: `len`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust/../../../🫀️core/⚡️implementations/🦀️rust/📦️lib.rs:1083:21
+     |
+1083 |                 let len = end_j - i;
+     |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-dsl-core` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os-kernel-dsl-core` to apply 1 suggestion)
+warning: function `print_edge_label` is never used
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🖋️notation/⚡️implementations/🦀️rust/../../../🖋️notation/⚡️implementations/🦀️rust/📦️lib.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-dsl-notation` (lib) generated 1 warning
+warning: variable does not need to be mutable
+    --> 🧰️framework/🔨️modules/🧮️math/🎯️sampling/⚡️implementations/🦀️rust/../../../🎯️sampling/⚡️implementations/🦀️rust/📦️lib.rs:9291:13
+     |
+9291 |         let mut empty = MustIncludeConstraint::new(Vec::new());
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-math-sampling` (lib test) generated 1 warning (run `cargo fix --lib -p semio-framework-os-kernel-math-sampling --tests` to apply 1 suggestion)
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust/../../../../🕸️graph/🛂️manifest/⚡️implementations/🦀️rust/📦️lib.rs:562:17
+    |
+562 |         let m = crate::generated::nakagin::nakagin_manifest();
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+562 -         let m = crate::generated::nakagin::nakagin_manifest();
+562 +         let m = nakagin::nakagin_manifest();
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust/../../../../🕸️graph/🛂️manifest/⚡️implementations/🦀️rust/📦️lib.rs:570:17
+    |
+570 |         let m = crate::generated::nakagin::nakagin_manifest();
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+570 -         let m = crate::generated::nakagin::nakagin_manifest();
+570 +         let m = nakagin::nakagin_manifest();
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️modules/🧮️math/🕸️graph/🛂️manifest/⚡️implementations/🦀️rust/../../../../🕸️graph/🛂️manifest/⚡️implementations/🦀️rust/📦️lib.rs:577:17
+    |
+577 |         let m = crate::generated::manifest_by_id("nakagin").expect("nakagin");
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+577 -         let m = crate::generated::manifest_by_id("nakagin").expect("nakagin");
+577 +         let m = manifest_by_id("nakagin").expect("nakagin");
+    |
+
+warning: `semio-framework-os-kernel-math-graph-manifest` (lib test) generated 3 warnings (run `cargo fix --lib -p semio-framework-os-kernel-math-graph-manifest --tests` to apply 3 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 1.47s
+     Running unittests ../../../➕️algebra/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_algebra-7641871886728e05)
+
+running 99 tests
+test exact_tests::bareiss_det_matches_field_det ... ok
+test exact_tests::bareiss_det_over_integer_matches_hand_case ... ok
+test exact_tests::berkowitz_over_modint_matches_brute_force_2x2 ... ok
+test exact_tests::det_matches_cofactor_hand_case ... ok
+test exact_tests::det_of_singular_matrix_is_zero ... ok
+test exact_tests::inverse_of_singular_matrix_is_none ... ok
+test exact_tests::inverse_round_trips_to_identity ... ok
+test exact_tests::lll_recovers_a_short_relation ... ok
+test exact_tests::nullspace_vectors_are_in_kernel ... ok
+test exact_tests::cayley_hamilton_holds_for_3x3 ... ok
+test exact_tests::smith_normal_form_divisibility_chain ... ok
+test exact_tests::quick::bareiss_matches_field_det_on_random_integer_matrices ... ok
+test exact_tests::rank_bareiss_hand_cases_full_and_deficient_rank ... ok
+test exact_tests::rref_and_rank_hand_case ... ok
+test exact_tests::solve_of_singular_system_is_none ... ok
+test tests::algebra_error_display_covers_remaining_variants ... ok
+test exact_tests::solve_matches_hand_solved_system ... ok
+test exact_tests::vecg_basic_ops_match_hand_computation ... ok
+test tests::cholesky_matches_hand_solved_spd_system ... ok
+test tests::csr_spmv_matches_dense_mul_vec ... ok
+test exact_tests::quick::rank_bareiss_matches_field_rank_on_random_integer_matrices ... ok
+test tests::algebra_error_display_is_human_readable ... ok
+test tests::cholesky_rejects_non_positive_definite ... ok
+test tests::conjugate_gradient_matches_hand_solved_system ... ok
+test tests::conjugate_gradient_reports_non_convergence_with_zero_iterations ... ok
+test tests::csr_from_triplets_dedupes_and_sorts ... ok
+test tests::csr_transpose_swaps_rows_and_cols ... ok
+test tests::expm_pade_of_diagonal_matrix_is_elementwise_exp ... ok
+test tests::hessenberg_similarity_orthogonality_and_shape ... ok
+test tests::expm_pade_of_zero_matrix_is_identity ... ok
+test tests::hessenberg_skips_already_zero_subdiagonal_column ... ok
+test tests::hessenberg_rejects_non_square - should panic ... ok
+test tests::jacobi_eigen_rejects_asymmetric_matrix ... ok
+test tests::jacobi_eigen_matches_characteristic_polynomial_roots ... ok
+test tests::jacobi_eigen_diagonal_matrix_returns_sorted_diagonal ... ok
+test tests::jacobi_eigen_reports_non_convergence_with_zero_sweeps ... ok
+test tests::lanczos_extreme_eigen_finds_largest_on_diagonal_matrix ... ok
+test tests::lanczos_extreme_eigen_rejects_non_square ... ok
+test tests::lanczos_extreme_eigen_finds_smallest_on_diagonal_matrix ... ok
+test tests::mat2_apply_matches_matrix_vector_multiply ... ok
+test tests::mat2_det_of_scale_matrix ... ok
+test tests::mat2_eigenvalues_of_diagonal_matrix_are_the_diagonal ... ok
+test tests::mat2_identity_apply_is_noop ... ok
+test tests::mat2_inverse_round_trips ... ok
+test tests::long::conjugate_gradient_converges_on_tridiagonal_system ... ok
+test tests::mat2_rotation_like_matrix_has_complex_eigenvalues ... ok
+test tests::mat2_singular_matrix_has_no_inverse ... ok
+test tests::mat2_transpose_swaps_off_diagonal ... ok
+test tests::mat3d_identity_axes_is_identity ... ok
+test tests::mat4_identity_transforms_point_unchanged ... ok
+test tests::mat4_mul_composes_transforms_in_matrix_order ... ok
+test tests::mat3d_mul_vec3_transforms_basis_vector ... ok
+test tests::mat3d_transpose_is_inverse_for_orthonormal_basis ... ok
+test tests::mat4_from_quat_90_degrees_about_z_rotates_x_to_y ... ok
+test tests::mat4_from_quat_identity_is_identity ... ok
+test tests::mat4_inverse_of_singular_matrix_returns_identity ... ok
+test tests::mat4_inverse_round_trips_translation ... ok
+test tests::mat4_look_at_places_target_along_negative_z ... ok
+test tests::mat4_perspective_maps_near_and_far_planes_to_depth_zero_and_one ... ok
+test tests::mat4_scale_vec_scales_each_axis ... ok
+test tests::long::lanczos_matches_dense_jacobi_on_tridiagonal ... ok
+test tests::mat4_to_cols_array_matches_column_major_layout ... ok
+test tests::mat4_transform_direction_ignores_translation_and_normalizes ... ok
+test tests::matd_add_triple_product_matches_btdb ... ok
+test tests::matd_lu_solve_detects_singular_matrix ... ok
+test tests::matd_lu_solve_matches_hand_solved_system ... ok
+test tests::matd_matmul_identity_is_noop ... ok
+test tests::matd_matmul_skips_zero_entries_and_still_correct ... ok
+test tests::matd_mul_vec_matches_matrix_vector_multiply ... ok
+test tests::matd_transpose_round_trips ... ok
+test tests::qr_householder_reconstructs_and_is_orthogonal ... ok
+test tests::poly_roots_companion_matches_known_complex_conjugate_pairs ... ok
+test tests::poly_roots_companion_rejects_too_short_input ... ok
+test tests::poly_roots_companion_rejects_zero_leading_coefficient ... ok
+test tests::power_iteration_rejects_non_square ... ok
+test tests::poly_roots_companion_matches_known_real_quartic_roots ... ok
+test tests::qr_householder_skips_already_zero_column_segment ... ok
+test tests::power_iteration_finds_dominant_eigenpair ... ok
+test tests::pseudo_inverse_satisfies_penrose_identity ... ok
+test tests::real_schur_recovers_planted_complex_conjugate_pairs ... ok
+test tests::real_schur_rejects_non_square ... ok
+test tests::vec3_array_round_trip ... ok
+test tests::solve_llsq_matches_normal_equations ... ok
+test tests::real_schur_recovers_planted_real_spectrum ... ok
+test tests::svd_nullvector_rejects_matrix_with_zero_columns ... ok
+test tests::svd_nullvector_finds_planted_kernel ... ok
+test tests::svd_reconstructs_tall_random_matrix ... ok
+test tests::svd_reconstructs_wide_random_matrix ... ok
+test tests::solve_llsq_detects_rank_deficient_system ... ok
+test tests::vec3_add_sub_scale_dot_length_match_hand_computation ... ok
+test tests::vec3_cross_is_perpendicular ... ok
+test tests::vec3_normalize_zero_stays_zero ... ok
+test tests::vec3d_cross_is_perpendicular_to_inputs ... ok
+test tests::vecd_add_sub_scale_round_trip ... ok
+test tests::vec3d_sub_and_length_match_hand_computation ... ok
+test tests::vecd_dot_and_norm ... ok
+test tests::weighted_normal_equations_match_hand_assembly ... ok
+test tests::weighted_normal_equations_skips_zero_entries_in_a ... ok
+test exact_tests::quick::random_rational_matrix_inverse_round_trips ... ok
+
+test result: ok. 99 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests ../../../🧮️cas/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_cas-e8bacb6f7314bd6e)
+
+running 138 tests
+test assume::tests::close_propagates_positive_to_real_nonnegative_nonzero ... ok
+test assume::tests::close_propagates_even_to_integer_rational_real ... ok
+test assume::tests::bound_for_deduces_sign_from_assumption_store ... ok
+test canon::tests::mul_by_zero_absorbs ... ok
+test canon::tests::func_special_values_fold ... ok
+test canon::tests::i_power_cycles_with_period_four ... ok
+test canon::tests::mul_nonzero_times_complex_infinity_is_complex_infinity ... ok
+test canon::tests::mul_folds_numeric_literals ... ok
+test canon::tests::add_folds_numeric_literals ... ok
+test canon::tests::mul_zero_times_complex_infinity_is_undefined ... ok
+test canon::tests::add_drops_zero ... ok
+test canon::tests::mul_combines_like_bases ... ok
+test canon::tests::canonicalization_is_idempotent_on_a_small_corpus ... ok
+test canon::tests::pow_integer_folds_exactly ... ok
+test canon::tests::pow_negative_integer_exponent_gives_rational ... ok
+test canon::tests::nested_pow_combines_exponents_for_integer_outer_exponent ... ok
+test canon::tests::add_collects_like_terms ... ok
+test canon::tests::pow_identities ... ok
+test canon::tests::radical_of_prime_stays_symbolic ... ok
+test canon::tests::radical_exact_perfect_power_folds_fully ... ok
+test canon::tests::radical_partial_extraction_matches_plan_example ... ok
+test diff::tests::diff_of_constant_is_zero ... ok
+test diff::tests::bessel_j_recurrence_derivative ... ok
+test diff::tests::chain_rule_sin_of_square ... ok
+test assume::tests::close_rejects_positive_and_negative - should panic ... ok
+test diff::tests::diff_of_other_symbol_is_zero ... ok
+test diff::tests::general_power_logarithmic_differentiation ... ok
+test diff::tests::diff_of_x_is_one ... ok
+test diff::tests::exp_of_x_is_itself ... ok
+test assume::tests::close_rejects_even_and_odd - should panic ... ok
+test diff::tests::gradient_computes_all_partials ... ok
+test diff::tests::ln_derivative ... ok
+test diff::tests::power_rule ... ok
+test diff::tests::product_rule ... ok
+test diff::tests::unknown_function_derivative_is_none ... ok
+test expr::tests::ord_is_consistent_and_total ... ok
+test expr::tests::hash_is_deterministic ... ok
+test expr::tests::structural_equality_ignores_sharing ... ok
+test expr::tests::symbols_with_different_assumptions_are_distinct ... ok
+test fmt::tests::display_negative_term ... ok
+test fmt::tests::display_simple_polynomial ... ok
+test fmt::tests::latex_constant_pi ... ok
+test fmt::tests::latex_fraction_and_power ... ok
+test fnkind::tests::arity_hand_cases ... ok
+test fnkind::tests::name_hand_cases ... ok
+test fmt::tests::display_division ... ok
+test fnkind::tests::parity_hand_cases ... ok
+test integrate::tests::definite_integral_of_power ... ok
+test integrate::tests::integrate_by_parts_x_times_exp ... ok
+test integrate::tests::integrate_u_substitution ... ok
+test integrate::tests::integrate_polynomial_sum ... ok
+test integrate::tests::integrate_irreducible_quadratic_denominator ... ok
+test integrate::tests::integrate_ln_by_parts ... ok
+test integrate::tests::integrate_power_rule ... ok
+test integrate::tests::integrate_reciprocal_gives_ln ... ok
+test integrate::tests::integrate_sin_and_cos ... ok
+test integrate::tests::residue_at_simple_pole ... ok
+test limits::tests::classic_sin_x_over_x_at_zero ... ok
+test limits::tests::direct_substitution_when_defined ... ok
+test limits::tests::polynomial_ratio_at_removable_singularity ... ok
+test limits::tests::limit_at_infinity_of_rational_function ... FAILED
+test limits::tests::one_plus_one_over_n_to_the_n_via_lhopital_on_log_form ... ok
+test matrix::tests::inverse_times_original_is_identity ... ok
+test matrix::tests::det_2x2_hand_case ... ok
+test matrix::tests::cayley_hamilton_holds_for_a_3x3_matrix ... ok
+test matrix::tests::rank_of_numeric_matrix ... ok
+test matrix::tests::det_symbolic_2x2 ... ok
+test integrate::tests::integrate_simple_partial_fraction ... FAILED
+test matrix::tests::charpoly_and_eigenvalues_of_diagonal_matrix ... ok
+test ode::tests::separable_ode_y_prime_equals_x_over_y ... ok
+test matrix::tests::rref_of_numeric_matrix ... ok
+test matrix::tests::singular_matrix_has_no_inverse ... ok
+test matrix::tests::solve_numeric_linear_system ... ok
+test ode::tests::linear_constant_coefficient_complex_roots ... ok
+test ode::tests::bernoulli_ode ... FAILED
+test ode::tests::linear_constant_coefficient_repeated_root ... ok
+test ode::tests::linear_first_order_ode ... FAILED
+test pattern::tests::ac_match_finds_permuted_assignment ... ok
+test ode::tests::linear_constant_coefficient_second_order_distinct_real_roots ... ok
+test pattern::tests::free_of_constraint_rejects_expressions_containing_the_symbol ... ok
+test pattern::tests::pow_exponent_mismatch_fails ... ok
+test polybridge::tests::as_poly_uni_extracts_univariate_polynomial ... ok
+test pattern::tests::rule_rewrites_matching_expression ... ok
+test pattern::tests::ruleset_bottom_up_rewrites_nested_occurrence ... ok
+test pattern::tests::seq_wildcard_absorbs_remaining_terms ... ok
+test pattern::tests::structural_match_on_pow ... ok
+test pattern::tests::wildcard_any_matches_anything ... ok
+test pattern::tests::wildcard_number_rejects_symbols ... ok
+test polybridge::tests::as_poly_uni_fails_for_other_generators ... ok
+test polybridge::tests::as_poly_roundtrips_through_from_poly ... ok
+test polybridge::tests::as_ratfunc_auto_recovers_together_form ... ok
+test polybridge::tests::build_ratio_folds_constant_denominator ... ok
+test polybridge::tests::detect_gens_finds_symbols_and_functions ... ok
+test series::tests::series_to_expr_round_trips_a_polynomial ... ok
+test series::tests::leading_term_skips_zero_coefficients ... ok
+test series::tests::taylor_series_fails_at_a_pole ... ok
+test rootof::tests::root_of_sign_matches_isolation_interval ... ok
+test series::tests::taylor_series_of_exp_matches_known_coefficients ... ok
+test series::tests::taylor_series_of_sin_around_zero_has_no_even_terms ... ok
+test polybridge::tests::factor_poly_u_recombines_to_the_original ... ok
+test simplify::tests::cancel_removes_common_univariate_factor ... ok
+test simplify::tests::denest_sqrt_classic_example ... ok
+test simplify::tests::collect_groups_like_powers ... ok
+test simplify::tests::expand_distributes_over_function_argument_unchanged ... ok
+test simplify::tests::expand_binomial_square ... ok
+test simplify::tests::simplify_picks_the_smallest_candidate ... ok
+test simplify::tests::apart_splits_simple_rational_function ... ok
+test simplify::tests::together_combines_fractions ... ok
+test simplify::tests::factor_recovers_linear_factors ... ok
+test solve::tests::solve_2x2_linear_system ... ok
+test solve::tests::solve_exp_equation ... ok
+test solve::tests::solve_inequality_simple_quadratic ... ok
+test solve::tests::solve_linear_equation ... ok
+test solve::tests::solve_quadratic_with_complex_roots ... ok
+test solve::tests::solve_sin_equation_gives_parametric_family ... ok
+test rootof::tests::real_roots_of_quadratic_gives_two_rootofs ... ok
+test sums::tests::fourier_coefficients_of_a_polynomial_smoke_test ... FAILED
+test sums::tests::sum_geometric_series_hand_case ... ok
+test solve::tests::solve_quadratic_with_real_roots ... ok
+test transforms::tests::laplace_and_inverse_round_trip_for_exp ... ok
+test sums::tests::sum_of_k_squared_matches_known_hand_values ... FAILED
+test transforms::tests::laplace_linearity ... ok
+test transforms::tests::laplace_of_exp ... ok
+test transforms::tests::laplace_of_t_to_the_n ... ok
+test trig::tests::expand_trig_sin_of_sum ... ok
+test trig::tests::expand_log_of_product_and_power ... ok
+test trig::tests::logcombine_merges_positive_logs ... ok
+test trig::tests::logcombine_skips_unknown_sign_arguments ... ok
+test trig::tests::powsimp_combines_same_exponent_factors ... ok
+test trig::tests::trig_canon_applies_pythagorean_identity ... ok
+test trig::tests::trig_canon_pythagorean_with_extra_terms ... ok
+test trig::tests::trig_canon_rewrites_tan_to_sin_over_cos ... ok
+test sums::tests::sum_of_k_from_1_to_n_is_gauss_formula ... FAILED
+test visit::tests::contains_symbol_detects_nested_occurrence ... ok
+test visit::tests::free_symbols_deduplicates_and_sorts ... ok
+test visit::tests::node_count_hand_case ... ok
+test visit::tests::subs_replaces_matching_subtree ... ok
+test solve::tests::solve_high_degree_gives_rootof ... ok
+
+failures:
+
+---- limits::tests::limit_at_infinity_of_rational_function stdout ----
+
+thread 'limits::tests::limit_at_infinity_of_rational_function' (118527780) panicked at 🧰️framework/🔨️modules/🧮️math/🧮️cas/⚡️implementations/🦀️rust/../../../🧮️cas/⚡️implementations/🦀️rust/📦️lib.rs:4370:13:
+assertion `left == right` failed
+  left: Some((zoo + 1)/(zoo + 3))
+ right: Some(2)
+
+---- integrate::tests::integrate_simple_partial_fraction stdout ----
+
+thread 'integrate::tests::integrate_simple_partial_fraction' (118527774) panicked at 🧰️framework/🔨️modules/🧮️math/🧮️cas/⚡️implementations/🦀️rust/../../../🧮️cas/⚡️implementations/🦀️rust/📦️lib.rs:5611:13:
+assertion failed: diff_matches(&e, &x, &result)
+
+---- ode::tests::bernoulli_ode stdout ----
+
+thread 'ode::tests::bernoulli_ode' (118527792) panicked at 🧰️framework/🔨️modules/🧮️math/🧮️cas/⚡️implementations/🦀️rust/../../../🧮️cas/⚡️implementations/🦀️rust/📦️lib.rs:6078:13:
+assertion failed: sol.is_some()
+
+---- ode::tests::linear_first_order_ode stdout ----
+
+thread 'ode::tests::linear_first_order_ode' (118527796) panicked at 🧰️framework/🔨️modules/🧮️math/🧮️cas/⚡️implementations/🦀️rust/../../../🧮️cas/⚡️implementations/🦀️rust/📦️lib.rs:6067:57:
+called `Option::unwrap()` on a `None` value
+
+---- sums::tests::fourier_coefficients_of_a_polynomial_smoke_test stdout ----
+
+thread 'sums::tests::fourier_coefficients_of_a_polynomial_smoke_test' (118527838) panicked at 🧰️framework/🔨️modules/🧮️math/🧮️cas/⚡️implementations/🦀️rust/../../../🧮️cas/⚡️implementations/🦀️rust/📦️lib.rs:5802:13:
+assertion failed: result.is_some()
+
+---- sums::tests::sum_of_k_squared_matches_known_hand_values stdout ----
+
+thread 'sums::tests::sum_of_k_squared_matches_known_hand_values' (118527841) panicked at 🧰️framework/🔨️modules/🧮️math/🧮️cas/⚡️implementations/🦀️rust/../../../🧮️cas/⚡️implementations/🦀️rust/📦️lib.rs:5784:13:
+assertion `left == right` failed
+  left: 44
+ right: 14
+
+---- sums::tests::sum_of_k_from_1_to_n_is_gauss_formula stdout ----
+
+thread 'sums::tests::sum_of_k_from_1_to_n_is_gauss_formula' (118527840) panicked at 🧰️framework/🔨️modules/🧮️math/🧮️cas/⚡️implementations/🦀️rust/../../../🧮️cas/⚡️implementations/🦀️rust/📦️lib.rs:5775:13:
+assertion `left == right` failed
+  left: 3*n/2 + n^2/2
+ right: n^2/2 + n/2
+
+
+failures:
+    integrate::tests::integrate_simple_partial_fraction
+    limits::tests::limit_at_infinity_of_rational_function
+    ode::tests::bernoulli_ode
+    ode::tests::linear_first_order_ode
+    sums::tests::fourier_coefficients_of_a_polynomial_smoke_test
+    sums::tests::sum_of_k_from_1_to_n_is_gauss_formula
+    sums::tests::sum_of_k_squared_matches_known_hand_values
+
+test result: FAILED. 131 passed; 7 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `-p semio-framework-os-kernel-math-cas --lib`
+     Running unittests ../../../🔗️causal/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_causal-42ee79070246fbf2)
+
+running 34 tests
+test tests::cyclic_edges_are_rejected ... ok
+test tests::fisher_z_ci_test_via_causal_dag_columns ... ok
+test tests::cpdag_to_dag_round_trip_on_chain_is_acyclic_and_same_skeleton ... ok
+test tests::cpdag_from_chain_is_fully_undirected ... ok
+test tests::collider_d_separation_pattern ... ok
+test tests::cpdag_to_dag_round_trip_preserves_skeleton_and_v_structures ... ok
+test tests::backdoor_minimal_set_on_confounder_triangle ... ok
+test tests::backdoor_m_bias_graph_allows_empty_adjustment ... ok
+test tests::cpdag_from_collider_keeps_both_arrows ... ok
+test tests::chain_d_separation_pattern ... ok
+test tests::fork_d_separation_pattern ... ok
+test tests::identify_returns_backdoor_for_a_confounded_edge ... ok
+test tests::frontdoor_satisfied_on_classic_mediator_graph ... ok
+test tests::identify_returns_no_confounding_for_a_direct_unconfounded_edge ... ok
+test tests::linear_scm_implied_covariance_matches_hand_computation ... ok
+test tests::linear_scm_counterfactual_shifts_by_exact_path_product_preserving_noise ... ok
+test tests::meek_rule1_orients_to_avoid_new_collider ... ok
+test tests::meek_rule2_orients_to_avoid_cycle ... ok
+test tests::meek_rule3_orients_via_two_directed_co_parents ... ok
+test tests::linear_scm_total_effect_matches_analytic_path_product ... ok
+test tests::moralization_marries_coparents ... ok
+test tests::implied_independencies_hold_by_d_separation ... ok
+test tests::local_bic_prefers_the_true_parent_set ... ok
+test tests::quick::direct_lingam_recovers_causal_order_on_uniform_noise_sem ... ok
+test tests::quick::pc_stable_recovers_known_cpdag_from_simulated_chain ... ok
+test tests::quick::discrete_scm_fit_recovers_cpts_from_simulated_data ... ok
+test tests::wrong_column_type_errors ... ok
+test tests::what_if_query_level2_vs_level3 ... ok
+test tests::quick::naive_difference_is_biased_while_adjusted_estimators_recover_true_ate ... ok
+test tests::sprinkler_posterior_vs_interventional_distribution_contrast ... ok
+test tests::quick::linear_scm_simulate_then_fit_recovers_coefficients ... ok
+test tests::quick::ges_recovers_known_cpdag_from_simulated_chain ... ok
+test tests::quick::bootstrap_ci_contains_true_ate ... ok
+test tests::oversized_variable_elimination_is_rejected ... ok
+
+test result: ok. 34 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 35.19s
+
+     Running unittests ../../../🎲️entropy/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_entropy-7c3874826cd6d789)
+
+running 318 tests
+test continuous::tests::gaussian_mle_matches_closed_form ... ok
+test continuous::tests::histogram_entropy_reasonable_for_uniform ... ok
+test continuous::tests::rejects_constant_series ... ok
+test continuous::tests::rejects_too_few_samples ... ok
+test counts::tests::from_symbols_counts_correctly ... ok
+test continuous::tests::uniform_entropy_near_zero ... ok
+test continuous::tests::vasicek_entropy_matches_gaussian_closed_form ... ok
+test continuous::tests::quick::exponential_entropy_matches_closed_form ... ok
+test counts::tests::encode_categories_is_first_seen_order ... ok
+test counts::tests::from_symbols_rejects_empty ... ok
+test counts::tests::from_symbols_rejects_out_of_range ... ok
+test counts::tests::joint_counts_marginals_match_independent_construction ... ok
+test counts::tests::laplace_smoothing_adds_pseudocount ... ok
+test counts::tests::probabilities_normalize_to_one ... ok
+test counts::tests::support_and_singleton_diagnostics ... ok
+test counts::tests::validate_probabilities_rejects_large_deviation ... ok
+test counts::tests::validate_probabilities_rejects_nan ... ok
+test continuous::tests::knn_entropy_matches_gaussian_closed_form ... ok
+test continuous::tests::correa_entropy_matches_gaussian_closed_form ... ok
+test counts::tests::validate_probabilities_renormalizes_within_tolerance ... ok
+test counts::tests::weighted_counts_effective_sample_size ... ok
+test discrete::tests::chain_rule_holds_for_joint_entropy ... ok
+test discrete::tests::conditional_entropy_zero_when_y_determined_by_x ... ok
+test discrete::tests::cross_entropy_infinite_on_support_mismatch ... ok
+test discrete::tests::cross_entropy_of_identical_distributions_equals_entropy ... ok
+test discrete::tests::deterministic_distribution_entropy_is_zero ... ok
+test discrete::tests::entropy_rejects_empty ... ok
+test discrete::tests::fair_coin_entropy_is_one_bit ... ok
+test discrete::tests::hartley_entropy_matches_log_k ... ok
+test discrete::tests::kaniadakis_limit_at_kappa_zero_equals_shannon_nats ... ok
+test discrete::tests::min_entropy_matches_negative_log_max_probability ... ok
+test discrete::tests::entropy_non_negative_for_random_distributions ... ok
+test discrete::tests::normalized_entropy_of_deterministic_is_zero ... ok
+test discrete::tests::renyi_alpha_two_equals_collision_entropy ... ok
+test discrete::tests::renyi_alpha_zero_equals_hartley_over_support ... ok
+test discrete::tests::renyi_continuity_near_alpha_one_approaches_shannon ... ok
+test discrete::tests::renyi_rejects_alpha_exactly_one ... ok
+test discrete::tests::sharma_mittal_reduces_to_renyi_as_beta_approaches_one ... ok
+test discrete::tests::tsallis_limit_at_q_one_equals_shannon_nats ... ok
+test discrete::tests::tsallis_uniform_matches_closed_form ... ok
+test discrete::tests::uniform_entropy_equals_log_support_size ... ok
+test divergence::tests::bregman_squared_euclidean_matches_direct_formula ... ok
+test divergence::tests::chi_square_of_identical_distributions_is_zero ... ok
+test divergence::tests::energy_distance_of_identical_distributions_is_near_zero ... ok
+test divergence::tests::energy_distance_is_non_negative ... ok
+test divergence::tests::itakura_saito_of_identical_spectra_is_zero ... ok
+test divergence::tests::js_divergence_symmetric_and_bounded_by_ln2 ... ok
+test divergence::tests::hellinger_distance_bounds_and_identity ... ok
+test discrete::tests::normalized_entropy_of_uniform_is_one ... ok
+test discrete::tests::quick::renyi_is_monotone_nonincreasing_in_alpha ... ok
+test divergence::tests::js_of_identical_distributions_is_zero ... ok
+test divergence::tests::kl_infinite_on_support_mismatch ... ok
+test divergence::tests::kl_of_identical_distributions_is_zero ... ok
+test divergence::tests::log_det_divergence_of_identical_matrices_is_zero ... ok
+test divergence::tests::kl_is_non_negative_for_random_distributions ... ok
+test divergence::tests::renyi_divergence_of_identical_distributions_is_zero ... ok
+test divergence::tests::quick::renyi_divergence_monotone_in_alpha ... ok
+test divergence::tests::renyi_divergence_rejects_alpha_one ... ok
+test divergence::tests::total_variation_bounds_and_identity ... ok
+test divergence::tests::tsallis_divergence_limit_matches_kl ... ok
+test divergence::tests::wasserstein_1d_matches_hand_computation_equal_size ... ok
+test divergence::tests::wasserstein_1d_of_identical_samples_is_zero ... ok
+test estimators::tests::chao_shen_handles_all_singletons ... ok
+test estimators::tests::jackknife_matches_hand_computation_on_small_example ... ok
+test estimators::tests::james_stein_shrinks_toward_uniform_reducing_variance_estimate ... ok
+test estimators::tests::plugin_matches_direct_entropy_computation ... ok
+test estimators::tests::nsb_returns_finite_value_between_zero_and_log_k ... ok
+test estimators::tests::dirichlet_rejects_nonpositive_alpha ... ok
+test estimators::tests::miller_madow_correction_matches_hand_computation ... ok
+test estimators::tests::gauss_legendre_integrates_polynomial_exactly ... ok
+test estimators::tests::gauss_legendre_nodes_are_symmetric_and_weights_sum_to_two ... ok
+test estimators::tests::schurmann_grassberger_close_to_plugin_for_large_n_uniform ... ok
+test estimators::tests::bias_corrected_methods_closer_to_truth_than_plugin_on_undersampled_uniform ... ok
+test estimators::tests::quick::all_methods_consistency_as_n_grows ... ok
+test estimators::tests::small_sample_warning_triggers_for_undersampled_input ... ok
+test features::tests::compute_propagates_first_error ... ok
+test estimators::tests::uniform_counts_all_methods_close_to_log_k ... ok
+test features::tests::suggest_knn_k_scales_with_sample_size_and_stays_bounded ... ok
+test features::tests::suggest_bins_falls_back_to_sturges_for_degenerate_iqr ... ok
+test features::tests::suggest_bins_prefers_freedman_diaconis_for_spread_data ... ok
+test continuous::tests::kde_loo_differs_from_naive_resubstitution_direction ... ok
+test fft::tests::hann_window_endpoints_are_zero ... ok
+test fft::tests::forward_then_inverse_roundtrips ... ok
+test fft::tests::parseval_theorem_holds ... ok
+test fft::tests::quick::bluestein_matches_radix2_on_power_of_two_length ... ok
+test fft::tests::quick::large_prime_length_dft_matches_naive ... ok
+test fft::tests::radix2_fft_matches_naive_dft ... ok
+test fft::tests::bluestein_fft_matches_naive_dft_for_arbitrary_lengths ... ok
+test fft::tests::real_fft_returns_one_sided_spectrum_length ... ok
+test fft::tests::rectangular_window_is_all_ones ... ok
+test fft::tests::window_functions_produce_expected_length_and_endpoints ... ok
+test fisher::tests::aic_increases_with_num_params ... ok
+test fisher::tests::aic_matches_hand_computed_value ... ok
+test fisher::tests::aicc_approaches_aic_for_large_n ... ok
+test fisher::tests::aicc_errs_when_n_leq_k_plus_one ... ok
+test fisher::tests::aicc_ok_when_n_greater_than_k_plus_one ... ok
+test fisher::tests::bic_increases_with_num_params ... ok
+test fisher::tests::bic_matches_hand_computed_value ... ok
+test fisher::tests::bic_penalizes_more_than_aic_when_ln_n_exceeds_two ... ok
+test fisher::tests::fisher_information_matches_gaussian_closed_form ... ok
+test fisher::tests::fisher_information_zero_for_flat_log_likelihood ... ok
+test fisher::tests::hqc_increases_with_num_params ... ok
+test fisher::tests::hqc_small_n_edge_case_has_zero_penalty ... ok
+test fisher::tests::mdl_increases_with_num_params ... ok
+test fisher::tests::mdl_matches_hand_computed_value ... ok
+test graph::tests::degree_entropy_of_regular_graph_is_zero ... ok
+test graph::tests::degree_entropy_rejects_out_of_range_endpoint ... ok
+test graph::tests::random_walk_entropy_rate_of_cycle_matches_binary_entropy ... ok
+test graph::tests::random_walk_handles_isolated_node ... ok
+test graph::tests::random_walk_entropy_rate_of_complete_graph_matches_uniform_row_entropy ... ok
+test inference::tests::bootstrap_ci_rejects_insufficient_data_and_bad_level ... ok
+test inference::tests::fdr_bh_separates_tiny_and_large_p_values ... ok
+test inference::tests::fdr_bh_rejects_empty_input_and_bad_alpha ... ok
+test inference::tests::circular_shift_and_block_shuffle_preserve_value_multiset ... ok
+test graph::tests::random_walk_rejects_negative_weight ... ok
+test inference::tests::jackknife_ci_rejects_insufficient_data_and_bad_level ... ok
+test inference::tests::permutation_test_rejects_empty_groups_and_zero_permutations ... ok
+test inference::tests::quick::fdr_bh_is_stricter_than_uncorrected_threshold_under_known_null_proportion ... ok
+test inference::tests::iaaft_preserves_value_distribution_phase_randomized_generally_does_not ... ok
+test inference::tests::phase_randomized_and_iaaft_preserve_power_spectrum ... ok
+test inference::tests::surrogate_config_rejects_zero_count_and_block_size ... ok
+test inference::tests::quick::surrogate_series_is_reproducible_from_the_same_seed ... ok
+test knn::tests::build_rejects_empty_and_bad_shape ... ok
+test knn::tests::k_nearest_excludes_self_when_requested ... ok
+test knn::tests::k_nearest_on_single_point_tree ... ok
+test knn::tests::kd_tree_matches_brute_force_knn_euclidean ... ok
+test knn::tests::kd_tree_matches_brute_force_for_chebyshev_and_manhattan ... ok
+test lz::tests::exhaustive::lz76_canonical_value_matches_verified_reference ... ok
+test knn::tests::radius_count_matches_brute_force ... ok
+test lz::tests::lempel_ziv_complexity_large_sample_does_not_warn ... ok
+test knn::tests::quick::kd_tree_matches_brute_force_on_larger_random_set ... ok
+test lz::tests::lempel_ziv_complexity_normalized_is_zero_for_single_symbol_alphabet ... ok
+test lz::tests::lempel_ziv_complexity_raw_matches_lz76 ... ok
+test lz::tests::lempel_ziv_complexity_rejects_empty ... ok
+test lz::tests::lempel_ziv_complexity_small_sample_warns ... ok
+test lz::tests::lz76_constant_sequence_is_minimally_complex ... ok
+test lz::tests::lz76_matches_canonical_test_string ... ok
+test lz::tests::lz76_repetitive_much_lower_than_random_of_same_length ... ok
+test lz::tests::lz78_empty_input_compresses_to_zero ... ok
+test lz::tests::lz78_repetitive_input_compresses_shorter_than_random ... ok
+test lz::tests::ncd_is_bounded_below_by_zero ... ok
+test lz::tests::ncd_rejects_empty_inputs ... ok
+test lz::tests::quick::lz76_is_non_decreasing_in_sequence_length_for_a_growing_random_stream ... ok
+test lz::tests::ncd_of_a_string_with_itself_is_well_below_unrelated_random_strings ... ok
+test markov::tests::entropy_rate_diagnostics_report_order_and_alphabet ... ok
+test markov::tests::fit_rejects_order_zero ... ok
+test markov::tests::fit_rejects_out_of_range_symbol ... ok
+test markov::tests::fit_rejects_too_short_sequence ... ok
+test markov::tests::order_one_matches_ordinary_transition_counts ... ok
+test markov::tests::periodic_two_cycle_has_near_zero_entropy_rate ... ok
+test lz::tests::quick::lz78_concatenation_never_shrinks_relative_to_either_half ... ok
+test lz::tests::exhaustive::lz76_matches_definitional_brute_force_for_every_short_binary_string ... ok
+test inference::tests::bootstrap_ci_contains_true_mean_for_fixed_seed ... ok
+test markov::tests::quick::two_state_chain_converges_to_analytic_stationary_and_entropy_rate ... ok
+test matrix::tests::cholesky_reconstructs_positive_definite_matrix ... ok
+test matrix::tests::cholesky_regularizes_near_singular_matrix ... ok
+test matrix::tests::jacobi_hand_3x3_matches_known_eigenvalues ... ok
+test matrix::tests::jacobi_matches_diagonal_matrix_eigenvalues ... ok
+test matrix::tests::jacobi_reconstructs_symmetric_matrix ... ok
+test matrix::tests::log_det_matches_known_determinant ... ok
+test matrix::tests::svd_entropy_of_equal_singular_values_is_maximal ... ok
+test matrix::tests::svd_reconstructs_matrix ... ok
+test matrix::tests::svd_entropy_of_rank_one_matrix_is_zero ... ok
+test matrix::tests::von_neumann_clips_tiny_negative_eigenvalues ... ok
+test matrix::tests::von_neumann_entropy_of_maximally_mixed_state_is_log_n ... ok
+test matrix::tests::von_neumann_entropy_of_pure_state_is_zero ... ok
+test ml::tests::bald_of_disagreeing_ensemble_is_positive ... ok
+test ml::tests::bald_of_unanimous_ensemble_is_near_zero ... ok
+test ml::tests::ece_of_badly_miscalibrated_predictions_is_large ... ok
+test ml::tests::ece_rejects_length_mismatch ... ok
+test ml::tests::ece_rejects_out_of_range_confidence ... ok
+test ml::tests::predictive_entropy_batch_shape ... ok
+test ml::tests::predictive_entropy_of_confident_prediction_is_zero ... ok
+test ml::tests::ece_of_perfectly_calibrated_predictions_is_zero ... ok
+test ml::tests::predictive_entropy_of_uniform_is_max ... ok
+test multiscale::tests::coarse_grain_mean_matches_hand_computation ... ok
+test multiscale::tests::coarse_grain_scale_one_is_identity ... ok
+test multiscale::tests::multiscale_config_rejects_zero_scales ... ok
+test multiscale::tests::multiscale_entropy_stops_early_for_short_series ... ok
+test mutual::tests::dual_total_correlation_requires_at_least_two_variables ... ok
+test mutual::tests::cmi_zero_when_x_and_y_independent_given_z ... ok
+test multiscale::tests::multiscale_entropy_reports_requested_scales_for_long_series ... ok
+test inference::tests::jackknife_ci_matches_classical_mean_ci_for_large_n ... ok
+test mutual::tests::mi_of_identical_variables_equals_entropy ... ok
+test mutual::tests::mi_of_independent_variables_is_near_zero ... ok
+test mutual::tests::mi_rejects_length_mismatch ... ok
+test mutual::tests::o_information_of_redundant_copy_is_positive ... ok
+test mutual::tests::pack_symbols_rejects_overflow ... ok
+test mutual::tests::total_correlation_of_independent_variables_is_near_zero ... ok
+test numeric::tests::checked_state_count_detects_overflow ... ok
+test numeric::tests::clamp_near_zero_behavior ... ok
+test numeric::tests::digamma_matches_known_value_at_one ... ok
+test numeric::tests::digamma_recurrence_holds ... ok
+test numeric::tests::erf_endpoints ... ok
+test numeric::tests::incomplete_gamma_full_integral_is_one ... ok
+test numeric::tests::inverse_normal_cdf_roundtrips_normal_cdf ... ok
+test numeric::tests::ln_gamma_half_matches_sqrt_pi ... ok
+test numeric::tests::ln_gamma_matches_known_factorials ... ok
+test numeric::tests::log_factorial_cache_matches_ln_gamma ... ok
+test numeric::tests::log_sum_exp_avoids_overflow ... ok
+test numeric::tests::log_sum_exp_matches_naive_for_moderate_values ... ok
+test numeric::tests::neumaier_more_accurate_than_naive_for_ill_conditioned_sum ... ok
+test numeric::tests::neumaier_sum_exact_on_simple_case ... ok
+test numeric::tests::normal_cdf_at_zero_is_half ... ok
+test numeric::tests::pairwise_sum_matches_neumaier_on_large_array ... ok
+test numeric::tests::quick::digamma_asymptotic_region_matches_recurrence_shifted_from_small_x ... ok
+test numeric::tests::quick::xorshift_gaussian_mean_and_variance_converge ... ok
+test numeric::tests::shuffle_is_a_permutation ... ok
+test numeric::tests::trigamma_matches_pi_squared_over_six_at_one ... ok
+test numeric::tests::x_ln_x_zero_at_zero ... ok
+test numeric::tests::xorshift_is_deterministic_for_fixed_seed ... ok
+test numeric::tests::xorshift_uniform_range_respected ... ok
+test ordinal::tests::dispersion_config_rejects_small_classes ... ok
+test ordinal::tests::dispersion_entropy_of_noise_is_positive ... ok
+test ordinal::tests::increment_entropy_of_constant_series_is_zero ... ok
+test ordinal::tests::increment_entropy_of_noise_is_positive ... ok
+test ordinal::tests::increment_entropy_rejects_zero_word_length ... ok
+test ordinal::tests::permutation_entropy_of_monotone_series_is_zero ... ok
+test ordinal::tests::permutation_entropy_of_noise_approaches_max ... ok
+test ordinal::tests::quick::permutation_entropy_orders_regularity_correctly ... ok
+test ordinal::tests::slope_entropy_of_noise_is_positive ... ok
+test ordinal::tests::slope_entropy_of_straight_line_is_zero ... ok
+test ordinal::tests::slope_entropy_rejects_bad_thresholds ... ok
+test pid::tests::copy_gate_shows_dominant_unique1_and_near_zero_synergy ... ok
+test pid::tests::full_set_node_i_min_equals_total_joint_mi_and_singletons_node_is_smaller ... ok
+test pid::tests::lattice_has_exactly_eighteen_nodes ... ok
+test pid::tests::lattice_rejects_source_counts_other_than_three ... ok
+test pid::tests::partial_information_lookup_matches_internal_full_set_node ... ok
+test pid::tests::pid_two_sources_rejects_empty_input ... ok
+test pid::tests::pid_two_sources_rejects_length_mismatch ... ok
+test pid::tests::sum_of_all_partial_information_equals_total_mutual_information ... ok
+test pid::tests::xor_gate_shows_dominant_synergy_near_one_bit ... ok
+test regularity::tests::approximate_entropy_small_sample_warning ... ok
+test regularity::tests::base_conversion_is_consistent_across_apen_sampen_fuzzyen ... ok
+test inference::tests::permutation_test_p_value_high_under_null_low_under_effect ... ok
+test regularity::tests::near_constant_signal_under_generous_tolerance_has_near_zero_regularity_entropy ... ok
+test mutual::tests::ksg_mi_of_independent_gaussians_is_near_zero ... ok
+test regularity::tests::regularity_config_rejects_m_zero ... ok
+test regularity::tests::resolve_tolerance_auto_matches_hand_computation ... ok
+test regularity::tests::resolve_tolerance_rejects_constant_series ... ok
+test regularity::tests::sample_entropy_rejects_very_short_series ... ok
+test regularity::tests::sample_entropy_reports_infinity_when_no_higher_order_matches_exist ... ok
+test spatial::tests::constant_image_is_rejected ... ok
+test spatial::tests::global_entropy_of_uniform_random_image_is_near_max ... ok
+test spatial::tests::noisy_image_has_higher_glcm_entropy_than_smooth_gradient ... ok
+test spatial::tests::shape_mismatch_is_rejected ... ok
+test spatial::tests::spatial_config_rejects_small_bins ... ok
+test spectral::tests::band_restriction_changes_entropy_and_validates_range ... ok
+test spectral::tests::config_new_rejects_overlap_at_or_above_one ... ok
+test spectral::tests::pure_sine_has_low_normalized_spectral_entropy ... ok
+test spectral::tests::rejects_segment_len_larger_than_input ... ok
+test spectral::tests::white_noise_has_high_normalized_spectral_entropy ... ok
+test streaming::tests::decayed_entropy_forgets_old_symbols ... ok
+test streaming::tests::decayed_entropy_rejects_bad_decay ... ok
+test streaming::tests::decayed_entropy_remove_is_unsupported ... ok
+test streaming::tests::decayed_entropy_snapshot_restore_roundtrips ... ok
+test streaming::tests::sliding_window_matches_batch_recomputed_at_every_step ... ok
+test streaming::tests::sliding_window_remove_and_merge_are_unsupported ... ok
+test streaming::tests::streaming_counts_merge_matches_combined_batch ... ok
+test streaming::tests::streaming_counts_remove_rejects_unobserved_symbol ... ok
+test streaming::tests::streaming_counts_remove_undoes_update ... ok
+test streaming::tests::streaming_counts_snapshot_restore_roundtrips ... ok
+test streaming::tests::streaming_counts_update_matches_batch_entropy ... ok
+test symbolic::tests::dispersion_symbolizer_alphabet_size_is_classes_pow_dim ... ok
+test symbolic::tests::dispersion_symbolizer_rejects_constant_series ... ok
+test symbolic::tests::dispersion_symbolizer_rejects_invalid_config ... ok
+test symbolic::tests::dispersion_symbolizer_symbol_count_matches_embedding ... ok
+test symbolic::tests::embed_produces_expected_windows_and_values ... ok
+test symbolic::tests::embed_rejects_insufficient_data ... ok
+test symbolic::tests::embed_rejects_zero_dim_and_zero_tau ... ok
+test symbolic::tests::embed_respects_tau ... ok
+test symbolic::tests::ordinal_config_default_is_dim3_tau1 ... ok
+test symbolic::tests::ordinal_config_rejects_dim_less_than_two ... ok
+test symbolic::tests::ordinal_config_rejects_zero_tau ... ok
+test symbolic::tests::ordinal_config_with_ties_overrides_default ... ok
+test symbolic::tests::ordinal_pattern_symbol_hand_computed_example ... ok
+test symbolic::tests::ordinal_symbolizer_all_six_dim3_patterns_are_distinct ... ok
+test symbolic::tests::ordinal_symbolizer_alphabet_size_is_factorial ... ok
+test symbolic::tests::ordinal_symbolizer_monotone_series_yields_constant_pattern ... ok
+test symbolic::tests::ordinal_ties_error_policy_rejects_equal_values ... ok
+test symbolic::tests::ordinal_ties_stable_rank_breaks_by_original_index ... ok
+test symbolic::tests::quantile_symbolizer_alphabet_size_equals_bins ... ok
+test symbolic::tests::quantile_symbolizer_rejects_bins_less_than_two ... ok
+test symbolic::tests::quantile_symbolizer_splits_small_example_in_half ... ok
+test symbolic::tests::quick::dispersion_symbols_always_within_alphabet_for_random_series ... ok
+test symbolic::tests::quick::ordinal_symbols_always_within_alphabet_for_random_series ... ok
+test symbolic::tests::quick::quantile_symbolizer_bins_are_roughly_balanced ... ok
+test symbolic::tests::threshold_symbolizer_classifies_against_edges ... ok
+test symbolic::tests::threshold_symbolizer_rejects_empty_edges ... ok
+test symbolic::tests::threshold_symbolizer_rejects_non_finite_edges ... ok
+test symbolic::tests::threshold_symbolizer_rejects_unsorted_edges ... ok
+test transfer::tests::ais_of_highly_predictable_series_is_positive ... ok
+test transfer::tests::ais_of_white_noise_is_near_zero ... ok
+test regularity::tests::quick::fuzzy_entropy_finite_and_defined_for_moderate_series ... ok
+test transfer::tests::te_detects_coupling_discrete ... ok
+test transfer::tests::te_of_independent_series_discrete_is_near_zero ... ok
+test transfer::tests::te_rejects_length_mismatch ... ok
+test transfer::tests::transfer_config_rejects_zero_history ... ok
+test wavelet::tests::config_new_rejects_zero_levels ... ok
+test wavelet::tests::constant_signal_has_zero_haar_detail_energy ... ok
+test wavelet::tests::daubechies_filters_are_orthonormal_sum_sqrt2 ... ok
+test wavelet::tests::decompose_rejects_input_shorter_than_filter ... ok
+test wavelet::tests::decompose_stops_early_when_signal_runs_out_of_levels ... ok
+test wavelet::tests::haar_periodic_multi_level_preserves_energy ... ok
+test wavelet::tests::haar_periodic_one_level_preserves_energy ... ok
+test wavelet::tests::smooth_ramp_has_lower_wavelet_entropy_than_noise ... ok
+test wavelet::tests::wavelet_entropy_rejects_all_zero_input ... ok
+test wavelet::tests::wavelet_entropy_reports_levels_achieved_diagnostic ... ok
+test wavelet::tests::white_noise_has_higher_wavelet_entropy_than_pure_tone ... ok
+test features::tests::with_feature_appends_after_standard_entries ... ok
+test mutual::tests::ksg2_matches_gaussian_closed_form ... ok
+test mutual::tests::ksg1_matches_gaussian_closed_form ... ok
+test features::tests::standard_registry_computes_all_features_in_order ... ok
+test continuous::tests::kde_entropy_matches_gaussian_closed_form ... ok
+test transfer::tests::quick::te_knn_detects_coupling_on_coupled_logistic_maps ... ok
+test regularity::tests::regular_sine_has_much_lower_regularity_entropy_than_white_noise ... ok
+test continuous::tests::quick::all_continuous_estimators_agree_within_tolerance_on_gaussian ... ok
+test multiscale::tests::quick::white_noise_multiscale_entropy_differs_from_pink_like_noise ... ok
+
+test result: ok. 318 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.09s
+
+     Running unittests ../../../🌫️fuzzy/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_fuzzy-7bc2c93d2c7bb738)
+
+running 70 tests
+test tests::adaptive_membership_fit_updates_parameters ... ok
+test tests::anfis_default_forward_and_rule_count ... ok
+test tests::complement_concentration_dilation_basic ... ok
+test tests::defuzzifier_bisector_mom_som_lom ... ok
+test tests::defuzzifier_centroid_on_triangle ... ok
+test tests::defuzzifier_empty_universe_errors ... ok
+test tests::defuzzifier_weighted_average_and_height_match ... ok
+test tests::defuzzifier_weighted_average_requires_heights_and_values ... ok
+test tests::fuzzy_add_sums_components ... ok
+test tests::fan_controller_learns_from_sensor_data ... ok
+test tests::fuzzy_vikor_ranks_compromise_solution ... ok
+test tests::fuzzy_ahp_produces_normalized_weights ... ok
+test tests::fuzzy_c_means_two_cluster_toy ... ok
+test tests::fuzzy_mul_interval_at_peak_alpha ... ok
+test tests::fuzzy_number_alpha_cut_contains_peak ... ok
+test tests::fuzzy_number_defuzzify_centroid_matches_peak ... ok
+test tests::fuzzy_number_sub_and_scale ... ok
+test tests::fuzzy_topsis_ranks_better_alternative_first ... ok
+test tests::gaussian_membership_symmetric_and_peaks_at_mean ... ok
+test tests::generalized_bell_membership_symmetric_peak ... ok
+test tests::gustafson_kessel_clusters_two_groups ... ok
+test tests::hedge_variants_apply ... ok
+test tests::hybrid_fuse_weighted_combination ... ok
+test tests::interval_type2_centroid_between_bounds ... ok
+test tests::intuitionistic_set_grades_computes_hesitation ... ok
+test tests::intuitionistic_set_grades_rejects_over_unity ... ok
+test tests::larsen_inference_model_produces_output ... ok
+test tests::linguistic_variable_fuzzify_and_term_index ... ok
+test tests::long::evolving_system_adapts_over_stream ... ok
+test tests::long::pso_optimizer_finds_minimum ... ok
+test tests::long::genetic_optimizer_improves_quadratic ... ok
+test tests::long::hierarchical_system_chains_layers ... ok
+test tests::membership_function_parameters_roundtrip ... ok
+test tests::mamdani_high_temperature_yields_fast_fan ... ok
+test tests::membership_function_support_bounds ... ok
+test tests::mimo_infer_rejects_bad_input_and_empty_rules ... ok
+test tests::piecewise_linear_membership_interpolates_and_edge_cases ... ok
+test tests::possibility_and_necessity_measures ... ok
+test tests::possibility_measure_from_scores_normalizes_by_max ... ok
+test tests::relation_composition_dimension_mismatch_errors ... ok
+test tests::relation_composition_max_min ... ok
+test tests::rule_firing_strength_applies_hedge ... ok
+test tests::sigmoid_membership_is_monotonic_increasing ... ok
+test tests::spatial_evaluator_near_and_slowly ... ok
+test tests::soft_constraint_consequent_scales_by_preference ... ok
+test tests::possibility_measure_rejects_mismatched_lengths ... ok
+test tests::possibility_to_membership_passes_through_values ... ok
+test tests::probabilistic_to_membership_blends_by_certainty ... ok
+test tests::prune_rules_filters_below_thresholds ... ok
+test tests::relation_composition_max_product ... ok
+test tests::rule_base_is_empty_reports_correctly ... ok
+test tests::singleton_membership_exact_match_only ... ok
+test tests::subtractive_cluster_centers_empty_data_returns_empty ... ok
+test tests::subtractive_cluster_centers_finds_clusters ... ok
+test tests::sugeno_inference_weighted_average ... ok
+test tests::tconorm_variants_apply_correctly ... ok
+test tests::temporal_evaluator_recently_and_frequently ... ok
+test tests::tnorm_lukasiewicz_and_drastic_variants ... ok
+test tests::tnorm_product_is_stricter_than_min ... ok
+test tests::tnorm_tconorm_fold_over_iterator ... ok
+test tests::trapezoidal_membership_flat_top_and_edges ... ok
+test tests::triangular_membership_peaks_at_center ... ok
+test tests::tsukamoto_inference_model_inverts_monotonic_consequent ... ok
+test tests::tsukamoto_inverse_handles_zero_alpha_and_solves_monotonic ... ok
+test tests::universe_len_sample_and_is_empty ... ok
+test tests::universe_rejects_invalid_bounds ... ok
+test tests::wang_mendel_rules_generates_one_rule_per_sample ... ok
+test tests::wang_mendel_rules_sugeno_uses_constant_consequent ... ok
+test tests::weight_rules_by_fit_updates_confidence_from_error ... ok
+test tests::long::anfis_learns_nonlinear_surface ... ok
+
+test result: ok. 70 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests ../../../📐️geometry/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_geometry-6dfb421c5b76d99b)
+
+running 12 tests
+test tests::bounding_box_covers_all_points ... ok
+test tests::circle_line_intersections_finds_two_points_through_center ... ok
+test tests::convex_hull_of_square_with_interior_point_drops_interior ... ok
+test tests::cubic_nearest_t_finds_endpoint_for_endpoint_query ... ok
+test tests::cubic_split_endpoints_match_source_and_split_point ... ok
+test tests::distance_between_matches_pythagoras ... ok
+test tests::normalize_or_zero_handles_zero_vector ... ok
+test tests::point_in_polygon_detects_interior_and_exterior ... ok
+test tests::polygon_area_of_unit_square_is_one ... ok
+test tests::polygon_centroid_of_square_is_center ... ok
+test tests::segment_intersection_none_for_parallel_lines ... ok
+test tests::segment_intersection_finds_crossing_point ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../🕸️graph/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph-8b36f8cabf66f15e)
+
+running 97 tests
+test algorithms::tests::bfs_layers_group_by_distance ... ok
+test algorithms::tests::acyclic_edge_subset_accumulates_accepted_candidates ... ok
+test algorithms::tests::adjacency_accessors_expose_node_count_and_neighbor_lists ... ok
+test algorithms::tests::bfs_distances_unreachable_is_none ... ok
+test algorithms::tests::bfs_order_ignores_out_of_range_seeds ... ok
+test algorithms::tests::bfs_order_visits_reachable_nodes_breadth_first ... ok
+test algorithms::tests::connected_components_groups_weak_components ... ok
+test algorithms::tests::degrees_and_roots_match_edge_shape ... ok
+test algorithms::tests::dfs_preorder_and_postorder_agree_on_leaf_first_last ... ok
+test algorithms::tests::dfs_preorder_and_postorder_out_of_range_seed_returns_empty ... ok
+test algorithms::tests::dijkstra_and_dijkstra_path_out_of_range_from_returns_empty_or_none ... ok
+test algorithms::tests::dijkstra_path_none_when_unreachable ... ok
+test algorithms::tests::dijkstra_path_reconstructs_cheapest_route ... ok
+test algorithms::tests::dijkstra_prefers_cheaper_longer_path ... ok
+test algorithms::tests::dijkstra_unreachable_node_stays_none ... ok
+test algorithms::tests::find_cycle_returns_none_for_dag ... ok
+test algorithms::tests::find_cycle_returns_some_for_cyclic_graph ... ok
+test algorithms::tests::id_index_from_ids_dedupes_and_reports_len ... ok
+test algorithms::tests::id_index_is_deterministic_and_sorted ... ok
+test algorithms::tests::is_reachable_from_equals_to_is_trivially_true ... ok
+test algorithms::tests::longest_path_layers_propagates_cycle_error ... ok
+test algorithms::tests::topo_levels_detects_cycle ... ok
+test algorithms::tests::union_find_unions_and_queries_sets ... ok
+test algorithms::tests::longest_path_layers_assigns_root_layer_zero ... ok
+test algorithms::tests::minimum_spanning_tree_selects_cheapest_edges_without_cycles ... ok
+test algorithms::tests::minimum_spanning_tree_skips_out_of_range_edges ... ok
+test algorithms::tests::shortest_path_unweighted_finds_hop_path ... ok
+test algorithms::tests::shortest_path_unweighted_none_when_unreachable ... ok
+test algorithms::tests::strongly_connected_components_finds_cycle_as_one_component ... ok
+test algorithms::tests::topo_levels_groups_independent_nodes ... ok
+test algorithms::tests::topo_sort_detects_cycle ... ok
+test algorithms::tests::topo_sort_orders_dependencies_before_dependents ... ok
+test algorithms::tests::would_create_cycle_detects_back_edge ... ok
+test algorithms::tests::would_create_cycle_self_loop_is_always_a_cycle ... ok
+test algorithms::tests::would_create_cycle_ids_matches_index_version ... ok
+test tests::arbitrary_element_is_deterministic ... ok
+test tests::add_node_allocates_monotone_ids ... ok
+test tests::attr_weight_falls_back_to_default_when_missing_or_non_numeric ... ok
+test tests::clear_edges_keeps_nodes_clear_removes_everything ... ok
+test tests::closure_implements_edge_weights ... ok
+test tests::add_handle_denies_missing_node_and_handle_owner_is_none_for_unknown_handle ... ok
+test tests::add_node_with_id_upserts_attrs_and_bumps_allocator ... ok
+test tests::core_edge_normalize_undirected_orders_the_pair ... ok
+test tests::csr_from_view_mirrors_undirected_edges_both_ways ... ok
+test tests::csr_out_edges_and_unknown_ids_return_none ... ok
+test tests::csr_from_view_preserves_directed_adjacency ... ok
+test tests::directed_degree_is_in_plus_out ... ok
+test tests::filtered_view_keep_predicate_hides_by_inversion ... ok
+test tests::decrease_key_returns_false_for_absent_item ... ok
+test tests::directed_self_loop_counts_once_each_towards_out_and_in_degree ... ok
+test tests::edge_subgraph_view_degree_and_directed_flag ... ok
+test tests::edge_subgraph_view_nodes_are_exactly_edge_endpoints ... ok
+test tests::edge_subgraph_view_undirected_in_neighbors_matches_out_neighbors ... ok
+test tests::filtered_view_attr_view_delegates_edge_and_graph_attrs ... ok
+test tests::filtered_view_keep_edge_predicate_hides_specific_edges_without_hiding_nodes ... ok
+test tests::graph_error_display_covers_remaining_variants ... ok
+test tests::graph_error_display_reads_clearly ... ok
+test tests::graph_error_is_a_std_error ... ok
+test tests::interner_from_labels_is_sorted_and_deduplicated ... ok
+test tests::interner_intern_is_idempotent ... ok
+test tests::interner_is_empty_and_unknown_lookups_return_none ... ok
+test tests::is_directed_and_is_multigraph_reflect_type_axes ... ok
+test tests::mapped_heap_decrease_key_reorders ... ok
+test tests::mapped_heap_len_and_is_empty_track_size ... ok
+test tests::mapped_heap_pops_in_ascending_priority_order ... ok
+test tests::mapped_heap_push_or_decrease_ignores_higher_or_equal_priority ... ok
+test tests::max_flow_and_min_cut_are_deterministic_across_fresh_instances ... ok
+test tests::max_flow_is_zero_when_source_and_sink_are_disconnected ... ok
+test tests::max_flow_saturates_branching_level_graph ... ok
+test tests::max_flow_matches_clrs_textbook_network ... ok
+test tests::min_cut_capacity_matches_max_flow_value_duality ... ok
+test tests::node_attrs_mut_and_edge_attrs_mut_edit_in_place_and_are_none_for_unknown_ids ... ok
+test tests::normal_add_edge_upserts_instead_of_duplicating ... ok
+test tests::normal_storage_denies_handles ... ok
+test tests::pairwise_yields_consecutive_pairs ... ok
+test tests::ported_add_edge_always_creates_parallel_edges ... ok
+test tests::property_bag_from_json_falls_back_to_default_on_unparsable_shape ... ok
+test tests::property_bag_json_round_trips_and_empty_bag_serializes_to_none ... ok
+test tests::remove_edge_and_remove_node_return_false_for_unknown_ids ... ok
+test tests::remove_edge_unlinks_adjacency_both_ways_when_undirected ... ok
+test tests::reversed_view_edges_and_edges_between_swap_endpoints ... ok
+test tests::quick::csr_out_degree_matches_storage_out_degree_under_random_directed_graphs ... ok
+test tests::remove_node_cascades_edges_and_handles ... ok
+test tests::reversed_view_is_a_no_op_on_undirected_graph ... ok
+test tests::reversed_view_swaps_direction_on_directed_graph ... ok
+test tests::storage_default_weight_reads_weight_attr_with_fallback ... ok
+test tests::subgraph_view_attr_view_hides_attrs_outside_the_node_subset ... ok
+test tests::subgraph_view_degree_counts_only_edges_within_subset ... ok
+test tests::subgraph_view_drops_edges_leaving_the_subset ... ok
+test tests::tolerance_constants_are_ordered ... ok
+test tests::undirected_in_neighbors_equals_out_neighbors ... ok
+test tests::undirected_self_loop_counts_twice_towards_degree ... ok
+test tests::undirected_view_attr_view_delegates_to_parent ... ok
+test tests::undirected_view_merges_successors_and_predecessors ... ok
+test tests::undirected_view_edges_normalizes_endpoint_order ... ok
+test tests::unit_weight_is_always_one ... ok
+test tests::undirected_view_degree_and_edges_between_merge_both_directions ... ok
+
+test result: ok. 97 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running unittests ../../../../🕸️graph/🎯️approximation/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_approximation-52cdc14a195b5a04)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🔀️bipartite/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_bipartite-3d51069f58735faf)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🎯️centrality/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_centrality-d50785e3fe8b0c34)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🔺️cliques/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_cliques-58c0c79a2c108d75)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🧩️clustering/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_clustering-3bbd5517b62c5d03)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests ../../../../🕸️graph/🎨️coloring/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_coloring-01c494330ac439c5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🏘️community/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_community-750f509113b45282)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🧩️components/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_components-2be8770cc99e84a9)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🔗️connectivity/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_connectivity-44510c01e9e353e5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🔄️cycles/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_cycles-722d3fe919c1dc64)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🕸️dag/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_dag-6a7b8c39e6db511c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🖊️drawing/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_drawing-b9fbad7ff5c5ba59)
+
+running 12 tests
+test force::tests::circular_layout_places_points_on_ring ... ok
+test force::tests::force_layout_moves_nodes ... ok
+test force::tests::grid_layout_places_points_in_rows ... ok
+test routing::tests::edge_bezier_free_target_end_tangent_matches_incoming_chord ... ok
+test routing::tests::edge_bezier_rectangle_port_uses_outward_normal ... ok
+test routing::tests::edge_bezier_starts_outside_handle_cap_peak ... ok
+test routing::tests::exterior_cap_paths_bulge_outward_on_all_cardinals ... ok
+test routing::tests::outside_node_clip_path_excludes_node_interior ... ok
+test routing::tests::rectangle_rim_outward_uses_edge_normal_not_radial ... ok
+test routing::tests::sharp_sz_path_is_orthogonal_between_peaks ... ok
+test routing::tests::triangle_cap_peak_matches_outward_direction ... ok
+test tidy_tree::tests::buchheim_tree_two_nodes ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_dsl-d7cbf27a7db7f505)
+
+running 77 tests
+test tests::board_graph_node_property_id_kind_all_and_missing ... ok
+test tests::complete_suggests_bound_variable_when_prefix_does_not_match_logic_keywords ... ok
+test tests::empty_pattern_error_is_reachable_via_pattern_construction ... ok
+test tests::execute_multiple_match_patterns_join_bindings ... ok
+test tests::complete_after_at_suggests_port_kinds ... ok
+test tests::complete_at_start_suggests_clause_keywords ... ok
+test tests::complete_in_where_clause_suggests_logic_keywords ... ok
+test tests::complete_after_dot_suggests_property_names ... ok
+test tests::complete_after_colon_suggests_node_then_edge_kinds ... ok
+test tests::execute_rejects_with_unwind_call_pending_wiring ... ok
+test tests::execute_returns_graph_kind_when_returning_bound_entities ... ok
+test tests::execute_returns_table_kind_for_property_projection ... ok
+test tests::execute_undirected_edge_matches_both_directions ... ok
+test tests::execute_where_clause_filters_bindings ... ok
+test tests::execute_with_no_return_clause_yields_empty_table ... ok
+test tests::execute_and_or_expressions ... ok
+test tests::execute_rejects_mutating_clauses ... ok
+test tests::format_query_is_idempotent_and_normalizes_whitespace ... ok
+test tests::format_rejects_unterminated_string ... ok
+test tests::from_fixture_json_rejects_invalid_json ... ok
+test tests::from_puzzle3d_fixture_json_converts_objects_array ... ok
+test tests::from_puzzle3d_fixture_json_passes_through_existing_nodes ... ok
+test tests::graph_dsl_error_display_messages ... ok
+test tests::hover_reports_keyword_and_bound_variable ... ok
+test tests::hover_matches_bare_node_kind_edge_kind_and_property_words ... ok
+test tests::from_puzzle2d_and_puzzle5d_fixture_json_resolve_manifests ... ok
+test tests::hover_returns_none_for_whitespace ... ok
+test tests::lexer_accepts_both_single_and_double_quoted_strings_and_always_prints_double_quoted ... ok
+test tests::lint_flags_unbound_variable ... ok
+test tests::lint_clean_query_has_no_diagnostics ... ok
+test tests::idiom_hooks_canonicalize_and_classify_through_the_dsl_registry_seam ... ok
+test tests::manifest_helpers_merge_graph_and_manifest_kinds ... ok
+test tests::parse_back_arrow_edge_swaps_left_and_right ... ok
+test tests::parse_call_clause_with_positional_args ... ok
+test tests::parse_error_on_char_outside_dsl_core_alphabet_reports_lex_error ... ok
+test tests::lint_flags_unknown_node_kind ... ok
+test tests::parse_error_on_lone_bang_reports_lex_error ... ok
+test tests::parse_error_on_unexpected_char ... ok
+test tests::parse_match_with_port ... ok
+test tests::lint_reports_parse_errors ... ok
+test tests::parse_delete_set_merge_clauses ... ok
+test tests::parse_error_on_unterminated_string ... ok
+test tests::parse_labeled_directed_and_undirected_edges_use_double_dash_connector ... ok
+test tests::parse_undirected_edge ... ok
+test tests::parse_unexpected_token_error_has_expected_and_found ... ok
+test tests::parse_unwind_clause ... ok
+test tests::parse_where_and_or_precedence ... ok
+test tests::parse_with_clause ... ok
+test tests::parse_match_return ... ok
+test tests::run_dag_fixture_query ... ok
+test tests::run_query_json_serializes_result ... ok
+test tests::split_endpoint_falls_back_to_plain_id ... ok
+test tests::run_port_filtered_query ... ok
+test tests::semantic_tokens_mirror_tokenize_classes ... ok
+test tests::split_endpoint_resolves_handle_mapped_at_and_colon ... ok
+test tests::split_endpoint_resolves_exact_handle_and_unmapped_at ... ok
+test tests::split_endpoint_resolves_unmapped_colon_and_dot ... ok
+test tests::subgraph_fixture_json_filters_to_requested_ids ... ok
+test tests::tokenize_classifies_clause_and_operator_tokens ... ok
+test wire::tests::dag_from_wire_literal_parses_bool_and_null_properties ... ok
+test tests::tokenize_marks_unterminated_string_as_error_class ... ok
+test wire::tests::dag_from_wire_literal_rejects_edge_missing_source_port ... ok
+test tests::tokenize_never_panics_on_stray_symbols ... ok
+test wire::tests::dag_from_wire_literal_rejects_edge_missing_target_port ... ok
+test tests::tokenize_treats_hash_as_a_comment_to_end_of_line ... ok
+test wire::tests::dag_from_wire_literal_rejects_malformed_properties ... ok
+test wire::tests::dag_from_wire_literal_parses_undirected_dash_dash_edge ... ok
+test wire::tests::dag_from_wire_literal_parses_double_quoted_string_properties ... ok
+test wire::tests::dag_from_wire_literal_rejects_unterminated_string ... ok
+test wire::tests::dag_from_wire_literal_accepts_back_arrow_sugar_and_normalizes_direction ... ok
+test wire::tests::dag_from_wire_literal_rejects_unexpected_char ... ok
+test wire::tests::wire_literal_from_dag_round_trips_through_unified_double_quoted_syntax ... ok
+test wire::tests::wire_literal_from_dag_unknown_node_kind_defaults_to_node ... ok
+test wire::tests::wire_literal_nested_object_and_array_properties ... ok
+test wire::tests::wire_literal_roundtrip_simple ... ok
+test wire::tests::wire_literal_undirected ... ok
+test wire::tests::wire_literal_with_properties ... ok
+
+test result: ok. 77 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests ../../../../🕸️graph/🌊️flow/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_flow-615257ccddd5f43a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🎲️generate/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_generate-46a0d59388f39f5b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../🕸️graph/🎲️generate/🎲️random/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_generate_random-4d74da27279506c3)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🔌️io/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_io-24e6fc966081aab0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🪞️isomorphism/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_isomorphism-4bf7f0204aee31e6)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🛂️manifest/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_manifest-cfa3c93540bbc048)
+
+running 4 tests
+test tests::property_value_dsl_field_round_trips_nested_array_and_object ... ok
+test tests::manifest_by_id_resolves ... ok
+test tests::nakagin_manifest_loads ... ok
+test tests::validator_rejects_unknown_node_kind ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🤝️matching/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_matching-8b42a1075251ddf5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../🕸️graph/➕️normal/➡️directed/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_normal_directed-02bc94cef41cd61b)
+
+running 36 tests
+test tests::add_edge_upserts_and_auto_creates_nodes ... ok
+test tests::add_edge_respects_direction ... ok
+test tests::add_edges_from_and_weighted_edges_from ... ok
+test tests::add_node_with_attrs_and_merge_by_id ... ok
+test tests::add_nodes_from_and_remove_nodes_from ... ok
+test tests::all_neighbors_is_union_of_predecessors_and_successors ... ok
+test tests::attr_view_and_edge_weights_trait_methods ... ok
+test tests::clear_removes_everything_clear_edges_keeps_nodes ... ok
+test tests::copy_is_independent_of_original ... ok
+test tests::common_neighbors_uses_successors_only ... ok
+test tests::density_is_zero_below_two_nodes ... ok
+test tests::density_on_small_complete_digraph ... ok
+test tests::edge_subgraph_is_an_independent_copy ... ok
+test tests::get_edge_data_is_none_for_missing_pair ... ok
+test tests::get_node_and_edge_attributes_skip_entries_without_the_key ... ok
+test tests::is_empty_reflects_edge_count_not_node_count ... ok
+test tests::in_edges_and_out_edges_are_direction_filtered ... ok
+test tests::graph_view_trait_methods_delegate_to_storage ... ok
+test tests::is_path_rejects_missing_node_and_wrong_direction ... ok
+test tests::name_defaults_to_empty_string ... ok
+test tests::node_and_edge_attributes_round_trip ... ok
+test tests::non_edges_lists_every_missing_ordered_pair ... ok
+test tests::non_neighbors_excludes_self_and_successors ... ok
+test tests::path_cycle_star_respect_direction ... ok
+test tests::path_weight_sums_weights_and_is_none_off_path ... ok
+test tests::selfloop_counts_twice_towards_degree ... ok
+test tests::set_node_and_edge_attributes_skip_missing_ids ... ok
+test tests::single_node_path_adds_isolated_node_without_edges ... ok
+test tests::single_node_cycle_is_a_selfloop ... ok
+test tests::star_with_only_center_or_no_nodes_adds_no_edges ... ok
+test tests::subgraph_is_an_independent_copy ... ok
+test tests::to_undirected_non_reciprocal_dedupes ... ok
+test tests::to_undirected_reciprocal_keeps_only_mutual_edges ... ok
+test tests::remove_edge_is_directional ... ok
+test tests::remove_node_cascades_incident_edges ... ok
+test tests::reverse_swaps_every_edge_and_round_trips ... ok
+
+test result: ok. 36 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests ../../../../../🕸️graph/➕️normal/↔undirected/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_normal_undirected-995b97eb48518901)
+
+running 11 tests
+test tests::add_edge_upsert_semantics ... ok
+test tests::is_empty_vs_number_of_nodes ... ok
+test tests::density_edge_cases ... ok
+test tests::crud_round_trip ... ok
+test tests::path_cycle_star_builders ... ok
+test tests::selfloop_counts_double_degree ... ok
+test tests::path_helpers ... ok
+test tests::subgraph_and_edge_subgraph_are_independent_copies ... ok
+test tests::to_directed_doubles_edge_count ... ok
+test tests::weighted_degree_and_size ... ok
+test tests::attributes_round_trip ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests ../../../../🕸️graph/🔧️operators/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_operators-c17d3c11173d9099)
+
+running 19 tests
+test tests::compose_lets_h_overwrite_shared_node_and_edge_attrs ... ok
+test tests::contracted_nodes_merges_v_into_u_and_respects_self_loops_flag ... ok
+test tests::difference_keeps_gs_nodes_and_only_gs_own_edges ... ok
+test tests::disjoint_union_relabels_both_graphs_into_fresh_ids ... ok
+test tests::intersection_keeps_only_shared_nodes_and_edges ... ok
+test tests::lexicographic_product_includes_cross_block_edges ... ok
+test tests::line_graph_of_a_triangle_is_itself_a_triangle ... ok
+test tests::complement_of_a_path_matches_a_hand_count ... ok
+test tests::contracted_edge_contracts_its_own_endpoints ... ok
+test tests::cartesian_product_of_two_2node_paths_is_a_4cycle ... ok
+test tests::mycielskian_of_a_single_edge_is_the_5cycle ... ok
+test tests::quotient_graph_connects_blocks_that_have_a_crossing_edge ... ok
+test tests::power_connects_nodes_within_k_hops ... ok
+test tests::reverse_round_trips_the_edge_set ... ok
+test tests::strong_product_is_the_union_of_cartesian_and_tensor ... ok
+test tests::symmetric_difference_keeps_edges_unique_to_either_side ... ok
+test tests::tensor_product_requires_adjacency_on_both_sides ... ok
+test tests::union_errors_on_overlapping_node_ids ... ok
+test tests::union_of_disjoint_graphs_merges_everything ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🛤️paths/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_paths-aacd5d565bdf5545)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🗺️planarity/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_planarity-ec18cd20e10e889f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../../🕸️graph/🔌️ports/➡️directed/➕️normal/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_port_directed_normal-6ce268a64783dd5e)
+
+running 33 tests
+test tests::add_edges_from_and_weighted_edges_from ... ok
+test tests::add_node_with_and_with_id_apply_attrs ... ok
+test tests::add_nodes_from_and_remove_nodes_from ... ok
+test tests::default_matches_new ... ok
+test tests::add_path_cycle_star_build_directed_shapes ... ok
+test tests::add_edge_auto_creates_missing_nodes ... ok
+test tests::all_neighbors_unions_predecessors_and_successors ... ok
+test tests::clear_and_clear_edges_behave ... ok
+test tests::density_is_zero_below_two_nodes ... ok
+test tests::density_can_exceed_one_for_multigraph ... ok
+test tests::copy_produces_an_independent_clone ... ok
+test tests::parallel_directed_edges_are_never_upserted ... ok
+test tests::remove_node_cascades_incident_edges_and_forgets_handle ... ok
+test tests::edge_subgraph_skips_edges_not_in_the_keep_set ... ok
+test tests::graph_view_and_attr_view_delegate_correctly ... ok
+test tests::in_edges_and_out_edges_yield_correct_refs ... ok
+test tests::in_out_degree_count_every_parallel_edge ... ok
+test tests::is_empty_tracks_edge_presence_not_node_presence ... ok
+test tests::name_defaults_empty_and_is_settable ... ok
+test tests::number_of_edges_single_endpoint_counts_in_and_out ... ok
+test tests::remove_edge_reports_existence ... ok
+test tests::reverse_pair_is_independent ... ok
+test tests::remove_one_edge_leaves_the_rest ... ok
+test tests::reverse_flips_every_edge ... ok
+test tests::selfloop_counts_twice_towards_degree ... ok
+test tests::set_and_get_node_and_edge_attributes ... ok
+test tests::subgraph_and_edge_subgraph_restrict_correctly ... ok
+test tests::subgraph_ignores_nonexistent_node_ids ... ok
+test tests::to_simple_sums_weights ... ok
+test tests::to_undirected_non_reciprocal_keeps_both_directions_as_separate_parallel_edges ... ok
+test tests::successors_and_predecessors_dedupe_despite_parallels ... ok
+test tests::to_undirected_reciprocal_keeps_only_mutual_pairs ... ok
+test tests::weighted_degree_sums_in_and_out_weights ... ok
+
+test result: ok. 33 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests ../../../../../🕸️graph/🔌️ports/↔undirected/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_port_undirected-8efe9ec9f48f625f)
+
+running 35 tests
+test tests::add_edges_from_and_add_weighted_edges_from ... ok
+test tests::add_cycle_empty_single_and_many ... ok
+test tests::add_nodes_from_creates_every_node ... ok
+test tests::add_path_chains_consecutive_nodes ... ok
+test tests::add_edge_auto_creates_unseen_nodes ... ok
+test tests::attrview_and_edgeweights_delegate_correctly ... ok
+test tests::add_star_empty_and_hub_with_leaves ... ok
+test tests::clear_edges_keeps_nodes_but_drops_edges ... ok
+test tests::add_node_with_stores_attrs ... ok
+test tests::add_node_with_id_reuses_given_id ... ok
+test tests::clear_removes_nodes_edges_and_handles ... ok
+test tests::copy_is_an_independent_snapshot ... ok
+test tests::density_zero_for_zero_or_one_node_else_multigraph_formula ... ok
+test tests::degree_counts_every_parallel_edge ... ok
+test tests::graphview_trait_delegates_match_native_methods ... ok
+test tests::edges_between_returns_all_parallel_ids ... ok
+test tests::parallel_edges_get_distinct_ids ... ok
+test tests::is_empty_reflects_edge_presence_not_node_presence ... ok
+test tests::name_defaults_to_none_then_reflects_set_name ... ok
+test tests::number_of_edges_falls_back_to_total_unless_both_endpoints_given ... ok
+test tests::neighbors_dedupe_across_parallel_edges ... ok
+test tests::remove_one_edge_drops_exactly_one_parallel_edge ... ok
+test tests::order_matches_number_of_nodes_and_nodes_iterator ... ok
+test tests::remove_edge_by_id_and_missing_edge_data ... ok
+test tests::remove_node_drops_incident_edges_and_reallocates_fresh_handle ... ok
+test tests::remove_nodes_from_removes_every_listed_node ... ok
+test tests::set_edge_attributes_extends_and_get_edge_attributes_missing ... ok
+test tests::self_loop_counts_twice_towards_degree ... ok
+test tests::remove_one_edge_returns_false_when_pair_has_no_edge ... ok
+test tests::set_node_attributes_extends_existing_and_ignores_missing_node ... ok
+test tests::selfloop_edges_and_nodes_with_selfloops_report_only_loops ... ok
+test tests::subgraph_and_edge_subgraph_are_independent_copies ... ok
+test tests::to_directed_mirrors_edges_both_ways_but_selfloop_once ... ok
+test tests::to_simple_sums_parallel_edge_weights ... ok
+test tests::weighted_degree_sums_named_attribute_with_default_and_counts_selfloop_twice ... ok
+
+test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🎯️similarity/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_similarity-830b7a2e362a6d08)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/📊️spectral/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_spectral-fa77e79c652ac00a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🏗️structure/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_structure-65942816b67be100)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🚶️traversal/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_traversal-c32cda1fb452b676)
+
+running 24 tests
+test tests::bfs_layers_multi_source ... ok
+test tests::bfs_on_disconnected_stays_in_source_component ... ok
+test tests::bfs_predecessors_and_successors_on_tree ... ok
+test tests::bfs_edges_on_missing_source_is_empty ... ok
+test tests::bfs_tree_matches_bfs_edges ... ok
+test tests::bfs_beam_edges_keeps_only_top_width_per_layer ... ok
+test tests::bfs_beam_edges_width_zero_terminates_immediately ... ok
+test tests::bfs_edges_chain_is_linear ... ok
+test tests::bfs_edges_on_cycle_terminates_and_covers_all_nodes ... ok
+test tests::bfs_edges_handles_self_loop_without_looping ... ok
+test tests::descendants_at_distance_on_tree ... ok
+test tests::dfs_edges_chain_is_linear ... ok
+test tests::dfs_edges_handles_self_loop_without_looping ... ok
+test tests::dfs_labeled_edges_undirected_skips_trivial_parent_mirror ... ok
+test tests::dfs_on_cycle_terminates_and_labels_back_edge ... ok
+test tests::dfs_on_disconnected_stays_in_source_component ... ok
+test tests::dfs_predecessors_and_successors_on_tree ... ok
+test tests::dfs_tree_matches_dfs_edges ... ok
+test tests::edge_bfs_handles_self_loop_without_looping ... ok
+test tests::dfs_preorder_and_postorder_on_tree ... ok
+test tests::edge_bfs_on_cycle_visits_each_edge_once ... ok
+test tests::edge_bfs_visits_every_parallel_edge ... ok
+test tests::edge_dfs_visits_every_parallel_edge ... ok
+test tests::generic_bfs_edges_honors_custom_neighbor_order ... ok
+
+test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../🕸️graph/🌳️trees/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_graph_trees-b6b5b5bc7807c7ab)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../🔷️lie/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_lie-cc1c8f00d53763e1)
+
+running 16 tests
+test tests::quat_slerp_hits_endpoints_and_stays_unit ... ok
+test tests::project_to_so3_restores_perturbed_rotation ... ok
+test tests::quat_matrix_round_trip_covers_all_shepperd_branches ... ok
+test tests::quat_rotate_matches_matrix_action ... ok
+test tests::se3_exp_log_round_trips ... ok
+test tests::se3_adjoint_matches_conjugation ... ok
+test tests::se3_lerp_endpoints_and_midpoint ... ok
+test tests::sim3_exp_log_round_trips ... ok
+test tests::se3_spline_tracks_constant_velocity ... ok
+test tests::jl_times_jl_inv_is_identity ... ok
+test tests::so3_exp_log_round_trips_small_moderate_and_near_pi ... ok
+test tests::so3_compose_inverse_and_hat_vee_round_trip ... ok
+test tests::so3_log_matrix_round_trip_at_pi ... ok
+test tests::umeyama_recovers_planted_similarity ... ok
+test tests::umeyama_rejects_degenerate_inputs ... ok
+test tests::umeyama_rigid_without_scale ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../🔢️number/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_number-0c6a8fb81cc0ffea)
+
+running 79 tests
+test integer::tests::div_rem_truncated_matches_rust_semantics ... ok
+test integer::tests::checked_isqrt_rejects_negative ... ok
+test integer::tests::div_rem_euclid_remainder_always_nonnegative ... ok
+test integer::tests::mul_sign_handling ... ok
+test integer::tests::nth_root_odd_accepts_negative ... ok
+test integer::tests::extended_gcd_satisfies_bezout_identity ... ok
+test integer::tests::ordering_across_signs ... ok
+test integer::tests::ring_trait_impl_matches_inherent_methods ... ok
+test integer::tests::add_sub_sign_handling ... ok
+test integer::tests::div_rem_floor_matches_math_floor_division ... ok
+test integer::tests::string_roundtrip_positive_and_negative ... ok
+test interval::tests::arithmetic_hand_cases ... ok
+test interval::tests::division_by_zero_straddling_interval_is_none ... ok
+test interval::tests::hull_and_intersect ... ok
+test interval::tests::powi_matches_repeated_multiplication ... ok
+test interval::tests::sign_detection ... ok
+test interval::tests::from_rational_contains_the_exact_value ... ok
+test interval::tests::sqrt_of_negative_is_none ... ok
+test modular::tests::jacobi_hand_cases ... ok
+test modular::tests::crt_pair_matches_congruences ... ok
+test modular::tests::mod_add_sub_mul_hand_cases ... ok
+test modular::tests::mod_inv_matches_bezout ... ok
+test modular::tests::mod_pow_hand_cases ... ok
+test modular::tests::modint_field_operations ... ok
+test modular::tests::modint_unbound_zero_unifies_with_bound_side ... ok
+test modular::tests::sqrt_mod_hand_cases ... ok
+test natural::tests::add_matches_hand_case ... ok
+test modular::tests::quick::sqrt_mod_matches_brute_force_for_all_residues_small_primes ... ok
+test natural::tests::bit_length_and_bit_access ... ok
+test natural::tests::checked_sub_matches_hand_case_and_rejects_negative ... ok
+test natural::tests::decimal_string_roundtrip ... ok
+test natural::tests::div_rem_by_larger_value_is_zero_quotient ... ok
+test natural::tests::div_rem_self_check_invariant ... ok
+test natural::tests::gcd_matches_euclid_hand_cases ... ok
+test natural::tests::hex_roundtrip ... ok
+test natural::tests::isqrt_matches_known_squares ... ok
+test natural::tests::mul_matches_hand_case ... ok
+test natural::tests::nth_root_matches_known_cubes ... ok
+test natural::tests::quick::div_rem_add_back_branch_is_exercised_and_correct ... ok
+test natural::tests::ord_compares_by_magnitude ... ok
+test natural::tests::quick::sieve_like_isqrt_matches_f64_for_moderate_values ... ok
+test natural::tests::shl_shr_roundtrip ... ok
+test natural::tests::quick::karatsuba_matches_schoolbook_across_threshold ... ok
+test natural::tests::zero_roundtrips ... ok
+test primes::tests::carmichael_numbers_are_rejected ... ok
+test primes::tests::divisors_hand_case ... ok
+test primes::tests::euler_phi_hand_cases ... ok
+test primes::tests::factor_u64_reconstructs_via_multiplication ... ok
+test natural::tests::quick::div_rem_invariant_holds_on_random_shapes ... ok
+test primes::tests::is_prime_u64_hand_cases ... ok
+test primes::tests::is_prime_natural_matches_u64_path_for_small_values ... ok
+test primes::tests::moebius_hand_cases ... ok
+test primes::tests::next_prime_hand_cases ... ok
+test primes::tests::quick::factor_random_64bit_semiprimes ... ok
+test natural::tests::exhaustive::stress_16384_bit_operations ... ok
+test primes::tests::sieve_matches_is_prime_u64 ... ok
+test rational::tests::continued_fraction_reconstructs_convergents ... ok
+test rational::tests::field_ops_hand_cases ... ok
+test rational::tests::best_approximation_respects_denominator_bound ... ok
+test rational::tests::field_trait_impl_matches_inherent_methods ... ok
+test rational::tests::floor_ceil_trunc_hand_cases ... ok
+test rational::tests::inv_of_zero_is_none ... ok
+test rational::tests::from_f64_roundtrips_exactly ... ok
+test rational::tests::normalization_reduces_to_lowest_terms ... ok
+test rational::tests::ordering_via_cross_multiplication ... ok
+test traits::tests::field_gcd_helper_matches_unit_convention ... ok
+test traits::tests::i64_from_i64_via_default_matches_identity_for_positive_and_negative ... ok
+test rational::tests::to_f64_matches_expected_for_simple_fractions ... ok
+test rational::tests::zero_denominator_is_rejected ... ok
+test traits::tests::f64_field_inv_and_div ... ok
+test traits::tests::i64_div_rem_matches_language_semantics ... ok
+test traits::tests::i64_gcd_matches_euclid_hand_cases ... ok
+test traits::tests::i64_lcm_matches_hand_cases ... ok
+test traits::tests::i64_pow_matches_repeated_multiplication ... ok
+test traits::tests::i64_ring_axioms_hold_on_small_samples ... ok
+test primes::tests::is_prime_natural_handles_large_known_prime ... ok
+test primes::tests::long::factor_natural_random_semiprime ... ok
+test natural::tests::long::stress_4096_bit_mul_div_gcd ... ok
+test primes::tests::quick::sieve_count_matches_known_pi_of_1e6 ... ok
+
+test result: ok. 79 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running unittests ../../../🎯️optimize/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_optimize-a3222f5f5f0d3fe5)
+
+running 9 tests
+test tests::golden_section_finds_convex_minimum ... ok
+test tests::brent_minimize_finds_convex_minimum ... ok
+test tests::gauss_newton_solves_consistent_linear_system_in_one_step ... ok
+test tests::levenberg_marquardt_solves_rosenbrock ... ok
+test tests::huber_loss_recovers_line_that_trivial_loss_misses ... ok
+test tests::numeric_jacobian_matches_analytic_jacobian_for_rosenbrock ... ok
+test tests::ransac_recovers_line_and_planted_inlier_count ... ok
+test tests::lo_ransac_improves_on_plain_ransac_accuracy ... ok
+test tests::schur_lm_matches_flat_levenberg_marquardt ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../📈️polynomial/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_polynomial-1004cf8e49e7a7b7)
+
+running 41 tests
+test algebraic::tests::from_rational_is_exact ... ok
+test factor::tests::factor_irreducible_quadratic_stays_whole ... ok
+test factor::tests::factor_repeated_linear_factor ... ok
+test algebraic::tests::neg_and_inv_hand_cases ... FAILED
+test factor::tests::factor_x2_minus_1 ... ok
+test factor::tests::factor_nonmonic_quadratic ... ok
+test factor::tests::rational_roots_of_quadratic ... ok
+test factor::tests::factor_x4_minus_1 ... ok
+test factor::tests::rational_roots_with_zero_root ... ok
+test finite::tests::distinct_degree_factor_separates_degrees ... ok
+test algebraic::tests::root_of_selects_correct_irreducible_factor ... FAILED
+test finite::tests::equal_degree_factor_splits_product_of_two_linears ... ok
+test finite::tests::factor_mod_p_reconstructs_via_multiplication ... ok
+test finite::tests::poly_mod_pow_matches_repeated_squaring ... ok
+test multivariate::tests::eval_hand_case ... ok
+test finite::tests::is_irreducible_hand_cases ... FAILED
+test multivariate::tests::monomial_ordering_grlex_uses_total_degree_first ... ok
+test multivariate::tests::groebner_basis_of_line_intersection ... ok
+test multivariate::tests::monomial_ordering_lex ... ok
+test multivariate::tests::partial_derivative_hand_case ... ok
+test roots::tests::cauchy_bound_contains_all_roots ... ok
+test roots::tests::zero_polynomial_and_constant_have_no_roots ... ok
+test multivariate::tests::ring_ops_hand_case ... ok
+test multivariate::tests::try_div_and_lcm ... ok
+test roots::tests::isolate_roots_matches_known_integer_roots ... ok
+test roots::tests::isolate_roots_of_simple_quadratic ... ok
+test univariate::tests::derivative_power_rule ... ok
+test univariate::tests::eval_horner_matches_direct_computation ... ok
+test univariate::tests::div_rem_identity_holds ... ok
+test univariate::tests::factor_x2_minus_1_via_squarefree_and_roots ... ok
+test univariate::tests::interpolate_reconstructs_quadratic ... FAILED
+test univariate::tests::gcd_hand_case ... ok
+test univariate::tests::rational_root_via_eval_hand_case ... ok
+test univariate::tests::resultant_of_coprime_linear_factors_is_nonzero ... ok
+test roots::tests::refine_root_converges_to_sqrt2 ... ok
+test univariate::tests::resultant_of_shared_root_is_zero ... ok
+test univariate::tests::ring_axioms_on_small_polynomials ... ok
+test univariate::tests::squarefree_decomposition_of_repeated_factor ... ok
+test roots::tests::wilkinson_like_small_case_root_count ... ok
+test algebraic::tests::cbrt2_times_cbrt4_equals_2 ... FAILED
+test algebraic::tests::sqrt2_plus_sqrt3_has_minimal_poly_degree_4 ... FAILED
+
+failures:
+
+---- algebraic::tests::neg_and_inv_hand_cases stdout ----
+
+thread 'algebraic::tests::neg_and_inv_hand_cases' (118546603) panicked at 🧰️framework/🔨️modules/🧮️math/📈️polynomial/⚡️implementations/🦀️rust/../../../📈️polynomial/⚡️implementations/🦀️rust/📦️lib.rs:2337:13:
+assertion failed: (negated.to_f64() + 2f64.sqrt()).abs() < 1e-9
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- algebraic::tests::root_of_selects_correct_irreducible_factor stdout ----
+
+thread 'algebraic::tests::root_of_selects_correct_irreducible_factor' (118546604) panicked at 🧰️framework/🔨️modules/🧮️math/📈️polynomial/⚡️implementations/🦀️rust/../../../📈️polynomial/⚡️implementations/🦀️rust/📦️lib.rs:2347:13:
+assertion failed: (root0.to_f64() + 2f64.sqrt()).abs() < 1e-6
+
+---- finite::tests::is_irreducible_hand_cases stdout ----
+
+thread 'finite::tests::is_irreducible_hand_cases' (118546616) panicked at 🧰️framework/🔨️modules/🧮️math/📈️polynomial/⚡️implementations/🦀️rust/../../../📈️polynomial/⚡️implementations/🦀️rust/📦️lib.rs:1275:13:
+assertion failed: is_irreducible(&f)
+
+---- univariate::tests::interpolate_reconstructs_quadratic stdout ----
+
+thread 'univariate::tests::interpolate_reconstructs_quadratic' (118546636) panicked at 🧰️framework/🔨️modules/🧮️math/📈️polynomial/⚡️implementations/🦀️rust/../../../📈️polynomial/⚡️implementations/🦀️rust/📦️lib.rs:606:13:
+assertion `left == right` failed
+  left: PolyU { coeffs: [Rational { numer: Integer { sign: Positive, magnitude: Natural { limbs: [1] } }, denom: Natural { limbs: [1] } }, Rational { numer: Integer { sign: Positive, magnitude: Natural { limbs: [7] } }, denom: Natural { limbs: [1] } }, Rational { numer: Integer { sign: Positive, magnitude: Natural { limbs: [2] } }, denom: Natural { limbs: [1] } }] }
+ right: PolyU { coeffs: [Rational { numer: Integer { sign: Positive, magnitude: Natural { limbs: [1] } }, denom: Natural { limbs: [1] } }, Rational { numer: Integer { sign: Positive, magnitude: Natural { limbs: [3] } }, denom: Natural { limbs: [1] } }, Rational { numer: Integer { sign: Positive, magnitude: Natural { limbs: [2] } }, denom: Natural { limbs: [1] } }] }
+
+---- algebraic::tests::cbrt2_times_cbrt4_equals_2 stdout ----
+
+thread 'algebraic::tests::cbrt2_times_cbrt4_equals_2' (118546601) panicked at 🧰️framework/🔨️modules/🧮️math/📈️polynomial/⚡️implementations/🦀️rust/../../../📈️polynomial/⚡️implementations/🦀️rust/📦️lib.rs:2322:13:
+assertion failed: (product.to_f64() - 2.0).abs() < 1e-6
+
+---- algebraic::tests::sqrt2_plus_sqrt3_has_minimal_poly_degree_4 stdout ----
+
+thread 'algebraic::tests::sqrt2_plus_sqrt3_has_minimal_poly_degree_4' (118546605) panicked at 🧰️framework/🔨️modules/🧮️math/📈️polynomial/⚡️implementations/🦀️rust/../../../📈️polynomial/⚡️implementations/🦀️rust/📦️lib.rs:2313:13:
+assertion failed: (val - (2f64.sqrt() + 3f64.sqrt())).abs() < 1e-6
+
+
+failures:
+    algebraic::tests::cbrt2_times_cbrt4_equals_2
+    algebraic::tests::neg_and_inv_hand_cases
+    algebraic::tests::root_of_selects_correct_irreducible_factor
+    algebraic::tests::sqrt2_plus_sqrt3_has_minimal_poly_degree_4
+    finite::tests::is_irreducible_hand_cases
+    univariate::tests::interpolate_reconstructs_quadratic
+
+test result: FAILED. 35 passed; 6 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.84s
+
+error: test failed, to rerun pass `-p semio-framework-os-kernel-math-polynomial --lib`
+     Running unittests ../../../🎲️probability/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_probability-cb624fd548400065)
+
+running 38 tests
+test tests::beta_inc_symmetric_midpoint ... ok
+test tests::beta_inc_symmetry_identity ... ok
+test tests::bernoulli_pmf_cdf_quantile ... ok
+test tests::chi_squared_quantile_cdf_round_trip ... ok
+test tests::bernoulli_sample_frequency_matches_p ... ok
+test tests::beta_inc_uniform_case_is_identity ... ok
+test tests::binomial_cdf_matches_manual_partial_sum ... ok
+test tests::binomial_quantile_cdf_consistency ... ok
+test tests::binomial_pmf_matches_known_value ... ok
+test tests::chi_squared_quantiles_match_standard_table ... ok
+test tests::binomial_cdf_matches_beta_identity ... ok
+test tests::erf_is_odd ... ok
+test tests::erf_matches_known_values ... ok
+test tests::fisher_f_cdf_symmetry_point ... ok
+test tests::fisher_f_quantile_cdf_round_trip ... ok
+test tests::chi_squared_sample_mean_within_band ... ok
+test tests::fisher_f_sample_is_nonnegative ... ok
+test tests::gamma_p_and_q_sum_to_one ... ok
+test tests::gamma_p_matches_analytic_identity_for_a_one ... ok
+test tests::ln_gamma_matches_known_values ... ok
+test tests::ln_gamma_satisfies_recurrence ... ok
+test tests::multinomial_pmf_matches_hand_computation ... ok
+test tests::multinomial_rejects_probs_not_summing_to_one ... ok
+test tests::multinomial_sample_counts_sum_to_n ... ok
+test tests::normal_cdf_matches_known_value ... ok
+test tests::normal_quantile_cdf_round_trip ... ok
+test tests::normal_quantile_matches_known_value ... ok
+test tests::normal_rejects_nonpositive_std_dev ... ok
+test tests::student_t_cdf_matches_known_value ... ok
+test tests::normal_sample_mean_and_variance_within_band ... ok
+test tests::student_t_quantile_matches_known_value ... ok
+test tests::uniform_pdf_cdf_quantile_consistency ... ok
+test tests::uniform_rejects_invalid_bounds ... ok
+test tests::student_t_quantile_cdf_round_trip ... ok
+test tests::uniform_sample_mean_and_variance_within_band ... ok
+test tests::student_t_sample_mean_within_band ... ok
+test tests::binomial_sample_mean_within_band ... ok
+test tests::multinomial_sample_category_means_within_band ... ok
+
+test result: ok. 38 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests ../../../🎲️random/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_random-7d4462d77512b8e2)
+
+running 30 tests
+test tests::alias_table_empty_weights_always_samples_index_zero ... ok
+test tests::alias_table_all_zero_weights_always_samples_index_zero ... ok
+test tests::alias_table_single_weight_always_samples_it ... ok
+test tests::choose_returns_none_for_empty_slice ... ok
+test tests::choose_always_returns_an_element_from_the_slice ... ok
+test tests::cumulative_distribution_ends_at_one_and_is_nondecreasing ... ok
+test tests::cumulative_distribution_of_empty_weights_is_empty ... ok
+test tests::geometric_is_always_at_least_one ... ok
+test tests::discrete_sequence_draws_only_from_nonzero_weight_indices ... ok
+test tests::geometric_p_one_always_returns_one ... ok
+test tests::next_bool_respects_extremes ... ok
+test tests::next_f64_stays_within_unit_interval ... ok
+test tests::next_range_degenerate_empty_range_returns_lo ... ok
+test tests::poisson_lambda_zero_always_returns_zero ... ok
+test tests::normal_stays_within_six_std_devs_of_mean ... ok
+test tests::powerlaw_sequence_values_are_positive_and_at_least_one ... ok
+test tests::rng_different_seeds_diverge ... ok
+test tests::next_range_stays_within_bounds_and_is_roughly_uniform ... ok
+test tests::rng_next_f64_is_deterministic_for_same_seed ... ok
+test tests::poisson_mean_is_roughly_lambda ... ok
+test tests::rng_next_u64_is_deterministic_for_same_seed ... ok
+test tests::rng_state_round_trip_resumes_identically ... ok
+test tests::shuffle_preserves_multiset ... ok
+test tests::sample_without_replacement_returns_k_distinct_indices_in_range ... ok
+test tests::split_mix64_is_deterministic_for_same_seed ... ok
+test tests::split_mix64_differs_across_seeds ... ok
+test tests::zipf_ranks_are_within_bounds ... ok
+test tests::rng_has_no_obvious_short_cycle ... ok
+test tests::alias_table_sampling_frequency_matches_weights ... ok
+test tests::zipf_favors_low_ranks ... ok
+
+test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests ../../../🎯️sampling/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_sampling-20070ddbef0385a0)
+
+running 191 tests
+test tests::aho_corasick_handles_overlapping_patterns_via_fail_links ... ok
+test tests::aho_corasick_matches_and_reports_hold_back_on_partial_prefix ... ok
+test tests::allow_tokens_restricts_mask_to_exactly_the_allowed_set ... ok
+test tests::bad_words_masks_the_completion_token_after_its_prefix ... ok
+test tests::apply_inpaint_mask_blends_by_mask_weight ... ok
+test tests::all_presets_validate ... ok
+test tests::adaptive_truncation_targeting_effective_count_shrinks_a_near_uniform_distribution ... ok
+test tests::all_noise_schedules_are_non_increasing ... ok
+test tests::beam_search_finds_the_highest_probability_short_sequence ... ok
+test tests::all_processor_spec_variants_round_trip_through_json ... ok
+test tests::beam_search_hypotheses_have_independent_state ... ok
+test tests::bitset_and_or_and_not_operations ... ok
+test tests::bitset_first_set_and_is_all_zero ... ok
+test tests::best_of_n_selects_the_candidate_with_highest_mean_logprob ... ok
+test tests::bitset_iter_ones_skips_zero_words_across_boundaries ... ok
+test tests::bitset_set_get_round_trip ... ok
+test tests::builder_produces_a_validated_config ... ok
+test tests::build_constraint_covers_every_constraint_spec_variant ... ok
+test tests::by_position_schedule_clamps_past_its_length ... ok
+test tests::callback_schedule_serializes_but_refuses_to_deserialize ... ok
+test tests::bitset_new_full_has_exactly_len_bits_set ... ok
+test tests::cdf_binary_search_finds_first_index_at_or_above_u ... ok
+test tests::confidence_controller_uses_low_temp_under_low_entropy ... ok
+test tests::config_json_rejects_unknown_version ... ok
+test tests::config_json_round_trips_core_fields ... ok
+test tests::config_fingerprint_is_stable_and_sensitive_to_changes ... ok
+test tests::constant_schedule_ignores_input ... ok
+test tests::continuous_batcher_add_remove_and_step ... ok
+test tests::continuous_batcher_step_reports_error_for_unknown_sequence ... ok
+test tests::cosine_schedule_starts_and_ends_at_bounds ... ok
+test tests::continuous_batcher_per_sequence_output_is_independent_of_processing_order ... ok
+test tests::counter_rng_different_seeds_diverge ... ok
+test tests::counter_rng_is_deterministic_for_same_seed ... ok
+test tests::counter_rng_snapshot_restore_resumes_identically ... ok
+test tests::counter_rng_split_differs_by_purpose ... ok
+test tests::counter_rng_split_is_independent_of_call_order ... ok
+test tests::custom_schedule_returns_its_values_verbatim ... ok
+test tests::ddim_eta_zero_is_deterministic_regardless_of_seed ... ok
+test tests::decaying_penalty_weighs_recent_occurrences_more_than_distant_ones ... ok
+test tests::default_config_validates ... ok
+test tests::default_limits_validate ... ok
+test tests::dfa_token_cache_computes_allowed_tokens_and_next_states ... ok
+test tests::dfa_budget_is_enforced_for_pathologically_wide_patterns ... ok
+test tests::dfa_alive_flag_marks_dead_ends_as_unreachable_to_accept ... ok
+test tests::dfa_handles_alternation_class_and_bounded_repeat ... ok
+test tests::dfa_handles_escaped_bytes_and_unbounded_repeat ... ok
+test tests::dfa_matches_a_star_b_pattern ... ok
+test tests::dfa_rejects_unbalanced_parens_with_parse_error ... ok
+test tests::dfa_token_cache_evicts_all_entries_once_max_entries_is_reached ... ok
+test tests::ebnf_constraint_rejects_unbounded_left_recursion ... ok
+test tests::effective_candidate_count_matches_perplexity_of_uniform ... ok
+test tests::ebnf_constraint_compiles_a_simple_recursive_ish_grammar_and_masks_correctly ... ok
+test tests::entropy_of_deterministic_distribution_is_zero ... ok
+test tests::dfa_supports_plus_optional_and_negated_class_quantifiers ... ok
+test tests::entropy_of_uniform_distribution_is_ln_n ... ok
+test tests::forced_tokens_forces_bos_then_prefix_then_at_position ... ok
+test tests::entropy_pid_sharpens_the_distribution_when_entropy_exceeds_target ... ok
+test tests::entropy_scaled_schedule_clamps_to_range ... ok
+test tests::epsilon_cutoff_drops_near_zero_probability_tokens ... ok
+test tests::eta_cutoff_never_empties_live_set ... ok
+test tests::euler_ancestral_and_ddim_with_eta_differ_across_seeds ... ok
+test tests::euler_solver_converges_exactly_to_a_constant_target_when_schedule_reaches_zero ... ok
+test tests::every_error_variant_has_nonempty_display ... ok
+test tests::fallback_ladder_prefers_forced_over_eos_over_argmax_over_error ... ok
+test tests::forbid_tokens_removes_exactly_the_forbidden_set ... ok
+test tests::gumbel_top_k_returns_k_distinct_tokens ... ok
+test tests::heun_solver_uses_two_evaluations_per_non_final_step ... ok
+test tests::frequency_penalty_scales_with_occurrence_count ... ok
+test tests::greedy_sampler_errors_on_empty_distribution ... ok
+test tests::greedy_sampler_highest_token_id_picks_last_of_a_tie ... ok
+test tests::greedy_sampler_lowest_token_id_picks_first_of_a_tie ... ok
+test tests::guidance_combine_extrapolates_away_from_unconditional ... ok
+test tests::ids_display_show_raw_value ... ok
+test tests::img2img_start_index_boundaries ... ok
+test tests::json_parses_empty_array_and_object_and_unicode_escape ... ok
+test tests::json_depth_cap_is_enforced ... ok
+test tests::json_rejects_malformed_literals_strings_and_numbers ... ok
+test tests::json_rejects_trailing_garbage ... ok
+test tests::json_round_trips_basic_values ... ok
+test tests::json_schema_constraint_flags_a_schema_violation_once_json_completes ... ok
+test tests::json_schema_validator_checks_type_enum_and_bounds ... ok
+test tests::json_rejects_malformed_arrays_and_objects ... ok
+test tests::json_mode_constraint_accepts_valid_json_and_rejects_invalid ... ok
+test tests::gumbel_max_sampler_matches_multinomial_marginals ... ok
+test tests::kahan_sum_matches_naive_sum_for_short_sequences ... ok
+test tests::logsumexp_handles_all_neg_infinity ... ok
+test tests::logit_bias_sparse_and_dense_add_expected_deltas ... ok
+test tests::max_length_force_eos_restricts_to_eos_at_the_cap ... ok
+test tests::min_keep_guarantee_is_honored_by_every_truncation_warper ... ok
+test tests::logsumexp_matches_naive_for_moderate_values ... ok
+test tests::json_value_accessors_return_none_for_mismatched_variants ... ok
+test tests::min_length_eos_suppression_allows_eos_once_floor_reached ... ok
+test tests::linear_schedule_interpolates_and_clamps_at_bound ... ok
+test tests::multinomial_cdf_binary_search_matches_expected_frequencies ... ok
+test tests::min_length_eos_suppression_masks_eos_before_the_floor ... ok
+test tests::min_p_drops_tokens_far_below_the_maximum ... ok
+test tests::mirostat_commit_updates_mu_toward_target ... ok
+test tests::mirostat_v2_truncates_to_tokens_within_the_surprise_budget ... ok
+test tests::must_include_constraint_is_satisfied_once_an_alternative_appears ... ok
+test tests::must_include_constraint_is_trivially_satisfied_with_no_alternatives_and_supports_rollback ... ok
+test tests::mirostat_rollback_restores_mu ... ok
+test tests::next_f64_open01_is_never_zero ... ok
+test tests::next_range_stays_within_bounds ... ok
+test tests::no_repeat_ngram_rollback_un_forbids ... ok
+test tests::no_repeat_ngram_forbids_recreating_a_seen_bigram ... ok
+test tests::partial_select_top_k_is_noop_when_k_covers_everything ... ok
+test tests::piecewise_schedule_holds_at_last_breakpoint ... ok
+test tests::prediction_type_conversions_round_trip_through_denoised ... ok
+test tests::phrase_penalty_penalizes_only_after_the_proper_prefix ... ok
+test tests::partial_select_top_k_selects_highest_k_by_logit_with_tie_break ... ok
+test tests::rank_truncation_keeps_exactly_max_rank_entries ... ok
+test tests::regex_constraint_rollback_restores_dfa_state ... ok
+test tests::rejection_sampler_errors_after_max_attempts_when_never_accepted ... ok
+test tests::rejection_sampler_retries_until_accept_returns_true ... ok
+test tests::regex_parse_errors_on_unclosed_class_and_dangling_escapes ... ok
+test tests::regex_constraint_masks_to_only_valid_continuations ... ok
+test tests::sample_step_errors_when_sequence_already_finished ... ok
+test tests::presence_penalty_applies_flat_penalty_regardless_of_count ... ok
+test tests::repetition_penalty_pushes_down_a_seen_positive_logit ... ok
+test tests::repetition_controller_flattens_after_crossing_the_threshold ... ok
+test tests::repetition_penalty_rollback_restores_exact_prior_state ... ok
+test tests::rng_snapshot_rejects_kind_mismatch_on_restore ... ok
+test tests::rng_snapshot_text_round_trips ... ok
+test tests::run_diffusion_with_guidance_evaluates_both_branches_every_step ... ok
+test tests::run_diffusion_cancellation_stops_the_run_and_errors ... ok
+test tests::sequence_encouragement_biases_the_completion_token_after_its_prefix ... ok
+test tests::sample_step_honors_forced_bos_at_step_zero ... ok
+test tests::sample_step_with_no_repeat_ngram_avoids_recreating_a_bigram ... ok
+test tests::sample_step_with_regex_constraint_only_ever_emits_matching_text ... ok
+test tests::sanitize_logits_clamp_inf_policy_clamps_positive_infinity ... ok
+test tests::sanitize_logits_error_policy_rejects_any_non_finite ... ok
+test tests::sanitize_logits_neg_inf_nan_policy_masks_nan_and_rejects_pos_inf ... ok
+test tests::schedule_json_round_trips_every_non_callback_variant ... ok
+test tests::sequence_state_checkpoint_restore_round_trips ... ok
+test tests::sequence_state_new_builds_configured_constraints ... ok
+test tests::sequence_state_fork_diverges_independently ... ok
+test tests::sequence_state_new_rejects_an_invalid_regex_constraint ... ok
+test tests::sequence_state_to_text_round_trips_and_rejects_fingerprint_mismatch ... ok
+test tests::sequence_state_rollback_then_readvance_matches_direct_run ... ok
+test tests::sharded_softmax_matches_unsharded_softmax ... ok
+test tests::sharded_top_k_matches_unsharded_top_k ... ok
+test tests::slice_text_adapter_returns_bytes_and_stable_fingerprint ... ok
+test tests::softmax_live_f32_and_f64_accum_agree_closely ... ok
+test tests::softmax_live_is_invariant_to_constant_shift ... ok
+test tests::softmax_live_sums_to_one_and_matches_hand_computed ... ok
+test tests::speculative_decode_accepts_when_draft_matches_target_distribution ... ok
+test tests::speculative_decode_rejects_and_resamples_when_draft_disagrees_with_target ... ok
+test tests::stateless_step_greedy_precise_always_picks_the_argmax ... ok
+test tests::stateless_step_is_deterministic_for_same_seed_and_config ... ok
+test tests::stateless_step_probabilities_sum_to_approximately_one ... ok
+test tests::stateless_step_rejects_mismatched_logits_length ... ok
+test tests::stateless_step_reports_eos_finish_reason ... ok
+test tests::stateless_step_reports_max_tokens_finish_reason ... ok
+test tests::step_index_checked_next_overflows_to_none ... ok
+test tests::suppress_special_removes_flagged_tokens ... ok
+test tests::tail_free_keeps_at_least_min_keep_on_short_live_sets ... ok
+test tests::temperature_scales_processed_logits ... ok
+test tests::temperature_zero_collapses_to_greedy ... ok
+test tests::text_stop_condition_without_adapter_never_matches ... ok
+test tests::text_stop_condition_matches_a_multi_token_stop_sequence ... ok
+test tests::top_k_keeps_exactly_k_highest_probability_tokens ... ok
+test tests::top_p_min_keep_overrides_a_too_small_cutoff ... ok
+test tests::trie_constraint_only_allows_configured_phrase_tokens ... ok
+test tests::typical_and_locally_typical_agree_on_the_same_input ... ok
+test tests::token_class_penalty_scales_only_classified_tokens ... ok
+test tests::token_stop_condition_fires_on_configured_token ... ok
+test tests::top_a_drops_low_probability_tokens_relative_to_max ... ok
+test tests::top_p_retains_smallest_prefix_covering_cumulative_mass ... ok
+test tests::utf8_status_classifies_complete_partial_invalid ... ok
+test tests::validate_rejects_min_tokens_above_max_tokens ... ok
+test tests::validate_rejects_candidate_count_above_limit ... ok
+test tests::validate_rejects_mismatched_token_class_penalty_lengths ... ok
+test tests::validate_rejects_too_many_stop_sequences ... ok
+test tests::validate_rejects_zero_candidate_count ... ok
+test tests::validate_rejects_zero_no_repeat_ngram_order ... ok
+test tests::validates_json_schema_checks_integer_string_and_array_bounds ... ok
+test tests::validates_json_schema_checks_object_required_properties_and_enum ... ok
+test tests::vocabulary_is_eos_reflects_configured_set ... ok
+test tests::vocabulary_validates_logits_length ... ok
+test tests::workspace_collapse_live_to_argmax_leaves_single_best_entry ... ok
+test tests::write_json_escapes_control_characters_and_formats_non_integral_numbers ... ok
+test tests::workspace_pool_reuses_released_workspace ... ok
+test tests::workspace_reset_for_step_initializes_live_to_full_vocab_and_argmax ... ok
+test tests::workspace_sort_live_by_prob_desc_orders_by_probability_then_token_id ... ok
+test tests::workspace_sync_live_with_mask_removes_masked_entries ... ok
+test tests::workspace_truncate_live_to_respects_min_keep ... ok
+test tests::xoshiro_source_matches_underlying_rng_sequence ... ok
+test tests::zero_limit_fails_validation ... ok
+test tests::multinomial_strategies_agree_statistically ... ok
+test tests::sharded_sample_marginal_distribution_matches_unsharded ... ok
+test tests::speculative_decode_matches_direct_target_sampling_distribution ... ok
+
+test result: ok. 191 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+     Running unittests ../../../📶️signal/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_signal-6edf50cbbb6b1f49)
+
+running 12 tests
+test tests::fft_ifft_round_trips ... ok
+test tests::fft2_ifft2_round_trips ... ok
+test tests::cross_spectrum_phase_encodes_lag ... ok
+test tests::fft_satisfies_parseval ... ok
+test tests::find_peaks_ranks_two_bumps_by_prominence ... ok
+test tests::savitzky_golay_differentiates_cubic ... ok
+test tests::savitzky_golay_preserves_low_order_polynomials ... ok
+test tests::smoothing_preserves_constant_signals ... ok
+test tests::subsample_peak_recovers_fractional_lag ... ok
+test tests::welch_psd_finds_planted_sinusoid ... ok
+test tests::windows_have_expected_shape ... ok
+test tests::xcorr_peaks_at_known_shift ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../🗺️spatial/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_spatial-d9067fd74501f80c)
+
+running 14 tests
+test tests::kd_empty_tree_is_safe ... ok
+test tests::morton3_round_trips ... ok
+test tests::grid2_neighbors9_matches_brute_force ... ok
+test tests::octree_downsample_preserves_counts_and_centroids ... ok
+test tests::voxel_grid3_cell_of_floors_negative_coords ... ok
+test tests::octree_empty_build_is_safe ... ok
+test tests::voxel_grid3_neighbors27_matches_brute_force ... ok
+test tests::kd_aabb_visits_match_brute_force_d2 ... ok
+test tests::kd_aabb_visits_match_brute_force_d3 ... ok
+test tests::kd_radius_matches_brute_force_d2 ... ok
+test tests::kd_nearest_and_k_nearest_match_brute_force_d2 ... ok
+test tests::kd_radius_matches_brute_force_d3 ... ok
+test tests::kd_nearest_and_k_nearest_match_brute_force_d3 ... ok
+test tests::octree_range_matches_brute_force ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.65s
+
+     Running unittests ../../../📊️statistics/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_statistics-593522113b4a645c)
+
+running 17 tests
+test tests::correlation_of_orthogonal_pattern_is_zero ... ok
+test tests::chi2_independence_matches_hand_computation ... ok
+test tests::correlation_matrix_diagonal_is_one ... ok
+test tests::entropy_of_uniform_four_levels_is_ln_four ... ok
+test tests::fisher_z_test_matches_hand_computation ... ok
+test tests::g2_ci_test_is_zero_for_margin_product_counts ... ok
+test tests::invert_round_trips_and_detects_singular ... ok
+test tests::correlation_of_perfect_line_is_one ... ok
+test tests::conditional_mutual_information_is_zero_on_markov_chain ... ok
+test tests::logistic_perfect_separation_returns_error_not_panic ... ok
+test tests::logistic_symmetric_data_has_near_zero_intercept ... ok
+test tests::mean_and_variance_hand_computed ... ok
+test tests::mutual_information_of_variable_with_itself_is_its_entropy ... ok
+test tests::ols_recovers_exact_line ... ok
+test tests::partial_correlation_matches_closed_form ... ok
+test tests::partial_correlation_with_empty_given_equals_plain_correlation ... ok
+test tests::welch_t_test_matches_hand_computation ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../📋️tabular/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_tabular-2bb7723857e73c61)
+
+running 17 tests
+test tests::categorical_counts_exclude_missing ... ok
+test tests::categorical_from_labels_assigns_first_seen_order ... ok
+test tests::categorical_from_parts_rejects_out_of_range_code ... ok
+test tests::categorical_one_hot_matches_hand_matrix ... ok
+test tests::column_index_unknown_errors ... ok
+test tests::complete_rows_and_drop_missing ... ok
+test tests::continuous_and_categorical_type_errors ... ok
+test tests::csv_headerless_synthesizes_names ... ok
+test tests::csv_parses_quoted_field_with_embedded_delimiter_and_escaped_quote ... ok
+test tests::csv_round_trip_with_missing_values ... ok
+test tests::csv_type_inference_any_nonnumeric_is_categorical ... ok
+test tests::csv_type_inference_continuous_with_blank_is_nan ... ok
+test tests::push_column_duplicate_name_errors ... ok
+test tests::push_column_length_mismatch_errors ... ok
+test tests::select_columns_projects_subset ... ok
+test tests::table_json_round_trip ... ok
+test tests::select_rows_allows_repetition_for_bootstrap ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../🧩️wfc/⚡️implementations/🦀️rust/📦️lib.rs (target/debug/deps/mathematical_wfc-838b74612b32a15e)
+
+running 270 tests
+test bitset::tests::freshly_built_sets_are_well_formed ... ok
+test bitset::tests::empty_and_full ... ok
+test bitset::tests::first_set_and_iter_ones_skip_zero_words ... ok
+test bitset::tests::and_or_and_not ... ok
+test beam::tests::width_one_still_finds_a_solution_when_no_backtrack_is_needed ... ok
+test beam::tests::contradictory_fixed_pins_report_contradiction_immediately ... ok
+test beam::tests::respects_fixed_pins ... ok
+test bitset::tests::full_respects_boundary_bits ... ok
+test beam::tests::finds_a_valid_solution_on_a_harder_coloring_instance ... ok
+test bitset::tests::restrict_no_change_returns_zero ... ok
+test beam::tests::reports_contradiction_not_a_panic_on_an_unsatisfiable_instance ... ok
+test bitset::tests::restrict_returning_removed_matches_naive ... ok
+test bitset::tests::set_get_roundtrip ... ok
+test bitset::tests::stray_bits_past_len_in_final_word_are_not_well_formed ... ok
+test bitset::tests::subset_and_intersects ... ok
+test bitset::tests::wrong_word_count_is_not_well_formed ... ok
+test beam::tests::finds_a_valid_solution_on_a_satisfiable_instance ... ok
+test bitset::tests::serde_round_trip_preserves_bits_and_len ... ok
+test chunk::tests::chunk_seed_is_deterministic_and_varies_by_coordinate_and_model ... ok
+test chunk::tests::solve_chunk_respects_seam_pins_from_a_committed_neighbor ... ok
+test chunk::tests::different_chunk_coordinates_can_yield_different_content_for_an_underconstrained_model ... ok
+test chunk::tests::solve_chunk_reproduces_identical_content_on_repeated_calls ... ok
+test constraints_card::tests::initialize_signals_infeasible_min_via_empty_domain ... ok
+test constraint::tests::adjacency_view_exposes_neighbors_and_regions ... ok
+test constraints_card::tests::initialize_forces_pattern_when_min_equals_possible ... ok
+test constraints_card::tests::rejects_invalid_bounds ... ok
+test constraints_card::tests::validate_complete_accepts_matching_count ... ok
+test constraints_card::tests::validate_complete_rejects_out_of_bounds_count ... ok
+test constraints_conn::tests::connectivity_accepts_single_connected_component ... ok
+test constraints_conn::tests::connectivity_rejects_split_components ... ok
+test constraints_conn::tests::connectivity_trivially_accepts_zero_or_one_selected ... ok
+test constraints_conn::tests::reachability_accepts_connected_path ... ok
+test constraints_conn::tests::reachability_rejects_blocked_path ... ok
+test diag::tests::diag_levels_are_ordered ... ok
+test diag::tests::metrics_default_to_zero ... ok
+test diag::tests::emit_detailed_is_suppressed_below_decisions_level ... ok
+test diag::tests::off_sink_records_nothing ... ok
+test diag::tests::summary_sink_records_events ... ok
+test diag::tests::trace_replay_extracts_only_observed_events_in_order ... ok
+test domain::tests::assign_forces_single_pattern ... ok
+test diag::tests::trace_replay_matches_identical_sequences_and_rejects_divergent_ones ... ok
+test domain::tests::domain_store_all_singleton ... ok
+test domain::tests::new_full_has_all_patterns_and_correct_sums ... ok
+test domain::tests::re_add_exactly_reverses_remove ... ok
+test domain::tests::quick::resync_boundary_does_not_change_observable_state ... ok
+test domain::tests::reduced_count_is_removed_not_remaining ... ok
+test domain::tests::restrict_reduces_and_updates_caches ... ok
+test domain::tests::restrict_unchanged_when_already_subset ... ok
+test domain::tests::remove_to_singleton_and_wipeout ... ok
+test domain::tests::singleton_has_zero_entropy_regardless_of_weight ... ok
+test domain::tests::uniform_weights_entropy_matches_ln_cardinality ... ok
+test error::tests::display_messages_are_human_readable ... ok
+test domain::tests::wiped_domain_has_zero_entropy ... ok
+test error::tests::errors_are_std_error ... ok
+test evolve::tests::derive_seed_is_deterministic_and_varies_by_salt ... ok
+test evolve::tests::evolve_reports_no_best_when_every_attempt_fails ... ok
+test evolve::tests::evolve_finds_a_solution_and_tracks_evaluated_count ... ok
+test extract::tests::extraction_rejects_empty_sample_list ... ok
+test extract::tests::extracted_model_relations_match_von_neumann_stencil ... ok
+test extract::tests::multiple_samples_merge_frequencies ... ok
+test extract::tests::periodic_sample_solves_on_a_same_size_wrapped_grid ... ok
+test extract::tests::window_content_is_preserved_for_decode ... ok
+test extract::tests::window_one_extracts_one_pattern_per_distinct_tile ... ok
+test extract::tests::symmetry_expansion_can_only_add_patterns_never_remove ... ok
+test extract::tests::window_two_deduplicates_repeated_windows ... ok
+test flow::tests::a_wall_blocking_the_only_path_fails_flow_of_one ... ok
+test flow::tests::ladder_with_both_corridors_open_meets_flow_of_two ... ok
+test flow::tests::ladder_with_one_corridor_walled_off_fails_flow_of_two ... ok
+test flow::tests::max_flow_never_exceeds_the_number_of_distinct_source_sink_edges ... ok
+test flow::tests::single_path_meets_flow_of_one ... ok
+test flow::tests::source_not_selected_yields_zero_flow ... ok
+test grid2d::tests::custom_stencil_rejects_duplicate_and_self_offset ... ok
+test grid2d::tests::custom_stencil_rejects_unpaired_offset ... ok
+test grid2d::tests::fixed_outside_restrictions_only_on_boundary_facing_axis ... ok
+test evolve::tests::evolve_prefers_higher_scores_across_generations ... ok
+test grid2d::tests::mask_excludes_inactive_cells_from_arcs ... ok
+test grid2d::tests::mirror_boundary_reflects_at_edges ... ok
+test grid2d::tests::node_at_and_coords_roundtrip ... ok
+test grid2d::tests::open_boundary_drops_out_of_range_arcs ... ok
+test bitset::tests::quick::random_and_or_matches_vec_bool_model ... ok
+test grid2d::tests::size_one_axis_wrap_self_loops ... ok
+test grid2d::tests::von_neumann_offsets_are_symmetric ... ok
+test grid2d::tests::in_arc_matches_out_arc_on_open_boundary ... ok
+test grid2d::tests::wrap_boundary_connects_opposite_edges ... ok
+test grid3d::tests::all_built_in_stencils_validate ... ok
+test grid3d::tests::face6_edge18_vertex26_offset_counts ... ok
+test heuristics::tests::none_when_all_singleton ... ok
+test heuristics::tests::singleton_and_resolved_domains_are_skipped ... ok
+test grid3d::tests::mask_excludes_inactive_voxels ... ok
+test grid3d::tests::node_at_and_coords_roundtrip ... ok
+test heuristics::tests::ties_break_by_ascending_node_id ... ok
+test heuristics::tests::weighted_entropy_prefers_lower_entropy_domain ... ok
+test domain::tests::quick::random_remove_re_add_sequences_preserve_invariants ... ok
+test hierarchy::tests::child_seeds_differ_by_node_and_reproduce_deterministically ... ok
+test grid3d::tests::open_boundary_corner_has_three_neighbors ... ok
+test grid3d::tests::wrap_boundary_connects_all_axes ... ok
+test heuristics::tests::mrv_picks_smallest_domain ... ok
+test hierarchy::tests::reports_which_node_child_failed_at ... ok
+test hierarchy::tests::reports_macro_unsatisfiable_without_attempting_children ... ok
+test ids::tests::id_index_roundtrip ... ok
+test ids::tests::id_ordering_and_equality ... ok
+test hierarchy::tests::solves_macro_then_every_child ... ok
+test ids::tests::id_serde_roundtrip ... ok
+test model::tests::compile_rejects_empty_pattern_universe ... ok
+test model::tests::compile_rejects_invalid_weight ... ok
+test model::tests::deny_wins_over_allow_regardless_of_order ... ok
+test model::tests::allowed_and_supporters_are_transposes ... ok
+test model::tests::fingerprint_is_deterministic_and_sensitive ... ok
+test model::tests::lint_flags_unconstrained_and_unsupported ... ok
+test model::tests::stats_report_sane_values ... ok
+test grid3d::tests::in_arc_matches_out_arc_on_open_boundary ... ok
+test model::tests::tags_are_interned_and_deduplicated ... ok
+test model::tests::validate_fails_on_asymmetric_declaration ... ok
+test model::tests::validate_passes_on_mirrored_model ... ok
+test motif::tests::canonicalize_of_empty_input_is_empty ... ok
+test motif::tests::canonicalize_produces_dense_first_seen_ids ... ok
+test motif::tests::different_base_labels_propagate_into_different_signatures ... ok
+test motif::tests::isomorphic_rooted_neighborhoods_get_identical_signatures ... ok
+test motif::tests::refine_colors_is_deterministic ... ok
+test motif::tests::zero_rounds_is_the_identity_on_labels_modulo_hashing ... ok
+test motif::tests::structurally_different_neighborhoods_get_different_signatures ... ok
+test nogood::tests::disabled_store_records_and_watches_nothing ... ok
+test nogood::tests::eviction_keeps_store_at_max_count ... ok
+test nogood::tests::on_decision_detects_conflict_when_the_other_watch_was_already_resolved_true ... ok
+test nogood::tests::on_decision_finds_a_third_literal_as_replacement_watch_instead_of_propagating ... ok
+test nogood::tests::on_decision_ignores_a_watch_whose_partner_is_already_stale ... ok
+test nogood::tests::on_decision_forced_exclusion_cascades_through_ac3_to_a_third_node ... ok
+test nogood::tests::record_skips_empty_and_over_length_clauses ... ok
+test nogood::tests::on_decision_unit_propagates_the_partner_literal ... ok
+test nogood::tests::rewatch_leaves_a_fully_excluded_nogood_inert ... ok
+test nogood::tests::rewatch_reports_conflict_when_length_one_nogood_wipes_a_singleton_domain ... ok
+test nogood::tests::rewatch_unit_propagates_a_length_one_nogood_at_attempt_start ... ok
+test oracle::tests::check_assignment_detects_violation ... ok
+test oracle::tests::checkerboard_path_is_satisfiable_and_alternates ... ok
+test oracle::tests::even_cycle_is_satisfiable ... ok
+test oracle::tests::limit_caps_collected_solutions ... ok
+test oracle::tests::complete_graph_coloring_matches_chromatic_condition ... ok
+test oracle::tests::unsat_odd_cycle_has_no_solutions ... ok
+test parallel::tests::derive_seed_is_deterministic_and_varies_by_index ... ok
+test prop_ac3::tests::no_dirty_nodes_means_no_op ... ok
+test prop_ac3::tests::odd_cycle_pin_propagates_to_wipeout ... ok
+test prop_ac3::tests::propagation_forces_alternation_after_one_pin ... ok
+test prop_ac4::tests::initial_counts_match_full_domain_supporter_popcounts ... ok
+test parallel::tests::multi_start_finds_a_valid_solution ... ok
+test prop_ac4::tests::odd_cycle_pin_propagates_to_wipeout ... ok
+test parallel::tests::single_attempt_matches_a_plain_solve_call ... ok
+test prop_ac4::tests::propagation_forces_alternation_after_one_pin ... ok
+test propagate::tests::clear_resets_membership ... ok
+test parallel::tests::multi_start_proves_unsat_when_every_attempt_would ... ok
+test propagate::tests::popped_node_can_be_repushed ... ok
+test propagate::tests::push_all_enqueues_every_node_once ... ok
+test repair::tests::halo_expands_by_relation_hops_and_stays_in_bounds ... ok
+test repair::tests::halo_from_multiple_centers_unions_their_neighborhoods ... ok
+test repair::tests::halo_radius_zero_is_just_the_centers ... ok
+test parallel::tests::multi_start_is_deterministic_across_repeated_calls ... ok
+test propagate::tests::push_dedups_and_fifo_orders ... ok
+test repair::tests::repair_region_reproduces_a_solved_checkerboard_when_reopened_around_one_node ... ok
+test repair::tests::repair_region_with_radius_zero_pins_everything_and_reproduces_the_input_exactly ... ok
+test sample::tests::same_seed_produces_same_sequence ... ok
+test sample::tests::uniform_only_ever_returns_live_patterns ... ok
+test sample::tests::weighted_roulette_only_ever_returns_live_patterns ... ok
+test search::tests::cancel_token_reflects_state ... ok
+test sample::tests::weighted_roulette_is_biased_toward_heavier_pattern ... ok
+test search::tests::budget_exceeded_reports_partial_state ... ok
+test search::tests::diag_off_records_no_decision_events_but_summary_and_above_do ... ok
+test search::tests::cancellation_stops_search_and_reports_partial ... ok
+test search::tests::fixed_pins_are_respected ... ok
+test search::tests::luby_sequence_matches_known_values ... ok
+test search::tests::golden_replay_same_seed_reproduces_the_identical_decision_trace ... ok
+test search::tests::backjump_mode_matches_backtrack_completeness ... ok
+test oracle::tests::quick::random_instances_every_solution_passes_check_assignment ... ok
+test search::tests::nogood_learning_still_proves_unsat_on_pigeonhole_instance ... ok
+test search::tests::backtracking_solves_graph_coloring_needing_multiple_decisions ... ok
+test search::tests::proves_unsat_on_odd_cycle_with_backtrack_mode ... ok
+test search::tests::restart_only_never_proves_unsat_on_unsatisfiable_instance ... ok
+test search::tests::restart_only_still_solves_satisfiable_instances ... ok
+test search::tests::same_seed_is_fully_reproducible ... ok
+test search::tests::solve_all_finds_every_solution_and_proves_complete ... ok
+test search::tests::solve_all_on_unsat_instance_returns_empty_and_complete ... ok
+test search::tests::solve_all_respects_limit_and_reports_incomplete ... ok
+test prop_ac4::tests::sequential_and_batch_seed_application_agree ... ok
+test search::tests::solves_a_satisfiable_path ... ok
+test search::tests::unsatisfiable_k5_with_four_colors_proves_unsat ... ok
+test serial::tests::checkpoint_doc_rejects_fingerprint_mismatch ... ok
+test serial::tests::checkpoint_doc_rejects_tampered_bitset_from_raw_json ... ok
+test serial::tests::checkpoint_doc_rejects_version_mismatch ... ok
+test serial::tests::checkpoint_doc_rejects_wrong_bitset_length ... ok
+test serial::tests::checkpoint_doc_rejects_wrong_domain_count ... ok
+test serial::tests::checkpoint_doc_round_trips_and_resumes ... ok
+test serial::tests::compile_rejects_unknown_schema_version ... ok
+test serial::tests::hand_authored_asymmetric_allow_fails_validate_on_compile ... ok
+test serial::tests::from_model_compile_round_trip_preserves_fingerprint ... ok
+test serial::tests::source_model_doc_json_round_trips ... ok
+test soft::tests::best_of_n_keeps_the_highest_scoring_attempt ... ok
+test soft::tests::best_of_n_keeps_the_lowest_scoring_attempt ... ok
+test search::tests::quick::random_instances_solved_or_proven_unsat_match_oracle ... ok
+test search::tests::quick::random_instances_with_nogoods_enabled_still_match_oracle ... ok
+test soft::tests::best_of_n_returns_none_when_every_attempt_fails ... ok
+test soft::tests::best_of_n_skips_failed_attempts ... ok
+test soft::tests::weight_field_identity_is_all_ones ... ok
+test soft::tests::weight_field_set_and_get_roundtrip ... ok
+test solver_graph::tests::builds_and_solves ... ok
+test solver_graph::tests::cardinality_constraint_beyond_both_colorings_is_unsatisfiable ... ok
+test solver_graph::tests::domain_override_restricts_a_node ... ok
+test solver_graph::tests::cardinality_constraint_forces_the_unique_matching_checkerboard_coloring ... ok
+test solver_graph::tests::fix_on_unknown_node_is_rejected ... ok
+test solver_graph::tests::fix_pins_a_node ... ok
+test solver_graph::tests::flow_constraint_end_to_end_forces_a_connected_path_through_a_real_solve ... ok
+test solver_graph::tests::resume_from_checkpoint_completes_the_solve ... ok
+test solver_graph::tests::repair_reopens_only_the_requested_halo ... ok
+test solver_graph::tests::resume_rejects_mismatched_fingerprint ... ok
+test solver_graph::tests::solve_all_finds_both_checkerboard_colorings ... ok
+test solver_graph::tests::solve_beam_finds_a_valid_solution_and_respects_fixed_pins ... ok
+test solver_graph::tests::solve_cancellable_reports_cancelled_when_pre_cancelled ... ok
+test solver_grid2d::tests::decode_tiles_round_trips_tile_provenance ... ok
+test solver_grid2d::tests::fix_pins_a_cell_and_propagates ... ok
+test solver_grid2d::tests::masked_cells_are_excluded_and_solve_completes ... ok
+test solver_grid2d::tests::odd_size_wrap_is_unsatisfiable_for_two_color_checkerboard ... ok
+test solver_graph::tests::solve_multi_start_finds_a_valid_solution_and_respects_fixed_pins ... ok
+test solver_grid2d::tests::solve_chunk_respects_seam_pins_and_reproduces_deterministically ... ok
+test solver_grid2d::tests::solves_a_checkerboard_grid ... ok
+test solver_grid2d::tests::wrap_boundary_solves_consistently ... ok
+test solver_grid3d::tests::fix_pins_a_voxel_and_propagates ... ok
+test search::tests::quick::solve_all_matches_oracle_solution_set_on_random_instances ... ok
+test solver_grid3d::tests::masked_voxels_are_excluded_and_solve_completes ... ok
+test sparse3d::tests::empty_volume_builds_a_zero_node_topology ... ok
+test sparse3d::tests::a_single_isolated_voxel_has_no_arcs ... ok
+test solver_grid3d::tests::odd_size_wrap_is_unsatisfiable_for_two_color_checkerboard ... ok
+test solver_grid3d::tests::solves_a_checkerboard_volume ... ok
+test sparse3d::tests::from_coords_dedups_and_assigns_stable_first_seen_ids ... ok
+test sparse3d::tests::negative_coordinates_work_like_any_other_origin ... ok
+test solver_grid3d::tests::wrap_boundary_solves_consistently ... ok
+test sparse3d::tests::to_graph_topology_only_connects_occupied_neighbors ... ok
+test symmetry::tests::apply_offset_matches_apply_window_orientation ... ok
+test symmetry::tests::apply_window_round_trips_through_inverse ... ok
+test sparse3d::tests::sparse_graph_solves_through_the_ordinary_kernel ... ok
+test symmetry::tests::cube_full_symmetry_group_has_exactly_48_elements ... ok
+test symmetry::tests::cube_offset_transform_preserves_unit_offset_length ... ok
+test solver_grid2d::tests::graph_vs_grid2d_strict_equivalence_von_neumann_open ... ok
+test symmetry::tests::cube_rotation_inverse_composes_to_identity ... ok
+test symmetry::tests::cube_rotations_are_closed_under_composition ... ok
+test symmetry::tests::cube_rotation_group_has_exactly_24_elements ... ok
+test symmetry::tests::d4_group_has_eight_elements ... ok
+test symmetry::tests::four_quarter_rotations_is_identity ... ok
+test symmetry::tests::inverse_composes_to_identity ... ok
+test symmetry::tests::group_closure_every_composition_stays_in_d4 ... ok
+test symmetry::tests::identity_matrix_is_neutral ... ok
+test tiled::tests::allow_and_deny_compile_correctly ... ok
+test symmetry::tests::two_flips_is_identity ... ok
+test symmetry::tests::z_rot4_is_four_distinct_quarter_turns_returning_to_identity ... ok
+test tiled::tests::allow_where_compiles_predicate_eagerly ... ok
+test tiled::tests::tile_to_pattern_is_one_to_one ... ok
+test tiled::tests::tags_round_trip_through_tiles ... ok
+test prop_ac4::tests::quick::ac3_and_ac4_reach_identical_fixed_points_on_random_instances ... ok
+test topology::tests::in_arc_slots_are_dense_and_unique_per_node ... ok
+test topology::tests::builder_produces_correct_out_and_in_arcs ... ok
+test topology::tests::regions_default_to_zero_and_are_settable ... ok
+test topology::tests::dangling_arc_is_rejected ... ok
+test topology::tests::self_loops_and_multiedges_are_supported ... ok
+test trail::tests::active_decisions_lists_every_frame_in_order ... ok
+test trail::tests::decision_frames_push_and_pop ... ok
+test trail::tests::undo_to_partial_mark_restores_only_later_entries ... ok
+test solver_grid3d::tests::graph_vs_grid3d_strict_equivalence_face6_open ... ok
+test trail::tests::undo_to_restores_removed_patterns ... ok
+test weights::tests::integer_detection ... ok
+test weights::tests::precomputes_terms ... ok
+test weights::tests::rejects_negative_and_nonfinite ... ok
+test weights::tests::sum_over_matches_manual ... ok
+test weights::tests::zero_weight_terms_are_zero_not_nan ... ok
+test search::tests::nogood_learning_survives_restarts_and_still_proves_unsat ... ok
+
+test result: ok. 270 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+error: 2 targets failed:
+    `-p semio-framework-os-kernel-math-cas --lib`
+    `-p semio-framework-os-kernel-math-polynomial --lib`

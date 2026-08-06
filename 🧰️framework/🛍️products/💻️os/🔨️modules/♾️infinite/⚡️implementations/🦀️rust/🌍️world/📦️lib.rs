@@ -2,7 +2,7 @@
 
 use base64::Engine;
 use framework_surface_terrain::TerrainSessionCore;
-use kernel_3d_scene::{
+use semio_s_3d::{
     aabb_intersects_frustum, axis_rotate_angle, frustum_planes, grid_placement_anchor, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
     marquee_is_crossing_from_path, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rotate_vector, screen_select_components, screen_select_instances,
     transform_aabb, vec3_from_f64, Camera3d, Instance3d, LineDraw3d, LineVertex3d, Mat4, Mesh3d, OrbitController, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, Vec3,
@@ -2790,7 +2790,7 @@ fn pick_component_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
                     }
                     for (vertex_index, chunk) in mesh.positions.as_chunks::<3>().0.iter().enumerate() {
                         let world = instance.model.transform_point(Vec3::new(chunk[0], chunk[1], chunk[2]));
-                        let Some(screen) = kernel_3d_scene::project_point(view_proj, world, rect.w, rect.h) else {
+                        let Some(screen) = semio_s_3d::project_point(view_proj, world, rect.w, rect.h) else {
                             continue;
                         };
                         let dx = screen[0] - local_x;
@@ -2822,14 +2822,14 @@ fn pick_component_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
                     for (edge_index, chunk) in mesh.edge_positions.as_chunks::<6>().0.iter().enumerate() {
                         let a = instance.model.transform_point(Vec3::new(chunk[0], chunk[1], chunk[2]));
                         let b = instance.model.transform_point(Vec3::new(chunk[3], chunk[4], chunk[5]));
-                        let (Some(screen_a), Some(screen_b)) = (kernel_3d_scene::project_point(view_proj, a, rect.w, rect.h), kernel_3d_scene::project_point(view_proj, b, rect.w, rect.h)) else {
+                        let (Some(screen_a), Some(screen_b)) = (semio_s_3d::project_point(view_proj, a, rect.w, rect.h), semio_s_3d::project_point(view_proj, b, rect.w, rect.h)) else {
                             continue;
                         };
-                        let screen_dist = kernel_3d_scene::screen_segment_distance(local_x, local_y, screen_a[0], screen_a[1], screen_b[0], screen_b[1]);
+                        let screen_dist = semio_s_3d::screen_segment_distance(local_x, local_y, screen_a[0], screen_a[1], screen_b[0], screen_b[1]);
                         if screen_dist > PICK_EDGE_SCREEN_PX {
                             continue;
                         }
-                        let ray_dist = kernel_3d_scene::ray_segment_distance(origin, dir, a, b).unwrap_or(f32::INFINITY);
+                        let ray_dist = semio_s_3d::ray_segment_distance(origin, dir, a, b).unwrap_or(f32::INFINITY);
                         let depth = a.add(b).scale(0.5).sub(origin).dot(dir);
                         let better = match &best {
                             None => true,
@@ -3579,7 +3579,7 @@ mod tests {
         state.bounds = inner;
         state.pick_bounds = inner;
         let camera = state.orbit.to_camera();
-        let screen = kernel_3d_scene::project_point(camera.view_proj(1.0), Vec3::ZERO, inner.w, inner.h).expect("vertex projects");
+        let screen = semio_s_3d::project_point(camera.view_proj(1.0), Vec3::ZERO, inner.w, inner.h).expect("vertex projects");
         let action = pick_select_action(&state, screen[0], screen[1], inner, false, false).expect("pick action");
         assert_eq!(action.action, "worldPick");
         let args = action.args.expect("args");
@@ -3615,7 +3615,7 @@ mod tests {
         let mut max_x = f32::NEG_INFINITY;
         let mut max_y = f32::NEG_INFINITY;
         for corner in [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0]] {
-            let screen = kernel_3d_scene::project_point(view_proj, Vec3::from_array(corner), inner.w, inner.h).expect("screen");
+            let screen = semio_s_3d::project_point(view_proj, Vec3::from_array(corner), inner.w, inner.h).expect("screen");
             min_x = min_x.min(screen[0]);
             min_y = min_y.min(screen[1]);
             max_x = max_x.max(screen[0]);
@@ -3766,7 +3766,7 @@ mod tests {
         state.bounds = bounds;
         state.pick_bounds = clip;
         let camera = state.orbit.to_camera();
-        let screen = kernel_3d_scene::project_point(camera.view_proj(1.0), Vec3::ZERO, bounds.w, bounds.h).expect("vertex projects");
+        let screen = semio_s_3d::project_point(camera.view_proj(1.0), Vec3::ZERO, bounds.w, bounds.h).expect("vertex projects");
         let global_x = bounds.x + screen[0];
         let global_y = bounds.y + screen[1];
         let picked = pick_component_at(&state, global_x, global_y, bounds).expect("vertex pick respects render viewport");
@@ -3803,7 +3803,7 @@ mod tests {
         let mesh_ref = state.meshes.get("mesh-1").expect("mesh");
         let tri = mesh_ref.indices.get(0..3).expect("triangle");
         let centroid = mesh_vertex(mesh_ref, tri[0]).add(mesh_vertex(mesh_ref, tri[1])).add(mesh_vertex(mesh_ref, tri[2])).scale(1.0 / 3.0);
-        let screen = kernel_3d_scene::project_point(camera.view_proj(1.0), centroid, inner.w, inner.h).expect("face centroid projects");
+        let screen = semio_s_3d::project_point(camera.view_proj(1.0), centroid, inner.w, inner.h).expect("face centroid projects");
         let picked = pick_component_at(&state, screen[0], screen[1], inner).expect("face pick");
         assert_eq!(picked.0, "face");
         assert_eq!(picked.2, "obj-1");
@@ -3824,7 +3824,7 @@ mod tests {
         let a = Vec3::new(chunk[0], chunk[1], chunk[2]);
         let b = Vec3::new(chunk[3], chunk[4], chunk[5]);
         let mid = a.add(b).scale(0.5);
-        let screen = kernel_3d_scene::project_point(camera.view_proj(1.0), mid, inner.w, inner.h).expect("edge midpoint projects");
+        let screen = semio_s_3d::project_point(camera.view_proj(1.0), mid, inner.w, inner.h).expect("edge midpoint projects");
         let picked = pick_component_at(&state, screen[0], screen[1], inner).expect("edge pick");
         assert_eq!(picked.0, "edge");
         assert_eq!(picked.2, "obj-1");

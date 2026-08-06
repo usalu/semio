@@ -11,11 +11,12 @@ import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTyp
 import { applyNodeChanges, Background, BackgroundVariant, BaseEdge, ConnectionMode, getBezierPath, Handle, MiniMap, Position, ReactFlow, ReactFlowProvider, SelectionMode, useInternalNode, useReactFlow, useStoreApi, ViewportPortal } from "@xyflow/react";
 import * as dagre from "dagre";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
-// 🚧️W3-interim: these still live in the ui-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ or 🧱️elements/🫀️core/ dirs) — W3 rewires this import per-symbol as each
-// dependency's own element/core file lands. Do not import the barrel from any OTHER new leaf file
-// without the same marker; grep for `🚧️W3-interim` must be empty before W6 closes.
-import { reactHostPort, queryElement, HostReactFlow, HostReactFlowProvider, surfaceClass, cn, loadingBorderClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { reactHostPort } from "../🫀️core/Ports/🟦️component.tsx";
+import { cn } from "../🫀️core/ClassNames/🟦️component.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { surfaceClass, loadingBorderClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { queryElement, HostReactFlow, HostReactFlowProvider } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Diagram

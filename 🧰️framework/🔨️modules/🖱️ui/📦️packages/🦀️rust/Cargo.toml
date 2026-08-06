@@ -1,0 +1,158 @@
+cargo-features = ["trim-paths"]
+
+[package]
+name = "semio-framework-ui"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Handcrafted semio UI: declarative components plus the terminal (feature \"tui\") and wgpu (feature \"wgpu\") retained-mode targets"
+build = "build.rs"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui"
+
+[lints]
+workspace = true
+
+[lib]
+path = "📦️lib.rs"
+
+[features]
+default = []
+# ⌨️ Terminal target: semio-styled scene/cell renderer, wasm-safe. Carries no platform I/O on its own.
+tui = ["dep:unicode-width"]
+# 🖥️ Native terminal backend for `tui`: raw mode, alt screen, stdin ANSI input decoding.
+tui-terminal = ["tui", "dep:libc", "dep:windows-sys"]
+# 🌐️ wasm-bindgen exports of the tui `WasmHost` for browser hosts (xterm.js); never default.
+tui-bindgen = ["tui", "dep:wasm-bindgen"]
+# 🧊️ wgpu target: declarative component types only, so wasm32-wasip2 program components stay light.
+# Names the target, not the `wgpu` crate — that one only arrives with `wgpu-engine` below.
+wgpu = ["dep:serde", "dep:serde_json", "dep:dsl"]
+# 🎨️ Full retained-mode engine for `wgpu`: arena/tree/layout/text/input/gpu rendering.
+wgpu-engine = [
+    "wgpu",
+    "dep:parley",
+    "dep:swash",
+    "dep:bytemuck",
+    "dep:winit",
+    "dep:wgpu",
+    "dep:taffy",
+    "dep:kernel_3d_scene",
+    "dep:pollster",
+    "dep:js-sys",
+    "dep:wasm-bindgen",
+    "dep:wasm-bindgen-futures",
+    "dep:web-sys",
+    "dep:arboard",
+]
+# 🧬️ TypeScript mirror for boundary/protocol types on the `wgpu` target's `component` region.
+typegen = ["wgpu", "dep:ts-rs"]
+
+[dependencies]
+ui_styling = { path = "../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+unicode-width = { version = "0.2.2", optional = true }
+dsl = { path = "../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl", optional = true }
+serde = { version = "1.0.219", features = ["derive"], optional = true }
+serde_json = { version = "1.0.140", optional = true }
+ts-rs = { version = "10", optional = true }
+kernel_3d_scene = { path = "../../../../../✏️s/🔨️modules/🧊️3d/🎬️scene/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-scene", optional = true }
+# 🖋️ Text shaping/font-fallback (parley) + rasterization (swash) for the `text` region's glyph
+# atlas — versions match what `layout_rs` already resolves in the workspace lockfile (parley
+# pulls fontique 0.5.0 transitively; accessed here via `parley::fontique`, not a direct dep).
+parley = { version = "0.5.0", optional = true }
+swash = { version = "0.2.6", default-features = false, features = ["render", "std"], optional = true }
+bytemuck = { version = "1.24.0", features = ["derive"], optional = true }
+winit = { version = "0.30.12", default-features = false, features = ["rwh_06"], optional = true }
+wgpu = { version = "27.0.1", default-features = false, features = ["wgsl"], optional = true }
+taffy = { version = "0.9", default-features = false, features = ["std", "flexbox", "taffy_tree"], optional = true }
+
+[target.'cfg(all(unix, not(target_arch = "wasm32")))'.dependencies]
+libc = { version = "0.2.186", optional = true }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.60.2", optional = true, features = [
+    "Win32_Foundation",
+    "Win32_System_Console",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Threading",
+] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wgpu = { version = "27.0.1", default-features = false, features = ["webgpu", "wgsl"], optional = true }
+js-sys = { version = "0.3.83", optional = true }
+wasm-bindgen = { version = "0.2.106", optional = true }
+wasm-bindgen-futures = { version = "0.4.71", optional = true }
+web-sys = { version = "0.3.98", optional = true, features = [
+    "Window",
+    "Navigator",
+    "Clipboard",
+    "HtmlCanvasElement",
+    "HtmlElement",
+    "CssStyleDeclaration",
+    "MouseEvent",
+    "WheelEvent",
+    "KeyboardEvent",
+    "Request",
+    "RequestInit",
+    "RequestMode",
+    "Response",
+] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+wgpu = { version = "27.0.1", default-features = false, features = ["metal", "vulkan", "dx12", "wgsl"], optional = true }
+pollster = { version = "0.4.0", optional = true }
+# 📋️ OS clipboard read/write for `host::clipboard_write_text`/`clipboard_read_text` — pure-Rust X11/
+# Wayland (Linux), NSPasteboard (macOS), Win32 (Windows) backends, no system dev headers required.
+arboard = { version = "3", optional = true }
+
+# ⛔️ TEMPORARY VERIFICATION OVERLAY — delete before registrar handoff (TEMPLATE.md §3).
+[workspace]
+members = ["."]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[profile.dev]
+debug = false
+incremental = true
+
+[profile.dev.build-override]
+opt-level = 3
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"
+incremental = false
+trim-paths = "object"
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+incremental = false
+trim-paths = "object"
+
+[workspace.lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"

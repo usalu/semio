@@ -1,0 +1,312 @@
+# w6-core-icons-button-context inventory (PAUSE — no barrel edits)
+generated: 2026-08-06T10:18:40.634Z
+ticket: /Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE
+elements: /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements
+barrel: /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx (lines=24890)
+barrel lock: HELD BY PARENT — this session did NOT edit index.tsx
+
+## Element directories
+- Button/: EXISTS files=[🧊️component.rs]
+- Icons/: EXISTS files=[🟦️component.tsx, 🧪️story.tsx]
+- ContextMenu/: MISSING
+- DragHandle/: MISSING
+- ButtonGroup/: MISSING
+- PanelTabBar/: MISSING
+- Avatar/: EXISTS files=[🟦️component.tsx, 🧪️story.tsx]
+- Panel/: EXISTS files=[🟦️component.tsx, 🧪️story.tsx]
+- core/: [ClassNames, ElementId, Label, Ports, UiLabel]
+- Button has .tsx component: false; has .rs: true; files=[🧊️component.rs]
+- Icons files: [🟦️component.tsx, 🧪️story.tsx]
+
+## Icons leaf preview / exports
+// #region 🧲️Header
+// 💻️ framework/ui/elements/Icons/component.tsx
+// 2026 Ueli Saluz <ueli@semio-tech.com>
+// 2026 Kinan Sarakbi <kinan.sarak@gmail.com>
+// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// #endregion 🧲️Header
+
+// #region 🔌️Adapters
+import * as React from "react";
+// #endregion 🔌️Adapters
+
+// #region 🛒️Icons
+// Cursor icon component for collaborative pointer display.
+// Consumers MUST provide position data for rendering.
+
+/**
+ * CursorProps holds the data fields for a CursorProps record.
+ **/
+interface CursorProps {
+  color: string;
+  x?: number;
+  y?: number;
+}
+
+/**
+ **/
+const Cursor: React.FC<CursorProps> = ({ color, x = 0, y = 0 }) => {
+  return (
+    <svg
+      style={{
+        position: "absolute",
+        left: 0,
+        top: 0,
+        transform: `translateX(${x}px) translateY(${y}px)`,
+      }}
+      width="24"
+      height="36"
+      viewBox="0 0 24 36"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z" fill={color} />
+    </svg>
+  );
+};
+
+export { Cursor };
+
+// #endregion 🛒️Icons
+
+--- exports ---
+  export { Cursor };
+
+## Avatar drag-related
+- Avatar component present: true
+- contains DragHandle/DraggableAvatar: true
+  export interface DraggableAvatarProps {
+  export const DraggableAvatar = reactHostPort.forwardRef<HTMLDivElement, DraggableAvatarProps>(
+  export interface TableAvatarProps {
+  export const TableAvatar: React.FC<TableAvatarProps> = ({ id, icon, name, className, isSelected, isHovered, style, fallbackStyle }) => {
+  export { Avatar, AvatarFallback, AvatarImage };
+
+## Panel tab-related
+- Panel component present: true
+- contains PanelTabBar/PanelTabNode: true
+  export interface TreePanelConfig {
+  export interface TreePanelDefinition {
+  export type TreePanelSource = TreePanelConfig | TreePanelDefinition;
+  export function staticTreePanelDefinition(config: TreePanelConfig): TreePanelDefinition {
+  export interface PanelProps {
+  export const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
+  export function PanelEmptyDockZone({ anchor }: { readonly anchor: Anchor }) {
+  export { Panel };
+
+## Barrel regions matching targets
+  437:// #region 🔖️IconRenderPort
+  670:// #endregion 🔖️IconRenderPort
+  1168:// #region 🔖️Icon
+  1186:// #region 🖼️IconCodec
+  1667:// #endregion 🖼️IconCodec
+  1786:// #endregion 🔖️Icon
+  1788:// #region 🖱️ContextMenu
+  2764:// #endregion 🖱️ContextMenu
+  3828:// #region 🎗️UiLabel
+  3834:// #endregion 🎗️UiLabel
+  6368:// #region 📱️UiMobile Context
+  6383:// #endregion 📱️UiMobile Context
+  6442:// #region 🔤️Interaction Context
+  6665:// #endregion 🔤️Interaction Context
+  8505:// #region 🎈️Level Context
+  8792://#region 🫳️DragAffordance
+  8847://#endregion 🫳️DragAffordance
+  8895:// #region 🧭️Flow Context
+  8985:// #endregion 🧭️Flow Context
+  9745://#region 🪟️DragPreview
+  9762://#endregion 🪟️DragPreview
+  9764://#region 🌱️TreeUnitDrag
+  9812://#endregion 🌱️TreeUnitDrag
+  11088:// #endregion 🎈️Level Context
+  11537:// #region 📔️Avatar
+  11540:// #endregion 📔️Avatar
+  11826:// #region 🛒️Icons
+  11829:// #endregion 🛒️Icons
+  11878:// #region 🌩️ActionGroup
+  11881:// #endregion 🌩️ActionGroup
+  12105:// #region 🧩️ToggleGroup
+  12108:// #endregion 🧩️ToggleGroup
+  12441:// #region 🖼️IconSelector
+  12444:// #endregion 🖼️IconSelector
+
+## Region span estimates (stack-matched)
+  Icons: [11826,11829,4]
+  ContextMenu: [1788,2764,977]
+  Avatar: [11537,11540,4]
+  Button: null
+  ButtonGroup: null
+  DragHandle: null
+  PanelTab: null
+  Label: [3828,3834,7]
+  Icon : null
+Button region candidates:
+Drag/Handle region candidates:
+  8792://#region 🫳️DragAffordance
+  9745://#region 🪟️DragPreview
+  9764://#region 🌱️TreeUnitDrag
+PanelTab region candidates:
+  9965://#region 🎛️PanelChromeTabBar
+Group region candidates:
+  11878:// #region 🌩️ActionGroup
+  12105:// #region 🧩️ToggleGroup
+
+## Symbol residence
+STILL_IN_BARREL = export/const/function/type definition still in barrel body
+EXTRACTED_REEXPORT = barrel import {...} from elements/... then export
+- Button: STILL_IN_BARREL
+    L12036: function Button({ className, asChild = false, id, icon, text, children, ...props }: ButtonProps) {
+    L12066: export { Button, ButtonCycle, ButtonGroup, ButtonGroupItem, buttonGroupItemVariants };
+- ButtonGroup: STILL_IN_BARREL
+    L11919: function ButtonGroup({ className, detailPanelWidthMode = "fit", id, showLabel, children, ...props }: ButtonGroupProps) {
+    L12066: export { Button, ButtonCycle, ButtonGroup, ButtonGroupItem, buttonGroupItemVariants };
+- ButtonGroupItem: STILL_IN_BARREL
+    L11951: function ButtonGroupItem({
+    L12066: export { Button, ButtonCycle, ButtonGroup, ButtonGroupItem, buttonGroupItemVariants };
+- ContextMenu: STILL_IN_BARREL
+    L1971: export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, title, titleIcon = "list" }) => {
+- ContextMenuItem: STILL_IN_BARREL
+    L1879: export interface ContextMenuItem {
+- DragHandle: STILL_IN_BARREL
+    L8799: export const DragHandle: React.FC<{
+- Icon: STILL_IN_BARREL
+    L1189: export type Icon =
+    L1605: export function Icon({ icon, size = "base", className, title }: IconProps): React.ReactElement {
+- ControlIcon: STILL_IN_BARREL
+    L1447: export type ControlIcon = IconSource | React.ReactElement;
+- renderControlIcon: STILL_IN_BARREL
+    L1554: export function renderControlIcon(icon: ControlIcon | undefined | null | false, size: number | IconSizeToken = "small"): React.ReactNode {
+- IconSource: STILL_IN_BARREL
+    L1444: export type IconSource = Icon | IconName | { readonly name: IconName } | { readonly svg: string } | { readonly url: string } | { readonly node: React.ReactNode };
+- IconName: BARREL_REFERENCE_ONLY
+    L149: import { ICONS, assertUniqueIconConceptAssignments, isIconName, resolveCatalogIconSvgFromTheme, shortcodeCatalogKey, shortcodeEmoji, type IconName } from "@semio-tech/assets";
+- CheckIcon: STILL_IN_BARREL
+    L1684: export const CheckIcon = createIconComponent("check");
+- ChevronDownIcon: STILL_IN_BARREL
+    L1686: export const ChevronDownIcon = createIconComponent("chevron-down");
+- ChevronUpIcon: STILL_IN_BARREL
+    L1690: export const ChevronUpIcon = createIconComponent("chevron-up");
+- ChevronLeftIcon: STILL_IN_BARREL
+    L1688: export const ChevronLeftIcon = createIconComponent("chevron-left");
+- ChevronRightIcon: STILL_IN_BARREL
+    L1689: export const ChevronRightIcon = createIconComponent("chevron-right");
+- CloseIcon: STILL_IN_BARREL
+    L1693: export const CloseIcon = createIconComponent("x");
+- Maximize2Icon: STILL_IN_BARREL
+    L1735: export const Maximize2Icon = createIconComponent("maximize-2");
+- Minimize2Icon: STILL_IN_BARREL
+    L1738: export const Minimize2Icon = createIconComponent("minimize-2");
+- ChevronDownIconAlt: STILL_IN_BARREL
+    L1687: export const ChevronDownIconAlt = ChevronDownIcon;
+- PanelTabBar: STILL_IN_BARREL
+    L9495: export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, anchor, tabs, activePath, onActivePathChange, direction = "down", startDepth = 0, maxRows = Infinity, showActiveC
+- PanelTabNode: STILL_IN_BARREL
+    L9024: export type PanelTabNode = PanelTabLeaf | PanelTabBranch;
+- findPanelTabNode: STILL_IN_BARREL
+    L9032: export function findPanelTabNode(tabs: readonly PanelTabNode[], path: readonly string[]): PanelTabNode | undefined {
+- progressPanelTabSelection: STILL_IN_BARREL
+    L9074: export function progressPanelTabSelection(tabs: readonly PanelTabNode[], currentPath: readonly string[], selectedPath: readonly string[], memory: Readonly<Record<string, string>>):
+- usePanelTabSelection: STILL_IN_BARREL
+    L9132: export function usePanelTabSelection({ tabs, visible, onVisibleChange, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange }: PanelTabSelectionOptions): {
+- Label: STILL_IN_BARREL
+    L11278: export function Label({ id, rowId, label, labelElementId, className, children, labelLayoutKind = "property" }: LabelProps) {
+- useLabel: STILL_IN_BARREL
+    L6161: export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey, options?: Record<string, unknown>): UiLabel;
+    L6162: export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | undefined, options?: Record<string, unknown>): UiLabel | undefined;
+    L6163: export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | undefined, options?: Record<string, unknown>): UiLabel | undefined {
+
+## Storybook story locations
+- Button: .storybook/stories/ui/Button.stories.tsx
+- ButtonGroup: .storybook/stories/ui/ButtonGroup.stories.tsx
+- ContextMenu: .storybook/stories/ui/ContextMenu.stories.tsx
+- DragAndDrop: .storybook/stories/ui/DragAndDrop.stories.tsx
+- Label: .storybook/stories/ui/Label.stories.tsx
+- PanelTabBar: .storybook/stories/ui/PanelTabBar.stories.tsx
+
+## W3-interim fanout (element leaves still importing these from barrel)
+  22	useLabel
+  10	Label
+  8	Icon
+  7	ControlIcon
+  5	renderControlIcon
+  4	Button
+  4	DragHandle
+  4	IconName
+  4	ChevronDownIcon
+  4	CloseIcon
+  3	ContextMenu
+  3	ContextMenuItem
+  3	CheckIcon
+  2	ChevronUpIcon
+  2	ChevronRightIcon
+  2	IconSource
+  2	PanelTabBar
+  2	PanelTabNode
+  2	findPanelTabNode
+  2	progressPanelTabSelection
+  2	usePanelTabSelection
+  2	ChevronDownIconAlt
+  2	ButtonGroup
+  2	ButtonGroupItem
+  2	Maximize2Icon
+  2	Minimize2Icon
+  1	ChevronLeftIcon
+
+## Verdict (inventory only — waiting for barrel lock)
+1. Button/: EXISTS but only Rust component.rs — NO react component.tsx. See Button symbol status → extract when lock free.
+2. Icons/: EXISTS with react component + story; currently Cursor-only (see exports). Icon/ControlIcon/renderControlIcon/IconSource/IconName/individual icons still barrel-resident in Icons region → EXTEND Icons/ when lock free. Prefer co-locate under Icons/; core/Icons only if module-top-level cycle break needed.
+3. ContextMenu/: MISSING. ContextMenu region exists in barrel → CREATE dir + EXTRACT when lock free.
+4. DragHandle/: MISSING as own dir. See Avatar DraggableAvatar + barrel DragHandle status → place with Avatar or create DragHandle when lock free.
+5. ButtonGroup/: MISSING. See ButtonGroup/ButtonGroupItem status → CREATE + EXTRACT when lock free if still inline.
+6. PanelTabBar/: MISSING as own dir. See Panel leaf + barrel PanelTab* status before deciding Panel vs own element.
+
+STOPPING per parent instruction. No edits to ui-react barrel.
+
+## Precise definition lines (enrichment — inventory only)
+
+| Symbol | Line | Status |
+|---|---|---|
+| Icon (type) | L1189 | STILL_IN_BARREL (near IconRenderPort / Icon region ~L1168) |
+| IconSource | L1444 | STILL_IN_BARREL |
+| ControlIcon | L1447 | STILL_IN_BARREL |
+| renderControlIcon | L1554 | STILL_IN_BARREL |
+| Icon (component) | L1605 | STILL_IN_BARREL |
+| CheckIcon / Chevron* / CloseIcon / Maximize2Icon | L1684+ | STILL_IN_BARREL (createIconComponent cluster) |
+| ContextMenuItem | L1881 | STILL_IN_BARREL inside #region ContextMenu L1788-~2764 |
+| ContextMenu | L1973 | STILL_IN_BARREL inside #region ContextMenu |
+| DragHandle | L8801 | STILL_IN_BARREL (near DnD; NOT in Avatar leaf) |
+| PanelTabNode | L9026 | STILL_IN_BARREL |
+| PanelTabBar | L9497 | STILL_IN_BARREL |
+| Label (component) | L11280 | STILL_IN_BARREL (distinct from core/UiLabel) |
+| ButtonGroup | L11921 | STILL_IN_BARREL (no named #region; clustered with Button) |
+| ButtonGroupItem | L11953 | STILL_IN_BARREL |
+| Button | L12038 | STILL_IN_BARREL (function Button; export cluster L12068) |
+
+### Region stubs already extracted
+- #region Icons L11826-11829: only import { Cursor } from elements/Icons + export — Icon cluster NOT moved yet
+- #region Avatar L11537-11540: already import-then-exports Avatar/DraggableAvatar/TableAvatar from Avatar leaf
+- #region UiLabel L3828-3834: core/UiLabel only (NOT the Label component)
+
+### Leaf probes
+- Avatar contains DragHandle text: false; exports DraggableAvatar: true
+- Panel contains PanelTabBar: true; PanelTabNode: true
+
+### Co-location notes for when lock frees
+- Button/: needs NEW component.tsx (rs-only today). Button+ButtonCycle co-extract; ButtonGroup/Item adjacent (~L11921-12068) -> ButtonGroup/ element dir per task.
+- Icons/: EXTEND existing component.tsx beyond Cursor with Icon/ControlIcon/renderControlIcon/IconSource/IconName/individual icons from ~L1189-1735+. Prefer Icons/ not core/Icons unless top-level TDZ cycle.
+- ContextMenu/: CREATE; extract full #region ContextMenu (~977 lines).
+- DragHandle: NOT in Avatar (Avatar already has DraggableAvatar). CREATE DragHandle/ element (preferred over stuffing Avatar).
+- PanelTabBar/PanelTabNode: NOT in Panel leaf. Own PanelTabBar/ element if interim needs them.
+- Label/: MISSING; Label component still barrel L11280; extract only if in scope.
+- Stories still at .storybook/stories/ui/: Button, ButtonGroup, ContextMenu, Label, PanelTabBar — move after extract homes exist; do NOT change meta.title.
+
+### W3-interim clearance blockers (still barrel-defined)
+Button, Icon, ControlIcon, renderControlIcon, IconSource, CheckIcon/Chevrons/Close/Maximize*, ContextMenu, ContextMenuItem, DragHandle, ButtonGroup, ButtonGroupItem, PanelTabBar, PanelTabNode, Label — all STILL_IN_BARREL.
+
+STOP. Awaiting parent barrel lock. No edits to ui-react barrel.
+
+### Panel leaf PanelTab probe (corrected)
+- Panel/🟦️component.tsx uses 🚧️W3-interim import of PanelTabBar, PanelTabNode, findPanelTabNode, progressPanelTabSelection, usePanelTabSelection, DragHandle, Icon, CloseIcon, useLabel (and others) from the barrel.
+- Definitions remain in barrel: PanelTabNode L9026, PanelTabBar L9497, DragHandle L8801.
+- Extracting those clears high-fanout W3-interim deps for Panel (and MobilePanel et al.).
+
+STOP. Awaiting parent barrel lock. No edits to ui-react barrel.

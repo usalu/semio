@@ -1,7 +1,7 @@
 //! @emoji 📡️ `dsl_lsp` — LSP 3.17 JSON-RPC subset and in-process [`LanguageSession`] over
 //! [`dsl::LanguageSpec`] hooks (semantic tokens, completion, canonicalize).
 
-use dsl::{CompletionItem, LanguageSpec, TokenClass};
+use dsl::{CompletionItem, LanguageSpec, TextError, TokenClass};
 use serde_json::{json, Value};
 
 //#region 🔖️Session
@@ -56,7 +56,7 @@ impl LanguageSession {
         (self.spec.hooks.complete)(&self.text, offset)
     }
 
-    pub fn canonicalize(&self) -> Result<String, dsl_core::TextError> {
+    pub fn canonicalize(&self) -> Result<String, TextError> {
         (self.spec.hooks.canonicalize)(&self.text)
     }
 }

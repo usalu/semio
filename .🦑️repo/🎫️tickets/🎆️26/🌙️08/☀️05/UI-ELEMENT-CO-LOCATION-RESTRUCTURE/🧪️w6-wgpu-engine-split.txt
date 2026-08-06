@@ -1,0 +1,86 @@
+W6 — ui-wgpu engine module split (wiring-only entry)
+=====================================================
+Ticket: 2026/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE
+Date: 2026-08-06
+Package: semio-framework-ui (parent at 📦️packages/🦀️rust; wgpu target is pub mod wgpu via #[path])
+Target file: 🎯️targets/🧊️wgpu/📦️lib.rs
+
+BEFORE
+------
+lib.rs lines: 17881
+All engine/schema modules were INLINE `pub mod <name> { ... }` bodies in lib.rs.
+(~10 widget leaves already extracted to 🎱️elements/*/📊️component.rs — left untouched.)
+
+AFTER
+-----
+lib.rs lines: 232
+lib.rs is wiring-only: #[path] mod declarations + pub use re-exports + feature gates.
+Goal band: ≤ ~150–400 lines — HIT (232 lines).
+
+MODS MOVED → 🎯️targets/🧊️wgpu/🦀️<name>.rs
+------------------------------------------
+label          → 🦀️label.rs          (was crate-root //#region Label; wired as mod label_impl + pub use *; added `use super::{Locale, Terminology}`)
+component      → 🦀️component.rs      (declarative schema: layout/ui/utilities + wire tests)
+arena          → 🦀️arena.rs          #[cfg(feature = "wgpu-engine")]
+tree           → 🦀️tree.rs
+reconcile      → 🦀️reconcile.rs
+chrome         → 🦀️chrome.rs
+cursor         → 🦀️cursor.rs
+draw           → 🦀️draw.rs
+geometry       → 🦀️geometry.rs      (ungated)
+minimap        → 🦀️minimap.rs       (ungated; module docs kept on #[path] decl)
+gpu            → 🦀️gpu.rs
+input          → 🦀️input.rs
+layout         → 🦀️layout.rs
+flex           → 🦀️flex.rs
+shaders        → 🦀️shaders.rs
+text           → 🦀️text.rs
+theme          → 🦀️theme.rs         (ungated)
+paint          → 🦀️paint.rs
+events         → 🦀️events.rs
+scene_slots    → 🦀️scene_slots.rs
+shell          → 🦀️shell.rs
+engine         → 🦀️engine.rs
+widgets        → 🦀️widgets.rs       (shared enums/dispatch; element render fns stay in 🎱️elements)
+host           → 🦀️host.rs
+
+LEFT AS-IS (already extracted / generated)
+-----------------------------------------
+icon_name #[path] → framework-level 🖼️assets …/🦀️icon_name.rs (verified exists)
+ui_axes → 🤖️generated.rs
+10 element leaves: Select/Button/Input/Toggle/KeyValue/Slider/Stepper/Ring/IconSelector/Tree
+
+WIRING PATTERN
+--------------
+#[cfg(feature = "wgpu-engine")]   // when gated
+#[path = "🦀️<name>.rs"]
+pub mod <name>;
+
+Module names unchanged → `crate::wgpu::<name>::…` paths stay valid.
+
+VERIFICATION
+------------
+Brace balance (naive {/} count) on all 26 .rs files under wgpu target: OK (0 imbalances).
+All 36 #[path] declarations resolve to existing files: OK.
+icon_name path resolves: OK.
+
+cargo check:
+  - Root workspace `cargo check -p semio-framework-ui-wgpu`: BLOCKED
+    (root Cargo.toml still points at 🎯️targets/📊️wgpu which no longer has its own Cargo.toml —
+     package merged into parent semio-framework-ui; concurrent workspace churn / missing plugin
+     manifests also present).
+  - Isolated parent: `cargo check --manifest-path …/📦️packages/🦀️rust/Cargo.toml --features wgpu`
+    → GREEN (Finished `dev` profile). Validates wiring for component/label/geometry/theme/minimap.
+  - Isolated parent `--features wgpu,wgpu-engine`: NOT GREEN
+    Source references `semio_s_3d::ScenePass3d` (pre-existing in draw.rs / re-exports) but parent
+    Cargo.toml currently has no `semio-s-3d`/`kernel_3d_scene` dep (concurrent package-merge state).
+    Restoring the dep under the TEMPORARY local [workspace] overlay then fails loading transitive
+    `semio-framework-os-kernel-math-algebra` Cargo.toml (missing — concurrent math-family churn).
+    Documented as cargo-check-pending for full wgpu-engine until those settle.
+    Scratch logs: scratch-w6-cargo-ui-parent.txt, scratch-w6-cargo-ui-parent2.txt,
+    scratch-w6-cargo-wgpu-only.txt.
+
+NOT TOUCHED
+-----------
+TypeScript ui-react barrel (other agents).
+Master ticket open/close (shared — left alone).

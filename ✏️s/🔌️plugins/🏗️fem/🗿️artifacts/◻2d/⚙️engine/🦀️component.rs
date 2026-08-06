@@ -1,12 +1,22 @@
 //! ⚙️ FEM 2D artifact — headless compute (constitutional: engine). Sibling files
-//! `🦀️meshing.rs`/`🦀️modal_buckling.rs`/`🦀️mesh_preview.rs` hold the region-meshing, modal/buckling and
+//! `🕸️meshing`/`🎵️modal-buckling`/`🗺️mesh-preview` hold the region-meshing, modal/buckling and
 //! mesh-preview bridges respectively; this file keeps the `Errors` region, the `Io` region, and the
 //! top-level `fem2d_io()`/solve entry points that aren't specific to any of those three.
 
 use crate::artifacts::fem2d::engine::meshing::{area_load_nodal_loads, build_nodes_and_elements, self_weight_nodal_loads, GRAVITY_G};
-use crate::artifacts::fem2d::{Fem2dDocument, FemElement, FemLoad};
+use crate::artifacts::fem2d::{Fem2dDocument, FemLoad};
 use crate::core::{MemberUdl, NodalLoad, Support};
 use std::collections::HashMap;
+
+// #region 🔖️Register
+/// 🗂️ Registers `Fem2dDocument`'s pack↔dsl codec under `FEM_2D_SCHEMA` so `framework/sync`'s
+/// `FolderEndpoint` (and any other schema-string-keyed caller) can print/parse fem2d documents without
+/// depending on its concrete `Projection`/`Operation` types. Reached from the plugin root's
+/// `semio_plugin!{ setup: … }` via `crate::core::register_all_engines`.
+pub fn register() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::fem2d::Fem2dPlayApp>(crate::artifacts::fem2d::FEM_2D_SCHEMA);
+}
+// #endregion 🔖️Register
 
 pub fn empty_fem2d_projection() -> Fem2dDocument {
     Fem2dDocument::default()
@@ -158,7 +168,7 @@ pub fn fem2d_solve_all(doc: &Fem2dDocument) -> Result<HashMap<String, crate::cor
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::fem2d::{FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+    use crate::artifacts::fem2d::{FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
     use crate::core::{Dof, ElementResult};
 
     // #region 🔖️Io

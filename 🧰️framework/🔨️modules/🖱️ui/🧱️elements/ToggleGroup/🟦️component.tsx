@@ -13,11 +13,13 @@ import { toggleVariants, type ToggleProps, type ToggleStandardProps, type Toggle
 // reactHostPort.createContext at module top level, which requires a non-circular import (see
 // 🧱️elements/🫀️core/Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../🫀️core/Ports/🟦️component.tsx";
-// 🚧️W3-interim: these still live in the ui-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ or 🧱️elements/🫀️core/ dirs) — W3 rewires this import per-symbol as each
-// dependency's own element/core file lands. Do not import the barrel from any OTHER new leaf file
-// without the same marker; grep for `🚧️W3-interim` must be empty before W6 closes.
-import { type Level, useLevel, cn, chromeControlGroupClass, Label, useControlInlineText, useControlAccessibleLabel, ControlHotkeyBadge, renderControlIcon, surfaceClass, Action, ChevronDownIcon, Popover, PopoverTrigger, PopoverContent, ChromeControlHint, type ControlIcon } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { cn } from "../🫀️core/ClassNames/🟦️component.tsx";
+import { Action } from "../ActionGroup/🟦️component.tsx";
+import { Popover, PopoverTrigger, PopoverContent } from "../Popover/🟦️component.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { surfaceClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { type Level, useLevel, chromeControlGroupClass, Label, useControlInlineText, useControlAccessibleLabel, ControlHotkeyBadge, renderControlIcon, ChevronDownIcon, ChromeControlHint, type ControlIcon } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🧩️ToggleGroup

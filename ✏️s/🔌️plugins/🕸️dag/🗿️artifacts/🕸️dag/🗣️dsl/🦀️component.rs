@@ -32,5 +32,14 @@ mod tests {
         let document = parse_dsl(DAG_EXAMPLE_TEXT).expect("parse default fixture");
         store::test_support::assert_dsl_round_trip(&document);
     }
+
+    #[test]
+    fn fused_edge_arrow_wire_parses_labeled_endpoints() {
+        let parsed = dsl::parse_wire_text("a -e1:Connection> b:Node@out").expect("parse fused edge");
+        assert_eq!(parsed.edge_label.id.as_deref(), Some("e1"));
+        assert_eq!(parsed.edge_label.kind.as_deref(), Some("Connection"));
+        assert_eq!(parsed.from.id, "a");
+        assert!(parsed.edge.as_ref().map(|(d, _)| *d).unwrap_or(false));
+    }
 }
 //#endregion 🧪️Tests

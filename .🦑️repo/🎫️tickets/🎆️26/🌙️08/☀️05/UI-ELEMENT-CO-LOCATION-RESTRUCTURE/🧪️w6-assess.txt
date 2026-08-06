@@ -1,0 +1,179 @@
+ticket /Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/� combos/☀️05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE
+=== package markers ===
+PKG 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml role=framework marker=true
+PKG 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/Cargo.toml role=framework marker=true
+PKG 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json role=framework marker=true
+PKG 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml role=framework marker=true
+PKG 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/package.json role=? marker=true
+PKG 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json role=framework marker=true
+PKG 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/Cargo.toml role=framework marker=true
+PKG 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/package.json role=framework marker=true
+MISSING 🧰️framework/🔨️modules/🖱️ui/🖼️assets/📦️packages
+=== barrel sizes ===
+BARREL 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx lines=24940 regions=146
+BARREL 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx lines=1244 regions=30
+=== taxonomy ===
+targetsDirName 🎯️targets
+elementsDirName 🧱️elements
+storyLeafFilename 🧪️story.tsx
+areas {"✏️s/🔌️plugins":"mixed","✏️s/🔨️modules":"legacy","🧰️framework":"legacy","🌎️hub":"legacy","♻️mit-bestand":"legacy","compose":"exempt"}
+uiElDir 🧰️framework/🔨️modules/🖱️ui/🧱️elements
+renElDir 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements
+W3-interim files 51
+W4-interim files 19
+indexed leaf symbols 966
+resolvable_to_leaves 71
+still_only_barrel 222
+--- still-in-barrel top ---
+22	useLabel
+11	SurfaceScope
+10	ElementProps
+10	Label
+8	Icon
+8	surfaceClass
+8	glassClass
+8	useTransaction
+7	interactiveHoverClass
+7	ControlIcon
+7	borderNormalClass
+6	useFlow
+6	useIdLabel
+5	renderControlIcon
+4	DragHandle
+4	useShellScopeOptional
+4	useControlAccessibleLabel
+4	interactiveControlTransitionClass
+4	ChevronDownIcon
+4	CloseIcon
+4	Button
+4	formControlFocusBorderClass
+4	uiFormControlBrowserDefaultProps
+3	ContextMenu
+3	ContextMenuItem
+3	useUiDriverDragSurface
+3	useControlInlineText
+3	interactiveActiveFillClass
+3	loadingBorderStateClass
+3	waitingBorderStateClass
+3	CheckIcon
+3	useSurface
+3	shellFloorFillClass
+3	LevelProvider
+3	UiStatus
+3	useInteractionCommands
+3	borderElementClass
+3	borderNormalBottomClass
+3	useLevel
+3	menuListItemClassName
+2	FlowProvider
+2	resolveTranslationLabel
+2	useUiTranslation
+2	usePanelGhost
+2	dropZoneReadyFillClass
+2	ChevronRightIcon
+2	ChevronUpIcon
+2	shellFloorPaints
+2	IconSource
+2	Anchor
+2	PanelGhostRoot
+2	PanelTabBar
+2	PanelTabNode
+2	findPanelTabNode
+2	getLevelZClass
+2	progressPanelTabSelection
+2	useNativeDragArm
+2	usePanelTabSelection
+2	useSurfaceActive
+2	veilClass
+2	loadingBorderClass
+2	ChevronDownIconAlt
+2	chromeStatusBorderClass
+2	Level
+2	ChromeControlHint
+2	ButtonGroup
+2	ButtonGroupItem
+2	useShellKeydown
+2	isSurfaceActiveBackgroundPointer
+2	focusActiveSearchInput
+2	routeWindowSearchEscape
+2	NULL_SHELL_ROOT_REF
+2	Maximize2Icon
+2	Minimize2Icon
+2	uiSpacingPx
+1	interactiveTabActiveClass
+1	FlowBlock
+1	FlowInline
+1	TREE_SECTION_REORDER_MIME
+1	dropZoneReadyTextClass
+1	panelTabIconSlotClass
+1	panelTabLabelClass
+1	windowMeasureTreeGroupLabelClass
+1	windowMeasureTreeLeafLabelClass
+1	windowPaneChromeToggleClass
+1	ChevronLeftIcon
+1	DocumentIcon
+1	FolderIcon
+1	hoverExcludingHandleTextEmphasizedClass
+1	groupHoverExcludingHandleBgFillClass
+1	NavbarTrailingFullscreenSlot
+1	IconName
+1	getElementById
+1	useUiDriverTooltips
+1	useUiDriver
+1	useControlHotkey
+1	useControlHotkeyTooltipVisible
+1	resolveControlLabelId
+1	isInternalChromeControlId
+1	humanizeControlId
+--- resolvable top ---
+40	cn	🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/ClassNames/🟦️component.tsx
+20	reactHostPort	🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/Ports/🟦️component.tsx
+13	UiLabel	🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/UiLabel/🟦️component.tsx
+5	PropertyValueColumnContext	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Tree/🟦️component.tsx
+4	Scrollable	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Scrollable/🟦️component.tsx
+3	uiDataLabel	🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/UiLabel/🟦️component.tsx
+3	Select	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Select/🟦️component.tsx
+3	SelectContent	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Select/🟦️component.tsx
+3	SelectItem	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Select/🟦️component.tsx
+3	SelectTrigger	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Select/🟦️component.tsx
+3	SelectValue	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Select/🟦️component.tsx
+3	Popover	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Popover/🟦️component.tsx
+3	PopoverTrigger	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Popover/🟦️component.tsx
+3	PopoverContent	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Popover/🟦️component.tsx
+2	TableAvatar	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Avatar/🟦️component.tsx
+2	Action	🧰️framework/🔨️modules/🖱️ui/🧱️elements/ActionGroup/🟦️component.tsx
+2	Input	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Input/🟦️component.tsx
+2	Textarea	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Textarea/🟦️component.tsx
+2	childElementId	🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/ElementId/🟦️component.tsx
+2	NavbarItem	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Navbar/🟦️component.tsx
+2	TreeDragAndDropController	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Tree/🟦️component.tsx
+2	TreeSelectionMode	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Tree/🟦️component.tsx
+2	useFirstDraggableElementAlias	🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/ElementId/🟦️component.tsx
+2	PanelProps	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Panel/🟦️component.tsx
+2	CanvasSkeleton	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Skeletons/🟦️component.tsx
+2	formatNumber	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Input/🟦️component.tsx
+1	Collapsible	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Collapsible/🟦️component.tsx
+1	CollapsibleContent	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Collapsible/🟦️component.tsx
+1	CollapsibleTrigger	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Collapsible/🟦️component.tsx
+1	Slider	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Slider/🟦️component.tsx
+1	Stepper	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Stepper/🟦️component.tsx
+1	Toggle	🧰️framework/🔨️modules/🖱️ui/🧱️elements/ToggleGroup/🟦️component.tsx
+1	Tree	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Tree/🟦️component.tsx
+1	TreeDataItem	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Tree/🟦️component.tsx
+1	TreeDataSection	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Tree/🟦️component.tsx
+1	Panel	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Panel/🟦️component.tsx
+1	MobilePanelProps	🧰️framework/🔨️modules/🖱️ui/🧱️elements/MobilePanel/🟦️component.tsx
+1	MobilePanel	🧰️framework/🔨️modules/🖱️ui/🧱️elements/MobilePanel/🟦️component.tsx
+1	Command	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Command/🟦️component.tsx
+1	CommandInput	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Command/🟦️component.tsx
+1	CommandList	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Command/🟦️component.tsx
+1	CommandEmpty	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Command/🟦️component.tsx
+1	CommandGroup	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Command/🟦️component.tsx
+1	CommandItem	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Command/🟦️component.tsx
+1	ResizableHandle	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Resizable/🟦️component.tsx
+1	ResizablePanel	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Resizable/🟦️component.tsx
+1	ResizablePanelGroup	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Resizable/🟦️component.tsx
+1	Navbar	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Navbar/🟦️component.tsx
+1	Window	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Window/🟦️component.tsx
+1	ResizableJoinCornerResizeHandler	🧰️framework/🔨️modules/🖱️ui/🧱️elements/Resizable/🟦️component.tsx
+wrote assess

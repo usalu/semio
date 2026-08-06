@@ -8,11 +8,14 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { type UiStatus } from "@semio-tech/ui-styling";
-// 🚧️W3-interim: these still live in the ui-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ or 🧱️elements/🫀️core/ dirs) — W3 rewires this import per-symbol as each
-// dependency's own element/core file lands. Do not import the barrel from any OTHER new leaf file
-// without the same marker; grep for `🚧️W3-interim` must be empty before W6 closes.
-import { cn, type Anchor, ANCHORS, type PanelProps, Panel, type MobilePanelProps, MobilePanel, UiMobileProvider, GhostProvider, surfaceClass, SurfaceScope, chromeStatusBorderClass, CanvasSkeleton } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { cn } from "../🫀️core/ClassNames/🟦️component.tsx";
+import { type PanelProps, Panel } from "../Panel/🟦️component.tsx";
+import { type MobilePanelProps, MobilePanel } from "../MobilePanel/🟦️component.tsx";
+import { CanvasSkeleton } from "../Skeletons/🟦️component.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { surfaceClass, chromeStatusBorderClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { type Anchor, ANCHORS, UiMobileProvider, GhostProvider, SurfaceScope } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🪨️Layout

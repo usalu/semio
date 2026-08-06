@@ -2,7 +2,7 @@
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
-//! `🎭️modes/✏️edit/🪟️windows/*`, view state in `🦀️config.rs`, shared compute in the artifact's
+//! `🎭️modes/✏️edit/🪟️windows/*`, view state in `🎚️config`, shared compute in the artifact's
 //! `⚙️engine`. This file is a routing table: `handle` → `Fem3dCommand::dispatch`, `render` → body-key →
 //! window, and a `🔖️Manifest` region that calls one passthrough per node (scalar `.mode(..)`/
 //! `.window_kind(..)` calls stay inline — fem3d builds neither a `ModeDefinition` nor a
@@ -374,7 +374,6 @@ mod tests {
     use super::*;
     use crate::apps::fem3d::testkit::{dispatch, fem3d_app, Fem3dApp};
     use semio_framework_plugin::testkit::assert_undo_redo_round_trip;
-    use semio_framework_plugin::PluginApp;
 
     //#region 🔖️CommandSurface
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order — mirrors the exact
@@ -421,6 +420,48 @@ mod tests {
         for command in every_command() {
             store::test_support::assert_op_text_binary_equivalence(&command);
         }
+    }
+
+    /// 📌️ LAW: the pre-migration command wire format, row for row — the hex list is positionally aligned
+    /// to `every_command()`, which carries exactly the values the old `📡️protocol` crate's baseline dump
+    /// used (ticket `26/08/05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION`,
+    /// `🧪️wire-baseline-before-3d.txt`). Row order is the binary variant ordinal, so a reordering — which
+    /// no round-trip law can catch — shows up here as a leading-byte mismatch. `addNodalLoad`'s `None`
+    /// case is pinned separately below because `every_command()` only carries its `Some` shape.
+    #[test]
+    fn every_command_keeps_its_pre_migration_bytes() {
+        use protocol::OpBinary;
+        let expected = [
+            "010000030005000000000000f03f0105000000000000004002050000000000000840",
+            "010104026e31026e3203726f6405737465656c04000600010601020603030602",
+            "01020406686561323030026e31026e3205737465656c050006010106020206030306000405000000000000e03f",
+            "01030105537465656c030006000105000000da7c72484202050000806444ce3242",
+            "0104010648454132303005000600010545f5d6c05609763f020554fc8458a258033f0305210ec81462e4eb3e040576830df4f521a43e",
+            "010501026e310200060001160600020406080a",
+            "010602046c697665026e3104000601010a020205000000000088b3c0030600",
+            "01070102653104000600010500000000000000000205000000000000000003050000000000407fc0",
+            "010802046465616404736f6c31030006010105000000000088b340020600",
+            "01090108636f6e637265746508000500000000000000000105000000000000000002050000000000001040030500000000000000400405000000000000e03f05060006050000000000000000070402",
+            "010a01044c697665020006000101",
+            "010b0203554c531c5b5b2264656164222c312e33355d2c5b226c697665222c312e355d5d02000600010601",
+            "010c010464656164020006000102",
+            "010d000200040502050000000000003e40",
+            "010e02026531026e3101000c0206010600",
+            "010f010764656661756c7401000600",
+            "011001077b2278223a317d01000600",
+            "0111020464656164056d6f64616c03000600010601020400",
+        ];
+        let commands = every_command();
+        assert_eq!(commands.len(), expected.len(), "the baseline hex list must cover every command row");
+        for (command, expected) in commands.iter().zip(expected) {
+            let bytes = command.encode_op().expect("encode");
+            assert_eq!(bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), expected, "wire bytes changed for {}", command.command_id());
+        }
+        let nodal_load_without_case = Fem3dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n1".into(), dof: crate::artifacts::fem3d::FemDof::Tz, value: -5000.0, case_id: None });
+        assert_eq!(
+            nodal_load_without_case.encode_op().expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>(),
+            "010601026e3103000600010a020205000000000088b3c0"
+        );
     }
 
     /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword. Three rows

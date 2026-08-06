@@ -1,17 +1,17 @@
 //! 🔎️ wgpu render function for the KeyValue element — extracted from `widgets` mod's inline body
 //! (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a CRATE-ROOT sibling module of
-//! `crate::widgets` (declared `#[cfg(feature = "engine")] #[path = "..."] mod key_value;` right
+//! `crate::wgpu::widgets` (declared `#[cfg(feature = "wgpu-engine")] #[path = "..."] mod key_value;` right
 //! before `pub mod widgets` in lib.rs — deliberately NOT nested inside `widgets { }`, since rustc
 //! resolves a nested inline-module's `#[path]` as if the parent had its own on-disk directory,
 //! which fails for a genuinely inline `mod widgets { }` block). `widgets` mod pulls this back in via
-//! `use crate::key_value::render_key_value;` so its own unqualified call sites keep working.
-//! `crate::widgets::{...}` reaches the sibling items this needs (`WidgetContext`, `KeyValueEntry`,
+//! `use crate::wgpu::key_value::render_key_value;` so its own unqualified call sites keep working.
+//! `crate::wgpu::widgets::{...}` reaches the sibling items this needs (`WidgetContext`, `KeyValueEntry`,
 //! `draw_text`, `measure_text_width`) — these stay in `widgets` because other widgets share them.
 //! Not to be confused with the `Field` element (a single labeled-field wrapper) — `KeyValue` renders
 //! a table of label→value rows.
 
-use crate::widgets::{draw_text, measure_text_width, KeyValueEntry, WidgetContext};
-use crate::geometry::Rect;
+use crate::wgpu::widgets::{draw_text, measure_text_width, KeyValueEntry, WidgetContext};
+use crate::wgpu::geometry::Rect;
 
 pub(crate) fn render_key_value<E>(entries: &[KeyValueEntry], bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let label_w = entries.iter().map(|e| measure_text_width(ctx, &e.label, ctx.theme.font_size_small)).fold(0.0f32, f32::max);

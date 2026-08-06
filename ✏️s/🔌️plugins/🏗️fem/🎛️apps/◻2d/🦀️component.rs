@@ -2,7 +2,7 @@
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
-//! `🎭️modes/*/🪟️windows/*`, view state in `🦀️config.rs`, shared compute in the artifact's `⚙️engine`.
+//! `🎭️modes/*/🪟️windows/*`, view state in `🎚️config`, shared compute in the artifact's `⚙️engine`.
 //! This file is a routing table: `handle` → `Fem2dCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one passthrough per node (fem2d's mode/window declarations stay
 //! scalar/inline — no `mode_def`/`window_kind_def` object is built anywhere in the pre-migration code).
@@ -17,12 +17,11 @@ use crate::artifacts::fem2d::Fem2dDocument;
 use crate::core::shared::{DisplayMode, ResultDisplay};
 use crate::core::{Dof, ElementResult};
 use semio_framework_plugin::{
-    create_default_layout, ui_text, ActionArgDef, ActionArgOption, ActionKind, App, AppIo, ConfigSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
-    SurfaceKind, UiNode,
+    create_default_layout, ui_text, ActionArgDef, ActionArgOption, App, AppIo, ConfigSpec, ConfigView, DocumentApp, DocumentView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, SurfaceKind,
+    UiNode,
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use store::DocumentDsl;
 
 //#region 🔖️Constants
 pub const FEM2D_APP_ID: &str = "fem2d-play";
@@ -387,8 +386,9 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::fem2d::testkit::{dispatch, fem2d_app, Fem2dApp};
+    use crate::apps::fem2d::testkit::{fem2d_app, render};
     use semio_framework_plugin::PluginApp;
+    use store::DocumentDsl;
 
     //#region 🔖️CommandSurface
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
@@ -445,6 +445,52 @@ mod tests {
     fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::test_support::assert_op_text_binary_equivalence(&command);
+        }
+    }
+
+    /// 📌️ LAW: the pre-migration command wire format, row for row, INCLUDING both `Option` shapes of
+    /// every row whose `None`/`Some` cases encode differently. Every hex string was dumped from the old
+    /// `📡️protocol` crate's `Fem2dCommand` before `app_commands!` rebuilt the enum (ticket
+    /// `26/08/05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION`,
+    /// `🧪️wire-baseline-before-2d.txt`). Row order is the binary variant ordinal, so a reordering — which
+    /// no round-trip law can catch — shows up here as a leading-byte mismatch.
+    #[test]
+    fn every_command_keeps_its_pre_migration_bytes() {
+        use protocol::OpBinary;
+        let rows: Vec<(&str, Fem2dCommand)> = vec![
+            ("010000020005000000000000f03f01050000000000000040", Fem2dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0 })),
+            ("010104026d31026e31026e3202733104000601010602020600030603", Fem2dCommand::AddBar(add_bar::AddBar { start: "n1".into(), end: "n2".into(), material_id: "m1".into(), section_id: "s1".into() })),
+            ("010204026d31026e31026e3202733104000601010602020600030603", Fem2dCommand::AddBeam(add_beam::AddBeam { start: "n1".into(), end: "n2".into(), material_id: "m1".into(), section_id: "s1".into() })),
+            ("01030105737465656c020006000105000000da7c724842", Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "steel".into(), e: 210e9 })),
+            ("01040106697065333030030006000105a4005130630a763f020509c577de9de7153f", Fem2dCommand::AddSection(add_section::AddSection { name: "ipe300".into(), area: 0.005381, iy: 8.356e-5 })),
+            ("010501026e31020006000116020002", Fem2dCommand::AddSupport(add_support::AddSupport { node_id: "n1".into(), fixed: vec![crate::artifacts::fem2d::FemDof::Tx, crate::artifacts::fem2d::FemDof::Ty] })),
+            ("010602046c697665026e3104000601010a010205000000000088b3c0030600", Fem2dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n1".into(), dof: crate::artifacts::fem2d::FemDof::Ty, value: -5000.0, case_id: Some("live".into()) })),
+            ("010601026e3103000600010a010205000000000088b3c0", Fem2dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n1".into(), dof: crate::artifacts::fem2d::FemDof::Ty, value: -5000.0, case_id: None })),
+            ("010701026531030006000105000000000000000002050000000000407fc0", Fem2dCommand::AddMemberUdl(add_member_udl::AddMemberUdl { element_id: "e1".into(), wx: 0.0, wy: -500.0, case_id: None })),
+            ("0108020464656164027231030006010105000000000088b340020600", Fem2dCommand::AddAreaLoad(add_area_load::AddAreaLoad { region_id: "r1".into(), pressure: 5000.0, case_id: Some("dead".into()) })),
+            (
+                "01090105737465656c060005000000000000000001050000000000000000020500000000000010400305000000000000004004060005057b14ae47e17a943f",
+                Fem2dCommand::AddRegion(add_region::AddRegion { x: 0.0, y: 0.0, width: 4.0, height: 2.0, material_id: "steel".into(), thickness: Some(0.02), mesh_size: None }),
+            ),
+            ("010a01044c697665020006000101", Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false })),
+            (
+                "010b0303554c530464656164046c69766502000600010c020d0200060101059a9999999999f53f0d020006020105000000000000f83f",
+                Fem2dCommand::AddCombination(add_combination::AddCombination {
+                    name: "ULS".into(),
+                    terms: vec![crate::artifacts::fem2d::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, crate::artifacts::fem2d::FemCombinationTerm { case_id: "live".into(), factor: 1.5 }],
+                }),
+            ),
+            ("010c010464656164020006000102", Fem2dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "dead".into(), enabled: true })),
+            ("010d000200040502050000000000003e40", Fem2dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0) })),
+            ("010e02026531026e3101000c0206010600", Fem2dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec!["n1".into(), "e1".into()] })),
+            ("010f010764656661756c7401000600", Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() })),
+            ("011000030005000000000000f03f010500000000000000400205000000000000f83f", Fem2dCommand::SetCamera(set_camera::SetCamera { x: 1.0, y: 2.0, zoom: 1.5 })),
+            ("0111020464656164056d6f64616c03000600010601020400", Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0 })),
+            ("0112010564652d444501000600", Fem2dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() })),
+        ];
+        for (expected, command) in rows {
+            let bytes = command.encode_op().expect("encode");
+            assert_eq!(bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), expected, "wire bytes changed for {}", command.command_id());
         }
     }
     //#endregion 🔖️CommandSurface
@@ -511,7 +557,7 @@ mod tests {
     #[test]
     fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         let mut app = fem2d_app();
-        assert!(crate::apps::fem2d::testkit::render(&mut app, "fem2d.play.nope").contains("Unknown body"));
+        assert!(render(&mut app, "fem2d.play.nope").contains("Unknown body"));
     }
 
     #[test]

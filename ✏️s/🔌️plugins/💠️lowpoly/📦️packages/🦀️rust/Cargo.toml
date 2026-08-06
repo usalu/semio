@@ -26,7 +26,7 @@ path = "📦️lib.rs"
 dsl = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 protocol = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
-kernel_3d_mesh = { path = "../../../../🔨️modules/🧊️3d/🥽️mesh/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-mesh" }
+semio-s-3d = { path = "../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
 serde.workspace = true
@@ -41,5 +41,3 @@ png = "0.17.16"
 # old `⚙️engine` crate's `[dev-dependencies]` verbatim (already repointed by a prior batch-1 agent from the
 # deleted `semio-s-app-cad-engine` to this crate).
 cad_plugin = { path = "../../../../../✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust", package = "semio-s-plugin-cad" }
-kernel_3d_brepkit = { path = "../../../../🔨️modules/🧊️3d/📐️brep/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-brep" }
-kernel_3d_engine = { path = "../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-brep-engine" }

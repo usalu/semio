@@ -6,7 +6,7 @@ use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigOperation};
 use crate::apps::lowpoly::session::{LowpolyScratch, Transform};
 use crate::artifacts::lowpoly::op::LowpolyOperation;
 use crate::artifacts::lowpoly::LowpolyProjection;
-use kernel_3d_mesh::Vec3;
+use semio_s_3d::Vec3;
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

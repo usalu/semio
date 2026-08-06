@@ -75,11 +75,20 @@ pub fn index_of<T: HasId>(items: &[T], id: &str) -> Option<usize> {
 /// 🩹️ Sparse id-keyed collection diff — removals plus id-or-index `set`s (replace when the id already
 /// exists, else insert at the recorded index). Mirrors `procedural_2d`'s `WidgetsDiff` pattern so
 /// disjoint edits from concurrent peers merge cleanly.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CollectionDiff<T> {
     pub removed: Vec<String>,
     pub set: Vec<(usize, T)>,
+}
+
+/// 🈳️ Hand-written rather than derived: `#[derive(Default)]` would demand `T: Default`, which no
+/// document entity type satisfies (`FemElement`/`FemLoad` are enums with no natural empty value), even
+/// though an empty diff never needs a `T` at all.
+impl<T> Default for CollectionDiff<T> {
+    fn default() -> Self {
+        Self { removed: Vec::new(), set: Vec::new() }
+    }
 }
 
 impl<T> CollectionDiff<T> {
@@ -118,7 +127,7 @@ pub fn apply_collection_diff<T: HasId + Clone>(items: &mut Vec<T>, diff: &Collec
 
 // #region 🔖️Fem3dDiff
 /// 🩹️ Sparse fem-3d diff over every document collection (camera is session-only runtime state, not a
-/// document field — see `Fem3dConfig::camera` in the app's `🦀️config.rs`).
+/// document field — see `Fem3dConfig::camera` in the app's `🎚️config`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Fem3dDiff {

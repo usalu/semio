@@ -45,6 +45,18 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
+    /// 📌️ LAW: the pre-migration operation wire format, byte for byte. The hex was dumped from the old
+    /// `📡️protocol` crate before the seven-crate merge (ticket
+    /// `26/08/05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION`,
+    /// `🧪️wire-baseline-before-3d.txt`) — the round-trip laws above are self-consistent and would happily
+    /// pass on a silently rewritten format, so this pin is the only real proof.
+    #[test]
+    fn operation_bytes_match_the_pre_migration_baseline() {
+        let operation = Fem3dOperation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } };
+        let bytes = encode_op(&operation).expect("encode");
+        assert_eq!(bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), "01100001000e0d0300040501040202050000000000002440");
+    }
+
     #[test]
     fn fem3d_document_text_round_trips_through_the_store() {
         let mut store = crate::artifacts::fem3d::op::Fem3dStore::new(create_document_envelope(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", engine::empty_fem3d_projection(), None));

@@ -9774,9 +9774,9 @@ dependencies = [
 name = "semio-s-plugin-writer"
 version = "0.1.0"
 dependencies = [
- "regex",
  "semio-framework-editor",
  "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-dsl-lsp",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",

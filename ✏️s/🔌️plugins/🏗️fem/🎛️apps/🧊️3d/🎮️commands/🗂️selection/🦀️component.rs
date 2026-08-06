@@ -57,7 +57,6 @@ mod tests {
     use super::*;
     use crate::apps::fem3d::testkit::{dispatch, fem3d_app};
     use crate::apps::fem3d::Fem3dCommand;
-    use semio_framework_plugin::PluginApp;
 
     #[test]
     fn remove_selection_covers_solids_3d() {

@@ -14,32 +14,13 @@ import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from 
 // sceneHostPort.drei.Line at module top level, which requires a non-circular import (see
 // 🧱️elements/🫀️core/Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
 import { sceneHostPort } from "../🫀️core/Ports/🟦️component.tsx";
-// 🚧️W3-interim: these still live in the ui-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ or 🧱️elements/🫀️core/ dirs) — W3 rewires this import per-symbol as each
-// dependency's own element/core file lands. Do not import the barrel from any OTHER new leaf file
-// without the same marker; grep for `🚧️W3-interim` must be empty before W6 closes.
-import {
-  reactHostPort,
-  HostThreeCanvas,
-  cn,
-  surfaceClass,
-  loadingBorderClass,
-  uiSpacingPx,
-  resolveSemanticColorHex,
-  resolveColorHex,
-  themeColorVar,
-  tokenVar,
-  resolveSpatialAxisColors,
-  useLabel,
-  ActionDropdown,
-  type ActionDropdownOption,
-  CameraIcon,
-  GripVerticalIcon,
-  type Point,
-  type Vector,
-  type Plane,
-  type Camera,
-} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { reactHostPort } from "../🫀️core/Ports/🟦️component.tsx";
+import { cn } from "../🫀️core/ClassNames/🟦️component.tsx";
+import { ActionDropdown } from "../ActionGroup/🟦️component.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { surfaceClass, loadingBorderClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { HostThreeCanvas, uiSpacingPx, resolveSemanticColorHex, resolveColorHex, themeColorVar, tokenVar, resolveSpatialAxisColors, useLabel, type ActionDropdownOption, CameraIcon, GripVerticalIcon, type Point, type Vector, type Plane, type Camera } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 // #region 📍️Scene
 // 3D scene viewer built on React Three Fiber.

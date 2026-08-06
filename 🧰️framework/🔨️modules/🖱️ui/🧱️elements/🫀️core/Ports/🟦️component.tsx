@@ -25,7 +25,7 @@ import { Canvas as ThreeCanvas, createPortal as r3fCreatePortal, useFrame, useSt
  * happens at render time, long after both modules have finished loading — so only THIS binding needed to
  * move early; `flowHostPort`/`threeHostPort`/`iconRenderPort`/`configureHostPorts` stay in the barrel for
  * now (no top-level consumer needs them yet, same deferred-core posture as everything else under
- * `🚧️W3-interim`/`🚧️W4-interim`). `sceneHostPort` (below) needed the identical treatment once `Scene`
+ * barrel-interim imports). `sceneHostPort` (below) needed the identical treatment once `Scene`
  * was extracted — same class of bug, same fix.
  */
 export interface ReactHostPort {

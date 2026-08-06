@@ -109,7 +109,7 @@ path = "📦️lib.rs"
 [dependencies]
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
-kernel_3d_brepkit = { path = "../../../../🔨️modules/🧊️3d/📐️brep/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-brep" }
+semio-s-3d = { path = "../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 serde_json.workspace = true
 
 procedural = { path = "../../../🌀️procedural/📦️packages/🦀️rust", package = "semio-s-plugin-procedural" }

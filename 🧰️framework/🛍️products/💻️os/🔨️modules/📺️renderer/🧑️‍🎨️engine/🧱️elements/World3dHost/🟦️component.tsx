@@ -88,24 +88,9 @@ import {
 import { CAMERA_SYNC_DEBOUNCE_MS } from "../Canvas2dHost/🟦️component.tsx";
 import { openSurfaceContextMenu, useShellContextMenuFallback, wireLabel } from "../Interpreter/🟦️component.tsx";
 import { WorldTerrainLayer } from "../WorldTerrainLayer/🟦️component.tsx";
-// 🚧️W4-interim: these still live in the framework-renderer-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ dir) — a later wave rewires this import per-symbol as each dependency's own
-// element file lands. Do not import the barrel from any OTHER new leaf file without the same marker;
-// grep for `🚧️W4-interim` must be empty before this wave's closing batch.
-import {
-  base64ToBytes,
-  createCoalescingActionDispatcher,
-  createInFlightSkippingInterval,
-  isRevealCutoffHidden,
-  registeredPuzzle3dBrushMeshes,
-  NOTE_WORLD_NAVIGATION_ACTION_ID,
-  PUZZLE3D_FILL_REVEAL_GROUP_ID,
-  reconcileCommittedRevealCutoffs,
-  SetWindowIconContext,
-  SetWindowTitleContext,
-  useMapContextMenuSpecs,
-  worldRevealCutoffStore,
-} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { base64ToBytes } from "../Paint2dHost/🟦️component.tsx";
+import { createCoalescingActionDispatcher, createInFlightSkippingInterval, isRevealCutoffHidden, registeredPuzzle3dBrushMeshes, NOTE_WORLD_NAVIGATION_ACTION_ID, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, worldRevealCutoffStore } from "../ShellHelpers/🟦️component.tsx";
+import { SetWindowIconContext, SetWindowTitleContext, useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️World3dHost

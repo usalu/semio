@@ -9,7 +9,7 @@ use crate::apps::lowpoly::session::{map_kernel_err, mesh_edit, LowpolyScratch};
 use crate::apps::lowpoly::view::{mirror_axis_from_param, utility_param_f32, utility_param_u32, utility_params_value};
 use crate::artifacts::lowpoly::op::LowpolyOperation;
 use crate::artifacts::lowpoly::LowpolyProjection;
-use kernel_3d_mesh::{FaceId, MirrorAxis, WeldMode};
+use semio_s_3d::{FaceId, MirrorAxis, WeldMode};
 use semio_framework_plugin::{ConfigView, DocumentView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

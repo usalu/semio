@@ -10,7 +10,7 @@ name = "infinite_world"
 path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/⚡️implementations/🦀️rust/🌍️world/📦️lib.rs"
 
 [dependencies]
-kernel_3d_scene = { path = "../../../../../../../../✏️s/🔨️modules/🧊️3d/🎬️scene/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-scene" }
+semio-s-3d = { path = "../../../../../../../../✏️s/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 ui_wgpu = { path = "../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu", features = ["engine"], package = "semio-framework-ui-wgpu" }
 semio-framework-core = { path = "../../../../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
 framework_surface_terrain = { path = "../../../../../../../🔨️modules/🗺️surface/🏔️terrain/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-surface-terrain" }

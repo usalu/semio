@@ -17,33 +17,14 @@ import { reactHostPort } from "../🫀️core/Ports/🟦️component.tsx";
 // import (see 🧱️elements/🫀️core/ClassNames/🟦️component.tsx's header comment for why the barrel import
 // caused a real bug).
 import { cn } from "../🫀️core/ClassNames/🟦️component.tsx";
-// 🚧️W3-interim: these still live in the ui-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ or 🧱️elements/🫀️core/ dirs) — W3 rewires this import per-symbol as each
-// dependency's own element/core file lands. Do not import the barrel from any OTHER new leaf file
-// without the same marker; grep for `🚧️W3-interim` must be empty before W6 closes.
-import {
-  useTransaction,
-  useLevel,
-  type Level,
-  type UiLabel,
-  type ControlIcon,
-  useControlAccessibleLabel,
-  useControlInlineText,
-  renderControlIcon,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  CheckIcon,
-  chromeControlItemBaseClass,
-  chromeControlGroupShellClass,
-  interactiveHoverClass,
-  interactiveActiveFillClass,
-  menuListItemClassName,
-  formControlFocusBorderClass,
-  borderNormalClass,
-  loadingBorderElementClass,
-  waitingBorderElementClass,
-} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { type UiLabel } from "../🫀️core/UiLabel/🟦️component.tsx";
+import { Popover, PopoverTrigger, PopoverContent } from "../Popover/🟦️component.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { interactiveHoverClass, interactiveActiveFillClass, menuListItemClassName, formControlFocusBorderClass, borderNormalClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { chromeControlItemBaseClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+// 🚧️W3-interim: remaining symbols still live in the ui-react barrel — clear before W6.
+import { useTransaction, useLevel, type Level, type ControlIcon, useControlAccessibleLabel, useControlInlineText, renderControlIcon, CheckIcon, chromeControlGroupShellClass, loadingBorderElementClass, waitingBorderElementClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🌩️ActionGroup

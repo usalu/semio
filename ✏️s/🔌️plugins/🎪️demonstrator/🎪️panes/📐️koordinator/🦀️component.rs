@@ -17,12 +17,12 @@ const CAD_FORMAT: &str = "cad";
 /// codec into the plugin runtime.
 pub fn register_exports() {
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<CadPlayApp>(CAD_DOCUMENT_SCHEMA);
-    semio_framework_os::register_solid_exporter(CAD_KIND, Box::new(kernel_3d_brepkit::ObjSolidExporter));
-    semio_framework_os::register_solid_exporter(CAD_KIND, Box::new(kernel_3d_brepkit::StlSolidExporter));
-    semio_framework_os::register_solid_exporter(CAD_KIND, Box::new(kernel_3d_brepkit::StepSolidExporter));
-    semio_framework_os::register_solid_importer(CAD_KIND, Box::new(kernel_3d_brepkit::ObjSolidImporter));
-    semio_framework_os::register_solid_importer(CAD_KIND, Box::new(kernel_3d_brepkit::StlSolidImporter));
-    semio_framework_os::register_solid_importer(CAD_KIND, Box::new(kernel_3d_brepkit::StepSolidImporter));
+    semio_framework_os::register_solid_exporter(CAD_KIND, Box::new(semio_s_3d::brep::kernel::ObjSolidExporter));
+    semio_framework_os::register_solid_exporter(CAD_KIND, Box::new(semio_s_3d::brep::kernel::StlSolidExporter));
+    semio_framework_os::register_solid_exporter(CAD_KIND, Box::new(semio_s_3d::brep::kernel::StepSolidExporter));
+    semio_framework_os::register_solid_importer(CAD_KIND, Box::new(semio_s_3d::brep::kernel::ObjSolidImporter));
+    semio_framework_os::register_solid_importer(CAD_KIND, Box::new(semio_s_3d::brep::kernel::StlSolidImporter));
+    semio_framework_os::register_solid_importer(CAD_KIND, Box::new(semio_s_3d::brep::kernel::StepSolidImporter));
     semio_framework_os::register_mesh_exporter(CAD_KIND, CAD_FORMAT, cad_mesh_from_document, Box::new(GlbExporter));
     semio_framework_os::register_mesh_importer(CAD_KIND, cad_document_from_mesh, Box::new(GlbImporter));
     semio_framework_os::register_mesh_dwg_export_handler(CAD_KIND, CAD_FORMAT, cad_mesh_from_document);

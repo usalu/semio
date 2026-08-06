@@ -1,13 +1,13 @@
 //! ⌨️ tui key-handling and paint functions for the Input element — extracted from `widget` mod's
 //! inline body (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a crate-root sibling
-//! module of `crate::widget` (see that mod's `use crate::input::{input_on_key, paint_input};`).
+//! module of `crate::tui::widget` (see that mod's `use crate::tui::input::{input_on_key, paint_input};`).
 
-use crate::cell::{Cell, CellBuffer};
-use crate::event::{Key, KeyEvent};
-use crate::geometry::{Pos, Rect};
-use crate::text::{display_width, truncate_to};
-use crate::theme::{Role, Surface, Theme};
-use crate::widget::{InputState, WidgetSignal};
+use crate::tui::cell::{Cell, CellBuffer};
+use crate::tui::event::{Key, KeyEvent};
+use crate::tui::geometry::{Pos, Rect};
+use crate::tui::text::{display_width, truncate_to};
+use crate::tui::theme::{Role, Surface, Theme};
+use crate::tui::widget::{InputState, WidgetSignal};
 
 pub(crate) fn input_on_key(i: &mut InputState, ev: &KeyEvent) -> Option<WidgetSignal> {
     match ev.key {

@@ -216,7 +216,7 @@ impl Default for FemCamera {
 /// see `Fem2dConfig::camera` in the app's `config.rs` — never a VCS-tracked document field.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "fem2d", layout = "lines")]
+#[dsl(id = "fem.fem2d", layout = "lines")]
 pub struct Fem2dDocument {
     #[dsl(table)]
     pub nodes: Vec<FemNode>,

@@ -11,11 +11,8 @@ import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } fro
 import { ContextMenuController, CATALOGUE_DRAG_MIME, registerIntroductionSurfaceResolver, windowElementId, useLabel, type ContextMenuItem, type IntroductionResolvedGeometry } from "@semio-tech/ui-react";
 import { type ComponentSceneHostProps } from "@semio-tech/framework-core";
 import { currentStylingAppearanceName, STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_STROKES } from "@semio-tech/ui-styling";
-// 🚧️W4-interim: these still live in the framework-renderer-react barrel (not yet extracted to their own
-// 🧱️elements/<Element>/ dir) — a later wave rewires this import per-symbol as each dependency's own
-// element file lands. Do not import the barrel from any OTHER new leaf file without the same marker;
-// grep for `🚧️W4-interim` must be empty before this wave's closing batch.
-import { WindowInstanceIdContext, useMapContextMenuSpecs } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
+import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 // 🐢️ Direct element-to-element import — `Interpreter` and `Canvas2dHost` landed in the same batch.
 import { useShellContextMenuFallback, openSurfaceContextMenu } from "../Interpreter/🟦️component.tsx";
 // #endregion 🔌️Adapters

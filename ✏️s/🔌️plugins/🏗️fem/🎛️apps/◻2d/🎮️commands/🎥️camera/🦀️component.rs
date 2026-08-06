@@ -36,10 +36,10 @@ mod tests {
     #[test]
     fn set_camera_action_writes_config_not_document_operations() {
         let mut app = fem2d_app();
-        let before = app.projection().expect("projection").clone();
+        let before = app.projection().expect("projection");
         let result = dispatch(&mut app, Fem2dCommand::SetCamera(set_camera::SetCamera { x: 1.0, y: 2.0, zoom: 1.5 }));
         assert!(result.operations.is_empty(), "setCamera must not emit a document VCS operation");
-        assert_eq!(app.projection().expect("projection"), &before, "the document must be unchanged by a config-only command");
+        assert_eq!(app.projection().expect("projection"), before, "the document must be unchanged by a config-only command");
     }
 }
 //#endregion 🧪️Tests

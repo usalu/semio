@@ -36,10 +36,10 @@ mod tests {
     #[test]
     fn set_result_display_is_config_only() {
         let mut app = fem2d_app();
-        let before = app.projection().expect("projection").clone();
+        let before = app.projection().expect("projection");
         let result = dispatch(&mut app, Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0 }));
         assert!(result.operations.is_empty(), "setResultDisplay must not emit document operations (it's config-only)");
-        assert_eq!(app.projection().expect("projection"), &before);
+        assert_eq!(app.projection().expect("projection"), before);
     }
 }
 //#endregion 🧪️Tests

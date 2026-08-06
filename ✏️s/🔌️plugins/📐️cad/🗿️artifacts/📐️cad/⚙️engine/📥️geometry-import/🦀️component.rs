@@ -1,8 +1,8 @@
 //! 📐️ Fixture geometry import — builds kernel handles from authored spatial.model geometry.
 
 use crate::artifacts::cad::{CadEdge, CadFace, CadGeometry, CadObject, CadPrimitiveSlot, CadShell, CadSolid, CadWire};
-use kernel_3d_brepkit::mesh_data_from_mesh_transfer;
-use kernel_3d_engine::{block_on, BrepKernel, GeometryHandle, Vec3};
+use semio_s_3d::brep::kernel::mesh_data_from_mesh_transfer;
+use semio_s_3d::brep::engine::{block_on, BrepKernel, GeometryHandle, Vec3};
 use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::MeshData;
 use serde_json::Value;
@@ -416,7 +416,7 @@ fn primitives_from_json(entry: &Value) -> Vec<CadPrimitiveSlot> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use kernel_3d_brepkit::BrepkitKernel;
+    use semio_s_3d::brep::kernel::BrepkitKernel;
 
     fn mesh_triangle_area(mesh: &MeshData, triangle_index: usize) -> f32 {
         let i0 = mesh.indices[triangle_index * 3] as usize;

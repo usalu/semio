@@ -76,7 +76,10 @@ pub mod open_document {
     pub fn handle(payload: &OpenDocument, _doc: &DocumentView<'_, WriterProjection>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterOperation, WriterConfigOperation>, Fault> {
         let id = payload.uri.rsplit('/').next().unwrap_or("document").to_string();
         let ext = payload.uri.rsplit('.').next().filter(|s| *s != &id);
-        let language_id = ext.and_then(|e| dsl::language_for_extension(e).map(|spec| spec.id.to_string())).unwrap_or_else(|| "plaintext".to_string());
+        let language_id = dsl::language_for_semio_content(payload.text.as_bytes())
+            .or_else(|| ext.and_then(|e| dsl::language_for_extension(e)))
+            .map(|spec| spec.id.to_string())
+            .unwrap_or_else(|| "plaintext".to_string());
         let document = WriterProjection { schema: crate::artifacts::writer::WRITER_DOCUMENT_SCHEMA.into(), id: id.clone(), language_id, uri: payload.uri.clone(), text: payload.text.clone() };
         Ok(Emit::operations(vec![WriterOperation::SetDocument { document }]))
     }

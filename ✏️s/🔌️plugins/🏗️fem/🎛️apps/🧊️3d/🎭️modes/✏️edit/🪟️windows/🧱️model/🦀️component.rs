@@ -30,7 +30,6 @@ pub fn render(doc: &Fem3dDocument, camera: &FemCamera) -> semio_framework_plugin
 mod tests {
     use super::*;
     use crate::apps::fem3d::testkit::{fem3d_app, render as render_body};
-    use semio_framework_plugin::PluginApp;
 
     #[test]
     fn renders_fem3d_model_scene() {

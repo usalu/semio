@@ -36,7 +36,7 @@ pub mod set_active_example {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::fem2d::testkit::{dispatch, fem2d_app};
+    use crate::apps::fem2d::testkit::{dispatch, fem2d_app, fem2d_app_with_registry};
     use crate::apps::fem2d::Fem2dCommand;
 
     #[test]
@@ -47,9 +47,12 @@ mod tests {
         assert!(!app.projection().expect("projection").nodes.is_empty(), "expected the default fixture's nodes");
     }
 
+    /// 📚️ Driven through the manifest-registry-wired app: `setActiveExample` is declared as an
+    /// Operation, so the registry's View/Shell kind discipline must let a whole-document reset through.
     #[test]
     fn set_active_example_unknown_id_yields_empty_document_2d() {
-        let mut app = fem2d_app();
+        let mut app = fem2d_app_with_registry();
+        dispatch(&mut app, Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() }));
         dispatch(&mut app, Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "".into() }));
         assert_eq!(app.projection().expect("projection"), crate::artifacts::fem2d::engine::empty_fem2d_projection());
     }

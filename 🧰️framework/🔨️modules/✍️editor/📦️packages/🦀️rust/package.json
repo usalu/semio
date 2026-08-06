@@ -1,0 +1,11 @@
+{
+  "name": "@semio-tech/framework-editor-rs",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./pkg/framework_editor.js",
+    "./pkg/framework_editor.js": "./pkg/framework_editor.js"
+  },
+  "bundleKind": "library"
+}

@@ -1,16 +1,16 @@
 //! 🔎️ wgpu render function for the Ring element — extracted from `widgets` mod's inline body
 //! (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a CRATE-ROOT sibling module of
-//! `crate::widgets` (declared `#[cfg(feature = "engine")] #[path = "..."] mod ring;` right before
+//! `crate::wgpu::widgets` (declared `#[cfg(feature = "wgpu-engine")] #[path = "..."] mod ring;` right before
 //! `pub mod widgets` in lib.rs — deliberately NOT nested inside `widgets { }`, since rustc resolves a
 //! nested inline-module's `#[path]` as if the parent had its own on-disk directory, which fails for a
 //! genuinely inline `mod widgets { }` block). `widgets` mod pulls this back in via
-//! `use crate::ring::render_ring;` so its own unqualified call sites keep working.
-//! `crate::widgets::{...}` reaches the sibling items this needs (`RingMeta`, `WidgetContext`);
-//! `crate::geometry`/`crate::input` are the other top-level engine mods `widgets` itself also depends on.
+//! `use crate::wgpu::ring::render_ring;` so its own unqualified call sites keep working.
+//! `crate::wgpu::widgets::{...}` reaches the sibling items this needs (`RingMeta`, `WidgetContext`);
+//! `crate::wgpu::geometry`/`crate::wgpu::input` are the other top-level engine mods `widgets` itself also depends on.
 
-use crate::widgets::{RingMeta, WidgetContext};
-use crate::geometry::Rect;
-use crate::input::{DragAxis, HitKind, HitTarget};
+use crate::wgpu::widgets::{RingMeta, WidgetContext};
+use crate::wgpu::geometry::Rect;
+use crate::wgpu::input::{DragAxis, HitKind, HitTarget};
 
 pub(crate) fn render_ring<E: Clone>(id: &str, t: f64, disabled: bool, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let cx = bounds.x + bounds.w * 0.5;

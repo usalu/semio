@@ -2,6 +2,7 @@
 
 //#region 🔖️Brep
 /// @emoji 📐️ Boundary-representation kernel (native modules + brepkit backend + engine contracts).
+#[cfg(feature = "brep")]
 pub mod brep {
     #[path = "../../📐️brep/🚨️error/🦀️component.rs"]
     pub mod error;
@@ -59,8 +60,10 @@ pub use scene::*;
 //#endregion 🔖️Scene
 
 //#region 🔖️Spatial
+#[cfg(feature = "brep")]
 #[path = "../../🗺️spatial/🦀️component.rs"]
 pub mod spatial;
+#[cfg(feature = "brep")]
 pub use spatial::*;
 //#endregion 🔖️Spatial
 

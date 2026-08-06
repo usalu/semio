@@ -1,12 +1,12 @@
 //! 🔎️ tui paint function for the Footer element — extracted from `chrome` mod's inline body
 //! (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a crate-root sibling module of
-//! `crate::chrome` (see that mod's `use crate::footer::paint_footer;`).
+//! `crate::tui::chrome` (see that mod's `use crate::tui::footer::paint_footer;`).
 
-use crate::cell::{Cell, CellBuffer};
-use crate::chrome::FooterState;
-use crate::geometry::{Pos, Rect};
-use crate::text::truncate_to;
-use crate::theme::{Role, Surface, Theme};
+use crate::tui::cell::{Cell, CellBuffer};
+use crate::tui::chrome::FooterState;
+use crate::tui::geometry::{Pos, Rect};
+use crate::tui::text::truncate_to;
+use crate::tui::theme::{Role, Surface, Theme};
 
 pub(crate) fn paint_footer(f: &FooterState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     let bg = theme.surface(Surface::Base);

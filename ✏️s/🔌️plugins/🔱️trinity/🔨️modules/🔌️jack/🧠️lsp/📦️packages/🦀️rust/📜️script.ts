@@ -1,12 +1,11 @@
 #!/usr/bin/env bun
 /** 🦀️ `@semio-tech/trinity-jack-lsp` router: `bun ./📜️script.ts wasm`. */
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
-import { join } from "node:path";
 
 class WasmScript extends BundleScript {
   run(): void {
     runWasmPackWebBuild({
-      rsDir: join(this.root, "rs"),
+      rsDir: this.root,
       skipEnvVar: "TRINITY_JACK_LSP_SKIP_WASM_BUILD",
       logPrefix: "trinity/jack/lsp",
       wasmBaseName: "trinity_jack_lsp",
