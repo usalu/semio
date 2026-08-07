@@ -10,6 +10,14 @@
 //! codec — is an APP concern, not an artifact one: it now lives in `🎛️apps/📜️imperative/🦀️component.rs`,
 //! assembled from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
 
+
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
+
 use crate::artifacts::imperative::dsl::{dictionary_to_value_dsl_map, step_node_dsl_to_step, step_to_step_node_dsl, value_dsl_map_to_dictionary, StepNodeDsl, ValueDsl};
 use crate::artifacts::imperative::op::ImperativeOperation;
 use crate::artifacts::imperative::PathRef;

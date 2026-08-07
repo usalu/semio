@@ -1,5 +1,13 @@
 //! 🔧️ Animate present artifact — operation enum + laws (constitutional: op).
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::present::diff::PresentDiff;
 use crate::artifacts::present::{FigureTileDraft, FigureTileDraftPatch, FigureTileSource, PresentDeck};
 use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionOperation, Operation};

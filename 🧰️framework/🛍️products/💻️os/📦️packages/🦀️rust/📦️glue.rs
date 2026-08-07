@@ -189,9 +189,13 @@ pub use crate::os_pack::*;
 #[path = "../../🔨️modules/🧬️semio/🦀️component.rs"]
 pub mod os_semio;
 
+#[path = "../../🔨️modules/🧩️extension/🦀️component.rs"]
+pub mod os_extension;
+
 pub use crate::os_vcs::*;
 pub use crate::os_engine::*;
 pub use crate::os_semio::*;
+pub use crate::os_extension as extension;
 
 // Former dsl_notation crate root surface
 pub use crate::os_dsl::notation::*;

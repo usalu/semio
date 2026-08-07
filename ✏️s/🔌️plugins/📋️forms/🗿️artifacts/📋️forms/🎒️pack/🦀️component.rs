@@ -4,6 +4,14 @@
 //! `🗿️artifacts/📋️forms/🦀️component.rs` for why. This component only adds the thin artifact-facing
 //! `encode`/`decode` wrappers plus the pack↔dsl equivalence law and the command-envelope round-trip law.
 
+
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
+
 use crate::artifacts::forms::FormSpec;
 use store::PackError;
 

@@ -1,5 +1,13 @@
 //! 🔺️ Procedural3d artifact — the operation diff (constitutional: diff).
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::procedural3d::{widget_id, Procedural3dDocument};
 use flow_core::{CameraJson, SynapseSpec, Widget, WidgetLayout};
 use playbook::{apply_generation_operation, GenerationOperation};

@@ -29,6 +29,8 @@ import {
   type ContextMenuItemSpec,
   createBrowserStoragePort,
   createDevPluginSource,
+  createExtensionSource,
+  multiplexPluginSources,
   createMemoryStoragePort,
   createScopedStoragePort,
   DockLayoutStore,
@@ -376,8 +378,10 @@ import {
 
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🟦️brand.ts";
-import { createFrameworkDisplayPanelTabs, createFrameworkPluginsPanelTabs, createFrameworkSettingsPanelTabs, type DisplayHostApi, PluginRecoveryPanel, type PluginsHostApi, type PluginsPanelEntry, type SettingsHostApi, ShellRouteNotFoundPage, useNamedLayoutHost } from "../ChromePanels/🟦️component.tsx";
+import { createFrameworkDisplayPanelTabs, createFrameworkExtensionsPanelTabs, createFrameworkPluginsPanelTabs, createFrameworkSettingsPanelTabs, type DisplayHostApi, type ExtensionsHostApi, type ExtensionsPanelEntry, PluginRecoveryPanel, type PluginsHostApi, type PluginsPanelEntry, type SettingsHostApi, ShellRouteNotFoundPage, useNamedLayoutHost } from "../ChromePanels/🟦️component.tsx";
 import { type PluginWasmHandle } from "../PluginRuntime/🟦️component.tsx";
+import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️plugins.ts";
+
 
 import { SyncAttachCard } from "../ShellSync/🟦️component.tsx";
 import { UIFind, UIFindProvider, UISearch, type UISearchItem } from "../ShellSearch/🟦️component.tsx";
@@ -837,9 +841,9 @@ function FrameworkOsShellInner({
     if (pluginStatus === "installing" || pluginStatus === "reloading") return "loading";
     return undefined;
   }, [session, primaryPluginId, pluginStatusById]);
-  /** 🔌️ Dev-only today (`createDevPluginSource`) — a future hub-backed source implements the same
-   * `PluginSource` contract and swaps in here with no other change to the runtime below. */
-  const pluginSource: PluginSource = useMemo(() => createDevPluginSource(registry), [registry]);
+  /** 🔌️ Dev `/plugin-modules` catalog plus extension-store `/extensions` installs share one
+   * {@link PluginSource} so the incremental runtime can load from either tree. */
+  const pluginSource: PluginSource = useMemo(() => multiplexPluginSources(createDevPluginSource(registry), createExtensionSource()), [registry]);
 
   /** 🔌️ Recreates the primary session instance for `handle` — the exact `hostConfig`/non-studio
    * app-resolution logic the boot effect used to run once inline, now shared with `reloadPlugin` so a
@@ -1085,6 +1089,177 @@ function FrameworkOsShellInner({
     },
     [primaryPluginId, studioMode],
   );
+  /** 🧩️ Durable-in-session extension ledger mirror — space document ops are dispatched
+   * best-effort when a space/studio session can accept them; this state keeps Settings + contribution
+   * filtering coherent even when the space app is not the active session. */
+  type ExtensionLedgerEntry = {
+    readonly extensionId: string;
+    readonly version: string;
+    readonly sourceUri: string;
+    readonly packageHash: string;
+    readonly enabled: boolean;
+    readonly extendsHost: string;
+  };
+  const [extensionLedger, setExtensionLedger] = useState<readonly ExtensionLedgerEntry[]>([]);
+  const extensionLedgerRef = useRef(extensionLedger);
+  extensionLedgerRef.current = extensionLedger;
+  const extensionTargetById = useMemo(() => new Map(EXTENSION_TARGETS.map((target) => [target.pluginId, target] as const)), []);
+  const extensionIdSet = useMemo(() => new Set(EXTENSION_TARGETS.map((target) => target.pluginId)), []);
+
+  const dispatchSpaceExtensionOp = useCallback(async (action: string, args: Record<string, unknown>) => {
+    const active = sessionRef.current;
+    if (!active) return;
+    const pluginEntry = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === active.pluginId);
+    if (!pluginEntry) return;
+    try {
+      const wire = encodeActionWire({ controllerId: active.app.controllerId, action, args });
+      await pluginEntry.handle.handleAction(active.instanceId, wire, active.viewState);
+      console.log("[DEBUG] space extension ledger op dispatched", { action, args });
+    } catch (error) {
+      console.warn("[DEBUG] space extension ledger op skipped", action, error instanceof Error ? error.message : String(error));
+    }
+  }, []);
+
+  /** 🧩️ Installs an extension package from a URL via the extension-store HTTP endpoint when
+   * available, loads its module into `loadedPlugins`, and records it on the durable ledger. */
+  const installExtension = useCallback(
+    async (sourceUri: string) => {
+      let extensionId = "";
+      let version = "0.0.0";
+      let moduleUrl = "";
+      let packageHash = "";
+      try {
+        const response = await fetch("/extensions/install", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ url: sourceUri }),
+        });
+        if (!response.ok) {
+          const body = await response.text();
+          throw new Error(`extension store install failed (${response.status}): ${body}`);
+        }
+        const result = (await response.json()) as { extensionId: string; version: string; moduleUrl: string; packageHash?: string };
+        extensionId = result.extensionId;
+        version = result.version;
+        moduleUrl = result.moduleUrl;
+        packageHash = result.packageHash ?? "";
+        console.log("[DEBUG] extension store install ok", result);
+      } catch (error) {
+        console.warn("[DEBUG] extension store unavailable or install failed; falling back to catalog id heuristic", error instanceof Error ? error.message : String(error));
+        const guessedId = sourceUri.split("/").filter(Boolean).pop()?.replace(/\.sxt$/i, "") ?? "";
+        if (!guessedId) return;
+        extensionId = guessedId;
+        try {
+          moduleUrl = pluginSource.moduleUrl(extensionId);
+        } catch (resolveError) {
+          console.warn("[DEBUG] installExtension could not resolve moduleUrl", resolveError);
+          return;
+        }
+      }
+      if (!extensionId || !moduleUrl) return;
+      if (pluginOpInFlightRef.current.has(extensionId)) return;
+      pluginOpInFlightRef.current.add(extensionId);
+      dispatch({ type: "SET_PLUGIN_STATUS", pluginId: extensionId, value: "installing" });
+      try {
+        const handle = await loadPluginModuleResilient(extensionId, moduleUrl);
+        if (!handle) {
+          dispatch({ type: "SET_PLUGIN_STATUS", pluginId: extensionId, value: "failed" });
+          return;
+        }
+        pluginModuleUrlByIdRef.current.set(extensionId, moduleUrl);
+        dispatch({ type: "UPSERT_LOADED_PLUGIN", value: { handle, manifest: handle.manifest } });
+        dispatch({ type: "SET_PLUGIN_STATUS", pluginId: extensionId, value: "loaded" });
+        dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId: extensionId, value: "loaded" });
+        const extendsHost = extensionTargetById.get(extensionId)?.extends ?? "unscoped";
+        const entry: ExtensionLedgerEntry = {
+          extensionId,
+          version: handle.manifest.version || version,
+          sourceUri,
+          packageHash,
+          enabled: true,
+          extendsHost,
+        };
+        setExtensionLedger((prev) => {
+          const next = prev.filter((existing) => existing.extensionId !== extensionId);
+          next.push(entry);
+          return next;
+        });
+        void dispatchSpaceExtensionOp("installExtension", {
+          extensionId: entry.extensionId,
+          version: entry.version,
+          sourceUri: entry.sourceUri,
+          packageHash: entry.packageHash,
+          enabled: entry.enabled,
+        });
+      } finally {
+        pluginOpInFlightRef.current.delete(extensionId);
+      }
+    },
+    [dispatchSpaceExtensionOp, extensionTargetById, pluginSource],
+  );
+
+  /** 🧩️ Unloads an extension, drops it from the ledger, and best-effort asks the store / space
+   * document to forget it. */
+  const uninstallExtension = useCallback(
+    async (extensionId: string) => {
+      if (pluginOpInFlightRef.current.has(extensionId)) return;
+      pluginOpInFlightRef.current.add(extensionId);
+      try {
+        const current = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === extensionId);
+        if (current) {
+          const contributorInstanceId = contributorInstancesRef.current.get(extensionId);
+          if (contributorInstanceId != null) {
+            await current.handle.destroyApp(contributorInstanceId).catch(() => {});
+            contributorInstancesRef.current.delete(extensionId);
+          }
+          dispatch({ type: "REMOVE_LOADED_PLUGIN", pluginId: extensionId });
+          dispatch({ type: "SET_PLUGIN_STATUS", pluginId: extensionId, value: "available" });
+          current.handle.dispose();
+          const moduleUrl = pluginModuleUrlByIdRef.current.get(extensionId);
+          pluginModuleUrlByIdRef.current.delete(extensionId);
+          if (moduleUrl) evictPluginModule(moduleUrl);
+        }
+        setExtensionLedger((prev) => prev.filter((entry) => entry.extensionId !== extensionId));
+        void dispatchSpaceExtensionOp("uninstallExtension", { extensionId });
+        try {
+          await fetch(`/extensions/install?extensionId=${encodeURIComponent(extensionId)}`, { method: "DELETE" });
+        } catch {
+          /* store may not expose DELETE yet */
+        }
+      } finally {
+        pluginOpInFlightRef.current.delete(extensionId);
+      }
+    },
+    [dispatchSpaceExtensionOp],
+  );
+
+  /** 🧩️ Toggles whether an installed extension's contributions are pushed to host plugins. */
+  const setExtensionEnabled = useCallback(
+    async (extensionId: string, enabled: boolean) => {
+      setExtensionLedger((prev) => {
+        const existing = prev.find((entry) => entry.extensionId === extensionId);
+        if (existing) {
+          return prev.map((entry) => (entry.extensionId === extensionId ? { ...entry, enabled } : entry));
+        }
+        const target = extensionTargetById.get(extensionId);
+        return [
+          ...prev,
+          {
+            extensionId,
+            version: "0.0.0",
+            sourceUri: "",
+            packageHash: "",
+            enabled,
+            extendsHost: target?.extends ?? "unscoped",
+          },
+        ];
+      });
+      void dispatchSpaceExtensionOp("setExtensionEnabled", { extensionId, enabled });
+      console.log("[DEBUG] setExtensionEnabled", { extensionId, enabled });
+    },
+    [dispatchSpaceExtensionOp, extensionTargetById],
+  );
+
   //#endregion 🔌️PluginRuntime
 
   // 🐢️ Memoized on the raw `panelJson` string (not `session` object identity, which churns every
@@ -1978,21 +2153,28 @@ function FrameworkOsShellInner({
           }
           continue;
         }
-        if ("requestPluginExchange" in effect) {
-          const { pluginId, appId, requestJson, responseAction } = effect.requestPluginExchange;
+        if ("invokeExtension" in effect) {
+          const { extensionId, capability, requestJson, responseAction } = effect.invokeExtension;
           const request = JSON.parse(requestJson) as { operatorId?: string; inputJson?: string; nodeHash?: number };
-          const contributor = loadedPlugins.find((entry) => entry.handle.pluginId === pluginId);
-          if (contributor && request.operatorId && request.inputJson != null && request.nodeHash != null) {
+          const requestingPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
+          const extensionEntry = loadedPlugins.find((entry) => entry.handle.pluginId === extensionId || entry.manifest.contributions?.some((c) => "extensionId" in c && (c as { extensionId?: string }).extensionId === extensionId));
+          if (requestingPlugin && request.operatorId && request.inputJson != null && request.nodeHash != null) {
             try {
-              const bim = (await import("@semio-tech/flow-module-bim")) as { evaluate?: (kindId: string, inputJson: string) => string };
-              const outputJson = typeof bim.evaluate === "function" ? bim.evaluate(request.operatorId, request.inputJson) : "";
-              console.log("[DEBUG] requestPluginExchange resolved extension eval", { pluginId, appId, operatorId: request.operatorId, nodeHash: request.nodeHash });
-              await makeEffectDispatchOne(pluginEntry, baseSession, applyHostEffects)(responseAction, {
+              let outputJson = "";
+              const invoke = (extensionEntry?.handle as { invoke?: (capability: string, request: Uint8Array | string) => Promise<string | Uint8Array> } | undefined)?.invoke;
+              if (typeof invoke === "function" && extensionEntry) {
+                const raw = await invoke(capability, requestJson);
+                outputJson = typeof raw === "string" ? raw : new TextDecoder().decode(raw);
+                console.log("[DEBUG] invokeExtension via handle.invoke", { extensionId, capability, operatorId: request.operatorId, nodeHash: request.nodeHash });
+              } else {
+                console.warn("[DEBUG] invokeExtension: extension handle missing invoke; returning empty output", { extensionId, capability });
+              }
+              await makeEffectDispatchOne(requestingPlugin, baseSession, applyHostEffects)(responseAction, {
                 nodeHash: request.nodeHash,
                 outputJson,
               });
             } catch (error) {
-              console.warn("[os-shell] requestPluginExchange failed", { pluginId, appId, error });
+              console.warn("[os-shell] invokeExtension failed", { extensionId, capability, error });
             }
           }
           continue;

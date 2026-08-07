@@ -1,0 +1,213 @@
+✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🦀️component.rs:117:#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🦀️component.rs:13:#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🔧️op/🦀️component.rs:11:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🗣️dsl/🦀️component.rs:39:#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🦀️component.rs:43:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🔧️op/🦀️component.rs:17:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📡️spr/🦀️component.rs:16:#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📡️spr/🦀️component.rs:92:/// via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎚️config/🦀️component.rs:17:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎚️config/🦀️component.rs:68:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️component.rs:54:#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️component.rs:291:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📡️spr/🦀️component.rs:16:#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📡️spr/🦀️component.rs:125:/// `OpBinary` via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔧️op/🦀️component.rs:42:/// ⚡️ DSL-facing mirror of `PresentOperation`, declared purely so `#[derive(dsl::DslOps)]` has
+✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔧️op/🦀️component.rs:49:#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔧️op/🦀️component.rs:111:/// (see its doc comment for why a direct `#[derive(dsl::DslOps)]` on `PresentOperation` itself isn't
+✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔧️op/🦀️component.rs:124:/// via `#[derive(dsl::DslOps)]`, so this is a pure `From`/`Into` forward.
+✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎚️config/🦀️component.rs:30:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎚️config/🦀️component.rs:115:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎚️config/🦀️component.rs:24:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎚️config/🦀️component.rs:56:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🔧️op/🦀️component.rs:49:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🦀️component.rs:217:#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🗣️dsl/🦀️component.rs:136:/// can't stay as-is under a direct `#[derive(dsl::DslDocument)]`. `pub` so `🎒️pack` (the sibling node
+✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🗣️dsl/🦀️component.rs:138:#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️component.rs:153:#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/📡️spr/🦀️component.rs:7://! through `#[derive(dsl::DslOps)]` for the actual text/binary codegen.
+✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/📡️spr/🦀️component.rs:22:/// a genuinely tagged enum (`#[derive(dsl::DslOps)]` requires an enum), not the single generic-struct
+✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/📡️spr/🦀️component.rs:24:#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/📡️spr/🦀️component.rs:90:/// `OpBinary` via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️component.rs:208:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🎒️pack/🦀️component.rs:4://! `#[derive(dsl::DslDocument)]` directly), so it did NOT automatically gain `store::DocumentPack` from
+✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️component.rs:114:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🔧️op/🦀️component.rs:19:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎚️config/🦀️component.rs:17:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎚️config/🦀️component.rs:44:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔧️op/🦀️component.rs:11:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔧️op/🦀️component.rs:20:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️component.rs:232:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, dsl::DslDocument)]
+✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🎚️config/🦀️component.rs:19:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🎬️sequence/🎛️apps/🎬️sequence/🎚️config/🦀️component.rs:56:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🔧️op/🦀️component.rs:63:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️component.rs:44:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎚️config/🦀️component.rs:16:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎚️config/🦀️component.rs:118:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🗣️dsl/🦀️component.rs:5://! `#[derive(dsl::DslOps)]` on `MindmapWiresOperation` (in `crate::artifacts::wires::op`).
+✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/🎚️config/🦀️component.rs:14:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/🎚️config/🦀️component.rs:43:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️component.rs:263:#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs:19:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🔧️op/🦀️component.rs:19:#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🔧️op/🦀️component.rs:25:/// other variants, but boxing them would require the `#[derive(dsl::DslOps)]` field-shape machinery to
+✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🔧️op/🦀️component.rs:29:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:14:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🌍️gis/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:47:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎚️config/🦀️component.rs:13:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎚️config/🦀️component.rs:61:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🦀️component.rs:9:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🔧️op/🦀️component.rs:9:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎚️config/🦀️component.rs:18:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎚️config/🦀️component.rs:55:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🦀️component.rs:149:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🧮️config/🦀️component.rs:118:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🧮️config/🦀️component.rs:253:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🎚️config/🦀️component.rs:47:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🎚️config/🦀️component.rs:105:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🎚️config/🦀️component.rs:14:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🎚️config/🦀️component.rs:39:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/⚙️engine/⏳️session/🦀️component.rs:629:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🎚️config/🦀️component.rs:24:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🎚️config/🦀️component.rs:66:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🎚️config/🦀️component.rs:15:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🎚️config/🦀️component.rs:53:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎚️config/🦀️component.rs:18:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎚️config/🦀️component.rs:58:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🦀️component.rs:18:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️component.rs:342:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📡️spr/🦀️component.rs:29:/// `#[derive(dsl::DslOps)]` is applied where the type is declared, in `⚙️engine` — not here — because
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🗣️dsl/🦀️component.rs:243:#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🦀️component.rs:56:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🔧️op/🦀️component.rs:18:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🧮️config/🦀️component.rs:17:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🧮️config/🦀️component.rs:154:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📡️spr/🦀️component.rs:12:#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs:924:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️component.rs:88:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️component.rs:138:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️component.rs:574:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️component.rs:351:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:15:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:53:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs:15:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🎚️config/🦀️component.rs:14:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🎚️config/🦀️component.rs:48:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs:18:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎚️config/🦀️component.rs:18:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎚️config/🦀️component.rs:55:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🔧️op/🦀️component.rs:15:// scalar/id-keyed variants, but boxing it would require the `#[derive(dsl::DslOps)]` field-shape
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🔧️op/🦀️component.rs:19:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs:19:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🔧️op/🦀️component.rs:10:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🦀️component.rs:7:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🦀️component.rs:80:// `impl store::DocumentDsl for Document` is generated by `#[derive(dsl::DslDocument)]` on the type
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🦀️component.rs:364:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️component.rs:80:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🦀️component.rs:626:/// ⚠️ `OpBinary` is a plain JSON-bytes bridge (NOT `#[derive(dsl::DslOps)]`, and NOT the framework's
+✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🦀️component.rs:70:#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🦀️component.rs:93:// impls directly (see `#[derive(dsl::DslDocument)]` above and `#[derive(dsl::DslOps)]` in `🔧️op`) —
+✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🗣️dsl/🦀️component.rs:83:#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🗣️dsl/🦀️component.rs:130:/// auto-emitted alongside `#[derive(dsl::DslDocument)]`) so `GraphFixture` can be nested as an
+✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📡️spr/🦀️component.rs:51:#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📡️spr/🦀️component.rs:147:/// `OpBinary` via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔧️op/🦀️component.rs:6://! for free by this artifact's `#[derive(dsl::DslDocument)]`). The `NormFamily` binding that ties
+✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🔧️op/🦀️component.rs:9:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🦀️component.rs:7:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🦀️component.rs:85:// `impl store::DocumentDsl for Document` is generated by `#[derive(dsl::DslDocument)]` on the type
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:70:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:144:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🦀️component.rs:1043:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎚️config/🦀️component.rs:16:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎚️config/🦀️component.rs:55:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🎚️config/🦀️component.rs:71:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🎚️config/🦀️component.rs:117:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🦀️component.rs:32:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️component.rs:6:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🦀️component.rs:364:#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs:15:// scalar/id-keyed variants, but boxing it would require the `#[derive(dsl::DslOps)]` field-shape
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs:19:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🦀️component.rs:7:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🦀️component.rs:70:// `impl store::DocumentDsl for Document` is generated by `#[derive(dsl::DslDocument)]` on the type
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔧️op/🦀️component.rs:6://! for free by this artifact's `#[derive(dsl::DslDocument)]`). The `NormFamily` binding that ties
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔧️op/🦀️component.rs:9://! one-variant `#[derive(dsl::DslOps)]` enum that would duplicate exactly this shape) keeps every norm
+✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🎚️config/🦀️component.rs:11:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🔱️trinity/🎛️apps/♻️rewrite/🎚️config/🦀️component.rs:49:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🦀️component.rs:39:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🦀️component.rs:96:// by `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslScalar)]` on the type definitions above.
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🦀️component.rs:6:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🦀️component.rs:144:// `impl store::DocumentDsl for Document` is generated by `#[derive(dsl::DslDocument)]` on the type
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️component.rs:44:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🦀️component.rs:7:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🔧️op/🦀️component.rs:10:#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🗣️dsl/🦀️component.rs:259:/// into one top-level `#[derive(dsl::DslDocument)]` grammar.
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🗣️dsl/🦀️component.rs:260:#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/📡️spr/🦀️component.rs:13:/// variant into its own four top-level keyword variants since a `#[derive(dsl::DslOps)]` enum's
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/📡️spr/🦀️component.rs:15:#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/📡️spr/🦀️component.rs:116:/// `OpBinary` via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🦀️component.rs:131:/// mirror each action's real args exactly; `#[derive(dsl::DslOps)]` gives this a binary (`OpBinary`)
+✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🦀️component.rs:136:#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🦀️component.rs:445:    /// through both its binary (`OpBinary`, via `#[derive(dsl::DslOps)]`) and text (`OpText`) codecs.
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🦀️component.rs:69:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🦀️component.rs:139:// mappings are generated by `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslScalar)]` on the type
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔧️op/🦀️component.rs:6://! for free by this artifact's `#[derive(dsl::DslDocument)]`). The `NormFamily` binding that ties
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔧️op/🦀️component.rs:6://! for free by this artifact's `#[derive(dsl::DslDocument)]`). The `NormFamily` binding that ties
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🦀️component.rs:7:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🦀️component.rs:175:// `impl store::DocumentDsl for Document` is generated by `#[derive(dsl::DslDocument)]` on the type
+✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🎚️config/🦀️component.rs:20:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🎚️config/🦀️component.rs:69:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🦀️component.rs:18:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🦀️component.rs:70:// `impl store::DocumentDsl for Document` is generated by `#[derive(dsl::DslDocument)]` on the type
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs:15:// scalar/id-keyed variants, but boxing it would require the `#[derive(dsl::DslOps)]` field-shape
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs:19:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🦀️component.rs:7:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📕️norm/🫀️core/🦀️component.rs:650:/// `#[derive(dsl::DslDocument)]` that already granted `DocumentDsl`.
+✏️s/🔌️plugins/📕️norm/🫀️core/🦀️component.rs:700:    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📕️norm/🫀️core/🎚️config/🦀️component.rs:16:#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📕️norm/🫀️core/🎚️config/🦀️component.rs:44:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔧️op/🦀️component.rs:6://! for free by this artifact's `#[derive(dsl::DslDocument)]`). The `NormFamily` binding that ties
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🦀️component.rs:19:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🦀️component.rs:1130:/// ⚠️ `OpBinary` is a plain JSON-bytes bridge (NOT `#[derive(dsl::DslOps)]`, and NOT the framework's
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎚️config/🦀️component.rs:51:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🎚️config/🦀️component.rs:128:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎚️config/🦀️component.rs:13:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎚️config/🦀️component.rs:37:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🦀️component.rs:801:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔧️op/🦀️component.rs:9://! one-variant `#[derive(dsl::DslOps)]` enum that would duplicate exactly this shape) keeps every norm
+✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:61:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:146:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎚️config/🦀️component.rs:13:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎚️config/🦀️component.rs:37:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎚️config/🦀️component.rs:16:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🎚️config/🦀️component.rs:39:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🦀️component.rs:1615:/// ⚠️ `OpBinary` is a plain JSON-bytes bridge (NOT `#[derive(dsl::DslOps)]`, and NOT the framework's
+✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️component.rs:305:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📡️spr/🦀️component.rs:4://! `#[derive(dsl::DslOps)]`, but its `Pages`/`Stories`/`Links` variants wrap a foreign generic type
+✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📡️spr/🦀️component.rs:103:#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📡️spr/🦀️component.rs:232:/// `OpBinary` via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️component.rs:417:#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs:6://! — orphan rule, and not the tagged-enum shape `#[derive(dsl::DslOps)]` needs anyway), so this file also
+✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs:189:#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs:232:/// can't `impl dsl::DslField` for it here) that also isn't the tagged-enum shape `#[derive(dsl::DslOps)]`
+✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs:236:#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs:417:/// via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎚️config/🦀️component.rs:22:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎚️config/🦀️component.rs:88:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/🎚️config/🦀️component.rs:15:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/🎚️config/🦀️component.rs:45:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🗣️dsl/🦀️component.rs:86:/// 📄️ DSL-only mirror of `MathProjection` — the actual `#[derive(dsl::DslDocument)]` root.
+✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🗣️dsl/🦀️component.rs:87:#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🔧️op/🦀️component.rs:47:#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🔧️op/🦀️component.rs:85:/// via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🧮️config/🦀️component.rs:31:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🧮️config/🦀️component.rs:81:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️component.rs:21:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🗣️dsl/🦀️component.rs:3://! `Program`'s `store::DocumentDsl` impl is `#[derive(dsl::DslDocument)]`-generated on the document
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:22:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎚️config/🦀️component.rs:125:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️component.rs:487:#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🔧️op/🦀️component.rs:99:/// @emoji 📝️ Hand-written (not `#[derive(dsl::DslOps)]`): every collection-register variant here
+✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔧️op/🦀️component.rs:125:#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔧️op/🦀️component.rs:222:/// `OpBinary` via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎚️config/🦀️component.rs:17:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎚️config/🦀️component.rs:76:#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]

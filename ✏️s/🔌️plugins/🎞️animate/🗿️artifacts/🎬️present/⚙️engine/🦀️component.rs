@@ -341,10 +341,66 @@ use crate::artifacts::present::PRESENT_DECK_SCHEMA;
 //#region 🔖️Register
 /// 🔌️ Called by the plugin-root `📦️glue.rs`'s `semio_plugin!{}` `setup:` field.
 pub fn register() {
+    register_pilot_languages();
     semio_framework_os::register_2d_export_handlers(PRESENT_DECK_SCHEMA, "animate", animate_present_document_json_to_svg);
     semio_framework_os::register_dwg_import_handler(PRESENT_DECK_SCHEMA, animate_present_document_json_from_dwg);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::present::AnimatePresentPlayApp>(PRESENT_DECK_SCHEMA);
 }
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "present.document",
+        extension: Some("present"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("present.document"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "present.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("present.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "present.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("present.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "present.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("present.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "present.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("present.spr"),
+    });
+}
+
 //#endregion 🔖️Register
 
 //#region 🔖️Io

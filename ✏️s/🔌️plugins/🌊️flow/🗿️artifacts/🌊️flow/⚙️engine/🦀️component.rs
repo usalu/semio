@@ -34,8 +34,64 @@ pub const FLOW_EVAL_TICK_ACTION: &str = "flowEvalTick";
 /// endpoints and any other schema-string-keyed caller can print/parse flow documents. Called from the
 /// plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::flow::FlowPlayApp>(crate::artifacts::flow::FLOW_DOCUMENT_SCHEMA);
 }
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "flow.document",
+        extension: Some("flow"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("flow.document"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "flow.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("flow.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "flow.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("flow.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "flow.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("flow.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "flow.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("flow.spr"),
+    });
+}
+
 //#endregion 🔖️Register
 
 //#region 🔖️Host

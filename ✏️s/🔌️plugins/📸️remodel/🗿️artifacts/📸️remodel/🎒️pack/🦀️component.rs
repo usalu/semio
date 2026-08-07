@@ -1,5 +1,13 @@
 //! 📦️ Remodel artifact — the binary document surface (`pack`) and its laws.
 
+
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
+
 use crate::artifacts::remodel::RemodelProjection;
 use store::PackError;
 

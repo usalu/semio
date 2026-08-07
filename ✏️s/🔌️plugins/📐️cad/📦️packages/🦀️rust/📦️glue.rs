@@ -106,6 +106,8 @@ pub mod apps {
             pub mod locale;
             #[path = "../../🎛️apps/📐️cad/🎮️commands/🗺️model-definition/🦀️component.rs"]
             pub mod model_definition;
+            #[path = "../../🎛️apps/📐️cad/🎮️commands/🧩️contribution/🦀️component.rs"]
+            pub mod contribution;
         }
 
         #[path = "."]

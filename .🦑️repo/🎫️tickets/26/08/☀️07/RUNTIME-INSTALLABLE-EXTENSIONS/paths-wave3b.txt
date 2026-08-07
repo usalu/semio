@@ -1,0 +1,10 @@
+BIM_ROOT=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim
+RUST:"📦️glue.rs" PATH=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/📦️glue.rs
+RUST:"Cargo.toml" PATH=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/Cargo.toml
+RUST:"📋️project.json" PATH=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/📋️project.json
+RUST:"📜️script.ts" PATH=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/📜️script.ts
+COMPONENT=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/🦀️component.rs
+WOOD_ROOT=/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood
+DRAW_ROOT=/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🖍️draw
+DRAW_COMPONENT=/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs
+GLUE=/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/📦️glue.rs true

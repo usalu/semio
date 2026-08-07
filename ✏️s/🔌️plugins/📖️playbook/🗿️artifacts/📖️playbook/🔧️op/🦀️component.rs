@@ -6,6 +6,14 @@
 //! here so every taxonomy node names an artifact-owned symbol instead of reaching into the kernel path.
 
 //#region 🔖️Types
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 pub use playbook::{add_block_operation, add_step_operation, apply_playbook_edit_operation, move_block_operation, move_step_operation, remove_block_operation, remove_step_operation, update_playbook_title_operation, PlaybookOperation};
 //#endregion 🔖️Types
 

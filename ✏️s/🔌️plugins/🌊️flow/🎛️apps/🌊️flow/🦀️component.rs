@@ -70,6 +70,7 @@ semio_framework_plugin::app_commands! {
         "nodeGraphEdit" as "node-graph-edit" => node_graph_edit::NodeGraphEdit,
         "spotlightCommit" as "spotlight-commit" => spotlight_commit::SpotlightCommit,
         "runExtensionAction" as "run-extension-action" => run_extension_action::RunExtensionAction,
+        "setContributions" as "set-contributions" => set_contributions::SetContributions,
         "evaluate" as "evaluate" => evaluate::Evaluate,
         "selectAll" as "select-all" => select_all::SelectAll,
         "focusSelection" as "focus-selection" => focus_selection::FocusSelection,
@@ -107,7 +108,7 @@ semio_framework_plugin::app_commands! {
 // containing command-group modules and are aliased.
 use catalogue::set_catalogue_sections;
 use eval::{evaluate, flow_eval_resolve, flow_eval_tick};
-use extension::{run_extension_action, toggle_extension};
+use extension::{run_extension_action, set_contributions, toggle_extension};
 use generation::{add_generation, remove_generation, rename_generation, select_generation, update_generation_values};
 use grid::{set_grid_factor, set_grid_snap_enabled, set_grid_visible};
 use locale::set_locale;
@@ -332,7 +333,7 @@ pub fn create_flow_app() -> App {
             .action_with(flow_internal_action("openSpotlight", LocalizedLabel::native("Open Spotlight", "Spotlight öffnen"), ActionKind::View).with_category("create"))
             .action_with(flow_internal_action("replaceImage", LocalizedLabel::native("Replace Image", "Bild ersetzen"), ActionKind::View).with_category("actions"))
             .action_with(flow_internal_action("setCatalogueSections", LocalizedLabel::native("Set Catalogue Sections", "Katalogabschnitte festlegen"), ActionKind::View))
-            .action_with(flow_internal_action("toggleExtension", LocalizedLabel::native("Toggle Extension", "Erweiterung umschalten"), ActionKind::View))
+            .action_with(flow_internal_action("toggleAutomation", LocalizedLabel::native("Toggle Extension", "Erweiterung umschalten"), ActionKind::View))
             .action_with(flow_internal_action("addGeneration", LocalizedLabel::native("Add Generation", "Generation hinzufügen"), ActionKind::View))
             .action_with(flow_internal_action("removeGeneration", LocalizedLabel::native("Remove Generation", "Generation entfernen"), ActionKind::View))
             .action_with(flow_internal_action("selectGeneration", LocalizedLabel::native("Select Generation", "Generation auswählen"), ActionKind::View))

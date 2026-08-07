@@ -8,6 +8,14 @@
 //! its own DSL-facing operation variant — the `imperative::ImperativeOperationDsl` idiom. `📡️spr`'s
 //! `encode_op`/`decode_op` are thin forwards onto the `OpBinary` impl defined here.
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::shooting::diff::ShootingDiff;
 use crate::artifacts::shooting::{ShootingAsset, ShootingAssetPatch, ShootingCamera, ShootingFixture, ShootingSavedCamera, ShootingSavedCameraPatch, ShootingScenePatch, ShootingShot, ShootingShotPatch};
 use protocol::{collection_diff_from_operation, CollectionDiff, CollectionOperation, ItemPatch, Operation};

@@ -4,6 +4,14 @@
 //! `Puzzle2dPlayProjection` newtype (`🔖️PlayProjection`) live here too, beside the `Operation`/
 //! `OperationDiff` impls that give them meaning.
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::puzzle2d::diff::{puzzle2d_diff_absorb, puzzle2d_index_of, Puzzle2dDiff};
 use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dProjection};
 use protocol::{Operation, OperationDiff};

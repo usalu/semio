@@ -2376,330 +2376,138 @@ const POLICY_TS_FACADE_ALLOWLIST = new Set<string>([
  * ⚖️P3/M4: colliding .grammar.semio/.protocol.semio after name/start normalization. Remove a path once its normalized hash is unique.
  * Seeded 0 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
  */
-const POLICY_SPEC_DISTINCTNESS_EXEMPTIONS = new Set<string>([
-
-]);
+const POLICY_SPEC_DISTINCTNESS_EXEMPTIONS = new Set<string>([]);
 
 /**
  * ⚖️P3/M4: generic catch-all grammar specs under ✏️s/. Remove once handcrafted.
  * Seeded 0 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
  */
-const POLICY_GENERIC_SPEC_EXEMPTIONS = new Set<string>([
-
-]);
+const POLICY_GENERIC_SPEC_EXEMPTIONS = new Set<string>([]);
 
 /**
  * ⚖️P3/M4: grammars with use family-X that never reference a family production. Remove once wired.
  * Seeded 0 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
  */
-const POLICY_DECLARED_USE_EXEMPTIONS = new Set<string>([
-
-]);
+const POLICY_DECLARED_USE_EXEMPTIONS = new Set<string>([]);
 
 /**
  * ⚖️P3/M4: facet 🦀️component.rs missing include_str! of sibling spec. Remove once wired.
  * Seeded 220 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
  */
-const POLICY_SPEC_WIRING_INCLUDE_EXEMPTIONS = new Set<string>([
-  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🗣️dsl/🦀️component.rs",
-  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🎒️pack/🦀️component.rs",
-  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/📡️spr/🦀️component.rs",
-  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🔧️op/🦀️component.rs",
-  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🗣️dsl/🦀️component.rs",
-]);
+const POLICY_SPEC_WIRING_INCLUDE_EXEMPTIONS = new Set<string>([]);
 
 /**
  * ⚖️P3/M4: artifacts with facet specs but no register_language under the artifact. Remove once engines register.
  * Seeded 44 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
  */
-const POLICY_SPEC_WIRING_REGISTER_EXEMPTIONS = new Set<string>([
-  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d",
-  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d",
-  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap",
-  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs",
-  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting",
-  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d",
-  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires",
-  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms",
-  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599",
-  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook",
-  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative",
-  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite",
-  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw",
-  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d",
-  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home",
-  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate",
-]);
+const POLICY_SPEC_WIRING_REGISTER_EXEMPTIONS = new Set<string>([]);
 
 /**
  * ⚖️P3/M4: *.pack.semio/*.spr.semio under 📚️examples with size<=64. Remove once payload examples land.
  * Seeded 20 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
  */
-const POLICY_EMPTY_EXAMPLE_EXEMPTIONS = new Set<string>([
-  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.demonstrator.playground.pack.semio",
-  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.demonstrator.playground.spr.semio",
-  "✏️s/🔌️plugins/💡️reasoning/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.reasoning.wires.pack.semio",
-  "✏️s/🔌️plugins/💡️reasoning/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.reasoning.wires.spr.semio",
-  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️default/🎒️packs/♻️default/🧬️component.cad.cad.pack.semio",
-  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️default/📡️sprs/♻️default/🧬️component.cad.cad.spr.semio",
-  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.cad.cad.pack.semio",
-  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.cad.cad.spr.semio",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.norm.en1992.pack.semio",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.norm.en1992.spr.semio",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/🎒️packs/📕️liquid-retaining-fem-anchor/🧬️component.norm.en1992.pack.semio",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/📡️sprs/📕️liquid-retaining-fem-anchor/🧬️component.norm.en1992.spr.semio",
-  "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.energy.model.pack.semio",
-  "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.energy.model.spr.semio",
-  "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.dag.dag.pack.semio",
-  "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.dag.dag.spr.semio",
-  "🧰️framework/🛍️products/💻️os/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.os.workflow.pack.semio",
-  "🧰️framework/🛍️products/💻️os/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.os.workflow.spr.semio",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.space.studio.pack.semio",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.space.studio.spr.semio",
+const POLICY_EMPTY_EXAMPLE_EXEMPTIONS = new Set<string>([]);
+/**
+ * ⚖️P1/M3b staged ban: plugin artifact `.rs` files allowed to keep `#[derive(DslDocument|DslOps)]`
+ * (which emit generic DocumentDsl/OpText/DocumentPack/OpBinary). Full deletion is P6.
+ * Seeded 93 paths at M3b — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
+ */
+const POLICY_GENERIC_CODEC_DERIVE_EXEMPTIONS = new Set<string>([
+  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️component.rs",
+  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️component.rs",
+  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🦀️component.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️component.rs",
+  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🦀️component.rs",
+  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️component.rs",
+  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️component.rs",
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️component.rs",
+  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️component.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️component.rs",
+  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🦀️component.rs",
+  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🦀️component.rs",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🦀️component.rs",
+  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️component.rs",
+  "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/⚙️engine/⏳️session/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️component.rs",
+  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️component.rs",
+  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🦀️component.rs",
 ]);
+
 //#endregion 🔧️PolicyAllowlists
 
 //#region 🔧️PolicyRuleRegionFormat
@@ -4846,6 +4654,44 @@ function policyEmptyExampleBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
+/**
+ * ⚖️P1/M3b staged ban on generic codec derives: flags NEW `#[derive(...DslDocument|DslOps...)]`
+ * uses under plugin artifact Rust files outside `POLICY_GENERIC_CODEC_DERIVE_EXEMPTIONS`.
+ * Those macros emit DocumentDsl/OpText/DocumentPack/OpBinary today; full deletion of that emission is P6.
+ */
+function policyGenericCodecDeriveBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const files = policyWalkRelFiles(repoRoot, ["✏️s/🔌️plugins"], (relPath, name) => {
+    return relPath.includes("/🗿️artifacts/") && name.endsWith(".rs");
+  });
+  const deriveRe = /#\[derive\s*\(([^)]*)\)\]/g;
+  const banned = /\b(?:dsl::)?(?:DslDocument|DslOps)\b/;
+  for (const relPath of files) {
+    if (POLICY_GENERIC_CODEC_DERIVE_EXEMPTIONS.has(relPath)) continue;
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    let match: RegExpExecArray | null;
+    deriveRe.lastIndex = 0;
+    while ((match = deriveRe.exec(content)) !== null) {
+      const attrs = match[1] ?? "";
+      if (!banned.test(attrs)) continue;
+      const before = content.slice(0, match.index);
+      const line = before.split(/\r?\n/).length;
+      const which = [...attrs.matchAll(/\b(?:dsl::)?(DslDocument|DslOps)\b/g)].map((m) => m[1]).join("+");
+      breaches.push({
+        id: `generic-codec-derive-${relPath}-${line}`,
+        summary: `New generic codec derive ${which} in "${relPath}" (line ${line})`,
+        kind: "handcrafted-grammar/generic-codec-derive",
+        scope: relPath,
+        line,
+        priority: "high",
+        reason: "DslDocument/DslOps still emit generic DocumentDsl/OpText/DocumentPack/OpBinary; new uses are frozen mid-migration. Full derive emission deletion is P6.",
+        solution: `Handcraft codecs for ${relPath} (or add to POLICY_GENERIC_CODEC_DERIVE_EXEMPTIONS only during migration), then remove the derive by P6.`,
+      });
+    }
+  }
+  return breaches;
+}
+
 /** ⚖️Aggregates all P3/M4 handcrafted-grammar high-priority scanners for policy + verify gate. */
 function policyHandcraftedSpecP3Breaches(repoRoot: string): BreachRecord[] {
   return [
@@ -4854,6 +4700,7 @@ function policyHandcraftedSpecP3Breaches(repoRoot: string): BreachRecord[] {
     ...policyDeclaredUseBreaches(repoRoot),
     ...policySpecWiringBreaches(repoRoot),
     ...policyEmptyExampleBreaches(repoRoot),
+    ...policyGenericCodecDeriveBreaches(repoRoot),
   ];
 }
 //#endregion 🔧️PolicyRuleHandcraftedSpecP3

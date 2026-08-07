@@ -4,7 +4,7 @@
 // #endregion 🧲️Header
 
 import { PLAYGROUND_BUILD_TARGETS, type PlaygroundBuildTarget } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
-import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS, pluginModuleUrl } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️plugins.ts";
+import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS, EXTENSION_TARGETS, pluginModuleUrl, extensionModuleUrl } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️plugins.ts";
 import type { IconName } from "@semio-tech/assets";
 export type { IconName };
 import { SHELL_LOCALES, isShellLocale, SHELL_TERMINOLOGIES, isShellTerminology, type ShellLocale, type ShellTerminology, type LocalizedLabel } from "./🤖️generated/🟦️ui-axes.ts";
@@ -2189,6 +2189,48 @@ export type PluginContribution =
       readonly iconId: IconName;
       readonly typologyJson: string;
       readonly kindsJson: string;
+    }
+  | {
+      readonly kind: "processMachines";
+      readonly appId: string;
+      readonly moduleId: string;
+      readonly label: string;
+      readonly iconId: IconName;
+      readonly machinesJson: string;
+    }
+  | {
+      readonly kind: "flowExtension";
+      readonly appId: string;
+      readonly extensionId: string;
+      readonly label: string;
+      readonly iconId: IconName;
+      readonly manifestJson: string;
+    }
+  | {
+      readonly kind: "formsQuestionKind";
+      readonly appId: string;
+      readonly questionKind: string;
+      readonly label: string;
+      readonly iconId: IconName;
+      readonly defaultValueJson?: string;
+      readonly paramsBodyKey: string;
+      readonly previewBodyKey: string;
+    }
+  | {
+      readonly kind: "cadComputer";
+      readonly appId: string;
+      readonly moduleId: string;
+      readonly label: string;
+      readonly iconId: IconName;
+      readonly computersJson: string;
+    }
+  | {
+      readonly kind: "imperativeModule";
+      readonly appId: string;
+      readonly moduleId: string;
+      readonly label: string;
+      readonly iconId: IconName;
+      readonly manifestJson: string;
     };
 
 export type ProgramContributionEntry = {
@@ -2784,10 +2826,12 @@ export type HostEffect =
         readonly documentHighlightedIds?: readonly string[];
       };
     }
+  | { readonly clipboardWrite: { readonly fragment: unknown } }
+  | { readonly replayShellCommand: { readonly actionId: string; readonly args?: unknown } }
   | {
-      readonly requestPluginExchange: {
-        readonly pluginId: string;
-        readonly appId: string;
+      readonly invokeExtension: {
+        readonly extensionId: string;
+        readonly capability: string;
         readonly requestJson: string;
         readonly responseAction: string;
       };
@@ -3464,6 +3508,79 @@ export function createDevPluginSource(registry: readonly PluginRegistryEntry[]):
     },
   };
 }
+
+/** @emoji 🧩️ Dev-server SSE endpoint for {@link createExtensionSource} — paired with the `/extensions`
+ * static route the extension store materializes at install time. */
+export const EXTENSION_SOURCE_WATCH_PATH = "/extensions/watch";
+
+/** @emoji 🧩️ `PluginSource` backed by the extension store's `/extensions` HTTP tree and its watch SSE
+ * stream. Catalog rows come from generated {@link EXTENSION_TARGETS}; runtime installs add artifacts
+ * under each extension id without changing this list. */
+export function createExtensionSource(): PluginSource {
+  const registry: readonly PluginRegistryEntry[] = EXTENSION_TARGETS.map((target) => ({
+    pluginId: target.pluginId,
+    moduleUrl: extensionModuleUrl(target.pluginId, target.wasmOut),
+    contributes: target.contributes,
+    consumes: target.consumes,
+  }));
+  const byId = new Map(registry.map((entry) => [entry.pluginId, entry] as const));
+  return {
+    id: "extensions",
+    async list() {
+      return registry;
+    },
+    moduleUrl(pluginId, rebuiltAt) {
+      const entry = byId.get(pluginId);
+      if (!entry) throw new Error(`[DEBUG] plugin source "extensions" has no registry entry for ${pluginId}`);
+      return rebuiltAt === undefined ? entry.moduleUrl : `${entry.moduleUrl}?v=${rebuiltAt}`;
+    },
+    subscribe(listener) {
+      if (typeof EventSource === "undefined") return () => {};
+      const source = new EventSource(EXTENSION_SOURCE_WATCH_PATH);
+      source.onmessage = (event) => {
+        try {
+          listener(JSON.parse(event.data) as PluginSourceEvent);
+        } catch (error) {
+          console.warn(`[DEBUG] plugin source "extensions" malformed event: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      };
+      return () => source.close();
+    },
+  };
+}
+
+/** @emoji 🔌️ Merges multiple {@link PluginSource} implementations — dev `/plugin-modules` plus extension
+ * `/extensions` — into one catalog the shell's incremental runtime can treat as a single source. */
+export function multiplexPluginSources(...sources: readonly PluginSource[]): PluginSource {
+  if (sources.length === 0) throw new Error("[DEBUG] multiplexPluginSources requires at least one source");
+  if (sources.length === 1) return sources[0];
+  return {
+    id: sources.map((source) => source.id).join("+"),
+    async list() {
+      const merged = new Map<string, PluginRegistryEntry>();
+      for (const entries of await Promise.all(sources.map((source) => source.list()))) {
+        for (const entry of entries) merged.set(entry.pluginId, entry);
+      }
+      return [...merged.values()];
+    },
+    moduleUrl(pluginId, rebuiltAt) {
+      for (const source of sources) {
+        try {
+          return source.moduleUrl(pluginId, rebuiltAt);
+        } catch {
+          continue;
+        }
+      }
+      throw new Error(`[DEBUG] multiplexed plugin sources have no registry entry for ${pluginId}`);
+    },
+    subscribe(listener) {
+      const unsubscribes = sources.map((source) => source.subscribe(listener));
+      return () => {
+        for (const unsubscribe of unsubscribes) unsubscribe();
+      };
+    },
+  };
+}
 //#endregion 🔌️PluginSource
 
 // #region 🎮️PlaygroundResolution
@@ -3504,9 +3621,9 @@ export function resolvePlaygroundBoot(variant: string, session?: PlaygroundBootS
   }
   const registryPluginId = resolvePluginRegistryId(variant);
   const studioMode = resolvePluginHostConfig(variant) !== undefined;
-  const catalogPlugins: PluginRegistryEntry[] = PLUGIN_BUILD_TARGETS.map((target) => ({
+  const catalogPlugins: PluginRegistryEntry[] = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map((target) => ({
     pluginId: target.pluginId,
-    moduleUrl: pluginModuleUrl(target.pluginId, target.wasmOut),
+    moduleUrl: target.role === "extension" ? extensionModuleUrl(target.pluginId, target.wasmOut) : pluginModuleUrl(target.pluginId, target.wasmOut),
     contributes: target.contributes,
     consumes: target.consumes,
   }));
@@ -3889,6 +4006,17 @@ if (import.meta.vitest) {
       const unsubscribe = source.subscribe((event) => events.push(event));
       expect(() => unsubscribe()).not.toThrow();
       expect(events).toEqual([]);
+    });
+
+    it("multiplexPluginSources() merges list() and resolves moduleUrl from the matching child", async () => {
+      const dev = createDevPluginSource(registry);
+      const extensions = createExtensionSource();
+      const multiplexed = multiplexPluginSources(dev, extensions);
+      expect(multiplexed.id).toBe("dev+extensions");
+      const listed = await multiplexed.list();
+      expect(listed.map((entry) => entry.pluginId).sort()).toEqual([...registry.map((entry) => entry.pluginId), ...EXTENSION_TARGETS.map((entry) => entry.pluginId)].sort());
+      expect(multiplexed.moduleUrl("note")).toBe("/plugin-modules/note/note_plugin.js");
+      expect(() => multiplexed.moduleUrl("missing")).toThrow(/missing/);
     });
   });
 

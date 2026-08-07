@@ -366,6 +366,39 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Currently commands that change the document by returning a diff are called operations. Rename to mutations. Dont keep any legacy. Make sure that op (the custom grammar for mutations)
+A mutation is declarative and returns a diff. Every mutation has an implementation for inverse mutations (list of arguments for calling other mutations to revert the mutation).
+Every artifact defines mutations.
+Every artifact must have an enigne. The engine is a state machine where every transition is a mutation.
+The engine is ui-independant and only accepts mutations.
+
+```
+<plugin>
+  artifacts
+    <artifact>
+      mutations
+        <mutation>
+          diff
+            component.rs
+            component.ts
+            …
+          inverse
+            component.rs
+            component.ts
+            …
+          mutation
+            builder.rs
+            builder.ts
+            …
+          …
+        …
+      …
+    …
+  …
+```
+
+---
+
 ```
 <framework|s|etc>
   bundles
@@ -424,6 +457,7 @@ plugins
     …
   …
 ```
+
 e.g. wronng where it is not properly put under artifact: ✏️s/🔌️plugins/🌍️gis/📚️examples/🌍️reuse.map.gismap
 
 ---
@@ -648,6 +682,7 @@ plugin
 ---
 
 Every artifact must define diff, sqlite, 
+```
 <artifact>
   diff
     implementations
@@ -682,8 +717,11 @@ Every artifact must define diff, sqlite,
         rust
         typescript
         …
+```
+
 ---
 
+```
 <plugin>
   general.rs
   general.ts
@@ -707,6 +745,8 @@ doesnt work because of shared package.json
           lib.rs
         typescript
           index.ts
+```
+
 ---
 
 Make sure os/s follows this architecture:

@@ -3,11 +3,135 @@
 // #endregion 🧭️Header
 
 import { ephemeralBox } from "@semio-tech/framework-core";
+import type { ProgramContributionEntry } from "@semio-tech/framework-core";
 import { registerModelDefinitionAssets, type ModelDefinitionAssetModules } from "../🫀️core/🟦️component.ts";
 import * as spatialShape from "@semio-tech/cad-js-module-spatial-shape";
 import * as aecBuilding from "@semio-tech/cad-js-module-aec-building";
 import * as aecBuildingEnergy from "@semio-tech/cad-js-module-aec-building-energy";
 import * as aecBuildingStructure from "@semio-tech/cad-js-module-aec-building-structure";
+
+// #region 🧩️Contributions
+export const CAD_PLAY_APP_ID = "cad-play";
+
+/** @emoji 📋️ Declarative computer/import metadata carried in `Contribution::CadComputer.computersJson`. */
+export type CadComputersManifest = {
+  modelDefinitionIds: string[];
+  statComputers: string[];
+  propertyComputers: string[];
+  importProfiles: readonly {
+    modelDefinitionId: string;
+    layerTypology: Record<string, string>;
+    fallbackTypology: string;
+    preferPresentationLayers?: boolean;
+    presentationGeometry?: string;
+    namespacedDomain?: string;
+  }[];
+  transformationAppliers: string[];
+};
+
+const CAD_MODULE_REGISTRARS: Readonly<Record<string, () => void>> = {
+  "spatial-shape": () => spatialShape.register(),
+  "aec-building": () => aecBuilding.register(),
+  "aec-building-energy": () => aecBuildingEnergy.register(),
+  "aec-building-structure": () => aecBuildingStructure.register(),
+};
+
+const cadComputerModulesSynced = ephemeralBox<Set<string>>("s.plugins.cad.modules.runtime.component.ts.cadComputerModulesSynced", new Set());
+
+/** @emoji 🚢️ Default shipped `ProgramContributionEntry[]` JSON when the host has not pushed contributions yet. */
+export function shippedCadComputerContributionsJson(): string {
+  const entries: ProgramContributionEntry[] = [
+    {
+      pluginId: "cad-extension-spatial-shape",
+      contribution: {
+        kind: "cadComputer",
+        appId: CAD_PLAY_APP_ID,
+        moduleId: "spatial-shape",
+        label: "Spatial Shape",
+        iconId: "box",
+        computersJson: JSON.stringify({
+          modelDefinitionIds: ["spatial.shape"],
+          statComputers: ["spatial.shape.geometry"],
+          propertyComputers: ["spatial.shape.volume"],
+          importProfiles: [],
+          transformationAppliers: [],
+        } satisfies CadComputersManifest),
+      },
+    },
+    {
+      pluginId: "cad-extension-aec-building",
+      contribution: {
+        kind: "cadComputer",
+        appId: CAD_PLAY_APP_ID,
+        moduleId: "aec-building",
+        label: "AEC Building",
+        iconId: "building",
+        computersJson: JSON.stringify({
+          modelDefinitionIds: ["aec.building"],
+          statComputers: [],
+          propertyComputers: [],
+          importProfiles: [{ modelDefinitionId: "aec.building", layerTypology: {}, fallbackTypology: "building.building.slab" }],
+          transformationAppliers: [],
+        } satisfies CadComputersManifest),
+      },
+    },
+    {
+      pluginId: "cad-extension-aec-building-energy",
+      contribution: {
+        kind: "cadComputer",
+        appId: CAD_PLAY_APP_ID,
+        moduleId: "aec-building-energy",
+        label: "AEC Building Energy",
+        iconId: "zap",
+        computersJson: JSON.stringify({
+          modelDefinitionIds: ["aec.building.energy"],
+          statComputers: ["energy.demand"],
+          propertyComputers: ["energy.heatedvolume"],
+          importProfiles: [],
+          transformationAppliers: [],
+        } satisfies CadComputersManifest),
+      },
+    },
+    {
+      pluginId: "cad-extension-aec-building-structure",
+      contribution: {
+        kind: "cadComputer",
+        appId: CAD_PLAY_APP_ID,
+        moduleId: "aec-building-structure",
+        label: "AEC Building Structure",
+        iconId: "landmark",
+        computersJson: JSON.stringify({
+          modelDefinitionIds: ["aec.building.structure"],
+          statComputers: ["structure.stability"],
+          propertyComputers: [],
+          importProfiles: [],
+          transformationAppliers: ["aec.building.structure/from_building"],
+        } satisfies CadComputersManifest),
+      },
+    },
+  ];
+  return JSON.stringify(entries);
+}
+
+/** @emoji 🧩️ Applies `cad.computer` contributions by `moduleId` via existing cad-js `register()` hooks. */
+export function syncCadComputerContributions(contributionsJson: string): void {
+  let entries: ProgramContributionEntry[];
+  try {
+    entries = JSON.parse(contributionsJson) as ProgramContributionEntry[];
+  } catch {
+    return;
+  }
+  const synced = cadComputerModulesSynced.current;
+  for (const { contribution } of entries) {
+    if (contribution.kind !== "cadComputer" || contribution.appId !== CAD_PLAY_APP_ID) continue;
+    if (synced.has(contribution.moduleId)) continue;
+    const register = CAD_MODULE_REGISTRARS[contribution.moduleId];
+    if (!register) continue;
+    register();
+    synced.add(contribution.moduleId);
+  }
+}
+// #endregion 🧩️Contributions
 
 // #region 📥️ModelDefinitionAssets
 const emptyModelDefinitionAssets = (): ModelDefinitionAssetModules => ({
@@ -56,14 +180,11 @@ function shippedModelDefinitionAssets(): ModelDefinitionAssetModules {
 
 const cadModulesBootstrapped = ephemeralBox("s.plugins.cad.modules.runtime.component.ts.cadModulesBootstrapped", false);
 
-/** @emoji 🚀️ Loads model-definition assets and registers all CAD modules once. */
-export function bootstrapCadModules(): void {
+/** @emoji 🚀️ Loads model-definition assets and registers CAD computer modules from contributions once. */
+export function bootstrapCadModules(contributionsJson?: string): void {
   if (cadModulesBootstrapped.current) return;
   registerModelDefinitionAssets(shippedModelDefinitionAssets());
-  spatialShape.register();
-  aecBuilding.register();
-  aecBuildingEnergy.register();
-  aecBuildingStructure.register();
+  syncCadComputerContributions(contributionsJson ?? shippedCadComputerContributionsJson());
   cadModulesBootstrapped.current = true;
 }
 

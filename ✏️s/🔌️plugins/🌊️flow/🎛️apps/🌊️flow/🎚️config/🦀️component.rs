@@ -18,7 +18,7 @@ use std::collections::HashMap;
 /// config `DocumentStore` exactly like document content, with a real `backwards` per
 /// [`FlowConfigOperation`] instead of never being VCS'd at all.
 ///
-/// `extension_enabled_json`/`generation_json` hold JSON-encoded `HashMap<String, bool>`/
+/// `automation_enabled_json`/`generation_json` hold JSON-encoded `HashMap<String, bool>`/
 /// `playbook::GenerationPlayState` payloads rather than nested `#[dsl(block)]`/`#[dsl(table)]` fields:
 /// none of those types derive `dsl::DslRecord`, mirroring `procedural_3d`'s identical `sun_json` escape
 /// hatch for the same reason. Per-dispatch eval scratch uses a local `FlowEvalSession` in `handle` /
@@ -56,7 +56,10 @@ pub struct FlowConfig {
     /// 📚️ JSON-encoded extra catalogue sections.
     pub catalogue_sections_json: String,
     /// 🧩️ JSON-encoded `(extension id) -> enabled` map.
-    pub extension_enabled_json: String,
+    pub automation_enabled_json: String,
+    /// 🧩️ Host-pushed ProgramContributionEntry[] JSON for flow.extension hot-swap installs.
+    #[serde(default = "default_contributions_json")]
+    pub contributions_json: String,
     /// 🧬️ JSON-encoded `playbook::GenerationPlayState` (Generate-mode exploration surface).
     pub generation_json: String,
     /// 🗣️ BCP-47 locale tag.
@@ -77,7 +80,8 @@ impl Default for FlowConfig {
             grid_snap_enabled: false,
             grid_factor: FLOW_DEFAULT_GRID_FACTOR,
             catalogue_sections_json: "[]".into(),
-            extension_enabled_json: String::new(),
+            automation_enabled_json: String::new(),
+            contributions_json: "[]".into(),
             generation_json: String::new(),
             locale: "en-US".into(),
         }
@@ -85,9 +89,9 @@ impl Default for FlowConfig {
 }
 
 impl FlowConfig {
-    /// 🧩️ Parses `extension_enabled_json` — falls back to an empty map.
-    pub fn extension_enabled(&self) -> HashMap<String, bool> {
-        serde_json::from_str(&self.extension_enabled_json).unwrap_or_default()
+    /// 🧩️ Parses `automation_enabled_json` — falls back to an empty map.
+    pub fn automation_enabled(&self) -> HashMap<String, bool> {
+        serde_json::from_str(&self.automation_enabled_json).unwrap_or_default()
     }
 
     /// 🧬️ Parses `generation_json` — falls back to `GenerationPlayState::default()`.
@@ -110,6 +114,9 @@ store::impl_whole_record_config!(FlowConfig);
 /// "whole-record diff" shape the shooting/dag/procedural-3d config operations already use.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum FlowConfigOperation {
+    /// 🧩️ Host-pushed contributions catalogue JSON.
+    #[dsl(key = "contributions")]
+    SetContributions { json: String },
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -137,7 +144,7 @@ pub enum FlowConfigOperation {
     #[dsl(key = "catalogue-sections")]
     SetCatalogueSections { sections_json: String },
     #[dsl(key = "extension-enabled")]
-    SetExtensionEnabled { json: String },
+    SetAutomationEnabled { json: String },
     #[dsl(key = "generation")]
     SetGeneration { json: String },
     #[dsl(key = "locale")]
@@ -164,8 +171,12 @@ impl Operation<FlowConfig> for FlowConfigOperation {
             FlowConfigOperation::SetGridSnapEnabled { value } => next.grid_snap_enabled = *value,
             FlowConfigOperation::SetGridFactor { value } => next.grid_factor = *value,
             FlowConfigOperation::SetCatalogueSections { sections_json } => next.catalogue_sections_json = sections_json.clone(),
-            FlowConfigOperation::SetExtensionEnabled { json } => next.extension_enabled_json = json.clone(),
+            FlowConfigOperation::SetAutomationEnabled { json } => next.automation_enabled_json = json.clone(),
             FlowConfigOperation::SetGeneration { json } => next.generation_json = json.clone(),
+            FlowConfigOperation::SetContributions { json } => {
+                next.contributions_json = json.clone();
+                flow_core::sync_host_flow_extension_contributions(json);
+            }
             FlowConfigOperation::SetLocale { value } => next.locale = value.clone(),
         }
         next
@@ -193,7 +204,7 @@ mod tests {
         assert_eq!(config.grid_factor, FLOW_DEFAULT_GRID_FACTOR);
         assert_eq!(config.catalogue_sections_json, "[]");
         assert_eq!(config.locale, "en-US");
-        assert_eq!(config.extension_enabled(), HashMap::new());
+        assert_eq!(config.automation_enabled(), HashMap::new());
         assert_eq!(config.generation(), GenerationPlayState::default());
     }
 
@@ -212,7 +223,8 @@ mod tests {
             grid_snap_enabled: true,
             grid_factor: 5.0,
             catalogue_sections_json: "[{\"id\":\"custom\"}]".into(),
-            extension_enabled_json: "{\"auto-layout\":true}".into(),
+            automation_enabled_json: "{\"auto-layout\":true}".into(),
+            contributions_json: "[]".into(),
             generation_json: "{\"generations\":[]}".into(),
             locale: "de-DE".into(),
         };
@@ -232,7 +244,7 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&FlowConfigOperation::SetGridSnapEnabled { value: false });
         store::test_support::assert_op_line_round_trip(&FlowConfigOperation::SetGridFactor { value: 10.0 });
         store::test_support::assert_op_line_round_trip(&FlowConfigOperation::SetCatalogueSections { sections_json: "[]".into() });
-        store::test_support::assert_op_line_round_trip(&FlowConfigOperation::SetExtensionEnabled { json: "{\"auto-layout\":true}".into() });
+        store::test_support::assert_op_line_round_trip(&FlowConfigOperation::SetAutomationEnabled { json: "{\"auto-layout\":true}".into() });
         store::test_support::assert_op_line_round_trip(&FlowConfigOperation::SetGeneration { json: "{\"generations\":[]}".into() });
         store::test_support::assert_op_line_round_trip(&FlowConfigOperation::SetLocale { value: "de-DE".into() });
     }

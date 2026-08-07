@@ -1,6 +1,14 @@
 //! ⚖️ Block 5D artifact — state-patch-representation wire codec + laws (was: constitutional
 //! `protocol`; no `📡️protocol` path segment may survive under plugins).
 
+
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
+
 use crate::artifacts::block5d::op::Block5dOperation;
 use protocol::OpBinary;
 

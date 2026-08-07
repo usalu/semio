@@ -6,7 +6,8 @@ start operation
 
 artifact-mark = "procedural.procedural2d-op"
 operation = artifact-mark mesh-op+
-mesh-op = "add-vertex" vtx-field+ | "set-face" face-field+ | "transform-mesh" xfm-field+ | "merge-solid" merge-field+
+mesh-op = "add-vertex" vtx-field+ | "set-face" face-field+ | "transform-mesh" xfm-field+ | "merge-solid" merge-field+ | "loft-profile" loft-field+
+loft-field = "profile" "=" IDENT | "steps" "=" INT
 vtx-field = "x" "=" FLOAT | "y" "=" FLOAT | "z" "=" FLOAT
 face-field = "index" "=" INT | "loop" "=" list
 xfm-field = "axis" "=" IDENT | "angle" "=" FLOAT

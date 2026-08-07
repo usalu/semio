@@ -1401,6 +1401,11 @@ impl neural::Operation for ContributedExtensionStub {
 
 fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &str, manifest_json: &str) {
     let Ok(manifest) = serde_json::from_str::<FlowExtensionManifest>(manifest_json) else { return };
+    for schema in manifest.contributes.schemas {
+        if !registry.schema_catalogue().iter().any(|existing| existing.id == schema.id) {
+            registry.register_schema(schema);
+        }
+    }
     for info in manifest.contributes.operators {
         if registry.operator_info(&info.id).is_some() {
             continue;
@@ -1414,6 +1419,7 @@ fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &st
         );
     }
     let _ = plugin_id;
+    registry.finalize();
 }
 
 fn build_flow_extension_registry(contributed: &BTreeMap<String, ContributedFlowExtension>) -> neural::Registry {
@@ -1436,12 +1442,57 @@ pub fn install_flow_extension(spec: FlowExtensionSpec) {
     if state.contributed.contains_key(&spec.id) {
         return;
     }
-    let mut registry = neural::Registry::new();
-    (spec.install)(&mut registry);
+    let id = spec.id.clone();
+    let mut composed = neural::Registry::new();
+    install_builtin_flow_extensions(&mut composed);
+    for entry in state.contributed.values() {
+        register_contributed_manifest(&mut composed, &entry.plugin_id, &entry.manifest_json);
+    }
+    (spec.install)(&mut composed);
+    composed.finalize();
+    state.contributed.insert(
+        id.clone(),
+        ContributedFlowExtension {
+            plugin_id: format!("spec:{}", id),
+            manifest_json: serde_json::json!({
+                "schema": "flow.extension",
+                "id": id,
+                "name": spec.name,
+                "version": spec.version,
+                "activationEvents": ["onStartup"],
+                "contributes": { "schemas": [], "operators": [], "widgets": [], "commands": [], "settings": [] }
+            })
+            .to_string(),
+        },
+    );
+    // Preserve the live registry that includes spec.install side effects.
+    state.generation += 1;
+    state.registry = std::sync::Arc::new(composed);
     let _ = (spec.name, spec.version);
 }
 
 /// 📥️ Merges a contributed `flow.extension` manifest from a hot-swapped plugin.
+/// 🔌️ Installs or refreshes contributed flow.extension manifests from host-pushed contributionsJson.
+pub fn sync_host_flow_extension_contributions(contributions_json: &str) {
+    use std::sync::Mutex;
+    static LAST: Mutex<String> = Mutex::new(String::new());
+    let mut last = LAST.lock().expect("flow contributions lock");
+    if *last == contributions_json {
+        return;
+    }
+    for info in installed_flow_extensions() {
+        uninstall_flow_extension(&info.id);
+    }
+    if let Ok(entries) = serde_json::from_str::<Vec<semio_framework_core::ProgramContributionEntry>>(contributions_json) {
+        for entry in entries {
+            if let semio_framework_core::Contribution::FlowExtension { manifest_json, .. } = entry.contribution {
+                install_flow_extension_manifest(&entry.plugin_id, &manifest_json);
+            }
+        }
+    }
+    *last = contributions_json.to_string();
+}
+
 pub fn install_flow_extension_manifest(plugin_id: &str, manifest_json: &str) {
     let Ok(manifest) = serde_json::from_str::<FlowExtensionManifest>(manifest_json) else { return };
     let id = manifest.id.clone();

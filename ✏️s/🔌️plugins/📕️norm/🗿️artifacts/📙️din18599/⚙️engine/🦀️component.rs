@@ -657,3 +657,58 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "din18599.document",
+        extension: Some("din18599"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::din18599::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::din18599::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::din18599::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::din18599::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("din18599.document"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "din18599.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::din18599::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::din18599::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::din18599::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::din18599::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("din18599.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "din18599.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::din18599::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::din18599::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("din18599.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "din18599.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::din18599::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::din18599::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("din18599.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "din18599.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::din18599::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::din18599::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("din18599.spr"),
+    });
+}

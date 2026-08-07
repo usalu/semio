@@ -35,6 +35,10 @@ members = [
     "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust",
@@ -64,6 +68,10 @@ members = [
     "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust",
     # 🧹️ Adopted 2026-07-18 (RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN): these crates lived
     # inside the workspace dir but were neither members nor excluded, so they could

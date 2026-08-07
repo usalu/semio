@@ -13,6 +13,7 @@ package = "semio:sourcing-module-beams"
 
 [package.metadata.semio]
 role = "extension"
+contributes = ["sourcing.module"]
 
 [package.metadata.wasm-pack.profile.dev]
 wasm-opt = false

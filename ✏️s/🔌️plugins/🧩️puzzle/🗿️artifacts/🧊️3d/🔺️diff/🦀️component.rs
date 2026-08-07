@@ -3,6 +3,14 @@
 //! replacement that wins over them. The `serde_json::Value` and `Puzzle3dPlayProjection` bridge
 //! impls of the same diff live in `🔧️op` beside the newtypes they patch.
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dProjection, Puzzle3dReference, Puzzle3dTargetVolume};
 use protocol::OperationDiff;
 use serde::{Deserialize, Serialize};

@@ -140,8 +140,64 @@ fn slot_key(slot: Option<&SlotRef>) -> Option<(String, String)> {
 /// `framework/sync`'s folder endpoints and any other schema-string-keyed caller can print/parse
 /// sequence documents. Called from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::sequence::SequencePlayApp>(SEQUENCE_FIXTURE_SCHEMA);
 }
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "sequence.document",
+        extension: Some("sequence"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("sequence.document"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "sequence.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("sequence.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "sequence.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("sequence.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "sequence.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("sequence.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "sequence.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("sequence.spr"),
+    });
+}
+
 //#endregion 🔖️Register
 
 //#region 🔖️Camera

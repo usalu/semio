@@ -1,5 +1,13 @@
 //! ⚡️ Raster artifact — operation enum + laws (constitutional: op).
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::raster::diff::{patch_layer_in_tree, step_diff, RasterDiff};
 use crate::artifacts::raster::engine::{find_layer, layer_node_id, locate_layer};
 use crate::artifacts::raster::RasterLayerNode;

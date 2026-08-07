@@ -50,6 +50,13 @@ pub struct Process3dConfig {
     pub active_utility_id: String,
     /// 🗣️ Was read off `ViewModel::locale`.
     pub locale: String,
+    /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `process.machines` hot-swap installs.
+    #[serde(default = "default_contributions_json")]
+    pub contributions_json: String,
+}
+
+fn default_contributions_json() -> String {
+    "[]".into()
 }
 
 impl Default for Process3dConfig {
@@ -70,6 +77,7 @@ impl Default for Process3dConfig {
             sun_color: "#ffffff".into(),
             active_utility_id: PROCESS3D_DEFAULT_UTILITY.into(),
             locale: "en-US".into(),
+            contributions_json: default_contributions_json(),
         }
     }
 }
@@ -143,6 +151,8 @@ pub enum Process3dConfigOperation {
     SetActiveUtility { utility_id: String },
     #[dsl(key = "locale")]
     SetLocale { value: String },
+    #[dsl(key = "contributions")]
+    SetContributions { json: String },
 }
 
 impl Operation<Process3dConfig> for Process3dConfigOperation {
@@ -170,6 +180,10 @@ impl Operation<Process3dConfig> for Process3dConfigOperation {
             }
             Process3dConfigOperation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
             Process3dConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            Process3dConfigOperation::SetContributions { json } => {
+                next.contributions_json = json.clone();
+                crate::artifacts::process3d::engine::sync_process_machine_contributions(json);
+            }
         }
         next
     }
@@ -232,6 +246,7 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#123456".into() });
         store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetActiveUtility { utility_id: "cut".into() });
         store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetLocale { value: "de-DE".into() });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetContributions { json: "[]".into() });
     }
 
     #[test]

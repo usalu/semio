@@ -7,6 +7,14 @@
 //! `🫀️core` because all fifteen artifacts share exactly one copy of it. This node states the concrete
 //! binding for this artifact and proves the law against this artifact's own `Document`.
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::din16798::Document;
 
 //#region 🔖️Types

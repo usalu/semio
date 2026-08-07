@@ -95,6 +95,9 @@ struct HubState {
     /// builds of the same app disagreeing on a document's field shape. A zero hash always skips
     /// validation (schema-agnostic client, see `DocumentCodec::pack_schema_hash`'s own doc).
     schema_hashes: Arc<DashMap<String, [u8; 32]>>,
+    /// @emoji 🧩️ Wave 1.B: installed runtime extensions mirrored from dev `/extensions` static dir —
+    /// populated by hub deploy copy / sideload; `GET /extensions` lists `install.json` rows.
+    extensions_root: std::path::PathBuf,
 }
 
 impl HubState {
@@ -586,10 +589,76 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sta
 }
 //#endregion 🔖️WebSocket
 
+//#region 🔖️Extensions
+/// @emoji 🧩️ Hub mirror of dev `staticDirVitePlugin` `/extensions` — lists installed extension metadata.
+#[derive(Serialize)]
+struct ExtensionListResponse {
+    extensions: Vec<serde_json::Value>,
+}
+
+fn extension_asset_content_type(path: &std::path::Path) -> &'static str {
+    match path.extension().and_then(|value| value.to_str()) {
+        Some("js") | Some("mjs") => "text/javascript",
+        Some("wasm") => "application/wasm",
+        Some("json") => "application/json",
+        _ => "application/octet-stream",
+    }
+}
+
+fn extension_asset_path(root: &std::path::Path, extension_id: &str, rest: &str) -> Option<std::path::PathBuf> {
+    if extension_id.is_empty() || extension_id.contains('/') || extension_id.contains('\\') || extension_id.contains("..") {
+        return None;
+    }
+    if rest.is_empty() || rest.contains("..") {
+        return None;
+    }
+    let base = root.join(extension_id);
+    let path = base.join(rest);
+    if !path.starts_with(&base) {
+        return None;
+    }
+    Some(path)
+}
+
+async fn list_extensions(State(state): State<HubState>) -> Result<Json<ExtensionListResponse>, StatusCode> {
+    let mut extensions = Vec::new();
+    let read_dir = tokio::fs::read_dir(&state.extensions_root).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let mut entries = read_dir;
+    while let Ok(Some(entry)) = entries.next_entry().await {
+        if !entry.file_type().await.map(|kind| kind.is_dir()).unwrap_or(false) {
+            continue;
+        }
+        let meta_path = entry.path().join("install.json");
+        let bytes = match tokio::fs::read(&meta_path).await {
+            Ok(value) => value,
+            Err(_) => continue,
+        };
+        let value: serde_json::Value = serde_json::from_slice(&bytes).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        extensions.push(value);
+    }
+    extensions.sort_by(|left, right| {
+        left.get("extensionId")
+            .and_then(|value| value.as_str())
+            .unwrap_or_default()
+            .cmp(right.get("extensionId").and_then(|value| value.as_str()).unwrap_or_default())
+    });
+    Ok(Json(ExtensionListResponse { extensions }))
+}
+
+async fn get_extension_asset(Path((extension_id, rest)): Path<(String, String)>, State(state): State<HubState>) -> Result<impl IntoResponse, StatusCode> {
+    let path = extension_asset_path(&state.extensions_root, &extension_id, &rest).ok_or(StatusCode::BAD_REQUEST)?;
+    let bytes = tokio::fs::read(&path).await.map_err(|error| if error.kind() == std::io::ErrorKind::NotFound { StatusCode::NOT_FOUND } else { StatusCode::INTERNAL_SERVER_ERROR })?;
+    let content_type = extension_asset_content_type(&path);
+    Ok(([(axum::http::header::CONTENT_TYPE, content_type)], bytes))
+}
+//#endregion 🔖️Extensions
+
 //#region 🔖️Main
 fn router(state: HubState) -> Router {
     Router::new()
         .route("/auth/sessions", post(create_auth_session))
+        .route("/extensions", get(list_extensions))
+        .route("/extensions/{extension_id}/{*rest}", get(get_extension_asset))
         .route("/spaces/{space_id}/blobs/{hash}", get(get_blob).head(head_blob).put(put_blob))
         .route("/spaces/{space_id}/documents/{id}", get(get_document_status))
         .route("/spaces/{space_id}/documents/{id}/share", post(create_share))
@@ -692,7 +761,17 @@ async fn main() -> Result<(), HubError> {
     let db = connect_db(&data_dir)?;
     let directory = connect_directory(&data_dir).await?;
     let admin_token = std::env::var("OS_HUB_ADMIN_TOKEN").ok().filter(|value| !value.is_empty());
-    let state = HubState { db: Arc::new(db), directory, admin_token, fanout: Arc::new(DashMap::new()), presence: Arc::new(DashMap::new()), schema_hashes: Arc::new(DashMap::new()) };
+    let extensions_root = std::env::var("OS_HUB_EXTENSIONS_DIR").map(std::path::PathBuf::from).unwrap_or_else(|_| data_dir.join("extension-modules"));
+    std::fs::create_dir_all(&extensions_root)?;
+    let state = HubState {
+        db: Arc::new(db),
+        directory,
+        admin_token,
+        fanout: Arc::new(DashMap::new()),
+        presence: Arc::new(DashMap::new()),
+        schema_hashes: Arc::new(DashMap::new()),
+        extensions_root,
+    };
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     tracing::info!("os-hub listening on http://{addr}");
     let listener = tokio::net::TcpListener::bind(addr).await?;
@@ -732,7 +811,7 @@ mod tests {
         let database = db::Database::open_at(&tempdir("db"), db::Profile::Test).expect("open db");
         let directory = SqliteDirectory::connect(":memory:").await.expect("connect directory");
         directory.seed().await.expect("seed");
-        HubState { db: Arc::new(database), directory: Arc::new(directory), admin_token: None, fanout: Arc::new(DashMap::new()), presence: Arc::new(DashMap::new()), schema_hashes: Arc::new(DashMap::new()) }
+        HubState { db: Arc::new(database), directory: Arc::new(directory), admin_token: None, fanout: Arc::new(DashMap::new()), presence: Arc::new(DashMap::new()), schema_hashes: Arc::new(DashMap::new()), extensions_root: dir.path().join("extension-modules") }
     }
 
     fn sample_envelope(id: &str, document: &WireDocumentId) -> OperationEnvelope {

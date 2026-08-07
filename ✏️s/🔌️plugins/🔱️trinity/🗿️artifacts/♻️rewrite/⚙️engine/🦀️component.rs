@@ -418,3 +418,58 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "rewrite.document",
+        extension: Some("rewrite"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::pack::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::pack::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::pack::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::pack::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("rewrite.document"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "rewrite.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::pack::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::pack::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::pack::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::pack::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("rewrite.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "rewrite.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::pack::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::pack::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("rewrite.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "rewrite.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::pack::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::pack::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("rewrite.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "rewrite.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::pack::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::pack::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("rewrite.spr"),
+    });
+}

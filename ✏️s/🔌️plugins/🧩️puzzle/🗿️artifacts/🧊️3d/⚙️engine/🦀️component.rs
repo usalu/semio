@@ -485,3 +485,58 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "puzzle.puzzle3d",
+        extension: Some("puzzle3d"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::puzzle3d::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::puzzle3d::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::puzzle3d::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::puzzle3d::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("puzzle.puzzle3d"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "puzzle.puzzle3d.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::puzzle3d::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::puzzle3d::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::puzzle3d::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::puzzle3d::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("puzzle.puzzle3d.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "puzzle.puzzle3d.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::puzzle3d::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::puzzle3d::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("puzzle.puzzle3d.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "3d.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::puzzle3d::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::puzzle3d::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("3d.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "3d.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::puzzle3d::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::puzzle3d::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("3d.spr"),
+    });
+}

@@ -4,6 +4,14 @@
 //! replace, so `Operation` is a re-export of `norm_core`'s generic `SetDocumentOperation<Document>`,
 //! which already carries its own `Operation`/`OpText`/`OpBinary` impls — nothing to implement here.
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::din18599::Document;
 
 pub type Operation = crate::core::SetDocumentOperation<Document>;

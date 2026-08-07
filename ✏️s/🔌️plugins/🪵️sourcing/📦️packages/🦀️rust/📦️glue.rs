@@ -76,6 +76,8 @@ pub mod apps {
             pub mod selection;
             #[path = "../../🎛️apps/🗂️curate/🎮️commands/🗣️locale/🦀️component.rs"]
             pub mod locale;
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧩️contribution/🦀️component.rs"]
+            pub mod contribution;
         }
 
         #[path = "."]

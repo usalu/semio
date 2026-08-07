@@ -1145,3 +1145,58 @@ mod tests {
         assert_eq!(<Iso16757Family as crate::core::NormFamily>::family_id(), crate::core::NormFamilyId::Iso16757);
     }
 }
+
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "iso16757.document",
+        extension: Some("iso16757"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::en1999::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::en1999::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::en1999::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::en1999::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("iso16757.document"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "iso16757.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::en1999::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::en1999::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("iso16757.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "iso16757.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::en1999::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::en1999::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("iso16757.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "iso16757.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::en1999::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::en1999::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("iso16757.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "iso16757.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("iso16757.spr"),
+    });
+}

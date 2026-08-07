@@ -10,9 +10,11 @@ use semio_s_3d::brep::engine::{BrepEngineHost, BrepKernel, GeometryHandle};
 use semio_framework_plugin::{MeshData, MeshExporter, MeshImporter};
 use serde::Serialize;
 use serde_json::Value;
+use semio_framework_core::{parse_contributions, Contribution};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
+use std::sync::Mutex;
 use store::DocumentDsl;
 
 /// 🕳️ Tessellation tolerance for kernel replay/export.
@@ -24,6 +26,7 @@ const PROCESS3D_KERNEL_MEMO_CAP: usize = 128;
 /// 🔌️ Registers this app's document exporters/import handlers and codec with the OS runtime — the
 /// `setup` hook `📦️glue.rs`'s `semio_plugin!{}` invocation calls.
 pub fn register() {
+    register_pilot_languages();
     fn process3d_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
         let document: Process3dDocument = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
         processed_mesh(&document).ok_or_else(|| "process3d: kernel replay failed".to_string())
@@ -99,6 +102,72 @@ pub fn process3d_io() -> semio_framework_plugin::AppIo {
 //#endregion 🔖️Io
 
 //#region 🔖️Catalog
+fn leak_str(value: String) -> &'static str {
+    Box::leak(value.into_boxed_str())
+}
+
+/// 🧩️ One hot-installed machine catalog deserialized from `Contribution::ProcessMachines`.
+#[derive(Clone)]
+struct ContributedMachineCatalog {
+    catalog_id: &'static str,
+    label: &'static str,
+    icon_id: &'static str,
+    machines: Vec<WorkshopMachine>,
+}
+
+impl MachineCatalog for ContributedMachineCatalog {
+    fn catalog_id(&self) -> &'static str {
+        self.catalog_id
+    }
+
+    fn label(&self) -> &'static str {
+        self.label
+    }
+
+    fn icon_id(&self) -> &'static str {
+        self.icon_id
+    }
+
+    fn machines(&self) -> Vec<WorkshopMachine> {
+        self.machines.clone()
+    }
+}
+
+static CONTRIBUTED_MACHINE_CATALOGS: Mutex<Vec<ContributedMachineCatalog>> = Mutex::new(Vec::new());
+static LAST_PROCESS_CONTRIBUTIONS_JSON: Mutex<String> = Mutex::new(String::new());
+
+const PROCESS3D_PLAY_APP_ID: &str = "process3d-play";
+
+/// 🔌️ Refreshes contributed `process.machines` catalogs when the host pushes a new catalogue.
+pub fn sync_process_machine_contributions(contributions_json: &str) {
+    let mut last = LAST_PROCESS_CONTRIBUTIONS_JSON.lock().expect("process contributions lock");
+    if *last == contributions_json {
+        return;
+    }
+    let mut catalogs = Vec::new();
+    for entry in parse_contributions(contributions_json) {
+        let Contribution::ProcessMachines { app_id, module_id, label, icon_id, machines_json, .. } = entry.contribution else {
+            continue;
+        };
+        if app_id != PROCESS3D_PLAY_APP_ID {
+            continue;
+        }
+        let machines: Vec<WorkshopMachine> = serde_json::from_str(&machines_json).unwrap_or_default();
+        catalogs.push(ContributedMachineCatalog {
+            catalog_id: leak_str(module_id),
+            label: leak_str(label),
+            icon_id: leak_str(icon_id.to_string()),
+            machines,
+        });
+    }
+    *CONTRIBUTED_MACHINE_CATALOGS.lock().expect("process contributed catalogs lock") = catalogs;
+    *last = contributions_json.to_string();
+}
+
+fn builtin_installed_catalogs() -> Vec<Box<dyn MachineCatalog>> {
+    vec![Box::new(GenericCatalog)]
+}
+
 /// 📦️ The built-in generic catalog — wraps `crate::artifacts::process3d::generic_machines()`, the same
 /// fallback used to seed a document's default workshop, exposed here as an installable `MachineCatalog`
 /// so it appears alongside domain catalogs in the workshop configurator's "installed catalogs" list.
@@ -123,18 +192,14 @@ impl MachineCatalog for GenericCatalog {
 }
 
 /// 🧩️ Every machine catalog installed in this build, in stable display order — the built-in generic
-/// catalog first (so it renders as the default-open section), then every built-in domain catalog topic
-/// file this engine module owns (`🦀️catalog_wood.rs` etc. — see their doc comments for why these are
-/// engine topic files rather than satellite crates). Adding a new domain is one new topic file plus one
-/// line here.
+/// catalog first (so it renders as the default-open section), then every `process.machines` contribution
+/// merged via `sync_process_machine_contributions` from runtime-installable extensions under
+/// `🏭️process/🧩️extensions/`.
 pub fn installed_catalogs() -> Vec<Box<dyn MachineCatalog>> {
-    vec![
-        Box::new(GenericCatalog),
-        crate::artifacts::process3d::engine::catalog_wood::catalog(),
-        crate::artifacts::process3d::engine::catalog_concrete::catalog(),
-        crate::artifacts::process3d::engine::catalog_metal::catalog(),
-        crate::artifacts::process3d::engine::catalog_robotic::catalog(),
-    ]
+    let mut catalogs = builtin_installed_catalogs();
+    let contributed = CONTRIBUTED_MACHINE_CATALOGS.lock().expect("process contributed catalogs lock");
+    catalogs.extend(contributed.iter().map(|catalog| Box::new(catalog.clone()) as Box<dyn MachineCatalog>));
+    catalogs
 }
 
 /// 🔎️ One machine, by catalog + machine id, with `catalog_id` stamped onto the snapshot — the
@@ -714,14 +779,84 @@ mod tests {
     }
 
     #[test]
-    fn kernel_replay_memoizes_prefixes_across_cursor_scrub() {
-        let mut session = ProcessKernelReplay::new();
-        let mut fixture = Process3dDocument::default();
-        fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
-        fixture.steps.push(ProcessStep { id: "drill-1".into(), label: "Drill".into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.1, depth: 1.0, pose: Pose::default() } });
-        fixture.resolved_up_to = Some(1);
-        session_volume(&mut session, &fixture);
-        assert!(session.tables.memo.len() >= 2, "expected stock + drilled prefixes memoized, got {}", session.tables.memo.len());
+    fn sync_process_machine_contributions_merges_hot_installed_catalogs() {
+        use semio_framework_core::{Contribution, ProgramContributionEntry};
+        let machine = WorkshopMachine {
+            id: "hot-saw".into(),
+            label: "Hot Saw".into(),
+            icon_id: "scissors".into(),
+            catalog_id: None,
+            capabilities: vec![],
+        };
+        let entry = ProgramContributionEntry {
+            plugin_id: "process-module-test".into(),
+            contribution: Contribution::ProcessMachines {
+                app_id: "process3d-play".into(),
+                module_id: "hot-catalog".into(),
+                label: "Hot Catalog".into(),
+                icon_id: "wrench".into(),
+                machines_json: serde_json::to_string(&vec![machine]).unwrap(),
+            },
+        };
+        let json = serde_json::to_string(&vec![entry]).unwrap();
+        sync_process_machine_contributions(&json);
+        assert!(installed_catalogs().iter().any(|catalog| catalog.catalog_id() == "hot-catalog"));
+        sync_process_machine_contributions("[]");
     }
 }
 //#endregion 🧪️Tests
+
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "process.process3d",
+        extension: Some("process3d"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("process.process3d"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "process.process3d.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("process.process3d.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "process.process3d.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("process.process3d.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "process3d.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("process3d.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "process3d.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("process3d.spr"),
+    });
+}

@@ -14,10 +14,66 @@ use serde_json::{json, Value};
 /// `SHOOTING_FIXTURE_SCHEMA` so `framework/sync`'s folder endpoints and any other schema-keyed caller
 /// can print/parse/export shooting documents. Called from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    register_pilot_languages();
     semio_framework_os::register_2d_export_handlers("2d.shooting", "shooting", shooting_document_json_to_svg);
     semio_framework_os::register_dwg_import_handler("2d.shooting", shooting_document_json_from_dwg);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::shooting::ShootingPlayApp>(crate::artifacts::shooting::SHOOTING_FIXTURE_SCHEMA);
 }
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "shooting.document",
+        extension: Some("shooting"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("shooting.document"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "shooting.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("shooting.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "shooting.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("shooting.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "shooting.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("shooting.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "shooting.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("shooting.spr"),
+    });
+}
+
 //#endregion 🔖️Register
 
 //#region 🔖️Io

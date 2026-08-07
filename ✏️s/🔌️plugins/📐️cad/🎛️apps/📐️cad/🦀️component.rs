@@ -5,6 +5,7 @@
 //! 🧭️ Every behavioural arm lives in `🎮️commands/<group>/🦀️component.rs`; every rendered surface in
 //! `📌️panels/<panel>` or `🎭️modes/✏️edit/🪟️windows/<window>`. This file dispatches and stitches.
 
+use crate::apps::cad::commands::contribution::set_contributions;
 use crate::apps::cad::commands::camera::{set_camera, set_projection, set_projection_param};
 use crate::apps::cad::commands::engagement::{engagement_abort, engagement_input, engagement_possible_select, engagement_repeat_last, engagement_submit, world_pointer_down, world_pointer_move};
 use crate::apps::cad::commands::io::{import_cad_file, load_raw_request, save_current, save_in_play, save_selected};
@@ -891,6 +892,7 @@ semio_framework_plugin::app_commands! {
         "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
         "setLocale" as "locale" => set_locale::SetLocale,
         "setTerminology" as "terminology" => set_terminology::SetTerminology,
+        "setContributions" as "contributions" => set_contributions::SetContributions,
 
         // 🐚️ Shell effects — export/import round-trips through the host, no operations either way.
         "saveSelected" as "save-selected" => save_selected::SaveSelected,
@@ -997,6 +999,7 @@ impl DocumentApp for CadPlayApp
     }
 
     fn render(body_key: &str, doc: &DocumentView<'_, CadProjection>, cfg: &ConfigView<'_, CadConfig>) -> UiNode {
+        crate::artifacts::cad::engine::sync_cad_computer_contributions(&cfg.projection.contributions_json);
         let view = CadPlayView { document: doc.projection.clone(), runtime: cad_runtime_from_config(cfg.projection) };
         let labels = cad_labels(cfg.projection);
         let window_kind_id = match body_key {
@@ -1440,6 +1443,7 @@ mod tests {
             CadCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "dislocate".into() }),
             CadCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
             CadCommand::SetTerminology(set_terminology::SetTerminology { value: "reuse".into() }),
+            CadCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
             CadCommand::SaveSelected(save_selected::SaveSelected {}),
             CadCommand::SaveInPlay(save_in_play::SaveInPlay {}),
             CadCommand::SaveCurrent(save_current::SaveCurrent { format: Some("step".into()) }),

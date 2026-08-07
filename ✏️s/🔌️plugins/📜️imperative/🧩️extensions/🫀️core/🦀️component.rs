@@ -124,6 +124,32 @@ pub fn module_registry() -> Registry {
 }
 // #endregion 🔖️Helpers
 
+//#region 🔖️Bundle
+const EXTENSION_ID: &str = "imperative-extension-core";
+const MODULE_VERSION: &str = "0.1.0";
+
+/// 🧩️ Host contribution entry for the core imperative module.
+pub fn imperative_module_contribution() -> semio_framework_core::ProgramContributionEntry {
+    let registry = module_registry();
+    let catalogue = catalogue_json(&registry);
+    imperative_extension_sdk::imperative_module_contribution(EXTENSION_ID, "core", "Actions", "zap", "core", "Core", MODULE_VERSION, &registry, Some(&catalogue))
+}
+
+fn bundle() -> semio_framework_plugin::ExtensionBundle {
+    let entry = imperative_module_contribution();
+    semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Core", MODULE_VERSION)
+        .extends("imperative")
+        .handler(imperative_extension_sdk::IMPERATIVE_MODULE_EVALUATE_CAPABILITY, |request| {
+            imperative_extension_sdk::evaluate_invoke(&module_registry(), request).map_err(|message| {
+                semio_framework_core::Fault::new(semio_framework_core::FaultOrigin::Plugin, semio_framework_core::FaultCode::new("extension.evaluate"), message)
+            })
+        })
+        .contributes(entry.contribution)
+}
+
+semio_framework_plugin::extension_exports!(bundle);
+//#endregion 🔖️Bundle
+
 #[cfg(test)]
 mod tests {
     use super::*;

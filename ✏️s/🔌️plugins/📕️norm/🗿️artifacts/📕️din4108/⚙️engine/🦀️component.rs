@@ -924,3 +924,58 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "din4108.document",
+        extension: Some("din4108"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::core::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::core::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::core::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::core::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("din4108.document"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "din4108.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::core::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::core::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::core::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::core::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("din4108.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "din4108.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::core::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::core::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("din4108.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "din4108.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::core::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::core::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("din4108.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "din4108.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::core::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::core::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("din4108.spr"),
+    });
+}

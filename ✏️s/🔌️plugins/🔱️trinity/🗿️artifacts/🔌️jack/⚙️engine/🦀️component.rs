@@ -25,3 +25,58 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "jack.document",
+        extension: Some("trinity"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::core::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::core::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::core::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::core::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("jack.document"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "jack.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::core::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::core::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::core::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::core::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("jack.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "jack.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::core::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::core::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("jack.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "jack.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::core::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::core::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("jack.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "jack.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::core::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::core::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("jack.spr"),
+    });
+}

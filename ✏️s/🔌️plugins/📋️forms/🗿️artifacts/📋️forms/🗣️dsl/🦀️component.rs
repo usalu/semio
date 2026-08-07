@@ -4,6 +4,14 @@
 //! `🗿️artifacts/📋️forms/🦀️component.rs` for why. This component only adds the thin artifact-facing
 //! `parse_dsl`/`print_dsl` wrappers plus the canonical example fixtures and their round-trip laws.
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::forms::FormSpec;
 
 /// 📄️ The building-component fixture, handcrafted in the `.forms` DSL.

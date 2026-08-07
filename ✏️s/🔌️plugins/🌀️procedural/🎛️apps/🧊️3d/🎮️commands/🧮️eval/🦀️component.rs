@@ -21,15 +21,18 @@ pub mod flow_eval_tick {
         let more = session.tick(&mut host);
         let mut effects = if more { vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
         if let Some(pending) = host.take_pending_extension_eval() {
-            if let Some(plugin_id) = flow_core::flow_extension_plugin_id(&pending.extension_id) {
-                let request_json = serde_json::json!({
-                    "operatorId": pending.operator_id,
-                    "inputJson": pending.input_json,
-                    "nodeHash": pending.node_hash,
-                })
-                .to_string();
-                effects.push(HostEffect::RequestPluginExchange { plugin_id, app_id: "flow-extension-eval".into(), request_json, response_action: "flowEvalResolve".into() });
-            }
+            let request_json = serde_json::json!({
+                "operatorId": pending.operator_id,
+                "inputJson": pending.input_json,
+                "nodeHash": pending.node_hash,
+            })
+            .to_string();
+            effects.push(HostEffect::InvokeExtension {
+                extension_id: pending.extension_id,
+                capability: "evaluate".into(),
+                request_json,
+                response_action: "flowEvalResolve".into(),
+            });
         }
         Ok(Emit { effects, ..Default::default() })
     }

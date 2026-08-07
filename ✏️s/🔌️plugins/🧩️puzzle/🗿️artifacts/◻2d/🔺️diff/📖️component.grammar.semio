@@ -6,7 +6,8 @@ start diff
 
 artifact-mark = "puzzle.2d-diff"
 diff = artifact-mark mesh-change+
-mesh-change = "add-vertex" vtx+ | "drop-face" INT | "transform" xfm+
+mesh-change = "add-vertex" vtx+ | "drop-face" INT | "transform" xfm+ | "snap-part" snap+
+snap = "part" "=" IDENT | "grid" "=" INT
 vtx = "x" "=" FLOAT | "y" "=" FLOAT | "z" "=" FLOAT
 xfm = "axis" "=" IDENT | "delta" "=" FLOAT
 layer = IDENT "@" FLOAT FLOAT

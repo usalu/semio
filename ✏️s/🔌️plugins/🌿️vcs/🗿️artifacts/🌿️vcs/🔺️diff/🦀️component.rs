@@ -1,5 +1,13 @@
 //! 🔺️ VCS artifact — per-field diff type + `OperationDiff` law (was: part of constitutional `op`).
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::vcs::op::VcsDemoOperation;
 use crate::artifacts::vcs::VcsDemoProjection;
 use protocol::OperationDiff;

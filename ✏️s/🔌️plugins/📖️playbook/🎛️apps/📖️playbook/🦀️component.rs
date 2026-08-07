@@ -7,7 +7,7 @@
 //! `PlaybookCommand::dispatch`, `render` → body-key → node, plus `import_media`'s `"chapters:in"`
 //! importer (an app-level `DocumentApp` trait override, not a command).
 
-use crate::apps::playbook::commands::{block, selection, step, locale};
+use crate::apps::playbook::commands::{block, contribution, selection, step, locale};
 use crate::apps::playbook::config::{PlaybookConfig, PlaybookConfigOperation};
 use crate::apps::playbook::modes::builder;
 use crate::apps::playbook::modes::builder::windows::builder as builder_window;
@@ -44,6 +44,7 @@ semio_framework_plugin::app_commands! {
         "updatePlaybook" as "update-playbook" => update_playbook::UpdatePlaybook,
         "setSelection" as "set-selection" => set_selection::SetSelection,
         "setLocale" as "locale" => set_locale::SetLocale,
+        "setContributions" as "contributions" => set_contributions::SetContributions,
     }
 }
 
@@ -53,6 +54,7 @@ use step::{add_step, move_step, remove_step, update_playbook};
 use block::{add_block, move_block, remove_block};
 use selection::set_selection;
 use locale::set_locale;
+use contribution::set_contributions;
 //#endregion 🔖️Commands
 
 //#region 🔖️PlaybookPlayApp
@@ -222,7 +224,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 9, "every PlaybookCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 10, "every PlaybookCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -243,6 +245,7 @@ mod tests {
             let id = command.command_id();
             let expected = match id {
                 "setLocale" => "locale".to_string(),
+                "setContributions" => "contributions".to_string(),
                 _ => id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect(),
             };
             let printed = protocol::OpText::print_op(&command);
@@ -262,6 +265,7 @@ mod tests {
             PlaybookCommand::UpdatePlaybook(update_playbook::UpdatePlaybook { value: "Recipe".into() }),
             PlaybookCommand::SetSelection(set_selection::SetSelection { ids: vec!["a".into(), "b".into()] }),
             PlaybookCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
+            PlaybookCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
         ]
     }
     //#endregion 🔖️CommandSurface

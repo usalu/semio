@@ -5,6 +5,14 @@
 //! crate — since both now do, there is no reason to split them into a separate file the way the old
 //! 7-crate layout's orphan-rule workaround did).
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::mathematical::diff::MathDiff;
 use crate::artifacts::mathematical::dsl::{math_graph_from_dsl, math_graph_to_dsl, MathGraphDsl};
 use crate::artifacts::mathematical::{MathGeometry, MathGraph, MathProjection};

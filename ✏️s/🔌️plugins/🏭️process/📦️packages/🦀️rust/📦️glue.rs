@@ -47,20 +47,6 @@ pub mod artifacts {
             #[path = "../../🗿️artifacts/🧊️process3d/⚙️engine/🦀️component.rs"]
             mod component;
             pub use component::*;
-
-            // 🪵️🧱️🔩️🤖️ Built-in machine catalogs — folded in from the old satellite
-            // `semio-s-plugin-process-{wood,concrete,metal,robotic}` crates (see `🦀️catalog_wood.rs`'s
-            // doc comment): this engine module depends on them for `installed_catalogs()`, and they need
-            // this crate's `Capability`/`WorkshopMachine` types, so keeping them as separate crates would
-            // be a compile-time dependency cycle now that everything else is one crate.
-            #[path = "../../🗿️artifacts/🧊️process3d/⚙️engine/🪵️wood/🦀️component.rs"]
-            pub mod catalog_wood;
-            #[path = "../../🗿️artifacts/🧊️process3d/⚙️engine/🧱️concrete/🦀️component.rs"]
-            pub mod catalog_concrete;
-            #[path = "../../🗿️artifacts/🧊️process3d/⚙️engine/🔩️metal/🦀️component.rs"]
-            pub mod catalog_metal;
-            #[path = "../../🗿️artifacts/🧊️process3d/⚙️engine/🤖️robotic/🦀️component.rs"]
-            pub mod catalog_robotic;
         }
     }
 }
@@ -110,6 +96,8 @@ pub mod apps {
             pub mod sun;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗣️locale/🦀️component.rs"]
             pub mod locale;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧩️contribution/🦀️component.rs"]
+            pub mod contribution;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/📤️media/🦀️component.rs"]
             pub mod media;
         }

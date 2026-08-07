@@ -3,7 +3,7 @@ name = "semio-s-plugin-process"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Process plugin - one crate for the process3d artifact (diff/op/dsl/pack/spr/engine, incl. built-in machine catalogs) and the process 3d play app (commands/modes/windows/panels)"
+description = "Process plugin - one crate for the process3d artifact (diff/op/dsl/pack/spr/engine) and the process 3d play app (commands/modes/windows/panels)"
 
 [lints]
 workspace = true

@@ -5,6 +5,14 @@
 //! artifact-facing `parse_dsl`/`print_dsl` wrappers plus the canonical example-fixture constant and its
 //! round-trip law.
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::shooting::ShootingFixture;
 
 /// 🗄️ The base-icon example fixture, handcrafted in `shooting`'s DSL (`store::DocumentDsl`).

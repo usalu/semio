@@ -1,5 +1,13 @@
 //! ⚡️ Wires artifact — operation enum + laws (constitutional: op).
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::wires::diff::{steps_diff, MindmapWiresDiff};
 use crate::artifacts::wires::engine::{entity_id, find_board_edge, find_board_node, find_relationship};
 use crate::artifacts::wires::{BoardFixtureDsl, MindmapWiresDocument, WiresFixtureDsl};

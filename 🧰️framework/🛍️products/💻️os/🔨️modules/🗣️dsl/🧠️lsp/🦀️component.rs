@@ -1,7 +1,7 @@
 //! @emoji 📡️ `dsl_lsp` — LSP 3.17 JSON-RPC subset and in-process [`LanguageSession`] over
 //! [`crate::os_dsl::LanguageSpec`] hooks (semantic tokens, completion, canonicalize).
 
-use crate::os_dsl::{CompletionItem, GrammarFile, LanguageSpec, TextError, TokenClass};
+use crate::os_dsl::{CompletionItem, GrammarFile, LanguageSpec, ProtocolFile, TextError, TokenClass};
 use serde_json::{json, Value};
 
 //#region 🔖️Session
@@ -85,7 +85,7 @@ impl LanguageSession {
     }
 
     /// @emoji 📡️ Parsed protocol file for binary verification (`None` when unset).
-    pub fn protocol_file(&self) -> Result<Option<GrammarFile>, TextError> {
+    pub fn protocol_file(&self) -> Result<Option<ProtocolFile>, TextError> {
         self.spec.parsed_protocol()
     }
 

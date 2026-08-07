@@ -12,8 +12,64 @@ use serde_json::{json, Value};
 /// 🗂️ Registers `Block2dDefinition`'s pack↔dsl codec under `BLOCK_2D_SCHEMA`. Called from the plugin
 /// root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::block2d::Block2dPlayApp>(BLOCK_2D_SCHEMA);
 }
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "block.block2d",
+        extension: Some("block2d"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::core::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::core::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::core::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::core::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("block.block2d"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "block.block2d.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::core::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::core::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::core::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::core::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("block.block2d.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "block.block2d.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::core::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::core::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("block.block2d.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "2d.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::core::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::core::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("2d.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "2d.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::core::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::core::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("2d.spr"),
+    });
+}
+
 //#endregion 🔖️Register
 
 //#region 🔖️DocumentHelpers

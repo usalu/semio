@@ -1,6 +1,14 @@
 //! 🔺️ GIS map artifact — the operation diff and its `OperationDiff` law (split out of the old
 //! constitutional `op` crate).
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::gismap::{GisMapDocument, MapFeature, MapFeaturePatch};
 use protocol::{CollectionDiff, OperationDiff, Patchable};
 use serde::{Deserialize, Serialize};

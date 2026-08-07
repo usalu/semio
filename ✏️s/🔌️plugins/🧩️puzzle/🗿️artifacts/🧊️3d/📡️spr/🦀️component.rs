@@ -4,6 +4,14 @@
 //! `DocumentStore` aliases every puzzle-3d host binds. Renamed from the pre-consolidation
 //! `📡️protocol` module; both wire formats are unchanged (`dsl::DslOps`'s generated `OpBinary`).
 
+
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
+
 use crate::artifacts::puzzle3d::op::Puzzle3dOperation;
 use crate::artifacts::puzzle3d::Puzzle3dProjection;
 use protocol::OpBinary;

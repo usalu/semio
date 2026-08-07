@@ -4,6 +4,14 @@
 //! `Puzzle3dPlayProjection` newtype over it) the play app's untyped fixture still rides on, and the
 //! `puzzle3d_document_delta_operations` before/after differ every fixture-mutating action goes through.
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::puzzle3d::diff::{puzzle3d_diff_absorb, puzzle3d_index_of, Puzzle3dDiff};
 use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dProjection, Puzzle3dReference, Puzzle3dTargetVolume};
 use protocol::{Operation, OperationDiff};

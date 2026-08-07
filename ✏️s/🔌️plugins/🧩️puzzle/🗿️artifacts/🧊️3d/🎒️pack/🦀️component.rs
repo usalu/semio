@@ -1,6 +1,14 @@
 //! 🎒️ Puzzle 3d artifact — the binary document surface and its laws: `encode`/`decode` over the
 //! typed `Puzzle3dProjection`, agreeing byte-for-byte with what `🗣️dsl` prints and parses.
 
+
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
+
 use crate::artifacts::puzzle3d::Puzzle3dProjection;
 use store::PackError;
 

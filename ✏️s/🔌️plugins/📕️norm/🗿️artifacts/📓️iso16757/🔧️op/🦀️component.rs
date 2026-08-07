@@ -9,6 +9,14 @@
 //! one-variant `#[derive(dsl::DslOps)]` enum that would duplicate exactly this shape) keeps every norm
 //! artifact's operation layer DRY. The `NormFamily` binding lives in `⚙️engine`, next to `evaluate`.
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::iso16757::Document;
 use crate::core::SetDocumentOperation;
 

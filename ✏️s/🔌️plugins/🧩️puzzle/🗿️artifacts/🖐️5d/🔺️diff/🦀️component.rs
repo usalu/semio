@@ -4,6 +4,14 @@
 //! beside the newtypes they patch. Camera pose is session-only app runtime state, never part of this
 //! diff — see the app's `🦀️config.rs`.
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dMeta, Puzzle5dPart, Puzzle5dProjection};
 use protocol::OperationDiff;
 use serde::{Deserialize, Serialize};

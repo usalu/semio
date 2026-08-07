@@ -12,7 +12,7 @@
 //! written via `config::Process3dConfigOperation`s; every action dispatches through the single typed
 //! `Process3dCommand` channel via `DocumentApp::handle`.
 
-use crate::apps::process3d::commands::{camera, cursor, document, engagement, inspector, locale, media, selection, step, stock, sun, utility, workshop, world};
+use crate::apps::process3d::commands::{camera, contribution, cursor, document, engagement, inspector, locale, media, selection, step, stock, sun, utility, workshop, world};
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigOperation};
 use crate::apps::process3d::modes::edit;
 use crate::apps::process3d::modes::edit::windows::workpiece;
@@ -109,6 +109,7 @@ semio_framework_plugin::app_commands! {
         "setSunElevation" as "sun-elevation" => set_sun_elevation::SetSunElevation,
         "setSunIntensity" as "sun-intensity" => set_sun_intensity::SetSunIntensity,
         "setLocale" as "locale" => set_locale::SetLocale,
+        "setContributions" as "contributions" => set_contributions::SetContributions,
         "exportModel" as "export-model" => export_model::ExportModel,
         "loadModelRequest" as "load-model-request" => load_model_request::LoadModelRequest,
     }
@@ -122,6 +123,7 @@ use document::{set_active_example, set_document};
 use engagement::{engagement_abort, engagement_input, engagement_submit};
 use inspector::patch_inspector;
 use locale::set_locale;
+use contribution::set_contributions;
 use media::{export_model, import_model_file, load_model_request};
 use selection::{set_hover, set_selection};
 use step::{add_step, move_step, remove_selected_step, remove_step, set_step_enabled, update_step};
@@ -244,6 +246,7 @@ impl DocumentApp for Process3dPlayApp {
     }
 
     fn render(body_key: &str, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> UiNode {
+        crate::artifacts::process3d::engine::sync_process_machine_contributions(&cfg.projection.contributions_json);
         let config = cfg.projection;
         let labels = process3d_labels(config);
         match body_key {
@@ -442,7 +445,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 35, "every Process3dCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 36, "every Process3dCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -493,6 +496,7 @@ mod tests {
                 "setSunElevation" => "sun-elevation",
                 "setSunIntensity" => "sun-intensity",
                 "setLocale" => "locale",
+                "setContributions" => "contributions",
                 "exportModel" => "export-model",
                 "loadModelRequest" => "load-model-request",
                 other if other == SET_ACTIVE_UTILITY_ACTION_ID => "active-utility",
@@ -552,6 +556,7 @@ mod tests {
             Process3dCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: 45.0 }),
             Process3dCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: 1.0 }),
             Process3dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
+            Process3dCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
             Process3dCommand::ExportModel(export_model::ExportModel { format: "step".into() }),
             Process3dCommand::LoadModelRequest(load_model_request::LoadModelRequest {}),
         ]

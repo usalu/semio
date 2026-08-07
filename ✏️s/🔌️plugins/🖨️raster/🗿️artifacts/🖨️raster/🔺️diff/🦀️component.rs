@@ -1,5 +1,13 @@
 //! 🔺️ Raster artifact — diff surface + laws (constitutional: diff).
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterProjection};
 use protocol::OperationDiff;
 use serde::{Deserialize, Serialize};

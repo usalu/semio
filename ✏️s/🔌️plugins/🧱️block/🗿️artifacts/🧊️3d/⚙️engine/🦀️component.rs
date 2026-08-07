@@ -13,8 +13,64 @@ use serde_json::{json, Value};
 /// 🗂️ Registers `Block3dDefinition`'s pack↔dsl codec under `BLOCK_3D_SCHEMA`. Called from the plugin
 /// root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::block3d::Block3dPlayApp>(BLOCK_3D_SCHEMA);
 }
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "block.block3d",
+        extension: Some("block3d"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::block3d::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::block3d::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::block3d::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::block3d::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("block.block3d"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "block.block3d.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::block3d::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::block3d::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::block3d::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::block3d::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("block.block3d.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "block.block3d.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::block3d::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::block3d::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("block.block3d.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "3d.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::block3d::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::block3d::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("3d.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "3d.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::block3d::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::block3d::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("3d.spr"),
+    });
+}
+
 //#endregion 🔖️Register
 
 //#region 🔖️DocumentHelpers

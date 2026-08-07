@@ -1,0 +1,17 @@
+[workspace]
+
+[package]
+name = "probe-sxt"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "probe-sxt"
+path = "main.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+zip = { version = "2.4", default-features = false, features = ["deflate"] }
+semio-framework-hash = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }

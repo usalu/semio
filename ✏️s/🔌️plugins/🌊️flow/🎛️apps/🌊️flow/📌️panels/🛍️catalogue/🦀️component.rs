@@ -1,6 +1,6 @@
 //! 🛍️ Flow play app panel — the catalogue: draggable widget/operator palette plus the extension sections.
 
-use crate::apps::flow::commands::extension::FLOW_EXTENSIONS;
+use crate::apps::flow::commands::extension::FLOW_AUTOMATIONS;
 use crate::apps::flow::config::FlowConfig;
 use crate::apps::flow::flow_action;
 use crate::apps::flow::terminology::{flow_extension_action_title_label, flow_extension_label, FlowPlayLabels};
@@ -67,8 +67,8 @@ pub fn render(fixture: &FlowFixture, config: &FlowConfig, session: &FlowEvalSess
 
 /// 🧩️ Installed/enabled extension palette plus actions surfaced by active extensions.
 fn flow_extensions_tree_sections(config: &FlowConfig, labels: &FlowPlayLabels) -> Vec<UiTreeSectionNode> {
-    let extension_enabled = config.extension_enabled();
-    let installed: Vec<UiTreeItemNode> = FLOW_EXTENSIONS
+    let extension_enabled = config.automation_enabled();
+    let installed: Vec<UiTreeItemNode> = FLOW_AUTOMATIONS
         .iter()
         .map(|(id, name, _, _, _)| {
             let enabled = extension_enabled.get(*id).copied().unwrap_or(false);
@@ -80,7 +80,7 @@ fn flow_extensions_tree_sections(config: &FlowConfig, labels: &FlowPlayLabels) -
             )
         })
         .collect();
-    let actions: Vec<UiTreeItemNode> = FLOW_EXTENSIONS
+    let actions: Vec<UiTreeItemNode> = FLOW_AUTOMATIONS
         .iter()
         .filter(|(id, ..)| extension_enabled.get(*id).copied().unwrap_or(false))
         .map(|(_, _, action_id, title, _)| {
@@ -170,7 +170,7 @@ mod tests {
     fn every_built_in_extension_is_listed_in_the_installed_section() {
         let mut app = flow_app();
         let json = render_body(&mut app, FLOW_PLAY_BODY_CATALOGUE);
-        for (id, ..) in FLOW_EXTENSIONS {
+        for (id, ..) in FLOW_AUTOMATIONS {
             assert!(json.contains(&format!("flow-play-extensions.{id}")), "extension {id} missing: {json}");
         }
     }

@@ -6,7 +6,8 @@ start diff
 
 artifact-mark = "procedural.procedural3d-diff"
 diff = artifact-mark mesh-change+
-mesh-change = "add-vertex" vtx+ | "drop-face" INT | "transform" xfm+
+mesh-change = "add-vertex" vtx+ | "drop-face" INT | "transform" xfm+ | "revolve-profile" rev+
+rev = "profile" "=" IDENT | "axis" "=" IDENT | "angle" "=" FLOAT
 vtx = "x" "=" FLOAT | "y" "=" FLOAT | "z" "=" FLOAT
 xfm = "axis" "=" IDENT | "delta" "=" FLOAT
 layer = IDENT "@" FLOAT FLOAT

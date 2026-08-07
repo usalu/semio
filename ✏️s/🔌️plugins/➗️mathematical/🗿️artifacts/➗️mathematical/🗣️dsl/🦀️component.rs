@@ -9,6 +9,14 @@
 //! No external `.mathematical` fixture file has ever shipped for this app, so these laws stay proven
 //! purely against inline-constructed fixtures (mirrors the original flattened `🔖️DslTests`).
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::mathematical::{MathEdge, MathGeometry, MathGraph, MathNode, MathProjection};
 use serde::{Deserialize, Serialize};
 use store::DocumentDsl;

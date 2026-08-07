@@ -20,6 +20,7 @@ path = "📦️glue.rs"
 [features]
 default = ["deflate"]
 deflate = ["dep:miniz_oxide"]
+dsl-fixture-sweep-full = []
 ureq = ["dep:ureq"]
 sync = ["dep:tokio-tungstenite", "dep:notify", "dep:rusqlite", "tokio/rt", "tokio/net", "tokio/time"]
 worker = ["sync"]
@@ -38,6 +39,7 @@ thiserror = "2.0.12"
 tokio = { version = "1", features = ["sync", "macros"], default-features = false }
 ureq = { version = "2", optional = true }
 semio-framework-hash = { path = "../../../../🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+zip = { version = "2.4", default-features = false, features = ["deflate"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.83"

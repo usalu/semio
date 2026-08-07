@@ -3,6 +3,14 @@
 //! See `procedural2d`'s sibling `🗣️dsl/🦀️component.rs` docstring for why the `*Dsl` mirror types below
 //! are LOCAL structural twins rather than derives on the foreign `flow_core`/`playbook` types directly.
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::procedural3d::Procedural3dDocument;
 use flow_core::neural::{Atom, Dictionary, Value as NeuralValue};
 use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};

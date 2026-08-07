@@ -10,6 +10,14 @@
 //! assembled from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`. Its
 //! WASM bridge moved to `🎛️apps/🎬️present/🦀️wasm.rs`.
 
+
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
+
 use crate::artifacts::present::engine::{empty_present_deck, PresentError};
 use crate::artifacts::present::op::PresentOperation;
 use crate::artifacts::present::{PresentDeck, PRESENT_DECK_SCHEMA};

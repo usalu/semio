@@ -49,10 +49,66 @@ pub fn empty_puzzle2d_projection() -> Puzzle2dProjection {
 ///
 /// 🚧️ The 🖐️5d port adds its own `crate::apps::puzzle5d::register_puzzle5d_exports()` line right here.
 pub fn register() {
+    register_pilot_languages();
     crate::apps::puzzle2d::register_puzzle2d_exports();
     crate::apps::puzzle3d::register_puzzle3d_exports();
     crate::apps::puzzle5d::register_puzzle5d_exports();
 }
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "puzzle.puzzle2d",
+        extension: Some("puzzle2d"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("puzzle.puzzle2d"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "puzzle.puzzle2d.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("puzzle.puzzle2d.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "puzzle.puzzle2d.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("puzzle.puzzle2d.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "2d.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("2d.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "2d.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("2d.spr"),
+    });
+}
+
 //#endregion 🔖️Register
 
 //#region 🧪️Tests

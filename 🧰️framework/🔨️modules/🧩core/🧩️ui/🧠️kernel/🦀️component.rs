@@ -381,10 +381,10 @@ pub enum HostEffect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         document_highlighted_ids: Option<Vec<String>>,
     },
-    /// @emoji 🔁️ Asks the shell to call a contributor plugin's exchange endpoint and redispatch `response_action` on the requesting instance with the result.
-    RequestPluginExchange {
-        plugin_id: String,
-        app_id: String,
+    /// @emoji 🔁️ Asks the shell to invoke an extension capability and redispatch `response_action` on the requesting instance with the result.
+    InvokeExtension {
+        extension_id: String,
+        capability: String,
         request_json: String,
         response_action: String,
     },

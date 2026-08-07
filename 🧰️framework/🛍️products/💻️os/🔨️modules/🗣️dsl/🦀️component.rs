@@ -20,7 +20,11 @@ pub use dsl_derive::{DslDiff, DslDocument, DslEnum, DslOps, DslRecord, DslScalar
 pub use crate::os_dsl::schema::*;
 
 pub use crate::os_dsl::schema::{from_dsl_value, to_dsl_value};
-pub use crate::os_dsl::grammar::{parse_grammar, print_grammar, verify_protocol_bytes, GrammarFile, SemioDialect, Recognizer};
+pub use crate::os_dsl::grammar::{
+    parse_grammar, parse_protocol, print_grammar, print_protocol, verify_protocol_bytes, verify_protocol_envelope,
+    verify_protocol_source, walk_protocol, Block, Count, Field, FragmentRegistry, Framing, GrammarFile, Prim,
+    ProtocolFile, ProtocolMismatch, ProtocolTrace, Recognizer, SemioDialect,
+};
 
 //#region 🔖️Field
 /// @emoji 🔗️ Bridges a concrete Rust field type to the engine's `Shape`/`FieldValue` — every
@@ -496,24 +500,20 @@ impl LanguageSpec {
         Ok(Some(file))
     }
 
-    /// @emoji 📡️ Parses `protocol` via [`parse_grammar`], requiring [`SemioDialect::Protocol`].
-    pub fn parsed_protocol(&self) -> Result<Option<GrammarFile>, TextError> {
+    /// @emoji 📡️ Parses `protocol` via [`parse_protocol`].
+    pub fn parsed_protocol(&self) -> Result<Option<ProtocolFile>, TextError> {
         let Some(text) = self.protocol else {
             return Ok(None);
         };
-        let file = parse_grammar(text)?;
-        if file.dialect != SemioDialect::Protocol {
-            return Err(TextError::new("LanguageSpec.protocol requires dialect protocol", TextSpan::at(1, 1)));
-        }
-        Ok(Some(file))
+        Ok(Some(parse_protocol(text)?))
     }
 
     /// @emoji ✅ Verifies encoded bytes against this language's protocol when protocol text is present.
     pub fn verify_protocol(&self, bytes: &[u8]) -> Result<(), String> {
-        let Some(file) = self.parsed_protocol().map_err(|e| e.message.clone())? else {
+        let Some(text) = self.protocol else {
             return Ok(());
         };
-        verify_protocol_bytes(&file, bytes)
+        verify_protocol_source(text, bytes)
     }
 }
 

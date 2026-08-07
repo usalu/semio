@@ -26,11 +26,18 @@ pub struct SourcingCurateConfig {
     pub selected_object_id: Option<String>,
     /// 🗣️ BCP-47 locale tag.
     pub locale: String,
+    /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `sourcing.module` hot-swap installs.
+    #[serde(default = "default_contributions_json")]
+    pub contributions_json: String,
+}
+
+fn default_contributions_json() -> String {
+    "[]".into()
 }
 
 impl Default for SourcingCurateConfig {
     fn default() -> Self {
-        Self { filters: Filters::default(), selected_object_id: None, locale: "en-US".into() }
+        Self { filters: Filters::default(), selected_object_id: None, locale: "en-US".into(), contributions_json: default_contributions_json() }
     }
 }
 
@@ -82,6 +89,8 @@ pub enum SourcingCurateConfigOperation {
     SetSelectedObject { object_id: Option<String> },
     #[dsl(key = "locale")]
     SetLocale { value: String },
+    #[dsl(key = "contributions")]
+    SetContributions { json: String },
 }
 
 impl Operation<SourcingCurateConfig> for SourcingCurateConfigOperation {
@@ -98,6 +107,10 @@ impl Operation<SourcingCurateConfig> for SourcingCurateConfigOperation {
             SourcingCurateConfigOperation::SetSort { sort } => next.filters.sort = sort.clone(),
             SourcingCurateConfigOperation::SetSelectedObject { object_id } => next.selected_object_id = object_id.clone(),
             SourcingCurateConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            SourcingCurateConfigOperation::SetContributions { json } => {
+                next.contributions_json = json.clone();
+                crate::artifacts::curate::engine::sync_sourcing_module_contributions(json);
+            }
         }
         next
     }
@@ -158,6 +171,7 @@ mod tests {
         round_trip(&config, &SourcingCurateConfigOperation::SetSort { sort: None });
         round_trip(&config, &SourcingCurateConfigOperation::SetSelectedObject { object_id: None });
         round_trip(&config, &SourcingCurateConfigOperation::SetLocale { value: "en-US".into() });
+        round_trip(&config, &SourcingCurateConfigOperation::SetContributions { json: "[]".into() });
         let snapshot = round_trip(&config, &SourcingCurateConfigOperation::Snapshot { config: SourcingCurateConfig::default() });
         assert_eq!(snapshot, SourcingCurateConfig::default());
     }

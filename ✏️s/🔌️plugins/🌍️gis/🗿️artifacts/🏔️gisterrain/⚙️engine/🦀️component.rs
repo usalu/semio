@@ -230,6 +230,7 @@ pub fn gis3d_scene_media(document: &Gis3dTerrainDocument) -> semio_framework_plu
 /// 🗂️ Native setup hook for the `gis.terrain` artifact — registers the pack↔dsl document codec
 /// `framework/sync`'s `FolderEndpoint` reaches for. Called from the plugin root's `📦️glue.rs` setup fn.
 pub fn register() {
+    register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::gis3d::Gis3dPlayApp>(GIS_3D_TERRAIN_SCHEMA);
 }
 //#endregion 🔖️Registration
@@ -293,3 +294,58 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "gis.gisterrain",
+        extension: Some("gisterrain"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::gisterrain::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::gisterrain::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::gisterrain::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::gisterrain::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("gis.gisterrain"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "gis.gisterrain.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::gisterrain::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::gisterrain::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::gisterrain::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::gisterrain::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("gis.gisterrain.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "gis.gisterrain.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::gisterrain::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::gisterrain::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("gis.gisterrain.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "gisterrain.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::gisterrain::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::gisterrain::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("gisterrain.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "gisterrain.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::gisterrain::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::gisterrain::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("gisterrain.spr"),
+    });
+}

@@ -7,31 +7,31 @@ todos:
     status: completed
   - id: p1-protocol-ast
     content: "P1/M1: give the protocol dialect a real AST (ProtocolFile/Framing/Block/Prim), a lossless printer, `use` fragment support, and a self-hosting protocol.grammar.semio"
-    status: in_progress
+    status: completed
   - id: p1-byte-walker
     content: "P1/M2: replace verify_protocol_bytes with walk_protocol, a spec-driven byte walker that must consume exactly all bytes and report offset-level mismatches"
-    status: in_progress
+    status: completed
   - id: p1-recognizer
     content: "P1/M3: make the Recognizer usable - resolve `use family-*` fragments, replace debug-name terminal matching so BOOL/QUANTITY/arrows match, finish the table/quantity/props macros, add production coverage"
-    status: in_progress
+    status: completed
   - id: p1-kill-hatches
     content: "P1/M3b: delete from_record_spec, LanguageSpec::derived and the empty OS protocol module tree; stage the deletion of dsl_derive's generic codec emission"
-    status: in_progress
+    status: completed
   - id: p2-families
     content: "P2: rewrite the 7 stub family kits as 8 real domain families with typed terminals and matching shared protocol struct/enum fragments"
     status: completed
   - id: p3-enforcement
     content: "P3/M4+M5: arm the five policy rules in script.ts (distinctness, genericness, declared-use, wiring, empty examples) and add the four conformance laws to the fixture sweep including cross-artifact rejection"
-    status: in_progress
+    status: completed
   - id: p4-pilots
     content: "P4: prove all 5 facets end to end on lowpoly (mesh, removes mesh-json), en1992 (quantity), dag (graph, family resolution) and cad (typed op grammar replacing the untyped shell), with real binary payloads and independent verification"
-    status: pending
+    status: completed
   - id: w5-fanout
     content: "W5a-W5f: fan out the remaining 50 artifacts across six waves by domain family with disjoint plugin ownership, hot plugins last"
-    status: pending
+    status: completed
   - id: p6-flagday
     content: "P6: delete dsl_derive's DocumentDsl/OpText/DocumentPack/OpBinary emission and dsl::__rt, empty all allowlists, get script.ts policy fully green"
-    status: pending
+    status: in_progress
   - id: p7-e2e
     content: "P7: full verify, test exhaustive at 95% LCOV, semio verify over all 736 examples, OS boot smoke, writer opens 6+ kinds with logged evidence, close the ticket"
     status: pending

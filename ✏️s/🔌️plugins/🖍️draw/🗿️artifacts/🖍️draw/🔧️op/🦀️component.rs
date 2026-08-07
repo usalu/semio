@@ -1,5 +1,13 @@
 //! 🔧️ Draw artifact — operation enum + apply/backwards (constitutional: op).
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::draw::diff::{DrawDiff, DrawLayerBasePatch, DrawLayerTreeAdd, DrawLayerTreePatch};
 use crate::artifacts::draw::engine::{clone_draw_layer_node, extract_layer_node, find_draw_layer, find_draw_layer_location, hex_to_rgba, insert_layer, layer_base, layer_base_mut, mutate_draw_layer, remove_layer_from_tree};
 use crate::artifacts::draw::{DrawDocument, DrawLayerNode, FillStyle, StrokeStyle};

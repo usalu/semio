@@ -1,0 +1,49 @@
+   Compiling blake3 v1.8.5
+warning: blake3@1.8.5: Compiler family detection failed due to error: ToolExecError: command did not execute successfully (status code exit status: 69): "cc" "-E" "/Users/ueli/Documents/semio/target/debug/build/blake3-f1fb3a1b01038ea4/out/2480356190725933336detect_compiler_family.c"
+warning: blake3@1.8.5: You have not agreed to the Xcode license agreements. Please run 'sudo xcodebuild -license' from within a Terminal window to review and agree to the Xcode and Apple SDKs license.
+warning: blake3@1.8.5: sccache: error: failed to execute compile
+warning: blake3@1.8.5: sccache: caused by: Compiler not supported: "You have not agreed to the Xcode license agreements. Please run \'sudo xcodebuild -license\' from within a Terminal window to review and agree to the Xcode and Apple SDKs license.\n"
+error: failed to run custom build command for `blake3 v1.8.5`
+
+Caused by:
+  process didn't exit successfully: `/Users/ueli/Documents/semio/target/debug/build/blake3-1984858ffe78f7c4/build-script-build` (exit status: 1)
+  --- stdout
+  cargo:rustc-check-cfg=cfg(blake3_sse2_ffi, values(none()))
+  cargo:rustc-check-cfg=cfg(blake3_sse2_rust, values(none()))
+  cargo:rustc-check-cfg=cfg(blake3_sse41_ffi, values(none()))
+  cargo:rustc-check-cfg=cfg(blake3_sse41_rust, values(none()))
+  cargo:rustc-check-cfg=cfg(blake3_avx2_ffi, values(none()))
+  cargo:rustc-check-cfg=cfg(blake3_avx2_rust, values(none()))
+  cargo:rustc-check-cfg=cfg(blake3_avx512_ffi, values(none()))
+  cargo:rustc-check-cfg=cfg(blake3_neon, values(none()))
+  cargo:rustc-check-cfg=cfg(blake3_wasm32_simd, values(none()))
+  cargo:rerun-if-env-changed=CARGO_FEATURE_PURE
+  cargo:rerun-if-env-changed=CARGO_FEATURE_NO_NEON
+  cargo:rerun-if-env-changed=CARGO_FEATURE_NEON
+  cargo:rerun-if-env-changed=CARGO_FEATURE_NEON
+  cargo:rerun-if-env-changed=CARGO_FEATURE_NO_NEON
+  cargo:rerun-if-env-changed=CARGO_FEATURE_PURE
+  cargo:rustc-cfg=blake3_neon
+  CC_FORCE_DISABLE = None
+  CC_aarch64-apple-darwin = None
+  CC_aarch64_apple_darwin = None
+  HOST_CC = None
+  CC = None
+  cargo:rerun-if-env-changed=CC_ENABLE_DEBUG_OUTPUT
+  cargo:warning=Compiler family detection failed due to error: ToolExecError: command did not execute successfully (status code exit status: 69): "cc" "-E" "/Users/ueli/Documents/semio/target/debug/build/blake3-f1fb3a1b01038ea4/out/2480356190725933336detect_compiler_family.c"
+  CRATE_CC_NO_DEFAULTS = None
+  MACOSX_DEPLOYMENT_TARGET = None
+  cargo:warning=You have not agreed to the Xcode license agreements. Please run 'sudo xcodebuild -license' from within a Terminal window to review and agree to the Xcode and Apple SDKs license.
+  CFLAGS = None
+  HOST_CFLAGS = None
+  CFLAGS_aarch64_apple_darwin = None
+  CFLAGS_aarch64-apple-darwin = None
+  cargo:warning=sccache: error: failed to execute compile
+  cargo:warning=sccache: caused by: Compiler not supported: "You have not agreed to the Xcode license agreements. Please run \'sudo xcodebuild -license\' from within a Terminal window to review and agree to the Xcode and Apple SDKs license.\n"
+
+  --- stderr
+
+
+  error occurred in cc-rs: command did not execute successfully (status code exit status: 2): env -u IPHONEOS_DEPLOYMENT_TARGET LC_ALL="C" "sccache" "cc" "-O0" "-ffunction-sections" "-fdata-sections" "-fPIC" "-arch" "arm64" "-mmacosx-version-min=11.0" "-Wall" "-Wextra" "-std=c11" "-o" "/Users/ueli/Documents/semio/target/debug/build/blake3-f1fb3a1b01038ea4/out/a1edd97dd51cd48d-blake3_neon.o" "-c" "c/blake3_neon.c"
+
+

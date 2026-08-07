@@ -2,6 +2,7 @@
 
 use crate::apps::playbook::config::PlaybookConfig;
 use crate::artifacts::playbook::{PlaybookSpec, PLAYBOOK_BUILTIN_KINDS};
+use semio_framework_core::{parse_contributions, Contribution};
 use semio_framework_plugin::{BlockPaletteEntry, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -32,8 +33,25 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn builtin_palette() -> Vec<BlockPaletteEntry> {
-    PLAYBOOK_BUILTIN_KINDS.iter().map(|kind| BlockPaletteEntry { block_kind: (*kind).into(), label: (*kind).into(), icon_id: "circle".into() }).collect()
+fn builtin_palette_tuples() -> Vec<(&'static str, &'static str, &'static str)> {
+    PLAYBOOK_BUILTIN_KINDS.iter().map(|kind| (*kind, *kind, "circle")).collect()
+}
+
+fn extension_palette_entries(config: &PlaybookConfig) -> Vec<(String, String, String)> {
+    parse_contributions(&config.contributions_json)
+        .into_iter()
+        .filter_map(|entry| {
+            let Contribution::PlaybookBlockKind { block_kind, label, icon_id, .. } = entry.contribution else {
+                return None;
+            };
+            Some((block_kind, label, icon_id.to_string()))
+        })
+        .collect()
+}
+
+fn build_palette(config: &PlaybookConfig) -> Vec<BlockPaletteEntry> {
+    let builtins = builtin_palette_tuples();
+    playbook::build_palette(&builtins, &extension_palette_entries(config))
 }
 
 fn playbook_builder_config() -> playbook::PlaybookBuilderConfig {
@@ -41,7 +59,7 @@ fn playbook_builder_config() -> playbook::PlaybookBuilderConfig {
 }
 
 pub fn render(spec: &PlaybookSpec, config: &PlaybookConfig) -> UiNode {
-    playbook::render_playbook_builder(PLAYBOOK_PLAY_SURFACE_BUILDER, spec, &builtin_palette(), config.selected_ids.first().map(String::as_str), &playbook_builder_config())
+    playbook::render_playbook_builder(PLAYBOOK_PLAY_SURFACE_BUILDER, spec, &build_palette(config), config.selected_ids.first().map(String::as_str), &playbook_builder_config())
 }
 //#endregion 🔖️Render
 
@@ -57,6 +75,28 @@ mod tests {
         let definition = definition();
         assert_eq!(definition.body_key, PLAYBOOK_PLAY_BODY_BUILDER);
         assert!(matches!(definition.surface_kind, SurfaceKind::BlockList));
+    }
+
+    #[test]
+    fn render_builder_palette_includes_contributed_block_kinds() {
+        use crate::apps::playbook::config::PlaybookConfig;
+        use semio_framework_core::{Contribution, ProgramContributionEntry};
+        let mut config = PlaybookConfig::default();
+        let entry = ProgramContributionEntry {
+            plugin_id: "playbook-module-procedural".into(),
+            contribution: Contribution::PlaybookBlockKind {
+                app_id: "playbook-module-procedural".into(),
+                block_kind: "buildingComponent".into(),
+                label: "Building Component".into(),
+                icon_id: "building".into(),
+                default_value_json: "{}".into(),
+                params_body_key: "params".into(),
+                preview_body_key: "preview".into(),
+            },
+        };
+        config.contributions_json = serde_json::to_string(&vec![entry]).unwrap();
+        let palette = build_palette(&config);
+        assert!(palette.iter().any(|entry| entry.block_kind == "buildingComponent"));
     }
 
     #[test]

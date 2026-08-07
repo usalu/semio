@@ -1,6 +1,14 @@
 //! 🎒️ Puzzle 5d artifact — the binary document surface and its laws: `encode`/`decode` over the
 //! typed `Puzzle5dProjection`, agreeing byte-for-byte with what `🗣️dsl` prints and parses.
 
+
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
+
 use crate::artifacts::puzzle5d::Puzzle5dProjection;
 use store::PackError;
 

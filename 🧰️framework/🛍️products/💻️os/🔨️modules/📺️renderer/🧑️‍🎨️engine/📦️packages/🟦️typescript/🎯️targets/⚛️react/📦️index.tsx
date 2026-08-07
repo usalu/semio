@@ -352,6 +352,8 @@ import {
   acquirePluginModule,
   evictPluginModule,
   createDevPluginSource,
+  createExtensionSource,
+  multiplexPluginSources,
   type PluginModuleLease,
   type PluginSource,
   type PluginSourceEvent,

@@ -1,0 +1,14 @@
+[workspace]
+
+[package]
+name = "probe-protocol-m1m2"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "probe-protocol-m1m2"
+path = "main.rs"
+
+[dependencies]
+semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }

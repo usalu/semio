@@ -1,5 +1,13 @@
 //! 📜️ EN 1998 app — textual document grammar surface + laws (constitutional: dsl).
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::en1998::Document;
 
 /// 🗄️ The seismic-rc-frame example fixture, handcrafted in `en1998`'s DSL (`store::DocumentDsl`): a

@@ -4,6 +4,14 @@
 //! `GraphFixtureDsl` mirror it delegates through (same reason the DSL impl lives there too) — this
 //! file only holds the public encode/decode entry points, matching the old bundle crate's shape.
 
+
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
+
 use crate::artifacts::jack::GraphFixture;
 use store::{DocumentPack, PackError};
 

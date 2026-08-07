@@ -1,0 +1,36 @@
+[package]
+name = "semio-s-plugin-process-concrete"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Process concrete machine catalog — contributes concrete-shop machines to process3d-play"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:process-extension-concrete"
+
+[package.metadata.semio]
+role = "extension"
+extends = "process"
+contributes = ["process.machines"]
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "📦️glue.rs"
+
+[dependencies]
+semio_s_plugin_process = { path = "../../../../../../../✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust", package = "semio-s-plugin-process" }
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-core = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework-core" }
+serde_json = { workspace = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = { workspace = true }

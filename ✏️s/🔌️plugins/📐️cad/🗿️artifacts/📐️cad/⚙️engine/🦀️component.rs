@@ -14,7 +14,8 @@ use crate::artifacts::cad::{cad_all_objects, cad_pane_from_model_definition_id, 
 use crate::artifacts::cad::engine::geometry_import::{cad_object_from_mesh, cad_object_from_solid_handle, centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture};
 use semio_s_3d::brep::kernel::{mesh_data_from_mesh_transfer, Brep};
 use semio_s_3d::brep::engine::{block_on, BrepEngineHost, BrepKernel, GeometryHandle, MeshTransfer};
-use semio_framework_core::MeshImporter;
+use semio_framework_core::{parse_contributions, Contribution, MeshImporter};
+use std::sync::{Mutex, OnceLock};
 use semio_framework_plugin::{mesh_from_kind, MeshData, OsMediaFormat, WorldProjectionConfig};
 use serde_json::Value;
 use std::collections::HashSet;
@@ -684,6 +685,33 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("cad.spr"),
     });
 }
+
+//#region 🧩️Contributions
+fn last_cad_computer_contributions_json() -> &'static Mutex<String> {
+    static SLOT: OnceLock<Mutex<String>> = OnceLock::new();
+    SLOT.get_or_init(|| Mutex::new(String::new()))
+}
+
+/// 🧩️ Parses and tracks host-pushed `CadComputer` contributions for `cad-play` (implementations register in cad-js).
+pub fn sync_cad_computer_contributions(contributions_json: &str) {
+    let Ok(mut last) = last_cad_computer_contributions_json().lock() else {
+        return;
+    };
+    if *last == contributions_json {
+        return;
+    }
+    for entry in parse_contributions(contributions_json) {
+        let Contribution::CadComputer { app_id, module_id, computers_json, .. } = entry.contribution else {
+            continue;
+        };
+        if app_id != "cad-play" {
+            continue;
+        }
+        let _ = (module_id, computers_json);
+    }
+    *last = contributions_json.to_string();
+}
+//#endregion 🧩️Contributions
 
 /// 🔌️ Plugin setup hook (`semio_plugin!`'s `setup:`): registers the `cad.scene` document codec for
 /// the cad play app plus every native geometry exporter/importer the `3d.cad` artifact kind

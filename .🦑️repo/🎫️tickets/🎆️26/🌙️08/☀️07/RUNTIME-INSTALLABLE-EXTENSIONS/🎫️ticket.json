@@ -1,0 +1,10 @@
+{
+  "id": "26/08/07/RUNTIME-INSTALLABLE-EXTENSIONS",
+  "title": "Runtime Installable Extensions",
+  "status": "open",
+  "goal": "r2602/runningsketchpad",
+  "due": "2026-08-07",
+  "client": "cursor-chat",
+  "llm": "cursor-grok-4.5-high",
+  "description": "Promote extension to a first-class individually-packaged sideloadable runtime-installable unit of the OS plugin system."
+}\n

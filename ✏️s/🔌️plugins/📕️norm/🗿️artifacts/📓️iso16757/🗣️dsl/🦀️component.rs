@@ -1,5 +1,13 @@
 //! 📜️ ISO 16757 app — textual document grammar surface + laws (constitutional: dsl).
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::iso16757::Document;
 
 /// 📄️ The `default` example document, handcrafted in the `.iso16757` DSL — a demo HVAC catalogue

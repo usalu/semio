@@ -1,6 +1,14 @@
 //! ⚖️ GIS map artifact — state-patch-representation wire codec + laws (was: constitutional
 //! `protocol`; no `📡️protocol` path segment may survive under plugins).
 
+
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
+
 use crate::artifacts::gismap::op::GisMapOperation;
 use crate::artifacts::gismap::{GisMapDocument, MapFeature, MapFeaturePatch};
 use protocol::{CollectionOperation, OpBinary};

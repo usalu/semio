@@ -6721,6 +6721,7 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+ "zip 2.4.2",
 ]
 
 [[package]]
@@ -6969,6 +6970,7 @@ dependencies = [
 name = "semio-s-imperative"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
  "semio-s-plugin-imperative-control",
@@ -7053,6 +7055,50 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-ui",
  "semio-s-3d",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-plugin-cad-aec-building"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-plugin-cad-aec-building-energy"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-plugin-cad-aec-building-structure"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-plugin-cad-spatial-shape"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -7171,7 +7217,6 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -7385,6 +7430,50 @@ dependencies = [
  "semio-framework-plugin",
  "semio-s-3d",
  "serde",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-plugin-process-concrete"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "semio-s-plugin-process",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-plugin-process-metal"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "semio-s-plugin-process",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-plugin-process-robotic"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "semio-s-plugin-process",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-plugin-process-wood"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "semio-s-plugin-process",
  "serde_json",
  "wasm-bindgen",
 ]

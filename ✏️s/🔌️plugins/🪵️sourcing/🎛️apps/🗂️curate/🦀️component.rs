@@ -57,12 +57,14 @@ semio_framework_plugin::app_commands! {
         "selectRow" as "select-row" => select_row::SelectRow,
         "worldSelect" as "world-select" => world_select::WorldSelect,
         "setLocale" as "locale" => set_locale::SetLocale,
+        "setContributions" as "contributions" => set_contributions::SetContributions,
     }
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
 use crate::apps::curate::commands::curation::{curate_add, curate_remove, curate_set_count, drop_on_curated, drop_on_pool};
+use crate::apps::curate::commands::contribution::set_contributions;
 use crate::apps::curate::commands::document::{set_active_example, set_document_json, stock_from_catalogue};
 use crate::apps::curate::commands::filter::{set_filter_min_availability, set_filter_module, set_filter_query, set_filter_typology, sort_table};
 use crate::apps::curate::commands::locale::set_locale;
@@ -130,6 +132,7 @@ impl DocumentApp for SourcingCurateApp {
     }
 
     fn render(body_key: &str, doc: &DocumentView<'_, CurateDocument>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> UiNode {
+        crate::artifacts::curate::engine::sync_sourcing_module_contributions(&cfg.projection.contributions_json);
         let document = doc.projection;
         let config = cfg.projection;
         let labels = sourcing_curate_labels(config);
@@ -298,7 +301,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 16, "every SourcingCurateCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 17, "every SourcingCurateCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row — the
@@ -337,6 +340,7 @@ mod tests {
                 "selectRow" => "select-row",
                 "worldSelect" => "world-select",
                 "setLocale" => "locale",
+                "setContributions" => "contributions",
                 other => panic!("expected_wire_key: unhandled command id {other}"),
             }
         }
@@ -394,6 +398,7 @@ mod tests {
             SourcingCurateCommand::SelectRow(select_row::SelectRow { object_id: Some("beam-glulam-gl24h".into()) }),
             SourcingCurateCommand::WorldSelect(world_select::WorldSelect { ids: vec!["beam-glulam-gl24h".into(), "beam-kvh-c24".into()] }),
             SourcingCurateCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
+            SourcingCurateCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
         ]
     }
     //#endregion 🔖️CommandSurface

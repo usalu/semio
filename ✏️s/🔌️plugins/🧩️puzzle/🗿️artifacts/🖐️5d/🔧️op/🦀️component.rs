@@ -4,6 +4,14 @@
 //! `Puzzle5dPlayProjection` newtype over it) the play app's untyped document still rides on, and the
 //! `puzzle5d_document_delta_operations` before/after differ every document-mutating action goes through.
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::puzzle5d::diff::{puzzle5d_diff_absorb, puzzle5d_index_of, Puzzle5dDiff};
 use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dMeta, Puzzle5dPart, Puzzle5dProjection};
 use protocol::{Operation, OperationDiff};

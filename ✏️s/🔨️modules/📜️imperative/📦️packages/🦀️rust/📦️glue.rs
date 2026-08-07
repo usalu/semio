@@ -14,4 +14,12 @@ pub mod registry;
 
 pub use compiler::compile_to_text;
 pub use engine::{EffectLogEntry, Executor, Path, RunResult, Step};
-pub use registry::{imperative_catalogue_json, imperative_module_registry};
+pub use imperative_extension_sdk::{
+    build_manifest_json, evaluate_invoke, evaluate_json, imperative_module_contribution, ImperativeExtensionManifest, IMPERATIVE_MODULE_EVALUATE_CAPABILITY, IMPERATIVE_PLAY_APP_ID,
+};
+pub use registry::{
+    contributions_json_from_entries, imperative_catalogue_json, imperative_module_registry, register_default_imperative_contributions, register_native_imperative_module,
+    sync_imperative_module_contributions,
+};
+#[cfg(feature = "linked-modules")]
+pub use registry::bootstrap_linked_modules;

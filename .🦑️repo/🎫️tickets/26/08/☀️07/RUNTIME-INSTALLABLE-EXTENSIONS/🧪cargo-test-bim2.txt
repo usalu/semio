@@ -1,0 +1,264 @@
+   Compiling blake3 v1.8.5
+   Compiling semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:7:1
+  |
+7 | extern crate self as dsl_grammar;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+7 - extern crate self as dsl_grammar;
+  |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:11:1
+   |
+11 | extern crate self as pack;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+11 - extern crate self as pack;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:12:1
+   |
+12 | extern crate self as spr;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+12 - extern crate self as spr;
+   |
+
+warning: unused extern crate
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:13:1
+   |
+13 | extern crate self as vcs;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+   |
+help: remove the unused `extern crate`
+   |
+13 - extern crate self as vcs;
+   |
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:345:11
+    |
+345 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:351:11
+    |
+351 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `canonicalize` in the value namespace is first re-exported here
+...
+202 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `canonicalize` in the value namespace is also re-exported here
+    |
+    = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `test_support` in the type namespace is first re-exported here
+186 | pub use crate::os_store::*;
+    |         ------------------ but the name `test_support` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `core` in the type namespace is first re-exported here
+...
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `core` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:185:9
+    |
+185 | pub use crate::os_dsl::*;
+    |         ^^^^^^^^^^^^^^^^ the name `Symbol` in the type namespace is first re-exported here
+...
+202 | pub use crate::os_dsl::grammar::*;
+    |         ------------------------- but the name `Symbol` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `cli` in the type namespace is first re-exported here
+...
+197 | pub use crate::os_semio::*;
+    |         ------------------ but the name `cli` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `format` in the type namespace is first re-exported here
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `format` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `io` in the type namespace is first re-exported here
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `io` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:187:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^^^^ the name `testkit` in the type namespace is first re-exported here
+188 | pub use crate::os_pack::*;
+    |         ----------------- but the name `testkit` in the type namespace is also re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `read_varint_u64` in the value namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `read_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `write_varint_u64` in the value namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `write_varint_u64` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `recover_file` in the value namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `recover_file` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `RecoveryReport` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `RecoveryReport` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `VerificationLevel` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `VerificationLevel` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `WriteOptions` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `WriteOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `DecodeOptions` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `DecodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:188:9
+    |
+187 | pub use crate::os_spr::*;
+    |         ---------------- but the name `EncodeOptions` in the type namespace is also re-exported here
+188 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^^^^ the name `EncodeOptions` in the type namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:202:9
+    |
+186 | pub use crate::os_store::*;
+    |         ------------------ but the name `Alternative` in the type namespace is also re-exported here
+...
+202 | pub use crate::os_dsl::grammar::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^ the name `Alternative` in the type namespace is first re-exported here
+
+warning: unused import: `crate::os_dsl::core::*`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:203:9
+    |
+203 | pub use crate::os_dsl::core::*;
+    |         ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `len`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🫀️core/🦀️component.rs:1083:21
+     |
+1083 |                 let len = end_j - i;
+     |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `print_edge_label` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2125:19
+     |
+2019 | / impl<P, Operation> DocumentStore<P, Operation>
+2020 | | where
+2021 | |     P: Clone + Serialize + DeserializeOwned + DocumentPack,
+2022 | |     Operation: Clone + Serialize + DeserializeOwned + self::Operation<P> + OpBinary + OpText,
+     | |_____________________________________________________________________________________________- method in this implementation
+...
+2125 |       pub(crate) fn set_envelope(&mut self, envelope: DocumentEnvelope<P, Operation>, applied_edit_ids: Vec<String>) {
+     |                     ^^^^^^^^^^^^
+
+warning: failed running `"xcrun" "--sdk" "macosx" "--show-sdk-path"` to find MacOSX.sdk
+  |
+  = note: You have not agreed to the Xcode license agreements. Please run 'sudo xcodebuild -license' from within a Terminal window to review and agree to the Xcode and Apple SDKs license.
+  = note: the SDK is needed by the linker to know where to find symbols in system libraries and for embedding the SDK version in the final object file
+  = note: found active developer directory at "/Applications/Xcode.app/Contents/Developer"
+
+error: linking with `cc` failed: exit status: 69
+  |
+  = note:  "cc" "-Wl,-exported_symbols_list" "-Wl,/Users/ueli/Documents/semio/target/debug/deps/rustcPDdDCL/list" "/Users/ueli/Documents/semio/target/debug/deps/rustcPDdDCL/symbols.o" "<2 object files omitted>" "/Users/ueli/Documents/semio/target/debug/deps/{libsemio_framework_hash-3e15ed09b674fe25,libzip-30fda75a0d967ad0,libzopfli-7a5d5b572c605274,libbumpalo-da4bca6e8f41ba0c,liblog-32382caf04be5a9e,libflate2-6ef0b26cfacaf98f,libindexmap-655b1b50926b5942,libequivalent-0d05cd9ffbbb3b07,libhashbrown-97f401e7928020b3,libcrc32fast-c72380fd44166001,libminiz_oxide-9f14ec3ee44244d3,libsimd_adler32-3092c74381f85f7a,libblake3-0cee5fc072f08b6e,libconstant_time_eq-2b8907d11a0c0f75,libcfg_if-e8d71dc7d01390af,libarrayvec-9aeb457c93c5b7f2,libarrayref-8fb272f51b2ae927,libfutures_lite-4c841d94b69921ae,libfutures_io-e42a7836a4bb0e92,libfutures_core-a0d5a793b5f1302c,libparking-312b7d5da55ef1d8,libpin_project_lite-14dda04f65acfb04,libfastrand-40c5ab703be598bb,libbase64-783b53c0ba57b514,libserde_json-0caf27179e7b9139,libmemchr-f4eedfff2edc1f78,libitoa-8faa300c25d53595,libzmij-ccd242ad0330b8fc,libthiserror-c16765ad92f1631a,libserde-a0874bed89197182,libserde_core-b3bb434f385c2fed}.rlib" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib/{libstd-*,libpanic_unwind-*,libobject-*,libmemchr-*,libaddr2line-*,libgimli-*,libcfg_if-*,librustc_demangle-*,libstd_detect-*,libhashbrown-*,librustc_std_workspace_alloc-*,libminiz_oxide-*,libadler2-*,libunwind-*,liblibc-*,librustc_std_workspace_core-*,liballoc-*,libcore-*,libcompiler_builtins-*}.rlib" "-lSystem" "-lc" "-lm" "-arch" "arm64" "-mmacosx-version-min=11.0.0" "-L" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib" "-o" "/Users/ueli/Documents/semio/target/debug/deps/libsemio_framework_os_kernel.dylib" "-Wl,-dead_strip" "-dynamiclib" "-nodefaultlibs"
+  = note: some arguments are omitted. use `--verbose` to show all linker arguments
+  = note: You have not agreed to the Xcode license agreements. Please run 'sudo xcodebuild -license' from within a Terminal window to review and agree to the Xcode and Apple SDKs license.
+          
+
+warning: `semio-framework-os-kernel` (lib) generated 28 warnings
+error: could not compile `semio-framework-os-kernel` (lib) due to 1 previous error; 28 warnings emitted

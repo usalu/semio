@@ -2738,6 +2738,61 @@ pub enum Contribution {
         #[cfg_attr(feature = "typegen", ts(rename = "manifestJson"))]
         manifest_json: String,
     },
+    /// 🧩️ A forms question kind contributing params/preview slots to a forms host app.
+    FormsQuestionKind {
+        #[cfg_attr(feature = "typegen", ts(rename = "appId"))]
+        app_id: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "questionKind"))]
+        question_kind: String,
+        label: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "iconId"))]
+        icon_id: IconName,
+        #[serde(default, skip_serializing_if = "String::is_empty")]
+        #[cfg_attr(feature = "typegen", ts(rename = "defaultValueJson"))]
+        default_value_json: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "paramsBodyKey"))]
+        params_body_key: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "previewBodyKey"))]
+        preview_body_key: String,
+    },
+    /// 🧩️ A CAD computer contributing stat/property/import profiles to a CAD host.
+    CadComputer {
+        #[cfg_attr(feature = "typegen", ts(rename = "appId"))]
+        app_id: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "moduleId"))]
+        module_id: String,
+        label: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "iconId"))]
+        icon_id: IconName,
+        #[cfg_attr(feature = "typegen", ts(rename = "computersJson"))]
+        computers_json: String,
+    },
+    /// 🧩️ An imperative module contributing operators to an imperative path host.
+    ImperativeModule {
+        #[cfg_attr(feature = "typegen", ts(rename = "appId"))]
+        app_id: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "moduleId"))]
+        module_id: String,
+        label: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "iconId"))]
+        icon_id: IconName,
+        #[cfg_attr(feature = "typegen", ts(rename = "manifestJson"))]
+        manifest_json: String,
+    },
+}
+
+/// 🧩️ One host-aggregated plugin contribution entry (`contributionsJson` wire shape).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ProgramContributionEntry {
+    pub plugin_id: String,
+    pub contribution: Contribution,
+}
+
+/// 📕️ Parses host-pushed `contributionsJson` into typed entries.
+pub fn parse_contributions(json: &str) -> Vec<ProgramContributionEntry> {
+    serde_json::from_str(json).unwrap_or_default()
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -4158,6 +4213,7 @@ mod app_document_tests {
         crate::ui::AppDefinition::export().unwrap();
         crate::ui::ExampleDefinition::export().unwrap();
         crate::ui::Contribution::export().unwrap();
+        crate::ui::ProgramContributionEntry::export().unwrap();
         crate::ui::PluginManifest::export().unwrap();
         crate::ui::ViewWindowInstance::export().unwrap();
         crate::ui::ViewModel::export().unwrap();

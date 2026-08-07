@@ -372,8 +372,17 @@ impl WasmPluginRuntime {
     pub fn load(path: impl AsRef<Path>) -> Result<Self, PluginHostError> {
         let path = path.as_ref().to_path_buf();
         let wasm_bytes = std::fs::read(&path)?;
+        Self::load_from_wasm_bytes(&wasm_bytes, path)
+    }
+
+    /// @emoji 📦 Installs a plugin runtime directly from in-memory wasip2 component bytes (extension store / sideload).
+    pub fn load_bytes(wasm_bytes: &[u8]) -> Result<Self, PluginHostError> {
+        Self::load_from_wasm_bytes(wasm_bytes, PathBuf::new())
+    }
+
+    fn load_from_wasm_bytes(wasm_bytes: &[u8], path: PathBuf) -> Result<Self, PluginHostError> {
         let engine = Self::build_engine()?;
-        let component = Component::from_binary(&engine, &wasm_bytes).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let component = Component::from_binary(&engine, wasm_bytes).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let linker = Self::build_linker(&engine)?;
         let manifest = Self::read_manifest(&engine, &component, &linker)?;
         let store = Store::new(&engine, Self::host_state(&manifest.plugin_id, &manifest));
@@ -573,7 +582,6 @@ impl WasmPluginRuntime {
                     session.draft.apply_emit_ops(draft_schema.as_deref(), draft_ops);
                     session.command_log_len = session.command_log_len.saturating_add(1);
                     session.generation = session.generation.saturating_add(1);
-                    eprintln!(
                 }
                 _ => {}
             }

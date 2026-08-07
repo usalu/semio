@@ -1,0 +1,2 @@
+[DEBUG] generic-codec breaches: 0
+[DEBUG] handcrafted kinds: {}

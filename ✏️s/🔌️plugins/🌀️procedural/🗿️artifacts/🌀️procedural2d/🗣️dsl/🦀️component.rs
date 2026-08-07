@@ -9,6 +9,14 @@
 //! and `imperative_core`'s `ValueDsl`/`StepNodeDsl`/`PathDsl`) — `Procedural2dDocument`/
 //! `Procedural2dOperation` themselves keep their ORIGINAL foreign field types unchanged.
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::procedural2d::Procedural2dDocument;
 use flow_core::neural::{Atom, Dictionary, Value as NeuralValue};
 use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};

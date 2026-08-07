@@ -1,0 +1,25 @@
+{
+  "name": "@semio-tech/cad-extension-aec-building-energy-rust",
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": ["{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/**/*.rs", "{projectRoot}/**/*"]
+  },
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

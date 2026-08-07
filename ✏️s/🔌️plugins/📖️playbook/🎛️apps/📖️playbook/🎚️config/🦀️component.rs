@@ -20,11 +20,18 @@ pub struct PlaybookConfig {
     pub selected_ids: Vec<String>,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
     pub locale: String,
+    /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `playbook.blockKind` hot-swap installs.
+    #[serde(default = "default_contributions_json")]
+    pub contributions_json: String,
+}
+
+fn default_contributions_json() -> String {
+    "[]".into()
 }
 
 impl Default for PlaybookConfig {
     fn default() -> Self {
-        Self { selected_ids: Vec::new(), locale: "en-US".into() }
+        Self { selected_ids: Vec::new(), locale: "en-US".into(), contributions_json: default_contributions_json() }
     }
 }
 
@@ -49,6 +56,8 @@ pub enum PlaybookConfigOperation {
     SetSelectedIds { ids: Vec<String> },
     #[dsl(key = "locale")]
     SetLocale { value: String },
+    #[dsl(key = "contributions")]
+    SetContributions { json: String },
 }
 
 impl Operation<PlaybookConfig> for PlaybookConfigOperation {
@@ -60,6 +69,7 @@ impl Operation<PlaybookConfig> for PlaybookConfigOperation {
             PlaybookConfigOperation::Snapshot { config } => return config.clone(),
             PlaybookConfigOperation::SetSelectedIds { ids } => next.selected_ids = ids.clone(),
             PlaybookConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            PlaybookConfigOperation::SetContributions { json } => next.contributions_json = json.clone(),
         }
         next
     }
@@ -113,6 +123,7 @@ mod tests {
         let base = PlaybookConfig::default();
         assert_eq!(config_round_trip(&base, &PlaybookConfigOperation::SetSelectedIds { ids: vec!["block-1".into()] }).selected_ids, vec!["block-1".to_string()]);
         assert_eq!(config_round_trip(&base, &PlaybookConfigOperation::SetLocale { value: "de-DE".into() }).locale, "de-DE");
+        assert_eq!(config_round_trip(&base, &PlaybookConfigOperation::SetContributions { json: "[]".into() }).contributions_json, "[]");
     }
 
     #[test]

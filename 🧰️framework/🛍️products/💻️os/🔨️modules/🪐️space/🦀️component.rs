@@ -94,11 +94,11 @@ pub struct CollectionRef {
     pub document_id: String,
 }
 
-/// 🏠️ A space's manifest: name, kind, visibility, membership, the collections it hosts, and the
+/// 🏠️ A space's manifest: name, kind, visibility, membership, the collections it hosts, the
 /// workflow plugin ids installed into it (`programs`, moved down from os-core's dissolved
-/// `OsProjection` in W3 — see `## The inversion` in the plan). Session-only `active_plugin_id`/
-/// `active_alternative_id` stay OUT of this document by design (transient UI state, not manifest
-/// data) — see os-core's space app glue.
+/// `OsProjection` in W3 — see `## The inversion` in the plan), and the durable extension ledger
+/// (`extensions`). Session-only `active_plugin_id`/`active_alternative_id` stay OUT of this document
+/// by design (transient UI state, not manifest data) — see os-core's space app glue.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[dsl(extension = "space")]
 pub struct SpaceProjection {
@@ -112,10 +112,33 @@ pub struct SpaceProjection {
     pub collections: Vec<CollectionRef>,
     #[serde(default)]
     pub programs: Vec<String>,
+    #[serde(default)]
+    pub extensions: Vec<InstalledExtension>,
+}
+
+/// 🧩️ One installed extension recorded in the space ledger — identity, package provenance, and
+/// enablement. Distinct from session-only `loadedPlugins` handles; this is what survives reload.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct InstalledExtension {
+    pub extension_id: String,
+    pub version: String,
+    pub source_uri: String,
+    pub package_hash: String,
+    pub enabled: bool,
 }
 
 pub fn empty_space_projection(name: &str, kind: SpaceKind, visibility: SpaceVisibility) -> SpaceProjection {
-    SpaceProjection { schema: S_SPACE_SCHEMA.into(), name: name.into(), kind, visibility, users: Vec::new(), collections: Vec::new(), programs: Vec::new() }
+    SpaceProjection {
+        schema: S_SPACE_SCHEMA.into(),
+        name: name.into(),
+        kind,
+        visibility,
+        users: Vec::new(),
+        collections: Vec::new(),
+        programs: Vec::new(),
+        extensions: Vec::new(),
+    }
 }
 
 //#region 🔖️SpaceOperation
@@ -156,6 +179,20 @@ pub enum SpaceOperation {
     UninstallProgram {
         plugin_id: String,
     },
+    InstallExtension {
+        extension_id: String,
+        version: String,
+        source_uri: String,
+        package_hash: String,
+        enabled: bool,
+    },
+    UninstallExtension {
+        extension_id: String,
+    },
+    SetExtensionEnabled {
+        extension_id: String,
+        enabled: bool,
+    },
 }
 
 /// 🧬️ Sparse whole-field diff — mirrors `writer_op::WriterDiff`'s "one `Option<T>` per possible
@@ -176,6 +213,11 @@ pub struct SpaceDiff {
     pub rename_collection_name: Option<String>,
     pub install_program: Option<String>,
     pub uninstall_program: Option<String>,
+    #[dsl(block)]
+    pub install_extension: Option<InstalledExtension>,
+    pub uninstall_extension_id: Option<String>,
+    pub set_extension_enabled_id: Option<String>,
+    pub set_extension_enabled: Option<bool>,
 }
 
 impl protocol::OperationDiff<SpaceProjection> for SpaceDiff {
@@ -220,6 +262,22 @@ impl protocol::OperationDiff<SpaceProjection> for SpaceDiff {
         if let Some(plugin_id) = &self.uninstall_program {
             next.programs.retain(|installed| installed != plugin_id);
         }
+        if let Some(extension) = &self.install_extension {
+            next.extensions.retain(|existing| existing.extension_id != extension.extension_id);
+            next.extensions.push(extension.clone());
+        }
+        if let Some(extension_id) = &self.uninstall_extension_id {
+            next.extensions.retain(|existing| &existing.extension_id != extension_id);
+        }
+        if let Some(extension_id) = &self.set_extension_enabled_id {
+            if let Some(enabled) = self.set_extension_enabled {
+                for extension in &mut next.extensions {
+                    if &extension.extension_id == extension_id {
+                        extension.enabled = enabled;
+                    }
+                }
+            }
+        }
         next
     }
 
@@ -255,6 +313,16 @@ impl protocol::OperationDiff<SpaceProjection> for SpaceDiff {
         if other.uninstall_program.is_some() {
             self.uninstall_program = other.uninstall_program;
         }
+        if other.install_extension.is_some() {
+            self.install_extension = other.install_extension;
+        }
+        if other.uninstall_extension_id.is_some() {
+            self.uninstall_extension_id = other.uninstall_extension_id;
+        }
+        if other.set_extension_enabled_id.is_some() {
+            self.set_extension_enabled_id = other.set_extension_enabled_id;
+            self.set_extension_enabled = other.set_extension_enabled;
+        }
     }
 }
 
@@ -277,6 +345,20 @@ impl protocol::Operation<SpaceProjection> for SpaceOperation {
             }
             SpaceOperation::InstallProgram { plugin_id } => diff.install_program = Some(plugin_id.clone()),
             SpaceOperation::UninstallProgram { plugin_id } => diff.uninstall_program = Some(plugin_id.clone()),
+            SpaceOperation::InstallExtension { extension_id, version, source_uri, package_hash, enabled } => {
+                diff.install_extension = Some(InstalledExtension {
+                    extension_id: extension_id.clone(),
+                    version: version.clone(),
+                    source_uri: source_uri.clone(),
+                    package_hash: package_hash.clone(),
+                    enabled: *enabled,
+                });
+            }
+            SpaceOperation::UninstallExtension { extension_id } => diff.uninstall_extension_id = Some(extension_id.clone()),
+            SpaceOperation::SetExtensionEnabled { extension_id, enabled } => {
+                diff.set_extension_enabled_id = Some(extension_id.clone());
+                diff.set_extension_enabled = Some(*enabled);
+            }
         }
         diff
     }
@@ -315,6 +397,41 @@ impl protocol::Operation<SpaceProjection> for SpaceOperation {
                     Vec::new()
                 }
             }
+            SpaceOperation::InstallExtension { extension_id, .. } => match base.extensions.iter().find(|existing| &existing.extension_id == extension_id) {
+                Some(existing) => vec![SpaceOperation::InstallExtension {
+                    extension_id: existing.extension_id.clone(),
+                    version: existing.version.clone(),
+                    source_uri: existing.source_uri.clone(),
+                    package_hash: existing.package_hash.clone(),
+                    enabled: existing.enabled,
+                }],
+                None => vec![SpaceOperation::UninstallExtension { extension_id: extension_id.clone() }],
+            },
+            SpaceOperation::UninstallExtension { extension_id } => base
+                .extensions
+                .iter()
+                .find(|existing| &existing.extension_id == extension_id)
+                .map(|existing| {
+                    vec![SpaceOperation::InstallExtension {
+                        extension_id: existing.extension_id.clone(),
+                        version: existing.version.clone(),
+                        source_uri: existing.source_uri.clone(),
+                        package_hash: existing.package_hash.clone(),
+                        enabled: existing.enabled,
+                    }]
+                })
+                .unwrap_or_default(),
+            SpaceOperation::SetExtensionEnabled { extension_id, .. } => base
+                .extensions
+                .iter()
+                .find(|existing| &existing.extension_id == extension_id)
+                .map(|existing| {
+                    vec![SpaceOperation::SetExtensionEnabled {
+                        extension_id: extension_id.clone(),
+                        enabled: existing.enabled,
+                    }]
+                })
+                .unwrap_or_default(),
         }
     }
 
@@ -1376,6 +1493,16 @@ mod tests {
         SpaceUser { id: id.into(), name: format!("User {id}"), avatar: None, role }
     }
 
+    fn demo_extension(extension_id: &str, enabled: bool) -> InstalledExtension {
+        InstalledExtension {
+            extension_id: extension_id.into(),
+            version: "1.0.0".into(),
+            source_uri: format!("https://example.test/{extension_id}.sxt"),
+            package_hash: format!("hash-{extension_id}"),
+            enabled,
+        }
+    }
+
     fn demo_space() -> SpaceProjection {
         let mut space = empty_space_projection("Atelier Demo", SpaceKind::Atelier, SpaceVisibility::Private);
         space.users.push(demo_user("u1", SpaceRole::Author));
@@ -1461,6 +1588,15 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&SpaceOperation::RenameCollection { collection_id: "c1".into(), name: "Renamed Collection".into() });
         store::test_support::assert_op_line_round_trip(&SpaceOperation::InstallProgram { plugin_id: "cad".into() });
         store::test_support::assert_op_line_round_trip(&SpaceOperation::UninstallProgram { plugin_id: "cad".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceOperation::InstallExtension {
+            extension_id: "flow-math".into(),
+            version: "1.0.0".into(),
+            source_uri: "https://example.test/flow-math.sxt".into(),
+            package_hash: "hash-flow-math".into(),
+            enabled: true,
+        });
+        store::test_support::assert_op_line_round_trip(&SpaceOperation::UninstallExtension { extension_id: "flow-math".into() });
+        store::test_support::assert_op_line_round_trip(&SpaceOperation::SetExtensionEnabled { extension_id: "flow-math".into(), enabled: false });
     }
 
     #[test]
@@ -1477,6 +1613,30 @@ mod tests {
         let mut with_program = base.clone();
         with_program.programs.push("cad".into());
         store::test_support::assert_operation_round_trip(&with_program, SpaceOperation::UninstallProgram { plugin_id: "cad".into() });
+        store::test_support::assert_operation_round_trip(
+            &base,
+            SpaceOperation::InstallExtension {
+                extension_id: "flow-math".into(),
+                version: "1.0.0".into(),
+                source_uri: "https://example.test/flow-math.sxt".into(),
+                package_hash: "hash-flow-math".into(),
+                enabled: true,
+            },
+        );
+        let mut with_extension = base.clone();
+        with_extension.extensions.push(demo_extension("flow-math", true));
+        store::test_support::assert_operation_round_trip(&with_extension, SpaceOperation::UninstallExtension { extension_id: "flow-math".into() });
+        store::test_support::assert_operation_round_trip(&with_extension, SpaceOperation::SetExtensionEnabled { extension_id: "flow-math".into(), enabled: false });
+        store::test_support::assert_operation_round_trip(
+            &with_extension,
+            SpaceOperation::InstallExtension {
+                extension_id: "flow-math".into(),
+                version: "2.0.0".into(),
+                source_uri: "https://example.test/flow-math-v2.sxt".into(),
+                package_hash: "hash-flow-math-v2".into(),
+                enabled: false,
+            },
+        );
     }
 
     #[test]
@@ -1486,6 +1646,9 @@ mod tests {
             SpaceDiff { upsert_user: Some(demo_user("u2", SpaceRole::Author)), ..Default::default() },
             SpaceDiff { install_program: Some("cad".into()), ..Default::default() },
             SpaceDiff { uninstall_program: Some("cad".into()), ..Default::default() },
+            SpaceDiff { install_extension: Some(demo_extension("flow-math", true)), ..Default::default() },
+            SpaceDiff { uninstall_extension_id: Some("flow-math".into()), ..Default::default() },
+            SpaceDiff { set_extension_enabled_id: Some("flow-math".into()), set_extension_enabled: Some(false), ..Default::default() },
             SpaceDiff::default(),
         ];
         for diff in diffs {

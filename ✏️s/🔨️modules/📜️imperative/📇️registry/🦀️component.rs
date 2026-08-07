@@ -1,30 +1,176 @@
-//! 📇 Composes the imperative operator registry and catalogue from all installed `imperative_module_*` crates.
+//! 📇 Runtime imperative operator registry composed from `imperative.module` contributions.
 
-use neural_engine::Registry;
+use imperative_extension_sdk::ImperativeExtensionManifest;
+use neural_engine::{node_hash, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry};
+use semio_framework_core::{parse_contributions, Contribution, ProgramContributionEntry};
+use std::collections::HashMap;
+use std::sync::{Mutex, OnceLock};
 
 // #region 🔖️ModuleRegistry
-/// 📦️ Builds the composed imperative operator registry from all installed modules.
-pub fn imperative_module_registry() -> Registry {
-    let mut registry = Registry::new();
-    imperative_module_core::register(&mut registry);
-    imperative_module_text::register(&mut registry);
-    imperative_module_math::register(&mut registry);
-    imperative_module_logic::register(&mut registry);
-    registry
+type NativeRegistrar = fn(&mut Registry);
+
+struct RegistryState {
+    registry: Registry,
+    catalogue_sections: Vec<serde_json::Value>,
+    contributions_json: String,
 }
 
-/// 📚️ Merges catalogue sections from all installed imperative modules.
-pub fn imperative_catalogue_json(registry: &Registry) -> String {
-    let core: serde_json::Value = serde_json::from_str(&imperative_module_core::catalogue_json(registry)).unwrap_or(serde_json::json!({}));
-    let text: serde_json::Value = serde_json::from_str(&imperative_module_text::catalogue_json(registry)).unwrap_or(serde_json::json!({}));
-    let math: serde_json::Value = serde_json::from_str(&imperative_module_math::catalogue_json(registry)).unwrap_or(serde_json::json!({}));
-    let logic: serde_json::Value = serde_json::from_str(&imperative_module_logic::catalogue_json(registry)).unwrap_or(serde_json::json!({}));
-    let control: serde_json::Value = serde_json::from_str(&imperative_module_control::catalogue_json()).unwrap_or(serde_json::json!({}));
-    let mut sections = core.get("sections").and_then(|value| value.as_array()).cloned().unwrap_or_default();
-    for module in [&text, &math, &logic, &control] {
-        if let Some(module_sections) = module.get("sections").and_then(|value| value.as_array()) {
-            sections.extend(module_sections.iter().cloned());
+static REGISTRY_STATE: OnceLock<Mutex<RegistryState>> = OnceLock::new();
+static NATIVE_REGISTRARS: OnceLock<Mutex<HashMap<String, NativeRegistrar>>> = OnceLock::new();
+static DEFAULT_CONTRIBUTIONS: OnceLock<fn() -> String> = OnceLock::new();
+static BOOTSTRAPPED: OnceLock<()> = OnceLock::new();
+
+fn registry_state() -> &'static Mutex<RegistryState> {
+    REGISTRY_STATE.get_or_init(|| {
+        Mutex::new(RegistryState {
+            registry: Registry::new(),
+            catalogue_sections: Vec::new(),
+            contributions_json: "[]".into(),
+        })
+    })
+}
+
+fn native_registrars() -> &'static Mutex<HashMap<String, NativeRegistrar>> {
+    NATIVE_REGISTRARS.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// 🔌️ Registers an in-process extension crate that can materialize real operators when contributions sync.
+pub fn register_native_imperative_module(plugin_id: &str, register: NativeRegistrar) {
+    native_registrars().lock().expect("native imperative registrars lock").insert(plugin_id.to_string(), register);
+}
+
+/// 📥️ Supplies default `contributionsJson` for dev hosts that have not pushed contributions yet.
+pub fn register_default_imperative_contributions(provider: fn() -> String) {
+    let _ = DEFAULT_CONTRIBUTIONS.set(provider);
+}
+
+fn ensure_bootstrapped() {
+    BOOTSTRAPPED.get_or_init(|| {
+        if let Some(provider) = DEFAULT_CONTRIBUTIONS.get() {
+            sync_imperative_module_contributions(&provider());
         }
+    });
+}
+
+struct ContributedExtensionStub {
+    extension_id: String,
+    operator_id: String,
+}
+
+impl Operation for ContributedExtensionStub {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        let node_hash = node_hash(&self.operator_id, input);
+        Err(EvalError::PendingExtension { extension_id: self.extension_id.clone(), operator_id: self.operator_id.clone(), node_hash })
+    }
+}
+
+fn register_manifest_operators(registry: &mut Registry, plugin_id: &str, manifest: &ImperativeExtensionManifest) {
+    for info in &manifest.contributes.operators {
+        if registry.operator_info(&info.id).is_some() {
+            continue;
+        }
+        let extension_id = plugin_id.to_string();
+        let operator_id = info.id.clone();
+        registry.register_operator(
+            info.clone(),
+            vec![OperatorImpl { schemas: vec![], operation: Box::new(ContributedExtensionStub { extension_id, operator_id }) }],
+            &[],
+        );
+    }
+}
+
+fn merge_catalogue_sections(target: &mut Vec<serde_json::Value>, catalogue_json: &str) {
+    let Ok(value) = serde_json::from_str::<serde_json::Value>(catalogue_json) else {
+        return;
+    };
+    if let Some(sections) = value.get("sections").and_then(|v| v.as_array()) {
+        target.extend(sections.iter().cloned());
+    }
+}
+
+fn compose_registry(contributions_json: &str) -> (Registry, Vec<serde_json::Value>) {
+    let mut registry = Registry::new();
+    let mut catalogue_sections = Vec::new();
+    let registrars = native_registrars().lock().expect("native imperative registrars lock");
+    for entry in parse_contributions(contributions_json) {
+        let Contribution::ImperativeModule { app_id, manifest_json, .. } = entry.contribution else {
+            continue;
+        };
+        if app_id != imperative_extension_sdk::IMPERATIVE_PLAY_APP_ID {
+            continue;
+        }
+        let Ok(manifest) = serde_json::from_str::<ImperativeExtensionManifest>(&manifest_json) else {
+            continue;
+        };
+        if let Some(register) = registrars.get(&entry.plugin_id) {
+            register(&mut registry);
+        } else {
+            register_manifest_operators(&mut registry, &entry.plugin_id, &manifest);
+        }
+        if let Some(catalogue_json) = manifest.contributes.catalogue_json.as_deref() {
+            merge_catalogue_sections(&mut catalogue_sections, catalogue_json);
+        }
+    }
+    registry.finalize();
+    (registry, catalogue_sections)
+}
+
+/// 🔌️ Refreshes contributed `imperative.module` operators and catalogue sections.
+pub fn sync_imperative_module_contributions(contributions_json: &str) {
+    let mut state = registry_state().lock().expect("imperative registry state lock");
+    if state.contributions_json == contributions_json {
+        return;
+    }
+    let (registry, catalogue_sections) = compose_registry(contributions_json);
+    state.registry = registry;
+    state.catalogue_sections = catalogue_sections;
+    state.contributions_json = contributions_json.to_string();
+}
+
+/// 📦️ Returns the composed imperative operator registry from synced contributions.
+pub fn imperative_module_registry() -> Registry {
+    ensure_bootstrapped();
+    let contributions_json = registry_state().lock().expect("imperative registry state lock").contributions_json.clone();
+    compose_registry(&contributions_json).0
+}
+
+/// 📚️ Merges catalogue sections from synced imperative modules.
+pub fn imperative_catalogue_json(registry: &Registry) -> String {
+    ensure_bootstrapped();
+    let state = registry_state().lock().expect("imperative registry state lock");
+    let mut sections: Vec<serde_json::Value> = Vec::new();
+    let mut section_ids = std::collections::BTreeSet::new();
+    let mut items_by_section: HashMap<String, Vec<serde_json::Value>> = HashMap::new();
+    for info in registry.operator_catalogue() {
+        let section_id = if info.extension.is_empty() { "operators".into() } else { info.extension.clone() };
+        items_by_section.entry(section_id).or_default().push(serde_json::json!({
+            "kind": info.id,
+            "name": info.name,
+            "abbreviation": info.abbreviation,
+            "icon": info.icon,
+            "summary": info.summary,
+            "module": info.extension,
+            "inputs": info.inputs.iter().map(|channel| serde_json::json!({
+                "name": channel.name,
+                "code": channel.code,
+            })).collect::<Vec<_>>(),
+        }));
+    }
+    for (section_id, items) in items_by_section {
+        section_ids.insert(section_id.clone());
+        sections.push(serde_json::json!({
+            "id": section_id,
+            "title": section_id,
+            "items": items,
+        }));
+    }
+    for section in &state.catalogue_sections {
+        if let Some(id) = section.get("id").and_then(|v| v.as_str()) {
+            if section_ids.contains(id) {
+                continue;
+            }
+        }
+        sections.push(section.clone());
     }
     serde_json::to_string(&serde_json::json!({
         "schema": "imperative.catalogue",
@@ -32,21 +178,67 @@ pub fn imperative_catalogue_json(registry: &Registry) -> String {
     }))
     .unwrap_or_else(|_| "{}".into())
 }
+
+/// 🧩️ Serializes contribution entries for host bootstrap.
+pub fn contributions_json_from_entries(entries: &[ProgramContributionEntry]) -> String {
+    serde_json::to_string(entries).unwrap_or_else(|_| "[]".into())
+}
 // #endregion 🔖️ModuleRegistry
+
+#[cfg(feature = "linked-modules")]
+// #region 🔖️LinkedModules
+mod linked_modules {
+    use super::*;
+
+    /// 🔌️ Registers native module crates bundled in this build.
+    pub fn install_native_registrars() {
+        register_native_imperative_module("imperative-extension-core", |registry| imperative_module_core::register(registry));
+        register_native_imperative_module("imperative-extension-text", |registry| imperative_module_text::register(registry));
+        register_native_imperative_module("imperative-extension-math", |registry| imperative_module_math::register(registry));
+        register_native_imperative_module("imperative-extension-logic", |registry| imperative_module_logic::register(registry));
+        register_native_imperative_module("imperative-extension-control", |_registry| {});
+    }
+
+    /// 📥️ Default contributions for dev hosts (all five linked extensions).
+    pub fn default_contributions_json() -> String {
+        contributions_json_from_entries(&[
+            imperative_module_core::imperative_module_contribution(),
+            imperative_module_text::imperative_module_contribution(),
+            imperative_module_math::imperative_module_contribution(),
+            imperative_module_logic::imperative_module_contribution(),
+            imperative_module_control::imperative_module_contribution(),
+        ])
+    }
+
+    /// 🚀️ One-shot dev bootstrap: native registrars + default contributions sync.
+    pub fn bootstrap_linked_modules() {
+        install_native_registrars();
+        register_default_imperative_contributions(default_contributions_json);
+        sync_imperative_module_contributions(&default_contributions_json());
+    }
+}
+// #endregion 🔖️LinkedModules
+
+#[cfg(feature = "linked-modules")]
+pub use linked_modules::bootstrap_linked_modules;
 
 // #region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use neural_engine::{Atom, Dictionary, Value};
 
     #[test]
-    fn composed_registry_runs_text_operators() {
+    fn empty_contributions_yield_empty_registry() {
+        sync_imperative_module_contributions("[]");
         let registry = imperative_module_registry();
-        let input = Dictionary::new().insert("text", Value::Atom(Atom::String("abc".into()))).insert("into", Value::Atom(Atom::String("upper".into())));
-        let output = registry.dispatch("text.uppercase", &input).expect("dispatch");
-        let value = output.get("upper").and_then(|v| v.as_atom()).and_then(|a| a.as_str());
-        assert_eq!(value, Some("ABC"));
+        assert!(registry.operator_catalogue().is_empty());
+    }
+
+    #[test]
+    fn sync_is_idempotent_for_same_json() {
+        sync_imperative_module_contributions("[]");
+        sync_imperative_module_contributions("[]");
+        assert!(imperative_module_registry().operator_catalogue().is_empty());
     }
 }
 // #endregion 🧪️Tests

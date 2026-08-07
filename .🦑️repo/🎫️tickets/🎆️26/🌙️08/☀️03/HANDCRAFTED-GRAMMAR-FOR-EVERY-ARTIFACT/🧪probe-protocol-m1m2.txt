@@ -1,0 +1,64 @@
+error: linking with `cc` failed: exit status: 69
+  |
+  = note:  "cc" "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/probe-protocol-m1m2/target/debug/build/proc-macro2-c45a415a1820dd9f/rustcwvFKd6/symbols.o" "<2 object files omitted>" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib/{libstd-*,libpanic_unwind-*,libobject-*,libmemchr-*,libaddr2line-*,libgimli-*,libcfg_if-*,librustc_demangle-*,libstd_detect-*,libhashbrown-*,librustc_std_workspace_alloc-*,libminiz_oxide-*,libadler2-*,libunwind-*,liblibc-*,librustc_std_workspace_core-*,liballoc-*,libcore-*,libcompiler_builtins-*}.rlib" "-lSystem" "-lc" "-lm" "-arch" "arm64" "-mmacosx-version-min=11.0.0" "-L" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib" "-o" "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/probe-protocol-m1m2/target/debug/build/proc-macro2-c45a415a1820dd9f/build_script_build-c45a415a1820dd9f" "-Wl,-dead_strip" "-nodefaultlibs"
+  = note: some arguments are omitted. use `--verbose` to show all linker arguments
+  = note: You have not agreed to the Xcode license agreements. Please run 'sudo xcodebuild -license' from within a Terminal window to review and agree to the Xcode and Apple SDKs license.
+          
+
+error: linking with `cc` failed: exit status: 69
+  |
+  = note:  "cc" "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/probe-protocol-m1m2/target/debug/build/thiserror-6c45944c3c0d81ad/rustc9dbCsi/symbols.o" "<3 object files omitted>" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib/{libstd-*,libpanic_unwind-*,libobject-*,libmemchr-*,libaddr2line-*,libgimli-*,libcfg_if-*,librustc_demangle-*,libstd_detect-*,libhashbrown-*,librustc_std_workspace_alloc-*,libminiz_oxide-*,libadler2-*,libunwind-*,liblibc-*,librustc_std_workspace_core-*,liballoc-*,libcore-*,libcompiler_builtins-*}.rlib" "-lSystem" "-lc" "-lm" "-arch" "arm64" "-mmacosx-version-min=11.0.0" "-L" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib" "-o" "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/probe-protocol-m1m2/target/debug/build/thiserror-6c45944c3c0d81ad/build_script_build-6c45944c3c0d81ad" "-Wl,-dead_strip" "-nodefaultlibs"
+  = note: some arguments are omitted. use `--verbose` to show all linker arguments
+  = note: You have not agreed to the Xcode license agreements. Please run 'sudo xcodebuild -license' from within a Terminal window to review and agree to the Xcode and Apple SDKs license.
+          
+
+error: linking with `cc` failed: exit status: 69
+  |
+  = note:  "cc" "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/probe-protocol-m1m2/target/debug/build/serde-b66324f40d4c7439/rustc2bKvif/symbols.o" "<2 object files omitted>" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib/{libstd-*,libpanic_unwind-*,libobject-*,libmemchr-*,libaddr2line-*,libgimli-*,libcfg_if-*,librustc_demangle-*,libstd_detect-*,libhashbrown-*,librustc_std_workspace_alloc-*,libminiz_oxide-*,libadler2-*,libunwind-*,liblibc-*,librustc_std_workspace_core-*,liballoc-*,libcore-*,libcompiler_builtins-*}.rlib" "-lSystem" "-lc" "-lm" "-arch" "arm64" "-mmacosx-version-min=11.0.0" "-L" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib" "-o" "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/probe-protocol-m1m2/target/debug/build/serde-b66324f40d4c7439/build_script_build-b66324f40d4c7439" "-Wl,-dead_strip" "-nodefaultlibs"
+  = note: some arguments are omitted. use `--verbose` to show all linker arguments
+  = note: You have not agreed to the Xcode license agreements. Please run 'sudo xcodebuild -license' from within a Terminal window to review and agree to the Xcode and Apple SDKs license.
+          
+
+error: could not compile `thiserror` (build script) due to 1 previous error
+error: could not compile `proc-macro2` (build script) due to 1 previous error
+error: could not compile `serde` (build script) due to 1 previous error
+error: linking with `cc` failed: exit status: 69
+  |
+  = note:  "cc" "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/probe-protocol-m1m2/target/debug/build/quote-f366cd63d9dc9e19/rustcvJsAkA/symbols.o" "<2 object files omitted>" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib/{libstd-*,libpanic_unwind-*,libobject-*,libmemchr-*,libaddr2line-*,libgimli-*,libcfg_if-*,librustc_demangle-*,libstd_detect-*,libhashbrown-*,librustc_std_workspace_alloc-*,libminiz_oxide-*,libadler2-*,libunwind-*,liblibc-*,librustc_std_workspace_core-*,liballoc-*,libcore-*,libcompiler_builtins-*}.rlib" "-lSystem" "-lc" "-lm" "-arch" "arm64" "-mmacosx-version-min=11.0.0" "-L" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib" "-o" "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/probe-protocol-m1m2/target/debug/build/quote-f366cd63d9dc9e19/build_script_build-f366cd63d9dc9e19" "-Wl,-dead_strip" "-nodefaultlibs"
+  = note: some arguments are omitted. use `--verbose` to show all linker arguments
+  = note: You have not agreed to the Xcode license agreements. Please run 'sudo xcodebuild -license' from within a Terminal window to review and agree to the Xcode and Apple SDKs license.
+          
+
+error: linking with `cc` failed: exit status: 69
+  |
+  = note:  "cc" "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/probe-protocol-m1m2/target/debug/build/serde_core-77b8ffa1c74928e7/rustc1jSKDr/symbols.o" "<2 object files omitted>" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib/{libstd-*,libpanic_unwind-*,libobject-*,libmemchr-*,libaddr2line-*,libgimli-*,libcfg_if-*,librustc_demangle-*,libstd_detect-*,libhashbrown-*,librustc_std_workspace_alloc-*,libminiz_oxide-*,libadler2-*,libunwind-*,liblibc-*,librustc_std_workspace_core-*,liballoc-*,libcore-*,libcompiler_builtins-*}.rlib" "-lSystem" "-lc" "-lm" "-arch" "arm64" "-mmacosx-version-min=11.0.0" "-L" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib" "-o" "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/probe-protocol-m1m2/target/debug/build/serde_core-77b8ffa1c74928e7/build_script_build-77b8ffa1c74928e7" "-Wl,-dead_strip" "-nodefaultlibs"
+  = note: some arguments are omitted. use `--verbose` to show all linker arguments
+  = note: You have not agreed to the Xcode license agreements. Please run 'sudo xcodebuild -license' from within a Terminal window to review and agree to the Xcode and Apple SDKs license.
+          
+
+error: linking with `cc` failed: exit status: 69
+  |
+  = note:  "cc" "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/probe-protocol-m1m2/target/debug/build/zmij-346caf63000ff630/rustcpARt5w/symbols.o" "<2 object files omitted>" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib/{libstd-*,libpanic_unwind-*,libobject-*,libmemchr-*,libaddr2line-*,libgimli-*,libcfg_if-*,librustc_demangle-*,libstd_detect-*,libhashbrown-*,librustc_std_workspace_alloc-*,libminiz_oxide-*,libadler2-*,libunwind-*,liblibc-*,librustc_std_workspace_core-*,liballoc-*,libcore-*,libcompiler_builtins-*}.rlib" "-lSystem" "-lc" "-lm" "-arch" "arm64" "-mmacosx-version-min=11.0.0" "-L" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib" "-o" "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/probe-protocol-m1m2/target/debug/build/zmij-346caf63000ff630/build_script_build-346caf63000ff630" "-Wl,-dead_strip" "-nodefaultlibs"
+  = note: some arguments are omitted. use `--verbose` to show all linker arguments
+  = note: You have not agreed to the Xcode license agreements. Please run 'sudo xcodebuild -license' from within a Terminal window to review and agree to the Xcode and Apple SDKs license.
+          
+
+error: linking with `cc` failed: exit status: 69
+  |
+  = note:  "cc" "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/probe-protocol-m1m2/target/debug/build/serde_json-fd4748f55d3641c7/rustc7pUtH6/symbols.o" "<2 object files omitted>" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib/{libstd-*,libpanic_unwind-*,libobject-*,libmemchr-*,libaddr2line-*,libgimli-*,libcfg_if-*,librustc_demangle-*,libstd_detect-*,libhashbrown-*,librustc_std_workspace_alloc-*,libminiz_oxide-*,libadler2-*,libunwind-*,liblibc-*,librustc_std_workspace_core-*,liballoc-*,libcore-*,libcompiler_builtins-*}.rlib" "-lSystem" "-lc" "-lm" "-arch" "arm64" "-mmacosx-version-min=11.0.0" "-L" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib" "-o" "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/probe-protocol-m1m2/target/debug/build/serde_json-fd4748f55d3641c7/build_script_build-fd4748f55d3641c7" "-Wl,-dead_strip" "-nodefaultlibs"
+  = note: some arguments are omitted. use `--verbose` to show all linker arguments
+  = note: You have not agreed to the Xcode license agreements. Please run 'sudo xcodebuild -license' from within a Terminal window to review and agree to the Xcode and Apple SDKs license.
+          
+
+error: could not compile `quote` (build script) due to 1 previous error
+error: could not compile `serde_json` (build script) due to 1 previous error
+error: could not compile `zmij` (build script) due to 1 previous error
+error: could not compile `serde_core` (build script) due to 1 previous error
+error: linking with `cc` failed: exit status: 69
+  |
+  = note:  "cc" "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/probe-protocol-m1m2/target/debug/build/blake3-514a6bd559f40632/rustcQ9t54h/symbols.o" "<2 object files omitted>" "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/probe-protocol-m1m2/target/debug/deps/{libcc-642c2f46981b9cd7,libfind_msvc_tools-c1d61763775a63bb,libshlex-2e668c968ca84e01}.rlib" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib/{libstd-*,libpanic_unwind-*,libobject-*,libmemchr-*,libaddr2line-*,libgimli-*,libcfg_if-*,librustc_demangle-*,libstd_detect-*,libhashbrown-*,librustc_std_workspace_alloc-*,libminiz_oxide-*,libadler2-*,libunwind-*,liblibc-*,librustc_std_workspace_core-*,liballoc-*,libcore-*,libcompiler_builtins-*}.rlib" "-lSystem" "-lc" "-lm" "-arch" "arm64" "-mmacosx-version-min=11.0.0" "-L" "<sysroot>/lib/rustlib/aarch64-apple-darwin/lib" "-o" "/Users/ueli/Documents/semio/.🦑\u{fe0f}repo/🎫\u{fe0f}tickets/🎆\u{fe0f}26/🌙\u{fe0f}08/☀\u{fe0f}03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT/probe-protocol-m1m2/target/debug/build/blake3-514a6bd559f40632/build_script_build-514a6bd559f40632" "-Wl,-dead_strip" "-nodefaultlibs"
+  = note: some arguments are omitted. use `--verbose` to show all linker arguments
+  = note: You have not agreed to the Xcode license agreements. Please run 'sudo xcodebuild -license' from within a Terminal window to review and agree to the Xcode and Apple SDKs license.
+          
+
+error: could not compile `blake3` (build script) due to 1 previous error

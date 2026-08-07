@@ -28,6 +28,6 @@ chain-block = "chain" IDENT? prim
 group = "{" field-pair {field-pair}* "}"
 prim = "u8" | "u16" | "u32" | "u64" | "i32" | "i64" | "f32" | "f64" | "varint" | "zigzag" | "bytes" | "utf8" | "tag" | fixed-prim | array-prim | ref-prim | "varint" "bytes"
 fixed-prim = "fixed" INT | "Fixed" "(" INT ")"
-array-prim = "Array" "(" prim "," count ")"
+array-prim = "array" prim | "Array" "(" prim "," count ")"
 ref-prim = "Ref" "(" IDENT ")"
 count = "Varint" | "Fixed" "(" INT ")" | "Field" "(" IDENT ")" | INT

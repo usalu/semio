@@ -4,6 +4,14 @@
 //! delegates through — see `crate::artifacts::mathematical::dsl`'s module doc for why this no longer needs
 //! to sit next to `MathProjection` itself now that the old 7-crate orphan-rule boundary is gone.
 
+
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
+
 use crate::artifacts::mathematical::dsl::{math_projection_from_dsl, math_projection_to_dsl, MathProjectionDsl};
 use crate::artifacts::mathematical::MathProjection;
 use store::{DocumentPack, PackDecodeOptions, PackEncodeOptions, PackError};

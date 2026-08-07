@@ -1,5 +1,13 @@
 //! 📜️ EN 1990 basis of structural design — textual document grammar surface + laws (constitutional: dsl).
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::en1990::Document;
 
 /// 🏢️ The high-consequence-office example fixture, handcrafted in `en1990`'s DSL

@@ -1,0 +1,5 @@
+🧰️framework/🔨️modules/🧩core/🧩️ui/🦀️component.rs
+🧰️framework/🔨️modules/🧩core/🧩️ui/🧠️kernel/🦀️component.rs
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs
+🧰️framework/🔨️modules/🧩core/🟦️component.ts
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx

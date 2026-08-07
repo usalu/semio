@@ -189,6 +189,13 @@ pub struct CadConfig {
     pub locale: String,
     /// 🗣️ Terminology id (`"native"`/`"reuse"`) — was read off `view_state.terminology`.
     pub terminology: String,
+    /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `cad.computer` hot-swap installs.
+    #[serde(default = "default_contributions_json")]
+    pub contributions_json: String,
+}
+
+fn default_contributions_json() -> String {
+    "[]".into()
 }
 
 impl Default for CadConfig {
@@ -223,6 +230,7 @@ impl Default for CadConfig {
             active_utility_id: "move".into(),
             locale: "en-US".into(),
             terminology: "native".into(),
+            contributions_json: default_contributions_json(),
         }
     }
 }
@@ -249,14 +257,23 @@ pub enum CadConfigOperation {
         #[dsl(block)]
         config: CadConfig,
     },
+    #[dsl(key = "contributions")]
+    SetContributions { json: String },
 }
 
 impl Operation<CadConfig> for CadConfigOperation {
     type Diff = CadConfig;
 
-    fn diff(&self, _base: &CadConfig) -> CadConfig {
-        let CadConfigOperation::Snapshot { config } = self;
-        config.clone()
+    fn diff(&self, base: &CadConfig) -> CadConfig {
+        match self {
+            CadConfigOperation::Snapshot { config } => config.clone(),
+            CadConfigOperation::SetContributions { json } => {
+                let mut next = base.clone();
+                next.contributions_json = json.clone();
+                crate::artifacts::cad::engine::sync_cad_computer_contributions(json);
+                next
+            }
+        }
     }
 
     fn backwards(&self, base: &CadConfig) -> Vec<Self> {
@@ -327,6 +344,16 @@ mod tests {
         assert_eq!(backwards, vec![CadConfigOperation::Snapshot { config: base.clone() }]);
         let restored = backwards[0].diff(&forward);
         assert_eq!(restored, base);
+        store::test_support::assert_op_line_round_trip(&operation);
+    }
+
+    #[test]
+    fn cad_config_set_contributions_round_trips() {
+        let base = CadConfig::default();
+        let json = r#"[{"pluginId":"cad-extension-spatial-shape","contribution":{"kind":"cadComputer","appId":"cad-play","moduleId":"spatial-shape","label":"Spatial Shape","iconId":"box","computersJson":"{}"}}]"#;
+        let operation = CadConfigOperation::SetContributions { json: json.into() };
+        let next = operation.diff(&base);
+        assert_eq!(next.contributions_json, json);
         store::test_support::assert_op_line_round_trip(&operation);
     }
 }

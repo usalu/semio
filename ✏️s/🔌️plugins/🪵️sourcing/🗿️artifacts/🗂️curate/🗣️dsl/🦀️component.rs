@@ -1,5 +1,13 @@
 //! 📜️ Sourcing curate artifact — textual document grammar surface + laws (constitutional: dsl).
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::curate::CurateDocument;
 
 /// 📄️ The demo-stock example, handcrafted in the `.curate` DSL.

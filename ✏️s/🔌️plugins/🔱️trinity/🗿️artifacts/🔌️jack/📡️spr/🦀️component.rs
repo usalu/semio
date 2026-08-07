@@ -1,6 +1,14 @@
 //! 📡️ `trinity.graph` artifact — state-patch wire codec for the raw document operation
 //! (constitutional: spr, renamed from the old `📡️protocol` — no `📡️protocol` segment survives).
 
+
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
+
 use crate::artifacts::jack::dsl::{port_dsl_to_port, port_to_port_dsl, PortDsl};
 use crate::artifacts::jack::op::TrinityGraphOperation;
 use crate::artifacts::jack::{EntityRef, GraphFixture, PropertyValue};

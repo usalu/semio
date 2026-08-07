@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@semio-tech/plugin-extension-store",
+  "version": "0.1.0",
+  "description": "framework · runtime extension install store for OS dev + hub",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./📜️store.ts"
+  },
+  "dependencies": {
+    "@semio-tech/framework-os-core": "workspace:*"
+  },
+  "license": "LGPL-3.0-or-later"
+}

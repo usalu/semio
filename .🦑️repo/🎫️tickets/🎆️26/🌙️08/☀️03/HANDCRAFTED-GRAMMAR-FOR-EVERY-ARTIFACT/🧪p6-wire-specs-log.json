@@ -1,0 +1,1380 @@
+{
+  "includeTotal": 220,
+  "registerTotal": 44,
+  "includeByStatus": {
+    "wired-protocol": [
+      {
+        "rsPath": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🎒️pack/🦀️component.rs",
+        "status": "wired-protocol"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/📡️spr/🦀️component.rs",
+        "status": "wired-protocol"
+      }
+    ],
+    "wired-grammar": [
+      {
+        "rsPath": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🔧️op/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🔺️diff/🦀️component.rs",
+        "status": "wired-grammar"
+      },
+      {
+        "rsPath": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🗣️dsl/🦀️component.rs",
+        "status": "wired-grammar"
+      }
+    ]
+  },
+  "engineByStatus": {
+    "engine-wired": [
+      {
+        "artRel": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "mathematical.document",
+        "opId": "mathematical.op",
+        "diffId": "mathematical.diff",
+        "packId": "mathematical.pack",
+        "sprId": "mathematical.spr",
+        "extension": "mathematical"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "procedural.procedural2d.document",
+        "opId": "procedural.procedural2d.op",
+        "diffId": "procedural.procedural2d.diff",
+        "packId": "procedural2d.pack",
+        "sprId": "procedural2d.spr",
+        "extension": "procedural2d"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d",
+        "status": "engine-wired",
+        "mod": "procedural3d",
+        "docId": "procedural.procedural3d.document",
+        "opId": "procedural.procedural3d.op",
+        "diffId": "procedural.procedural3d.diff",
+        "packId": "procedural3d.pack",
+        "sprId": "procedural3d.spr",
+        "extension": "procedural3d"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "flow.document",
+        "opId": "flow.op",
+        "diffId": "flow.diff",
+        "packId": "flow.pack",
+        "sprId": "flow.spr",
+        "extension": "flow"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain",
+        "status": "engine-wired",
+        "mod": "gisterrain",
+        "docId": "gis.gisterrain",
+        "opId": "gis.gisterrain.op",
+        "diffId": "gis.gisterrain.diff",
+        "packId": "gisterrain.pack",
+        "sprId": "gisterrain.spr",
+        "extension": "gisterrain"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "gis.gismap",
+        "opId": "gis.gismap.op",
+        "diffId": "gis.gismap.diff",
+        "packId": "gismap.pack",
+        "sprId": "gismap.spr",
+        "extension": "gismap"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "vcs.document",
+        "opId": "vcs.op",
+        "diffId": "vcs.diff",
+        "packId": "vcs.pack",
+        "sprId": "vcs.spr",
+        "extension": "vcsdemo"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "present.document",
+        "opId": "present.op",
+        "diffId": "present.diff",
+        "packId": "present.pack",
+        "sprId": "present.spr",
+        "extension": "present"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "shooting.document",
+        "opId": "shooting.op",
+        "diffId": "shooting.diff",
+        "packId": "shooting.pack",
+        "sprId": "shooting.spr",
+        "extension": "shooting"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "sequence.document",
+        "opId": "sequence.op",
+        "diffId": "sequence.diff",
+        "packId": "sequence.pack",
+        "sprId": "sequence.spr",
+        "extension": "sequence"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "architect.program",
+        "opId": "architect.program.op",
+        "diffId": "architect.program.diff",
+        "packId": "program.pack",
+        "sprId": "program.spr",
+        "extension": "architect"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "process.process3d",
+        "opId": "process.process3d.op",
+        "diffId": "process.process3d.diff",
+        "packId": "process3d.pack",
+        "sprId": "process3d.spr",
+        "extension": "process3d"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "wires.document",
+        "opId": "wires.op",
+        "diffId": "wires.diff",
+        "packId": "wires.pack",
+        "sprId": "wires.spr",
+        "extension": "wires"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "forms.forms",
+        "opId": "forms.forms.op",
+        "diffId": "forms.forms.diff",
+        "packId": "forms.pack",
+        "sprId": "forms.spr",
+        "extension": "forms"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "layout.document",
+        "opId": "layout.op",
+        "diffId": "layout.diff",
+        "packId": "layout.pack",
+        "sprId": "layout.spr",
+        "extension": "layout"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757",
+        "status": "engine-wired",
+        "mod": "en1999",
+        "docId": "iso16757.document",
+        "opId": "iso16757.op",
+        "diffId": "iso16757.diff",
+        "packId": "iso16757.pack",
+        "sprId": "iso16757.spr",
+        "extension": "iso16757"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805",
+        "status": "engine-wired",
+        "mod": "vdi3805",
+        "docId": "vdi3805.document",
+        "opId": "vdi3805.op",
+        "diffId": "vdi3805.diff",
+        "packId": "vdi3805.pack",
+        "sprId": "vdi3805.spr",
+        "extension": "vdi3805"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108",
+        "status": "engine-wired",
+        "mod": "core",
+        "docId": "din4108.document",
+        "opId": "din4108.op",
+        "diffId": "din4108.diff",
+        "packId": "din4108.pack",
+        "sprId": "din4108.spr",
+        "extension": "din4108"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798",
+        "status": "engine-wired",
+        "mod": "din16798",
+        "docId": "din16798.document",
+        "opId": "din16798.op",
+        "diffId": "din16798.diff",
+        "packId": "din16798.pack",
+        "sprId": "din16798.spr",
+        "extension": "din16798"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990",
+        "status": "engine-wired",
+        "mod": "en1990",
+        "docId": "en1990.document",
+        "opId": "en1990.op",
+        "diffId": "en1990.diff",
+        "packId": "en1990.pack",
+        "sprId": "en1990.spr",
+        "extension": "en1990"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991",
+        "status": "engine-wired",
+        "mod": "en1990",
+        "docId": "en1991.document",
+        "opId": "en1991.op",
+        "diffId": "en1991.diff",
+        "packId": "en1991.pack",
+        "sprId": "en1991.spr",
+        "extension": "en1991"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993",
+        "status": "engine-wired",
+        "mod": "en1992",
+        "docId": "en1993.document",
+        "opId": "en1993.op",
+        "diffId": "en1993.diff",
+        "packId": "en1993.pack",
+        "sprId": "en1993.spr",
+        "extension": "en1993"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994",
+        "status": "engine-wired",
+        "mod": "en1993",
+        "docId": "en1994.document",
+        "opId": "en1994.op",
+        "diffId": "en1994.diff",
+        "packId": "en1994.pack",
+        "sprId": "en1994.spr",
+        "extension": "en1994"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995",
+        "status": "engine-wired",
+        "mod": "en1994",
+        "docId": "en1995.document",
+        "opId": "en1995.op",
+        "diffId": "en1995.diff",
+        "packId": "en1995.pack",
+        "sprId": "en1995.spr",
+        "extension": "en1995"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996",
+        "status": "engine-wired",
+        "mod": "en1995",
+        "docId": "en1996.document",
+        "opId": "en1996.op",
+        "diffId": "en1996.diff",
+        "packId": "en1996.pack",
+        "sprId": "en1996.spr",
+        "extension": "en1996"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997",
+        "status": "engine-wired",
+        "mod": "en1996",
+        "docId": "en1997.document",
+        "opId": "en1997.op",
+        "diffId": "en1997.diff",
+        "packId": "en1997.pack",
+        "sprId": "en1997.spr",
+        "extension": "en1997"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998",
+        "status": "engine-wired",
+        "mod": "en1997",
+        "docId": "en1998.document",
+        "opId": "en1998.op",
+        "diffId": "en1998.diff",
+        "packId": "en1998.pack",
+        "sprId": "en1998.spr",
+        "extension": "en1998"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999",
+        "status": "engine-wired",
+        "mod": "en1998",
+        "docId": "en1999.document",
+        "opId": "en1999.op",
+        "diffId": "en1999.diff",
+        "packId": "en1999.pack",
+        "sprId": "en1999.spr",
+        "extension": "en1999"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599",
+        "status": "engine-wired",
+        "mod": "din18599",
+        "docId": "din18599.document",
+        "opId": "din18599.op",
+        "diffId": "din18599.diff",
+        "packId": "din18599.pack",
+        "sprId": "din18599.spr",
+        "extension": "din18599"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "playbook.playbook",
+        "opId": "playbook.playbook.op",
+        "diffId": "playbook.playbook.diff",
+        "packId": "playbook.pack",
+        "sprId": "playbook.spr",
+        "extension": "playbook"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "imperative.document",
+        "opId": "imperative.imperative.op",
+        "diffId": "imperative.imperative.diff",
+        "packId": "imperative.pack",
+        "sprId": "imperative.spr",
+        "extension": "imperative"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "remodel.document",
+        "opId": "remodel.op",
+        "diffId": "remodel.diff",
+        "packId": "remodel.pack",
+        "sprId": "remodel.spr",
+        "extension": "remodel"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite",
+        "status": "engine-wired",
+        "mod": "pack",
+        "docId": "rewrite.document",
+        "opId": "rewrite.op",
+        "diffId": "rewrite.diff",
+        "packId": "rewrite.pack",
+        "sprId": "rewrite.spr",
+        "extension": "rewrite"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack",
+        "status": "engine-wired",
+        "mod": "core",
+        "docId": "jack.document",
+        "opId": "jack.op",
+        "diffId": "jack.diff",
+        "packId": "jack.pack",
+        "sprId": "jack.spr",
+        "extension": "trinity"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "draw.document",
+        "opId": "draw.op",
+        "diffId": "draw.diff",
+        "packId": "draw.pack",
+        "sprId": "draw.spr",
+        "extension": "draw"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "raster.document",
+        "opId": "raster.op",
+        "diffId": "raster.document.diff",
+        "packId": "raster.pack",
+        "sprId": "raster.spr",
+        "extension": "raster"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "puzzle.puzzle2d",
+        "opId": "puzzle.puzzle2d.op",
+        "diffId": "puzzle.puzzle2d.diff",
+        "packId": "2d.pack",
+        "sprId": "2d.spr",
+        "extension": "puzzle2d"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d",
+        "status": "engine-wired",
+        "mod": "engine",
+        "docId": "puzzle.puzzle5d",
+        "opId": "puzzle.puzzle5d.op",
+        "diffId": "puzzle.puzzle5d.diff",
+        "packId": "5d.pack",
+        "sprId": "5d.spr",
+        "extension": "puzzle5d"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d",
+        "status": "engine-wired",
+        "mod": "puzzle3d",
+        "docId": "puzzle.puzzle3d",
+        "opId": "puzzle.puzzle3d.op",
+        "diffId": "puzzle.puzzle3d.diff",
+        "packId": "3d.pack",
+        "sprId": "3d.spr",
+        "extension": "puzzle3d"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d",
+        "status": "engine-wired",
+        "mod": "core",
+        "docId": "block.block2d",
+        "opId": "block.block2d.op",
+        "diffId": "block.block2d.diff",
+        "packId": "2d.pack",
+        "sprId": "2d.spr",
+        "extension": "block2d"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d",
+        "status": "engine-wired",
+        "mod": "block3d",
+        "docId": "block.block5d",
+        "opId": "block.block5d.op",
+        "diffId": "block.block5d.diff",
+        "packId": "5d.pack",
+        "sprId": "5d.spr",
+        "extension": "block5d"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d",
+        "status": "engine-wired",
+        "mod": "block3d",
+        "docId": "block.block3d",
+        "opId": "block.block3d.op",
+        "diffId": "block.block3d.diff",
+        "packId": "3d.pack",
+        "sprId": "3d.spr",
+        "extension": "block3d"
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate",
+        "status": "engine-wired",
+        "mod": "artifacts",
+        "docId": "sourcing.curate",
+        "opId": "sourcing.curate.op",
+        "diffId": "sourcing.curate.diff",
+        "packId": "curate.pack",
+        "sprId": "curate.spr",
+        "extension": "curate"
+      }
+    ],
+    "no-engine": [
+      {
+        "artRel": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home",
+        "status": "no-engine"
+      }
+    ]
+  },
+  "engineFailures": [
+    {
+      "artRel": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home",
+      "status": "no-engine"
+    }
+  ],
+  "includeNotWired": []
+}

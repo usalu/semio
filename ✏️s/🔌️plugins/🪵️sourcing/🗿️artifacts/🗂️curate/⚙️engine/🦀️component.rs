@@ -9,15 +9,73 @@
 //! `build_filter_bar`/`build_pool_table`, used only by the pool window).
 
 use crate::artifacts::curate::{CurateDocument, CuratedItem, Filters, GeometryRecipe, ObjectKind, SOURCING_CURATE_SCHEMA};
+use semio_framework_core::{parse_contributions, Contribution};
 use serde_json::{json, Value};
+use std::sync::Mutex;
 
 //#region 🔖️Register
 /// 🗂️ Registers `CurateDocument`'s pack↔dsl codec under `SOURCING_CURATE_SCHEMA` so `framework/sync`'s
 /// folder endpoints and any other schema-string-keyed caller can print/parse curate documents. Called
 /// from the plugin root's `semio_plugin!{ setup: … }`.
 pub fn register() {
+    register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::curate::SourcingCurateApp>(SOURCING_CURATE_SCHEMA);
 }
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "sourcing.curate",
+        extension: Some("curate"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("sourcing.curate"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "sourcing.curate.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("sourcing.curate.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "sourcing.curate.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::artifacts::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("sourcing.curate.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "curate.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("curate.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "curate.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::artifacts::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("curate.spr"),
+    });
+}
+
 //#endregion 🔖️Register
 
 //#region 🔖️Io
@@ -440,9 +498,78 @@ pub mod slabs {
     }
 }
 
+fn leak_str(value: String) -> &'static str {
+    Box::leak(value.into_boxed_str())
+}
+
+/// 🧩️ One hot-installed sourcing module deserialized from `Contribution::SourcingModule`.
+#[derive(Clone)]
+struct ContributedSourcingModule {
+    module_id: &'static str,
+    label: &'static str,
+    typology: TypologyNode,
+    kinds: Vec<ObjectKind>,
+}
+
+impl SourcingModule for ContributedSourcingModule {
+    fn module_id(&self) -> &'static str {
+        self.module_id
+    }
+
+    fn label(&self) -> &'static str {
+        self.label
+    }
+
+    fn typology(&self) -> TypologyNode {
+        self.typology.clone()
+    }
+
+    fn demo_kinds(&self) -> Vec<ObjectKind> {
+        self.kinds.clone()
+    }
+}
+
+static CONTRIBUTED_SOURCING_MODULES: Mutex<Vec<ContributedSourcingModule>> = Mutex::new(Vec::new());
+static LAST_SOURCING_CONTRIBUTIONS_JSON: Mutex<String> = Mutex::new(String::new());
+
+const SOURCING_CURATE_APP_ID: &str = "sourcing-curate";
+
+/// 🔌️ Refreshes contributed `sourcing.module` entries when the host pushes a new catalogue.
+pub fn sync_sourcing_module_contributions(contributions_json: &str) {
+    let mut last = LAST_SOURCING_CONTRIBUTIONS_JSON.lock().expect("sourcing contributions lock");
+    if *last == contributions_json {
+        return;
+    }
+    let mut modules = Vec::new();
+    for entry in parse_contributions(contributions_json) {
+        let Contribution::SourcingModule { app_id, module_id, label, typology_json, kinds_json, .. } = entry.contribution else {
+            continue;
+        };
+        if app_id != SOURCING_CURATE_APP_ID {
+            continue;
+        }
+        let Ok(typology) = serde_json::from_str::<TypologyNode>(&typology_json) else {
+            continue;
+        };
+        let Ok(kinds) = serde_json::from_str::<Vec<ObjectKind>>(&kinds_json) else {
+            continue;
+        };
+        modules.push(ContributedSourcingModule { module_id: leak_str(module_id), label: leak_str(label), typology, kinds });
+    }
+    *CONTRIBUTED_SOURCING_MODULES.lock().expect("sourcing contributed modules lock") = modules;
+    *last = contributions_json.to_string();
+}
+
+fn builtin_sourcing_modules() -> Vec<Box<dyn SourcingModule>> {
+    vec![Box::new(beams::BeamsModule), Box::new(windows::WindowsModule), Box::new(slabs::SlabsModule)]
+}
+
 /// 🧩️ Every sourcing module known to this crate, in stable order.
 pub fn sourcing_modules() -> Vec<Box<dyn SourcingModule>> {
-    vec![Box::new(beams::BeamsModule), Box::new(windows::WindowsModule), Box::new(slabs::SlabsModule)]
+    let mut modules = builtin_sourcing_modules();
+    let contributed = CONTRIBUTED_SOURCING_MODULES.lock().expect("sourcing contributed modules lock");
+    modules.extend(contributed.iter().map(|module| Box::new(module.clone()) as Box<dyn SourcingModule>));
+    modules
 }
 
 /// 🔎️ Looks up a single module by id.
@@ -670,6 +797,26 @@ mod tests {
     fn available_modules_uses_the_built_in_module_registry() {
         let modules = available_modules();
         assert_eq!(modules.len(), sourcing_modules().len());
+    }
+
+    #[test]
+    fn sync_sourcing_module_contributions_adds_hot_installed_modules() {
+        use semio_framework_core::{Contribution, ProgramContributionEntry};
+        let entry = ProgramContributionEntry {
+            plugin_id: "sourcing-module-test".into(),
+            contribution: Contribution::SourcingModule {
+                app_id: "sourcing-curate".into(),
+                module_id: "hot-test".into(),
+                label: "Hot Test".into(),
+                icon_id: "box".into(),
+                typology_json: serde_json::to_string(&TypologyNode::new("hot-test", "Hot Test", vec![])).unwrap(),
+                kinds_json: "[]".into(),
+            },
+        };
+        let json = serde_json::to_string(&vec![entry]).unwrap();
+        sync_sourcing_module_contributions(&json);
+        assert!(sourcing_modules().iter().any(|module| module.module_id() == "hot-test"));
+        sync_sourcing_module_contributions("[]");
     }
 }
 //#endregion 🧪️Tests

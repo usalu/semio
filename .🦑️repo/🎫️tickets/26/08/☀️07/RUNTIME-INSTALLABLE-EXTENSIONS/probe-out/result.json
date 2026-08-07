@@ -1,0 +1,6 @@
+{
+  "extensionId": "ticket.probe",
+  "label": "Probe",
+  "version": "0.0.1",
+  "extends": "flow"
+}

@@ -9,11 +9,13 @@ import { PLAYGROUND_BUILD_TARGETS } from "../../../🔌️plugin/📦️packages
 import { isStudioPluginFilter } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts";
 import { resolveShellBrandById } from "../../🏷️brand/📦️index.ts";
 import { semioBackboneVitePlugin, semioBlobVitePlugin, semioPluginHotSwapVitePlugin } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts";
+import { defaultExtensionInstallRoot, semioExtensionStoreVitePlugin } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🏪️store/📜️store.ts";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 const playDir = path.resolve(configDir, "../..");
 const repoRoot = path.resolve(playDir, "../../../../..");
 const pluginModulesDir = path.join(playDir, "🔌️plugin-modules");
+const installedExtensionsDir = defaultExtensionInstallRoot(repoRoot);
 const rendererModulesDir = path.join(playDir, "📺️renderer-modules");
 const renderer = process.env.SEMIO_RENDERER ?? "react";
 const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
@@ -86,6 +88,7 @@ export default defineConfig({
       { find: "@semio-tech/framework-os-core", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts") },
       { find: "@semio-tech/framework-surface-board-2d-rs", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/pkg") },
       { find: "/plugin-modules", replacement: pluginModulesDir },
+      { find: "/extensions", replacement: installedExtensionsDir },
       { find: "/renderer-modules", replacement: rendererModulesDir },
     ],
     dedupe: ["react", "react-dom", "three", "@react-three/fiber", "@react-three/drei"],
@@ -93,7 +96,7 @@ export default defineConfig({
   server: {
     port: Number(process.env.S_OS_PORT ?? 6066),
     strictPort: true,
-    fs: { allow: [repoRoot, pluginModulesDir, rendererModulesDir] },
+    fs: { allow: [repoRoot, pluginModulesDir, installedExtensionsDir, rendererModulesDir] },
     watch: {
       // Generated registry rewrites must not bounce Vite (write playgrounds.ts → restart → rewrite…).
       ignored: ["**/📇️registry/🤖️generated/**", "**/🤖️generated/**", "**/.vscode/launch.json"],
@@ -109,6 +112,7 @@ export default defineConfig({
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
     semioPluginHotSwapVitePlugin(),
+    semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot }),
     ...semioAssetsVitePlugin(repoRoot),
     // 🔌️ `resolve.alias`'s `/plugin-modules` entry above only covers *bundler* resolution (static imports
     // Vite can inline) — the shell also fetches wasm plugin modules at runtime via plain absolute-URL
@@ -123,6 +127,7 @@ export default defineConfig({
     ...(pluginModuleDirNames
       ? pluginModuleDirNames.flatMap((name) => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/plugin-modules/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) }))
       : staticDirVitePlugin(repoRoot, { kind: "static-dir", route: "/plugin-modules", root: path.relative(repoRoot, pluginModulesDir) })),
+    staticDirVitePlugin(repoRoot, { kind: "static-dir", route: "/extensions", root: path.relative(repoRoot, installedExtensionsDir) }),
     // 🏷️ A brand's own static assets (e.g. the Aggregator's funding/partner logos) mount at `/<assetsDir>`
     // alongside the shared `framework/ui/asset` mount above.
     ...(brand?.assetsDir ? staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/${brand.assetsDir}`, root: brand.assetsDir }) : []),

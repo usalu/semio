@@ -80,29 +80,26 @@ pub fn parse_value_json(value_json: &str) -> Value {
 //#endregion 🔖️Values
 
 //#region 🔖️Contributions
-/// 🧩️ One host-declared plugin contribution — the config-driven counterpart of a deleted `ViewModel`
-/// field. The host pushes contributions into config via `FormsCommand::SetContributions`/
-/// `FormsConfigOperation::SetContributions` (mirrors `SetLocale`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ProgramContributionEntry {
-    pub plugin_id: String,
-    pub contribution: Contribution,
-}
+pub use semio_framework_core::{parse_contributions, ProgramContributionEntry};
 
 pub fn parse_contributions(config: &FormsConfig) -> Vec<ProgramContributionEntry> {
-    serde_json::from_str::<Vec<ProgramContributionEntry>>(&config.contributions_json).unwrap_or_default()
+    semio_framework_core::parse_contributions(&config.contributions_json)
+}
+
+fn question_kind_match<'a>(contribution: &'a Contribution, kind: &str) -> Option<(&'a str, &'a str, &'a str)> {
+    match contribution {
+        Contribution::FormsQuestionKind { question_kind, app_id, params_body_key, preview_body_key, .. } if question_kind == kind => {
+            Some((app_id, params_body_key, preview_body_key))
+        }
+        Contribution::PlaybookBlockKind { block_kind, app_id, params_body_key, preview_body_key, .. } if block_kind == kind => {
+            Some((app_id, params_body_key, preview_body_key))
+        }
+        _ => None,
+    }
 }
 
 pub fn find_question_kind_contribution<'a>(contributions: &'a [ProgramContributionEntry], kind: &str) -> Option<(&'a str, &'a Contribution)> {
-    contributions.iter().find_map(|entry| {
-        if let Contribution::PlaybookBlockKind { block_kind, .. } = &entry.contribution {
-            if block_kind == kind {
-                return Some((entry.plugin_id.as_str(), &entry.contribution));
-            }
-        }
-        None
-    })
+    contributions.iter().find_map(|entry| question_kind_match(&entry.contribution, kind).map(|_| (entry.plugin_id.as_str(), &entry.contribution)))
 }
 
 fn extension_params_value(question: &FormQuestion, values: &Map<String, Value>) -> Value {
@@ -128,7 +125,7 @@ pub fn render_extension_question(question: &FormQuestion, values: &Map<String, V
     let Some((plugin_id, contribution)) = find_question_kind_contribution(contributions, &question.kind) else {
         return semio_framework_plugin::ui_text(Label::data(format!("Extension unavailable: {}", question.kind)));
     };
-    let Contribution::PlaybookBlockKind { app_id, params_body_key, preview_body_key, .. } = contribution else {
+    let Some((app_id, params_body_key, preview_body_key)) = question_kind_match(contribution, &question.kind) else {
         return semio_framework_plugin::ui_text(Label::data(format!("Extension unavailable: {}", question.kind)));
     };
     let params = extension_params_value(question, values);
@@ -166,8 +163,14 @@ pub fn catalogue_kinds(contributions: &[ProgramContributionEntry], labels: &Form
         })
         .collect();
     for entry in contributions {
-        if let Contribution::PlaybookBlockKind { block_kind, label, icon_id, .. } = &entry.contribution {
-            kinds.push((block_kind.clone(), label.clone(), *icon_id));
+        match &entry.contribution {
+            Contribution::FormsQuestionKind { question_kind, label, icon_id, .. } => {
+                kinds.push((question_kind.clone(), label.clone(), *icon_id));
+            }
+            Contribution::PlaybookBlockKind { block_kind, label, icon_id, .. } => {
+                kinds.push((block_kind.clone(), label.clone(), *icon_id));
+            }
+            _ => {}
         }
     }
     kinds
@@ -433,9 +436,9 @@ pub(crate) mod testkit {
     pub fn building_component_contributions() -> Vec<ProgramContributionEntry> {
         vec![ProgramContributionEntry {
             plugin_id: "forms-module-procedural".into(),
-            contribution: Contribution::PlaybookBlockKind {
+            contribution: Contribution::FormsQuestionKind {
                 app_id: "forms-module-procedural".into(),
-                block_kind: "buildingComponent".into(),
+                question_kind: "buildingComponent".into(),
                 label: "Building Component".into(),
                 icon_id: "building".into(),
                 default_value_json: "{}".into(),
@@ -593,6 +596,25 @@ mod tests {
         let node = render_extension_question(&building_component_question(), &Map::new(), &[], "try", true);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Extension unavailable"));
+    }
+
+    #[test]
+    fn extension_question_accepts_legacy_playbook_block_kind_contributions() {
+        let legacy = vec![ProgramContributionEntry {
+            plugin_id: "forms-module-procedural".into(),
+            contribution: Contribution::PlaybookBlockKind {
+                app_id: "forms-module-procedural".into(),
+                block_kind: "buildingComponent".into(),
+                label: "Building Component".into(),
+                icon_id: "building".into(),
+                default_value_json: "{}".into(),
+                params_body_key: "params".into(),
+                preview_body_key: "preview".into(),
+            },
+        }];
+        let node = render_extension_question(&building_component_question(), &Map::new(), &legacy, "try", true);
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("externalSlot"));
     }
 
     #[test]

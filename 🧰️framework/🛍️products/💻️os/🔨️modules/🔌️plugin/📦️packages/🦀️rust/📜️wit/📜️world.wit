@@ -47,6 +47,17 @@ interface plugin {
   clear-instance-guard: func();
 }
 
+interface extension {
+  use types.{plugin-error};
+
+  /// 📦️ ExtensionManifest encoded as store::pack_rt::encode_wire_value bytes.
+  manifest: func() -> list<u8>;
+  activate: func() -> result<_, plugin-error>;
+  deactivate: func();
+  /// 🔀️ Generic host-mediated call. `capability` selects the handler; request/result are wire-encoded bytes.
+  invoke: func(capability: string, request: list<u8>) -> result<list<u8>, plugin-error>;
+}
+
 interface host {
   log: func(level: string, message: string);
   now-ms: func() -> s64;
@@ -74,4 +85,9 @@ interface host {
 world plugin-world {
   import host;
   export plugin;
+}
+
+world extension-world {
+  import host;
+  export extension;
 }

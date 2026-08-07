@@ -1,6 +1,14 @@
 //! 🔺️ Process3d artifact — the `Process3dDiff` projection-patch type + its `OperationDiff` impl,
 //! extracted from the old `🔧️op` crate's combined operation+diff region.
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::process3d::{Process3dDocument, ProcessStep, ProcessStepPatch, Stock, WorkshopMachine, WorkshopMachinePatch};
 use protocol::{apply_collection_operation, CollectionOperation, OperationDiff};
 use serde::{Deserialize, Serialize};

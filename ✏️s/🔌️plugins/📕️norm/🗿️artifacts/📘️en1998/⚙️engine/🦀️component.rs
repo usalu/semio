@@ -895,3 +895,58 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "en1998.document",
+        extension: Some("en1998"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::en1997::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::en1997::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::en1997::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::en1997::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("en1998.document"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "en1998.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::en1997::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::en1997::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::en1997::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::en1997::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("en1998.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "en1998.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::en1997::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::en1997::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("en1998.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "en1998.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::en1997::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::en1997::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("en1998.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "en1998.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::en1997::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::en1997::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("en1998.spr"),
+    });
+}

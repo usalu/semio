@@ -18,6 +18,14 @@
 //! fork one shared shape into two incompatible encodings for no present benefit — a structural,
 //! cross-crate schema change out of scope here.
 
+
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 use crate::artifacts::wires::MindmapWiresDocument;
 
 /// 📄️ The `metabolism` example, handcrafted in the `.wires` DSL — source of truth for every

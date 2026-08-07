@@ -6,7 +6,8 @@
 //! content. B1: absorbs every field that used to live on `forms_ui::FormsPlayApp`'s
 //! `RefCell<FormsPlayRuntime>` (blueprint selection, the Try wizard's active step, its in-progress answer
 //! values) plus `locale` (was read off `view_state.locale`) and `contributions_json` (was read off
-//! `view_state.contributions_json` — the host-declared `Contribution::PlaybookBlockKind` list backing
+//! `view_state.contributions_json` — the host-declared `Contribution::FormsQuestionKind` (legacy:
+//! `PlaybookBlockKind`) list backing extension question kinds in the blueprint builder, try wizard, and
 //! extension question rendering; the host now pushes contributions into config via
 //! `SetContributions`, mirroring how it now pushes locale via `SetLocale`).
 
@@ -35,7 +36,7 @@ pub struct FormsConfig {
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
     pub locale: String,
     /// 🧩️ Host-declared plugin contributions (JSON array of `{pluginId, contribution}`, only
-    /// `Contribution::PlaybookBlockKind` entries matter) — was read off `view_state.contributions_json`.
+    /// `Contribution::FormsQuestionKind` entries matter; legacy `PlaybookBlockKind` still accepted) — was read off `view_state.contributions_json`.
     pub contributions_json: String,
 }
 
