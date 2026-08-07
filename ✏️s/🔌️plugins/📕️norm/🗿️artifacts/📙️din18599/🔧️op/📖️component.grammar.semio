@@ -4,8 +4,10 @@ extension din18599
 use family-sheet
 start operation
 
-operation = ("set" | "patch" | "remove") field*
-field = ("started" | "actor" | "use-class" | "heated-area-m2" | "occupants" | "h-t" | "h-v" | "internal-gains-w-m2" | "solar-gains-kwh" | "system-losses-kwh" | "renewable-kwh" | "annual-limit-kwh" | "energy-carrier" | "reference-q-p-kwh" | "theta-e-c" | "g-h-w-m2" | IDENT) "=" value
-value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
-UNITNUM = FLOAT UNIT | INT UNIT
+artifact-mark = "norm.din18599-op"
+operation = artifact-mark op-stmt+
+op-stmt = "set-field" field+ | "patch-field" field+ | "remove-field" field+
+field = ("din18599-basis" | "din18599-combination" | "din18599-partial-factor" | "din18599-verdict" | "din18599-annex" | "din18599-actor" | "started" | "actor") "=" value
+value = TEXT | INT | FLOAT | BOOL | QUANTITY
+QUANTITY = FLOAT UNIT | INT UNIT
 UNIT = IDENT

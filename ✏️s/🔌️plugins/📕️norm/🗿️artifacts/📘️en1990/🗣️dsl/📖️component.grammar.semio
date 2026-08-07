@@ -4,9 +4,14 @@ extension en1990
 use family-sheet
 start document
 
-document = header assign*
+artifact-mark = "norm.en1990"
+document = artifact-mark doc-body
+doc-body = header sheet-body
 header = "semio" IDENT "v" INT
-assign = ("g-k" | "q-k" | "resistance-kn" | "consequence-class" | "annex" | "seismic-a-ed-kn" | "started" | "actor") "=" value
-value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
-UNITNUM = FLOAT UNIT | INT UNIT
+sheet-body = assign*
+assign = ("en1990-basis" | "en1990-combination" | "en1990-partial-factor" | "en1990-verdict" | "en1990-annex" | "en1990-actor" | "started" | "actor") "=" value
+value = TEXT | INT | FLOAT | BOOL | QUANTITY | clause-ref
+QUANTITY = FLOAT UNIT | INT UNIT
 UNIT = IDENT
+clause-ref = IDENT "." IDENT
+trace = IDENT "=" expr ARROW FLOAT

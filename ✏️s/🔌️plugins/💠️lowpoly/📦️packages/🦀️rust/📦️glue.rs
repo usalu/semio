@@ -170,6 +170,7 @@ pub mod apps {
 /// `required_os_media_export_formats`/`required_os_media_import_formats`; also registers the
 /// `DocumentPack` codec so `.pack`/`.ops` sync/storage paths can encode/decode `LowpolyProjection`.
 fn register_lowpoly_exports() {
+    artifacts::lowpoly::engine::register();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::lowpoly::LowpolyPlayApp>(artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA);
     semio_framework_os::register_mesh_exporter("3d.lowpoly", "lowpoly", artifacts::lowpoly::engine::lowpoly_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
     semio_framework_os::register_mesh_exporter("3d.lowpoly", "lowpoly", artifacts::lowpoly::engine::lowpoly_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));

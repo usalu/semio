@@ -4,27 +4,58 @@ extension dag
 use family-graph
 start document
 
-document = TEXT schema-line node-body edges-table
+document = header schema-line nodes-table edges-table
+header = "semio" IDENT "v" INT
 schema-line = "schema=" IDENT
-node-body = node-entry*
-node-entry = "id=" IDENT field* node-kind
-node-kind = "slider" field* | "select" field* | "computation" comp-meta io-table io-table | "screen" field* | "note" field* | "image" field* | "preview" field* | "action" field* | "export" field* | "cluster" comp-meta io-table io-table | "app-instance" field* io-table io-table
-comp-meta = "variadic-inputs=" BOOL "variadic-outputs=" BOOL
-io-table = "inputs" table | "outputs" table
-edges-table = "edges" table
-
-wire-endpoint = IDENT {":" IDENT}? {"@" IDENT}?
-edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
-edge-label = IDENT {":" IDENT}?
-wire = wire-endpoint edge-arrow wire-endpoint props?
-chain = wire-endpoint {ARROW wire-endpoint}+ | wire-endpoint {DASHARROW wire-endpoint}+
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL)
-table = IDENT columns "{" row* "}"
-columns = "[" column+ "]"
+nodes-table = "nodes" node-table
+node-table = "[" node-columns "]" "{" node-row* "}"
+node-columns = column+
 column = IDENT ":" IDENT
-row = cell+
-cell = TEXT | INT | FLOAT | BOOL | IDENT | wire | MAP | BLOCK
-block = "{" field* "}"
-field = IDENT "=" value
-value = TEXT | INT | FLOAT | BOOL | wire | MAP | block | table
+node-row = node-kind
+node-kind = slider-node | select-node | computation-node | screen-node | note-node | image-node | preview-node | action-node | export-node | cluster-node | app-instance-node
+slider-node = "id=" IDENT "name=" TEXT "abbreviation=" TEXT "icon=" TEXT "x=" FLOAT "y=" FLOAT "width=" FLOAT "height=" FLOAT properties-block slider-kind
+select-node = "id=" IDENT "name=" TEXT "abbreviation=" TEXT "icon=" TEXT "x=" FLOAT "y=" FLOAT "width=" FLOAT "height=" FLOAT properties-block select-kind
+computation-node = "id=" IDENT "name=" TEXT "abbreviation=" TEXT "icon=" TEXT "x=" FLOAT "y=" FLOAT "width=" FLOAT "height=" FLOAT properties-block computation-kind
+screen-node = "id=" IDENT "name=" TEXT "abbreviation=" TEXT "icon=" TEXT "x=" FLOAT "y=" FLOAT "width=" FLOAT "height=" FLOAT properties-block screen-kind
+note-node = "id=" IDENT "name=" TEXT "abbreviation=" TEXT "icon=" TEXT "x=" FLOAT "y=" FLOAT "width=" FLOAT "height=" FLOAT properties-block note-kind
+image-node = "id=" IDENT "name=" TEXT "abbreviation=" TEXT "icon=" TEXT "x=" FLOAT "y=" FLOAT "width=" FLOAT "height=" FLOAT properties-block image-kind
+preview-node = "id=" IDENT "name=" TEXT "abbreviation=" TEXT "icon=" TEXT "x=" FLOAT "y=" FLOAT "width=" FLOAT "height=" FLOAT properties-block preview-kind
+action-node = "id=" IDENT "name=" TEXT "abbreviation=" TEXT "icon=" TEXT "x=" FLOAT "y=" FLOAT "width=" FLOAT "height=" FLOAT properties-block action-kind
+export-node = "id=" IDENT "name=" TEXT "abbreviation=" TEXT "icon=" TEXT "x=" FLOAT "y=" FLOAT "width=" FLOAT "height=" FLOAT properties-block export-kind
+cluster-node = "id=" IDENT "name=" TEXT "abbreviation=" TEXT "icon=" TEXT "x=" FLOAT "y=" FLOAT "width=" FLOAT "height=" FLOAT properties-block cluster-kind
+app-instance-node = "id=" IDENT "name=" TEXT "abbreviation=" TEXT "icon=" TEXT "x=" FLOAT "y=" FLOAT "width=" FLOAT "height=" FLOAT properties-block app-instance-kind
+slider-kind = "slider" slider-fields io-port
+select-kind = "select" "selected=" INT "options=" TEXT io-port
+computation-kind = "computation" "variadic-inputs=" BOOL "variadic-outputs=" BOOL io-table io-table
+cluster-kind = "cluster" "variadic-inputs=" BOOL "variadic-outputs=" BOOL io-table io-table
+screen-kind = "screen" screen-fields io-port
+note-kind = "note" note-fields io-port
+image-kind = "image" image-fields io-port
+preview-kind = "preview" preview-fields io-port
+action-kind = "action" action-fields io-port
+export-kind = "export" export-fields io-port
+app-instance-kind = "app-instance" app-instance-fields io-table io-table
+slider-fields = "min=" FLOAT "max=" FLOAT "step=" FLOAT "value=" FLOAT
+screen-fields = "media=" media-kind
+note-fields = "text=" TEXT
+image-fields = "src=" TEXT
+preview-fields = "kind=" IDENT "src=" TEXT
+action-fields = "label=" TEXT
+export-fields = "format=" IDENT
+app-instance-fields = "app=" IDENT
+media-kind = "kind=" IDENT "src=" TEXT
+io-table = "inputs" port-table | "outputs" port-table
+port-table = "[" port-columns "]" "{" port-row* "}"
+port-columns = column+
+port-row = port-cell+
+port-cell = TEXT | INT | FLOAT | BOOL | IDENT
+io-port = "input=" IDENT "label=" TEXT "code=" TEXT "abbreviation=" TEXT "full-name=" TEXT "cardinality=" TEXT "shape=" IDENT "visible=" BOOL | "output=" IDENT "label=" TEXT "code=" TEXT "abbreviation=" TEXT "full-name=" TEXT "cardinality=" TEXT "shape=" IDENT "visible=" BOOL
+properties-block = "properties" "{" "}"
+edges-table = "edges" edge-table
+edge-table = "[" edge-columns "]" "{" edge-row* "}"
+edge-columns = column+
+edge-row = IDENT TEXT TEXT route-style edge-props?
+route-style = IDENT
+edge-props = "{" edge-field* "}"
+edge-field = "weight" "=" (FLOAT | INT) | "kind" "=" (TEXT | IDENT) | "label" "=" TEXT | "id" "=" IDENT
+chain = wire-endpoint {ARROW wire-endpoint}+ | wire-endpoint {DASHARROW wire-endpoint}+

@@ -4,11 +4,7 @@ extension shooting
 use family-scene
 start diff
 
-diff = {"scene" "=" scene-patch}? {"assets" "=" collection-diff}? {"shots" "=" collection-diff}? {"saved-cameras" "=" collection-diff}? {"active-shot-id" "=" IDENT}? {"active-asset-id" "=" IDENT}?
-scene-patch = "{" prop* "}"
-collection-diff = "{" {"added" "=" list}? {"removed" "=" list}? {"moved" "=" list}? {"modified" "=" list}? "}"
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" prop* "}"
-value = TEXT | FLOAT | INT | BOOL | list | map
+artifact-mark = "shooting.shooting-diff"
+diff = artifact-mark canvas-change+
+canvas-change = "add-layer" IDENT | "remove-layer" IDENT | "move" "id" "=" IDENT "dx" "=" FLOAT "dy" "=" FLOAT
+paint-field = "stroke" "=" TEXT | "fill" "=" TEXT

@@ -4,30 +4,11 @@ extension draw
 use family-scene
 start operation
 
-operation = set-layer-visible | set-layer-locked | set-layer-opacity | set-layer-blend-mode | set-layer-name | set-layer-transform | set-fill | set-stroke | set-boolean-operation | set-trace-params | add-layer | duplicate-layer | remove-layer | reorder-layer | set-document
-set-layer-visible = "set-layer-visible" "layer-id" "=" IDENT "visible" "=" BOOL
-set-layer-locked = "set-layer-locked" "layer-id" "=" IDENT "locked" "=" BOOL
-set-layer-opacity = "set-layer-opacity" "layer-id" "=" IDENT "opacity" "=" FLOAT
-set-layer-blend-mode = "set-layer-blend-mode" "layer-id" "=" IDENT "blend-mode" "=" IDENT
-set-layer-name = "set-layer-name" "layer-id" "=" IDENT "name" "=" TEXT
-set-layer-transform = "set-layer-transform" "layer-id" "=" IDENT transform-block
-set-fill = "set-fill" "layer-id" "=" IDENT fill-block
-set-stroke = "set-stroke" "layer-id" "=" IDENT stroke-block
-set-boolean-operation = "set-boolean-operation" "layer-id" "=" IDENT "boolean-operation" "=" IDENT
-set-trace-params = "set-trace-params" "layer-id" "=" IDENT params-block
-add-layer = "add-layer" {"parent" "=" IDENT}? {"index" "=" INT}? layer
-duplicate-layer = "duplicate-layer" "layer-id" "=" IDENT
-remove-layer = "remove-layer" "layer-id" "=" IDENT
-reorder-layer = "reorder-layer" "layer-id" "=" IDENT "index" "=" INT
-set-document = "set-document" document-block
-layer = "shape" prop* | "path" prop* | "text" prop* | "image" prop* | "group" prop* | "boolean" prop* | "trace" prop*
-transform-block = "transform" "{" prop* "}"
-fill-block = "fill" "{" prop* "}"
-stroke-block = "stroke" "{" prop* "}"
-params-block = "params" "{" prop* "}"
-document-block = "document" "{" prop* "}"
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" prop* "}"
-value = TEXT | FLOAT | INT | BOOL | list | map
+artifact-mark = "draw.draw-op"
+operation = artifact-mark canvas-op+
+canvas-op = "add-layer" layer-field+ | "set-stroke" stroke-field+ | "move-layer" move-field+ | "set-fill" fill-field+
+layer-field = "id" "=" IDENT | "kind" "=" IDENT
+stroke-field = "color" "=" TEXT | "width" "=" FLOAT
+move-field = "id" "=" IDENT | "x" "=" FLOAT | "y" "=" FLOAT
+fill-field = "id" "=" IDENT | "fill" "=" TEXT
+paint-field = "opacity" "=" FLOAT | "blend" "=" IDENT

@@ -9,3 +9,17 @@ pub fn parse_fence_lang(header: &str) -> Option<String> {
     let lang = rest.split_whitespace().next()?;
     (!lang.is_empty()).then(|| lang.to_string())
 }
+
+//#region 🔖️Tests
+#[cfg(test)]
+mod tests {
+    /// @emoji 📖️ The fragment's `.grammar` file must parse under `dsl_grammar`'s parser.
+    #[test]
+    fn grammar_file_is_syntactically_valid() {
+        let source = include_str!("📖️family-embed.grammar.semio");
+        let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-embed.grammar must parse");
+        assert_eq!(grammar.id, "family-embed");
+        assert!(grammar.productions.len() > 4, "family-embed should expose fence vocabulary beyond a one-liner");
+    }
+}
+//#endregion 🔖️Tests

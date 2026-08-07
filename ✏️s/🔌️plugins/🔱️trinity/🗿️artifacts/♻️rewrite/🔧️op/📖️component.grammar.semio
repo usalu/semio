@@ -4,20 +4,13 @@ extension rewrite
 use family-graph
 start operation
 
-operation = "set-state" block
-
-wire-endpoint = IDENT {":" IDENT}? {"@" IDENT}?
-edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
-edge-label = IDENT {":" IDENT}?
-wire = wire-endpoint edge-arrow wire-endpoint props?
-chain = wire-endpoint {ARROW wire-endpoint}+ | wire-endpoint {DASHARROW wire-endpoint}+
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL)
-table = IDENT columns "{" row* "}"
-columns = "[" column+ "]"
-column = IDENT ":" IDENT
-row = cell+
-cell = TEXT | INT | FLOAT | BOOL | IDENT | wire | MAP | BLOCK
-block = "{" field* "}"
-field = IDENT "=" value
-value = TEXT | INT | FLOAT | BOOL | wire | MAP | block | table
+artifact-mark = "trinity.rewrite-op"
+operation = artifact-mark graph-op+
+graph-op = "add-node" node-field+ | "set-port" port-field+ | "wire-edge" edge-op | "unlink-edge" edge-op | "patch-layout" layout-field+
+node-field = "id" "=" IDENT | "kind" "=" IDENT
+port-field = "node" "=" IDENT | "port" "=" IDENT | "dir" "=" IDENT
+edge-op = "from" "=" IDENT "to" "=" IDENT
+layout-field = "x" "=" FLOAT | "y" "=" FLOAT
+edge = wire-endpoint edge-arrow wire-endpoint
+wire-endpoint = IDENT {":" IDENT}?
+edge-arrow = ARROW | DASHARROW | EDGEARROW

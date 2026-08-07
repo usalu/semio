@@ -4,8 +4,10 @@ extension en1991
 use family-sheet
 start operation
 
-operation = ("set" | "patch" | "remove") field*
-field = ("area-m2" | "category" | "annex" | "self-weight-material" | "self-weight-thickness-m" | "assumed-g-k-kn-m2" | "fire-curve" | "fire-resistance-min" | "fire-member-capacity-c" | "snow-zone" | "snow-altitude-m" | "en-s-k-kn-m2" | "wind-zone" | "en-v-b-m-s" | "delta-t-k" | "construction-activity" | "accidental-mass-t" | "accidental-speed-km-h" | "bridge-lane" | "bridge-span-m" | "bridge-lane-width-m" | "bridge-moment-resistance-knm" | "crane-class" | "hoist-class" | "hoisting-speed-m-s" | "silo-bulk-density-kn-m3" | "silo-height-m" | "silo-hydraulic-radius-m" | "silo-mu" | "silo-k" | "c-s" | "c-d" | "started" | "actor" | IDENT) "=" value
-value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
-UNITNUM = FLOAT UNIT | INT UNIT
+artifact-mark = "norm.en1991-op"
+operation = artifact-mark op-stmt+
+op-stmt = "set-field" field+ | "patch-field" field+ | "remove-field" field+
+field = ("en1991-basis" | "en1991-combination" | "en1991-partial-factor" | "en1991-verdict" | "en1991-annex" | "en1991-actor" | "started" | "actor") "=" value
+value = TEXT | INT | FLOAT | BOOL | QUANTITY
+QUANTITY = FLOAT UNIT | INT UNIT
 UNIT = IDENT

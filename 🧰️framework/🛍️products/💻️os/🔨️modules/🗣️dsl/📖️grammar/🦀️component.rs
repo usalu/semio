@@ -66,10 +66,89 @@ pub enum Symbol {
 }
 //#endregion 🔖️Model
 
+//#region 📡️ProtocolModel
+/// @emoji 📡️ One parsed `.protocol.semio` file: framing + typed body directives.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ProtocolFile {
+    pub id: String,
+    pub version: u16,
+    pub schema: String,
+    pub start: String,
+    pub uses: Vec<String>,
+    pub framing: Framing,
+    pub blocks: Vec<Block>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Framing {
+    Magic([u8; 8]),
+    Record,
+    Chunked,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum Block {
+    Header(Vec<Field>),
+    Segment { name: String, kind: Option<u8>, fields: Vec<Field> },
+    Record { name: String, tag: Option<u64>, fields: Vec<Field> },
+    Struct { name: String, fields: Vec<Field> },
+    Enum { name: String, variants: Vec<(String, u64)> },
+    Footer(usize),
+    Chain(Prim),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Field {
+    pub name: String,
+    pub ty: Prim,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum Prim {
+    U8,
+    U16,
+    U32,
+    U64,
+    I32,
+    I64,
+    F32,
+    F64,
+    Varint,
+    Zigzag,
+    Bytes,
+    Utf8,
+    Fixed(usize),
+    Array(Box<Prim>, Count),
+    Ref(String),
+    Tag,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Count {
+    Fixed(usize),
+    Varint,
+    Field(String),
+}
+
+/// @emoji ✅️ Successful byte walk: every declared wire slot consumed.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ProtocolTrace {
+    pub consumed: usize,
+}
+
+/// @emoji ❌️ Spec/bytes disagreement at a concrete offset.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ProtocolMismatch {
+    pub offset: usize,
+    pub message: String,
+}
+//#endregion 📡️ProtocolModel
+
 //#region 🔖️Lexer
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum GKind {
     Ident,
+    Int,
     Text,
     Star,
     Plus,
@@ -113,6 +192,7 @@ fn lex(text: &str) -> Result<Vec<GToken>, TextError> {
             }
             let kind = match token.kind {
                 CoreKind::Ident | CoreKind::Placeholder => GKind::Ident,
+                CoreKind::Int => GKind::Int,
                 CoreKind::Text => GKind::Text,
                 CoreKind::Star => GKind::Star,
                 CoreKind::Plus => GKind::Plus,
@@ -216,25 +296,30 @@ impl Cursor {
         }
     }
 
-    fn skip_line(&mut self) {
-        while self.peek().kind != GKind::Newline && self.peek().kind != GKind::Eof {
-            self.advance();
-        }
-        if self.peek().kind == GKind::Newline {
-            self.advance();
+    fn expect_ident_or_int(&mut self) -> Result<GToken, TextError> {
+        match self.peek().kind {
+            GKind::Ident | GKind::Int => Ok(self.advance()),
+            other => Err(TextError::new(format!("expected ident or int, found {other:?}"), self.peek().span.clone())),
         }
     }
-}
-
-fn is_protocol_directive_line(keyword: &str, cursor: &Cursor) -> bool {
-    if cursor.peek().kind == GKind::Equals {
-        return false;
-    }
-    matches!(keyword, "version" | "schema" | "framing" | "header" | "field" | "segment" | "record" | "footer" | "chain")
 }
 
 fn is_all_upper(text: &str) -> bool {
     text.chars().any(|c| c.is_alphabetic()) && text.chars().all(|c| c.is_uppercase() || c == '_' || c == '-' || c.is_ascii_digit())
+}
+
+fn is_protocol_source(text: &str) -> bool {
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') || trimmed.starts_with("//") {
+            continue;
+        }
+        if trimmed.starts_with("dialect") {
+            return trimmed.split_whitespace().nth(1) == Some("protocol");
+        }
+        return trimmed.starts_with("protocol");
+    }
+    false
 }
 
 fn parse_macro_args(cursor: &mut Cursor) -> Result<Vec<MacroArg>, TextError> {
@@ -333,15 +418,29 @@ fn parse_production_line(cursor: &mut Cursor) -> Result<Production, TextError> {
     Ok(Production { name, alternatives })
 }
 
+fn project_protocol(protocol: ProtocolFile) -> GrammarFile {
+    GrammarFile {
+        dialect: SemioDialect::Protocol,
+        id: protocol.id,
+        extension: None,
+        uses: protocol.uses,
+        start: protocol.start,
+        productions: Vec::new(),
+    }
+}
+
 /// @emoji 📖️ Parses one `.grammar` file. v1 requires every header directive and every production
 /// on its own line — no line continuation. This is a real, currently-enforced limitation (not yet
 /// a gap that's silently wrong): a production too long for one line is a signal to factor it into
-/// named sub-productions, which the format already supports via `Ref`.
+/// named sub-productions, which the format already supports via `Ref`. Protocol dialect sources
+/// project through [`parse_protocol`] into a shallow [`GrammarFile`] (empty productions).
 pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
+    if is_protocol_source(text) {
+        return Ok(project_protocol(parse_protocol(text)?));
+    }
+
     let tokens = lex(text)?;
     let mut cursor = Cursor { tokens, pos: 0 };
-    cursor.skip_newlines();
-
     cursor.skip_newlines();
 
     let dialect = if cursor.peek_ident("dialect") {
@@ -350,17 +449,16 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
         cursor.skip_newlines();
         match name.as_str() {
             "grammar" => SemioDialect::Grammar,
-            "protocol" => SemioDialect::Protocol,
+            "protocol" => {
+                return Ok(project_protocol(parse_protocol(text)?));
+            }
             other => return Err(TextError::new(format!("unknown semio dialect `{other}`"), cursor.peek().span.clone())),
         }
     } else {
         SemioDialect::Grammar
     };
 
-    cursor.expect_ident(match dialect {
-        SemioDialect::Grammar => "grammar",
-        SemioDialect::Protocol => "protocol",
-    })?;
+    cursor.expect_ident("grammar")?;
     let id = cursor.expect(GKind::Ident)?.text;
     cursor.skip_newlines();
 
@@ -387,20 +485,374 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
                 start = Some(cursor.expect(GKind::Ident)?.text);
                 cursor.skip_newlines();
             }
-            keyword if dialect == SemioDialect::Protocol && is_protocol_directive_line(keyword, &cursor) => {
-                cursor.skip_line();
-                cursor.skip_newlines();
-            }
             _ => {
-                cursor.pos -= 1; // un-consume; re-read as a production name
+                cursor.pos -= 1;
                 productions.push(parse_production_line(&mut cursor)?);
                 cursor.skip_newlines();
             }
         }
     }
 
+    let _ = dialect;
     let start = start.ok_or_else(|| TextError::new("`.grammar` file is missing a `start` directive", cursor.peek().span.clone()))?;
-    Ok(GrammarFile { dialect, id, extension, uses, start, productions })
+    Ok(GrammarFile { dialect: SemioDialect::Grammar, id, extension, uses, start, productions })
+}
+
+fn parse_usize_token(token: &GToken) -> Result<usize, TextError> {
+    token.text.parse::<usize>().map_err(|_| TextError::new(format!("expected unsigned integer, found `{}`", token.text), token.span.clone()))
+}
+
+fn parse_u64_literal(cursor: &mut Cursor) -> Result<u64, TextError> {
+    let first = cursor.expect_ident_or_int()?;
+    if first.kind == GKind::Int && first.text == "0" {
+        if cursor.peek().kind == GKind::Ident {
+            let rest = cursor.peek().text.clone();
+            if let Some(hex) = rest.strip_prefix('x').or_else(|| rest.strip_prefix('X')) {
+                cursor.advance();
+                return u64::from_str_radix(hex, 16).map_err(|_| TextError::new(format!("invalid hex literal `0{rest}`"), first.span.clone()));
+            }
+        }
+    }
+    if let Some(hex) = first.text.strip_prefix("0x").or_else(|| first.text.strip_prefix("0X")) {
+        return u64::from_str_radix(hex, 16).map_err(|_| TextError::new(format!("invalid hex literal `{}`", first.text), first.span.clone()));
+    }
+    first.text.parse::<u64>().map_err(|_| TextError::new(format!("expected unsigned integer, found `{}`", first.text), first.span.clone()))
+}
+
+fn parse_count(cursor: &mut Cursor) -> Result<Count, TextError> {
+    match cursor.peek().kind {
+        GKind::Ident if cursor.peek().text == "Varint" || cursor.peek().text == "varint" => {
+            cursor.advance();
+            Ok(Count::Varint)
+        }
+        GKind::Ident if cursor.peek().text == "Fixed" || cursor.peek().text == "fixed" => {
+            cursor.advance();
+            cursor.expect(GKind::LParen)?;
+            let n = parse_usize_token(&cursor.expect_ident_or_int()?)?;
+            cursor.expect(GKind::RParen)?;
+            Ok(Count::Fixed(n))
+        }
+        GKind::Ident if cursor.peek().text == "Field" => {
+            cursor.advance();
+            cursor.expect(GKind::LParen)?;
+            let name = cursor.expect(GKind::Ident)?.text;
+            cursor.expect(GKind::RParen)?;
+            Ok(Count::Field(name))
+        }
+        GKind::Int => Ok(Count::Fixed(parse_usize_token(&cursor.advance())?)),
+        _ => Err(TextError::new("expected Array count (Fixed/Varint/Field)", cursor.peek().span.clone())),
+    }
+}
+
+fn parse_prim(cursor: &mut Cursor) -> Result<Prim, TextError> {
+    match cursor.peek().kind {
+        GKind::Ident => {
+            let name = cursor.advance().text;
+            match name.as_str() {
+                "u8" => Ok(Prim::U8),
+                "u16" => Ok(Prim::U16),
+                "u32" => Ok(Prim::U32),
+                "u64" => Ok(Prim::U64),
+                "i32" => Ok(Prim::I32),
+                "i64" => Ok(Prim::I64),
+                "f32" => Ok(Prim::F32),
+                "f64" => Ok(Prim::F64),
+                "varint" => {
+                    if cursor.peek_ident("bytes") {
+                        cursor.advance();
+                        Ok(Prim::Array(Box::new(Prim::U8), Count::Varint))
+                    } else {
+                        Ok(Prim::Varint)
+                    }
+                }
+                "zigzag" => Ok(Prim::Zigzag),
+                "bytes" => Ok(Prim::Bytes),
+                "utf8" => Ok(Prim::Utf8),
+                "tag" => Ok(Prim::Tag),
+                "fixed" => {
+                    let n = parse_usize_token(&cursor.expect_ident_or_int()?)?;
+                    Ok(Prim::Fixed(n))
+                }
+                "Fixed" => {
+                    cursor.expect(GKind::LParen)?;
+                    let n = parse_usize_token(&cursor.expect_ident_or_int()?)?;
+                    cursor.expect(GKind::RParen)?;
+                    Ok(Prim::Fixed(n))
+                }
+                "array" => {
+                    let inner = parse_prim(cursor)?;
+                    Ok(Prim::Array(Box::new(inner), Count::Varint))
+                }
+                "Array" => {
+                    cursor.expect(GKind::LParen)?;
+                    let inner = parse_prim(cursor)?;
+                    cursor.expect(GKind::Comma)?;
+                    let count = parse_count(cursor)?;
+                    cursor.expect(GKind::RParen)?;
+                    Ok(Prim::Array(Box::new(inner), count))
+                }
+                "Ref" => {
+                    cursor.expect(GKind::LParen)?;
+                    let target = cursor.expect(GKind::Ident)?.text;
+                    cursor.expect(GKind::RParen)?;
+                    Ok(Prim::Ref(target))
+                }
+                other => Ok(Prim::Ref(other.to_string())),
+            }
+        }
+        other => Err(TextError::new(format!("expected a protocol type, found {other:?}"), cursor.peek().span.clone())),
+    }
+}
+
+fn parse_field_pair(cursor: &mut Cursor) -> Result<Field, TextError> {
+    let name = cursor.expect(GKind::Ident)?.text;
+    let ty = parse_prim(cursor)?;
+    Ok(Field { name, ty })
+}
+
+fn parse_fields_until_break(cursor: &mut Cursor) -> Result<Vec<Field>, TextError> {
+    let mut fields = Vec::new();
+    while matches!(cursor.peek().kind, GKind::Ident) {
+        fields.push(parse_field_pair(cursor)?);
+    }
+    Ok(fields)
+}
+
+fn parse_braced_fields(cursor: &mut Cursor) -> Result<Vec<Field>, TextError> {
+    cursor.expect(GKind::LBrace)?;
+    cursor.skip_newlines();
+    let mut fields = Vec::new();
+    while cursor.peek().kind != GKind::RBrace && cursor.peek().kind != GKind::Eof {
+        fields.push(parse_field_pair(cursor)?);
+        cursor.skip_newlines();
+    }
+    cursor.expect(GKind::RBrace)?;
+    Ok(fields)
+}
+
+fn parse_enum_variants(cursor: &mut Cursor) -> Result<Vec<(String, u64)>, TextError> {
+    cursor.expect(GKind::LBrace)?;
+    cursor.skip_newlines();
+    let mut variants = Vec::new();
+    while cursor.peek().kind != GKind::RBrace && cursor.peek().kind != GKind::Eof {
+        let name = cursor.expect(GKind::Ident)?.text;
+        cursor.expect(GKind::Equals)?;
+        let value = parse_u64_literal(cursor)?;
+        variants.push((name, value));
+        if cursor.peek().kind == GKind::Comma {
+            cursor.advance();
+        }
+        cursor.skip_newlines();
+    }
+    cursor.expect(GKind::RBrace)?;
+    Ok(variants)
+}
+
+fn magic_bytes(value: u64) -> [u8; 8] {
+    value.to_be_bytes()
+}
+
+fn flush_open_segment(blocks: &mut Vec<Block>, open: &mut Option<Block>) {
+    if let Some(block) = open.take() {
+        blocks.push(block);
+    }
+}
+
+/// @emoji 📡️ Parses one `.protocol.semio` file into a typed [`ProtocolFile`] — retains every body
+/// directive (`header`/`field`/`segment`/`record`/`struct`/`enum`/`footer`/`chain`).
+pub fn parse_protocol(text: &str) -> Result<ProtocolFile, TextError> {
+    let tokens = lex(text)?;
+    let mut cursor = Cursor { tokens, pos: 0 };
+    cursor.skip_newlines();
+
+    if cursor.peek_ident("dialect") {
+        cursor.expect_ident("dialect")?;
+        cursor.expect_ident("protocol")?;
+        cursor.skip_newlines();
+    }
+
+    cursor.expect_ident("protocol")?;
+    let id = cursor.expect(GKind::Ident)?.text;
+    cursor.skip_newlines();
+
+    let mut version = 1u16;
+    let mut schema = String::new();
+    let mut start = None;
+    let mut uses = Vec::new();
+    let mut framing = None;
+    let mut blocks = Vec::new();
+    let mut open_segment: Option<Block> = None;
+    let mut open_record: Option<Block> = None;
+    let mut open_header: Option<Vec<Field>> = None;
+
+    let close_header = |blocks: &mut Vec<Block>, open_header: &mut Option<Vec<Field>>| {
+        if let Some(fields) = open_header.take() {
+            blocks.push(Block::Header(fields));
+        }
+    };
+    let close_record = |blocks: &mut Vec<Block>, open_record: &mut Option<Block>| {
+        if let Some(block) = open_record.take() {
+            blocks.push(block);
+        }
+    };
+
+    loop {
+        if cursor.peek().kind == GKind::Eof {
+            break;
+        }
+        let head = cursor.expect(GKind::Ident)?;
+        match head.text.as_str() {
+            "version" => {
+                version = parse_u64_literal(&mut cursor)? as u16;
+                cursor.skip_newlines();
+            }
+            "schema" => {
+                schema = cursor.expect(GKind::Ident)?.text;
+                cursor.skip_newlines();
+            }
+            "use" => {
+                uses.push(cursor.expect(GKind::Ident)?.text);
+                cursor.skip_newlines();
+            }
+            "start" => {
+                start = Some(cursor.expect(GKind::Ident)?.text);
+                cursor.skip_newlines();
+            }
+            "framing" => {
+                let mode = cursor.expect(GKind::Ident)?.text;
+                framing = Some(match mode.as_str() {
+                    "magic" => Framing::Magic(magic_bytes(parse_u64_literal(&mut cursor)?)),
+                    "record" => Framing::Record,
+                    "chunked" => Framing::Chunked,
+                    other => return Err(TextError::new(format!("unknown framing `{other}`"), head.span.clone())),
+                });
+                cursor.skip_newlines();
+            }
+            "header" => {
+                flush_open_segment(&mut blocks, &mut open_segment);
+                close_record(&mut blocks, &mut open_record);
+                close_header(&mut blocks, &mut open_header);
+                cursor.expect_ident("fixed")?;
+                let _size = parse_u64_literal(&mut cursor)?;
+                open_header = Some(Vec::new());
+                cursor.skip_newlines();
+            }
+            "field" => {
+                let field = parse_field_pair(&mut cursor)?;
+                if let Some(fields) = open_header.as_mut() {
+                    fields.push(field);
+                } else if let Some(Block::Record { fields, .. }) = open_record.as_mut() {
+                    fields.push(field);
+                } else if let Some(Block::Segment { fields, .. }) = open_segment.as_mut() {
+                    fields.push(field);
+                } else if matches!(framing, Some(Framing::Record)) {
+                    open_record = Some(Block::Record { name: String::new(), tag: None, fields: vec![field] });
+                } else {
+                    open_header.get_or_insert_with(Vec::new).push(field);
+                }
+                cursor.skip_newlines();
+            }
+            "segment" => {
+                close_header(&mut blocks, &mut open_header);
+                close_record(&mut blocks, &mut open_record);
+                let name = cursor.expect(GKind::Ident)?.text;
+                if cursor.peek_ident("kind") && cursor.tokens.get(cursor.pos + 1).is_some_and(|t| t.kind == GKind::Equals) {
+                    flush_open_segment(&mut blocks, &mut open_segment);
+                    cursor.expect_ident("kind")?;
+                    cursor.expect(GKind::Equals)?;
+                    let kind = parse_u64_literal(&mut cursor)? as u8;
+                    let fields = if cursor.peek().kind == GKind::LBrace { parse_braced_fields(&mut cursor)? } else { Vec::new() };
+                    blocks.push(Block::Segment { name, kind: Some(kind), fields });
+                } else if cursor.peek().kind == GKind::LBrace {
+                    flush_open_segment(&mut blocks, &mut open_segment);
+                    let fields = parse_braced_fields(&mut cursor)?;
+                    blocks.push(Block::Segment { name, kind: None, fields });
+                } else {
+                    let ty = parse_prim(&mut cursor)?;
+                    match open_segment.as_mut() {
+                        Some(Block::Segment { fields, .. }) => fields.push(Field { name, ty }),
+                        _ => {
+                            open_segment = Some(Block::Segment { name: String::new(), kind: None, fields: vec![Field { name, ty }] });
+                        }
+                    }
+                }
+                cursor.skip_newlines();
+            }
+            "record" => {
+                close_header(&mut blocks, &mut open_header);
+                flush_open_segment(&mut blocks, &mut open_segment);
+                close_record(&mut blocks, &mut open_record);
+                let name = cursor.expect(GKind::Ident)?.text;
+                let mut tag = None;
+                if cursor.peek_ident("tag") && cursor.tokens.get(cursor.pos + 1).is_some_and(|t| t.kind == GKind::Equals) {
+                    cursor.expect_ident("tag")?;
+                    cursor.expect(GKind::Equals)?;
+                    tag = Some(parse_u64_literal(&mut cursor)?);
+                }
+                let fields = if cursor.peek().kind == GKind::LBrace {
+                    parse_braced_fields(&mut cursor)?
+                } else {
+                    parse_fields_until_break(&mut cursor)?
+                };
+                open_record = Some(Block::Record { name, tag, fields });
+                cursor.skip_newlines();
+            }
+            "struct" => {
+                close_header(&mut blocks, &mut open_header);
+                flush_open_segment(&mut blocks, &mut open_segment);
+                close_record(&mut blocks, &mut open_record);
+                let name = cursor.expect(GKind::Ident)?.text;
+                let fields = parse_braced_fields(&mut cursor)?;
+                blocks.push(Block::Struct { name, fields });
+                cursor.skip_newlines();
+            }
+            "enum" => {
+                close_header(&mut blocks, &mut open_header);
+                flush_open_segment(&mut blocks, &mut open_segment);
+                close_record(&mut blocks, &mut open_record);
+                let name = cursor.expect(GKind::Ident)?.text;
+                let variants = parse_enum_variants(&mut cursor)?;
+                blocks.push(Block::Enum { name, variants });
+                cursor.skip_newlines();
+            }
+            "footer" => {
+                close_header(&mut blocks, &mut open_header);
+                flush_open_segment(&mut blocks, &mut open_segment);
+                close_record(&mut blocks, &mut open_record);
+                cursor.expect_ident("fixed")?;
+                let size = parse_u64_literal(&mut cursor)? as usize;
+                blocks.push(Block::Footer(size));
+                cursor.skip_newlines();
+            }
+            "chain" => {
+                close_header(&mut blocks, &mut open_header);
+                flush_open_segment(&mut blocks, &mut open_segment);
+                close_record(&mut blocks, &mut open_record);
+                if cursor.peek().kind == GKind::Ident {
+                    let maybe_name = cursor.peek().text.clone();
+                    let prim_names = ["u8", "u16", "u32", "u64", "i32", "i64", "f32", "f64", "varint", "zigzag", "bytes", "utf8", "tag", "fixed", "Fixed", "Array", "Ref"];
+                    if !prim_names.contains(&maybe_name.as_str()) {
+                        cursor.advance();
+                    }
+                }
+                let ty = parse_prim(&mut cursor)?;
+                blocks.push(Block::Chain(ty));
+                cursor.skip_newlines();
+            }
+            other => return Err(TextError::new(format!("unknown protocol directive `{other}`"), head.span)),
+        }
+    }
+
+    close_header(&mut blocks, &mut open_header);
+    flush_open_segment(&mut blocks, &mut open_segment);
+    close_record(&mut blocks, &mut open_record);
+
+    let start = start.ok_or_else(|| TextError::new("`.protocol` file is missing a `start` directive", cursor.peek().span.clone()))?;
+    let framing = framing.ok_or_else(|| TextError::new("`.protocol` file is missing a `framing` directive", cursor.peek().span.clone()))?;
+    if schema.is_empty() {
+        return Err(TextError::new("`.protocol` file is missing a `schema` directive", cursor.peek().span.clone()));
+    }
+    Ok(ProtocolFile { id, version, schema, start, uses, framing, blocks })
 }
 //#endregion 🔖️Parser
 
@@ -503,10 +955,219 @@ pub fn print_grammar(grammar: &GrammarFile) -> String {
     out
 }
 
+fn print_count(count: &Count, out: &mut String) {
+    match count {
+        Count::Fixed(n) => {
+            out.push_str("Fixed(");
+            out.push_str(&n.to_string());
+            out.push(')');
+        }
+        Count::Varint => out.push_str("Varint"),
+        Count::Field(name) => {
+            out.push_str("Field(");
+            out.push_str(name);
+            out.push(')');
+        }
+    }
+}
+
+fn print_prim(prim: &Prim, out: &mut String) {
+    match prim {
+        Prim::U8 => out.push_str("u8"),
+        Prim::U16 => out.push_str("u16"),
+        Prim::U32 => out.push_str("u32"),
+        Prim::U64 => out.push_str("u64"),
+        Prim::I32 => out.push_str("i32"),
+        Prim::I64 => out.push_str("i64"),
+        Prim::F32 => out.push_str("f32"),
+        Prim::F64 => out.push_str("f64"),
+        Prim::Varint => out.push_str("varint"),
+        Prim::Zigzag => out.push_str("zigzag"),
+        Prim::Bytes => out.push_str("bytes"),
+        Prim::Utf8 => out.push_str("utf8"),
+        Prim::Tag => out.push_str("tag"),
+        Prim::Fixed(n) => {
+            out.push_str("fixed ");
+            out.push_str(&n.to_string());
+        }
+        Prim::Array(inner, count) => {
+            if matches!(inner.as_ref(), Prim::U8) && matches!(count, Count::Varint) {
+                out.push_str("varint bytes");
+            } else if matches!(count, Count::Varint) {
+                out.push_str("array ");
+                print_prim(inner, out);
+            } else {
+                out.push_str("Array(");
+                print_prim(inner, out);
+                out.push_str(", ");
+                print_count(count, out);
+                out.push(')');
+            }
+        }
+        Prim::Ref(name) => out.push_str(name),
+    }
+}
+
+fn print_field(field: &Field, out: &mut String) {
+    out.push_str(&field.name);
+    out.push(' ');
+    print_prim(&field.ty, out);
+}
+
+fn header_fixed_size(fields: &[Field]) -> usize {
+    fields.iter().map(|f| prim_fixed_width(&f.ty).unwrap_or(0)).sum()
+}
+
+fn prim_fixed_width(prim: &Prim) -> Option<usize> {
+    match prim {
+        Prim::U8 => Some(1),
+        Prim::U16 => Some(2),
+        Prim::U32 | Prim::I32 | Prim::F32 => Some(4),
+        Prim::U64 | Prim::I64 | Prim::F64 => Some(8),
+        Prim::Fixed(n) => Some(*n),
+        _ => None,
+    }
+}
+
+/// @emoji 🖨️ Lossless protocol printer — `parse_protocol(print_protocol(p)) == p`.
+pub fn print_protocol(protocol: &ProtocolFile) -> String {
+    let mut out = String::new();
+    out.push_str("dialect protocol\nprotocol ");
+    out.push_str(&protocol.id);
+    out.push('\n');
+    out.push_str("version ");
+    out.push_str(&protocol.version.to_string());
+    out.push('\n');
+    out.push_str("schema ");
+    out.push_str(&protocol.schema);
+    out.push('\n');
+    out.push_str("start ");
+    out.push_str(&protocol.start);
+    out.push('\n');
+    for fragment in &protocol.uses {
+        out.push_str("use ");
+        out.push_str(fragment);
+        out.push('\n');
+    }
+    match &protocol.framing {
+        Framing::Magic(bytes) => {
+            let value = u64::from_be_bytes(*bytes);
+            out.push_str(&format!("framing magic 0x{value:016X}\n"));
+        }
+        Framing::Record => out.push_str("framing record\n"),
+        Framing::Chunked => out.push_str("framing chunked\n"),
+    }
+    for block in &protocol.blocks {
+        match block {
+            Block::Header(fields) => {
+                let size = header_fixed_size(fields);
+                out.push_str("header fixed ");
+                out.push_str(&size.to_string());
+                out.push('\n');
+                for field in fields {
+                    out.push_str("field ");
+                    print_field(field, &mut out);
+                    out.push('\n');
+                }
+            }
+            Block::Segment { name, kind, fields } => {
+                if name.is_empty() && kind.is_none() {
+                    for field in fields {
+                        out.push_str("segment ");
+                        print_field(field, &mut out);
+                        out.push('\n');
+                    }
+                } else {
+                    out.push_str("segment ");
+                    out.push_str(name);
+                    if let Some(k) = kind {
+                        out.push_str(" kind=");
+                        out.push_str(&k.to_string());
+                    }
+                    out.push_str(" {");
+                    for (i, field) in fields.iter().enumerate() {
+                        if i > 0 {
+                            out.push(' ');
+                        }
+                        print_field(field, &mut out);
+                    }
+                    out.push_str("}\n");
+                }
+            }
+            Block::Record { name, tag, fields } => {
+                if name.is_empty() && tag.is_none() {
+                    for field in fields {
+                        out.push_str("field ");
+                        print_field(field, &mut out);
+                        out.push('\n');
+                    }
+                } else {
+                    out.push_str("record ");
+                    out.push_str(name);
+                    if let Some(t) = tag {
+                        out.push_str(" tag=");
+                        out.push_str(&t.to_string());
+                    }
+                    out.push(' ');
+                    for (i, field) in fields.iter().enumerate() {
+                        if i > 0 {
+                            out.push(' ');
+                        }
+                        print_field(field, &mut out);
+                    }
+                    out.push('\n');
+                }
+            }
+            Block::Struct { name, fields } => {
+                out.push_str("struct ");
+                out.push_str(name);
+                out.push_str(" {");
+                for (i, field) in fields.iter().enumerate() {
+                    if i > 0 {
+                        out.push(' ');
+                    }
+                    print_field(field, &mut out);
+                }
+                out.push_str("}\n");
+            }
+            Block::Enum { name, variants } => {
+                out.push_str("enum ");
+                out.push_str(name);
+                out.push_str(" {");
+                for (i, (vname, value)) in variants.iter().enumerate() {
+                    if i > 0 {
+                        out.push(' ');
+                    }
+                    out.push_str(vname);
+                    out.push('=');
+                    out.push_str(&value.to_string());
+                }
+                out.push_str("}\n");
+            }
+            Block::Footer(size) => {
+                out.push_str("footer fixed ");
+                out.push_str(&size.to_string());
+                out.push('\n');
+            }
+            Block::Chain(prim) => {
+                out.push_str("chain ");
+                print_prim(prim, &mut out);
+                out.push('\n');
+            }
+        }
+    }
+    out
+}
+
 /// @emoji ♻️ `canonicalize(canonicalize(x)) == canonicalize(x)` — the idempotence law every
-/// technology's canonical form must satisfy.
+/// technology's canonical form must satisfy. Protocol sources round-trip through
+/// [`parse_protocol`]/[`print_protocol`].
 pub fn canonicalize(text: &str) -> Result<String, TextError> {
-    Ok(print_grammar(&parse_grammar(text)?))
+    if is_protocol_source(text) {
+        Ok(print_protocol(&parse_protocol(text)?))
+    } else {
+        Ok(print_grammar(&parse_grammar(text)?))
+    }
 }
 //#endregion 🔖️Writer
 
@@ -706,37 +1367,215 @@ fn default_macros() -> Vec<MacroMatcher> {
 }
 //#endregion 🔖️Recognizer
 
-//#region 🔖️ProtocolVerify
-/// @emoji 📡️ Byte-level protocol conformance: walks a parsed `.protocol.semio` spec against encoded
-/// bytes. v1 checks container magic and minimum header span for `dag.pack`-shaped fixtures.
-pub fn verify_protocol_bytes(spec: &GrammarFile, bytes: &[u8]) -> Result<(), String> {
-    if spec.dialect != SemioDialect::Protocol {
-        return Err("verify_protocol_bytes requires dialect protocol".to_string());
-    }
-    let is_pack = spec.start == "frame" || spec.id.contains("pack");
-    let is_spr = spec.start == "record" || spec.id.contains("spr");
-    if is_pack {
-        if bytes.len() < 8 {
-            return Err("pack bytes shorter than magic".to_string());
-        }
-        if &bytes[..8] != &[0x89, b'S', b'P', b'K', 0x0D, 0x0A, 0x1A, 0x0A] {
-            return Err("SPK magic mismatch".to_string());
-        }
-        if bytes.len() < 32 {
-            return Err("pack header requires 32 bytes".to_string());
-        }
-        return Ok(());
-    }
-    if is_spr {
-        if bytes.is_empty() {
-            return Err("spr bytes empty".to_string());
-        }
-        // record protocols: at least format u8 present
-        return Ok(());
-    }
-    Err(format!("protocol spec start '{}' is neither frame nor record", spec.start))
+//#region 📡️ProtocolWalk
+fn mismatch(offset: usize, message: impl Into<String>) -> ProtocolMismatch {
+    ProtocolMismatch { offset, message: message.into() }
 }
-//#endregion 🔖️ProtocolVerify
+
+fn read_varint_u64(bytes: &[u8], pos: &mut usize) -> Result<u64, ProtocolMismatch> {
+    let mut result = 0u64;
+    let mut shift = 0u32;
+    loop {
+        if *pos >= bytes.len() {
+            return Err(mismatch(*pos, "truncated varint"));
+        }
+        let byte = bytes[*pos];
+        *pos += 1;
+        result |= u64::from(byte & 0x7f) << shift;
+        if byte & 0x80 == 0 {
+            return Ok(result);
+        }
+        shift += 7;
+        if shift > 63 {
+            return Err(mismatch(*pos, "varint overflow"));
+        }
+    }
+}
+
+fn need<'a>(bytes: &'a [u8], pos: usize, n: usize, what: &str) -> Result<&'a [u8], ProtocolMismatch> {
+    if pos + n > bytes.len() {
+        return Err(mismatch(pos, format!("truncated {what}: need {n} bytes, have {}", bytes.len().saturating_sub(pos))));
+    }
+    Ok(&bytes[pos..pos + n])
+}
+
+fn trailing_reserved(blocks: &[Block], from: usize) -> usize {
+    let mut reserved = 0usize;
+    for block in &blocks[from..] {
+        match block {
+            Block::Footer(n) => reserved += *n,
+            Block::Chain(prim) => reserved += prim_fixed_width(prim).unwrap_or(0),
+            Block::Struct { .. } | Block::Enum { .. } => {}
+            Block::Header(_) | Block::Segment { .. } | Block::Record { .. } => break,
+        }
+    }
+    reserved
+}
+
+fn resolve_count(count: &Count, env: &std::collections::HashMap<String, u64>, offset: usize) -> Result<usize, ProtocolMismatch> {
+    match count {
+        Count::Fixed(n) => Ok(*n),
+        Count::Varint => Err(mismatch(offset, "Count::Varint must be read from the byte stream, not resolved from env")),
+        Count::Field(name) => env.get(name).map(|v| *v as usize).ok_or_else(|| mismatch(offset, format!("unknown count field `{name}`"))),
+    }
+}
+
+fn walk_prim(
+    prim: &Prim,
+    bytes: &[u8],
+    pos: &mut usize,
+    env: &mut std::collections::HashMap<String, u64>,
+    reserved_tail: usize,
+) -> Result<(), ProtocolMismatch> {
+    match prim {
+        Prim::U8 => {
+            need(bytes, *pos, 1, "u8")?;
+            *pos += 1;
+        }
+        Prim::U16 => {
+            need(bytes, *pos, 2, "u16")?;
+            *pos += 2;
+        }
+        Prim::U32 | Prim::I32 | Prim::F32 => {
+            need(bytes, *pos, 4, "u32/i32/f32")?;
+            *pos += 4;
+        }
+        Prim::U64 | Prim::I64 | Prim::F64 => {
+            need(bytes, *pos, 8, "u64/i64/f64")?;
+            *pos += 8;
+        }
+        Prim::Fixed(n) => {
+            need(bytes, *pos, *n, "fixed")?;
+            *pos += *n;
+        }
+        Prim::Varint | Prim::Tag | Prim::Zigzag => {
+            let _ = read_varint_u64(bytes, pos)?;
+        }
+        Prim::Bytes | Prim::Utf8 => {
+            let end = bytes.len().saturating_sub(reserved_tail);
+            if *pos > end {
+                return Err(mismatch(*pos, "bytes field overlaps trailing reserved region"));
+            }
+            *pos = end;
+        }
+        Prim::Array(inner, count) => {
+            let n = match count {
+                Count::Varint => read_varint_u64(bytes, pos)? as usize,
+                other => resolve_count(other, env, *pos)?,
+            };
+            if matches!(inner.as_ref(), Prim::U8) {
+                need(bytes, *pos, n, "byte array")?;
+                *pos += n;
+            } else {
+                for _ in 0..n {
+                    walk_prim(inner, bytes, pos, env, reserved_tail)?;
+                }
+            }
+        }
+        Prim::Ref(name) => return Err(mismatch(*pos, format!("unresolved protocol Ref({name}) during walk"))),
+    }
+    Ok(())
+}
+
+fn walk_fields(fields: &[Field], bytes: &[u8], pos: &mut usize, reserved_tail: usize) -> Result<(), ProtocolMismatch> {
+    let mut env = std::collections::HashMap::new();
+    for (index, field) in fields.iter().enumerate() {
+        let field_reserved = if index + 1 == fields.len() {
+            reserved_tail
+        } else {
+            reserved_tail
+                + fields[index + 1..]
+                    .iter()
+                    .map(|f| prim_fixed_width(&f.ty).unwrap_or(0))
+                    .sum::<usize>()
+        };
+        match &field.ty {
+            Prim::U8 => {
+                let slice = need(bytes, *pos, 1, &field.name)?;
+                env.insert(field.name.clone(), u64::from(slice[0]));
+                *pos += 1;
+            }
+            Prim::U16 => {
+                let slice = need(bytes, *pos, 2, &field.name)?;
+                env.insert(field.name.clone(), u64::from(u16::from_le_bytes([slice[0], slice[1]])));
+                *pos += 2;
+            }
+            Prim::U32 => {
+                let slice = need(bytes, *pos, 4, &field.name)?;
+                env.insert(field.name.clone(), u64::from(u32::from_le_bytes(slice.try_into().unwrap())));
+                *pos += 4;
+            }
+            Prim::U64 => {
+                let slice = need(bytes, *pos, 8, &field.name)?;
+                env.insert(field.name.clone(), u64::from_le_bytes(slice.try_into().unwrap()));
+                *pos += 8;
+            }
+            Prim::Varint | Prim::Tag | Prim::Zigzag => {
+                let value = read_varint_u64(bytes, pos)?;
+                env.insert(field.name.clone(), value);
+            }
+            other => walk_prim(other, bytes, pos, &mut env, field_reserved)?,
+        }
+    }
+    Ok(())
+}
+
+fn definitions_only(block: &Block) -> bool {
+    matches!(block, Block::Struct { .. } | Block::Enum { .. })
+}
+
+/// @emoji 🧭️ Spec-driven byte walker — consumes every declared wire slot and must finish at
+/// exactly `bytes.len()`, else returns [`ProtocolMismatch`] with the failing offset.
+pub fn walk_protocol(spec: &ProtocolFile, bytes: &[u8]) -> Result<ProtocolTrace, ProtocolMismatch> {
+    let mut pos = 0usize;
+    match &spec.framing {
+        Framing::Magic(magic) => {
+            let got = need(bytes, 0, 8, "magic")?;
+            if got != magic {
+                return Err(mismatch(0, format!("magic mismatch: expected {magic:?}, got {got:?}")));
+            }
+            pos = 8;
+        }
+        Framing::Record | Framing::Chunked => {}
+    }
+
+    let skip_records = matches!(spec.framing, Framing::Magic(_) | Framing::Chunked);
+
+    for (index, block) in spec.blocks.iter().enumerate() {
+        if definitions_only(block) {
+            continue;
+        }
+        if skip_records && matches!(block, Block::Record { .. }) {
+            continue;
+        }
+        let reserved = trailing_reserved(&spec.blocks, index + 1);
+        match block {
+            Block::Header(fields) => walk_fields(fields, bytes, &mut pos, reserved)?,
+            Block::Segment { fields, .. } => walk_fields(fields, bytes, &mut pos, reserved)?,
+            Block::Record { fields, .. } => walk_fields(fields, bytes, &mut pos, reserved)?,
+            Block::Footer(size) => {
+                need(bytes, pos, *size, "footer")?;
+                pos += *size;
+            }
+            Block::Chain(prim) => {
+                let mut env = std::collections::HashMap::new();
+                walk_prim(prim, bytes, &mut pos, &mut env, 0)?;
+            }
+            Block::Struct { .. } | Block::Enum { .. } => {}
+        }
+    }
+
+    if pos != bytes.len() {
+        return Err(mismatch(pos, format!("trailing {} bytes after protocol walk", bytes.len() - pos)));
+    }
+    Ok(ProtocolTrace { consumed: pos })
+}
+
+/// @emoji 📡️ Byte-level protocol conformance via [`walk_protocol`].
+pub fn verify_protocol_bytes(spec: &ProtocolFile, bytes: &[u8]) -> Result<(), String> {
+    walk_protocol(spec, bytes).map(|_| ()).map_err(|e| format!("offset {}: {}", e.offset, e.message))
+}
+//#endregion 📡️ProtocolWalk
 
 //#region 🔖️Tests
 #[cfg(test)]
@@ -816,7 +1655,7 @@ mod tests {
     /// self-hosting proof the architecture plan calls for.
     #[test]
     fn self_hosting_grammar_grammar_parses_and_round_trips() {
-        let source = include_str!("../../📖️grammar.grammar.semio");
+        let source = include_str!("📖️grammar.grammar.semio");
         let parsed = parse_grammar(source).expect("dsl_grammar's own grammar.grammar must parse under its own parser");
         assert_eq!(parsed.id, "grammar");
         let printed = print_grammar(&parsed);
@@ -892,25 +1731,135 @@ mod tests {
     fn parse_grammar_sets_dialect_grammar_vs_protocol() {
         let g = parse_grammar("dialect grammar\ngrammar demo\nstart doc\ndoc = \"x\"\n").expect("grammar");
         assert_eq!(g.dialect, SemioDialect::Grammar);
-        let p = parse_grammar("dialect protocol\nprotocol demo.pack\nstart frame\n").expect("protocol");
+        let p = parse_grammar(
+            "dialect protocol\nprotocol demo.pack\nversion 1\nschema demo\nstart frame\nframing magic 0x8953504B0D0A1A0A\nheader fixed 4\nfield flags u32\n",
+        )
+        .expect("protocol");
         assert_eq!(p.dialect, SemioDialect::Protocol);
         assert_eq!(p.start, "frame");
         assert_eq!(p.id, "demo.pack");
     }
 
     #[test]
-    fn verify_protocol_bytes_branches_pack_spk_vs_spr_record() {
-        let pack = parse_grammar("dialect protocol\nprotocol demo.pack\nstart frame\n").expect("pack spec");
-        let spr = parse_grammar("dialect protocol\nprotocol demo.spr\nstart record\n").expect("spr spec");
-        let mut spk = vec![0x89, b'S', b'P', b'K', 0x0D, 0x0A, 0x1A, 0x0A];
-        spk.extend(std::iter::repeat(0u8).take(24));
-        verify_protocol_bytes(&pack, &spk).expect("pack accepts SPK header");
-        let mut spr_magic = vec![0x89, b'S', b'P', b'R', 0x0D, 0x0A, 0x1A, 0x0A];
-        spr_magic.extend(std::iter::repeat(0u8).take(24));
-        assert!(verify_protocol_bytes(&pack, &spr_magic).is_err(), "pack must reject SPR magic");
-        assert!(verify_protocol_bytes(&spr, &[]).is_err(), "spr rejects empty");
-        verify_protocol_bytes(&spr, &[1u8]).expect("spr record accepts non-empty op bytes without SPK");
-        verify_protocol_bytes(&spr, &spk).expect("spr must not require SPK magic");
+    fn protocol_parse_print_round_trip_retains_body() {
+        let source = r#"dialect protocol
+protocol flow.pack
+version 1
+schema flow
+start frame
+framing magic 0x8953504B0D0A1A0A
+header fixed 32
+field format_major u16
+field format_minor u16
+field flags u32
+field header_crc32 u32
+segment kind u8
+segment flags u8
+segment payload varint bytes
+record field id u16 type tag
+field tag varint
+field body bytes
+footer fixed 84
+"#;
+        let parsed = parse_protocol(source).expect("parse_protocol");
+        assert_eq!(parsed.id, "flow.pack");
+        assert!(matches!(parsed.framing, Framing::Magic(_)));
+        assert!(parsed.blocks.iter().any(|b| matches!(b, Block::Header(_))));
+        assert!(parsed.blocks.iter().any(|b| matches!(b, Block::Segment { .. })));
+        assert!(parsed.blocks.iter().any(|b| matches!(b, Block::Footer(84))));
+        let printed = print_protocol(&parsed);
+        let reparsed = parse_protocol(&printed).expect("reparse print_protocol");
+        assert_eq!(reparsed, parsed);
+        let once = canonicalize(source).expect("canonicalize");
+        let twice = canonicalize(&once).expect("canonicalize twice");
+        assert_eq!(once, twice);
+    }
+
+    #[test]
+    fn protocol_parses_rich_struct_enum_segment_forms() {
+        let source = r#"dialect protocol
+protocol demo.pack
+version 1
+schema demo
+start frame
+framing magic 0x8953504B0D0A1A0A
+struct Vertex { x f32 y f32 z f32 }
+enum Op { ObjectsAdd=1 ObjectsRemove=2 }
+segment Objects kind=1 { count varint items Array(Ref(Object), Field(count)) }
+footer fixed 84
+"#;
+        let parsed = parse_protocol(source).expect("parse rich protocol");
+        assert!(parsed.blocks.iter().any(|b| matches!(b, Block::Struct { name, .. } if name == "Vertex")));
+        assert!(parsed.blocks.iter().any(|b| matches!(b, Block::Enum { name, .. } if name == "Op")));
+        assert!(parsed.blocks.iter().any(|b| matches!(b, Block::Segment { name, kind: Some(1), .. } if name == "Objects")));
+        let printed = print_protocol(&parsed);
+        assert_eq!(parse_protocol(&printed).expect("reparse"), parsed);
+    }
+
+    #[test]
+    fn walk_protocol_shape_a_spk_like_buffer() {
+        let source = r#"dialect protocol
+protocol demo.pack
+version 1
+schema demo
+start frame
+framing magic 0x8953504B0D0A1A0A
+header fixed 12
+field format_major u16
+field format_minor u16
+field flags u32
+field header_crc32 u32
+segment kind u8
+segment flags u8
+segment payload varint bytes
+footer fixed 84
+"#;
+        let spec = parse_protocol(source).expect("parse");
+        let mut bytes = vec![0x89, b'S', b'P', b'K', 0x0D, 0x0A, 0x1A, 0x0A];
+        bytes.extend_from_slice(&1u16.to_le_bytes());
+        bytes.extend_from_slice(&0u16.to_le_bytes());
+        bytes.extend_from_slice(&0u32.to_le_bytes());
+        bytes.extend_from_slice(&0u32.to_le_bytes());
+        bytes.push(1);
+        bytes.push(0);
+        bytes.push(0);
+        bytes.extend(std::iter::repeat(0u8).take(84));
+        let trace = walk_protocol(&spec, &bytes).expect("walk Shape A");
+        assert_eq!(trace.consumed, bytes.len());
+        verify_protocol_bytes(&spec, &bytes).expect("verify");
+        let mut bad = bytes.clone();
+        bad[0] = 0x00;
+        assert!(walk_protocol(&spec, &bad).is_err());
+    }
+
+    #[test]
+    fn walk_protocol_minimal_op_binary_record() {
+        let source = r#"dialect protocol
+protocol demo.spr
+version 1
+schema demo.operation
+start record
+framing record
+field format u8
+field ordinal varint
+field body bytes
+"#;
+        let spec = parse_protocol(source).expect("parse spr");
+        let bytes = vec![1u8, 0x00, 0xAA, 0xBB];
+        let trace = walk_protocol(&spec, &bytes).expect("walk OpBinary");
+        assert_eq!(trace.consumed, 4);
+        assert!(walk_protocol(&spec, &[]).is_err());
+    }
+
+    #[test]
+    fn self_hosting_protocol_grammar_semio_parses_as_grammar() {
+        let source = include_str!("📖️protocol.grammar.semio");
+        let parsed = parse_grammar(source).expect("protocol.grammar.semio must parse as dialect grammar");
+        assert_eq!(parsed.dialect, SemioDialect::Grammar);
+        assert_eq!(parsed.id, "protocol");
+        let printed = print_grammar(&parsed);
+        let reparsed = parse_grammar(&printed).expect("canonical protocol grammar reparses");
+        assert_eq!(reparsed, parsed);
     }
 
 }

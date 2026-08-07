@@ -1,0 +1,9 @@
+{
+  "title": "Fix Demonstrator Mobile Blurred Background on Card",
+  "emoji": "📱",
+  "status": "closed",
+  "description": "On touch/mobile demonstrator overview, the live app behind each card must stay behind a full ui-veil blur instead of going clear when the section snaps settled.",
+  "summary": "## Summary\nTouch demonstrator overview sections no longer drop the veil to opacity 0 when snapped — each card now sits over a fully opaque `ui-veil` so the live pane stays blurred (desktop-style hover reveal is unchanged).\n\n### Root cause\n`demonstratorListVeilOpacity(0)` returned 0 for the settled section, matching desktop hover-reveal but leaving the running app sharp behind the glass card on mobile.\n\n### Fix\nReplaced scroll-driven veil fade with constant `DEMONSTRATOR_MOBILE_OVERVIEW_VEIL_OPACITY = 1` while `showOverviewLayer` is true; focused panes still hide the veil.\n\n### Files\n- `♻️mit-bestand/🧺️demonstrator/📦️index.tsx`\n",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": []
+}

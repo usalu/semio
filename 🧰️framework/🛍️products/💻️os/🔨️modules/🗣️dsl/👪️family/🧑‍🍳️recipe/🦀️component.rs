@@ -141,9 +141,10 @@ mod tests {
     /// @emoji 📖️ The fragment's `.grammar` file must at least parse under `dsl_grammar`'s parser.
     #[test]
     fn grammar_file_is_syntactically_valid() {
-        let source = include_str!("../../📖️family-recipe.grammar");
+        let source = include_str!("📖️family-recipe.grammar.semio");
         let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-recipe.grammar must parse");
         assert_eq!(grammar.id, "family-recipe");
+        assert!(grammar.productions.len() > 4, "family-recipe should cover named and positional args");
     }
 }
 //#endregion 🔖️Tests

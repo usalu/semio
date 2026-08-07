@@ -187,8 +187,8 @@ import { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeC
 export { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider, useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback };
 // #endregion 🐚️ShellScope
 
-import { registerShellActivityRoot, activeShellRoot, useShellKeydown, NULL_SHELL_ROOT_REF } from "../../../../🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx";
-export { registerShellActivityRoot, activeShellRoot, useShellKeydown, NULL_SHELL_ROOT_REF };
+import { registerShellActivityRoot, activeShellRoot, useShellKeydown, useIsActiveShellRoot, NULL_SHELL_ROOT_REF } from "../../../../🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx";
+export { registerShellActivityRoot, activeShellRoot, useShellKeydown, useIsActiveShellRoot, NULL_SHELL_ROOT_REF };
 
 // #region 🔖️IconRenderPort
 export type { IconRenderCamera, IconRenderFormat, IconRenderShape, IconRenderLights, IconRenderMaterial, IconRenderPort, IconRenderRequest, IconRenderResult, ThemeAppearanceName, ThemePaletteGroup, UiTheme } from "@semio-tech/ui-styling";
@@ -3972,6 +3972,16 @@ export const GLASS_OVERLAY_BOX_CLASS = cn("text-foreground pointer-events-auto f
 
 type IntroductionRect = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
 
+/** @emoji 🎓️ Converts a viewport (getBoundingClientRect) box into coordinates local to `host`. */
+export function introductionRectRelativeToHost(rect: IntroductionRect, hostRect: IntroductionRect): IntroductionRect {
+  return { top: rect.top - hostRect.top, left: rect.left - hostRect.left, width: rect.width, height: rect.height };
+}
+
+/** @emoji 🎓️ Viewport-pixel point → host-local point for absolute overlays inside a transformed shell. */
+export function introductionPointRelativeToHost(point: { readonly x: number; readonly y: number }, hostRect: IntroductionRect): { readonly x: number; readonly y: number } {
+  return { x: point.x - hostRect.left, y: point.y - hostRect.top };
+}
+
 /** @emoji 🎓️ Live-tracks the union DOM rect of an introduction step's `introduce` element(s) (via
  * {@link elementIdSelector}), stamping every match `data-introduced="true"` (pulsing the introduced border, see
  * `framework/ui/styling/js/🎨️ui.css`) for as long as they stay attached — cleared on unmount/selector change. A kind-level
@@ -4627,6 +4637,8 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
   // own standalone onboarding tour) — inside one, scopes the cursor-hide to that shell's own root so one
   // shell's demonstration never mutes the cursor over another shell (`.semio-scope[...]` in `🎨️ui.css`).
   const shellScope = useShellScopeOptional();
+  const demoHost = shellScope?.portalLayerRef.current ?? null;
+  const demoPositionClass = demoHost ? "absolute" : "fixed";
   const demonstratingRoot = reactHostPort.useCallback((): Element | null => (shellScope ? shellScope.rootRef.current : document.documentElement), [shellScope]);
   const hide = reactHostPort.useCallback(() => {
     demonstratingRoot()?.removeAttribute("data-introduction-demonstrating");
@@ -4649,9 +4661,16 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
       const ghost = ghostRef.current;
       if (ghost) ghost.style.backgroundImage = `var(--cursor-ghost-${glyph})`;
     };
+    const toOverlayPoint = (x: number, y: number) => {
+      if (!demoHost) return { x, y };
+      const hostRect = demoHost.getBoundingClientRect();
+      return introductionPointRelativeToHost({ x, y }, hostRect);
+    };
     const setPosition = (x: number, y: number) => {
       const ghost = ghostRef.current;
-      if (ghost) ghost.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      if (!ghost) return;
+      const local = toOverlayPoint(x, y);
+      ghost.style.transform = `translate3d(${local.x}px, ${local.y}px, 0)`;
     };
     const setOpacity = (opacity: number) => {
       const ghost = ghostRef.current;
@@ -4662,7 +4681,8 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
     const setCallout = (x: number, y: number, visual: IntroductionDemoVisual, pressed: boolean, scrollDirection?: number) => {
       const callout = calloutRef.current;
       if (!callout) return;
-      callout.style.transform = `translate3d(${x + 28}px, ${y + 8}px, 0)`;
+      const local = toOverlayPoint(x, y);
+      callout.style.transform = `translate3d(${local.x + 28}px, ${local.y + 8}px, 0)`;
       callout.dataset.button = visual.button;
       callout.dataset.feedback = visual.feedback;
       if (visual.modifiers.length > 0) callout.setAttribute("data-modifiers", visual.modifiers.join(" "));
@@ -4683,16 +4703,18 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
     const updateTrail = (from: IntroductionResolvedPoint, to: IntroductionResolvedPoint, orbit: boolean, feedback: IntroductionDemoFeedbackKind) => {
       const path = trailPathRef.current;
       if (!path) return;
+      const localFrom = toOverlayPoint(from.x, from.y);
+      const localTo = toOverlayPoint(to.x, to.y);
       if (orbit) {
-        const dx = to.x - from.x;
-        const dy = to.y - from.y;
+        const dx = localTo.x - localFrom.x;
+        const dy = localTo.y - localFrom.y;
         const distance = Math.hypot(dx, dy) || 1;
         const bulge = Math.min(64, distance * 0.35);
-        const controlX = (from.x + to.x) / 2 + (-dy / distance) * bulge;
-        const controlY = (from.y + to.y) / 2 + (dx / distance) * bulge;
-        path.setAttribute("d", `M ${from.x} ${from.y} Q ${controlX} ${controlY} ${to.x} ${to.y}`);
+        const controlX = (localFrom.x + localTo.x) / 2 + (-dy / distance) * bulge;
+        const controlY = (localFrom.y + localTo.y) / 2 + (dx / distance) * bulge;
+        path.setAttribute("d", `M ${localFrom.x} ${localFrom.y} Q ${controlX} ${controlY} ${localTo.x} ${localTo.y}`);
       } else {
-        path.setAttribute("d", `M ${from.x} ${from.y} L ${to.x} ${to.y}`);
+        path.setAttribute("d", `M ${localFrom.x} ${localFrom.y} L ${localTo.x} ${localTo.y}`);
       }
       path.setAttribute("class", `introduction-demo-trail-path introduction-demo-trail-path--${feedback}`);
       const length = path.getTotalLength();
@@ -4701,10 +4723,11 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
     const spawnRipple = (x: number, y: number, feedback: IntroductionDemoFeedbackKind, double = false) => {
       const host = rippleHostRef.current;
       if (!host || feedback === "scroll") return;
+      const local = toOverlayPoint(x, y);
       const ripple = document.createElement("div");
-      ripple.className = `${introductionDemoRippleClass(feedback, double)} pointer-events-none fixed rounded-full`;
-      ripple.style.left = `${x - 12}px`;
-      ripple.style.top = `${y - 12}px`;
+      ripple.className = `${introductionDemoRippleClass(feedback, double)} pointer-events-none ${demoPositionClass} rounded-full`;
+      ripple.style.left = `${local.x - 12}px`;
+      ripple.style.top = `${local.y - 12}px`;
       ripple.style.width = "24px";
       ripple.style.height = "24px";
       host.appendChild(ripple);
@@ -4713,10 +4736,11 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
     const spawnZoomRing = (x: number, y: number, zoomIn: boolean) => {
       const host = rippleHostRef.current;
       if (!host) return;
+      const local = toOverlayPoint(x, y);
       const ring = document.createElement("div");
-      ring.className = `introduction-demo-zoom-ring introduction-demo-zoom-ring--${zoomIn ? "in" : "out"} pointer-events-none`;
-      ring.style.left = `${x}px`;
-      ring.style.top = `${y}px`;
+      ring.className = `introduction-demo-zoom-ring introduction-demo-zoom-ring--${zoomIn ? "in" : "out"} pointer-events-none ${demoPositionClass}`;
+      ring.style.left = `${local.x}px`;
+      ring.style.top = `${local.y}px`;
       host.appendChild(ring);
       ring.addEventListener("animationend", () => ring.remove());
     };
@@ -4864,17 +4888,17 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
       cancelAnimationFrame(rafId);
       hide();
     };
-  }, [demonstratingRoot, demonstrations, hide, idle, reducedMotion]);
+  }, [demonstratingRoot, demonstrations, hide, idle, reducedMotion, demoHost, demoPositionClass]);
 
   if (reducedMotion) return null;
 
   return (
-    <div ref={overlayRef} data-slot="introduction-demonstration" className="pointer-events-none fixed inset-0" style={{ visibility: "hidden", zIndex: "calc(var(--z-tutorial) + 2)" }}>
-      <svg className="pointer-events-none fixed inset-0 h-full w-full overflow-visible" aria-hidden="true">
+    <div ref={overlayRef} data-slot="introduction-demonstration" className={cn("pointer-events-none inset-0", demoPositionClass)} style={{ visibility: "hidden", zIndex: "calc(var(--z-tutorial) + 2)" }}>
+      <svg className={cn("pointer-events-none inset-0 h-full w-full overflow-visible", demoPositionClass)} aria-hidden="true">
         <path ref={trailPathRef} />
       </svg>
-      <div ref={ghostRef} data-slot="introduction-demonstration-cursor" className="pointer-events-none fixed h-6 w-6 bg-contain bg-no-repeat opacity-0" style={{ backgroundImage: "var(--cursor-ghost-default)", willChange: "transform, opacity" }} />
-      <div ref={calloutRef} data-slot="introduction-demonstration-callout" className="introduction-demo-callout pointer-events-none fixed opacity-0 text-foreground" data-button="left" data-feedback="leftClick">
+      <div ref={ghostRef} data-slot="introduction-demonstration-cursor" className={cn("pointer-events-none h-6 w-6 bg-contain bg-no-repeat opacity-0", demoPositionClass)} style={{ backgroundImage: "var(--cursor-ghost-default)", willChange: "transform, opacity" }} />
+      <div ref={calloutRef} data-slot="introduction-demonstration-callout" className={cn("introduction-demo-callout pointer-events-none opacity-0 text-foreground", demoPositionClass)} data-button="left" data-feedback="leftClick">
         <svg className="introduction-demo-mouse" viewBox="0 0 48 72" aria-hidden="true">
           <defs>
             <clipPath id={mouseClipId}>
@@ -4915,7 +4939,7 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
           </kbd>
         </div>
       </div>
-      <div ref={rippleHostRef} className="pointer-events-none fixed inset-0" />
+      <div ref={rippleHostRef} className={cn("pointer-events-none inset-0", demoPositionClass)} />
     </div>
   );
 };
@@ -5047,17 +5071,41 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
     if (surfaceActive) setIntroductionActivated(true);
   }, [surfaceActive]);
 
-  reactHostPort.useEffect(() => {
-    const root = document.documentElement;
-    root.setAttribute("data-introduction-active", "true");
-    return () => root.removeAttribute("data-introduction-active");
-  }, []);
+  const shellScope = useShellScopeOptional();
+  const shellActive = useIsActiveShellRoot(shellScope?.rootRef ?? NULL_SHELL_ROOT_REF);
+  const overlayHost = shellScope?.portalLayerRef.current ?? null;
+  const overlayPositioned = Boolean(overlayHost);
+
+  const measureOverlayViewport = reactHostPort.useCallback(() => {
+    if (overlayHost) {
+      setViewport({ width: overlayHost.clientWidth, height: overlayHost.clientHeight });
+      return;
+    }
+    setViewport({ width: window.innerWidth, height: window.innerHeight });
+  }, [overlayHost]);
 
   reactHostPort.useEffect(() => {
-    const onResize = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
+    // Stamp the shell root (or documentElement for the landing-page tour outside any ShellScope) so
+    // elevated-chrome CSS stays scoped to the introducing shell instead of every co-hosted shell.
+    const root = shellScope?.rootRef.current ?? document.documentElement;
+    root.setAttribute("data-introduction-active", "true");
+    return () => root.removeAttribute("data-introduction-active");
+  }, [shellScope]);
+
+  reactHostPort.useEffect(() => {
+    measureOverlayViewport();
+    const onResize = () => measureOverlayViewport();
     window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
+    let observer: ResizeObserver | null = null;
+    if (overlayHost && typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver(measureOverlayViewport);
+      observer.observe(overlayHost);
+    }
+    return () => {
+      window.removeEventListener("resize", onResize);
+      observer?.disconnect();
+    };
+  }, [measureOverlayViewport, overlayHost]);
 
   reactHostPort.useEffect(() => {
     const el = boxRef.current;
@@ -5144,16 +5192,23 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
     },
   });
 
-  useControlKeybinding("ui.introduction.skip", skip, { enableOnFormTags: true }, [skip]);
-  useControlKeybinding("ui.introduction.next", () => advanceByButton && next(), { enableOnFormTags: true }, [advanceByButton, next]);
-  useControlKeybinding("ui.introduction.back", back, { enableOnFormTags: true }, [back]);
+  useControlKeybinding("ui.introduction.skip", skip, { enableOnFormTags: true, enabled: shellActive }, [skip, shellActive]);
+  useControlKeybinding("ui.introduction.next", () => advanceByButton && next(), { enableOnFormTags: true, enabled: shellActive && advanceByButton }, [advanceByButton, next, shellActive]);
+  useControlKeybinding("ui.introduction.back", back, { enableOnFormTags: true, enabled: shellActive }, [back, shellActive]);
 
   if (!step) return null;
 
   const bodyParagraphs = splitIntroductionBodyParagraphs(step.body);
-  const boxPosition = resolveIntroductionPlacement(step.placement, introduceRect, boxSize, viewport);
+  // When the overlay is absolutely positioned inside the shell portal layer (multi-shell hosts that
+  // CSS-transform their shells, e.g. the demonstrator grid), placement must use host-local coords —
+  // getBoundingClientRect is viewport-space and would otherwise land the box on the wrong pane.
+  const hostRect = overlayHost?.getBoundingClientRect() ?? null;
+  const placementAnchor =
+    introduceRect && hostRect ? introductionRectRelativeToHost(introduceRect, hostRect) : introduceRect;
+  const boxPosition = resolveIntroductionPlacement(step.placement, placementAnchor, boxSize, viewport);
   dragLayoutRef.current = { placement: boxPosition, boxSize, viewport };
   const position = dragPosition ?? boxPosition;
+  const overlayPositionClass = overlayPositioned ? "absolute" : "fixed";
   // 🎓️ A targeted element that hasn't mounted yet (a folded utility bar/panel the shell is still revealing)
   // must not trap the user behind an opaque-to-clicks veil — only screen-style steps (`introduce == null`)
   // and steps whose target did resolve block pointer events; an unresolved `introduce` lets clicks through
@@ -5161,9 +5216,9 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   // the drag source mounts).
   const veilBlocksPointer = step.introduce == null || elevated.has(step.introduce) || (step.show ?? []).some((id) => elevated.has(id));
 
-  return (
+  const overlay = (
     <>
-      <div data-level="dialog" className={cn(veilClass, "z-tutorial fixed inset-0", veilBlocksPointer ? "pointer-events-auto" : "pointer-events-none")} />
+      <div data-level="dialog" className={cn(veilClass, "z-tutorial inset-0", overlayPositionClass, veilBlocksPointer ? "pointer-events-auto" : "pointer-events-none")} />
       <WindowChrome
         ref={boxRef}
         stackSlot="introduction-info-box"
@@ -5172,7 +5227,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
         active={surfaceActive}
         borderKind={introductionActivated ? undefined : "introduced"}
         level="dialog"
-        className="pointer-events-auto fixed z-tutorial w-fit max-w-[calc(100vw-2rem)] bg-transparent"
+        className={cn("pointer-events-auto z-tutorial w-fit max-w-[calc(100vw-2rem)] bg-transparent", overlayPositionClass)}
         style={{ top: position.top, left: position.left, zIndex: "calc(var(--z-tutorial) + 2)" }}
         titleChips={
           <div data-hover-scope data-slot="introduction-info-box-chip" className={cn(windowChromeTitleChipClass, "!h-auto max-w-none shrink overflow-visible whitespace-normal")}>
@@ -5250,6 +5305,11 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
       {effectiveDemonstrations.length > 0 && <IntroductionDemonstrationOverlay key={step.id} demonstrations={effectiveDemonstrations} />}
     </>
   );
+
+  if (overlayHost && typeof document !== "undefined") {
+    return createPortal(overlay, overlayHost);
+  }
+  return overlay;
 };
 // #endregion 🎓️Introduction
 
@@ -8534,7 +8594,7 @@ export const Pane: React.FC<PaneProps> = ({
   id,
   anchor,
   onAnchorChange,
-  folded = false,
+  folded = true,
   onFoldToggle,
   icon,
   label,
@@ -8576,7 +8636,7 @@ export const Pane: React.FC<PaneProps> = ({
     [overlayRef],
   );
   const [surfaceActive, surfaceActiveProps] = useSurfaceActive(paneRootRef);
-  const effectiveFolded = mobile ? false : folded;
+  const effectiveFolded = folded;
   const flow = flowFromAnchor(anchor);
   const horizontal = anchorHorizontal(anchor);
   const [dragging, setDragging] = reactHostPort.useState(false);
@@ -8614,7 +8674,7 @@ export const Pane: React.FC<PaneProps> = ({
         maxWidth: !mobile && !effectiveFolded ? `min(100% - (var(--spacing-single) * 2), ${size}px)` : undefined,
       };
   const paneFoldControl =
-    !mobile && !effectiveFolded && onFoldToggle
+    !effectiveFolded && onFoldToggle
       ? {
           id: foldControlId ?? childElementId(id, "pane", "fold-control"),
           slot: "pane-fold",
@@ -8677,7 +8737,7 @@ export const Pane: React.FC<PaneProps> = ({
                 icon={icon}
                 label={label ?? id}
                 disabled={toggleDisabled}
-                onClick={mobile ? undefined : onFoldToggle}
+                onClick={onFoldToggle}
                 dragPointerProps={mobile || !onAnchorChange ? undefined : dragPointerProps}
                 showDragHandle={!mobile}
                 emphasized={dragging}
@@ -11449,6 +11509,23 @@ if (import.meta.vitest) {
       expect(centerChip?.className).toMatch(/ui-glass/);
       expect(container.querySelector('[data-slot="window-chrome-footer-right"]')).toBeNull();
       expect(container.querySelector('[data-slot="window-chrome-footer"]')?.className).toContain("grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]");
+    });
+  });
+
+  describe("introductionRectRelativeToHost", () => {
+    it("subtracts the host origin from a viewport rect so absolute overlays survive CSS-transformed shells", () => {
+      expect(introductionRectRelativeToHost({ top: 120, left: 80, width: 40, height: 20 }, { top: 100, left: 50, width: 400, height: 300 })).toEqual({
+        top: 20,
+        left: 30,
+        width: 40,
+        height: 20,
+      });
+    });
+  });
+
+  describe("introductionPointRelativeToHost", () => {
+    it("subtracts the host origin from a viewport point", () => {
+      expect(introductionPointRelativeToHost({ x: 250, y: 180 }, { top: 100, left: 50, width: 400, height: 300 })).toEqual({ x: 200, y: 80 });
     });
   });
 
@@ -16561,10 +16638,22 @@ if (import.meta.vitest) {
         expect(nearestAnchor(155, 160, hostRect)).toBe("bottom-middle");
       });
 
-      it("Pane defaults open width to the panel default (300px)", () => {
+      it("Pane defaults to a folded chip when folded is omitted", () => {
         const { container } = render(
           <PaneHost>
-            <Pane id="default-width-pane" anchor="top-left" icon="box" label={uiDataLabel("Pane")}>
+            <Pane id="default-folded-pane" anchor="top-left" icon="box" label={uiDataLabel("Pane")}>
+              <div data-testid="default-folded-content">Content</div>
+            </Pane>
+          </PaneHost>,
+        );
+        expect(container.querySelector('[data-slot="pane"]')?.getAttribute("data-folded")).toBe("true");
+        expect(screen.queryByTestId("default-folded-content")).toBeNull();
+      });
+
+      it("Pane defaults open width to the panel default (300px) when unfolded", () => {
+        const { container } = render(
+          <PaneHost>
+            <Pane id="default-width-pane" anchor="top-left" icon="box" label={uiDataLabel("Pane")} folded={false}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -16577,7 +16666,7 @@ if (import.meta.vitest) {
       it("Pane positions itself via the same anchorPositionStyle math as Panel and folds to a chip", () => {
         const { container, rerender } = render(
           <PaneHost>
-            <Pane id="test-pane" anchor="top-right" icon="box" label={uiDataLabel("Test")}>
+            <Pane id="test-pane" anchor="top-right" icon="box" label={uiDataLabel("Test")} folded={false}>
               <div data-testid="pane-content">Content</div>
             </Pane>
           </PaneHost>,
@@ -16600,7 +16689,7 @@ if (import.meta.vitest) {
       it("Pane opens its own pane level and stamps ui-glass chrome (same fill as the pane body)", () => {
         const { container } = render(
           <PaneHost>
-            <Pane id="level-pane" anchor="top-right" icon="box" label={uiDataLabel("Test")}>
+            <Pane id="level-pane" anchor="top-right" icon="box" label={uiDataLabel("Test")} folded={false}>
               <div data-testid="pane-level-content">{"placeholder"}</div>
             </Pane>
           </PaneHost>,
@@ -16618,7 +16707,7 @@ if (import.meta.vitest) {
       it("Pane grows down from top anchors, up from bottom anchors, and symmetrically around middle anchors within responsive bounds", () => {
         const { container, rerender } = render(
           <PaneHost>
-            <Pane id="direction-pane" anchor="top-left" icon="box" label={uiDataLabel("Direction")}>
+            <Pane id="direction-pane" anchor="top-left" icon="box" label={uiDataLabel("Direction")} folded={false}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -16627,12 +16716,12 @@ if (import.meta.vitest) {
         expect(pane().className).toContain("flex-col");
         expect(pane().className).not.toContain("flex-col-reverse");
         expect(pane().style.top).toBe("var(--spacing-single)");
-        expect(pane().style.maxWidth).toBe("calc(100% - (var(--spacing-single) * 2))");
+        expect(pane().style.maxWidth).toBe("min(100% - (var(--spacing-single) * 2), 300px)");
         expect(pane().style.maxHeight).toBe("calc(100% - (var(--spacing-single) * 2))");
 
         rerender(
           <PaneHost>
-            <Pane id="direction-pane" anchor="bottom-left" icon="box" label={uiDataLabel("Direction")}>
+            <Pane id="direction-pane" anchor="bottom-left" icon="box" label={uiDataLabel("Direction")} folded={false}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -16642,7 +16731,7 @@ if (import.meta.vitest) {
 
         rerender(
           <PaneHost>
-            <Pane id="direction-pane" anchor="bottom-middle" icon="box" label={uiDataLabel("Direction")}>
+            <Pane id="direction-pane" anchor="bottom-middle" icon="box" label={uiDataLabel("Direction")} folded={false}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -16655,7 +16744,7 @@ if (import.meta.vitest) {
 
         rerender(
           <PaneHost>
-            <Pane id="direction-pane" anchor="left-middle" icon="box" label={uiDataLabel("Direction")}>
+            <Pane id="direction-pane" anchor="left-middle" icon="box" label={uiDataLabel("Direction")} folded={false}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -16665,7 +16754,7 @@ if (import.meta.vitest) {
       });
 
       it("Pane chrome toggle folds and unfolds when onFoldToggle is wired", () => {
-        let folded = false;
+        let folded = true;
         const onFoldToggle = vi.fn(() => {
           folded = !folded;
         });
@@ -16676,7 +16765,7 @@ if (import.meta.vitest) {
             </Pane>
           </PaneHost>,
         );
-        expect(screen.getByTestId("fold-pane-content")).toBeTruthy();
+        expect(screen.queryByTestId("fold-pane-content")).toBeNull();
         expect(container.querySelector('[data-slot="pane"]')?.getAttribute("data-anchor")).toBe("bottom-right");
         fireEvent.click(container.querySelector('[data-slot="window-pane-chrome-toggle"]')!);
         expect(onFoldToggle).toHaveBeenCalledTimes(1);
@@ -16687,9 +16776,17 @@ if (import.meta.vitest) {
             </Pane>
           </PaneHost>,
         );
-        expect(screen.queryByTestId("fold-pane-content")).toBeNull();
+        expect(screen.getByTestId("fold-pane-content")).toBeTruthy();
         fireEvent.click(container.querySelector('[data-slot="window-pane-chrome-toggle"]')!);
         expect(onFoldToggle).toHaveBeenCalledTimes(2);
+        rerender(
+          <PaneHost>
+            <Pane id="fold-pane" anchor="bottom-right" icon="camera" label={uiDataLabel("Projection")} folded={folded} onFoldToggle={onFoldToggle}>
+              <div data-testid="fold-pane-content">Modes</div>
+            </Pane>
+          </PaneHost>,
+        );
+        expect(screen.queryByTestId("fold-pane-content")).toBeNull();
       });
 
       it("Pane isolates toggle pointer events from a pointer-capturing canvas host", () => {
@@ -16721,7 +16818,7 @@ if (import.meta.vitest) {
         });
         const { container, rerender } = render(
           <PaneHost>
-            <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label={uiDataLabel("Drag")}>
+            <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label={uiDataLabel("Drag")} folded={false}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -16735,7 +16832,7 @@ if (import.meta.vitest) {
         fireEvent.pointerUp(handle, { pointerId: 1, clientX: 290, clientY: 290 });
         rerender(
           <PaneHost>
-            <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label={uiDataLabel("Drag")}>
+            <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label={uiDataLabel("Drag")} folded={false}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -16746,7 +16843,7 @@ if (import.meta.vitest) {
       it("Pane without onAnchorChange still renders a drag-handle affordance like panel toggles", () => {
         const { container } = render(
           <PaneHost>
-            <Pane id="fixed-pane" anchor="bottom-left" icon="box" label={uiDataLabel("Fixed")}>
+            <Pane id="fixed-pane" anchor="bottom-left" icon="box" label={uiDataLabel("Fixed")} folded={false}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -16763,7 +16860,7 @@ if (import.meta.vitest) {
         const { container } = render(
           <UiDriverProvider driver={COMPACT_UI_DRIVER}>
             <PaneHost>
-              <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label={uiDataLabel("Drag")}>
+              <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label={uiDataLabel("Drag")} folded={false}>
                 <div>Content</div>
               </Pane>
             </PaneHost>
@@ -16787,7 +16884,7 @@ if (import.meta.vitest) {
         });
         const { container, rerender } = render(
           <PaneHost>
-            <Pane id="resize-pane" anchor="top-left" icon="box" label={uiDataLabel("Resize")} resizable size={size} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
+            <Pane id="resize-pane" anchor="top-left" icon="box" label={uiDataLabel("Resize")} resizable size={size} onSizeChange={onSizeChange} minSize={200} maxSize={600} folded={false}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -16799,7 +16896,7 @@ if (import.meta.vitest) {
         expect(onSizeChange).toHaveBeenCalledWith(350);
         rerender(
           <PaneHost>
-            <Pane id="resize-pane" anchor="top-left" icon="box" label={uiDataLabel("Resize")} resizable size={size} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
+            <Pane id="resize-pane" anchor="top-left" icon="box" label={uiDataLabel("Resize")} resizable size={size} onSizeChange={onSizeChange} minSize={200} maxSize={600} folded={false}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -16810,7 +16907,7 @@ if (import.meta.vitest) {
       it("usePaneSlot portals its pane into the nearest PaneHost and renders nothing outside one", () => {
         function DeepChild() {
           return usePaneSlot(
-            <Pane id="slotted-pane" anchor="bottom-right" icon="box" label={uiDataLabel("Slotted")}>
+            <Pane id="slotted-pane" anchor="bottom-right" icon="box" label={uiDataLabel("Slotted")} folded={false}>
               <div data-testid="slotted-content">Slotted</div>
             </Pane>,
           );
@@ -16834,11 +16931,12 @@ if (import.meta.vitest) {
         expect(withoutHost.querySelector('[data-slot="pane"]')).toBeNull();
       });
 
-      it("is fixed on mobile — no drag handle, no resize handle, and content visible despite folded", () => {
+      it("on mobile respects folded state — no drag or resize handles, fold toggle still works", () => {
+        const onFoldToggle = vi.fn();
         const { container } = render(
           <UiMobileProvider mobile>
             <PaneHost>
-              <Pane id="mobile-pane" anchor="bottom-right" icon="box" label={uiDataLabel("Mobile")} onAnchorChange={vi.fn()} resizable size={300} onSizeChange={vi.fn()} folded>
+              <Pane id="mobile-pane" anchor="bottom-right" icon="box" label={uiDataLabel("Mobile")} onAnchorChange={vi.fn()} resizable size={300} onSizeChange={vi.fn()} folded onFoldToggle={onFoldToggle}>
                 <div data-testid="mobile-pane-content">Content</div>
               </Pane>
             </PaneHost>
@@ -16846,13 +16944,15 @@ if (import.meta.vitest) {
         );
         expect(container.querySelector('[data-slot="window-chrome-cap"] [data-slot="drag-handle"]')).toBeNull();
         expect(container.querySelector('[data-slot="pane-resize-handle"]')).toBeNull();
-        expect(screen.getByTestId("mobile-pane-content")).toBeTruthy();
+        expect(screen.queryByTestId("mobile-pane-content")).toBeNull();
+        fireEvent.click(container.querySelector('[data-slot="window-pane-chrome-toggle"]')!);
+        expect(onFoldToggle).toHaveBeenCalledTimes(1);
       });
 
       it("mirrors dir=rtl for right anchors with a fixed semantic icon and trailing drag handle, while the body carries no dir override", () => {
         const { container: leftContainer } = render(
           <PaneHost>
-            <Pane id="left-pane" anchor="top-left" icon="box" label={uiDataLabel("Left")}>
+            <Pane id="left-pane" anchor="top-left" icon="box" label={uiDataLabel("Left")} folded={false}>
               <div data-testid="left-pane-content">Content</div>
             </Pane>
           </PaneHost>,
@@ -16866,7 +16966,7 @@ if (import.meta.vitest) {
 
         const { container: rightContainer } = render(
           <PaneHost>
-            <Pane id="right-pane" anchor="top-right" icon="camera" label={uiDataLabel("Right")}>
+            <Pane id="right-pane" anchor="top-right" icon="camera" label={uiDataLabel("Right")} folded={false}>
               <div data-testid="right-pane-content">Content</div>
             </Pane>
           </PaneHost>,
@@ -16882,7 +16982,7 @@ if (import.meta.vitest) {
       it("centers a middle anchor with items-center instead of items-start", () => {
         const { container } = render(
           <PaneHost>
-            <Pane id="middle-pane" anchor="top-middle" icon="box" label={uiDataLabel("Middle")}>
+            <Pane id="middle-pane" anchor="top-middle" icon="box" label={uiDataLabel("Middle")} folded={false}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -17267,7 +17367,7 @@ if (treeVitest) {
         <GhostProvider>
           <GhostRegionShell>
             <PaneHost>
-              <Pane id="resize-pane" anchor="top-left" icon="box" label={uiDataLabel("Resize")} resizable size={300} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
+              <Pane id="resize-pane" anchor="top-left" icon="box" label={uiDataLabel("Resize")} resizable size={300} onSizeChange={onSizeChange} minSize={200} maxSize={600} folded={false}>
                 <div>Content</div>
               </Pane>
             </PaneHost>

@@ -1,0 +1,9 @@
+#!/usr/bin/env bun
+/**
+ * [DEBUG] Run workspace policy and report P3 handcrafted-grammar breaches.
+ */
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { policy } from "../../../../../.. /📜️script.ts";
+
+const ticketDir = import.meta.dir;

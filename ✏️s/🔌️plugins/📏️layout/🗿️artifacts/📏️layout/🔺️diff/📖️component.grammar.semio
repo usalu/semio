@@ -4,16 +4,7 @@ extension layout
 use family-scene
 start diff
 
-diff = operation*
-operation = add-frame | remove-frame | patch-frame | set-data-fields
-add-frame = "add-frame" "page-id" "=" IDENT frame-block
-remove-frame = "remove-frame" "page-id" "=" IDENT "frame-id" "=" IDENT
-patch-frame = "patch-frame" "page-id" "=" IDENT "frame-id" "=" IDENT patch-block
-set-data-fields = "set-data-fields" {"json" "=" TEXT}?
-frame-block = "frame" "{" prop* "}"
-patch-block = "patch" "{" prop* "}"
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" prop* "}"
-value = TEXT | FLOAT | INT | BOOL | list | map
+artifact-mark = "layout.layout-diff"
+diff = artifact-mark canvas-change+
+canvas-change = "add-layer" IDENT | "remove-layer" IDENT | "move" "id" "=" IDENT "dx" "=" FLOAT "dy" "=" FLOAT
+paint-field = "stroke" "=" TEXT | "fill" "=" TEXT

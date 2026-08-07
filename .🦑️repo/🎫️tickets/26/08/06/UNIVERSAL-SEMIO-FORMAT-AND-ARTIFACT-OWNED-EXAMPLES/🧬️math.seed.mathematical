@@ -1,1 +1,0 @@
-graph directed=true algorithm=topo nodes=[ id=a label=A x=40 y=60 id=b label=B x=240 y=20 ] edges=[ a->b ]

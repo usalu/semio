@@ -6,5 +6,103 @@ start record
 framing record
 field format u8
 field ordinal varint
-field body bytes
+# One record tag per LowpolyOperation variant — not a generic body-only envelope.
+record ObjectsAdd tag 1
+field index varint
+field item Object
+record ObjectsRemove tag 2
+field id utf8
+record ObjectsMove tag 3
+field id utf8
+field to_index varint
+record ObjectsPatch tag 4
+field id utf8
+field patch ObjectPatch
+record AddPaintLayer tag 5
+field object_id utf8
+field index varint
+field layer PaintLayer
+record RemovePaintLayer tag 6
+field object_id utf8
+field index varint
+record PatchPaintLayer tag 7
+field object_id utf8
+field index varint
+field patch PaintLayerPatch
+record PaintStroke tag 8
+field object_id utf8
+field layer_index varint
+field run_count varint
+field runs array PixelRun
+record SetProjection tag 9
+field projection Projection
+struct Transform
+field position fixed 12
+field rotation fixed 12
+field scale fixed 12
+struct Vertex
+field position fixed 12
+field has_normal u8
+field normal fixed 12
+field has_halfedge u8
+field halfedge u32
+struct Halfedge
+field vertex u32
+field next u32
+field has_twin u8
+field twin u32
+field has_face u8
+field face u32
+field u f32
+field v f32
+struct Face
+field halfedge u32
+field smooth u8
+field flipped u8
+struct Mesh
+field vertex_count varint
+field vertices array Vertex
+field halfedge_count varint
+field halfedges array Halfedge
+field face_count varint
+field faces array Face
+struct PaintLayer
+field name utf8
+field visible u8
+field opacity f32
+field blend_mode utf8
+field pixels bytes
+struct PaintLayerPatch
+field has_name u8
+field name utf8
+field has_visible u8
+field visible u8
+field has_opacity u8
+field opacity f32
+field has_blend_mode u8
+field blend_mode utf8
+struct Object
+field id utf8
+field name utf8
+field smooth_shading u8
+field transform Transform
+field mesh Mesh
+field paint_layer_count varint
+field paint_layers array PaintLayer
+struct ObjectPatch
+field has_name u8
+field name utf8
+field has_smooth_shading u8
+field smooth_shading u8
+field has_transform u8
+field transform Transform
+field has_mesh u8
+field mesh Mesh
+struct PixelRun
+field offset u32
+field bytes bytes
+struct Projection
+field schema utf8
+field object_count varint
+field objects array Object
 chain hash u64

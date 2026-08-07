@@ -4,8 +4,14 @@ extension en1992
 use family-sheet
 start diff
 
-diff = change*
-change = ("set" | "unset" | "replace") ("annex" | "m-ed-knm" | "v-ed-kn" | "f-ck" | "b-mm" | "d-mm" | "a-s-mm2" | "f-yk" | "rho-l" | "n-ed-kn" | "p-kn" | "a-c-mm2" | "use-fem" | "span-m" | "udl-kn-m" | "fire-rating" | "provided-axis-distance-mm" | "bridge-sigma-c-mpa" | "bridge-delta-sigma-s-mpa" | "tightness-class" | "hd-over-h" | "liquid-sigma-s-mpa" | "liquid-rho-p-eff" | "liquid-f-ct-eff-mpa" | "liquid-e-s-mpa" | "liquid-s-r-max-mm" | "anchor-h-ef-mm" | "anchor-cracked" | "anchor-f-uk-mpa" | "anchor-f-yk-mpa" | "anchor-a-s-mm2" | "anchor-d-mm" | "anchor-c1-mm" | "anchor-n-ed-kn" | "anchor-v-ed-kn" | "started" | "actor" | IDENT) ("=" value)?
-value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
-UNITNUM = FLOAT UNIT | INT UNIT
-UNIT = IDENT
+diff = document-replace
+document-replace = "document" assign*
+assign = annex-field | quantity-field | ratio-field | bool-field | enum-field
+annex-field = "annex" "=" ("en" | "de")
+quantity-field = ("m-ed-knm" | "v-ed-kn" | "f-ck" | "b-mm" | "d-mm" | "a-s-mm2" | "f-yk" | "n-ed-kn" | "p-kn" | "a-c-mm2" | "span-m" | "udl-kn-m" | "provided-axis-distance-mm" | "bridge-sigma-c-mpa" | "bridge-delta-sigma-s-mpa" | "liquid-sigma-s-mpa" | "liquid-f-ct-eff-mpa" | "liquid-e-s-mpa" | "liquid-s-r-max-mm" | "anchor-h-ef-mm" | "anchor-f-uk-mpa" | "anchor-f-yk-mpa" | "anchor-a-s-mm2" | "anchor-d-mm" | "anchor-c1-mm" | "anchor-n-ed-kn" | "anchor-v-ed-kn") "=" qty
+ratio-field = ("rho-l" | "hd-over-h" | "liquid-rho-p-eff") "=" (FLOAT | INT)
+bool-field = ("use-fem" | "anchor-cracked") "=" BOOL
+enum-field = fire-rating-field | tightness-field
+fire-rating-field = "fire-rating" "=" ("r30" | "r60" | "r90" | "r120")
+tightness-field = "tightness-class" "=" ("tc0" | "tc1" | "tc2")
+reference-sheet = clause-ref qty trace

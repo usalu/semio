@@ -4,9 +4,14 @@ extension din16798
 use family-sheet
 start document
 
-document = header assign*
+artifact-mark = "norm.din16798"
+document = artifact-mark doc-body
+doc-body = header sheet-body
 header = "semio" IDENT "v" INT
-assign = ("annex" | "occupancy" | "comfort-category" | "t-op-c" | "rh-percent" | "air-speed-m-s" | "theta-rm-c" | "co2-ppm" | "df-percent" | "l-aeq-db" | "persons" | "ida-class" | "ventilation-m3-h" | "floor-area-m2" | "bedrooms" | "dwelling-ventilation-m3-h" | "occupants" | "residential-ventilation-m3-h" | "sfp-w-m3-s" | "sfp-required-class" | "heat-recovery-eta" | "heat-recovery-eta-min" | "system-type" | "years-since-inspection" | "humidification-required-kg-h" | "humidification-provided-kg-h" | "fan-q-v-m3-s" | "fan-t-run-h" | "fan-energy-reference-kwh" | "night-setback-k" | "hr-m-dot-kg-s" | "hr-cp-j-kgk" | "hr-delta-t-c" | "hr-t-h" | "hr-savings-reference-kwh" | "n50-h-inv" | "volume-m3" | "infiltration-allowance-m3-h" | "cellar-area-m2" | "cellar-ventilation-m3-h" | "h-tr-w-k" | "h-ve-w-k" | "theta-e-c" | "theta-set-c" | "cooling-delta-t-h" | "cooling-gains-kwh" | "cooling-utilization-factor" | "cooling-reference-kwh" | "chiller-type" | "eer-actual" | "q-c-kwh" | "generation-reference-kwh" | "data-center-supply-c" | "h-st-w-k" | "theta-st-c" | "theta-amb-c" | "storage-t-h" | "storage-allowance-kwh" | "dhw-delivery-c" | "duct-class" | "duct-test-pressure-pa" | "duct-leakage-m3-s-m2" | "started" | "actor") "=" value
-value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
-UNITNUM = FLOAT UNIT | INT UNIT
+sheet-body = assign*
+assign = ("din16798-basis" | "din16798-combination" | "din16798-partial-factor" | "din16798-verdict" | "din16798-annex" | "din16798-actor" | "started" | "actor") "=" value
+value = TEXT | INT | FLOAT | BOOL | QUANTITY | clause-ref
+QUANTITY = FLOAT UNIT | INT UNIT
 UNIT = IDENT
+clause-ref = IDENT "." IDENT
+trace = IDENT "=" expr ARROW FLOAT

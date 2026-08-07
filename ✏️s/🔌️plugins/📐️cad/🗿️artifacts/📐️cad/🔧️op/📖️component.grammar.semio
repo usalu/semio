@@ -4,14 +4,71 @@ extension cad
 use family-scene
 start operation
 
-op = cad-edit*
-cad-edit = IDENT assign* block?
-layer = IDENT "@" FLOAT FLOAT FLOAT? props?
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | FLOAT | INT | BOOL)
-assign = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | FLOAT | INT | BOOL | list | map
-block = "{" record* "}"
-record = IDENT assign* block?
+operation = op-line+
+op-line = add-object | remove-object | patch-object | translate-objects | rotate-objects | scale-objects | set-pane-objects | add-node | remove-node | rename-node | patch-reference | set-references | set-active-model-definition | set-scene
+add-object = "add-object" "pane" "=" pane-id object-block
+remove-object = "remove-object" "pane" "=" pane-id "object-id" "=" IDENT
+patch-object = "patch-object" "pane" "=" pane-id "object-id" "=" IDENT object-patch-block
+translate-objects = "translate-objects" "object-ids" "=" id-list "dx" "=" FLOAT "dy" "=" FLOAT "dz" "=" FLOAT
+rotate-objects = "rotate-objects" "object-ids" "=" id-list "ax" "=" FLOAT "ay" "=" FLOAT "az" "=" FLOAT "angle" "=" FLOAT
+scale-objects = "scale-objects" "object-ids" "=" id-list "sx" "=" FLOAT "sy" "=" FLOAT "sz" "=" FLOAT
+set-pane-objects = "set-pane-objects" "pane" "=" pane-id objects-table
+add-node = "add-node" node-block
+remove-node = "remove-node" "node-id" "=" IDENT
+rename-node = "rename-node" "node-id" "=" IDENT "label" "=" TEXT
+patch-reference = "patch-reference" "model-definition-id" "=" IDENT "reference-id" "=" IDENT reference-patch-block
+set-references = "set-references" "model-definition-id" "=" IDENT reference-list-block
+set-active-model-definition = "set-active-model-definition" "model-definition-id" "=" IDENT
+set-scene = "set-scene" scene-block
+schema-field = "schema" "=" IDENT
+id-field = "id" "=" IDENT
+scene-block = "scene" "{" scene-field* "}"
+scene-field = schema-field | id-field | active-model-field
+active-model-field = "active-model-definition-id" "=" IDENT
+pane-id = "shape" | "building" | "energy" | "structure-classic"
+object-block = "object" object-fields
+object-fields = "id" "=" IDENT "label" "=" TEXT "typology" "=" IDENT "visible" "=" BOOL "locked" "=" BOOL "origin" "=" coord-tuple orientation-field? scale-field? mesh-url-field? extent-field? solid-handle-field? primitives-field?
+orientation-field = "orientation" "=" orientation-tuple
+scale-field = "scale" "=" scale-tuple
+mesh-url-field = "mesh-url" "=" TEXT
+extent-field = "extent" "=" extent-tuple
+solid-handle-field = "solid-handle" "=" TEXT
+primitives-field = "primitives" "=" primitive-list
+object-patch-block = "patch" object-patch-fields
+object-patch-fields = label-patch? typology-patch? visible-patch? locked-patch? origin-patch? orientation-patch? scale-patch? mesh-url-patch? extent-patch? solid-handle-patch?
+label-patch = "label" "=" TEXT
+typology-patch = "typology" "=" IDENT
+visible-patch = "visible" "=" BOOL
+locked-patch = "locked" "=" BOOL
+origin-patch = "origin" "=" coord-tuple
+orientation-patch = "orientation" "=" orientation-tuple
+scale-patch = "scale" "=" scale-tuple
+mesh-url-patch = "mesh-url" "=" TEXT
+extent-patch = "extent" "=" extent-tuple
+solid-handle-patch = "solid-handle" "=" TEXT
+node-block = "node" "id" "=" IDENT "label" "=" TEXT "kind" "=" IDENT
+reference-patch-block = "patch" reference-patch-fields
+reference-patch-fields = source-url-patch? media-kind-patch? origin-patch? orientation-patch? scale-patch? width-world-patch? hidden-patch? locked-patch? opacity-patch?
+source-url-patch = "source-url" "=" TEXT
+media-kind-patch = "media-kind" "=" IDENT
+width-world-patch = "width-world" "=" FLOAT
+hidden-patch = "hidden" "=" BOOL
+opacity-patch = "opacity" "=" FLOAT
+reference-list-block = "references" reference-list
+reference-list = "[" reference-row* "]"
+reference-row = "id" "=" IDENT "source-url" "=" TEXT "media-kind" "=" IDENT "origin" "=" coord-tuple "width-world" "=" FLOAT "hidden" "=" BOOL "locked" "=" BOOL "opacity" "=" FLOAT "scale" "=" FLOAT
+objects-table = "[" object-columns "]" "{" object-row* "}"
+object-columns = column+
+column = IDENT ":" IDENT
+object-row = object-cells
+object-cells = TEXT TEXT TEXT BOOL BOOL coord-tuple orientation-tuple scale-tuple TEXT extent-tuple TEXT primitive-list
+scene-block = "scene" "{" scene-field* "}"
+scene-field = schema-field | id-field | active-model-field
+active-model-field = "active-model-definition-id" "=" IDENT
+coord-tuple = CRD | TUPLE
+orientation-tuple = TUPLE
+scale-tuple = TUPLE
+extent-tuple = TUPLE
+primitive-list = LIST
+id-list = "[" IDENT* "]"
+layer = layer-anchor transform-block? paint-block?

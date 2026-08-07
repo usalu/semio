@@ -1,0 +1,32 @@
+{
+  "pass": true,
+  "results": [
+    {
+      "label": "Aggregator",
+      "reverse": 0,
+      "startX": -70.8419,
+      "endX": -200,
+      "hash": "#aggregator",
+      "frames": 26,
+      "pass": true
+    },
+    {
+      "label": "Generator",
+      "reverse": 0,
+      "startX": -187.738,
+      "endX": 0,
+      "hash": "#generator",
+      "frames": 7,
+      "pass": true
+    },
+    {
+      "label": "Verfolgen",
+      "reverse": 0,
+      "startX": -7.6441,
+      "endX": -105.158,
+      "hash": "#verfolgen",
+      "frames": 3,
+      "pass": true
+    }
+  ]
+}

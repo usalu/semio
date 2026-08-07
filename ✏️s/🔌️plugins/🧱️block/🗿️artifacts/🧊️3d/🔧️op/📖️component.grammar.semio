@@ -1,23 +1,15 @@
 dialect grammar
 grammar block.block3d.op
 extension block3d
+use family-scene
 start operation
 
-operation = op-stmt*
-op-stmt = IDENT assign* block?
-node = IDENT {":" IDENT}? {"@" IDENT}?
-edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
-edge-label = IDENT {":" IDENT}?
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | list | map
-table-schema = "[" col {"," col}* "]"
-col = IDENT ":" IDENT
-table = table-schema "{" row* "}"
-row = field+
-field = IDENT "=" value
-block = "{" record* "}"
-record = IDENT assign* block?
+artifact-mark = "block.3d-op"
+operation = artifact-mark mesh-op+
+mesh-op = "add-vertex" vtx-field+ | "set-face" face-field+ | "transform-mesh" xfm-field+ | "merge-solid" merge-field+
+vtx-field = "x" "=" FLOAT | "y" "=" FLOAT | "z" "=" FLOAT
+face-field = "index" "=" INT | "loop" "=" list
+xfm-field = "axis" "=" IDENT | "angle" "=" FLOAT
+merge-field = "target" "=" IDENT | "source" "=" IDENT
+list = "[" INT* "]"
+layer = IDENT "@" FLOAT FLOAT FLOAT?

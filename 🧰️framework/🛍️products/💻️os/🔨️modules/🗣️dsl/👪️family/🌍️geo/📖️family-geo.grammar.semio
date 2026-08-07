@@ -2,5 +2,10 @@ dialect grammar
 grammar family-geo
 start point
 
-point = FLOAT FLOAT FLOAT? crs?
-crs = "crs" IDENT
+point = FLOAT FLOAT FLOAT? | point-kw
+point-kw = "point" FLOAT FLOAT FLOAT?
+point-tuple = FLOAT FLOAT FLOAT?
+crs = "crs" IDENT | "CRS" "=" IDENT
+bbox = "bbox" FLOAT FLOAT FLOAT FLOAT | "bbox" "=" bbox-literal
+bbox-literal = FLOAT FLOAT FLOAT FLOAT
+geo-field = "lat" "=" (FLOAT | INT) | "lon" "=" (FLOAT | INT) | "alt" "=" (FLOAT | INT) | "crs" "=" IDENT

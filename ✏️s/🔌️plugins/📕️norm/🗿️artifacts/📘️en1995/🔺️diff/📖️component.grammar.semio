@@ -4,8 +4,10 @@ extension en1995
 use family-sheet
 start diff
 
-diff = change*
-change = ("set" | "unset" | "replace") ("annex" | "m-ed-knm" | "n-ed-kn" | "v-ed-kn" | "w-mm3" | "a-mm2" | "b-mm" | "h-mm" | "f-m-k" | "f-c-0-k" | "service-class" | "load-duration" | "m-crit-knm" | "f-ed-kn" | "a-ef-mm2" | "f-v-k" | "fire-duration-min" | "section-depth-mm" | "a-vert-m-s2" | "n-cycles-bridge" | "started" | "actor" | IDENT) ("=" value)?
-value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
-UNITNUM = FLOAT UNIT | INT UNIT
+artifact-mark = "norm.en1995-diff"
+diff = artifact-mark change+
+change = "set" | "unset" | "replace"
+change-field = change ("en1995-basis" | "en1995-combination" | "en1995-partial-factor" | "en1995-verdict" | "en1995-annex" | "en1995-actor" | "started" | "actor") ("=" value)?
+value = TEXT | INT | FLOAT | BOOL | QUANTITY
+QUANTITY = FLOAT UNIT | INT UNIT
 UNIT = IDENT

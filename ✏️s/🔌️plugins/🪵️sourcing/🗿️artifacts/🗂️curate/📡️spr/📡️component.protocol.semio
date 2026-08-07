@@ -4,6 +4,15 @@ version 1
 schema sourcing.curate.operation
 start record
 framing record
+record sourcing.curate-add-stock tag 1
+field format u8
+field ordinal varint
+field body bytes
+record sourcing.curate-set-typology tag 2
+field format u8
+field ordinal varint
+field body bytes
+record sourcing.curate-curate-item tag 3
 field format u8
 field ordinal varint
 field body bytes

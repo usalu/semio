@@ -4,16 +4,11 @@ extension layout
 use family-scene
 start operation
 
-operation = add-frame | remove-frame | patch-frame | set-data-fields
-add-frame = "add-frame" "page-id" "=" IDENT {"index" "=" INT}? frame-block
-remove-frame = "remove-frame" "page-id" "=" IDENT "frame-id" "=" IDENT
-patch-frame = "patch-frame" "page-id" "=" IDENT "frame-id" "=" IDENT patch-block
-set-data-fields = "set-data-fields" {"json" "=" TEXT}?
-frame-block = "frame" "{" prop* bounds-block? "}"
-bounds-block = "bounds" "{" prop* "}"
-patch-block = "patch" "{" {"wrap-mode" "=" IDENT}? {"columns" "=" INT}? prop* "}"
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" prop* "}"
-value = TEXT | FLOAT | INT | BOOL | list | map
+artifact-mark = "layout.layout-op"
+operation = artifact-mark canvas-op+
+canvas-op = "add-layer" layer-field+ | "set-stroke" stroke-field+ | "move-layer" move-field+ | "set-fill" fill-field+
+layer-field = "id" "=" IDENT | "kind" "=" IDENT
+stroke-field = "color" "=" TEXT | "width" "=" FLOAT
+move-field = "id" "=" IDENT | "x" "=" FLOAT | "y" "=" FLOAT
+fill-field = "id" "=" IDENT | "fill" "=" TEXT
+paint-field = "opacity" "=" FLOAT | "blend" "=" IDENT

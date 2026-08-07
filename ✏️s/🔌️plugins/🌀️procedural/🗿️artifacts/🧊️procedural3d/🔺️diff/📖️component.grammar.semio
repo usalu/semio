@@ -1,29 +1,12 @@
 dialect grammar
 grammar procedural.procedural3d.diff
 extension procedural3d
-use family-graph
+use family-scene
 start diff
 
-diff = keyword-stmt | op-stmt*
-op-stmt = IDENT assign* block?
-node = IDENT {":" IDENT}? {"@" IDENT}?
-edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
-edge-label = IDENT {":" IDENT}?
-wire = node edge-arrow node
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | list | map
-table-schema = "[" col {"," col}* "]"
-col = IDENT ":" IDENT
-table = table-schema "{" row* "}"
-row = field+
-field = IDENT "=" value
-block = "{" record* "}"
-record = IDENT assign* block?
-
-// artifact-keywords: value, dict-entry, camera-json, widget-layout, synapse-spec, form-generation
-keyword-stmt = ("value" | "dict-entry" | "camera-json" | "widget-layout" | "synapse-spec" | "form-generation") field*
-field = IDENT "=" (TEXT | INT | FLOAT | BOOL)
+artifact-mark = "procedural.procedural3d-diff"
+diff = artifact-mark mesh-change+
+mesh-change = "add-vertex" vtx+ | "drop-face" INT | "transform" xfm+
+vtx = "x" "=" FLOAT | "y" "=" FLOAT | "z" "=" FLOAT
+xfm = "axis" "=" IDENT | "delta" "=" FLOAT
+layer = IDENT "@" FLOAT FLOAT

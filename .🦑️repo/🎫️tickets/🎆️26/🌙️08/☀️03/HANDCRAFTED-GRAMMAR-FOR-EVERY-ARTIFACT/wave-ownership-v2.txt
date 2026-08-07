@@ -1,0 +1,13 @@
+# Wave ownership v2
+
+P4 pilots: lowpoly | norm/en1992 | dag | cad
+
+W5a F1: reasoning trinity sequence mathematical (flow if free)
+W5b F3: norm(remaining) architect energy
+W5c F4: draw raster note layout animate shooting forms playbook
+W5d F5+F6+F7: sourcing space demonstrator writer imperative gis
+W5e F8+F2 mid: fem process remodel
+W5f HOT: flow procedural block puzzle vcs
+
+Orchestrator-only: script.ts Cargo.toml package.json launch.json
+Engine freeze after P1: dsl/** pack/** spr/** store/**

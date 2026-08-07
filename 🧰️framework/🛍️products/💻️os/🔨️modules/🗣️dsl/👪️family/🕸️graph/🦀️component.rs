@@ -227,9 +227,10 @@ mod tests {
     /// recognizer accepts every fixture, only that the spec itself is well-formed).
     #[test]
     fn grammar_file_is_syntactically_valid() {
-        let source = include_str!("../../📖️family-graph.grammar.semio");
+        let source = include_str!("📖️family-graph.grammar.semio");
         let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-graph.grammar must parse");
         assert_eq!(grammar.id, "family-graph");
+        assert!(grammar.productions.len() > 6, "family-graph should expose edge/chain/label vocabulary");
     }
 
     #[test]

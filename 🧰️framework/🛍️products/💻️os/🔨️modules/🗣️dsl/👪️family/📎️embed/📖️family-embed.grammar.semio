@@ -2,4 +2,10 @@ dialect grammar
 grammar family-embed
 start fence
 
-fence = "```" IDENT TEXT "```"
+fence = fence-open fence-body fence-close
+fence-open = "```" IDENT
+fence-body = TEXT
+fence-close = "```"
+fence-lang = IDENT
+embed-stmt = "embed" "=" fence | "text" "=" fence
+host-ref = IDENT "." IDENT

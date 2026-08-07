@@ -7378,6 +7378,7 @@ name = "semio-s-plugin-process"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
+ "blake3",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-os-kernel",

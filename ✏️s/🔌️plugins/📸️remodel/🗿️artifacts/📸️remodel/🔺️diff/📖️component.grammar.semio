@@ -4,30 +4,9 @@ extension remodel
 use family-scene
 start diff
 
-diff = empty | set-streams | set-asset | set-calibration | set-gcps | set-ingest-params | set-feature-params | set-match-params | set-sfm-params | set-dense-params | set-mesh-params | set-motion-params | set-geo-params | set-job | set-sparse | set-dense | set-mesh-result | set-trajectory | set-tracks | set-geo-products | set-qc
-empty = "empty"
-set-streams = "set-streams" "{" prop* "}"
-set-asset = "set-asset" "id" "=" IDENT "{" prop* "}"
-set-calibration = "set-calibration" "{" prop* "}"
-set-gcps = "set-gcps" "{" prop* "}"
-set-ingest-params = "set-ingest-params" "{" prop* "}"
-set-feature-params = "set-feature-params" "{" prop* "}"
-set-match-params = "set-match-params" "{" prop* "}"
-set-sfm-params = "set-sfm-params" "{" prop* "}"
-set-dense-params = "set-dense-params" "{" prop* "}"
-set-mesh-params = "set-mesh-params" "{" prop* "}"
-set-motion-params = "set-motion-params" "{" prop* "}"
-set-geo-params = "set-geo-params" "{" prop* "}"
-set-job = "set-job" "{" prop* "}"
-set-sparse = "set-sparse" "{" prop* "}"
-set-dense = "set-dense" "{" prop* "}"
-set-mesh-result = "set-mesh-result" "{" prop* "}"
-set-trajectory = "set-trajectory" "{" prop* "}"
-set-tracks = "set-tracks" "{" prop* "}"
-set-geo-products = "set-geo-products" "{" prop* "}"
-set-qc = "set-qc" "{" prop* "}"
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" prop* "}"
-value = TEXT | FLOAT | INT | BOOL | list | map
+artifact-mark = "remodel.remodel-diff"
+diff = artifact-mark mesh-change+
+mesh-change = "add-vertex" vtx+ | "drop-face" INT | "transform" xfm+
+vtx = "x" "=" FLOAT | "y" "=" FLOAT | "z" "=" FLOAT
+xfm = "axis" "=" IDENT | "delta" "=" FLOAT
+layer = IDENT "@" FLOAT FLOAT

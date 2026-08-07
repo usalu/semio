@@ -184,51 +184,53 @@ const _controlLabelIdResolver = ephemeralBox<(id: string) => string>("framework.
 
 /** @emoji 🏷️ Registers a product-specific mapper from shell control ids (`ui.*`) to i18n keys. */
 export function setControlLabelIdResolver(resolver: (id: string) => string): void {
-  _controlLabelIdResolver.current = resolver;
+  _controlLabelIdResolver.current = typeof resolver === "function" ? resolver : (id) => id;
 }
 
 /** @emoji 🏷️ Maps shell control ids to i18n keys for inline labels (identity until a product resolver is set). */
 export function resolveControlLabelId(id: string): string {
+  if (typeof _controlLabelIdResolver.current !== "function") _controlLabelIdResolver.current = (value) => value;
+  const resolve = _controlLabelIdResolver.current;
   if (id.startsWith("ui.nav.")) {
     const segment = id.slice("ui.nav.".length);
     if (segment === "back" || segment === "forward" || segment === "up") {
-      return _controlLabelIdResolver.current(`ui.nav.${segment}`);
+      return resolve(`ui.nav.${segment}`);
     }
   }
   if (id === "ui.search.toggle") {
-    return _controlLabelIdResolver.current("ui.search.toggle");
+    return resolve("ui.search.toggle");
   }
   if (id === "ui.find.toggle") {
-    return _controlLabelIdResolver.current("ui.find.toggle");
+    return resolve("ui.find.toggle");
   }
   if (id === "ui.fullscreen.toggle") {
-    return _controlLabelIdResolver.current("ui.fullscreen.toggle");
+    return resolve("ui.fullscreen.toggle");
   }
   if (id === "ui.mobilePanel.toggle") {
-    return _controlLabelIdResolver.current("ui.mobilePanel.toggle");
+    return resolve("ui.mobilePanel.toggle");
   }
   if (id.startsWith("ui.panelToggle.")) {
-    return _controlLabelIdResolver.current(`ui.panelToggle.${id.slice("ui.panelToggle.".length)}`);
+    return resolve(`ui.panelToggle.${id.slice("ui.panelToggle.".length)}`);
   }
   if (id.startsWith("ui.ribbon.group.")) {
-    return _controlLabelIdResolver.current(`ui.ribbon.parent.${id.slice("ui.ribbon.group.".length)}`);
+    return resolve(`ui.ribbon.parent.${id.slice("ui.ribbon.group.".length)}`);
   }
   if (id.startsWith("ui.ribbon.") && id.includes(".group.")) {
-    return _controlLabelIdResolver.current(`ui.ribbon.parent.${id.slice(id.lastIndexOf(".group.") + ".group.".length)}`);
+    return resolve(`ui.ribbon.parent.${id.slice(id.lastIndexOf(".group.") + ".group.".length)}`);
   }
   if (id === "ui.windowSearch.suggestions") {
-    return _controlLabelIdResolver.current("ui.windowSearch.suggestions");
+    return resolve("ui.windowSearch.suggestions");
   }
   if (id === "ui.engagement.actions") {
-    return _controlLabelIdResolver.current("ui.engagement.actions");
+    return resolve("ui.engagement.actions");
   }
   if (id === "search-input" || id === "ui.windowSearch.action") {
-    return _controlLabelIdResolver.current("ui.windowSearch.action");
+    return resolve("ui.windowSearch.action");
   }
   if (id.startsWith("playground.panel.")) {
-    return _controlLabelIdResolver.current(`ui.panelToggle.${id.slice("playground.panel.".length)}`);
+    return resolve(`ui.panelToggle.${id.slice("playground.panel.".length)}`);
   }
-  return _controlLabelIdResolver.current(id);
+  return resolve(id);
 }
 
 /** @emoji 🏷️ Panel kind slug from a panel-toggle control id (`ui.panelToggle.*`, `playground.panel.*`, sketchpad navbar keys). */

@@ -10,6 +10,13 @@ use crate::artifacts::en1992::Document;
 /// `anchor_cracked`) are exercised too.
 pub const EN1992_LIQUID_RETAINING_FEM_ANCHOR_EXAMPLE_TEXT: &str = include_str!("../📚️examples/📕️liquid-retaining-fem-anchor/🗣️dsls/📕️liquid-retaining-fem-anchor/🧬️component.norm.en1992.dsl.semio");
 
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+
 /// 📖️ Parses `.en1992` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {
     <Document as store::DocumentDsl>::parse_dsl(text)
@@ -62,5 +69,18 @@ mod tests {
         assert!(document.use_fem);
         assert!(document.anchor_cracked);
         store::test_support::assert_dsl_round_trip(&document);
+    }
+}
+
+#[cfg(test)]
+mod semio_grammar_conformance {
+    use super::*;
+
+    #[test]
+    fn component_grammar_semio_is_grammar_dialect() {
+        let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
+        assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);
+        assert!(!COMPONENT_GRAMMAR_SEMIO.is_empty());
+        let _ = COMPONENT_GRAMMAR_PATH;
     }
 }

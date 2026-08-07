@@ -4,8 +4,10 @@ extension en1990
 use family-sheet
 start operation
 
-operation = ("set" | "patch" | "remove") field*
-field = ("g-k" | "q-k" | "resistance-kn" | "consequence-class" | "annex" | "seismic-a-ed-kn" | "started" | "actor" | IDENT) "=" value
-value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
-UNITNUM = FLOAT UNIT | INT UNIT
+artifact-mark = "norm.en1990-op"
+operation = artifact-mark op-stmt+
+op-stmt = "set-field" field+ | "patch-field" field+ | "remove-field" field+
+field = ("en1990-basis" | "en1990-combination" | "en1990-partial-factor" | "en1990-verdict" | "en1990-annex" | "en1990-actor" | "started" | "actor") "=" value
+value = TEXT | INT | FLOAT | BOOL | QUANTITY
+QUANTITY = FLOAT UNIT | INT UNIT
 UNIT = IDENT

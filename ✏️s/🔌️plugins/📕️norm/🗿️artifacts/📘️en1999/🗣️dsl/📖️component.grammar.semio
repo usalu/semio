@@ -4,9 +4,14 @@ extension en1999
 use family-sheet
 start document
 
-document = header assign*
+artifact-mark = "norm.en1999"
+document = artifact-mark doc-body
+doc-body = header sheet-body
 header = "semio" IDENT "v" INT
-assign = ("n-ed-kn" | "m-ed-knm" | "a-mm2" | "w-el-mm3" | "alloy" | "chi" | "i-t-mm4" | "l-cr-mm" | "theta-c" | "delta-sigma-ed" | "delta-sigma-c" | "fatigue-m" | "n-cycles" | "v-weld-ed-kn" | "weld-throat-mm" | "weld-length-mm" | "beta-w" | "sheet-b-mm" | "sheet-t-mm" | "sheet-k-sigma" | "sheet-w-el-mm3" | "sheet-m-ed-knm" | "shell-t-mm" | "shell-r-mm" | "sigma-ed-shell-mpa" | "annex" | "started" | "actor") "=" value
-value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
-UNITNUM = FLOAT UNIT | INT UNIT
+sheet-body = assign*
+assign = ("en1999-basis" | "en1999-combination" | "en1999-partial-factor" | "en1999-verdict" | "en1999-annex" | "en1999-actor" | "started" | "actor") "=" value
+value = TEXT | INT | FLOAT | BOOL | QUANTITY | clause-ref
+QUANTITY = FLOAT UNIT | INT UNIT
 UNIT = IDENT
+clause-ref = IDENT "." IDENT
+trace = IDENT "=" expr ARROW FLOAT

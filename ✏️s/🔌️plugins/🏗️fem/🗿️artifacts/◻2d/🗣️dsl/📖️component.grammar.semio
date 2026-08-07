@@ -4,29 +4,16 @@ extension fem2d
 use family-sheet
 start document
 
-document = elements-block? analysis-block? nodes-table? regions-table? materials-table? sections-table? supports-table? load-cases-table? combinations-table?
-elements-block = "elements" block
-analysis-block = "analysis" block
+artifact-mark = "fem.2d"
+document = artifact-mark doc-body
+doc-body = eng-header eng-tables
+eng-header = "model" "=" IDENT
+eng-tables = nodes-table? elements-table? loads-table?
 nodes-table = "nodes" table-schema "{" row* "}"
-regions-table = "regions" table-schema "{" row* "}"
-materials-table = "materials" table-schema "{" row* "}"
-sections-table = "sections" table-schema "{" row* "}"
-supports-table = "supports" table-schema "{" row* "}"
-load-cases-table = "load-cases" table-schema "{" row* "}"
-combinations-table = "combinations" table-schema "{" row* "}"
-element-stmt = ("beam" | "bar" | "frame" | "rod") assign*
-load-stmt = ("nodal" | "udl" | "area") assign*
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
-qty = (FLOAT | INT) IDENT?
-block = "{" record* "}"
-record = IDENT assign* block?
-table = IDENT table-schema "{" row* "}"
+elements-table = "elements" table-schema "{" row* "}"
+loads-table = "loads" table-schema "{" row* "}"
 table-schema = "[" col {"," col}* "]"
 col = IDENT ":" IDENT
-row = field+
-field = IDENT "=" value | value
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)
+row = eng-node*
+eng-node = "node" "=" INT | "element" "=" IDENT | "load" "=" IDENT | "support" "=" IDENT | "commit" "=" TEXT
+eng-record = eng-node*

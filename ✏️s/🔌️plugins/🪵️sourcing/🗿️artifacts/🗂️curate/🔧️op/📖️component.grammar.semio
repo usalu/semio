@@ -4,19 +4,11 @@ extension curate
 use family-catalog
 start operation
 
-operation = op-line*
-op-line = ("set-document" | "document") assign* block?
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
-qty = (FLOAT | INT) IDENT?
-block = "{" record* "}"
-record = IDENT assign* block?
-table = IDENT table-schema "{" row* "}"
-table-schema = "[" col {"," col}* "]"
-col = IDENT ":" IDENT
-row = field+
-field = IDENT "=" value | value
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)
+artifact-mark = "sourcing.curate-op"
+operation = artifact-mark catalog-op+
+catalog-op = "add-stock" stock-op+ | "set-typology" typo-field+ | "curate-item" curate-field+
+stock-op = "path" "=" IDENT | "name" "=" TEXT
+typo-field = "path" "=" IDENT | "parent" "=" IDENT
+curate-field = "id" "=" IDENT | "count" "=" INT
+stock = slash-path IDENT TEXT
+slash-path = IDENT

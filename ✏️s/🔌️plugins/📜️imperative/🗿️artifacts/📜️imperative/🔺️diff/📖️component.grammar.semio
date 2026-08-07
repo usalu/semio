@@ -1,21 +1,10 @@
 dialect grammar
 grammar imperative.imperative.diff
 extension imperative
+use family-embed
 start diff
 
-diff = op-line*
-op-line = ("add" | "remove" | "move" | "patch") assign* block?
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
-qty = (FLOAT | INT) IDENT?
-block = "{" record* "}"
-record = IDENT assign* block?
-table = IDENT table-schema "{" row* "}"
-table-schema = "[" col {"," col}* "]"
-col = IDENT ":" IDENT
-row = field+
-field = IDENT "=" value | value
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)
+artifact-mark = "imperative.imperative-diff"
+diff = artifact-mark text-change+
+text-change = "insert" INT TEXT | "delete" INT INT | "fence" IDENT TEXT
+fence = "```" IDENT TEXT "```"

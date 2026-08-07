@@ -4,9 +4,14 @@ extension din18599
 use family-sheet
 start document
 
-document = header assign*
+artifact-mark = "norm.din18599"
+document = artifact-mark doc-body
+doc-body = header sheet-body
 header = "semio" IDENT "v" INT
-assign = ("started" | "actor" | "use-class" | "heated-area-m2" | "occupants" | "h-t" | "h-v" | "internal-gains-w-m2" | "solar-gains-kwh" | "system-losses-kwh" | "renewable-kwh" | "annual-limit-kwh" | "energy-carrier" | "reference-q-p-kwh" | "theta-e-c" | "g-h-w-m2") "=" value
-value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
-UNITNUM = FLOAT UNIT | INT UNIT
+sheet-body = assign*
+assign = ("din18599-basis" | "din18599-combination" | "din18599-partial-factor" | "din18599-verdict" | "din18599-annex" | "din18599-actor" | "started" | "actor") "=" value
+value = TEXT | INT | FLOAT | BOOL | QUANTITY | clause-ref
+QUANTITY = FLOAT UNIT | INT UNIT
 UNIT = IDENT
+clause-ref = IDENT "." IDENT
+trace = IDENT "=" expr ARROW FLOAT

@@ -1044,6 +1044,7 @@ fn register_norm_exports() {
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::en1990::En1990PlayApp>(apps::en1990::DOCUMENT_SCHEMA);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::en1991::En1991PlayApp>(apps::en1991::DOCUMENT_SCHEMA);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::en1992::En1992PlayApp>(apps::en1992::DOCUMENT_SCHEMA);
+    crate::artifacts::en1992::engine::register_pilot_languages();
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::en1993::En1993PlayApp>(apps::en1993::DOCUMENT_SCHEMA);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::en1994::En1994PlayApp>(apps::en1994::DOCUMENT_SCHEMA);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<apps::en1995::En1995PlayApp>(apps::en1995::DOCUMENT_SCHEMA);

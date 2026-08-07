@@ -4,6 +4,15 @@ version 1
 schema gis.terrain.operation
 start record
 framing record
+record gis.gisterrain-set-crs tag 1
+field format u8
+field ordinal varint
+field body bytes
+record gis.gisterrain-add-point tag 2
+field format u8
+field ordinal varint
+field body bytes
+record gis.gisterrain-tile-ref tag 3
 field format u8
 field ordinal varint
 field body bytes

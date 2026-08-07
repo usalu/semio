@@ -4,6 +4,12 @@
 use crate::artifacts::lowpoly::op::LowpolyOperation;
 use protocol::OpBinary;
 
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
 /// 📦️ Encodes a `LowpolyOperation` to its binary command form.
 pub fn encode_op(operation: &LowpolyOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
@@ -19,6 +25,25 @@ pub fn decode_op(bytes: &[u8]) -> Result<LowpolyOperation, protocol::ProtocolErr
 mod tests {
     use super::*;
     use crate::artifacts::lowpoly::engine::default_projection;
+
+    #[test]
+    fn handcrafted_spr_protocol_enumerates_operation_tags() {
+        for tag in [
+            "record ObjectsAdd tag 1",
+            "record ObjectsRemove tag 2",
+            "record ObjectsMove tag 3",
+            "record ObjectsPatch tag 4",
+            "record AddPaintLayer tag 5",
+            "record RemovePaintLayer tag 6",
+            "record PatchPaintLayer tag 7",
+            "record PaintStroke tag 8",
+            "record SetProjection tag 9",
+        ] {
+            assert!(COMPONENT_PROTOCOL_SEMIO.contains(tag), "missing {tag}");
+        }
+        assert!(COMPONENT_PROTOCOL_SEMIO.contains("field format u8"));
+        assert!(COMPONENT_PROTOCOL_SEMIO.contains("field ordinal varint"));
+    }
     use crate::artifacts::lowpoly::op::LowpolyPaintLayerPatch;
     use crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA;
 

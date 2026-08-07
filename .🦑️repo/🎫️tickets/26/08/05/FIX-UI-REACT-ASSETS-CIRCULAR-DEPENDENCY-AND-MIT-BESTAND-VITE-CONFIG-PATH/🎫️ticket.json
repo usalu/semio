@@ -1,8 +1,0 @@
-{
-  "id": "26/08/05/FIX-UI-REACT-ASSETS-CIRCULAR-DEPENDENCY-AND-MIT-BESTAND-VITE-CONFIG-PATH",
-  "title": "Fix UI React Assets Circular Dependency and Mit Bestand Vite Config Path",
-  "status": "open",
-  "created_at": "2026-08-05T15:17:00Z",
-  "description": "Fix circular nx build dependency between ui-react and assets, and fix stale js/ vite config relative path in mit-bestand-praesentation-projektetage script.ts.",
-  "files": []
-}

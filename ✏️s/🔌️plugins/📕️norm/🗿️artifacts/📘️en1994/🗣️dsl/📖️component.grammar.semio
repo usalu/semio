@@ -4,9 +4,14 @@ extension en1994
 use family-sheet
 start document
 
-document = header assign*
+artifact-mark = "norm.en1994"
+document = artifact-mark doc-body
+doc-body = header sheet-body
 header = "semio" IDENT "v" INT
-assign = ("annex" | "m-ed-knm" | "v-ed-kn" | "m-pla" | "m-pl-rd" | "eta" | "v-l-rd" | "insulation-thickness-mm" | "fire-rating" | "deck-type" | "delta-sigma-mpa" | "fatigue-detail" | "d-mm" | "h-sc-mm" | "f-ck-mpa" | "f-u-mpa" | "e-cm-mpa" | "v-ed-per-stud-kn" | "span-m" | "f-y-mpa" | "n-cycles-stud" | "delta-tau-stud-mpa" | "started" | "actor") "=" value
-value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
-UNITNUM = FLOAT UNIT | INT UNIT
+sheet-body = assign*
+assign = ("en1994-basis" | "en1994-combination" | "en1994-partial-factor" | "en1994-verdict" | "en1994-annex" | "en1994-actor" | "started" | "actor") "=" value
+value = TEXT | INT | FLOAT | BOOL | QUANTITY | clause-ref
+QUANTITY = FLOAT UNIT | INT UNIT
 UNIT = IDENT
+clause-ref = IDENT "." IDENT
+trace = IDENT "=" expr ARROW FLOAT

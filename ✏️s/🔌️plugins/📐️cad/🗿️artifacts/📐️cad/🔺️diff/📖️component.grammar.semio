@@ -4,14 +4,50 @@ extension cad
 use family-scene
 start diff
 
-diff = cad-edit*
-cad-edit = IDENT assign* block?
-layer = IDENT "@" FLOAT FLOAT FLOAT? props?
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | FLOAT | INT | BOOL)
-assign = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | FLOAT | INT | BOOL | list | map
-block = "{" record* "}"
-record = IDENT assign* block?
+diff = diff-line*
+diff-line = scene-replace | active-model-replace | objects-collection | building-objects-collection | energy-objects-collection | structure-classic-objects-collection | references-replace | nodes-collection
+scene-replace = "scene" scene-block
+active-model-replace = "active-model-definition-id" "=" IDENT
+objects-collection = "objects" collection-block
+building-objects-collection = "building-objects" collection-block
+energy-objects-collection = "energy-objects" collection-block
+structure-classic-objects-collection = "structure-classic-objects" collection-block
+references-replace = "references-by-model-definition-id" reference-map
+nodes-collection = "nodes" collection-block
+scene-block = "{" document-fields "}"
+document-fields = schema-field id-field active-model-field?
+schema-field = "schema" "=" IDENT
+id-field = "id" "=" IDENT
+active-model-field = "active-model-definition-id" "=" IDENT
+reference-map = "{" reference-entry* "}"
+reference-entry = IDENT "=" reference-list
+reference-list = "[" reference-row* "]"
+reference-row = "id" "=" IDENT "source-url" "=" TEXT "media-kind" "=" IDENT "origin" "=" coord-tuple "width-world" "=" FLOAT "hidden" "=" BOOL "locked" "=" BOOL "opacity" "=" FLOAT "scale" "=" FLOAT
+collection-block = "{" collection-line* "}"
+collection-line = "added" object-table | "removed" id-list | "modified" object-patch-list
+object-table = "[" object-columns "]" "{" object-row* "}"
+object-columns = column+
+column = IDENT ":" IDENT
+object-row = object-cells
+object-cells = TEXT TEXT TEXT BOOL BOOL coord-tuple orientation-tuple scale-tuple TEXT extent-tuple TEXT primitive-list
+object-patch-list = "[" object-patch-entry* "]"
+object-patch-entry = IDENT object-patch-block
+object-patch-block = "{" object-patch-fields "}"
+object-patch-fields = label-patch? typology-patch? visible-patch? locked-patch? origin-patch? orientation-patch? scale-patch? mesh-url-patch? extent-patch? solid-handle-patch?
+label-patch = "label" "=" TEXT
+typology-patch = "typology" "=" IDENT
+visible-patch = "visible" "=" BOOL
+locked-patch = "locked" "=" BOOL
+origin-patch = "origin" "=" coord-tuple
+orientation-patch = "orientation" "=" orientation-tuple
+scale-patch = "scale" "=" scale-tuple
+mesh-url-patch = "mesh-url" "=" TEXT
+extent-patch = "extent" "=" extent-tuple
+solid-handle-patch = "solid-handle" "=" TEXT
+coord-tuple = CRD | TUPLE
+orientation-tuple = TUPLE
+scale-tuple = TUPLE
+extent-tuple = TUPLE
+primitive-list = LIST
+id-list = "[" IDENT* "]"
+layer = layer-anchor transform-block? paint-block?

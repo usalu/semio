@@ -71,12 +71,42 @@ type ScrollOffset = { readonly x: number; readonly y: number };
 /** @emoji 🧭️ Largest scroll offset that still keeps the last column and row flush with the viewport edge. */
 const DEMONSTRATOR_MAX_SCROLL: ScrollOffset = { x: (DEMONSTRATOR_GRID_COLUMNS - 1) * 100, y: (DEMONSTRATOR_GRID_ROWS - 1) * 100 };
 
+/** @emoji 🎞 Programmatic pane pin / focus glide duration — one rAF timeline owns the transform; never pair this with a CSS `transition` on the same property. */
+const DEMONSTRATOR_SCROLL_GLIDE_MS = 500;
+
+/** @emoji 🎞 Exponential follow factor while the cursor freely pans the overview. */
+const DEMONSTRATOR_SCROLL_FOLLOW_LERP = 0.12;
+
+/** @emoji 🎞 Settle epsilon (vw/vh) for the free-pan follow loop. */
+const DEMONSTRATOR_SCROLL_FOLLOW_EPSILON = 0.01;
+
+/** @emoji 🎞 Either free-pan follow (exponential) or a timed ease-in-out glide to a pane — mutually exclusive so the grid never fights itself. */
+type ScrollDrive =
+  | { readonly mode: "follow" }
+  | {
+      readonly mode: "glide";
+      readonly from: ScrollOffset;
+      readonly to: ScrollOffset;
+      readonly startedAt: number;
+      readonly durationMs: number;
+    };
+
+/** @emoji 🎞 Cubic ease-in-out for focus / hover pin glides. */
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+}
+
 /** @emoji 🧭️ Scroll offset that brings the given pane fully into the viewport. */
 function scrollOffsetForPaneIndex(paneIndex: number): ScrollOffset {
   return {
     x: Math.min(DEMONSTRATOR_MAX_SCROLL.x, Math.max(0, paneColumn(paneIndex) * 100)),
     y: Math.min(DEMONSTRATOR_MAX_SCROLL.y, Math.max(0, paneRow(paneIndex) * 100)),
   };
+}
+
+/** @emoji 🧭️ Linear blend of two scroll offsets. */
+function lerpScrollOffset(from: ScrollOffset, to: ScrollOffset, t: number): ScrollOffset {
+  return { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };
 }
 
 type PaneAxisBounds = { readonly start: number; readonly end: number; readonly visible: boolean };
@@ -127,14 +157,8 @@ function demonstratorTintSegmentsPx(revealRect: RevealRectPx | null): readonly T
 //#endregion 🎪️DemonstratorGridGeometry
 
 //#region 📱️DemonstratorMobileList
-/** @emoji 📱️ How far past a section's snap point the veil needs to reach full tint. */
-const DEMONSTRATOR_LIST_VEIL_RAMP = 0.35;
-
-/** @emoji 🌫️ Veil alpha for one section: transparent while settled, opaque once a neighbour takes over. */
-function demonstratorListVeilOpacity(distanceInSections: number): number {
-  const t = Math.min(1, Math.abs(distanceInSections) / DEMONSTRATOR_LIST_VEIL_RAMP);
-  return t * t * (3 - 2 * t);
-}
+/** @emoji 🌫️ Touch overview keeps a full veil over each live pane — settled sections stay blurred so background apps never read clearly through the card. */
+const DEMONSTRATOR_MOBILE_OVERVIEW_VEIL_OPACITY = 1;
 //#endregion 📱️DemonstratorMobileList
 
 //#region 🎪️DemonstratorPaneBoot
@@ -506,21 +530,52 @@ function DemonstratorLanding() {
   const hoveredPaneIdRef = useRef<string | null>(null);
   const scrollTargetRef = useRef<ScrollOffset>(initialFocusId ? scrollOffsetForPaneIndex(paneIndexById(initialFocusId)) : { x: 0, y: 0 });
   const scrollCurrentRef = useRef<ScrollOffset>(scrollTargetRef.current);
+  const scrollDriveRef = useRef<ScrollDrive>({ mode: "follow" });
+  /** @emoji 🎞 Bumped on every drive change so a stale follow `setScrollOffset` cannot paint after a glide has taken ownership. */
+  const scrollEpochRef = useRef(0);
   const [scrollOffset, setScrollOffset] = useState<ScrollOffset>(scrollTargetRef.current);
   const listScrollRef = useRef<HTMLDivElement>(null);
   const listProgressRafRef = useRef<number | null>(null);
   const [listProgress, setListProgress] = useState(0);
   const [listScrollLocked, setListScrollLocked] = useState(Boolean(initialFocusId));
-  // 🪶️ Easing loop is stopped once settled so an idle tab isn't animating forever;
-  // `ensureEasingLoopRef` restarts it whenever a new scroll target arrives.
-  const easingRunningRef = useRef(false);
-  const ensureEasingLoopRef = useRef<() => void>(() => {});
+  // 📽 One rAF loop drives the grid transform; it stops once settled so an idle tab isn't animating forever.
+  // `ensureScrollLoopRef` restarts it whenever follow or glide needs another frame.
+  const scrollLoopRunningRef = useRef(false);
+  const ensureScrollLoopRef = useRef<() => void>(() => {});
 
-  const applyPaneScroll = useCallback((paneIndex: number) => {
-    const offset = scrollOffsetForPaneIndex(paneIndex);
-    scrollTargetRef.current = offset;
-    ensureEasingLoopRef.current();
+  const commitScrollOffset = useCallback((epoch: number, next: ScrollOffset) => {
+    scrollCurrentRef.current = next;
+    setScrollOffset((prev) => {
+      if (scrollEpochRef.current !== epoch) return prev;
+      return prev.x === next.x && prev.y === next.y ? prev : next;
+    });
   }, []);
+
+  const applyPaneScroll = useCallback(
+    (paneIndex: number) => {
+      const offset = scrollOffsetForPaneIndex(paneIndex);
+      const from = scrollCurrentRef.current;
+      scrollTargetRef.current = offset;
+      scrollEpochRef.current += 1;
+      const epoch = scrollEpochRef.current;
+      if (Math.abs(offset.x - from.x) < DEMONSTRATOR_SCROLL_FOLLOW_EPSILON && Math.abs(offset.y - from.y) < DEMONSTRATOR_SCROLL_FOLLOW_EPSILON) {
+        scrollDriveRef.current = { mode: "follow" };
+        commitScrollOffset(epoch, offset);
+        return;
+      }
+      scrollDriveRef.current = {
+        mode: "glide",
+        from: { x: from.x, y: from.y },
+        to: offset,
+        startedAt: performance.now(),
+        durationMs: DEMONSTRATOR_SCROLL_GLIDE_MS,
+      };
+      // Pin the origin immediately so any already-queued follow paint is superseded before the first glide frame.
+      commitScrollOffset(epoch, from);
+      ensureScrollLoopRef.current();
+    },
+    [commitScrollOffset],
+  );
 
   const scrollListToPaneIndex = useCallback((paneIndex: number) => {
     const el = listScrollRef.current;
@@ -640,11 +695,13 @@ function DemonstratorLanding() {
     if (touchListMode || focusedId) return;
     const onMove = (event: MouseEvent) => {
       if (hoveredPaneIdRef.current) return;
+      if (scrollDriveRef.current.mode !== "follow") scrollEpochRef.current += 1;
+      scrollDriveRef.current = { mode: "follow" };
       scrollTargetRef.current = {
         x: (event.clientX / window.innerWidth) * DEMONSTRATOR_MAX_SCROLL.x,
         y: (event.clientY / window.innerHeight) * DEMONSTRATOR_MAX_SCROLL.y,
       };
-      ensureEasingLoopRef.current();
+      ensureScrollLoopRef.current();
     };
     window.addEventListener("mousemove", onMove, { passive: true });
     return () => window.removeEventListener("mousemove", onMove);
@@ -652,37 +709,59 @@ function DemonstratorLanding() {
 
   useEffect(() => {
     if (touchListMode) return;
-    const EASING_EPSILON = 0.01;
     let frame = 0;
-    const tick = () => {
-      const current = scrollCurrentRef.current;
-      const target = scrollTargetRef.current;
-      if (Math.abs(target.x - current.x) < EASING_EPSILON && Math.abs(target.y - current.y) < EASING_EPSILON) {
-        if (current.x !== target.x || current.y !== target.y) {
-          scrollCurrentRef.current = target;
-          setScrollOffset(target);
-          if (hoveredPaneIdRef.current) refreshRevealRect(hoveredPaneIdRef.current, target);
+    const tick = (_frameTime: number) => {
+      // Use `performance.now()` (same clock as glide `startedAt`) — the rAF timestamp can lag slightly
+      // behind and yield a negative ease `t`, which lerps backward for one frame (visible flicker).
+      const now = performance.now();
+      const epoch = scrollEpochRef.current;
+      const drive = scrollDriveRef.current;
+      if (drive.mode === "glide") {
+        const t = Math.min(1, Math.max(0, (now - drive.startedAt) / drive.durationMs));
+        const next = lerpScrollOffset(drive.from, drive.to, easeInOutCubic(t));
+        commitScrollOffset(epoch, next);
+        if (hoveredPaneIdRef.current) refreshRevealRect(hoveredPaneIdRef.current, next);
+        if (t >= 1) {
+          scrollTargetRef.current = drive.to;
+          scrollDriveRef.current = { mode: "follow" };
+          scrollLoopRunningRef.current = false;
+          return;
         }
-        easingRunningRef.current = false;
+        frame = requestAnimationFrame(tick);
         return;
       }
-      const next = { x: current.x + (target.x - current.x) * 0.12, y: current.y + (target.y - current.y) * 0.12 };
-      scrollCurrentRef.current = next;
-      setScrollOffset(next);
+      const current = scrollCurrentRef.current;
+      const target = scrollTargetRef.current;
+      if (Math.abs(target.x - current.x) < DEMONSTRATOR_SCROLL_FOLLOW_EPSILON && Math.abs(target.y - current.y) < DEMONSTRATOR_SCROLL_FOLLOW_EPSILON) {
+        if (current.x !== target.x || current.y !== target.y) {
+          commitScrollOffset(epoch, target);
+          if (hoveredPaneIdRef.current) refreshRevealRect(hoveredPaneIdRef.current, target);
+        }
+        scrollLoopRunningRef.current = false;
+        return;
+      }
+      const next = lerpScrollOffset(current, target, DEMONSTRATOR_SCROLL_FOLLOW_LERP);
+      // A focus/hover glide may have started after this follow sample was computed — never let the stale
+      // follow frame yank the transform backward for one paint (that reads as a flicker).
+      if (scrollDriveRef.current.mode === "glide" || scrollEpochRef.current !== epoch) {
+        frame = requestAnimationFrame(tick);
+        return;
+      }
+      commitScrollOffset(epoch, next);
       if (hoveredPaneIdRef.current) refreshRevealRect(hoveredPaneIdRef.current, next);
       frame = requestAnimationFrame(tick);
     };
-    ensureEasingLoopRef.current = () => {
-      if (easingRunningRef.current) return;
-      easingRunningRef.current = true;
+    ensureScrollLoopRef.current = () => {
+      if (scrollLoopRunningRef.current) return;
+      scrollLoopRunningRef.current = true;
       frame = requestAnimationFrame(tick);
     };
-    ensureEasingLoopRef.current();
+    ensureScrollLoopRef.current();
     return () => {
-      easingRunningRef.current = false;
+      scrollLoopRunningRef.current = false;
       cancelAnimationFrame(frame);
     };
-  }, [touchListMode, refreshRevealRect]);
+  }, [touchListMode, refreshRevealRect, commitScrollOffset]);
 
   const dismissIntroduction = useCallback((_completed: boolean) => {
     setShowIntroduction(false);
@@ -757,7 +836,7 @@ function DemonstratorLanding() {
           {DEMONSTRATOR_PANES.map((pane, paneIndex) => {
             const isFocused = focusedId === pane.id;
             const showOverviewLayer = !focusedId;
-            const veilOpacity = showOverviewLayer ? demonstratorListVeilOpacity(listProgress - paneIndex) : 0;
+            const veilOpacity = showOverviewLayer ? DEMONSTRATOR_MOBILE_OVERVIEW_VEIL_OPACITY : 0;
             return (
               <section key={pane.id} className="relative w-full shrink-0 snap-start overflow-hidden" style={{ height: "100dvh", minHeight: "100dvh" }}>
                 <DemonstratorPane
@@ -801,7 +880,6 @@ function DemonstratorLanding() {
           width: `${DEMONSTRATOR_GRID_COLUMNS * 100}vw`,
           height: `${DEMONSTRATOR_GRID_ROWS * 100}vh`,
           transform: `translate(-${scrollOffset.x}vw, -${scrollOffset.y}vh)`,
-          transition: focusedId ? "transform 500ms ease-in-out" : undefined,
         }}
       >
         {DEMONSTRATOR_PANES.map((pane) => (

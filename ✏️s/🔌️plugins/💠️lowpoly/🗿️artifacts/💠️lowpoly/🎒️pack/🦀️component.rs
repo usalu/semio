@@ -3,6 +3,12 @@
 use crate::artifacts::lowpoly::LowpolyProjection;
 use store::PackError;
 
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
 /// 📦️ Encodes a `LowpolyProjection` to its binary pack form.
 pub fn encode(projection: &LowpolyProjection) -> Vec<u8> {
     store::DocumentPack::encode_pack(projection)
@@ -17,11 +23,11 @@ pub fn decode(bytes: &[u8]) -> Result<LowpolyProjection, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::lowpoly::dsl::{parse_dsl, LOWPOLY_EXAMPLE_TEXT};
+    use crate::artifacts::lowpoly::engine::default_projection;
 
     #[test]
     fn pack_round_trips_and_agrees_with_dsl() {
-        let projection = parse_dsl(LOWPOLY_EXAMPLE_TEXT).expect("default projection DSL parses");
+        let projection = default_projection();
         store::test_support::assert_dsl_pack_equivalence(&projection);
         let bytes = encode(&projection);
         assert_eq!(decode(&bytes).expect("decode"), projection);
@@ -29,10 +35,18 @@ mod tests {
 
     #[test]
     fn pack_round_trips_a_projection_with_a_painted_layer() {
-        let mut projection = parse_dsl(LOWPOLY_EXAMPLE_TEXT).expect("default projection DSL parses");
+        let mut projection = default_projection();
         projection.objects[0].paint_layers[0].pixels[0] = 7;
         projection.objects[0].paint_layers[0].pixels[1] = 9;
         store::test_support::assert_dsl_pack_equivalence(&projection);
+    }
+
+    #[test]
+    fn handcrafted_pack_protocol_uses_lwpl_domain_magic() {
+        assert!(COMPONENT_PROTOCOL_SEMIO.contains("0x894C57504C0D0A1A"));
+        assert!(COMPONENT_PROTOCOL_SEMIO.contains("segment Objects"));
+        assert!(COMPONENT_PROTOCOL_SEMIO.contains("segment PaintLayers"));
+        assert!(COMPONENT_PROTOCOL_SEMIO.contains("segment Projection"));
     }
 
     //#region 🔖️CommandEnvelopeTests

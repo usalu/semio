@@ -4,6 +4,15 @@ version 1
 schema en1996
 start record
 framing record
+record en1996-set-field tag 1
+field format u8
+field ordinal varint
+field body bytes
+record en1996-patch-field tag 2
+field format u8
+field ordinal varint
+field body bytes
+record en1996-remove-field tag 3
 field format u8
 field ordinal varint
 field body bytes

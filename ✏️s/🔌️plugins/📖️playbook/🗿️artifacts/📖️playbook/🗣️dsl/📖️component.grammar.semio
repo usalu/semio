@@ -1,26 +1,18 @@
 dialect grammar
 grammar playbook.playbook
 extension playbook
-use family-recipe
+use family-scene
 start document
 
-document = header-fields steps-field
-header-fields = ("schema" | "id" | "version" | "title") "=" (TEXT | IDENT | INT)
-steps-field = "steps" "=" list
-step-stmt = IDENT assign* block?
-block-stmt = IDENT assign* ("condition" block)?
-condition-stmt = ("and" | "or" | "eq" | "truthy" | "var" | "const") assign* block?
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
-qty = (FLOAT | INT) IDENT?
-block = "{" record* "}"
-record = IDENT assign* block?
-table = IDENT table-schema "{" row* "}"
-table-schema = "[" col {"," col}* "]"
-col = IDENT ":" IDENT
-row = field+
-field = IDENT "=" value | value
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)
+artifact-mark = "playbook.playbook"
+document = artifact-mark doc-body
+doc-body = schema-line layers-block
+schema-line = "schema" "=" TEXT
+layers-block = "layers" "{" layer* "}"
+layer = shape-layer | path-layer | text-layer
+shape-layer = "shape" "{" canvas-field* "}"
+path-layer = "path" "{" canvas-field* "}"
+text-layer = "text" "{" canvas-field* "}"
+canvas-field = "id" "=" IDENT | "x" "=" FLOAT | "y" "=" FLOAT | "fill" "=" TEXT | "stroke" "=" TEXT | "opacity" "=" FLOAT
+paint-block = "{" paint-field* "}"
+paint-field = "color" "=" TEXT | "width" "=" FLOAT | "blend" "=" IDENT

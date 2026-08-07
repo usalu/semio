@@ -474,21 +474,6 @@ pub struct LanguageSpec {
 }
 
 impl LanguageSpec {
-    /// @emoji 🧬️ Services a facet still on generic `RecordSpec`/`DocumentDsl` until its handcrafted
-    /// `.semio` spec lands — same hooks/specs as the parent, distinct registry id.
-    pub fn derived(parent: LanguageSpec, id: &'static str, role: LanguageRole) -> Self {
-        Self {
-            id,
-            extension: None,
-            role,
-            grammar: parent.grammar,
-            grammar_path: parent.grammar_path,
-            protocol: parent.protocol,
-            protocol_path: parent.protocol_path,
-            hooks: parent.hooks,
-        }
-    }
-
     /// @emoji 📝 Whether this role is a text grammar surface (dsl/op/diff/config/embed).
     pub fn is_text_role(self) -> bool {
         matches!(self.role, LanguageRole::Document | LanguageRole::Config | LanguageRole::Ops | LanguageRole::Embedded | LanguageRole::Diff)

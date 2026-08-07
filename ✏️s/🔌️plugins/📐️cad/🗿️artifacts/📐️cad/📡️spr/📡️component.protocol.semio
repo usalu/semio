@@ -1,10 +1,55 @@
 dialect protocol
 protocol cad.spr
 version 1
-schema cad.scene.operation
+schema cad.scene.operation.v2
 start record
 framing record
 field format u8
-field ordinal varint
-field body bytes
+record add-object tag 1
+field pane u8
+field object bytes
+record remove-object tag 2
+field pane u8
+field object-id utf8
+record patch-object tag 3
+field pane u8
+field object-id utf8
+field patch bytes
+record translate-objects tag 4
+field object-ids bytes
+field dx f64
+field dy f64
+field dz f64
+record rotate-objects tag 5
+field object-ids bytes
+field ax f64
+field ay f64
+field az f64
+field angle f64
+record scale-objects tag 6
+field object-ids bytes
+field sx f64
+field sy f64
+field sz f64
+record set-pane-objects tag 7
+field pane u8
+field objects bytes
+record add-node tag 8
+field node bytes
+record remove-node tag 9
+field node-id utf8
+record rename-node tag 10
+field node-id utf8
+field label utf8
+record patch-reference tag 11
+field model-definition-id utf8
+field reference-id utf8
+field patch bytes
+record set-references tag 12
+field model-definition-id utf8
+field references bytes
+record set-active-model-definition tag 13
+field model-definition-id utf8
+record set-scene tag 14
+field scene bytes
 chain hash u64

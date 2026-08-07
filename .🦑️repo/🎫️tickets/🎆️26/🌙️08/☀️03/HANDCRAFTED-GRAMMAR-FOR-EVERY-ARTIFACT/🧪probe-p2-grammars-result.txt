@@ -1,0 +1,10 @@
+ok graph id=family-graph productions=9 start=start edge
+ok scene id=family-scene productions=7 start=start scene
+ok sheet id=family-sheet productions=23 start=start trace
+ok catalog id=family-catalog productions=8 start=start stock
+ok recipe id=family-recipe productions=6 start=start step
+ok geo id=family-geo productions=7 start=start point
+ok embed id=family-embed productions=7 start=start fence
+
+STRUCTURAL CHECK PASSED
+

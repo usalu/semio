@@ -1,2 +1,39 @@
 semio lowpoly.lowpoly.op v1
 edit reuse started="0" actor=example
+objects-add index=1 object {
+  id=obj-2
+  name="Box"
+  smooth-shading=false
+  transform { position=2.0 0.0 0.0 rotation=0.0 0.0 0.0 scale=1.0 1.0 1.0 }
+  mesh {
+    vertices [
+      { position=-0.5 -0.5 -0.5 normal=-1.0 0.0 0.0 halfedge=0 }
+      { position=-0.5 0.5 -0.5 normal=-1.0 0.0 0.0 halfedge=2 }
+      { position=-0.5 0.5 0.5 normal=-1.0 0.0 0.0 halfedge=4 }
+      { position=-0.5 -0.5 0.5 normal=-1.0 0.0 0.0 halfedge=6 }
+    ]
+    halfedges [
+      { vertex=0 next=2 face=0 }
+      { vertex=1 next=0 }
+      { vertex=1 next=4 face=0 }
+      { vertex=2 next=2 }
+      { vertex=2 next=6 face=0 }
+      { vertex=3 next=4 }
+      { vertex=3 next=0 face=0 }
+      { vertex=0 next=6 }
+    ]
+    faces [ { halfedge=0 smooth=false } ]
+  }
+  paint-layers=[ { name="Base" visible=true opacity=1.0 blend-mode=normal } ]
+}
+objects-move id=obj-2 to-index=0
+objects-patch id=obj-2 patch { name="Renamed Box" smooth-shading=true }
+add-paint-layer object-id=obj-2 index=1 paint-layer { name="Detail" visible=true opacity=0.8 blend-mode=multiply }
+patch-paint-layer object-id=obj-2 index=1 patch { opacity=0.5 blend-mode=screen }
+paint-stroke object-id=obj-2 layer-index=1 runs { run offset=0 bytes="AQIDBA==" }
+remove-paint-layer object-id=obj-2 index=1
+objects-remove id=obj-2
+set-projection projection {
+  schema=lowpoly.document
+  objects=[ { id=obj-1 name="Unit Triangle" smooth-shading=false } ]
+}

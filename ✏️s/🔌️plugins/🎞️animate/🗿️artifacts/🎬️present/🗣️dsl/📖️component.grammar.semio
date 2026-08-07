@@ -4,15 +4,15 @@ extension present
 use family-scene
 start document
 
-document = schema-line source-block tiles-table
-schema-line = "schema" "=" IDENT
-source-block = "source" "{" source-prop* frame-block? "}"
-source-prop = {"src" "=" TEXT} | {"kind" "=" IDENT} | {"source-aspect" "=" FLOAT} | {"pdf-page" "=" INT} | prop
-frame-block = "frame" "{" {"x" "=" FLOAT}? {"y" "=" FLOAT}? {"width" "=" FLOAT}? {"height" "=" FLOAT}? "}"
-tiles-table = "tiles" "[" "id" ":" "TEXT" "name" ":" "TEXT" "crop" ":" "BLOCK" "]" "{" tile* "}"
-tile = IDENT TEXT "{" {"x" "=" FLOAT}? {"y" "=" FLOAT}? {"width" "=" FLOAT}? {"height" "=" FLOAT}? "}"
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" prop* "}"
-value = TEXT | FLOAT | INT | BOOL | list | map
+artifact-mark = "animate.present"
+document = artifact-mark doc-body
+doc-body = schema-line layers-block
+schema-line = "schema" "=" TEXT
+layers-block = "layers" "{" layer* "}"
+layer = shape-layer | path-layer | text-layer
+shape-layer = "shape" "{" canvas-field* "}"
+path-layer = "path" "{" canvas-field* "}"
+text-layer = "text" "{" canvas-field* "}"
+canvas-field = "id" "=" IDENT | "x" "=" FLOAT | "y" "=" FLOAT | "fill" "=" TEXT | "stroke" "=" TEXT | "opacity" "=" FLOAT
+paint-block = "{" paint-field* "}"
+paint-field = "color" "=" TEXT | "width" "=" FLOAT | "blend" "=" IDENT

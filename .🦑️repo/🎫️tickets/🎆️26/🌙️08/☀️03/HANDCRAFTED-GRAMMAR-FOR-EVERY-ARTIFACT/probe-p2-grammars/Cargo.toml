@@ -1,0 +1,19 @@
+[package]
+name = "probe-p2-grammars"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[lib]
+name = "probe_p2_grammars"
+path = "lib.rs"
+
+[[bin]]
+name = "probe-p2-grammars"
+path = "main.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

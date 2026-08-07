@@ -1,10 +1,36 @@
 dialect protocol
 protocol dag.spr
 version 1
-schema dag.operation
+schema dag.operation.v1
 start record
 framing record
 field format u8
-field ordinal varint
-field body bytes
+record nodes-add tag 1
+field index varint
+field item bytes
+record nodes-remove tag 2
+field id utf8
+record nodes-move tag 3
+field id utf8
+field to varint
+record nodes-patch tag 4
+field id utf8
+field patch bytes
+record edges-add tag 5
+field index varint
+field item bytes
+record edges-remove tag 6
+field id utf8
+record edges-move tag 7
+field id utf8
+field to varint
+record edges-patch tag 8
+field id utf8
+field patch bytes
+record set-nodes tag 9
+field nodes bytes
+record set-edges tag 10
+field edges bytes
+record set-document tag 11
+field document bytes
 chain hash u64

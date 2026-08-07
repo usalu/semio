@@ -1,0 +1,8 @@
+{
+  "id": "26/08/07/FIX-APPS-VERTICAL-LAYOUT-GROWTH-AND-HANG",
+  "title": "Fix Apps Vertical Layout Growth And Hang",
+  "status": "open",
+  "goal": "S-AND-PLUGINS-END-TO-END",
+  "description": "Individual apps launch with a collapsed/wrong layout that grows vertically and hangs. Diagnose shell/panel root cause and restore normal layout.",
+  "summary": ""
+}

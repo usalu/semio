@@ -4,8 +4,10 @@ extension iso16757
 use family-sheet
 start diff
 
-diff = change*
-change = ("set" | "unset" | "replace") ("catalogue" | "dictionary" | "geometry" | "selection" | "part-number-rule" | "part-number-inputs" | "script-limits" | "exchange-process" | "started" | "actor" | "id" | "metadata" | "edition-profile" | "names" | "short-name" | "preferred" | "locale" | "text" | "lifecycle" | "revision" | "status" | "manufacturer" | "version" | "accessories" | "compositions" | "extensions" | "fields" | "parameter-id" | "allowed-values" | "kind" | "value" | "default-value" | "article-number" | "geometry-id" | "parameter-values" | "dn" | "property-values" | "definition-id" | "symbol" | "si-factor" | "dimension" | "length" | "mass" | "time" | "temperature" | "min" | "max" | "reference" | "objects" | "parameters" | "depth" | "height" | "width" | "spaces" | "bounds" | "surfaces" | "ports" | "medium" | "position" | "direction" | "port-type" | "parameter-bindings" | "class-id" | "series-id" | "constraints" | "property-id" | "operator" | "source" | "max-steps" | "max-recursion" | "timeout-ms" | IDENT) ("=" value)?
-value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
-UNITNUM = FLOAT UNIT | INT UNIT
+artifact-mark = "norm.iso16757-diff"
+diff = artifact-mark change+
+change = "set" | "unset" | "replace"
+change-field = change ("iso16757-basis" | "iso16757-combination" | "iso16757-partial-factor" | "iso16757-verdict" | "iso16757-annex" | "iso16757-actor" | "started" | "actor") ("=" value)?
+value = TEXT | INT | FLOAT | BOOL | QUANTITY
+QUANTITY = FLOAT UNIT | INT UNIT
 UNIT = IDENT

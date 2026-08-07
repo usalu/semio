@@ -1,0 +1,6 @@
+{
+  "id": "26/08/07/DEFAULT-COLLAPSE-PANELS-AND-PANES",
+  "title": "Default Collapse Panels And Panes",
+  "status": "open",
+  "summary": "Pane no longer forces unfold on mobile; default folded=true; fold toggle works on mobile."
+}

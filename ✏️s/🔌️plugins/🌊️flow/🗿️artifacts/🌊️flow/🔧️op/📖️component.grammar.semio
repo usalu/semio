@@ -4,23 +4,13 @@ extension flow
 use family-graph
 start operation
 
-operation = op-stmt*
-op-stmt = flow-op
-flow-op = IDENT assign* block?
-node = IDENT {":" IDENT}? {"@" IDENT}?
-edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
-edge-label = IDENT {":" IDENT}?
-wire = node edge-arrow node
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | list | map
-table-schema = "[" col {"," col}* "]"
-col = IDENT ":" IDENT
-table = table-schema "{" row* "}"
-row = field+
-field = IDENT "=" value
-block = "{" record* "}"
-record = IDENT assign* block?
+artifact-mark = "flow.flow-op"
+operation = artifact-mark graph-op+
+graph-op = "add-node" node-field+ | "set-port" port-field+ | "wire-edge" edge-op | "unlink-edge" edge-op | "patch-layout" layout-field+
+node-field = "id" "=" IDENT | "kind" "=" IDENT
+port-field = "node" "=" IDENT | "port" "=" IDENT | "dir" "=" IDENT
+edge-op = "from" "=" IDENT "to" "=" IDENT
+layout-field = "x" "=" FLOAT | "y" "=" FLOAT
+edge = wire-endpoint edge-arrow wire-endpoint
+wire-endpoint = IDENT {":" IDENT}?
+edge-arrow = ARROW | DASHARROW | EDGEARROW

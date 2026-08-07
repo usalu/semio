@@ -49,7 +49,8 @@ import {
   type LcovFileRecord,
   type TestLevel,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/📦️packages/🟦️typescript/📦️index.ts";
-import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, extname, join, relative, resolve } from "node:path";
 import { createServer } from "node:net";
@@ -700,6 +701,16 @@ export class VerifyScript extends Script {
           console.error(`[verify] ${b.kind}: ${b.summary}`);
         }
         throw new Error(`[verify] ${osBreaches.length} OS exclusive state authority policy breach(es)`);
+      }
+    }
+    console.log("[verify] handcrafted grammar P3/M4 policies…");
+    {
+      const handcraftedBreaches = policyHandcraftedSpecP3Breaches(this.root);
+      if (handcraftedBreaches.length > 0) {
+        for (const b of handcraftedBreaches) {
+          console.error(`[verify] ${b.kind}: ${b.summary}`);
+        }
+        throw new Error(`[verify] ${handcraftedBreaches.length} handcrafted-grammar P3/M4 policy breach(es)`);
       }
     }
     console.log("[verify] dsl fixture laws…");
@@ -2360,6 +2371,334 @@ const POLICY_TS_FACADE_ALLOWLIST = new Set<string>([
   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🔺️diff/🟦️component.ts",
   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🎒️pack/🟦️component.ts",
   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📡️spr/🟦️component.ts",
+]);
+/**
+ * ⚖️P3/M4: colliding .grammar.semio/.protocol.semio after name/start normalization. Remove a path once its normalized hash is unique.
+ * Seeded 0 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
+ */
+const POLICY_SPEC_DISTINCTNESS_EXEMPTIONS = new Set<string>([
+
+]);
+
+/**
+ * ⚖️P3/M4: generic catch-all grammar specs under ✏️s/. Remove once handcrafted.
+ * Seeded 0 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
+ */
+const POLICY_GENERIC_SPEC_EXEMPTIONS = new Set<string>([
+
+]);
+
+/**
+ * ⚖️P3/M4: grammars with use family-X that never reference a family production. Remove once wired.
+ * Seeded 0 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
+ */
+const POLICY_DECLARED_USE_EXEMPTIONS = new Set<string>([
+
+]);
+
+/**
+ * ⚖️P3/M4: facet 🦀️component.rs missing include_str! of sibling spec. Remove once wired.
+ * Seeded 220 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
+ */
+const POLICY_SPEC_WIRING_INCLUDE_EXEMPTIONS = new Set<string>([
+  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🗣️dsl/🦀️component.rs",
+  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🎒️pack/🦀️component.rs",
+  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/📡️spr/🦀️component.rs",
+  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🔧️op/🦀️component.rs",
+  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🔺️diff/🦀️component.rs",
+  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🗣️dsl/🦀️component.rs",
+]);
+
+/**
+ * ⚖️P3/M4: artifacts with facet specs but no register_language under the artifact. Remove once engines register.
+ * Seeded 44 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
+ */
+const POLICY_SPEC_WIRING_REGISTER_EXEMPTIONS = new Set<string>([
+  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d",
+  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap",
+  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present",
+  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting",
+  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence",
+  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d",
+  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires",
+  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599",
+  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook",
+  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative",
+  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw",
+  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d",
+  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home",
+  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate",
+]);
+
+/**
+ * ⚖️P3/M4: *.pack.semio/*.spr.semio under 📚️examples with size<=64. Remove once payload examples land.
+ * Seeded 20 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
+ */
+const POLICY_EMPTY_EXAMPLE_EXEMPTIONS = new Set<string>([
+  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.demonstrator.playground.pack.semio",
+  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.demonstrator.playground.spr.semio",
+  "✏️s/🔌️plugins/💡️reasoning/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.reasoning.wires.pack.semio",
+  "✏️s/🔌️plugins/💡️reasoning/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.reasoning.wires.spr.semio",
+  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️default/🎒️packs/♻️default/🧬️component.cad.cad.pack.semio",
+  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️default/📡️sprs/♻️default/🧬️component.cad.cad.spr.semio",
+  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.cad.cad.pack.semio",
+  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.cad.cad.spr.semio",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.norm.en1992.pack.semio",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.norm.en1992.spr.semio",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/🎒️packs/📕️liquid-retaining-fem-anchor/🧬️component.norm.en1992.pack.semio",
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/📡️sprs/📕️liquid-retaining-fem-anchor/🧬️component.norm.en1992.spr.semio",
+  "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.energy.model.pack.semio",
+  "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.energy.model.spr.semio",
+  "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.dag.dag.pack.semio",
+  "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.dag.dag.spr.semio",
+  "🧰️framework/🛍️products/💻️os/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.os.workflow.pack.semio",
+  "🧰️framework/🛍️products/💻️os/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.os.workflow.spr.semio",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.space.studio.pack.semio",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.space.studio.spr.semio",
 ]);
 //#endregion 🔧️PolicyAllowlists
 
@@ -4203,6 +4542,322 @@ function policySprNamingBreaches(repoRoot: string, crates: readonly PolicyCrateR
 }
 //#endregion 🔧️PolicyRuleTaxonomy
 
+//#region 🔧️PolicyRuleHandcraftedSpecP3
+/** ⚖️P3/M4 handcrafted-grammar policy scanners (distinctness / generic / declared-use / wiring / empty examples). Exemptions shrink to empty by P6 — see ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT. */
+
+const POLICY_HANDCRAFTED_SPEC_ROOTS = ["✏️s", "🧰️framework"] as const;
+const POLICY_HANDCRAFTED_FACETS = ["🗣️dsl", "🔧️op", "🔺️diff", "🎒️pack", "📡️spr"] as const;
+const POLICY_GRAMMAR_SPEC_LEAF = "📖️component.grammar.semio";
+const POLICY_PROTOCOL_SPEC_LEAF = "📡️component.protocol.semio";
+const POLICY_RS_COMPONENT_LEAF = "🦀️component.rs";
+const POLICY_FAMILY_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family";
+
+/** 🧹Normalizes grammar/protocol headers so distinctness compares body shape, not dialect names. */
+function policyNormalizeSpecContent(content: string): string {
+  return content
+    .split(/\r?\n/)
+    .map((line) => {
+      if (/^(grammar|protocol|extension|schema)\s+\S+/.test(line)) {
+        return line.replace(/^(grammar|protocol|extension|schema)\s+\S+/, "$1 __NAME__");
+      }
+      if (/^start\s+\S+/.test(line)) return "start __START__";
+      return line;
+    })
+    .join("\n");
+}
+
+function policyHashSpecContent(content: string): string {
+  return createHash("sha256").update(content).digest("hex");
+}
+
+/** 🔎️Walks `relRoots` for files matching `pred`, skipping `POLICY_SKIP_DIRS` / dotted dirs. */
+function policyWalkRelFiles(repoRoot: string, relRoots: readonly string[], pred: (relPath: string, name: string) => boolean): string[] {
+  const found: string[] = [];
+  const walk = (relDir: string): void => {
+    const abs = join(repoRoot, relDir);
+    let entries: ReturnType<typeof readdirSync>;
+    try {
+      entries = readdirSync(abs, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const ent of entries) {
+      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
+      if (ent.isDirectory()) {
+        if (POLICY_SKIP_DIRS.has(ent.name) || ent.name.startsWith(".")) continue;
+        walk(childRel);
+        continue;
+      }
+      if (pred(childRel, ent.name)) found.push(childRel);
+    }
+  };
+  for (const root of relRoots) walk(root);
+  return found.sort();
+}
+
+function policyDiscoverGrammarAndProtocolSpecs(repoRoot: string): string[] {
+  return policyWalkRelFiles(repoRoot, POLICY_HANDCRAFTED_SPEC_ROOTS, (_p, name) => name.endsWith(".grammar.semio") || name.endsWith(".protocol.semio"));
+}
+
+/**
+ * 📏️Normalized-hash collision rule: two `.grammar.semio`/`.protocol.semio` under ✏️s/ or 🧰️framework/
+ * must not share a body after dialect name/start normalization.
+ */
+function policySpecDistinctnessBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const byHash = new Map<string, string[]>();
+  for (const relPath of policyDiscoverGrammarAndProtocolSpecs(repoRoot)) {
+    const raw = readFileSync(join(repoRoot, relPath), "utf8");
+    const hash = policyHashSpecContent(policyNormalizeSpecContent(raw));
+    const group = byHash.get(hash);
+    if (group) group.push(relPath);
+    else byHash.set(hash, [relPath]);
+  }
+  for (const [hash, group] of byHash) {
+    if (group.length < 2) continue;
+    const sorted = [...group].sort();
+    for (let i = 0; i < sorted.length; i++) {
+      for (let j = i + 1; j < sorted.length; j++) {
+        const a = sorted[i]!;
+        const b = sorted[j]!;
+        if (POLICY_SPEC_DISTINCTNESS_EXEMPTIONS.has(a) || POLICY_SPEC_DISTINCTNESS_EXEMPTIONS.has(b)) continue;
+        breaches.push({
+          id: `spec-distinctness-${hash.slice(0, 12)}-${a}-${b}`,
+          summary: `Normalized spec collision between "${a}" and "${b}"`,
+          kind: "handcrafted-grammar/spec-distinctness",
+          scope: a,
+          priority: "high",
+          reason: "Each artifact facet must own a distinct grammar/protocol body; shared stubs after name/start normalization are forbidden.",
+          solution: `Handcraft distinct specs for both paths, then remove them from POLICY_SPEC_DISTINCTNESS_EXEMPTIONS.`,
+        });
+      }
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 📏️Flags catch-all generic grammar shapes under ✏️s/ (prop IDENT=, untyped list/map/value with prop,
+ * bare IDENT assign* shells, json/blob/base64/payload field names).
+ */
+function policyGenericSpecBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const grammars = policyWalkRelFiles(repoRoot, ["✏️s"], (_p, name) => name.endsWith(".grammar.semio"));
+  for (const relPath of grammars) {
+    if (POLICY_GENERIC_SPEC_EXEMPTIONS.has(relPath)) continue;
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const reasons: string[] = [];
+    if (/prop\s*=\s*IDENT\s*"="\s*\(/.test(content) || /prop\s*=\s*IDENT\s*=/.test(content)) {
+      reasons.push("catch-all prop = IDENT");
+    }
+    const untyped: string[] = [];
+    for (const name of ["list", "map", "value"] as const) {
+      if (new RegExp(`^\\s*${name}\\s*=`, "m").test(content)) untyped.push(name);
+    }
+    if (/\bprop\b/.test(content) && untyped.length > 0) {
+      reasons.push(`untyped catch-all production(s) ${untyped.join(", ")} with prop`);
+    }
+    if (/=\s*IDENT\s+assign\*\s+block\?/.test(content) || /=\s*IDENT\s+assign\*/.test(content)) {
+      reasons.push("bare IDENT assign* statement shell");
+    }
+    if (/-(json|blob|base64|payload)"/.test(content) || /-(json|blob|base64|payload)\b/.test(content)) {
+      reasons.push("json/blob/base64/payload field name");
+    }
+    if (reasons.length === 0) continue;
+    breaches.push({
+      id: `generic-spec-${relPath}`,
+      summary: `"${relPath}" still uses generic grammar shape: ${reasons.join("; ")}`,
+      kind: "handcrafted-grammar/generic-spec",
+      scope: relPath,
+      priority: "high",
+      reason: "Artifact grammars must be domain-true; catch-all prop/list/map/value and bare statement shells are migration leftovers.",
+      solution: `Handcraft ${relPath}, then remove it from POLICY_GENERIC_SPEC_EXEMPTIONS.`,
+    });
+  }
+  return breaches;
+}
+
+/** 🔎️Loads `📖️family-*.grammar.semio` keyed by `family-*` id. */
+function policyLoadFamilyFragments(repoRoot: string): Map<string, { relPath: string; productions: readonly string[] }> {
+  const out = new Map<string, { relPath: string; productions: readonly string[] }>();
+  const files = policyWalkRelFiles(repoRoot, [POLICY_FAMILY_ROOT], (_p, name) => name.startsWith("📖️family-") && name.endsWith(".grammar.semio"));
+  for (const relPath of files) {
+    const leaf = relPath.split("/").pop()!;
+    const id = leaf.replace(/^📖️/, "").replace(/\.grammar\.semio$/, "");
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const productions: string[] = [];
+    for (const m of content.matchAll(/^([A-Za-z_][\w-]*)\s*=/gm)) {
+      const name = m[1]!;
+      if (name === "grammar" || name === "start" || name === "extension" || name === "dialect" || name === "use" || name === "schema" || name === "protocol") continue;
+      productions.push(name);
+    }
+    out.set(id, { relPath, productions });
+  }
+  return out;
+}
+
+/**
+ * 📏️Every `use family-X` must reference at least one production symbol from that family fragment.
+ */
+function policyDeclaredUseBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const families = policyLoadFamilyFragments(repoRoot);
+  const grammars = policyWalkRelFiles(repoRoot, ["✏️s"], (_p, name) => name.endsWith(".grammar.semio"));
+  for (const relPath of grammars) {
+    if (POLICY_DECLARED_USE_EXEMPTIONS.has(relPath)) continue;
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const uses = [...content.matchAll(/^use\s+(family-[\w-]+)/gm)].map((m) => m[1]!);
+    if (uses.length === 0) continue;
+    for (const fam of uses) {
+      const frag = families.get(fam);
+      if (!frag) {
+        breaches.push({
+          id: `declared-use-missing-${relPath}-${fam}`,
+          summary: `"${relPath}" declares use ${fam} but no family fragment was found under ${POLICY_FAMILY_ROOT}`,
+          kind: "handcrafted-grammar/declared-use",
+          scope: relPath,
+          priority: "high",
+          reason: "Declared family imports must resolve to a 📖️family-*.grammar.semio fragment.",
+          solution: `Add the family fragment or fix the use line, then remove ${relPath} from POLICY_DECLARED_USE_EXEMPTIONS if listed.`,
+        });
+        continue;
+      }
+      if (frag.productions.length === 0) continue;
+      const referenced = frag.productions.some((prod) => new RegExp(`\\b${prod.replace(/[.*+?^${}()|[\]\\]/g, "\\//#region 🔖️PolicyExport")}\\b`).test(content));
+      if (referenced) continue;
+      breaches.push({
+        id: `declared-use-${relPath}-${fam}`,
+        summary: `"${relPath}" declares use ${fam} but never references any production from ${frag.relPath}`,
+        kind: "handcrafted-grammar/declared-use",
+        scope: relPath,
+        priority: "high",
+        reason: "A use family-X line that never mentions a family production is dead wiring.",
+        solution: `Reference at least one production from ${fam} in the artifact grammar, then remove ${relPath} from POLICY_DECLARED_USE_EXEMPTIONS.`,
+      });
+    }
+  }
+  return breaches;
+}
+
+function policyListPluginArtifactDirs(repoRoot: string): string[] {
+  const out: string[] = [];
+  const pluginsRoot = "✏️s/🔌️plugins";
+  for (const plugin of policyReaddirSafe(repoRoot, pluginsRoot)) {
+    if (!plugin.isDirectory) continue;
+    const artifactsRel = `${pluginsRoot}/${plugin.name}/🗿️artifacts`;
+    for (const art of policyReaddirSafe(repoRoot, artifactsRel)) {
+      if (!art.isDirectory) continue;
+      out.push(`${artifactsRel}/${art.name}`);
+    }
+  }
+  return out.sort();
+}
+
+function policyArtifactHasRegisterLanguage(repoRoot: string, artRel: string): boolean {
+  const rsFiles = policyWalkRelFiles(repoRoot, [artRel], (_p, name) => name.endsWith(".rs"));
+  for (const rel of rsFiles) {
+    if (readFileSync(join(repoRoot, rel), "utf8").includes("register_language")) return true;
+  }
+  return false;
+}
+
+/**
+ * 📏️Facet `🦀️component.rs` must `include_str!` its sibling grammar/protocol spec; artifacts with any
+ * facet specs must call `register_language` somewhere under the artifact (engine preferred).
+ */
+function policySpecWiringBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
+    let hasAnySpec = false;
+    for (const facet of POLICY_HANDCRAFTED_FACETS) {
+      const facetRel = `${artRel}/${facet}`;
+      if (!existsSync(join(repoRoot, facetRel))) continue;
+      const grammarRel = `${facetRel}/${POLICY_GRAMMAR_SPEC_LEAF}`;
+      const protocolRel = `${facetRel}/${POLICY_PROTOCOL_SPEC_LEAF}`;
+      const hasGrammar = existsSync(join(repoRoot, grammarRel));
+      const hasProtocol = existsSync(join(repoRoot, protocolRel));
+      if (!hasGrammar && !hasProtocol) continue;
+      hasAnySpec = true;
+      const rsRel = `${facetRel}/${POLICY_RS_COMPONENT_LEAF}`;
+      if (!existsSync(join(repoRoot, rsRel))) continue;
+      if (POLICY_SPEC_WIRING_INCLUDE_EXEMPTIONS.has(rsRel)) continue;
+      const rsBody = readFileSync(join(repoRoot, rsRel), "utf8");
+      const specs: string[] = [];
+      if (hasGrammar) specs.push(POLICY_GRAMMAR_SPEC_LEAF);
+      if (hasProtocol) specs.push(POLICY_PROTOCOL_SPEC_LEAF);
+      for (const specLeaf of specs) {
+        const wired = rsBody.includes("include_str!") && rsBody.includes(specLeaf);
+        if (wired) continue;
+        breaches.push({
+          id: `spec-wiring-include-${rsRel}-${specLeaf}`,
+          summary: `"${rsRel}" does not include_str! sibling spec "${specLeaf}"`,
+          kind: "handcrafted-grammar/spec-wiring-include",
+          scope: rsRel,
+          priority: "high",
+          reason: "Facet Rust components must embed their normative .grammar.semio/.protocol.semio via include_str!.",
+          solution: `Add include_str!("…/${specLeaf}") to ${rsRel}, then remove it from POLICY_SPEC_WIRING_INCLUDE_EXEMPTIONS.`,
+        });
+      }
+    }
+    if (!hasAnySpec) continue;
+    if (POLICY_SPEC_WIRING_REGISTER_EXEMPTIONS.has(artRel)) continue;
+    if (policyArtifactHasRegisterLanguage(repoRoot, artRel)) continue;
+    breaches.push({
+      id: `spec-wiring-register-${artRel}`,
+      summary: `Artifact "${artRel}" has facet specs but never calls register_language`,
+      kind: "handcrafted-grammar/spec-wiring-register",
+      scope: artRel,
+      priority: "high",
+      reason: "Artifacts that ship grammar/protocol specs must register the language with the shared DSL host (typically in ⚙️engine/🦀️component.rs).",
+      solution: `Call register_language from the artifact engine (or another artifact .rs), then remove ${artRel} from POLICY_SPEC_WIRING_REGISTER_EXEMPTIONS.`,
+    });
+  }
+  return breaches;
+}
+
+/**
+ * 📏️`.pack.semio` / `.spr.semio` under any `📚️examples` tree must carry payload beyond an empty SEM envelope (size > 64).
+ */
+function policyEmptyExampleBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const files = policyWalkRelFiles(repoRoot, [""], (relPath, name) => {
+    if (!(name.endsWith(".pack.semio") || name.endsWith(".spr.semio"))) return false;
+    return relPath.includes("/📚️examples/") || relPath.startsWith("📚️examples/");
+  });
+  for (const relPath of files) {
+    if (POLICY_EMPTY_EXAMPLE_EXEMPTIONS.has(relPath)) continue;
+    let size = 0;
+    try {
+      size = statSync(join(repoRoot, relPath)).size;
+    } catch {
+      continue;
+    }
+    if (size > 64) continue;
+    breaches.push({
+      id: `empty-example-${relPath}`,
+      summary: `"${relPath}" is an empty/envelope-only pack/spr example (${size} bytes ≤ 64)`,
+      kind: "handcrafted-grammar/empty-example",
+      scope: relPath,
+      priority: "high",
+      reason: "Example pack/spr fixtures must include a real payload, not just the SEM envelope.",
+      solution: `Seed a non-empty example at ${relPath}, then remove it from POLICY_EMPTY_EXAMPLE_EXEMPTIONS.`,
+    });
+  }
+  return breaches;
+}
+
+/** ⚖️Aggregates all P3/M4 handcrafted-grammar high-priority scanners for policy + verify gate. */
+function policyHandcraftedSpecP3Breaches(repoRoot: string): BreachRecord[] {
+  return [
+    ...policySpecDistinctnessBreaches(repoRoot),
+    ...policyGenericSpecBreaches(repoRoot),
+    ...policyDeclaredUseBreaches(repoRoot),
+    ...policySpecWiringBreaches(repoRoot),
+    ...policyEmptyExampleBreaches(repoRoot),
+  ];
+}
+//#endregion 🔧️PolicyRuleHandcraftedSpecP3
+
 //#region 🔖️PolicyExport
 /**
  * ⚖️Runs every Wave 4 app-plugin rule over every discovered crate that belongs to a plugin, plus the
@@ -4252,6 +4907,7 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyGrammarFileBreaches(repoRoot));
   breaches.push(...policyProtocolFileBreaches(repoRoot));
   breaches.push(...policyTsFacadeBreaches(repoRoot));
+  breaches.push(...policyHandcraftedSpecP3Breaches(repoRoot));
   breaches.push(...policyProtocolMigrationBreaches(repoRoot));
   breaches.push(...policyDbServerOnlyBreaches(repoRoot));
   breaches.push(...policyOsStateAuthorityBreaches(repoRoot));

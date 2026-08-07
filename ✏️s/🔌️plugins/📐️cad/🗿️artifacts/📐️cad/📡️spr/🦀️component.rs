@@ -8,6 +8,12 @@ use crate::artifacts::cad::CadProjection;
 use protocol::OpBinary;
 use store::{DocumentEnvelope, DocumentStore};
 
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
 /// 📦️ Encodes a `CadOperation` to its binary command form.
 pub fn encode_op(operation: &CadOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()

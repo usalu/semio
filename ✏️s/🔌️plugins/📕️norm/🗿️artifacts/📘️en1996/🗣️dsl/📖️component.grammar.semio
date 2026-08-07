@@ -4,9 +4,14 @@ extension en1996
 use family-sheet
 start document
 
-document = header assign*
+artifact-mark = "norm.en1996"
+document = artifact-mark doc-body
+doc-body = header sheet-body
 header = "semio" IDENT "v" INT
-assign = ("m-ed-knm" | "n-ed-kn" | "v-ed-kn" | "h-ed-kn" | "z-mm3" | "area-mm2" | "shear-area-mm2" | "f-k-mpa" | "f-vk-mpa" | "annex" | "masonry-class" | "design-situation" | "mu" | "wall-thickness-mm" | "fire-resistance-min" | "unit" | "exposure" | "mortar" | "bed-joint-thickness-mm" | "storeys" | "h-ef-mm" | "t-ef-mm" | "started" | "actor") "=" value
-value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
-UNITNUM = FLOAT UNIT | INT UNIT
+sheet-body = assign*
+assign = ("en1996-basis" | "en1996-combination" | "en1996-partial-factor" | "en1996-verdict" | "en1996-annex" | "en1996-actor" | "started" | "actor") "=" value
+value = TEXT | INT | FLOAT | BOOL | QUANTITY | clause-ref
+QUANTITY = FLOAT UNIT | INT UNIT
 UNIT = IDENT
+clause-ref = IDENT "." IDENT
+trace = IDENT "=" expr ARROW FLOAT

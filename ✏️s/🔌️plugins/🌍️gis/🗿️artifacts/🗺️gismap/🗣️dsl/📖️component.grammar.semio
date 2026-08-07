@@ -4,23 +4,12 @@ extension gismap
 use family-geo
 start document
 
-document = positions-table routes-table regions-table
-positions-table = "positions" table-schema "{" feature-row* "}"
-routes-table = "routes" table-schema "{" feature-row* "}"
-regions-table = "regions" table-schema "{" feature-row* "}"
-feature-row = IDENT block
-feature-field = ("id" | "icon" | "kind" | "label" | "name" | "lat" | "lon" | "sourceUrl" | "points" | "ring" | "data") "=" value
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
-qty = (FLOAT | INT) IDENT?
-block = "{" record* "}"
-record = IDENT assign* block?
-table = IDENT table-schema "{" row* "}"
-table-schema = "[" col {"," col}* "]"
-col = IDENT ":" IDENT
-row = field+
-field = IDENT "=" value | value
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)
+artifact-mark = "gis.gismap"
+document = artifact-mark doc-body
+doc-body = crs-line geo-body
+crs-line = "crs" "=" IDENT
+geo-body = "features" "{" geo-feature* "}"
+geo-feature = "point" FLOAT FLOAT FLOAT? | geo-field
+geo-field = "lat" "=" FLOAT | "lon" "=" FLOAT | "alt" "=" FLOAT | "tile" "=" IDENT
+bbox = "bbox" FLOAT FLOAT FLOAT FLOAT
+point = FLOAT FLOAT FLOAT?

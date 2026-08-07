@@ -1,22 +1,13 @@
 dialect grammar
 grammar architect.program.diff
 extension program
-use family-catalog
+use family-sheet
 start diff
 
-diff = json-op*
-json-op = map
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
-qty = (FLOAT | INT) IDENT?
-block = "{" record* "}"
-record = IDENT assign* block?
-table = IDENT table-schema "{" row* "}"
-table-schema = "[" col {"," col}* "]"
-col = IDENT ":" IDENT
-row = field+
-field = IDENT "=" value | value
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)
+artifact-mark = "architect.program-diff"
+diff = artifact-mark change+
+change = "set" | "unset" | "replace"
+change-field = change ("architect.program-title" | "architect.program-clause") ("=" value)?
+value = TEXT | INT | FLOAT | BOOL | QUANTITY
+QUANTITY = FLOAT UNIT | INT UNIT
+UNIT = IDENT

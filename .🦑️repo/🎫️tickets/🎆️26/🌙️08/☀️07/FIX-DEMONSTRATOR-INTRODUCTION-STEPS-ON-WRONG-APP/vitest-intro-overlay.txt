@@ -1,0 +1,21 @@
+$ bun ./📜️script.ts nx run @semio-tech/ui-react:test -- -t "introductionRectRelativeToHost|introductionPointRelativeToHost|data-introduction-active|UIIntroduction appearance"
+
+> nx run @semio-tech/ui-react:test -t introductionRectRelativeToHost|introductionPointRelativeToHost|data-introduction-active|UIIntroduction appearance
+
+> bun ./📜️script.ts test -t "introductionRectRelativeToHost|introductionPointRelativeToHost|data-introduction-active|UIIntroduction appearance"
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react
+
+
+ Test Files  1 passed (1)
+      Tests  25 passed | 489 skipped (514)
+   Start at  13:23:22
+   Duration  3.29s (transform 1.29s, setup 125ms, import 2.29s, tests 367ms, environment 423ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/ui-react
+
+

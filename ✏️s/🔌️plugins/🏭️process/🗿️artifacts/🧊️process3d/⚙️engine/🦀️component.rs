@@ -6,14 +6,13 @@ use crate::artifacts::process3d::{
     Capability, MachineCatalog, MeasureKind, MeasureRecipe, Pose, Process3dDocument, ProcessMeasure, ProcessStep, SolidSpec, Stock, StockQuantity, Workshop, WorkshopMachine,
 };
 use semio_s_3d::brep::kernel::{Brep, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
-use semio_s_3d::brep::engine::{block_on, BrepEngineHost, BrepKernel, GeometryHandle};
+use semio_s_3d::brep::engine::{BrepEngineHost, BrepKernel, GeometryHandle};
 use semio_framework_plugin::{MeshData, MeshExporter, MeshImporter};
 use serde::Serialize;
 use serde_json::Value;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
-use std::sync::Mutex;
 use store::DocumentDsl;
 
 /// 🕳️ Tessellation tolerance for kernel replay/export.
@@ -399,7 +398,6 @@ fn replay_process(session: &mut ProcessKernelReplay, doc: &Process3dDocument) ->
     let enabled_steps: Vec<&ProcessStep> = doc.steps[..limit].iter().filter(|step| step.enabled).collect();
 
     let mut start = enabled_steps.len();
-    let mut kernel = session.kernel().lock().ok()?;
     let mut current: Option<GeometryHandle> = loop {
         let signature = prefix_signature(stock_signature, &enabled_steps[..start]);
         if let Some(handle) = session.tables.memo.get(&signature) {
@@ -410,19 +408,27 @@ fn replay_process(session: &mut ProcessKernelReplay, doc: &Process3dDocument) ->
         }
         start -= 1;
     };
+
     if current.is_none() {
-        current = solid_for_spec(&mut *kernel, &doc.stock.solid, &doc.stock.pose);
-        if let Some(handle) = &current {
-            session.tables.memo.insert(prefix_signature(stock_signature, &[]), handle.clone());
-        }
+        let stock = {
+            let mut kernel = session.kernel().lock().ok()?;
+            solid_for_spec(&mut *kernel, &doc.stock.solid, &doc.stock.pose)
+        }?;
+        session.tables.memo.insert(prefix_signature(stock_signature, &[]), stock.clone());
+        current = Some(stock);
     }
+
     let mut handle = current?;
     for (index, step) in enabled_steps.iter().enumerate().skip(start) {
-        let tool = tool_solid_for_measure(&mut *kernel, &step.measure)?;
-        handle = match step.measure {
-            ProcessMeasure::Attach { .. } => semio_s_3d::brep::engine::block_on(kernel.fuse(&handle, &tool)).ok()?,
-            _ => semio_s_3d::brep::engine::block_on(kernel.cut(&handle, &tool)).ok()?,
+        let next = {
+            let mut kernel = session.kernel().lock().ok()?;
+            let tool = tool_solid_for_measure(&mut *kernel, &step.measure)?;
+            match step.measure {
+                ProcessMeasure::Attach { .. } => semio_s_3d::brep::engine::block_on(kernel.fuse(&handle, &tool)).ok()?,
+                _ => semio_s_3d::brep::engine::block_on(kernel.cut(&handle, &tool)).ok()?,
+            }
         };
+        handle = next;
         session.tables.memo.insert(prefix_signature(stock_signature, &enabled_steps[..=index]), handle.clone());
     }
     if session.tables.memo.len() > PROCESS3D_KERNEL_MEMO_CAP {
@@ -436,7 +442,11 @@ fn replay_process(session: &mut ProcessKernelReplay, doc: &Process3dDocument) ->
 pub fn processed_mesh(doc: &Process3dDocument) -> Option<MeshData> {
     let mut session = ProcessKernelReplay::new();
     let handle = replay_process(&mut session, doc)?;
-    let mesh = semio_s_3d::brep::engine::block_on(session.kernel().lock().ok()?.tessellate(&handle, PROCESS3D_TESSELLATION_TOLERANCE)).ok()?;
+    let mesh = {
+        let kernel = session.kernel().lock().ok()?;
+        semio_s_3d::brep::engine::block_on(kernel.tessellate(&handle, PROCESS3D_TESSELLATION_TOLERANCE))
+    }
+    .ok()?;
     let face_groups: Vec<(u32, u32, u32)> = mesh.face_groups.iter().map(|group| (group.entity_id.parse().unwrap_or(0), group.start, group.count)).collect();
     Some(semio_framework_plugin::mesh_from_indexed_with_face_groups(&mesh.position, &mesh.normal, &mesh.index, &face_groups))
 }
@@ -444,7 +454,11 @@ pub fn processed_mesh(doc: &Process3dDocument) -> Option<MeshData> {
 pub fn processed_volume(doc: &Process3dDocument) -> Option<f64> {
     let mut session = ProcessKernelReplay::new();
     let handle = replay_process(&mut session, doc)?;
-    semio_s_3d::brep::engine::block_on(session.kernel().lock().ok()?.volume(&handle)).ok()
+    let volume = {
+        let kernel = session.kernel().lock().ok()?;
+        semio_s_3d::brep::engine::block_on(kernel.volume(&handle))
+    };
+    volume.ok()
 }
 //#endregion 🔖️KernelReplay
 
@@ -538,7 +552,6 @@ pub fn insert_step_operations(fixture: &Process3dDocument, step: ProcessStep) ->
     use crate::artifacts::process3d::op::Process3dOperation;
     use protocol::CollectionOperation;
     let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len()).min(fixture.steps.len());
-    let id = step.id.clone();
     vec![Process3dOperation::Steps { collection: CollectionOperation::Add { index: cursor, item: step } }, Process3dOperation::SetCursor { resolved_up_to: Some(cursor + 1) }]
 }
 

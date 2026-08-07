@@ -1,25 +1,15 @@
 dialect grammar
 grammar imperative.document
 extension imperative
+use family-embed
 start document
 
-document = schema-field steps-block seed-block?
-schema-field = "schema" "=" TEXT
-steps-block = "steps" block
-seed-block = "seed" block
-step-stmt = "step" TEXT assign* ("params" "=" block)? ("bodies" "=" block)?
-step-kind = ("state.set" | "log.print" | "control.if" | "control.while" | "math.add") 
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
-qty = (FLOAT | INT) IDENT?
-block = "{" record* "}"
-record = IDENT assign* block?
-table = IDENT table-schema "{" row* "}"
-table-schema = "[" col {"," col}* "]"
-col = IDENT ":" IDENT
-row = field+
-field = IDENT "=" value | value
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)
+artifact-mark = "imperative.imperative"
+document = artifact-mark doc-body
+doc-body = schema-line body-fields
+schema-line = "schema" "=" TEXT
+body-fields = text-field? embed-field?
+text-field = "text" "=" TEXT
+embed-field = "embed" "=" fence
+fence = "```" IDENT TEXT "```"
+embed-stmt = "embed" "=" fence

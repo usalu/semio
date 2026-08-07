@@ -1,0 +1,57 @@
+{
+  "loading": 1,
+  "canvas": 0,
+  "pageErrors": [],
+  "allConsole": [
+    {
+      "type": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] plugin worker + lowpoly (1 live)"
+    },
+    {
+      "type": "warning",
+      "text": "[DEBUG] skipping undeclared action setActiveExample lowpoly-play"
+    },
+    {
+      "type": "warning",
+      "text": "[DEBUG] setContributions push skipped action 'setContributions' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+    },
+    {
+      "type": "warning",
+      "text": "[DEBUG] setAppRegistrations push skipped action 'setAppRegistrations' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+    }
+  ],
+  "interesting": [
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] plugin worker + lowpoly (1 live)"
+    },
+    {
+      "type": "warning",
+      "text": "[DEBUG] skipping undeclared action setActiveExample lowpoly-play"
+    },
+    {
+      "type": "warning",
+      "text": "[DEBUG] setContributions push skipped action 'setContributions' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+    },
+    {
+      "type": "warning",
+      "text": "[DEBUG] setAppRegistrations push skipped action 'setAppRegistrations' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+    }
+  ]
+}

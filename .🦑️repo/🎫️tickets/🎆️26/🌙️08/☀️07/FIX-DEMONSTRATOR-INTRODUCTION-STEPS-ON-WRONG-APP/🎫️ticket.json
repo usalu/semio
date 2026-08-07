@@ -1,0 +1,25 @@
+{
+  "title": "Fix Demonstrator Introduction Steps On Wrong App",
+  "emoji": "🎓️",
+  "status": "closed",
+  "description": "In the mit-bestand demonstrator 2x3 multi-shell grid, introduction UI always appears on the top-right app (Aggregator) while non-top-right apps can still advance introduction steps. Root causes: (1) UIIntroduction/demonstration overlays use position:fixed with viewport coordinates while the demonstrator pans via CSS transform, so fixed containing-block math places overlays wrong across shells; (2) suppressAutoIntroduction only blocks auto-start and does not dismiss an already-running introduction when a pane loses focus, leaving stale overlays and global hotkeys from background shells; (3) introduction Next/Back/Skip keybindings use ungated useHotkeys so every mounted intro advances together.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [],
+  "summary": "Fixed demonstrator introduction steps appearing on the wrong (top-right) app.\n\n## Root causes\n1. UIIntroduction / demonstration overlays used position:fixed with viewport coordinates while the demonstrator pans via CSS transform — fixed containing-block math placed overlays across the wrong shell.\n2. suppressAutoIntroduction only blocked auto-start and did not dismiss an already-running tour when a pane lost focus, leaving stale veils/hotkeys from background shells.\n3. Introduction Next/Back/Skip used ungated useHotkeys, so every mounted intro advanced together.\n\n## Fix\n- Dismiss introduction when suppressAutoIntroduction becomes true (ShellHost).\n- Shell portal layer is absolute inset-0 under a position:relative .semio-scope; UIIntroduction portals into it.\n- Overlays use absolute + host-local coords inside a shell (fixed + viewport coords outside any ShellScope for the landing tour).\n- Gate introduction hotkeys with useIsActiveShellRoot.\n- Stamp data-introduction-active on the shell root (not always documentElement).\n\n## Verification\n- bun nx run @semio-tech/ui-react:test -t UIIntroduction → 41 passed.\n- New unit tests for introductionRectRelativeToHost / introductionPointRelativeToHost.",
+  "files": {
+    "updated": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx",
+      "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🐚️ShellScope/🟦️component.tsx",
+      "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx"
+    ],
+    "created": [
+      ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️07/FIX-DEMONSTRATOR-INTRODUCTION-STEPS-ON-WRONG-APP/mcp-unavailable.txt",
+      ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️07/FIX-DEMONSTRATOR-INTRODUCTION-STEPS-ON-WRONG-APP/vitest-intro-overlay.txt",
+      ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️07/FIX-DEMONSTRATOR-INTRODUCTION-STEPS-ON-WRONG-APP/vitest-ui-introduction.txt",
+      ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️07/FIX-DEMONSTRATOR-INTRODUCTION-STEPS-ON-WRONG-APP/ui-index.path",
+      ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️07/FIX-DEMONSTRATOR-INTRODUCTION-STEPS-ON-WRONG-APP/scope.path",
+      ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️07/FIX-DEMONSTRATOR-INTRODUCTION-STEPS-ON-WRONG-APP/ticket.path"
+    ],
+    "removed": []
+  }
+}

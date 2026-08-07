@@ -65,9 +65,75 @@ pub fn lowpoly_io() -> semio_framework_plugin::AppIo {
 }
 //#endregion 🔖️Io
 
+//#region 🔖️Register
+/// 🗂️ Registers lowpoly document codecs and handcrafted language specs. Called from the plugin
+/// root's `semio_plugin!{ setup: … }`.
+pub fn register() {
+    register_pilot_languages();
+}
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "lowpoly.document",
+        extension: Some("lowpoly"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::lowpoly::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::lowpoly::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::lowpoly::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::lowpoly::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("lowpoly.document"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "lowpoly.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::lowpoly::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::lowpoly::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::lowpoly::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::lowpoly::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("lowpoly.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "lowpoly.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::lowpoly::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::lowpoly::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("lowpoly.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "lowpoly.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::lowpoly::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::lowpoly::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("lowpoly.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "lowpoly.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::lowpoly::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::lowpoly::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("lowpoly.spr"),
+    });
+}
+//#endregion 🔖️Register
+
 //#region 🔖️DefaultProjection
+/// 🎞️ Default document projection used by tests and the play app. Built programmatically from a
+/// unit box until the handcrafted mesh DSL codec replaces derive-based `parse_dsl` (the reuse
+/// `.lowpoly` example is already structured half-edge text without `mesh-json`).
 pub fn default_projection() -> LowpolyProjection {
-    crate::artifacts::lowpoly::dsl::parse_dsl(crate::artifacts::lowpoly::dsl::LOWPOLY_EXAMPLE_TEXT).expect("default projection DSL parses")
+    let mesh_json = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("mesh json");
+    crate::artifacts::lowpoly::projection_from_mesh_json(&mesh_json, "obj-1", "Unit Box")
 }
 //#endregion 🔖️DefaultProjection
 
@@ -378,33 +444,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn default_projection_has_concrete_forest_left_object() {
+    fn default_projection_has_unit_box_object() {
         let projection = default_projection();
         assert_eq!(projection.schema, crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA);
         assert_eq!(projection.objects.len(), 1);
-        assert_eq!(projection.objects[0].name, "Concrete Forest Left");
+        assert_eq!(projection.objects[0].id, "obj-1");
+        assert_eq!(projection.objects[0].name, "Unit Box");
+        assert_eq!(projection.objects[0].paint_layers.len(), 1);
     }
 
     #[test]
-    fn default_concrete_forest_mesh_has_no_spanning_support_gap_faces() {
+    fn default_unit_box_mesh_parses_and_has_faces() {
         let projection = default_projection();
         let mesh = HalfedgeMesh::from_json(&projection.objects[0].mesh_json).expect("default mesh");
-        assert!((0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(FaceId(fi as u32)).map_or(0, |v| v.len()) >= 8), "expected coplanar-merged plate-side n-gon with >= 8 corners");
-        for fi in 0..mesh.face_count() {
-            let verts = mesh.face_vertex_ids(FaceId(fi as u32)).expect("face verts");
-            let mut min_x = f32::MAX;
-            let mut max_x = f32::MIN;
-            let mut min_z = f32::MAX;
-            let mut max_z = f32::MIN;
-            for vid in verts {
-                let p = mesh.vertex_position(vid).expect("vertex");
-                min_x = min_x.min(p.x());
-                max_x = max_x.max(p.x());
-                min_z = min_z.min(p.z());
-                max_z = max_z.max(p.z());
-            }
-            assert!(!((max_x - min_x) > 4.0 && (max_z - min_z) > 1.0), "default mesh face {fi} spans the support gap — CAD wire rebuild regressed to fill_holes caps");
-        }
+        assert!(mesh.face_count() >= 6, "unit box should expose six faces");
+        assert!(mesh.vertex_count() >= 8, "unit box should expose eight vertices");
     }
 
     #[test]

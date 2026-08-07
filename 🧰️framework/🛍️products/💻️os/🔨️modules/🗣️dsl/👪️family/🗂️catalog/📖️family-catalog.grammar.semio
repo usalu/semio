@@ -2,8 +2,11 @@ dialect grammar
 grammar family-catalog
 start stock
 
-stock = "stock" slash-path IDENT TEXT count? kind-args?
+stock = "stock" slash-path IDENT TEXT count? kind-tail?
 slash-path = IDENT
 count = IDENT
-kind-args = IDENT+
+kind-tail = IDENT+
 compat = IDENT DASHARROW IDENT
+compat-pair = compat
+stock-entry = slash-path TEXT count?
+stock-line = "stock" slash-path IDENT TEXT count?

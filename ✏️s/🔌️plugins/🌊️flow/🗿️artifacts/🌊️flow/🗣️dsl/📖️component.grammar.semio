@@ -4,29 +4,15 @@ extension flow
 use family-graph
 start document
 
-document = schema-field camera-block widgets-block layout-field synapses-table
-schema-field = "schema" "=" TEXT
-camera-block = "camera" block
-widgets-block = "widgets" block
-layout-field = "layout" "=" map
-synapses-table = "synapses" table
-synapse-row = IDENT wire props?
+artifact-mark = "flow.flow"
+document = artifact-mark doc-body
+doc-body = schema-line graph-table
+schema-line = "schema" "=" TEXT
+graph-table = "edges" "{" edge* "}"
+edge = wire-endpoint edge-arrow wire-endpoint edge-props?
+wire-endpoint = node
 node = IDENT {":" IDENT}? {"@" IDENT}?
-edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
-edge-label = IDENT {":" IDENT}?
-wire = node edge-arrow node
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | list | map
-table-schema = "[" col {"," col}* "]"
-col = IDENT ":" IDENT
-table = table-schema "{" row* "}"
-row = field+
-field = IDENT "=" value
-block = "{" record* "}"
-record = IDENT assign* block?
-
-widget-stmt = IDENT assign*
+edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW
+edge-props = "{" edge-field* "}"
+edge-field = "weight" "=" (FLOAT | INT) | "kind" "=" TEXT | "label" "=" TEXT
+chain = wire-endpoint {ARROW wire-endpoint}+

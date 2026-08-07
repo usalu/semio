@@ -1,0 +1,31 @@
+{
+  "scenario": "focus top-right from mid-pan",
+  "from": {
+    "x": 80,
+    "y": 20
+  },
+  "to": {
+    "x": 200,
+    "y": 0
+  },
+  "oldFightMaxDelta": 18.94921090466745,
+  "newGlide": {
+    "flips": 0,
+    "nonMonotonic": 0,
+    "end": {
+      "i": 60,
+      "t": 1,
+      "x": 200,
+      "y": 0,
+      "dx": 0
+    },
+    "mid": {
+      "i": 30,
+      "t": 1,
+      "x": 200,
+      "y": 0,
+      "dx": 0.017777777777780557
+    }
+  },
+  "pass": true
+}

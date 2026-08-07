@@ -1,0 +1,1164 @@
+{
+  "distinctness": {
+    "collidingFiles": [],
+    "pairCount": 0,
+    "groups": []
+  },
+  "generic": [],
+  "declaredUse": [],
+  "wiring": {
+    "includeStr": [
+      {
+        "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🗣️dsl/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🔧️op/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🔺️diff/🦀️component.rs",
+        "spec": "📖️component.grammar.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🎒️pack/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      },
+      {
+        "rel": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📡️spr/🦀️component.rs",
+        "spec": "📡️component.protocol.semio"
+      }
+    ],
+    "registerLanguage": [
+      {
+        "artRel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw",
+        "isStubish": false
+      },
+      {
+        "artRel": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook",
+        "isStubish": false
+      }
+    ]
+  },
+  "emptyExamples": [
+    {
+      "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.space.studio.spr.semio",
+      "size": 32
+    },
+    {
+      "rel": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.space.studio.pack.semio",
+      "size": 33
+    },
+    {
+      "rel": "🧰️framework/🛍️products/💻️os/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.os.workflow.spr.semio",
+      "size": 31
+    },
+    {
+      "rel": "🧰️framework/🛍️products/💻️os/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.os.workflow.pack.semio",
+      "size": 32
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/📡️sprs/📕️liquid-retaining-fem-anchor/🧬️component.norm.en1992.spr.semio",
+      "size": 31
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/🎒️packs/📕️liquid-retaining-fem-anchor/🧬️component.norm.en1992.pack.semio",
+      "size": 32
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.norm.en1992.spr.semio",
+      "size": 31
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.norm.en1992.pack.semio",
+      "size": 32
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️default/📡️sprs/♻️default/🧬️component.cad.cad.spr.semio",
+      "size": 27
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️default/🎒️packs/♻️default/🧬️component.cad.cad.pack.semio",
+      "size": 28
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.cad.cad.spr.semio",
+      "size": 27
+    },
+    {
+      "rel": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.cad.cad.pack.semio",
+      "size": 28
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.demonstrator.playground.spr.semio",
+      "size": 43
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.demonstrator.playground.pack.semio",
+      "size": 44
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.dag.dag.spr.semio",
+      "size": 27
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.dag.dag.pack.semio",
+      "size": 28
+    },
+    {
+      "rel": "✏️s/🔌️plugins/💡️reasoning/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.reasoning.wires.spr.semio",
+      "size": 35
+    },
+    {
+      "rel": "✏️s/🔌️plugins/💡️reasoning/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.reasoning.wires.pack.semio",
+      "size": 36
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.energy.model.spr.semio",
+      "size": 32
+    },
+    {
+      "rel": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.energy.model.pack.semio",
+      "size": 33
+    }
+  ],
+  "counts": {
+    "distinctnessFiles": 0,
+    "distinctnessPairs": 0,
+    "generic": 0,
+    "declaredUse": 0,
+    "wiringInclude": 220,
+    "wiringRegister": 44,
+    "emptyExamples": 20,
+    "familyFiles": 7,
+    "specFiles": 269
+  }
+}

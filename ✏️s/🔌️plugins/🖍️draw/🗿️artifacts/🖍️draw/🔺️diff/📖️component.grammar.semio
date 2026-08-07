@@ -4,13 +4,7 @@ extension draw
 use family-scene
 start diff
 
-diff = layer-patch*
-layer-patch = "layer-patch" "layer-id" "=" IDENT base-patch? tree-patch?
-base-patch = "base" "{" {"name" "=" TEXT}? {"visible" "=" BOOL}? {"locked" "=" BOOL}? {"opacity" "=" FLOAT}? {"blend-mode" "=" IDENT}? prop* "}"
-tree-patch = "tree" "{" {"add" "=" layer}? {"remove" "=" IDENT}? {"reorder" "=" INT}? "}"
-layer = "shape" prop* | "path" prop* | "text" prop* | "image" prop* | "group" prop* | "boolean" prop* | "trace" prop*
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" prop* "}"
-value = TEXT | FLOAT | INT | BOOL | list | map
+artifact-mark = "draw.draw-diff"
+diff = artifact-mark canvas-change+
+canvas-change = "add-layer" IDENT | "remove-layer" IDENT | "move" "id" "=" IDENT "dx" "=" FLOAT "dy" "=" FLOAT
+paint-field = "stroke" "=" TEXT | "fill" "=" TEXT

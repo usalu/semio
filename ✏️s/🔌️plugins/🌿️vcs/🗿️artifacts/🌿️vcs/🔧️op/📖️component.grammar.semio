@@ -1,8 +1,12 @@
 dialect grammar
 grammar vcs.op
 extension vcsdemo
+use family-sheet
 start operation
 
-op = vcs-edit*
-vcs-edit = "set-counter" assign | "set-title" assign | "set-notes" assign | "set-status" assign | "add-tag" assign | "remove-tag" assign
-assign = IDENT "=" (TEXT | INT)
+artifact-mark = "vcs.vcs-op"
+operation = artifact-mark eng-op+
+eng-op = "add-node" eng-field+ | "set-load" eng-field+ | "set-support" eng-field+ | "commit-step" eng-field+
+eng-field = "node" "=" INT | "element" "=" IDENT | "load" "=" IDENT | "dof" "=" IDENT | "commit" "=" TEXT
+eng-node = "node" "=" INT | "element" "=" IDENT
+eng-record = eng-node*

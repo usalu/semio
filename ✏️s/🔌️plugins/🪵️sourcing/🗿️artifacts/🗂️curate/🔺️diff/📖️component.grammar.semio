@@ -4,19 +4,8 @@ extension curate
 use family-catalog
 start diff
 
-diff = op-line*
-op-line = ("set-document" | "document") assign* block?
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
-qty = (FLOAT | INT) IDENT?
-block = "{" record* "}"
-record = IDENT assign* block?
-table = IDENT table-schema "{" row* "}"
-table-schema = "[" col {"," col}* "]"
-col = IDENT ":" IDENT
-row = field+
-field = IDENT "=" value | value
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)
+artifact-mark = "sourcing.curate-diff"
+diff = artifact-mark catalog-change+
+catalog-change = "stock-add" IDENT | "stock-remove" IDENT | "curate" IDENT INT
+stock = slash-path IDENT TEXT
+slash-path = IDENT

@@ -4,19 +4,7 @@ extension gisterrain
 use family-geo
 start diff
 
-diff = op-line*
-op-line = ("set-exaggeration" | "set-imported-features" | "set-document") assign* block?
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
-qty = (FLOAT | INT) IDENT?
-block = "{" record* "}"
-record = IDENT assign* block?
-table = IDENT table-schema "{" row* "}"
-table-schema = "[" col {"," col}* "]"
-col = IDENT ":" IDENT
-row = field+
-field = IDENT "=" value | value
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)
+artifact-mark = "gis.gisterrain-diff"
+diff = artifact-mark geo-change+
+geo-change = "crs" "=" IDENT | "point-add" FLOAT FLOAT | "tile" INT INT INT
+point = FLOAT FLOAT FLOAT?

@@ -3,6 +3,11 @@ grammar family-graph
 start edge
 
 node = IDENT {":" IDENT}? {"@" IDENT}?
-edge = node ARROW node | node DASHARROW node | node EDGEARROW node | node BACKARROW node | node "-" edge-label ARROW node | node "-" edge-label "-" node
-edge-label = "[" IDENT? {":" IDENT}? "]"
-chain = node {ARROW node}+ | node {DASHARROW node}+
+wire-endpoint = node
+edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
+edge-label = "[" edge-label-inner "]" | edge-label-inner
+edge-label-inner = IDENT? {":" IDENT}?
+edge = wire-endpoint edge-arrow wire-endpoint edge-props?
+edge-props = "{" edge-field* "}"
+edge-field = "weight" "=" (FLOAT | INT) | "kind" "=" (TEXT | IDENT) | "label" "=" TEXT | "id" "=" IDENT
+chain = wire-endpoint {ARROW wire-endpoint}+ | wire-endpoint {DASHARROW wire-endpoint}+

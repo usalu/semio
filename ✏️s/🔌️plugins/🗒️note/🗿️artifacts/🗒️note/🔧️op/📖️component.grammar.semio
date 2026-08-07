@@ -1,27 +1,14 @@
 dialect grammar
 grammar note.op
 extension note
-use family-embed
+use family-scene
 start operation
 
-operation = set-grid-visible | set-grid-spacing | set-grid-subdivisions | set-grid-opacity | set-snap-enabled | set-snap-grid-spacing | set-pencil-width | set-eraser-radius | set-blocks | put-asset | remove-asset | set-document
-set-grid-visible = "set-grid-visible" "visible" "=" BOOL
-set-grid-spacing = "set-grid-spacing" "spacing" "=" FLOAT
-set-grid-subdivisions = "set-grid-subdivisions" "subdivisions" "=" FLOAT
-set-grid-opacity = "set-grid-opacity" "opacity" "=" FLOAT
-set-snap-enabled = "set-snap-enabled" "enabled" "=" BOOL
-set-snap-grid-spacing = "set-snap-grid-spacing" "spacing" "=" FLOAT
-set-pencil-width = "set-pencil-width" "width" "=" FLOAT
-set-eraser-radius = "set-eraser-radius" "radius" "=" FLOAT
-set-blocks = "set-blocks" "{" block* "}"
-put-asset = "put-asset" "id" "=" IDENT asset-block
-remove-asset = "remove-asset" "id" "=" IDENT
-set-document = "set-document" document-block
-block = "text" prop* | "image" prop* | "table" prop* | "math" prop* | "stroke" prop* | "group" prop*
-asset-block = "asset" "{" prop* "}"
-document-block = "document" "{" prop* "}"
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" prop* "}"
-value = TEXT | FLOAT | INT | BOOL | list | map
+artifact-mark = "note.note-op"
+operation = artifact-mark canvas-op+
+canvas-op = "add-layer" layer-field+ | "set-stroke" stroke-field+ | "move-layer" move-field+ | "set-fill" fill-field+
+layer-field = "id" "=" IDENT | "kind" "=" IDENT
+stroke-field = "color" "=" TEXT | "width" "=" FLOAT
+move-field = "id" "=" IDENT | "x" "=" FLOAT | "y" "=" FLOAT
+fill-field = "id" "=" IDENT | "fill" "=" TEXT
+paint-field = "opacity" "=" FLOAT | "blend" "=" IDENT

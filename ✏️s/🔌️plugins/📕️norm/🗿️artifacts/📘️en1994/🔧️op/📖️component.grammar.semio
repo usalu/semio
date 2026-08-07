@@ -4,8 +4,10 @@ extension en1994
 use family-sheet
 start operation
 
-operation = ("set" | "patch" | "remove") field*
-field = ("annex" | "m-ed-knm" | "v-ed-kn" | "m-pla" | "m-pl-rd" | "eta" | "v-l-rd" | "insulation-thickness-mm" | "fire-rating" | "deck-type" | "delta-sigma-mpa" | "fatigue-detail" | "d-mm" | "h-sc-mm" | "f-ck-mpa" | "f-u-mpa" | "e-cm-mpa" | "v-ed-per-stud-kn" | "span-m" | "f-y-mpa" | "n-cycles-stud" | "delta-tau-stud-mpa" | "started" | "actor" | IDENT) "=" value
-value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
-UNITNUM = FLOAT UNIT | INT UNIT
+artifact-mark = "norm.en1994-op"
+operation = artifact-mark op-stmt+
+op-stmt = "set-field" field+ | "patch-field" field+ | "remove-field" field+
+field = ("en1994-basis" | "en1994-combination" | "en1994-partial-factor" | "en1994-verdict" | "en1994-annex" | "en1994-actor" | "started" | "actor") "=" value
+value = TEXT | INT | FLOAT | BOOL | QUANTITY
+QUANTITY = FLOAT UNIT | INT UNIT
 UNIT = IDENT

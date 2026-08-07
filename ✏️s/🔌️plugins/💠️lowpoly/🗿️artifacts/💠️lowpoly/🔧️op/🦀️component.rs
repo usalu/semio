@@ -7,6 +7,12 @@ use crate::artifacts::lowpoly::{LowpolyObject, LowpolyObjectPatch, LowpolyPaintL
 use protocol::{apply_collection_operation, invert_collection_operation, CollectionOperation, Operation};
 use serde::{Deserialize, Serialize};
 
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
 //#region 🔖️Patches
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
@@ -393,7 +399,7 @@ mod tests {
 
     //#region 🔖️OpText
     fn tiny_mesh_json() -> String {
-        semio_s_3d::HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("mesh json")
+        semio_s_3d::mesh::HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("mesh json")
     }
 
     fn tiny_object(id: &str, name: &str) -> LowpolyObject {

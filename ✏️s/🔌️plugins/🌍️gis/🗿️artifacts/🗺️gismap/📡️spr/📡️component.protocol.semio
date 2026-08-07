@@ -4,6 +4,15 @@ version 1
 schema gis.map.operation
 start record
 framing record
+record gis.gismap-set-crs tag 1
+field format u8
+field ordinal varint
+field body bytes
+record gis.gismap-add-point tag 2
+field format u8
+field ordinal varint
+field body bytes
+record gis.gismap-tile-ref tag 3
 field format u8
 field ordinal varint
 field body bytes

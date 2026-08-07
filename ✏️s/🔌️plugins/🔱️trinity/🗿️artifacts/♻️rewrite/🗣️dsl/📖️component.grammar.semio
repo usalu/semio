@@ -1,15 +1,18 @@
 dialect grammar
 grammar rewrite.document
 extension rewrite
-use family-embed
+use family-graph
 start document
 
-document = before-field lhs-field rhs-field bindings-field layout-field
-before-field = "before-fixture-json" "=" TEXT
-lhs-field = "lhs-json" "=" (TEXT | fence)
-rhs-field = "rhs-json" "=" (TEXT | fence)
-bindings-field = "parameter-bindings" "=" map
-layout-field = "rule-layout" "=" map
-fence = "\`\`\`" "json" TEXT "\`\`\`"
-map = "{" map-entry* "}"
-map-entry = IDENT "=" (TEXT | INT | FLOAT | BOOL)
+artifact-mark = "trinity.rewrite"
+document = artifact-mark doc-body
+doc-body = schema-line graph-table
+schema-line = "schema" "=" TEXT
+graph-table = "edges" "{" edge* "}"
+edge = wire-endpoint edge-arrow wire-endpoint edge-props?
+wire-endpoint = node
+node = IDENT {":" IDENT}? {"@" IDENT}?
+edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW
+edge-props = "{" edge-field* "}"
+edge-field = "weight" "=" (FLOAT | INT) | "kind" "=" TEXT | "label" "=" TEXT
+chain = wire-endpoint {ARROW wire-endpoint}+

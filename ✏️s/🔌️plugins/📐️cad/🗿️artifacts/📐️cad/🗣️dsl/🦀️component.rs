@@ -3,6 +3,12 @@
 
 use crate::artifacts::cad::CadProjection;
 
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
 /// 📄️ The `default` example scene, handcrafted in the `.cad` DSL — a small structural column with
 /// a two-vertex/one-edge/one-wire/one-face/one-shell/one-solid brep, a site-photo reference, and
 /// objects across the shape/building/structure-classic panes.

@@ -4,6 +4,12 @@
 use crate::artifacts::cad::CadProjection;
 use store::PackError;
 
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
+//#endregion 📡️SemioProtocol
+
 /// 📦️ Encodes a `CadProjection` to its binary pack form.
 pub fn encode(document: &CadProjection) -> Vec<u8> {
     store::DocumentPack::encode_pack(document)

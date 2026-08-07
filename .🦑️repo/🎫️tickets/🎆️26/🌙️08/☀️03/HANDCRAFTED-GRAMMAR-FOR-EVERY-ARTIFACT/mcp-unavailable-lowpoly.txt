@@ -1,0 +1,3 @@
+Repo MCP was not connected in this subagent session (namespace catalog had no repo tools;
+FetchMcpResource server "repo" failed). Continued under open ticket
+26/08/03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT using ticket contracts + note/dag patterns.

@@ -4,6 +4,15 @@ version 1
 schema draw.document.operation
 start record
 framing record
+record draw.draw-add-layer tag 1
+field format u8
+field ordinal varint
+field body bytes
+record draw.draw-set-stroke tag 2
+field format u8
+field ordinal varint
+field body bytes
+record draw.draw-move-layer tag 3
 field format u8
 field ordinal varint
 field body bytes

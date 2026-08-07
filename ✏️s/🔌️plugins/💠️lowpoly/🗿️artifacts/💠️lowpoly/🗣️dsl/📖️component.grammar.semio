@@ -4,17 +4,21 @@ extension lowpoly
 use family-scene
 start document
 
-document = schema-line objects-field
+document = schema-line objects-field scene-compose?
 schema-line = "schema" "=" IDENT
 objects-field = "objects" "=" "[" object* "]" | "objects" "=" object*
-object = "{" object-prop* "}" | object-inline
-object-inline = {"id" "=" IDENT} {"name" "=" TEXT}? {"smooth-shading" "=" BOOL}? {"mesh-json" "=" TEXT}? transform-block? paint-layers?
-object-prop = {"id" "=" IDENT} | {"name" "=" TEXT} | {"smooth-shading" "=" BOOL} | {"mesh-json" "=" TEXT} | transform-block | paint-layers | prop
-transform-block = "transform" "{" {"x" "=" FLOAT}? {"y" "=" FLOAT}? {"z" "=" FLOAT}? prop* "}"
+object = "{" object-field* "}"
+object-field = {"id" "=" IDENT} | {"name" "=" TEXT} | {"smooth-shading" "=" BOOL} | mesh | object-transform | paint-layers
+object-transform = "transform" "{" transform-field* "}"
+transform-field = {"position" "=" VEC3} | {"rotation" "=" VEC3} | {"scale" "=" VEC3}
+mesh = "mesh" "{" vertices halfedges faces "}"
+vertices = "vertices" "[" vertex* "]" | "vertices" "{" vertex* "}"
+vertex = "{" {"position" "=" VEC3} {"normal" "=" VEC3}? {"halfedge" "=" INT}? "}"
+halfedges = "halfedges" "[" halfedge* "]" | "halfedges" "{" halfedge* "}"
+halfedge = "{" {"vertex" "=" INT} {"next" "=" INT} {"twin" "=" INT}? {"face" "=" INT}? {"u" "=" FLOAT}? {"v" "=" FLOAT}? "}"
+faces = "faces" "[" face* "]" | "faces" "{" face* "}"
+face = "{" {"halfedge" "=" INT} {"smooth" "=" BOOL}? {"flipped" "=" BOOL}? "}"
 paint-layers = "paint-layers" "=" "[" paint-layer* "]" | "paint-layers" "{" paint-layer* "}"
-paint-layer = "{" {"name" "=" TEXT}? {"visible" "=" BOOL}? {"opacity" "=" FLOAT}? {"blend-mode" "=" IDENT}? {"pixels" "=" TEXT}? "}"
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" prop* "}"
-value = TEXT | FLOAT | INT | BOOL | list | map
+paint-layer = "{" paint-layer-field* "}"
+paint-layer-field = {"name" "=" TEXT} | {"visible" "=" BOOL} | {"opacity" "=" FLOAT} | {"blend-mode" "=" IDENT} | {"pixels" "=" TEXT}
+scene-compose = "scene" "{" layer* "}"

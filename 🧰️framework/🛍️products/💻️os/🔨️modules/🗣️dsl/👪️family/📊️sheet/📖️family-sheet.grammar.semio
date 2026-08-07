@@ -5,5 +5,23 @@ start trace
 trace = IDENT "=" expr ARROW FLOAT
 expr = term {{"+" | "-"} term}*
 term = factor {{"*" | "/"} factor}*
-factor = FLOAT | IDENT | call | "-" factor
+factor = FLOAT | IDENT | call | "-" factor | qty | clause-ref
 call = IDENT "(" expr {"," expr}* ")"
+qty = QUANTITY | FLOAT | INT
+QUANTITY = FLOAT UNIT | INT UNIT
+UNIT = IDENT
+assign = IDENT "=" value
+clause-ref = IDENT "." IDENT
+value = TEXT | INT | FLOAT | BOOL | qty | list | map | block | clause-ref
+list = "[" value* "]"
+map = "{" assign* "}"
+block = "{" record* "}"
+record = IDENT assign* block?
+table = IDENT table-schema "{" row* "}"
+table-schema = "[" col {"," col}* "]"
+col = IDENT ":" IDENT
+row = field+
+field = IDENT "=" value | value
+verdict = "pass" TEXT? | "fail" TEXT? | "warn" TEXT?
+eng-node = "node" "=" (INT | IDENT) | "element" "=" IDENT | "material" "=" IDENT | "section" "=" IDENT | "support" "=" IDENT | "load" "=" IDENT | "load-case" "=" IDENT | "dof" "=" IDENT | "commit" "=" TEXT
+eng-record = eng-node*

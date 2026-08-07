@@ -4,19 +4,9 @@ extension fem2d
 use family-sheet
 start operation
 
-operation = op-line*
-op-line = ("set-node" | "remove-node" | "set-element" | "remove-element" | "set-material" | "remove-material" | "set-section" | "remove-section" | "set-support" | "remove-support" | "set-load-case" | "remove-load-case" | "set-region" | "remove-region" | "set-combination" | "remove-combination" | "set-analysis-settings" | "set-document") assign* block?
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
-qty = (FLOAT | INT) IDENT?
-block = "{" record* "}"
-record = IDENT assign* block?
-table = IDENT table-schema "{" row* "}"
-table-schema = "[" col {"," col}* "]"
-col = IDENT ":" IDENT
-row = field+
-field = IDENT "=" value | value
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)
+artifact-mark = "fem.2d-op"
+operation = artifact-mark eng-op+
+eng-op = "add-node" eng-field+ | "set-load" eng-field+ | "set-support" eng-field+ | "commit-step" eng-field+
+eng-field = "node" "=" INT | "element" "=" IDENT | "load" "=" IDENT | "dof" "=" IDENT | "commit" "=" TEXT
+eng-node = "node" "=" INT | "element" "=" IDENT
+eng-record = eng-node*

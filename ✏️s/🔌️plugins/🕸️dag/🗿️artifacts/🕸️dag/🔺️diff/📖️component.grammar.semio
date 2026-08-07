@@ -5,20 +5,31 @@ use family-graph
 start diff
 
 diff = diff-line*
-diff-line = "document" block | "nodes" block | "edges" block | "set-nodes" block | "set-edges" block
-
-wire-endpoint = IDENT {":" IDENT}? {"@" IDENT}?
-edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
-edge-label = IDENT {":" IDENT}?
-wire = wire-endpoint edge-arrow wire-endpoint props?
-chain = wire-endpoint {ARROW wire-endpoint}+ | wire-endpoint {DASHARROW wire-endpoint}+
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL)
-table = IDENT columns "{" row* "}"
-columns = "[" column+ "]"
+diff-line = document-replace | set-nodes-replace | set-edges-replace | nodes-collection | edges-collection
+document-replace = "document" document-block
+set-nodes-replace = "set-nodes" nodes-table
+set-edges-replace = "set-edges" edges-table
+nodes-collection = "nodes" collection-block
+edges-collection = "edges" collection-block
+document-block = schema-line nodes-table edges-table
+nodes-table = "nodes" node-table
+edges-table = "edges" edge-table
+schema-line = "schema=" IDENT
+node-table = "[" node-columns "]" "{" node-row* "}"
+edge-table = "[" edge-columns "]" "{" edge-row* "}"
+node-columns = column+
+edge-columns = column+
 column = IDENT ":" IDENT
-row = cell+
-cell = TEXT | INT | FLOAT | BOOL | IDENT | wire | MAP | BLOCK
-block = "{" field* "}"
-field = IDENT "=" value
-value = TEXT | INT | FLOAT | BOOL | wire | MAP | block | table
+node-row = IDENT
+edge-row = IDENT TEXT TEXT route-style edge-props?
+route-style = IDENT
+edge-props = "{" edge-field* "}"
+edge-field = "weight" "=" (FLOAT | INT) | "kind" "=" (TEXT | IDENT) | "label" "=" TEXT | "id" "=" IDENT
+collection-block = "{" collection-line* "}"
+collection-line = "added" node-table | "removed" id-list | "modified" patch-list
+id-list = "[" IDENT* "]"
+patch-list = "[" patch-entry* "]"
+patch-entry = IDENT patch-block
+patch-block = "{" patch-field* "}"
+patch-field = "name" "=" TEXT | "x" "=" FLOAT | "y" "=" FLOAT | "source" "=" wire-endpoint | "target" "=" wire-endpoint
+chain = wire-endpoint {ARROW wire-endpoint}+ | wire-endpoint {DASHARROW wire-endpoint}+

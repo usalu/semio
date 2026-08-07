@@ -4,27 +4,15 @@ extension sequence
 use family-graph
 start document
 
-document = keyword-stmt | TEXT schema-line steps-table edges-table
-schema-line = "schema=" IDENT
-steps-table = "steps" table
-edges-table = "edges" table
-
-wire-endpoint = IDENT {":" IDENT}? {"@" IDENT}?
-edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
-edge-label = IDENT {":" IDENT}?
-wire = wire-endpoint edge-arrow wire-endpoint props?
-chain = wire-endpoint {ARROW wire-endpoint}+ | wire-endpoint {DASHARROW wire-endpoint}+
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL)
-table = IDENT columns "{" row* "}"
-columns = "[" column+ "]"
-column = IDENT ":" IDENT
-row = cell+
-cell = TEXT | INT | FLOAT | BOOL | IDENT | wire | MAP | BLOCK
-block = "{" field* "}"
-field = IDENT "=" value
-value = TEXT | INT | FLOAT | BOOL | wire | MAP | block | table
-
-// artifact-keywords: sequence, sequence-edge
-keyword-stmt = ("sequence" | "sequence-edge") field*
-field = IDENT "=" (TEXT | INT | FLOAT | BOOL)
+artifact-mark = "sequence.sequence"
+document = artifact-mark doc-body
+doc-body = schema-line graph-table
+schema-line = "schema" "=" TEXT
+graph-table = "edges" "{" edge* "}"
+edge = wire-endpoint edge-arrow wire-endpoint edge-props?
+wire-endpoint = node
+node = IDENT {":" IDENT}? {"@" IDENT}?
+edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW
+edge-props = "{" edge-field* "}"
+edge-field = "weight" "=" (FLOAT | INT) | "kind" "=" TEXT | "label" "=" TEXT
+chain = wire-endpoint {ARROW wire-endpoint}+

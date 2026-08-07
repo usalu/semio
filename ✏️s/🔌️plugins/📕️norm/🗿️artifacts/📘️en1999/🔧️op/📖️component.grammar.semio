@@ -4,8 +4,10 @@ extension en1999
 use family-sheet
 start operation
 
-operation = ("set" | "patch" | "remove") field*
-field = ("n-ed-kn" | "m-ed-knm" | "a-mm2" | "w-el-mm3" | "alloy" | "chi" | "i-t-mm4" | "l-cr-mm" | "theta-c" | "delta-sigma-ed" | "delta-sigma-c" | "fatigue-m" | "n-cycles" | "v-weld-ed-kn" | "weld-throat-mm" | "weld-length-mm" | "beta-w" | "sheet-b-mm" | "sheet-t-mm" | "sheet-k-sigma" | "sheet-w-el-mm3" | "sheet-m-ed-knm" | "shell-t-mm" | "shell-r-mm" | "sigma-ed-shell-mpa" | "annex" | "started" | "actor" | IDENT) "=" value
-value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
-UNITNUM = FLOAT UNIT | INT UNIT
+artifact-mark = "norm.en1999-op"
+operation = artifact-mark op-stmt+
+op-stmt = "set-field" field+ | "patch-field" field+ | "remove-field" field+
+field = ("en1999-basis" | "en1999-combination" | "en1999-partial-factor" | "en1999-verdict" | "en1999-annex" | "en1999-actor" | "started" | "actor") "=" value
+value = TEXT | INT | FLOAT | BOOL | QUANTITY
+QUANTITY = FLOAT UNIT | INT UNIT
 UNIT = IDENT

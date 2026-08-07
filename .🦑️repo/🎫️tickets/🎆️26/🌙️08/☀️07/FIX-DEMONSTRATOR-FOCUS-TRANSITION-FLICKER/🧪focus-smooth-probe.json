@@ -1,0 +1,48 @@
+{
+  "pass": true,
+  "samples": {
+    "before": {
+      "t": 2347,
+      "parsed": {
+        "x": -33.4134,
+        "y": -52.2047
+      },
+      "styleTransition": "",
+      "transitionProperty": "all",
+      "transitionDuration": "0s"
+    },
+    "reverseSteps": 0,
+    "maxReverse": 0,
+    "nonZeroCssDuration": 0,
+    "frameCount": 24,
+    "startX": -33.4134,
+    "endX": -200,
+    "minX": -200,
+    "maxX": -33.4134,
+    "hash": "#aggregator",
+    "overviewGone": true,
+    "samples": [
+      {
+        "t": 2347.600000023842,
+        "x": -33.4134,
+        "y": -52.2047,
+        "styleTransition": "",
+        "transitionDuration": "0s"
+      },
+      {
+        "t": 2641.7000000476837,
+        "x": -127.225,
+        "y": -22.8062,
+        "styleTransition": "",
+        "transitionDuration": "0s"
+      },
+      {
+        "t": 3000.899999976158,
+        "x": -200,
+        "y": 0,
+        "styleTransition": "",
+        "transitionDuration": "0s"
+      }
+    ]
+  }
+}

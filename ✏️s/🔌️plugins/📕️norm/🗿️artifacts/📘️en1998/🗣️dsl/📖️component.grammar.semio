@@ -4,9 +4,14 @@ extension en1998
 use family-sheet
 start document
 
-document = header assign*
+artifact-mark = "norm.en1998"
+document = artifact-mark doc-body
+doc-body = header sheet-body
 header = "semio" IDENT "v" INT
-assign = ("seismic-zone" | "ground-type" | "importance-class" | "structural-system" | "t1-s" | "mass-t" | "v-rd-kn" | "drift-mm" | "height-m" | "multiple-resisting-systems" | "annex" | "en-a-gr" | "en-ground-type" | "en-spectrum-type" | "period-ratio" | "bridge-v-rd-kn" | "bearing-d-ed-mm" | "bearing-d-rd-mm" | "retrofit-knowledge-level" | "retrofit-limit-state" | "retrofit-e-d-kn" | "retrofit-r-k-kn" | "retrofit-gamma-el" | "silo-height-m" | "silo-radius-m" | "silo-n-rd-kn" | "silo-v-ed-kn" | "silo-v-rd-kn" | "silo-q-nominal" | "tank-height-m" | "tank-radius-m" | "tank-mass-t" | "tank-v-rd-kn" | "tower-m-ed-knm" | "tower-m-rd-knm" | "tower-is-chimney" | "tower-q-nominal" | "tower-mass-t" | "foundation-area-m2" | "foundation-p-rd-kpa" | "foundation-h-ed-kn" | "foundation-h-rd-kn" | "k-foundation" | "k-soil" | "wall-height-m" | "wall-phi-deg" | "wall-soil-gamma-kn-m3" | "wall-r" | "wall-h-rd-kn" | "started" | "actor") "=" value
-value = TEXT | INT | FLOAT | BOOL | UNITNUM | IDENT
-UNITNUM = FLOAT UNIT | INT UNIT
+sheet-body = assign*
+assign = ("en1998-basis" | "en1998-combination" | "en1998-partial-factor" | "en1998-verdict" | "en1998-annex" | "en1998-actor" | "started" | "actor") "=" value
+value = TEXT | INT | FLOAT | BOOL | QUANTITY | clause-ref
+QUANTITY = FLOAT UNIT | INT UNIT
 UNIT = IDENT
+clause-ref = IDENT "." IDENT
+trace = IDENT "=" expr ARROW FLOAT

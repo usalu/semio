@@ -631,10 +631,65 @@ pub fn cad_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
 //#endregion 🔖️Compute
 
 //#region 🔖️Register
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary) for in-process execution.
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "cad.document",
+        extension: Some("cad"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::cad::dsl::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::cad::dsl::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::cad::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::cad::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("cad.document"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "cad.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::cad::op::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::cad::op::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::cad::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::cad::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("cad.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "cad.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::cad::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::cad::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("cad.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "cad.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::cad::pack::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::cad::pack::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("cad.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "cad.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::cad::spr::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::cad::spr::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("cad.spr"),
+    });
+}
+
 /// 🔌️ Plugin setup hook (`semio_plugin!`'s `setup:`): registers the `cad.scene` document codec for
 /// the cad play app plus every native geometry exporter/importer the `3d.cad` artifact kind
 /// advertises. Was the bundle crate's `register_cad_exports`.
 pub fn register() {
+    register_pilot_languages();
     // 📦️ pack binary codec for `CadProjection` (`CadPlayApp::document_schema()` == `CAD_DOCUMENT_SCHEMA`).
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::apps::cad::CadPlayApp>(crate::artifacts::cad::CAD_DOCUMENT_SCHEMA);
     semio_framework_os::register_solid_exporter("3d.cad", Box::new(semio_s_3d::brep::kernel::ObjSolidExporter));

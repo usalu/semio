@@ -22,6 +22,12 @@ pub struct CadDiff {
     pub scene: Option<Box<CadProjection>>,
 }
 
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
 fn apply_object_collection_diff(objects: &mut Vec<CadObject>, diff: &CollectionDiff<String, CadObjectPatch, CadObject>) {
     for id in &diff.removed {
         objects.retain(|object| object.id != *id);

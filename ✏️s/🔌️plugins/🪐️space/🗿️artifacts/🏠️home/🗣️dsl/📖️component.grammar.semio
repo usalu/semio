@@ -1,22 +1,18 @@
 dialect grammar
 grammar space.shome
 extension shome
+use family-catalog
 start document
 
-document = schema-field gen-field?
-schema-field = "schema" "=" (TEXT | IDENT)
-gen-field = "gen" "=" INT
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
-qty = (FLOAT | INT) IDENT?
-block = "{" record* "}"
-record = IDENT assign* block?
-table = IDENT table-schema "{" row* "}"
+artifact-mark = "space.home"
+document = artifact-mark doc-body
+doc-body = stock-field curated-block
+stock-field = "stock" "=" list
+list = "[" stock-line* "]"
+stock-line = slash-path IDENT TEXT
+slash-path = IDENT
+curated-block = "curated" table-schema "{" curated-row* "}"
+curated-row = IDENT INT
 table-schema = "[" col {"," col}* "]"
 col = IDENT ":" IDENT
-row = field+
-field = IDENT "=" value | value
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)
+compat = IDENT DASHARROW IDENT

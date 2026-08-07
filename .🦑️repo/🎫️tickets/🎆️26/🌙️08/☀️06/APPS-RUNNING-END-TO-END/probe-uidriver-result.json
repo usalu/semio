@@ -1,0 +1,16 @@
+{
+  "uidriver": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🫀️core/🚗️UiDriver/🟦️component.tsx"
+  ],
+  "imports": [
+    "8:import * as React from \"react\";",
+    "9:import { type StoragePort, createBrowserStoragePort, ephemeralBox } from \"@semio-tech/framework-core\";",
+    "10:import { reactHostPort } from \"../🔌Ports/🟦️component.tsx\";"
+  ],
+  "pkgFiles": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts"
+  ],
+  "glueSnippets": {
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts": "/** @emoji 📦️ `@semio-tech/framework-core` — package glue (reexports only). */\nexport * from \"../../🔨️modules/🧩core/🟦️component.ts\";\n"
+  }
+}

@@ -1,21 +1,13 @@
 dialect grammar
 grammar imperative.imperative.op
 extension imperative
+use family-embed
 start operation
 
-operation = op-line*
-op-line = ("add" | "remove" | "move" | "patch") assign* block?
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
-qty = (FLOAT | INT) IDENT?
-block = "{" record* "}"
-record = IDENT assign* block?
-table = IDENT table-schema "{" row* "}"
-table-schema = "[" col {"," col}* "]"
-col = IDENT ":" IDENT
-row = field+
-field = IDENT "=" value | value
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)
+artifact-mark = "imperative.imperative-op"
+operation = artifact-mark text-op+
+text-op = "insert-text" text-field+ | "replace-range" range-field+ | "set-fence" fence-field+
+text-field = "text" "=" TEXT
+range-field = "start" "=" INT | "end" "=" INT
+fence-field = "lang" "=" IDENT | "body" "=" TEXT
+fence = "```" IDENT TEXT "```"

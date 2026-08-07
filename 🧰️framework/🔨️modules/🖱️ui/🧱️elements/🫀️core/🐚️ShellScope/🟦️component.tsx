@@ -175,6 +175,27 @@ export function activeShellRoot(): HTMLElement | null {
   return activeShellRootValue.current;
 }
 
+/** @emoji 🐚️ True when `rootRef.current` is the page's {@link activeShellRoot} — re-renders on activity
+ * changes so shell-gated hotkeys (introduction Next/Back/Skip, …) enable/disable with focus instead of
+ * reading a stale snapshot once at mount. Outside any registered shell, returns true so single-shell /
+ * storybook call sites keep working without an activity root. */
+export function useIsActiveShellRoot(rootRef: { readonly current: HTMLElement | null }): boolean {
+  return React.useSyncExternalStore(
+    (onStoreChange) => {
+      shellActivitySubscribers.add(onStoreChange);
+      return () => {
+        shellActivitySubscribers.delete(onStoreChange);
+      };
+    },
+    () => {
+      const root = rootRef.current;
+      if (!root || shellActivityRoots.size === 0) return true;
+      return activeShellRootValue.current === root;
+    },
+    () => true,
+  );
+}
+
 /**
  * @emoji 🐚️ A `document`-level `keydown` listener gated to one shell: fires `handler` only when the
  * event's target is inside `rootRef.current`, or — for a keystroke that lands on `document`/`body` with

@@ -628,13 +628,15 @@ export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactEleme
   }, [scope]);
   const setPortalLayer = useCallback((node: HTMLDivElement | null) => {
     scope.portalLayerRef.current = node;
+    // Same attach bump as setRoot: UIIntroduction portals into this layer and must re-render once it exists.
+    bumpAfterRootAttach((n) => n + 1);
   }, [scope]);
   useEffect(() => () => disposeShellI18nInstance(scope.i18n), [scope]);
   return (
-    <div ref={setRoot} className="semio-scope" data-shell-id={scope.shellId} style={{ height: "100%", width: "100%", isolation: "isolate" }}>
+    <div ref={setRoot} className="semio-scope" data-shell-id={scope.shellId} style={{ position: "relative", height: "100%", width: "100%", isolation: "isolate" }}>
       <ShellScopeProvider scope={scope}>
+        <div data-semio-portal-layer ref={setPortalLayer} className="pointer-events-none absolute inset-0 z-tutorial" />
         <FrameworkOsShellInner {...innerProps} locks={locks} brand={brand} />
-        <div data-semio-portal-layer ref={setPortalLayer} />
       </ShellScopeProvider>
     </div>
   );
@@ -1118,10 +1120,17 @@ function FrameworkOsShellInner({
   useEffect(() => {
     if (!session || !activeIntroduction || shellState.tutorial.activeTutorialId != null) return;
     if (typeof window !== "undefined" && window.self !== window.top) return;
-    if (suppressAutoIntroduction) return;
+    // Embedded multi-shell hosts (demonstrator grid) pass suppressAutoIntroduction while a pane is
+    // backgrounded. That must both block auto-start AND tear down an already-running tour — otherwise the
+    // unfocused shell keeps mounting UIIntroduction (veil/hotkeys/ghost cursor) and steals step chrome
+    // from the focused pane.
+    if (suppressAutoIntroduction) {
+      if (introductionStepIndex != null) dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
+      return;
+    }
     if (!replayIntroductionOnLoad && readStoredIntroductionSeen(scope.storage, introductionSeenKey)) return;
     dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
-  }, [session?.app.id, activeIntroduction, introductionSeenKey, replayIntroductionOnLoad, shellState.tutorial.activeTutorialId, suppressAutoIntroduction]);
+  }, [session?.app.id, activeIntroduction, introductionSeenKey, replayIntroductionOnLoad, shellState.tutorial.activeTutorialId, suppressAutoIntroduction, introductionStepIndex]);
 
   // 🎥️ Zero per-app work: any app/brand that declares `tutorials` gets shell support automatically.
   // Brand-owned tutorials are shown ALONGSIDE the app's own (never replacing them, unlike `introduction`).

@@ -1,0 +1,26 @@
+{
+  "files": 182,
+  "empty": 20,
+  "paths": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.space.studio.spr.semio",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.space.studio.pack.semio",
+    "🧰️framework/🛍️products/💻️os/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.os.workflow.spr.semio",
+    "🧰️framework/🛍️products/💻️os/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.os.workflow.pack.semio",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/📡️sprs/📕️liquid-retaining-fem-anchor/🧬️component.norm.en1992.spr.semio",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/📕️liquid-retaining-fem-anchor/🎒️packs/📕️liquid-retaining-fem-anchor/🧬️component.norm.en1992.pack.semio",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.norm.en1992.spr.semio",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.norm.en1992.pack.semio",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️default/📡️sprs/♻️default/🧬️component.cad.cad.spr.semio",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️default/🎒️packs/♻️default/🧬️component.cad.cad.pack.semio",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.cad.cad.spr.semio",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.cad.cad.pack.semio",
+    "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.demonstrator.playground.spr.semio",
+    "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.demonstrator.playground.pack.semio",
+    "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.dag.dag.spr.semio",
+    "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.dag.dag.pack.semio",
+    "✏️s/🔌️plugins/💡️reasoning/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.reasoning.wires.spr.semio",
+    "✏️s/🔌️plugins/💡️reasoning/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.reasoning.wires.pack.semio",
+    "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📚️examples/♻️reuse/📡️sprs/♻️reuse/🧬️component.energy.model.spr.semio",
+    "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📚️examples/♻️reuse/🎒️packs/♻️reuse/🧬️component.energy.model.pack.semio"
+  ]
+}

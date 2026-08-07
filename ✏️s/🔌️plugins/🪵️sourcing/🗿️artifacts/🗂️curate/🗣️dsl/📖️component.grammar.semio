@@ -4,24 +4,15 @@ extension curate
 use family-catalog
 start document
 
-document = stock-field curated-table
+artifact-mark = "sourcing.curate"
+document = artifact-mark doc-body
+doc-body = stock-field curated-block
 stock-field = "stock" "=" list
-curated-table = "curated" table-schema "{" curated-row* "}"
+list = "[" stock-line* "]"
+stock-line = slash-path IDENT TEXT
+slash-path = IDENT
+curated-block = "curated" table-schema "{" curated-row* "}"
 curated-row = IDENT INT
-stock-item = IDENT assign* geometry-stmt
-geometry-stmt = ("box" | "frame" | "slab" | "mesh") assign*
-stock-field-name = ("id" | "name" | "module-id" | "availability" | "typology-path") "=" value
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
-qty = (FLOAT | INT) IDENT?
-block = "{" record* "}"
-record = IDENT assign* block?
-table = IDENT table-schema "{" row* "}"
 table-schema = "[" col {"," col}* "]"
 col = IDENT ":" IDENT
-row = field+
-field = IDENT "=" value | value
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)
+compat = IDENT DASHARROW IDENT

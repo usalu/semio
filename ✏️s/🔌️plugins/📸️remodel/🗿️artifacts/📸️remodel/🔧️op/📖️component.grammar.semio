@@ -4,42 +4,12 @@ extension remodel
 use family-scene
 start operation
 
-operation = set-streams | set-asset | set-calibration | set-gcps | set-ingest-params | set-feature-params | set-match-params | set-sfm-params | set-dense-params | set-mesh-params | set-motion-params | set-geo-params | set-job | set-sparse | set-dense | set-mesh-result | set-trajectory | set-tracks | set-geo-products | set-qc
-set-streams = "set-streams" streams-table
-set-asset = "set-asset" "id" "=" IDENT asset-block
-set-calibration = "set-calibration" calibration-block
-set-gcps = "set-gcps" gcps-table
-set-ingest-params = "set-ingest-params" params-block
-set-feature-params = "set-feature-params" params-block
-set-match-params = "set-match-params" params-block
-set-sfm-params = "set-sfm-params" params-block
-set-dense-params = "set-dense-params" params-block
-set-mesh-params = "set-mesh-params" params-block
-set-motion-params = "set-motion-params" params-block
-set-geo-params = "set-geo-params" params-block
-set-job = "set-job" job-block
-set-sparse = "set-sparse" {"id" "=" IDENT}? sparse-block
-set-dense = "set-dense" {"id" "=" IDENT}? dense-block
-set-mesh-result = "set-mesh-result" mesh-block
-set-trajectory = "set-trajectory" {"id" "=" IDENT}? trajectory-block
-set-tracks = "set-tracks" tracks-table
-set-geo-products = "set-geo-products" {"id" "=" IDENT}? geo-products-block
-set-qc = "set-qc" {"id" "=" IDENT}? qc-block
-streams-table = "streams" "{" prop* "}"
-asset-block = "asset" "{" prop* "}"
-calibration-block = "calibration" "{" prop* "}"
-gcps-table = "gcps" "{" prop* "}"
-params-block = "params" "{" prop* "}"
-job-block = "job" "{" prop* "}"
-sparse-block = "sparse" "{" prop* "}"
-dense-block = "dense" "{" prop* "}"
-mesh-block = "mesh" "{" prop* "}"
-trajectory-block = "trajectory" "{" prop* "}"
-tracks-table = "tracks" "{" prop* "}"
-geo-products-block = "geo-products" "{" prop* "}"
-qc-block = "qc" "{" prop* "}"
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" prop* "}"
-value = TEXT | FLOAT | INT | BOOL | list | map
+artifact-mark = "remodel.remodel-op"
+operation = artifact-mark mesh-op+
+mesh-op = "add-vertex" vtx-field+ | "set-face" face-field+ | "transform-mesh" xfm-field+ | "merge-solid" merge-field+
+vtx-field = "x" "=" FLOAT | "y" "=" FLOAT | "z" "=" FLOAT
+face-field = "index" "=" INT | "loop" "=" list
+xfm-field = "axis" "=" IDENT | "angle" "=" FLOAT
+merge-field = "target" "=" IDENT | "source" "=" IDENT
+list = "[" INT* "]"
+layer = IDENT "@" FLOAT FLOAT FLOAT?

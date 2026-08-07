@@ -14,6 +14,12 @@ use crate::artifacts::en1992::Document;
 pub type Diff = crate::core::DocumentDiff<Document>;
 //#endregion 🔖️Types
 
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

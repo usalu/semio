@@ -1,22 +1,12 @@
 dialect grammar
 grammar process.process3d.diff
 extension process3d
-use family-recipe
+use family-scene
 start diff
 
-diff = op-line*
-op-line = ("steps-add" | "steps-remove" | "steps-move" | "steps-patch" | "machines-add" | "machines-remove" | "machines-move" | "machines-patch" | "stock" | "cursor" | "document") assign* block?
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
-qty = (FLOAT | INT) IDENT?
-block = "{" record* "}"
-record = IDENT assign* block?
-table = IDENT table-schema "{" row* "}"
-table-schema = "[" col {"," col}* "]"
-col = IDENT ":" IDENT
-row = field+
-field = IDENT "=" value | value
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)
+artifact-mark = "process.process3d-diff"
+diff = artifact-mark mesh-change+
+mesh-change = "add-vertex" vtx+ | "drop-face" INT | "transform" xfm+
+vtx = "x" "=" FLOAT | "y" "=" FLOAT | "z" "=" FLOAT
+xfm = "axis" "=" IDENT | "delta" "=" FLOAT
+layer = IDENT "@" FLOAT FLOAT

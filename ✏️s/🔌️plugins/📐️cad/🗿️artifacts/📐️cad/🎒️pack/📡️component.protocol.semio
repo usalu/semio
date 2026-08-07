@@ -1,18 +1,25 @@
 dialect protocol
 protocol cad.pack
 version 1
-schema cad.scene
+schema cad.scene.v2
 start frame
-framing magic 0x8953504B0D0A1A0A
-header fixed 32
+framing magic 0x894341443E0A1A0A
+header fixed 36
 field format_major u16
 field format_minor u16
-field flags u32
-field header_crc32 u32
+field pane_flags u32
+field brep_flags u32
 segment kind u8
 segment flags u8
 segment payload varint bytes
-record field id u16 type tag
-field tag varint
+segment pane-shape u8
+segment pane-building u8
+segment pane-energy u8
+segment pane-structure u8
+segment brep-topology u8
+segment reference-media u8
+record cad-object tag 20
 field body bytes
-footer fixed 84
+record cad-node tag 21
+field body bytes
+footer fixed 96

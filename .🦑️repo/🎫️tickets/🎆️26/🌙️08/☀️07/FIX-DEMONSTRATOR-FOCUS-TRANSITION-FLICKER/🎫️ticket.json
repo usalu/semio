@@ -1,0 +1,9 @@
+{
+  "title": "Fix Demonstrator Focus Transition Flicker",
+  "emoji": "🎬",
+  "status": "closed",
+  "description": "Clicking a demonstrator app card (e.g. top-right) scrolls the main grid correctly but the transform flickers back and forth during the transition because a CSS transform transition fights the rAF easing loop. Make focus and overview scrolling a single smooth drive.",
+  "summary": "## Summary\nFixed the Entwerfen-mit-Bestand demonstrator focus transition flicker (e.g. clicking the top-right Aggregator card). The grid scroll now moves in one smooth direction with no back-and-forth.\n\n### Root cause\nTwo animation systems owned the same `transform`:\n1. A rAF exponential follow / lerp loop updating `scrollOffset` every frame\n2. A CSS `transition: transform 500ms` that turned on when `focusedId` was set\n\nEvery JS frame retargeted the CSS transition, so the main window visibly oscillated. A secondary glitch: glide ease used the rAF timestamp against a `performance.now()` start time, so `t` could go slightly negative and lerp backward for one frame.\n\n### Fix\n- Removed the focus-time CSS transform transition\n- Single scroll drive: free-pan **follow** (exponential) vs programmatic **glide** (500ms cubic ease-in-out) for hover pin / focus\n- Epoch-guarded `setScrollOffset` so stale follow paints cannot land after a glide starts\n- Clamp glide `t` to `[0,1]` and clock glide with `performance.now()`\n\n### Verification\n- Math probe: glide to top-right is monotonic (`🧪scroll-drive-math.json`)\n- Playwright on :6029: Aggregator focus has 0 reverse steps, 0 CSS transform duration, ends at `-200vw` (`🧪focus-smooth-probe.json`)\n- Multi-pane hover+click Aggregator / Generator / Verfolgen: 0 reverse steps (`🧪multi-focus-probe.json`)\n\n### Files\n- `♻️mit-bestand/🧺️demonstrator/📦️index.tsx`\n- Ticket probes under this folder\n",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": []
+}

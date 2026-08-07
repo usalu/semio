@@ -1,32 +1,20 @@
 dialect grammar
 grammar process.process3d
 extension process3d
-use family-recipe
+use family-scene
 start document
 
-document = resolved-field? workshop-block stock-block steps-field
-resolved-field = "resolved-up-to" "=" INT
-workshop-block = "workshop" block
-stock-block = "stock" block
-steps-field = "steps" "=" list
-machine-stmt = IDENT assign* block?
-step-stmt = IDENT assign* ("cut" | "drill" | "attach" | "crosscut" | "rip" | "bore" | "dowel")? assign* block?
-origin-block = "origin" block
-pose-block = "pose" block
-solid-stmt = ("box" | "cylinder" | "mesh") assign*
-measure-stmt = ("blade-cut" | "disc-cut" | "bore-drill" | "cylinder-attach") assign*
-rule-stmt = ("max" | "min") assign*
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
-qty = (FLOAT | INT) IDENT?
-block = "{" record* "}"
-record = IDENT assign* block?
-table = IDENT table-schema "{" row* "}"
+artifact-mark = "process.process3d"
+document = artifact-mark doc-body
+doc-body = schema-line mesh-block
+schema-line = "schema" "=" TEXT
+mesh-block = "mesh" "{" layer* "}"
+layer = IDENT "@" FLOAT FLOAT FLOAT? transform-block?
+transform-block = "{" transform-field* "}"
+transform-field = "x" "=" (FLOAT | INT) | "y" "=" (FLOAT | INT) | "z" "=" (FLOAT | INT) | "scale" "=" (FLOAT | INT)
+face-loop = "face" "[" INT+ "]"
+vertex-table = "vertices" table-schema "{" row* "}"
 table-schema = "[" col {"," col}* "]"
 col = IDENT ":" IDENT
 row = field+
-field = IDENT "=" value | value
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)
+field = IDENT "=" (FLOAT | INT | TEXT)

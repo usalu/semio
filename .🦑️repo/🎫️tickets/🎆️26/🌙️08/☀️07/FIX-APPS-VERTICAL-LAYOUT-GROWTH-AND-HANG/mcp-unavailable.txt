@@ -1,0 +1,1 @@
+repo MCP (ticket_open, ticket_close, repo://goals) not registered in this Cursor session.

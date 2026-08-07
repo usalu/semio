@@ -4,25 +4,50 @@ extension cad
 use family-scene
 start document
 
-document = header-field* geometry-block* object-table* nodes-table
-header-field = IDENT "=" value
-geometry-block = IDENT "-geometry" block
-object-table = IDENT table
-nodes-table = "nodes" table
-layer = IDENT "@" FLOAT FLOAT FLOAT? props?
-node = IDENT {":" IDENT}? {"@" IDENT}?
-edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
-edge-label = IDENT {":" IDENT}?
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | list | map
-table-schema = "[" col {"," col}* "]"
-col = IDENT ":" IDENT
-table = table-schema "{" row* "}"
-row = field+
-field = IDENT "=" value
-block = "{" record* "}"
-record = IDENT assign* block?
+document = header schema-field id-field active-model-field references-block geometry-block* object-table* nodes-table
+header = "semio" IDENT "v" INT
+schema-field = "schema=" IDENT
+id-field = "id=" IDENT
+active-model-field = "active-model-definition-id=" IDENT
+references-block = "references-by-model-definition-id=" reference-map
+reference-map = "{" reference-entry* "}"
+reference-entry = IDENT "=" reference-list
+reference-list = "[" reference-row* "]"
+reference-row = "id=" IDENT "source-url=" TEXT "media-kind=" IDENT "origin=" coord-tuple "width-world=" FLOAT "hidden=" BOOL "locked=" BOOL "opacity=" FLOAT "scale=" FLOAT
+coord-tuple = CRD | TUPLE
+geometry-block = geometry-name geometry-body
+geometry-name = "shape-geometry" | "building-geometry" | "energy-geometry" | "structure-classic-geometry"
+geometry-body = "{" brep-block "}"
+brep-block = anchors-table vertices-table edges-table wires-table faces-table shells-table solids-table
+anchors-table = "anchors=" "[" anchor-row* "]"
+anchor-row = "{" "id=" TEXT "position=" coord-list "}"
+coord-list = "[" FLOAT FLOAT FLOAT "]"
+vertices-table = "vertices=" "[" vertex-row* "]"
+vertex-row = "id=" IDENT "position=" coord-tuple
+edges-table = "edges=" "[" edge-row* "]"
+edge-row = "id=" IDENT "vertex-ids=" "[" IDENT* "]" curve-block
+curve-block = "curve" "{" "kind=" IDENT "}"
+wires-table = "wires=" "[" wire-row* "]"
+wire-row = "id=" IDENT "edge-ids=" "[" IDENT* "]"
+faces-table = "faces=" "[" face-row* "]"
+face-row = "id=" IDENT "wire-ids=" "[" IDENT* "]" surface-block
+surface-block = "surface" "{" "kind=" IDENT "origin=" coord-tuple "normal=" direction-tuple "}"
+direction-tuple = "^" FLOAT "," FLOAT "," FLOAT
+shells-table = "shells=" "[" shell-row* "]"
+shell-row = "id=" IDENT "face-ids=" "[" IDENT* "]"
+solids-table = "solids=" "[" solid-row* "]"
+solid-row = "id=" IDENT "shell-ids=" "[" IDENT* "]"
+object-table = "objects" typed-object-table | "building-objects" typed-object-table | "energy-objects" typed-object-table | "structure-classic-objects" typed-object-table
+typed-object-table = "[" object-columns "]" "{" object-row* "}"
+object-columns = column+
+column = IDENT ":" IDENT
+object-row = object-cells
+object-cells = TEXT TEXT TEXT BOOL BOOL coord-tuple orientation-tuple scale-tuple TEXT extent-tuple TEXT primitive-list
+orientation-tuple = TUPLE
+scale-tuple = TUPLE
+extent-tuple = TUPLE
+primitive-list = LIST
+nodes-table = "nodes" "[" node-columns "]" "{" node-row* "}"
+node-columns = column+
+node-row = TEXT TEXT TEXT
+layer = layer-anchor transform-block? paint-block?

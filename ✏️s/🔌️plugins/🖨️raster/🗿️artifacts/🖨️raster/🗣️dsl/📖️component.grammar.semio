@@ -4,22 +4,15 @@ extension raster
 use family-scene
 start document
 
-document = schema-line layers-block assets-map?
-schema-line = "schema" "=" IDENT {"id" "=" IDENT}? {"title" "=" TEXT}?
+artifact-mark = "raster.raster"
+document = artifact-mark doc-body
+doc-body = schema-line layers-block
+schema-line = "schema" "=" TEXT
 layers-block = "layers" "{" layer* "}"
-layer = pixel-layer | group-layer | adjustment-layer
-pixel-layer = "pixel" layer-props transform-block? mask-block?
-group-layer = "group" layer-props transform-block? children-block?
-adjustment-layer = "adjustment" layer-props transform-block? params-map?
-layer-props = {"id" "=" IDENT}? {"name" "=" TEXT}? {"visible" "=" BOOL}? {"opacity" "=" FLOAT}? {"blend" "=" IDENT}? {"width" "=" INT}? {"height" "=" INT}? {"image" "=" IDENT}? {"kind" "=" IDENT}?
-transform-block = "transform" "{" prop* "}"
-mask-block = "mask" "{" prop* "}"
-children-block = "children" "{" layer* "}"
-params-map = "params" "=" "{" prop* "}"
-assets-map = "assets" "=" "{" asset* "}"
-asset = IDENT "=" {"mime" "=" TEXT}? {"data" "=" TEXT}?
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | FLOAT | INT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" prop* "}"
-value = TEXT | FLOAT | INT | BOOL | list | map
+layer = shape-layer | path-layer | text-layer
+shape-layer = "shape" "{" canvas-field* "}"
+path-layer = "path" "{" canvas-field* "}"
+text-layer = "text" "{" canvas-field* "}"
+canvas-field = "id" "=" IDENT | "x" "=" FLOAT | "y" "=" FLOAT | "fill" "=" TEXT | "stroke" "=" TEXT | "opacity" "=" FLOAT
+paint-block = "{" paint-field* "}"
+paint-field = "color" "=" TEXT | "width" "=" FLOAT | "blend" "=" IDENT

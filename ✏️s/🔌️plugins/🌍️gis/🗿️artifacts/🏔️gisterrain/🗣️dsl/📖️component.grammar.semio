@@ -4,22 +4,12 @@ extension gisterrain
 use family-geo
 start document
 
-document = terrain-stmt origin-stmt? position-stmt*
-terrain-stmt = "gisterrain" assign*
-origin-stmt = "origin" assign*
-position-stmt = "position" assign*
-terrain-field = ("exaggeration" | "imported-features-json" | "features-json" | "lon" | "lat" | "id" | "label" | "icon") "=" value
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty | block)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | IDENT | qty | list | map | block
-qty = (FLOAT | INT) IDENT?
-block = "{" record* "}"
-record = IDENT assign* block?
-table = IDENT table-schema "{" row* "}"
-table-schema = "[" col {"," col}* "]"
-col = IDENT ":" IDENT
-row = field+
-field = IDENT "=" value | value
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map | qty)
+artifact-mark = "gis.gisterrain"
+document = artifact-mark doc-body
+doc-body = crs-line geo-body
+crs-line = "crs" "=" IDENT
+geo-body = "features" "{" geo-feature* "}"
+geo-feature = "point" FLOAT FLOAT FLOAT? | geo-field
+geo-field = "lat" "=" FLOAT | "lon" "=" FLOAT | "alt" "=" FLOAT | "tile" "=" IDENT
+bbox = "bbox" FLOAT FLOAT FLOAT FLOAT
+point = FLOAT FLOAT FLOAT?

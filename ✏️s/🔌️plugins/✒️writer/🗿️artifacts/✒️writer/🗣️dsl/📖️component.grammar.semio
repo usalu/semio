@@ -4,10 +4,12 @@ extension writer
 use family-embed
 start document
 
-document = schema-field id-field? language-id-field? uri-field? text-field?
-schema-field = "schema" "=" (TEXT | IDENT)
-id-field = "id" "=" (TEXT | IDENT)
-language-id-field = "language-id" "=" (TEXT | IDENT)
-uri-field = "uri" "=" (TEXT | IDENT)
-text-field = "text" "=" (TEXT | fence)
+artifact-mark = "writer.writer"
+document = artifact-mark doc-body
+doc-body = schema-line body-fields
+schema-line = "schema" "=" TEXT
+body-fields = text-field? embed-field?
+text-field = "text" "=" TEXT
+embed-field = "embed" "=" fence
 fence = "```" IDENT TEXT "```"
+embed-stmt = "embed" "=" fence

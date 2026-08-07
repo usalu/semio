@@ -57,7 +57,7 @@ pub enum Transform {
 /// purpose: every call site uses it directly as a `.map_err(map_kernel_err)` callback, and `map_err`'s
 /// closure signature is `FnOnce(E) -> F`, which always hands the error by value.
 #[allow(clippy::needless_pass_by_value)]
-pub fn map_kernel_err(error: semio_s_3d::MeshKernelError) -> String {
+pub fn map_kernel_err(error: semio_s_3d::mesh::MeshKernelError) -> String {
     format!("{error:?}")
 }
 

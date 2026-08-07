@@ -2,5 +2,9 @@ dialect grammar
 grammar family-recipe
 start step
 
-step = IDENT ":" IDENT "(" arg* ")"
-arg = IDENT | INT | FLOAT | TEXT
+step = IDENT ":" call-target "(" arg* ")"
+call-target = IDENT
+arg = named-arg | positional-arg
+named-arg = IDENT "=" arg-value
+positional-arg = arg-value
+arg-value = TEXT | INT | FLOAT | IDENT

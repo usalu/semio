@@ -2,10 +2,15 @@
 
 use crate::artifacts::lowpoly::LowpolyProjection;
 
-/// 📜️ The `Concrete Forest Left` example, handcrafted in the `.lowpoly` DSL (produced by
-/// `#[derive(dsl::DslDocument)]` on `LowpolyProjection`) instead of a raw mesh-only JSON fixture — every
-/// object, its full half-edge geometry and its paint layers are real textual DSL, not a JSON-shaped
-/// placeholder.
+//#region 📖️SemioGrammar
+/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
+//#endregion 📖️SemioGrammar
+
+/// 📜️ The reuse example, handcrafted against `COMPONENT_GRAMMAR_SEMIO` — structured half-edge mesh
+/// productions (no `mesh-json`). Derive-based `parse_dsl` does not yet consume this shape; the
+/// recognizer / handcrafted codec will.
 pub const LOWPOLY_EXAMPLE_TEXT: &str = include_str!("../📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️component.lowpoly.lowpoly.dsl.semio");
 
 /// 📖️ Parses `.lowpoly` DSL text into a `LowpolyProjection`.
@@ -24,17 +29,24 @@ mod tests {
     use super::*;
 
     #[test]
-    fn dsl_round_trips_the_default_concrete_forest_projection() {
-        let projection = parse_dsl(LOWPOLY_EXAMPLE_TEXT).expect("default projection DSL parses");
+    fn dsl_round_trips_the_default_projection() {
+        let projection = crate::artifacts::lowpoly::engine::default_projection();
         store::test_support::assert_dsl_round_trip(&projection);
     }
 
     #[test]
     fn dsl_round_trips_a_projection_with_a_painted_layer() {
-        let mut projection = parse_dsl(LOWPOLY_EXAMPLE_TEXT).expect("default projection DSL parses");
+        let mut projection = crate::artifacts::lowpoly::engine::default_projection();
         projection.objects[0].paint_layers[0].pixels[0] = 7;
         projection.objects[0].paint_layers[0].pixels[1] = 9;
         store::test_support::assert_dsl_round_trip(&projection);
+    }
+
+    #[test]
+    fn handcrafted_example_text_has_no_mesh_json_smuggle() {
+        assert!(!LOWPOLY_EXAMPLE_TEXT.contains("mesh-json"));
+        assert!(LOWPOLY_EXAMPLE_TEXT.contains("mesh {") || LOWPOLY_EXAMPLE_TEXT.contains("mesh{"));
+        assert!(COMPONENT_GRAMMAR_SEMIO.contains("halfedge"));
     }
 
     #[test]

@@ -1,30 +1,20 @@
 dialect grammar
 grammar block.block5d
 extension block5d
-use family-catalog
+use family-scene
 start document
 
-document = schema-field kind-block presentation-block? camera-block? meta-block? catalog-table*
-schema-field = "schema" "=" TEXT
-kind-block = IDENT block
-presentation-block = "presentation" block
-camera-block = IDENT block
-meta-block = "meta" block
-catalog-table = IDENT table
-compat-row = IDENT IDENT IDENT BOOL
-node = IDENT {":" IDENT}? {"@" IDENT}?
-edge-arrow = ARROW | DASHARROW | EDGEARROW | BACKARROW | "-" edge-label ARROW | "-" edge-label "-"
-edge-label = IDENT {":" IDENT}?
-props = "{" prop* "}"
-prop = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
-assign = IDENT "=" (TEXT | INT | FLOAT | BOOL | list | map)
-list = "[" value* "]"
-map = "{" assign* "}"
-value = TEXT | INT | FLOAT | BOOL | list | map
+artifact-mark = "block.5d"
+document = artifact-mark doc-body
+doc-body = schema-line mesh-block
+schema-line = "schema" "=" TEXT
+mesh-block = "mesh" "{" layer* "}"
+layer = IDENT "@" FLOAT FLOAT FLOAT? transform-block?
+transform-block = "{" transform-field* "}"
+transform-field = "x" "=" (FLOAT | INT) | "y" "=" (FLOAT | INT) | "z" "=" (FLOAT | INT) | "scale" "=" (FLOAT | INT)
+face-loop = "face" "[" INT+ "]"
+vertex-table = "vertices" table-schema "{" row* "}"
 table-schema = "[" col {"," col}* "]"
 col = IDENT ":" IDENT
-table = table-schema "{" row* "}"
 row = field+
-field = IDENT "=" value
-block = "{" record* "}"
-record = IDENT assign* block?
+field = IDENT "=" (FLOAT | INT | TEXT)

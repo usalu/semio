@@ -203,9 +203,10 @@ mod tests {
     /// @emoji 📖️ The fragment's `.grammar` file must at least parse under `dsl_grammar`'s parser.
     #[test]
     fn grammar_file_is_syntactically_valid() {
-        let source = include_str!("../../📖️family-sheet.grammar.semio");
+        let source = include_str!("📖️family-sheet.grammar.semio");
         let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-sheet.grammar must parse");
         assert_eq!(grammar.id, "family-sheet");
+        assert!(grammar.productions.len() > 10, "family-sheet should cover qty, assign, expr, and eng-record");
     }
 
     #[test]

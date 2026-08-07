@@ -1,0 +1,256 @@
+# Collision map v2 2026-08-07T11:55:46.166Z
+## Dirty plugins
+✏️s/🔌️plugins/🏭️process
+✏️s/🔌️plugins/💠️lowpoly
+## Open tickets (247)
+- FIX-SUGGESTION-PICK-STARTS-INTERACTION: Fix Suggestion Pick Starts Interaction
+- BRUSH-ENGAGEMENT-NO-SUGGESTIONS: Brush Engagement No Suggestions
+- VORTEX-COMPATIBILITY-COLORING: Puzzle 3d Vortex Compatibility Coloring
+- DISPOSITION-CLICK-DRAG-SELECTION: Disposition Click Drag Selection
+- FIX-PUZZLE-2D-TEXT-LABELS-ON-ZOOM: Fix Puzzle 2d Text Labels On Zoom
+- CONCRETE-FOREST-KIT-FIXTURE: Concrete Forest Kit Fixture
+- UNIFY-NAV-BUTTON-GROUP: Unify Nav Button Group
+- FIX-CAD-VIEWPORT-CAMERA-NAVIGATION-FREEZE: Fix Cad Viewport Camera Navigation Freeze
+- ADD-BAUKOMPONENTEN-SLIDE-TO-PROJEKTETAGE: Add Baukomponenten Slide to Projektetage
+- PUZZLE-3D-CONCRETE-BUILD-MESH-DEPENDENCIES: Puzzle 3d Concrete Build Mesh Dependencies
+- ADD-KATALOG-SLIDE-AFTER-BAUM: Add Katalog Slide After Baum
+- FIGURE-CTRL-WHEEL-ZOOM: Figure Ctrl Wheel Zoom
+- ADD-TYPOLOGIEN-SLIDE-BEFORE-BAUM: Add Typologien Slide Before Baum
+- REMOVE-EINF-HRUNG-MEDIEN-SEQUENCE: Remove Einführung Medien Sequence
+- INITIAL-SCROLL-POSITION-FOR-PRESENTATION-MEDIA: Initial Scroll Position for Presentation Media
+- PROJEKTETAGE-KONNEKTIVIT-T-BEISPIEL-SLIDE: Projektetage Konnektivität Beispiel Slide
+- PROJEKTETAGE-THANK-YOU-SLIDE: Projektetage Thank You Slide
+- MOVE-BAUM-SLIDE-TO-AUSGANGSLAGE: Move Baum Slide to Ausgangslage
+- ADD-RECHERCHE-SEQUENCE-TO-PROJEKTETAGE: Add Recherche Sequence to Projektetage
+- PLAYGROUND-FIXTURE-DEV-BUILD-COMMANDS: Playground Fixture Dev Build Commands
+- SPLIT-ENTWURFSWERKZEUG-KATALOG-INTO-THREE-FRAMES: Split Entwurfswerkzeug Katalog Into Three Frames
+- PROJEKTETAGE-EINGABEPROZESS-EINGABEARTEN-SLIDE: Projektetage Eingabeprozess Eingabearten Slide
+- MOVE-CATALOGUE-SLIDES-TO-BAUTEILPORTAL: Move Catalogue Slides to Bauteilportal
+- FIX-MISSING-PROJEKTETAGE-SLIDE-ASSETS: Fix Missing Projektetage Slide Assets
+- FIX-PROJEKTETAGE-JSON-BRANCH-NULL-CRASH: Projektetage Eingabeprozess Manuelles Prüfen Slide
+- PROJEKTETAGE-EINF-HRUNG-CHAPTER-FIX: Projektetage Einführung Chapter Fix
+- ENTWURFSWERKZEUG-PUZZLE-IFRAME-SLIDE: Entwurfswerkzeug Puzzle Iframe Slide
+- CAD-PLAY-BUILD-STYLING-FIX: Cad Play Build Styling Fix
+- PROJEKTETAGE-EINGABEOBERFL-CHE-ANNOTIERT-SLIDE: Projektetage Eingabeoberfläche Annotiert Slide
+- ADD-BAUM-SLIDE-SYSTEMATIK-TYPOLOGIEN: Add Baum Slide Systematik Typologien
+- REDUCE-CONTINENT-LOD-INLAND-WATER: Reduce Continent LOD Inland Water
+- REPLACE-CAD-PLACEHOLDER-REFERENCES-WITH-CONCRETE-FOREST-PNG: Replace Cad Placeholder References with Concrete Forest PNG
+- LASSO-SELECTION-FIRST-DIRECTION: Lasso Selection First Direction
+- FIX-CITY-LOD-VECTOR-TILE-QUADRANT-EDGES: Fix City Lod Vector Tile Quadrant Edges
+- HANDLE-EXTERIOR-CAPS-BEHIND-NODES: Handle Exterior Caps Behind Nodes
+- EXTRUDE-TAKES-VECTOR: Extrude Takes Vector
+- PUZZLE-2D-PLAY-MISSING-EDGES-AGAIN: Puzzle 2d Play Missing Edges Again
+- BRUSH-VORTEX-TOUCH-PLACEMENT: Brush Vortex Touch Placement
+- PUZZLE-2D-MULTI-WINDOW-SELECTION-CLEAR-SYNC: Puzzle 2d Multi Window Selection Clear Sync
+- SKETCHPAD-VFS-FILE-NAMES-AND-EXTENSION-ICONS: Sketchpad Vfs File Names And Extension Icons
+- DAG-REORGANIZE-ENGAGEMENT: Reorganize DAG Nodes with Left-to-Right Tree Layout
+- OUTPUT-FAN-OUT-TO-MULTIPLE-INPUTS: Output Fan-Out to Multiple Inputs
+- ADD-PROCEDURAL-FIXTURES-TO-PLAYGROUND: Fix Procedural Edge Deletion
+- OPERATOR-TYPED-CHANNELS-AND-PURE-RUST-BREP-NODES: Operator Typed Channels and Pure Rust Brep Nodes
+- CHANNEL-3D-SYNC: Channel 3D Sync
+- SKETCHPAD-VITE-OUTDATED-OPTIMIZE-DEP: Sketchpad Vite Outdated Optimize Dep
+- GIS-MAP-DUAL-BUILD-TILES: Gis Map Dual Build Tiles
+- CAD-PLAY-DETAILS-SELECTION-TREE-EMPTY: Cad Play Details Selection Tree Empty
+- COMPILER-MODULE-CALL-SITE-SWAP-AND-TYPST-EVICTION: Compiler Module — Call-Site Swap and Typst Eviction
+- CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE: Crate Consolidation And Plugin Taxonomy Restructure
+- UI-ELEMENT-CO-LOCATION-RESTRUCTURE: UI Element Co-location Restructure
+- CONVERGING-FLOW-EVALUATION-AND-EXPLICIT-NODE-STATUS: Converging Flow Evaluation and Explicit Node Status
+- FIX-STALE-DELETE-SELECTION-ACTION-ASSERTION-IN-TRINITY-JACK-TEST: Fix Stale DeleteSelection Action Assertion in Trinity-Jack Test
+- UNIFY-SPACE-COLLECTION-ARTIFACT-WORKFLOW-ARCHITECTURE: Unify Space Collection Artifact Workflow Architecture
+- HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT: Handcrafted Grammar for Every Artifact
+- COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND: Compile-Time Checked UI Labels Across Locale, Terminology and Brand
+- DEFAULT-DRIVER-AFFORDANCES: Default Driver Affordances
+- FIX-NUMERIC-TYPE-MISMATCH-IN-WIRES-DSL-FIXTURE-ROUND-TRIP: Fix Numeric Type Mismatch In Wires Dsl Fixture Round Trip
+- REJECT-FABRICATED-MICRO-COMMIT-MESSAGES: Reject Fabricated Micro Commit Messages
+- GROUPED-PROGRESSIVELY-DISCLOSED-CONTEXT-MENUS: Grouped Progressively-Disclosed Context Menus
+- WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE: Workflows End to End: Typed Ports, Real Schema Flow, Config on Node
+- REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: Reduce Demonstrator Idle Memory Footprint
+- LOCALIZE-NEW-DESIGN-DEFAULT-DOCUMENT-NAME: Localize New Design Default Document Name
+- FIX-PUZZLE-3D-PER-WINDOW-INSTANCE-STATE: Fix Puzzle 3D Per-Window Instance State
+- PRINT-SOLID-HEADING-CHIP-ROW-PARITY: Print Solid Heading Chip Row Parity
+- FRAMEWORK-SINGLETONS-AND-CORE-DE-SANDWICH: Framework Singletons And Core De Sandwich
+- S-AND-PLUGINS-END-TO-END: S And Plugins End To End
+- FRAMEWORK-SURFACE-FAMILY-CRATE-CONSOLIDATION: Framework Surface Family Crate Consolidation
+- FRAMEWORK-OS-HOST-AND-DEV-CRATE-CONSOLIDATION: Framework Os Host And Dev Crate Consolidation
+- FRAMEWORK-REPO-PRODUCT-CRATE-CONSOLIDATION: Framework Repo Product Crate Consolidation
+- PERIPHERY-PROJECT-JSON-AND-FINALIZATION: Periphery Project Json and Finalization
+- FRAMEWORK-OS-KERNEL-CRATE-CONSOLIDATION: Framework Os Kernel Crate Consolidation
+- DEFAULT-COLLAPSE-PANELS-AND-PANES: Default Collapse Panels And Panes
+- AUTO-DERIVE-PLAYGROUNDS-FROM-EXAMPLES: Auto-Derive Playgrounds From Examples
+- HIERARCHICAL-APP-IDENTITY: Hierarchical App Identity
+- FULL-CROSS-PLUGIN-PARITY-ROUND-4: Full Cross-Plugin Parity Round 4
+- FIX-WGPU-WORLD3D-EMPTY-PREVIEW: Fix Wgpu World3d Empty Preview
+- FIX-S-CAD-PLAY-ROOT-LAZY-IMPORT: Fix SCadPlayRoot Lazy Import
+- PRINT-WINDOW-WEIGHTED-SPACING: Print Window Weighted Spacing
+- REMOVE-JACK-TAB-FROM-PUZZLE-3D: Remove Jack Tab from Puzzle 3D
+- GENERALIZE-RASTER-SURFACE-KIND-TO-PAINT2D: Generalize Raster Surface Kind to Paint2d
+- INLINE-WORKBENCH-PANELS-INTO-NAVBAR-AND-FOOTER: Inline Workbench Panels Into Navbar And Footer
+- TERMINOLOGY-DRIVEN-PRODUCT-APP-AND-EXAMPLE-NAMES: Terminology-Driven Product App And Example Names
+- FIX-PUZZLE-3D-INTRODUCTION-STEPS-NOT-REVEALING-FOLDED-ANCHORS: Fix Puzzle 3D Introduction Steps Not Revealing Folded Anchors
+- COLLAPSE-ALL-PANELS-BY-DEFAULT: Collapse All Panels By Default
+- FIX-PUZZLE-3D-END-TO-END: Fix Puzzle 3d End to End
+- GENERALIZE-APPS-ONTO-FRAMEWORK-PRIMITIVES: Generalize Apps onto Framework Primitives
+- DOCUMENT-COMMAND-DSL-OP-STORE-ARCHITECTURE: Document Command Dsl Op Store Architecture
+- ENFORCE-CHROME-I18N-EXHAUSTIVENESS-FOR-LOCALE-LOCKED-BRAND-SHELLS: Enforce Chrome I18n Exhaustiveness For Locale-Locked Brand Shells
+- NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT: Native Brep Kernel and Vcs Brep Document
+- DSL-AND-OP-TEXT-WAVE-4-MULTI-APP-TECHNOLOGIES: DSL And Op Text Wave 4: Multi-App Technologies
+- CONVERT-SHOOTING-CRATE-TO-DSL-DERIVE-ENGINE: Convert Shooting Crate To Dsl Derive Engine
+- DSL-AND-OP-TEXT-PILOT-DRAW-AND-NOTE: DSL And Op Text Pilot: Draw And Note
+- EXHAUSTIVE-SINGLE-FILE-CONSOLIDATION: Exhaustive Single File Consolidation
+- NINETY-FIVE-PERCENT-EXHAUSTIVE-TEST-COVERAGE: Ninety-Five Percent Exhaustive Test Coverage
+- DSL-AND-OP-TEXT-WAVE-2-SIMPLE-SINGLE-APP-TECHNOLOGIES: DSL And Op Text Wave 2: Simple Single-App Technologies
+- CONVERT-EN-1997-NORM-CRATE-TO-DECLARATIVE-DSL-ENGINE: Convert EN 1997 Norm Crate to Declarative Dsl Engine
+- DSL-AND-OP-TEXT-WAVE-3-MEDIUM-TECHNOLOGIES: DSL And Op Text Wave 3: Medium Technologies
+- TOKEN-NATIVE-DECLARATIVE-DSL-ENGINE-DSL-CORE-DSL-TOKEN-DSL-SCHEMA: Token-Native Declarative DSL Engine (dsl/core, dsl/token, dsl/schema)
+- FRAMEWORK-SUPPORT-FOR-REMODEL-PHOTOGRAMMETRY-CAPABILITIES: Framework Support for Remodel Photogrammetry Capabilities
+- GRAPH-TRAVERSAL-BFS-DFS-FAMILY-FOR-NETWORK-X-PARITY: Graph Traversal: BFS/DFS Family for NetworkX Parity
+- RUST-CLEAN-REFACTOR-WAVE-12-ENERGY-ENGINE-ARCHITECT-PROGRAM-ARCHITECT-PLUGIN: Rust Clean Refactor Wave 12 — Energy Engine, Architect Program, Architect Plugin
+- NORM-EN-1994-1999-FEATURE-COMPLETENESS: Norm EN 1994-1999 Feature Completeness
+- NORM-EN-1993-AND-EN-1998-FEATURE-COMPLETENESS: Norm EN 1993 and EN 1998 Feature Completeness
+- DIRECTED-MULTIGRAPH-PORT-FACADE-FOR-NETWORK-X-PARITY: Directed Multigraph (Port) Facade for NetworkX Parity
+- RUST-CLEAN-REFACTOR-WAVE-12-ANIMATE-CORE-VIDEO-PRESENT-PLUGIN: Rust Clean Refactor Wave 12 — Animate Core, Video, Present, Plugin
+- FEATURE-COMPLETE-MATHEMATICAL-ENTROPY-CRATE: Feature Complete Mathematical Entropy Crate
+- APPS-COMPOSE-FRAMEWORK-OWNS-UI: Apps Compose, Framework Owns UI
+- NORM-ENERGY-FAMILY-COMPLETENESS-GAPS: Norm Energy Family Completeness Gaps
+- DIRECTED-GRAPH-FACADE-FOR-NETWORK-X-PARITY: Directed Graph Facade for NetworkX Parity
+- MEDIA-ARTIFACT-WIT-AND-SDK-CONTRACT: Media Artifact WIT and SDK Contract
+- MEDIA-FLOW-PLANNER: Media Flow Planner
+- HEADLESS-MEDIA-CONTRACT-AND-STUDIO-RUNNER-FOUNDATIONS: Headless Media Contract And Studio Runner Foundations
+- REWRITE-REMODEL-PLUGIN-TO-WIRE-THE-FULL-PHOTOGRAMMETRY-STACK-INTO-THE-APP-UI: Rewrite Remodel Plugin to Wire the Full Photogrammetry Stack into the App UI
+- REWRITE-REMODEL-DOCUMENT-SCHEMA-FOR-THE-FULL-PHOTOGRAMMETRY-PIPELINE: Rewrite Remodel Document Schema for the Full Photogrammetry Pipeline
+- GRAPH-OPERATORS-UNION-PRODUCTS-CONTRACTION-FOR-NETWORK-X-PARITY: Graph Operators: Union, Products, Contraction for NetworkX Parity
+- EDGE-CONTRACTS-AND-TYPED-CONNECT: Edge Contracts and Typed Connect
+- MATHEMATICAL-ALGEBRA-SPARSE-MATRICES-AND-EIGENSOLVERS-FOR-NETWORK-X-PARITY: Mathematical Algebra: Sparse Matrices and Eigensolvers for NetworkX Parity
+- NETWORK-X-PARITY-FOR-MATHEMATICAL-GRAPH-CRATES: NetworkX Parity for Mathematical Graph Crates
+- COMPUTER-ALGEBRA-SYSTEM-BUNDLE: Computer Algebra System Bundle
+- RUST-CLEAN-REFACTOR-WAVE-12-NORM-CRATES-FEM-2D-FEM-3D: Rust Clean Refactor Wave 12 — Norm Crates, Fem 2D, Fem 3D
+- FIX-PANEL-TAB-BODY-CHROME-GAP: Fix Panel Tab Body Chrome Gap
+- EXTEND-ANIMATE-CORE-MOBJECT-CATALOGS: Extend Animate Core Mobject Catalogs
+- FIX-WORKSPACE-BLOCKING-DOC-COMMENT-PLACEMENT-IN-UI-WGPU: Fix Workspace-Blocking Doc Comment Placement in ui/wgpu
+- WAVE-4-V1-DUPLICATION-HUNTER-AUDIT: Wave 4 V1 Duplication Hunter Audit
+- EXPAND-EN-1998-AND-EN-1999-NORM-CRATES: Expand EN 1998 and EN 1999 Norm Crates
+- ENERGY-ENGINE-ENVELOPE-PHYSICS-MODULES: Energy Engine Envelope Physics Modules
+- EXTRACT-ACTION-INPUT-INTO-SEARCH-PANE-AND-CATEGORIZE-ACTIONS: Extract Action Input Into Search Pane And Categorize Actions
+- DECOUPLE-FRAMEWORK-FROM-PLUGIN-IDENTITY: Use Native Umlauts in German Labels
+- MOVE-ALL-APPS-INTO-THE-S-PRODUCT-TREE-WITH-CONSTITUTIONAL-CRATES-EMOJI-LAYOUT: Move All Apps into the S Product Tree with Constitutional Crates + Emoji Layout
+- BUDGETED-REPO-BINARY-AND-TOTAL-TEST-DEADLINES: Budgeted Repo Binary and Total Test Deadlines
+- WGPU-RENDERER-FULL-PARITY: Wgpu Renderer Full Parity
+- S-REACT-RENDERER-PREMIGRATION-PARITY: S React Renderer Premigration Parity
+- FIX-PROCEDURAL-3D-SLIDER-RESET-AND-NODE-GRAPH-WHEEL-CRASH: Fix Procedural 3D Slider Reset And Node Graph Wheel Crash
+- FSM-STATECHART-TECHNOLOGY: Fsm Statechart Technology
+- RETAINED-MODE-UI-CRATE: Retained Mode UI Crate
+- AUTOMATIC-PRINT-REGISTERS: Automatic Print Registers
+- DELETE-ALL-EMPTY-FOLDERS: Delete All Empty Folders
+- WORKFLOWS-USE-PACK-DSL-DOCUMENTS-AND-PROTOCOL-OP-COMMANDS: Workflows Use Pack Dsl Documents and Protocol Op Commands
+- UNTRACK-COMPILED-JS-AND-WASM: Untrack Compiled Js and Wasm
+- FIX-3D-CLICK-HOVER-SELECT: Wgpu Window Rail Paint Parity
+- CONSISTENT-GEOMETRY-AND-GIS-FOLDER-NAMING: Consistent Geometry and Gis Folder Naming
+- PRINT-GLASS-PANELS: Print Glass Panels
+- WINDOW-OPTIONS-TREE-ICON-CHECKBOX: Window Options Tree Icon Checkbox
+- EMOJI-PREFIX-ALL-RENAMABLE-FILENAMES: Emoji Prefix All Renamable Filenames
+- BUILD-VERIFICATION-FOR-CAMERA-AS-VIEW-ACTION-AND-COMMAND-HISTORY-EFFORT: Build Verification For Camera-As-View-Action And Command-History Effort
+- GIS-2D-MAP-PARITY-RESTORE: Gis 2d Map Parity Restore
+- S-CHROME-SPAWNED-WINDOW-PARITY-RESTORE: S Chrome Spawned Window Parity Restore
+- FIX-PRINT-PARAGRAPH-CHIP-ALIGNMENT: Fix Print Paragraph Chip Alignment
+- FIX-MIT-BESTAND-ZWISCHENBERICHT-WATCH-HANG: Fix Mit Bestand Zwischenbericht Watch Hang
+- RICHER-INTRODUCTION-CLICK-PREVIEWS: Richer Introduction Click Previews
+- SEMANTIC-AND-WORLD-SPACE-INTRODUCTION-TARGETING: Semantic and World-Space Introduction Targeting
+- REALTIME-PUZZLE-GUMBALL-DRAG-DUPLICATE: Realtime Puzzle Gumball Drag
+- FIX-PUZZLE-3D-FILL-OPTIONS-LAG: Fix Puzzle 3D Fill Options Lag
+- PROCESS-3D-TECHNOLOGY-AND-APP: Process 3D Technology And App
+- RUST-ONLY-VCS-WITH-COMPLETE-BACKBONES: Os Vcs Hub Cqrs Event Sourcing Refactor
+- BACKBONE-AS-DUPLEX-PROCESS-CHANNEL: Backbone as Duplex Process Channel
+- OS-APP-PLAYGROUND-UI-REFACTOR: Os App Playground Ui Refactor
+- ENFORCE-WINDOW-APP-PANEL-AND-PLUGIN-CONTRACTS-AT-COMPILE-TIME: Enforce Window, App, Panel And Plugin Contracts At Compile Time
+- CANONICALIZE-TARGET-GRAPHQL-OPERATION-FIELDS: Canonicalize Target Graphql Operation Fields
+- TARGET-SCHEMA-REFACTOR-WORKER-A: Target Schema Refactor Worker A
+- CANVAS-RENDERS-NO-POINTER-INTERACTION: Canvas Renders No Pointer Interaction
+- BOARD-ICON-PATH-BBOX-AND-SVG-CACHE-HASH: Board Icon Path Bbox And Svg Cache Hash
+- BOARD-LOD-BANDS-OVERLAY-AND-HIT-POLICY: Board LOD Bands Overlay And Hit Policy
+- METABOLISM-NEO4J-QUERY-COOKBOOK: Metabolism Neo4j Query Cookbook
+- SPATIAL-OVERLAP-SELECTION-LIST: Spatial Overlap Selection List
+- FIX-SPATIAL-CAMERA-JUMP: Fix Spatial Camera Jump
+- FIX-SPATIAL-BOX-FIRST-POINT: Fix Spatial Box First Point
+- MAKE-SPATIAL-FACES-TRANSPARENT: Make Spatial Faces Transparent
+- REPLACE-SKETCHPAD-DIAGRAM-WITH-ELEMENTS-TOPOLOGY: Replace Sketchpad Diagram With Elements Topology
+- BOARD-FIXTURE-PIECE-NAME-ON-NODES: Board Fixture Piece Name On Nodes
+- ELEMENTS-SCENE-DEV-CONFIG-PARITY: Elements Scene Dev Config Parity
+- BOARD-TIE-ATTRACTION-NAMING: Board Tie Attraction Naming
+- SCENE-ATTRACTION-ATTRACTING-ATTRACTED-NAMING: Scene Attraction Attracting Attracted Naming
+- BOARD-THEME-REACTIVE-CHROME: Board Theme Reactive Chrome
+- ELEMENTS-TOPOLOGY-PACKAGE-BOARD-SCENE: Elements Topology Package Board Scene
+- CENTER-BOARD-SHAPE-TEXT: Center Board Shape Text
+- ADD-NODE-AND-HANDLE-SCALE-PROPS: Add Node And Handle Scale Props
+- BOARD-REDRAW-GRAPH-AND-HANDLES: Board Redraw Graph And Handles
+- END-TO-END-STORE-AND-TESTS-GREEN: End To End Store And Tests Green
+- REFACTOR-GRASSHOPPER-COMPONENTS-STORE-API: Refactor Grasshopper Components Store Api
+- BOARD-CLEAN-REFACTOR: Board Clean Refactor
+- BOARD-PLAY-WITHOUT-WINDOW-OPTIONS: Board Play Without Window Options
+- BOARD-HANDLE-LINK-DRAG-SNAP-AND-PREVIEW: Board Handle Link Drag Snap And Preview
+- SPATIAL-PLAY-DOCUMENT-OBJECTS: Spatial Play Document Objects
+- SPATIAL-PLAY-PRIMITIVE-TOPOLOGY-TREE: Spatial Play Primitive Topology Tree
+- DOCUMENT-RS-EDIT-AND-SDL-ALIGNMENT-EXAMPLES: Document Rs Edit And Sdl Alignment Examples
+- MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR: Macro Driven Entity Family Refactor
+- WIRE-SKETCHPAD-KIT-STORE-END-TO-END: Wire Sketchpad Kit Store End To End
+- PUZZLE-3D-SELECTABLE-HOVER-INSPECTOR: Puzzle 3d Selectable Hover Inspector
+- WRAP-EXTERNAL-DEPENDENCIES-BEHIND-INTERFACES: Wrap External Dependencies Behind Interfaces
+- THOROUGH-BOARD-TO-PUZZLE2D-RENAME: Thorough Board To Puzzle2d Rename
+- BUTTON-TOGGLE-ICON-LABEL-DEFAULT: Button Toggle Icon Label Default
+- RENAME-BOARD-TO-PUZZLE2D-IN-PLAY: Rename Board To Puzzle2d In Play
+- PUZZLE-3D-PROGRESSIVE-LOD-GRID: Puzzle 3d Progressive Lod Grid
+- MODE-DOCK-GAP-BASELINE-OVERSHOOT: Mode Dock Gap Baseline Overshoot
+- NORMALIZE-KIT-OPERATION-SIGNATURES: Normalize Kit Operation Signatures
+- CANONICALIZE-MONOREPO-TARGET-NAMES: Canonicalize Monorepo Target Names
+- REFACTOR-LIB-RS-TO-GOLDEN-SCHEMA: Refactor Lib Rs To Golden Schema
+- REMOVE-ROW-TERMINOLOGY-FROM-CLIENT-LIB: Remove Row Terminology From Client Lib
+- REFACTOR-COMPOSE-REACT-TO-COMPOSABLE-SCHEMA-ALIGNED-CONTEXTS: Refactor Compose React to Composable Schema-Aligned Contexts
+- SPATIAL-SPHERE-RADIUS-PREVIEW: Spatial Sphere Radius Preview
+- FIX-INTERACTION-REPL-RUNTIME-REFERENCE: Fix Interaction Repl Runtime Reference
+- CLEAN-SPATIAL-PLAY-NAMING: Clean Spatial Play Naming
+- SET-UP-CPP-MONOREPO-CONFIGS: Set Up Cpp Monorepo Configs
+- SPLIT-GEOMETRY-PLAY-DEV-WIRING: Split Geometry Play Dev Wiring
+- FIX-IDE-MCP-SERVER-CONFIGS: Fix IDE MCP Server Configs
+- GEOMETRY-DRAG-MOVES-CHILDREN: Geometry Drag Moves Children
+- FIX-SUBMODEL-ISSUES: Fix Submodel Issues
+- FIX-ELEMENTS-SCENE-INFINITE-LOOP: Fix Elements Scene Infinite Loop
+- CONVERT-TEMP-BUILDINGS-TO-SPATIAL-ASSETS: Convert Temp Buildings to Spatial Assets
+- SKETCHPAD-ALIGNS-PHASE-ONE-META-REP: Field Only Kit Reads Cqrs Classes
+- RS-CONTROL-PLANE-WITHOUT-SERDE-OUTSIDE-KIT-BACKBONE: Rs Control Plane Without Serde Outside Kit Backbone
+- JS-STORE-ROOT-CLASS: JS Store Root Class
+- LIVE-SUBSCRIPTION-FIELD-TREE: Live Subscription Field Tree
+- RUST-SDL-MATCHES-TARGET-SCHEMA-GOLDEN: Rust SDL Matches Target Schema Golden
+- REFACTOR-COMPOSE-JS-GENERAL-MECHANISMS: Refactor Compose JS General Mechanisms
+- REACT-FIELD-KIT-READS-CQRS-CLASSES: React Field Kit Reads Cqrs Classes
+- CLEAN-VS-CODE-LAUNCH-LIFECYCLE: Clean VS Code Launch Lifecycle
+- INTEGRATE-MONOREPO-STORYBOOK-AND-PLAYWRIGHT: Integrate Monorepo Storybook And Playwright
+- REFACTOR-KIT-API-TO-OBJECT-ORIENTED-WITH-CENTRALIZED-CHANGE-MANAGEMENT: Refactor Kit API To Object-Oriented With Centralized Change Management
+- REFACTOR-TYPE-SCRIPT-KIT-API-TO-OBJECT-ORIENTED-WITH-CENTRALIZED-CHANGE-MANAGEMENT: Refactor TypeScript Kit API To Object-Oriented With Centralized Change Management
+- ADD-EXPORT-SCHEMA-TEST-TO-BUILD: Add Export Schema Test to Build
+- RUST-STORE-SHELL-AFTER-DTO-REMOVAL: Rust Store Shell After Dto Removal
+- RUST-STORE-WIRE-ONLY-STRIP-PROJECTIONS: Rs Strip Store Projections Leave Store Only
+- REFACTOR-PIECE-DT-OS-TO-USE-NESTED-OPTIONAL-POSE: Refactor Piece DTOs to Use Nested Optional Pose
+- MERGE-CLI-INTO-CLIENT: Merge CLI Into Client
+- SKETCHPAD-STATE-STORE-REFACTOR: Sketchpad State Store Refactor
+- INTRODUCE-FAMILY-ENTITY-REPLACING-ARTIFACT-PARENT-MECHANISM: Introduce Family Entity Replacing Artifact Parent Mechanism
+- ADD-FAMILY-ENTITY-ACROSS-ALL-LANGUAGES: Add Family Entity Across All Languages
+- INTRODUCE-FAMILY-AS-FIRST-CLASS-ENTITY-WITH-PORTS: Introduce Family As First Class Entity With Ports
+- REMOVE-PARENT-FIELD-FROM-TYPE-AND-DESIGN: Remove Parent Field From Type And Design
+- REMOVE-PARENT-FIELD-FROM-TYPE-AND-DESIGN-STRUCTS: Remove Parent Field From Type And Design Structs
+- family-first-class-entity: Family First Class Entity in Compose JS
+- INTRODUCE-FAMILY-AS-FIRST-CLASS-ENTITY-IN-COMPOSE-JS: Introduce Family As First Class Entity In Compose JS
+- PLAY-SITE-TESTS-AND-LAYERING: Play Site Tests And Layering
+- CONNECTOR-COLOR-STORE: Connector Color Store
+- SKETCHPAD-PLAYWRIGHT-AND-REGISTRY-OPEN-COMPLIANCE: Sketchpad Playwright And Registry Open Compliance
+- COMPOSE-JS-GQL-DTO-WIRE-ALIGNMENT: Compose JS Gql Dto Wire Alignment
+- RUST-CONTROL-PLANE-REFACTOR: Rust Control Plane Refactor
+- COMPOSE-JS-EXACT-GRAPH-QL-AND-WIRE-TYPING: Compose JS Exact GraphQL And Wire Typing
+- REFACTOR-COMPOSE-TYPE-SCRIPT-OBJECT-MODEL: Refactor Compose TypeScript Object Model
+- LOWERCASE-DATA-COMPUTED-HASHED-SECTION-LABELS-IN-TARGET-SCHEMA: Lowercase Data Computed Hashed Section Labels in Target Schema
+- OWNERSHIP-FIELD-NAMES-OWNER-SUFFIX-IN-TARGET-SCHEMA: Ownership Field Names Owner Suffix in Target Schema
+- TEST-LIFECYCLE-TICKET: Test Lifecycle Ticket
+- CONFIGURE-RUSTFMT-FOR-MINIMAL-NEWLINES: Configure Rustfmt for Minimal Newlines
+- TEST-LIFECYCLE-TICKET-1776870229224635100: Test Lifecycle Ticket 1776870229224635100
+## Hot plugins (defer to W5f)
+🌊️flow, 🌀️procedural, 🧱️block, � contpuzzle, 🌿️vcs
+## Pilots (P4 exclusive)
+💠️lowpoly, 📕️norm/📘️en1992, 🕸️dag, 📐️cad

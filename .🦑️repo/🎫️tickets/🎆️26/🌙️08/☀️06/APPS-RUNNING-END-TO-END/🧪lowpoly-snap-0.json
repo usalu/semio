@@ -1,0 +1,23 @@
+{
+  "i": 0,
+  "title": "semio · os",
+  "canvasCount": 0,
+  "text": [
+    "Fullscreen",
+    "Display",
+    "Sync",
+    "Settings",
+    "Keybindings",
+    "Theme",
+    "Plugins",
+    "Command",
+    "Search",
+    "Search for items",
+    "Find",
+    "Find items in this view"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "crash": null,
+  "failedReqs": []
+}

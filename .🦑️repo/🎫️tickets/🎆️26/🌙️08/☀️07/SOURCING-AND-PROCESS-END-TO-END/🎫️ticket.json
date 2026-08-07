@@ -1,0 +1,14 @@
+{
+  "title": "Sourcing And Process End To End",
+  "emoji": "🪚",
+  "status": "closed",
+  "description": "Get sourcing and process working end to end after restructure. Immediate blocker: bun run dev:process:3d fails building semio-s-plugin-process (missing blake3 dep, memo/kernel borrow conflicts, session lifetime in volume replay). Fix process plugin compile, verify process3d boots, then verify sourcing app boots and works.",
+  "summary": "Fixed semio-s-plugin-process compile blockers that stopped process3d (and blocked related sourcing/process flows): added blake3 dependency; scoped kernel MutexGuards so memo table mutations no longer conflict; fixed processed_mesh/processed_volume temporary lifetimes. Verified cargo build -p semio-s-plugin-process --target wasm32-wasip2, bun run dev:process:3d (Vite :6022 + plugin build + hot-swap watch), and bun run dev:sourcing (Vite :6081 + plugin build + hot-swap watch).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2535"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪b7d27468053e42c5848ff2d140ae739b"
+  ]
+}
